@@ -2,20 +2,32 @@
 import { lstat } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { GatewayConfig, GatewayConfigContext } from '@graphql-mesh/serve-runtime';
+import type {
+  GatewayConfig,
+  GatewayConfigContext,
+} from '@graphql-mesh/serve-runtime';
 import type { KeyValueCache, Logger } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './server';
 
-export const defaultConfigExtensions = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs'];
+export const defaultConfigExtensions = [
+  '.ts',
+  '.mts',
+  '.cts',
+  '.js',
+  '.mjs',
+  '.cjs',
+];
 
 export const defaultConfigFileName = 'gateway.config';
 
 export function createDefaultConfigPaths(configFileName: string) {
-  return defaultConfigExtensions.map(ext => `${configFileName}${ext}`);
+  return defaultConfigExtensions.map((ext) => `${configFileName}${ext}`);
 }
 
-export async function loadConfig<TContext extends Record<string, any> = Record<string, any>>(opts: {
+export async function loadConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+>(opts: {
   quiet?: boolean;
   log: Logger;
   configPath: string | null | undefined;
@@ -37,13 +49,16 @@ export async function loadConfig<TContext extends Record<string, any> = Record<s
         .then(() => true)
         .catch(() => false);
       if (exists) {
-        !opts.quiet && opts.log.info(`Found default config file ${absoluteConfigPath}`);
+        !opts.quiet &&
+          opts.log.info(`Found default config file ${absoluteConfigPath}`);
         const importUrl = pathToFileURL(absoluteConfigPath).toString();
         const module = await import(importUrl);
         importedConfig = Object(module).gatewayConfig || null;
         if (!importedConfig) {
           !opts.quiet &&
-            opts.log.warn(`No "gatewayConfig" exported from config file at ${absoluteConfigPath}`);
+            opts.log.warn(
+              `No "gatewayConfig" exported from config file at ${absoluteConfigPath}`,
+            );
         }
         break;
       }
@@ -64,7 +79,9 @@ export async function loadConfig<TContext extends Record<string, any> = Record<s
     const module = await import(importUrl);
     importedConfig = Object(module).gatewayConfig || null;
     if (!importedConfig) {
-      throw new Error(`No "gatewayConfig" exported from config file at ${configPath}`);
+      throw new Error(
+        `No "gatewayConfig" exported from config file at ${configPath}`,
+      );
     }
   }
   if (importedConfig) {
@@ -88,16 +105,22 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useJWT(config.jwt));
   }
   if (config.prometheus) {
-    const { default: useMeshPrometheus } = await import('@graphql-mesh/plugin-prometheus');
+    const { default: useMeshPrometheus } = await import(
+      '@graphql-mesh/plugin-prometheus'
+    );
     plugins.push(useMeshPrometheus(config.prometheus));
   }
   if (config.openTelemetry) {
-    const { useOpenTelemetry } = await import('@graphql-mesh/plugin-opentelemetry');
+    const { useOpenTelemetry } = await import(
+      '@graphql-mesh/plugin-opentelemetry'
+    );
     plugins.push(useOpenTelemetry(config.openTelemetry));
   }
 
   if (config.rateLimiting) {
-    const { default: useMeshRateLimit } = await import('@graphql-mesh/plugin-rate-limit');
+    const { default: useMeshRateLimit } = await import(
+      '@graphql-mesh/plugin-rate-limit'
+    );
     plugins.push(
       useMeshRateLimit({
         cache: ctx.cache,
@@ -116,14 +139,18 @@ export async function getCacheInstanceFromConfig(
   if (config.cache && 'type' in config.cache) {
     switch (config.cache.type) {
       case 'redis': {
-        const { default: RedisCache } = await import('@graphql-mesh/cache-redis');
+        const { default: RedisCache } = await import(
+          '@graphql-mesh/cache-redis'
+        );
         return new RedisCache({
           ...ctx,
           ...config.cache,
         });
       }
       case 'cfw-kv': {
-        const { default: CloudflareKVCacheStorage } = await import('@graphql-mesh/cache-cfw-kv');
+        const { default: CloudflareKVCacheStorage } = await import(
+          '@graphql-mesh/cache-cfw-kv'
+        );
         return new CloudflareKVCacheStorage({
           ...ctx,
           ...config.cache,
@@ -131,9 +158,14 @@ export async function getCacheInstanceFromConfig(
       }
     }
     if (config.cache.type !== 'localforage') {
-      ctx.logger.warn('Unknown cache type, falling back to localforage', config.cache);
+      ctx.logger.warn(
+        'Unknown cache type, falling back to localforage',
+        config.cache,
+      );
     }
-    const { default: LocalforageCache } = await import('@graphql-mesh/cache-localforage');
+    const { default: LocalforageCache } = await import(
+      '@graphql-mesh/cache-localforage'
+    );
     return new LocalforageCache({
       ...ctx,
       ...config.cache,
@@ -142,6 +174,8 @@ export async function getCacheInstanceFromConfig(
   if (config.cache) {
     return config.cache as KeyValueCache;
   }
-  const { default: LocalforageCache } = await import('@graphql-mesh/cache-localforage');
+  const { default: LocalforageCache } = await import(
+    '@graphql-mesh/cache-localforage'
+  );
   return new LocalforageCache();
 }

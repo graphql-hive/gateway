@@ -18,7 +18,11 @@ import {
   type CLIGlobals,
   type GatewayCLIConfig,
 } from '../cli.js';
-import { getBuiltinPluginsFromConfig, getCacheInstanceFromConfig, loadConfig } from '../config.js';
+import {
+  getBuiltinPluginsFromConfig,
+  getCacheInstanceFromConfig,
+  loadConfig,
+} from '../config.js';
 import { startServerForRuntime } from '../server.js';
 import { handleFork } from './handleFork.js';
 
@@ -74,7 +78,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
             );
             process.exit(1);
           }
-          supergraph = { type: 'hive', endpoint: schemaPathOrUrl, key: hiveCdnKey };
+          supergraph = {
+            type: 'hive',
+            endpoint: schemaPathOrUrl,
+            key: hiveCdnKey,
+          };
         } else if (apolloKey) {
           ctx.log.info(`Using GraphOS API key`);
           if (!schemaPathOrUrl.includes('@')) {
@@ -107,7 +115,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
           process.exit(1);
         }
         ctx.log.info(`Using Hive CDN endpoint: ${hiveCdnEndpoint}`);
-        supergraph = { type: 'hive', endpoint: hiveCdnEndpoint, key: hiveCdnKey };
+        supergraph = {
+          type: 'hive',
+          endpoint: hiveCdnEndpoint,
+          key: hiveCdnKey,
+        };
       } else if (apolloGraphRef) {
         if (!apolloGraphRef.includes('@')) {
           ctx.log.error(
@@ -122,7 +134,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
           process.exit(1);
         }
         ctx.log.info(`Using Apollo Graph Ref: ${apolloGraphRef}`);
-        supergraph = { type: 'graphos', apiKey: apolloKey, graphRef: apolloGraphRef };
+        supergraph = {
+          type: 'graphos',
+          apiKey: apolloKey,
+          graphRef: apolloGraphRef,
+        };
       } else if ('supergraph' in loadedConfig) {
         supergraph = loadedConfig.supergraph;
         // TODO: how to provide hive-cdn-key?
@@ -156,7 +172,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         pubsub,
         logger: ctx.log,
       });
-      const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, { cache });
+      const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, {
+        cache,
+      });
 
       const config: SupergraphConfig = {
         ...defaultOptions,
@@ -199,7 +217,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
         // overwrite masked errors from loaded config only when provided
         config.maskedErrors = maskedErrors;
       }
-      if (typeof config.pollingInterval === 'number' && config.pollingInterval < 10_000) {
+      if (
+        typeof config.pollingInterval === 'number' &&
+        config.pollingInterval < 10_000
+      ) {
         process.stderr.write(
           `error: polling interval duration too short, use at least 10 seconds\n`,
         );
@@ -208,9 +229,13 @@ export const addCommand: AddCommand = (ctx, cli) =>
       return runSupergraph(ctx, config);
     });
 
-export type SupergraphConfig = GatewayConfigSupergraph<unknown> & GatewayCLIConfig;
+export type SupergraphConfig = GatewayConfigSupergraph<unknown> &
+  GatewayCLIConfig;
 
-export async function runSupergraph({ log }: CLIContext, config: SupergraphConfig) {
+export async function runSupergraph(
+  { log }: CLIContext,
+  config: SupergraphConfig,
+) {
   let absSchemaPath: string | null = null;
   if (
     typeof config.supergraph === 'string' &&
@@ -225,7 +250,9 @@ export async function runSupergraph({ log }: CLIContext, config: SupergraphConfi
     try {
       await lstat(absSchemaPath);
     } catch {
-      log.error(`Could not read supergraph from ${absSchemaPath}. Make sure the file exists.`);
+      log.error(
+        `Could not read supergraph from ${absSchemaPath}. Make sure the file exists.`,
+      );
       process.exit(1);
     }
   }
@@ -247,25 +274,33 @@ export async function runSupergraph({ log }: CLIContext, config: SupergraphConfi
       try {
         log.info(`Watching ${absSchemaPath} for changes`);
         const absSupergraphDirname = dirname(absSchemaPath);
-        const subscription = await watcher.subscribe(absSupergraphDirname, (err, events) => {
-          if (err) {
-            log.error(err);
-            return;
-          }
-          if (events.some(event => event.path === absSchemaPath && event.type === 'update')) {
-            log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
-            if (config.fork > 1) {
-              for (const workerId in cluster.workers) {
-                cluster.workers[workerId].send('invalidateUnifiedGraph');
-              }
-            } else {
-              runtime.invalidateUnifiedGraph();
+        const subscription = await watcher.subscribe(
+          absSupergraphDirname,
+          (err, events) => {
+            if (err) {
+              log.error(err);
+              return;
             }
-          }
-        });
-        registerTerminateHandler(signal => {
+            if (
+              events.some(
+                (event) =>
+                  event.path === absSchemaPath && event.type === 'update',
+              )
+            ) {
+              log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
+              if (config.fork > 1) {
+                for (const workerId in cluster.workers) {
+                  cluster.workers[workerId].send('invalidateUnifiedGraph');
+                }
+              } else {
+                runtime.invalidateUnifiedGraph();
+              }
+            }
+          },
+        );
+        registerTerminateHandler((signal) => {
           log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
-          return subscription.unsubscribe().catch(err => {
+          return subscription.unsubscribe().catch((err) => {
             // https://github.com/parcel-bundler/watcher/issues/129
             log.error(`Failed to close watcher for ${absSchemaPath}!`, err);
           });
@@ -292,7 +327,9 @@ export async function runSupergraph({ log }: CLIContext, config: SupergraphConfi
     'type' in config.supergraph &&
     config.supergraph.type === 'hive'
   ) {
-    log.info(`Serving supergraph from Hive CDN at ${config.supergraph.endpoint}`);
+    log.info(
+      `Serving supergraph from Hive CDN at ${config.supergraph.endpoint}`,
+    );
   } else {
     log.info('Serving supergraph from config');
   }

@@ -11,7 +11,9 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
       const worker = cluster.fork();
       worker.once('exit', (code, signal) => {
         if (expectedToExit) {
-          log.debug(`Worker ${worker.process.pid} exited with code ${code} and signal ${signal}`);
+          log.debug(
+            `Worker ${worker.process.pid} exited with code ${code} and signal ${signal}`,
+          );
         } else {
           log.warn(`Worker ${worker.process.pid} exited unexpectedly with code ${code} and signal ${signal}\n
 A restart is recommended to ensure the stability of the service`);
@@ -24,10 +26,10 @@ A restart is recommended to ensure the stability of the service`);
       });
       workers.add(worker);
     }
-    registerTerminateHandler(signal => {
+    registerTerminateHandler((signal) => {
       log.info(`Killing workers with ${signal}`);
       expectedToExit = true;
-      workers.forEach(w => {
+      workers.forEach((w) => {
         w.kill(signal);
       });
     });

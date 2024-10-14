@@ -62,7 +62,7 @@ export async function startServerForRuntime<
 ): Promise<AsyncDisposable> {
   const terminateStack = getTerminateStack();
   terminateStack.use(runtime);
-  process.on('message', message => {
+  process.on('message', (message) => {
     if (message === 'invalidateUnifiedGraph') {
       log.info(`Invalidating Supergraph`);
       runtime.invalidateUnifiedGraph();
@@ -103,16 +103,24 @@ async function startNodeHttpServer(
     protocol = 'https';
     const sslOptionsForNodeHttp: SecureContextOptions = {};
     if (sslCredentials.ca_file_name) {
-      sslOptionsForNodeHttp.ca = await fsPromises.readFile(sslCredentials.ca_file_name);
+      sslOptionsForNodeHttp.ca = await fsPromises.readFile(
+        sslCredentials.ca_file_name,
+      );
     }
     if (sslCredentials.cert_file_name) {
-      sslOptionsForNodeHttp.cert = await fsPromises.readFile(sslCredentials.cert_file_name);
+      sslOptionsForNodeHttp.cert = await fsPromises.readFile(
+        sslCredentials.cert_file_name,
+      );
     }
     if (sslCredentials.dh_params_file_name) {
-      sslOptionsForNodeHttp.dhparam = await fsPromises.readFile(sslCredentials.dh_params_file_name);
+      sslOptionsForNodeHttp.dhparam = await fsPromises.readFile(
+        sslCredentials.dh_params_file_name,
+      );
     }
     if (sslCredentials.key_file_name) {
-      sslOptionsForNodeHttp.key = await fsPromises.readFile(sslCredentials.key_file_name);
+      sslOptionsForNodeHttp.key = await fsPromises.readFile(
+        sslCredentials.key_file_name,
+      );
     }
     if (sslCredentials.passphrase) {
       sslOptionsForNodeHttp.passphrase = sslCredentials.passphrase;
@@ -144,7 +152,7 @@ async function startNodeHttpServer(
       resolve(
         createAsyncDisposable(
           () =>
-            new Promise<void>(resolve => {
+            new Promise<void>((resolve) => {
               process.stderr.write('\n');
               log.info(`Stopping the server`);
               server.closeAllConnections();

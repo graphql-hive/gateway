@@ -15,7 +15,11 @@ import {
   type CLIGlobals,
   type GatewayCLIConfig,
 } from '../cli.js';
-import { getBuiltinPluginsFromConfig, getCacheInstanceFromConfig, loadConfig } from '../config.js';
+import {
+  getBuiltinPluginsFromConfig,
+  getCacheInstanceFromConfig,
+  loadConfig,
+} from '../config.js';
 import { startServerForRuntime } from '../server.js';
 import { handleFork } from './handleFork.js';
 
@@ -57,7 +61,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         pubsub,
         logger: ctx.log,
       });
-      const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, { cache });
+      const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, {
+        cache,
+      });
 
       const config: SubgraphConfig = {
         ...defaultOptions,
@@ -108,7 +114,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
         // overwrite masked errors from loaded config only when provided
         config.maskedErrors = maskedErrors;
       }
-      if (typeof config.pollingInterval === 'number' && config.pollingInterval < 10_000) {
+      if (
+        typeof config.pollingInterval === 'number' &&
+        config.pollingInterval < 10_000
+      ) {
         process.stderr.write(
           `error: polling interval duration too short, use at least 10 seconds\n`,
         );
