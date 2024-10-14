@@ -32,6 +32,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version.ts",
+    "bundle": "(rm -rf bundle || true) && rollup -c && rollup -c rollup.binary.config.js && tsx scripts/inject-version.ts && tsx scripts/package-binary.ts",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts"
   },
