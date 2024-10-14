@@ -621,9 +621,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/gatway@workspace:packages/gateway":
+"@graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
-  resolution: "@graphql-hive/gatway@workspace:packages/gateway"
+  resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
     "@commander-js/extra-typings": "npm:^12.1.0"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.102.6"
@@ -668,7 +668,7 @@ __metadata:
     "@parcel/watcher":
       optional: true
   bin:
-    gatway: ./dist/bin.js
+    gateway: ./dist/bin.js
   languageName: unknown
   linkType: soft
 
