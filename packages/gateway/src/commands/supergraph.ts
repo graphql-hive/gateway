@@ -1,4 +1,4 @@
-import cluster, { type Worker } from 'node:cluster';
+import cluster from 'node:cluster';
 import { lstat } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { Option } from '@commander-js/extra-typings';
@@ -51,11 +51,14 @@ export const addCommand: AddCommand = (ctx, cli) =>
         polling,
         apolloGraphRef,
         apolloKey,
-        apolloUplink,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
       } = this.optsWithGlobals<CLIGlobals>();
+
+      // TODO: move to optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
+      const { apolloUplink } = this.opts();
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -158,6 +161,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
         };
       } else if (apolloKey) {
         ctx.log.info(`Configuring Apollo GraphOS registry reporting`);
+        if (!apolloGraphRef) {
+          ctx.log.error(
+            `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref.`,
+          );
+          process.exit(1);
+        }
         registryConfig = {
           reporting: {
             type: 'graphos',
@@ -182,30 +191,13 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ...opts,
         ...registryConfig,
         ...(polling ? { pollingInterval: polling } : {}),
-        ...(hivePersistedDocumentsEndpoint
-          ? {
-              persistedDocuments: {
-                type: 'hive',
-                endpoint:
-                  hivePersistedDocumentsEndpoint ||
-                  (loadedConfig.persistedDocuments &&
-                    'endpoint' in loadedConfig.persistedDocuments &&
-                    loadedConfig.persistedDocuments?.endpoint),
-                token:
-                  hivePersistedDocumentsToken ||
-                  (loadedConfig.persistedDocuments &&
-                    'token' in loadedConfig.persistedDocuments &&
-                    loadedConfig.persistedDocuments?.token),
-              },
-            }
-          : {}),
         supergraph,
         logging: loadedConfig.logging ?? ctx.log,
         productName: ctx.productName,
         productDescription: ctx.productDescription,
         productPackageName: ctx.productPackageName,
-        productLogo: ctx.productLogo,
         productLink: ctx.productLink,
+        ...(ctx.productLogo ? { productLogo: ctx.productLogo } : {}),
         pubsub,
         cache,
         plugins(ctx) {
@@ -213,8 +205,28 @@ export const addCommand: AddCommand = (ctx, cli) =>
           return [...builtinPlugins, ...userPlugins];
         },
       };
+      if (hivePersistedDocumentsEndpoint) {
+        const token =
+          hivePersistedDocumentsToken ||
+          (loadedConfig.persistedDocuments &&
+            'token' in loadedConfig.persistedDocuments &&
+            loadedConfig.persistedDocuments.token);
+        if (!token) {
+          ctx.log.error(
+            `Hive persisted documents needs a CDN token. Please provide it through the "--hive-persisted-documents-token <token>" option or the config.`,
+          );
+          process.exit(1);
+        }
+        config.persistedDocuments = {
+          ...loadedConfig.persistedDocuments,
+          type: 'hive',
+          endpoint: hivePersistedDocumentsEndpoint,
+          token,
+        };
+      }
       if (maskedErrors != null) {
         // overwrite masked errors from loaded config only when provided
+        // @ts-expect-error maskedErrors is a boolean but incorrectly inferred
         config.maskedErrors = maskedErrors;
       }
       if (
@@ -229,8 +241,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       return runSupergraph(ctx, config);
     });
 
-export type SupergraphConfig = GatewayConfigSupergraph<unknown> &
-  GatewayCLIConfig;
+export type SupergraphConfig = GatewayConfigSupergraph & GatewayCLIConfig;
 
 export async function runSupergraph(
   { log }: CLIContext,
@@ -263,7 +274,7 @@ export async function runSupergraph(
     try {
       watcher = await import('@parcel/watcher');
     } catch (e) {
-      if (e.code !== 'MODULE_NOT_FOUND') {
+      if (Object(e).code !== 'MODULE_NOT_FOUND') {
         log.debug('Problem while importing @parcel/watcher', e);
       }
       log.warn(
@@ -288,9 +299,9 @@ export async function runSupergraph(
               )
             ) {
               log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
-              if (config.fork > 1) {
+              if (config.fork && config.fork > 1) {
                 for (const workerId in cluster.workers) {
-                  cluster.workers[workerId].send('invalidateUnifiedGraph');
+                  cluster.workers[workerId]!.send('invalidateUnifiedGraph');
                 }
               } else {
                 runtime.invalidateUnifiedGraph();

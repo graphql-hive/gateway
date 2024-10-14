@@ -73,8 +73,8 @@ export async function startServerForRuntime<
     log,
     host,
     port,
-    sslCredentials,
     maxHeaderSize,
+    ...(sslCredentials ? { sslCredentials } : {}),
   };
 
   const server = await startNodeHttpServer(runtime, serverOpts);

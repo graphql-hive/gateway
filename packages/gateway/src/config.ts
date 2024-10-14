@@ -5,10 +5,11 @@ import { pathToFileURL } from 'node:url';
 import type {
   GatewayConfig,
   GatewayConfigContext,
+  GatewayPlugin,
 } from '@graphql-mesh/serve-runtime';
 import type { KeyValueCache, Logger } from '@graphql-mesh/types';
-import type { GatewayCLIBuiltinPluginConfig } from './cli';
-import type { ServerConfig } from './server';
+import type { GatewayCLIBuiltinPluginConfig } from './cli.js';
+import type { ServerConfig } from './server.js';
 
 export const defaultConfigExtensions = [
   '.ts',
@@ -98,7 +99,7 @@ export async function loadConfig<
 export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: { cache: KeyValueCache },
-) {
+): Promise<GatewayPlugin[]> {
   const plugins = [];
   if (config.jwt) {
     const { useJWT } = await import('@graphql-mesh/plugin-jwt-auth');
@@ -123,8 +124,8 @@ export async function getBuiltinPluginsFromConfig(
     );
     plugins.push(
       useMeshRateLimit({
-        cache: ctx.cache,
         ...config.rateLimiting,
+        cache: ctx.cache,
       }),
     );
   }

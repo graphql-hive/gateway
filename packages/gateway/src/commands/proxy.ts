@@ -1,9 +1,9 @@
-import cluster, { type Worker } from 'node:cluster';
+import cluster from 'node:cluster';
 import {
   createGatewayRuntime,
   type GatewayConfigProxy,
 } from '@graphql-mesh/serve-runtime';
-import { isUrl, PubSub, registerTerminateHandler } from '@graphql-mesh/utils';
+import { isUrl, PubSub } from '@graphql-mesh/utils';
 import {
   defaultOptions,
   type AddCommand,
@@ -63,7 +63,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
 
       let schema: GatewayConfigProxy['schema'] | undefined;
-      const hiveCdnEndpointOpt = opts.schema || hiveCdnEndpoint;
+      const hiveCdnEndpointOpt =
+        // TODO: take schema from optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
+        this.opts().schema || hiveCdnEndpoint;
       if (hiveCdnEndpointOpt) {
         if (hiveCdnKey) {
           if (!isUrl(hiveCdnEndpointOpt)) {
@@ -79,7 +81,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
             key: hiveCdnKey,
           };
         } else {
-          schema = opts.schema;
+          // TODO: take schema from optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
+          schema = this.opts().schema;
         }
       } else if ('schema' in loadedConfig) {
         schema = loadedConfig.schema;
@@ -115,31 +118,14 @@ export const addCommand: AddCommand = (ctx, cli) =>
             }
           : {}),
         ...(polling ? { pollingInterval: polling } : {}),
-        ...(hivePersistedDocumentsEndpoint
-          ? {
-              persistedDocuments: {
-                type: 'hive',
-                endpoint:
-                  hivePersistedDocumentsEndpoint ||
-                  (loadedConfig.persistedDocuments &&
-                    'endpoint' in loadedConfig.persistedDocuments &&
-                    loadedConfig.persistedDocuments?.endpoint),
-                token:
-                  hivePersistedDocumentsToken ||
-                  (loadedConfig.persistedDocuments &&
-                    'token' in loadedConfig.persistedDocuments &&
-                    loadedConfig.persistedDocuments?.token),
-              },
-            }
-          : {}),
         proxy,
         schema,
         logging: loadedConfig.logging ?? ctx.log,
         productName: ctx.productName,
         productDescription: ctx.productDescription,
         productPackageName: ctx.productPackageName,
-        productLogo: ctx.productLogo,
         productLink: ctx.productLink,
+        ...(ctx.productLogo ? { productLogo: ctx.productLogo } : {}),
         pubsub,
         cache,
         plugins(ctx) {
@@ -147,8 +133,28 @@ export const addCommand: AddCommand = (ctx, cli) =>
           return [...builtinPlugins, ...userPlugins];
         },
       };
+      if (hivePersistedDocumentsEndpoint) {
+        const token =
+          hivePersistedDocumentsToken ||
+          (loadedConfig.persistedDocuments &&
+            'token' in loadedConfig.persistedDocuments &&
+            loadedConfig.persistedDocuments.token);
+        if (!token) {
+          ctx.log.error(
+            `Hive persisted documents needs a CDN token. Please provide it through the "--hive-persisted-documents-token <token>" option or the config.`,
+          );
+          process.exit(1);
+        }
+        config.persistedDocuments = {
+          ...loadedConfig.persistedDocuments,
+          type: 'hive',
+          endpoint: hivePersistedDocumentsEndpoint,
+          token,
+        };
+      }
       if (maskedErrors != null) {
         // overwrite masked errors from loaded config only when provided
+        // @ts-expect-error maskedErrors is a boolean but incorrectly inferred
         config.maskedErrors = maskedErrors;
       }
       if (
@@ -163,7 +169,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       return runProxy(ctx, config);
     });
 
-export type ProxyConfig = GatewayConfigProxy<unknown> & GatewayCLIConfig;
+export type ProxyConfig = GatewayConfigProxy & GatewayCLIConfig;
 
 export async function runProxy({ log }: CLIContext, config: ProxyConfig) {
   if (handleFork(log, config)) {

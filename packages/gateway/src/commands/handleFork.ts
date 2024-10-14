@@ -3,7 +3,7 @@ import type { Logger } from '@graphql-mesh/types';
 import { registerTerminateHandler } from '@graphql-mesh/utils';
 
 export function handleFork(log: Logger, config: { fork?: number }): boolean {
-  if (cluster.isPrimary && config.fork > 1) {
+  if (cluster.isPrimary && config.fork && config.fork > 1) {
     const workers = new Set<Worker>();
     let expectedToExit = false;
     log.debug(`Forking ${config.fork} workers`);

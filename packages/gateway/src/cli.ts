@@ -265,7 +265,7 @@ let cli = new Command()
   )
   .option(
     '--hive-persisted-documents-token <token>',
-    '[EXPERIMENTAL] Hive persisted documents CDN endpoint. requires the "--hive-persisted-documents-endpoint <endpoint>" option',
+    '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. requires the "--hive-persisted-documents-endpoint <endpoint>" option',
   )
   .addOption(
     new Option(
@@ -299,9 +299,7 @@ export async function run(userCtx: Partial<CLIContext>) {
       // @ts-ignore bob will complain when bundling for cjs
       import.meta.url,
     data: {
-      packedDepsPath:
-        // WILL BE AVAILABLE IN SEA ENVIRONMENTS (see install-sea-packed-deps.cjs and rollup.binary.config.js)
-        globalThis.__PACKED_DEPS_PATH__ || '',
+      packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
     } satisfies InitializeData,
   });
 
