@@ -1,0 +1,79 @@
+{
+  "name": "@graphql-hive/gatway",
+  "version": "1.0.9",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/gateway"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": "./dist/bin.js",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "start": "tsx src/bin.ts"
+  },
+  "peerDependencies": {
+    "@parcel/watcher": "^2.1.0",
+    "graphql": "^16.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@parcel/watcher": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "^12.1.0",
+    "@graphql-mesh/cache-cfw-kv": "^0.102.6",
+    "@graphql-mesh/cache-localforage": "^0.102.6",
+    "@graphql-mesh/cache-redis": "^0.102.6",
+    "@graphql-mesh/cross-helpers": "^0.4.6",
+    "@graphql-mesh/hmac-upstream-signature": "^1.0.5",
+    "@graphql-mesh/include": "^0.2.2",
+    "@graphql-mesh/plugin-deduplicate-request": "^0.102.6",
+    "@graphql-mesh/plugin-http-cache": "^0.102.6",
+    "@graphql-mesh/plugin-jwt-auth": "^1.0.5",
+    "@graphql-mesh/plugin-mock": "^0.102.7",
+    "@graphql-mesh/plugin-opentelemetry": "^1.0.5",
+    "@graphql-mesh/plugin-prometheus": "^1.0.5",
+    "@graphql-mesh/plugin-rate-limit": "^0.102.6",
+    "@graphql-mesh/plugin-snapshot": "^0.102.6",
+    "@graphql-mesh/serve-runtime": "^1.0.5",
+    "@graphql-mesh/transport-http-callback": "^0.4.1",
+    "@graphql-mesh/transport-ws": "^0.3.7",
+    "@graphql-mesh/types": "^0.102.6",
+    "@graphql-mesh/utils": "^0.102.6",
+    "@graphql-tools/utils": "^10.5.3",
+    "commander": "^12.0.0",
+    "dotenv": "^16.3.1",
+    "parse-duration": "^1.1.0"
+  },
+  "devDependencies": {
+    "@parcel/watcher": "^2.3.0",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-sucrase": "^5.0.2",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/adm-zip": "^0.5.5",
+    "adm-zip": "^0.5.15",
+    "postject": "^1.0.0-alpha.6",
+    "rollup": "^4.18.1",
+    "rollup-plugin-tsconfig-paths": "^1.5.2",
+    "tsx": "^4.16.5"
+  },
+  "sideEffects": false
+}

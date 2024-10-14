@@ -1,0 +1,10 @@
+{
+  "extends": ["@tsconfig/strictest/tsconfig.json"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "composite": true,
+    "noEmit": false, // we must emit to type check all packages
+    "emitDeclarationOnly": true
+  },
+  "include": []
+}

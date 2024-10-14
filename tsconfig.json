@@ -1,0 +1,4 @@
+{
+  "references": [{ "path": "packages/gateway" }],
+  "include": []
+}

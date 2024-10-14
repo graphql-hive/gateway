@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - format
+          - type
+    name: Check ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - name: Install
+        run: yarn install
+      - name: Check
+        run: yarn check:${{ matrix.check }}
