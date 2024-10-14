@@ -6,6 +6,7 @@
   ],
   "packageManager": "yarn@4.5.0",
   "scripts": {
+    "build": "yarn workspaces foreach -A -p run build",
     "check:format": "prettier --check .",
     "check:type": "yarn tsc -b",
     "format": "yarn check:format --write"

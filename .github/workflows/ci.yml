@@ -29,3 +29,18 @@ jobs:
         run: yarn install
       - name: Check
         run: yarn check:${{ matrix.check }}
+
+  build: # making sure build works so it doesn't fail on us during release
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Install
+        run: yarn install
+      - name: Build
+        run: yarn build
