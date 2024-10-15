@@ -5,7 +5,7 @@ import type {
 import { getOnSubgraphExecute } from '@graphql-mesh/fusion-runtime';
 import type { Executor } from '@graphql-tools/utils';
 import type { GraphQLSchema } from 'graphql';
-import type { GatewayConfigContext, GatewayConfigProxy } from './types.js';
+import type { GatewayConfigContext, GatewayConfigProxy } from './types';
 
 export function getProxyExecutor<TContext extends Record<string, any>>({
   config,

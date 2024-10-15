@@ -1,7 +1,16 @@
 {
-  "references": [
-    { "path": "packages/gateway" },
-    { "path": "packages/runtime" }
-  ],
-  "include": []
+  "extends": ["@tsconfig/strictest/tsconfig.json"],
+  "compilerOptions": {
+    // tsc only for type checking
+    "noEmit": true,
+    // pkgroll will take care of building, we use the most modern JS while coding
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    // packages
+    "paths": {
+      "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"]
+    }
+  },
+  "include": ["packages/**/src", "packages/**/scripts"]
 }

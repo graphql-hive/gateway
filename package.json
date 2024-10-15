@@ -8,7 +8,7 @@
   "scripts": {
     "build": "yarn workspaces foreach -A -p run build",
     "check:format": "prettier --check .",
-    "check:type": "yarn tsc -b",
+    "check:type": "yarn tsc",
     "format": "yarn check:format --write"
   },
   "devDependencies": {

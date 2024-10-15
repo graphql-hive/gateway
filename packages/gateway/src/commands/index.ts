@@ -1,7 +1,7 @@
-import type { AddCommand } from '../cli.js';
-import { addCommand as addProxyCommand } from './proxy.js';
-import { addCommand as addSubgraphCommand } from './subgraph.js';
-import { addCommand as addSupergraphCommand } from './supergraph.js';
+import type { AddCommand } from '../cli';
+import { addCommand as addProxyCommand } from './proxy';
+import { addCommand as addSubgraphCommand } from './subgraph';
+import { addCommand as addSupergraphCommand } from './supergraph';
 
 export const addCommands: AddCommand = (ctx, cli) => {
   addSupergraphCommand(ctx, cli);

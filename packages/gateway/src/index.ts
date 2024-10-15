@@ -1,5 +1,5 @@
-export * from './cli.js';
-export * from '@graphql-mesh/serve-runtime';
+export * from './cli';
+export * from '@graphql-hive/gateway-runtime';
 export { PubSub } from '@graphql-mesh/utils';
 export * from '@graphql-mesh/plugin-jwt-auth';
 export * from '@graphql-mesh/plugin-opentelemetry';

@@ -13,7 +13,7 @@ import {
 } from '@graphql-tools/utils';
 import type { DocumentNode, GraphQLSchema } from 'graphql';
 import { buildASTSchema, isSchema, parse, print } from 'graphql';
-import type { GatewayConfigContext } from './types.js';
+import type { GatewayConfigContext } from './types';
 
 export type UnifiedGraphSchema = GraphQLSchema | DocumentNode | string;
 

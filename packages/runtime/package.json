@@ -11,7 +11,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "bin": "./dist/bin.js",
   "main": "./dist/index.js",
   "exports": {
     ".": {
@@ -74,7 +73,8 @@
   "devDependencies": {
     "@envelop/disable-introspection": "6.0.0",
     "graphql-sse": "^2.5.3",
-    "html-minifier-terser": "7.2.0"
+    "html-minifier-terser": "7.2.0",
+    "pkgroll": "^2.5.0"
   },
   "sideEffects": false
 }

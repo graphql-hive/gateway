@@ -2,7 +2,7 @@ import cluster from 'node:cluster';
 import {
   createGatewayRuntime,
   type GatewayConfigProxy,
-} from '@graphql-mesh/serve-runtime';
+} from '@graphql-hive/gateway-runtime';
 import { isUrl, PubSub } from '@graphql-mesh/utils';
 import {
   defaultOptions,
@@ -10,14 +10,14 @@ import {
   type CLIContext,
   type CLIGlobals,
   type GatewayCLIConfig,
-} from '../cli.js';
+} from '../cli';
 import {
   getBuiltinPluginsFromConfig,
   getCacheInstanceFromConfig,
   loadConfig,
-} from '../config.js';
-import { startServerForRuntime } from '../server.js';
-import { handleFork } from './handleFork.js';
+} from '../config';
+import { startServerForRuntime } from '../server';
+import { handleFork } from './handleFork';
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli

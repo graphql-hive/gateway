@@ -1,4 +1,4 @@
-import type { GatewayPlugin } from '../types.js';
+import type { GatewayPlugin } from '../types';
 
 export function useUpstreamCancel(): GatewayPlugin {
   return {

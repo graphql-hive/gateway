@@ -4,7 +4,7 @@ import type {
   GatewayConfig,
   GatewayConfigContext,
   GatewayPlugin,
-} from './types.js';
+} from './types';
 
 export function getReportingPlugin<TContext extends Record<string, any>>(
   config: GatewayConfig<TContext>,

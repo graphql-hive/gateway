@@ -66,25 +66,25 @@ import {
   type YogaServerInstance,
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
-import { getProxyExecutor } from './getProxyExecutor.js';
-import { getReportingPlugin } from './getReportingPlugin.js';
+import { getProxyExecutor } from './getProxyExecutor';
+import { getReportingPlugin } from './getReportingPlugin';
 import {
   getUnifiedGraphSDL,
   handleUnifiedGraphConfig,
-} from './handleUnifiedGraphConfig.js';
-import landingPageHtml from './landing-page-html.js';
-import { useChangingSchema } from './plugins/useChangingSchema.js';
-import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscriptionsOnDispose.js';
-import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange.js';
-import { useContentEncoding } from './plugins/useContentEncoding.js';
-import { useCustomAgent } from './plugins/useCustomAgent.js';
-import { useFetchDebug } from './plugins/useFetchDebug.js';
-import { usePropagateHeaders } from './plugins/usePropagateHeaders.js';
-import { useRequestId } from './plugins/useRequestId.js';
-import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug.js';
-import { useUpstreamCancel } from './plugins/useUpstreamCancel.js';
-import { useWebhooks } from './plugins/useWebhooks.js';
-import { defaultProductLogo } from './productLogo.js';
+} from './handleUnifiedGraphConfig';
+import landingPageHtml from './landing-page-html';
+import { useChangingSchema } from './plugins/useChangingSchema';
+import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscriptionsOnDispose';
+import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange';
+import { useContentEncoding } from './plugins/useContentEncoding';
+import { useCustomAgent } from './plugins/useCustomAgent';
+import { useFetchDebug } from './plugins/useFetchDebug';
+import { usePropagateHeaders } from './plugins/usePropagateHeaders';
+import { useRequestId } from './plugins/useRequestId';
+import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
+import { useUpstreamCancel } from './plugins/useUpstreamCancel';
+import { useWebhooks } from './plugins/useWebhooks';
+import { defaultProductLogo } from './productLogo';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -92,8 +92,8 @@ import type {
   GatewayHiveCDNOptions,
   GatewayPlugin,
   UnifiedGraphConfig,
-} from './types.js';
-import { checkIfDataSatisfiesSelectionSet, defaultQueryText } from './utils.js';
+} from './types';
+import { checkIfDataSatisfiesSelectionSet, defaultQueryText } from './utils';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path

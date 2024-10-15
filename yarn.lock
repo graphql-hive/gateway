@@ -621,7 +621,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/gateway-runtime@workspace:packages/runtime":
+"@graphql-hive/gateway-runtime@npm:^0.0.0, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
   dependencies:
@@ -653,6 +653,7 @@ __metadata:
     graphql-sse: "npm:^2.5.3"
     graphql-yoga: "npm:^5.7.0"
     html-minifier-terser: "npm:7.2.0"
+    pkgroll: "npm:^2.5.0"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
     graphql: ^16.9.0
@@ -669,6 +670,7 @@ __metadata:
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
     "@commander-js/extra-typings": "npm:^12.1.0"
+    "@graphql-hive/gateway-runtime": "npm:^0.0.0"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.102.6"
     "@graphql-mesh/cache-localforage": "npm:^0.102.6"
     "@graphql-mesh/cache-redis": "npm:^0.102.6"
@@ -683,7 +685,6 @@ __metadata:
     "@graphql-mesh/plugin-prometheus": "npm:^1.1.0"
     "@graphql-mesh/plugin-rate-limit": "npm:^0.102.6"
     "@graphql-mesh/plugin-snapshot": "npm:^0.102.6"
-    "@graphql-mesh/serve-runtime": "npm:^1.1.0"
     "@graphql-mesh/transport-http-callback": "npm:^0.4.1"
     "@graphql-mesh/transport-ws": "npm:^0.3.7"
     "@graphql-mesh/types": "npm:^0.102.6"

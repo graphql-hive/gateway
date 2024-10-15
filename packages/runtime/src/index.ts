@@ -1,9 +1,9 @@
-export * from './createGatewayRuntime.js';
-export type * from './types.js';
-export * from './plugins/useCustomFetch.js';
-export * from './plugins/useStaticFiles.js';
-export * from './getProxyExecutor.js';
-export * from './plugins/usePropagateHeaders.js';
+export * from './createGatewayRuntime';
+export type * from './types';
+export * from './plugins/useCustomFetch';
+export * from './plugins/useStaticFiles';
+export * from './getProxyExecutor';
+export * from './plugins/usePropagateHeaders';
 export * from '@whatwg-node/disposablestack';
 export type { ResolveUserFn, ValidateUserFn } from '@envelop/generic-auth';
 export * from '@graphql-mesh/hmac-upstream-signature';

@@ -2,10 +2,10 @@ import { promises as fsPromises } from 'node:fs';
 import { createServer as createHTTPServer, type Server } from 'node:http';
 import { createServer as createHTTPSServer } from 'node:https';
 import type { SecureContextOptions } from 'node:tls';
-import type { GatewayRuntime } from '@graphql-mesh/serve-runtime';
+import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-mesh/types';
 import { createAsyncDisposable, getTerminateStack } from '@graphql-mesh/utils';
-import { defaultOptions } from './cli.js';
+import { defaultOptions } from './cli';
 
 export interface ServerConfig {
   /**

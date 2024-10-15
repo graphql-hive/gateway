@@ -9,23 +9,23 @@ import {
   InvalidArgumentError,
   Option,
 } from '@commander-js/extra-typings';
-import type { InitializeData } from '@graphql-mesh/include/hooks';
-import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
-import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
-import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import type useMeshRateLimit from '@graphql-mesh/plugin-rate-limit';
 import type {
   GatewayConfigContext,
   GatewayConfigProxy,
   GatewayConfigSubgraph,
   GatewayConfigSupergraph,
-} from '@graphql-mesh/serve-runtime';
+} from '@graphql-hive/gateway-runtime';
+import type { InitializeData } from '@graphql-mesh/include/hooks';
+import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
+import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
+import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
+import useMeshRateLimit from '@graphql-mesh/plugin-rate-limit';
 import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
 import { DefaultLogger } from '@graphql-mesh/utils';
 import parseDuration from 'parse-duration';
-import { addCommands } from './commands/index.js';
-import { createDefaultConfigPaths } from './config.js';
-import type { ServerConfig } from './server.js';
+import { addCommands } from './commands/index';
+import { createDefaultConfigPaths } from './config';
+import type { ServerConfig } from './server';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig

@@ -30,10 +30,10 @@ import type {
   Plugin as YogaPlugin,
   YogaServerOptions,
 } from 'graphql-yoga';
-import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig.js';
-import type { UseContentEncodingOpts } from './plugins/useContentEncoding.js';
-import type { AgentFactory } from './plugins/useCustomAgent.js';
-import { PropagateHeadersOpts } from './plugins/usePropagateHeaders.js';
+import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
+import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
+import type { AgentFactory } from './plugins/useCustomAgent';
+import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 
 export type { UnifiedGraphConfig };
 
