@@ -311,7 +311,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/disable-introspection@npm:^6.0.0":
+"@envelop/disable-introspection@npm:6.0.0, @envelop/disable-introspection@npm:^6.0.0":
   version: 6.0.0
   resolution: "@envelop/disable-introspection@npm:6.0.0"
   dependencies:
@@ -620,6 +620,49 @@ __metadata:
   checksum: 10c0/0f8c0582e1e3b87fdc6d74e3ca0d45dd765a792266d1b011706e8d1ede396e6b2268254f9e59c9d0ba124948e5a324f67efac8d18e3a47fc5e0364fe12dba438
   languageName: node
   linkType: hard
+
+"@graphql-hive/gateway-runtime@workspace:packages/runtime":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
+  dependencies:
+    "@envelop/core": "npm:^5.0.0"
+    "@envelop/disable-introspection": "npm:6.0.0"
+    "@envelop/generic-auth": "npm:^8.0.0"
+    "@graphql-hive/core": "npm:^0.8.1"
+    "@graphql-mesh/cross-helpers": "npm:^0.4.6"
+    "@graphql-mesh/fusion-runtime": "npm:^0.9.0"
+    "@graphql-mesh/hmac-upstream-signature": "npm:^1.1.0"
+    "@graphql-mesh/plugin-hive": "npm:^0.102.8"
+    "@graphql-mesh/plugin-response-cache": "npm:^0.102.6"
+    "@graphql-mesh/transport-common": "npm:^0.7.7"
+    "@graphql-mesh/transport-http": "npm:^0.6.7"
+    "@graphql-mesh/utils": "npm:^0.102.6"
+    "@graphql-tools/batch-delegate": "npm:^9.0.3"
+    "@graphql-tools/delegate": "npm:^10.0.21"
+    "@graphql-tools/executor-http": "npm:^1.1.5"
+    "@graphql-tools/federation": "npm:^2.2.10"
+    "@graphql-tools/stitch": "npm:^9.2.10"
+    "@graphql-tools/utils": "npm:^10.5.3"
+    "@graphql-tools/wrap": "npm:^10.0.5"
+    "@graphql-yoga/plugin-apollo-usage-report": "npm:^0.1.0"
+    "@graphql-yoga/plugin-csrf-prevention": "npm:^3.7.0"
+    "@graphql-yoga/plugin-defer-stream": "npm:^3.7.0"
+    "@graphql-yoga/plugin-persisted-operations": "npm:^3.7.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
+    "@whatwg-node/server": "npm:^0.9.46"
+    graphql-sse: "npm:^2.5.3"
+    graphql-yoga: "npm:^5.7.0"
+    html-minifier-terser: "npm:7.2.0"
+  peerDependencies:
+    "@parcel/watcher": ^2.1.0
+    graphql: ^16.9.0
+  peerDependenciesMeta:
+    "@parcel/watcher":
+      optional: true
+  bin:
+    gateway-runtime: ./dist/bin.js
+  languageName: unknown
+  linkType: soft
 
 "@graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
@@ -1628,6 +1671,16 @@ __metadata:
   version: 1.2.1
   resolution: "@jridgewell/set-array@npm:1.2.1"
   checksum: 10c0/2a5aa7b4b5c3464c895c802d8ae3f3d2b92fcbe84ad12f8d0bfbb1f5ad006717e7577ee1fd2eac00c088abe486c7adb27976f45d2941ff6b0b92b2c3302c60f4
+  languageName: node
+  linkType: hard
+
+"@jridgewell/source-map@npm:^0.3.3":
+  version: 0.3.6
+  resolution: "@jridgewell/source-map@npm:0.3.6"
+  dependencies:
+    "@jridgewell/gen-mapping": "npm:^0.3.5"
+    "@jridgewell/trace-mapping": "npm:^0.3.25"
+  checksum: 10c0/6a4ecc713ed246ff8e5bdcc1ef7c49aaa93f7463d948ba5054dda18b02dcc6a055e2828c577bcceee058f302ce1fc95595713d44f5c45e43d459f88d267f2f04
   languageName: node
   linkType: hard
 
@@ -3989,6 +4042,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"buffer-from@npm:^1.0.0":
+  version: 1.1.2
+  resolution: "buffer-from@npm:1.1.2"
+  checksum: 10c0/124fff9d66d691a86d3b062eff4663fe437a9d9ee4b47b1b9e97f5a5d14f6d5399345db80f796827be7c95e70a8e765dd404b7c3ff3b3324f98e9b0c8826cc34
+  languageName: node
+  linkType: hard
+
 "busboy@npm:^1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
@@ -4104,6 +4164,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"clean-css@npm:~5.3.2":
+  version: 5.3.3
+  resolution: "clean-css@npm:5.3.3"
+  dependencies:
+    source-map: "npm:~0.6.0"
+  checksum: 10c0/381de7523e23f3762eb180e327dcc0cedafaf8cb1cd8c26b7cc1fc56e0829a92e734729c4f955394d65ed72fb62f82d8baf78af34b33b8a7d41ebad2accdd6fb
+  languageName: node
+  linkType: hard
+
 "clean-stack@npm:^2.0.0":
   version: 2.2.0
   resolution: "clean-stack@npm:2.2.0"
@@ -4161,10 +4230,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^10.0.0":
+  version: 10.0.1
+  resolution: "commander@npm:10.0.1"
+  checksum: 10c0/53f33d8927758a911094adadda4b2cbac111a5b377d8706700587650fd8f45b0bbe336de4b5c3fe47fd61f420a3d9bd452b6e0e6e5600a7e74d7bf0174f6efe3
+  languageName: node
+  linkType: hard
+
 "commander@npm:^12.0.0":
   version: 12.1.0
   resolution: "commander@npm:12.1.0"
   checksum: 10c0/6e1996680c083b3b897bfc1cfe1c58dfbcd9842fd43e1aaf8a795fbc237f65efcc860a3ef457b318e73f29a4f4a28f6403c3d653d021d960e4632dd45bde54a9
+  languageName: node
+  linkType: hard
+
+"commander@npm:^2.20.0":
+  version: 2.20.3
+  resolution: "commander@npm:2.20.3"
+  checksum: 10c0/74c781a5248c2402a0a3e966a0a2bba3c054aad144f5c023364be83265e796b20565aa9feff624132ff629aa64e16999fa40a743c10c12f7c61e96a794b99288
   languageName: node
   linkType: hard
 
@@ -4354,6 +4437,13 @@ __metadata:
   dependencies:
     iconv-lite: "npm:^0.6.2"
   checksum: 10c0/36d938712ff00fe1f4bac88b43bcffb5930c1efa57bbcdca9d67e1d9d6c57cfb1200fb01efe0f3109b2ce99b231f90779532814a81370a1bd3274a0f58585039
+  languageName: node
+  linkType: hard
+
+"entities@npm:^4.4.0":
+  version: 4.5.0
+  resolution: "entities@npm:4.5.0"
+  checksum: 10c0/5b039739f7621f5d1ad996715e53d964035f75ad3b9a4d38c6b3804bb226e282ffeae2443624d8fdd9c47d8e926ae9ac009c54671243f0c3294c26af7cc85250
   languageName: node
   linkType: hard
 
@@ -4686,6 +4776,7 @@ __metadata:
   dependencies:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
+    graphql: "npm:^16.9.0"
     prettier: "npm:^3.3.3"
     prettier-plugin-pkg: "npm:^0.18.1"
     prettier-plugin-sh: "npm:^0.14.0"
@@ -4856,6 +4947,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"graphql-sse@npm:^2.5.3":
+  version: 2.5.3
+  resolution: "graphql-sse@npm:2.5.3"
+  peerDependencies:
+    graphql: ">=0.11 <=16"
+  checksum: 10c0/b556564aaddd8dfcc4e7fd25da37cfe95dbf5e100fca287b1b15ab6874a772fda96088b66e7d02739076fb769d60279c17afe54d5ab196eeca67972247c6c73e
+  languageName: node
+  linkType: hard
+
 "graphql-tag@npm:^2.12.6":
   version: 2.12.6
   resolution: "graphql-tag@npm:2.12.6"
@@ -4894,6 +4994,13 @@ __metadata:
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
   checksum: 10c0/dc7524bd076bf336ca671a40a9765cf5ec66c0c6feda658bcd817966814010c849a7fa5b49ffdc3121ad9887b9791a460bf51ebdab3d0c7d2b9d5038230c6328
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.9.0":
+  version: 16.9.0
+  resolution: "graphql@npm:16.9.0"
+  checksum: 10c0/a8850f077ff767377237d1f8b1da2ec70aeb7623cdf1dfc9e1c7ae93accc0c8149c85abe68923be9871a2934b1bce5a2496f846d4d56e1cfb03eaaa7ddba9b6a
   languageName: node
   linkType: hard
 
@@ -4952,6 +5059,23 @@ __metadata:
   dependencies:
     react-is: "npm:^16.7.0"
   checksum: 10c0/fe0889169e845d738b59b64badf5e55fa3cf20454f9203d1eb088df322d49d4318df774828e789898dcb280e8a5521bb59b3203385662ca5e9218a6ca5820e74
+  languageName: node
+  linkType: hard
+
+"html-minifier-terser@npm:7.2.0":
+  version: 7.2.0
+  resolution: "html-minifier-terser@npm:7.2.0"
+  dependencies:
+    camel-case: "npm:^4.1.2"
+    clean-css: "npm:~5.3.2"
+    commander: "npm:^10.0.0"
+    entities: "npm:^4.4.0"
+    param-case: "npm:^3.0.4"
+    relateurl: "npm:^0.2.7"
+    terser: "npm:^5.15.1"
+  bin:
+    html-minifier-terser: cli.js
+  checksum: 10c0/ffc97c17299d9ec30e17269781b816ea2fc411a9206fc9e768be8f2decb1ea1470892809babb23bb4e3ab1f64d606d97e1803bf526ae3af71edc0fd3070b94b9
   languageName: node
   linkType: hard
 
@@ -6315,6 +6439,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"relateurl@npm:^0.2.7":
+  version: 0.2.7
+  resolution: "relateurl@npm:0.2.7"
+  checksum: 10c0/c248b4e3b32474f116a804b537fa6343d731b80056fb506dffd91e737eef4cac6be47a65aae39b522b0db9d0b1011d1a12e288d82a109ecd94a5299d82f6573a
+  languageName: node
+  linkType: hard
+
 "require-directory@npm:^2.1.1":
   version: 2.1.1
   resolution: "require-directory@npm:2.1.1"
@@ -6609,6 +6740,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"source-map-support@npm:~0.5.20":
+  version: 0.5.21
+  resolution: "source-map-support@npm:0.5.21"
+  dependencies:
+    buffer-from: "npm:^1.0.0"
+    source-map: "npm:^0.6.0"
+  checksum: 10c0/9ee09942f415e0f721d6daad3917ec1516af746a8120bba7bb56278707a37f1eb8642bde456e98454b8a885023af81a16e646869975f06afc1a711fb90484e7d
+  languageName: node
+  linkType: hard
+
+"source-map@npm:^0.6.0, source-map@npm:~0.6.0":
+  version: 0.6.1
+  resolution: "source-map@npm:0.6.1"
+  checksum: 10c0/ab55398007c5e5532957cb0beee2368529618ac0ab372d789806f5718123cc4367d57de3904b4e6a4170eb5a0b0f41373066d02ca0735a0c4d75c7d328d3e011
+  languageName: node
+  linkType: hard
+
 "sprintf-js@npm:^1.1.1, sprintf-js@npm:^1.1.3":
   version: 1.1.3
   resolution: "sprintf-js@npm:1.1.3"
@@ -6740,6 +6888,20 @@ __metadata:
   dependencies:
     bintrees: "npm:1.0.2"
   checksum: 10c0/10187b8144b112fcdfd3a5e4e9068efa42c990b1e30cd0d4f35ee8f58f16d1b41bc587e668fa7a6f6ca31308961cbd06cd5d4a4ae1dc388335902ae04f7d57df
+  languageName: node
+  linkType: hard
+
+"terser@npm:^5.15.1":
+  version: 5.34.1
+  resolution: "terser@npm:5.34.1"
+  dependencies:
+    "@jridgewell/source-map": "npm:^0.3.3"
+    acorn: "npm:^8.8.2"
+    commander: "npm:^2.20.0"
+    source-map-support: "npm:~0.5.20"
+  bin:
+    terser: bin/terser
+  checksum: 10c0/51c7d704c5c4ae88bf937124112c9972aed4e1fd29d805cc2d86e0f54cd631ecd4e69db5bb3c1e3b450c741c86e2313328bea0fde925329e8a31a07a7941723c
   languageName: node
   linkType: hard
 

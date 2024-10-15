@@ -98,7 +98,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
             type: 'graphos',
             apiKey: apolloKey,
             graphRef: schemaPathOrUrl,
-            upLink: apolloUplink,
+            ...(apolloUplink ? { upLink: apolloUplink } : {}),
           };
         } else {
           supergraph = schemaPathOrUrl;

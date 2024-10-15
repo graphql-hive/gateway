@@ -1,4 +1,7 @@
 {
-  "references": [{ "path": "packages/gateway" }],
+  "references": [
+    { "path": "packages/gateway" },
+    { "path": "packages/runtime" }
+  ],
   "include": []
 }

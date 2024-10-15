@@ -1,0 +1,80 @@
+{
+  "name": "@graphql-hive/gateway-runtime",
+  "version": "0.0.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/runtime"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": "./dist/bin.js",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "generate-landing-page": "tsx scripts/generate-landing-page.ts"
+  },
+  "peerDependencies": {
+    "@parcel/watcher": "^2.1.0",
+    "graphql": "^16.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@parcel/watcher": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@envelop/core": "^5.0.0",
+    "@envelop/disable-introspection": "^6.0.0",
+    "@envelop/generic-auth": "^8.0.0",
+    "@graphql-hive/core": "^0.8.1",
+    "@graphql-mesh/cross-helpers": "^0.4.6",
+    "@graphql-mesh/fusion-runtime": "^0.9.0",
+    "@graphql-mesh/hmac-upstream-signature": "^1.1.0",
+    "@graphql-mesh/plugin-hive": "^0.102.8",
+    "@graphql-mesh/plugin-response-cache": "^0.102.6",
+    "@graphql-mesh/transport-common": "^0.7.7",
+    "@graphql-mesh/transport-http": "^0.6.7",
+    "@graphql-mesh/utils": "^0.102.6",
+    "@graphql-tools/batch-delegate": "^9.0.3",
+    "@graphql-tools/delegate": "^10.0.21",
+    "@graphql-tools/executor-http": "^1.1.5",
+    "@graphql-tools/federation": "^2.2.10",
+    "@graphql-tools/stitch": "^9.2.10",
+    "@graphql-tools/utils": "^10.5.3",
+    "@graphql-tools/wrap": "^10.0.5",
+    "@graphql-yoga/plugin-apollo-usage-report": "^0.1.0",
+    "@graphql-yoga/plugin-csrf-prevention": "^3.7.0",
+    "@graphql-yoga/plugin-defer-stream": "^3.7.0",
+    "@graphql-yoga/plugin-persisted-operations": "^3.7.0",
+    "@whatwg-node/disposablestack": "^0.0.5",
+    "@whatwg-node/server": "^0.9.46",
+    "graphql-yoga": "^5.7.0"
+  },
+  "devDependencies": {
+    "@envelop/disable-introspection": "6.0.0",
+    "graphql-sse": "^2.5.3",
+    "html-minifier-terser": "7.2.0"
+  },
+  "sideEffects": false
+}

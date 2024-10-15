@@ -119,7 +119,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           : {}),
         ...(polling ? { pollingInterval: polling } : {}),
         proxy,
-        schema,
+        ...(schema ? { schema } : {}),
         logging: loadedConfig.logging ?? ctx.log,
         productName: ctx.productName,
         productDescription: ctx.productDescription,
