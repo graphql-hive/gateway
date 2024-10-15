@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import type { Logger, MeshPubSub } from '@graphql-mesh/types';
 import type { Plugin } from 'graphql-yoga';
 

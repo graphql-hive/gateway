@@ -269,7 +269,6 @@ export async function runSupergraph(
   }
 
   if (absSchemaPath && cluster.isPrimary) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     let watcher: typeof import('@parcel/watcher') | undefined;
     try {
       watcher = await import('@parcel/watcher');

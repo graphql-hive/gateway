@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { lstat } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { pathToFileURL } from 'node:url';

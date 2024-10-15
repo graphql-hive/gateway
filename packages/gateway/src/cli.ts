@@ -295,7 +295,6 @@ let cli = new Command()
 export async function run(userCtx: Partial<CLIContext>) {
   module.register('@graphql-mesh/include/hooks', {
     parentURL:
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore bob will complain when bundling for cjs
       import.meta.url,
     data: {

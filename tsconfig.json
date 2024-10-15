@@ -12,5 +12,5 @@
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"]
     }
   },
-  "include": ["packages/**/src", "packages/**/scripts"]
+  "include": ["eslint.config.js", "packages/**/src", "packages/**/scripts"]
 }

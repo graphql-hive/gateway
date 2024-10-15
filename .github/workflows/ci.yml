@@ -16,6 +16,7 @@ jobs:
         check:
           - format
           - type
+          - lint
     name: Check ${{ matrix.check }}
     runs-on: ubuntu-latest
     steps:

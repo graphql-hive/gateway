@@ -31,9 +31,7 @@ export function useCompleteSubscriptionsOnSchemaChange(): GatewayPlugin {
                   }
                   activeSubs.push(complete);
 
-                  // eslint-disable-next-line @typescript-eslint/no-floating-promises
                   stop.then(() => {
-                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     result.return?.();
                     activeSubs.splice(activeSubs.indexOf(complete), 1);
                   });

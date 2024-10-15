@@ -22,7 +22,6 @@ export function useCompleteSubscriptionsOnDispose(
             // If shutdown has already been initiated, return an error immediately
             if (disposableStack.disposed) {
               // Complete the subscription immediately
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
               result.return?.();
               setResult({
                 errors: [createShutdownError()],
@@ -32,7 +31,6 @@ export function useCompleteSubscriptionsOnDispose(
               Repeater.race([
                 result,
                 new Repeater<never>((_push, stop) => {
-                  // eslint-disable-next-line @typescript-eslint/no-floating-promises
                   stop.then(() => result.return?.());
                   // If shutdown has already been initiated, complete the subscription immediately
                   if (disposableStack.disposed) {

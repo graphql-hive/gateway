@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { fs, path } from '@graphql-mesh/cross-helpers';
 import { pathExists } from '@graphql-mesh/utils';
 import type { Plugin } from 'graphql-yoga';

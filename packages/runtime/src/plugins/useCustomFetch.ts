@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import type { MeshFetch } from '@graphql-mesh/types';
 import type { GatewayPlugin } from '../types';
 
