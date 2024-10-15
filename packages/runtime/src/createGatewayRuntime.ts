@@ -388,10 +388,9 @@ export function createGatewayRuntime<
           unifiedGraph = newUnifiedGraph;
           unifiedGraph = restoreExtraDirectives(unifiedGraph);
           subschemaConfig = {
-            name: getDirectiveExtensions(
-              // @ts-expect-error TODO: fix the unifiedGraph typings
-              unifiedGraph,
-            )?.['transport']?.[0]?.['subgraph'],
+            name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
+              'subgraph'
+            ],
             schema: unifiedGraph,
           };
           const transportEntryMap: Record<string, TransportEntry> = {};
