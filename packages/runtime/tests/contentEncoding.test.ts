@@ -67,7 +67,10 @@ describe('contentEncoding', () => {
       subgraphs: ['subgraph'],
     },
     plugins: () => [
-      useCustomFetch(subgraphServer.fetch),
+      useCustomFetch(
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        subgraphServer.fetch,
+      ),
       {
         onFetch() {
           return onFetchDoneSpy;

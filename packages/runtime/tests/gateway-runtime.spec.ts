@@ -34,7 +34,12 @@ describe('Gateway Runtime', () => {
         ]);
       },
       pollingInterval: 10000,
-      plugins: () => [useCustomFetch(upstreamFetch)],
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          upstreamFetch,
+        ),
+      ],
     });
   }
   function createUpstreamSchema() {
@@ -74,7 +79,12 @@ describe('Gateway Runtime', () => {
       proxy: {
         endpoint: 'http://localhost:4000/graphql',
       },
-      plugins: () => [useCustomFetch(upstreamFetch)],
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          upstreamFetch,
+        ),
+      ],
     }),
     supergraphAPI: createSupergraphRuntime(),
   };

@@ -52,7 +52,12 @@ describe('Subscriptions', () => {
           },
         ]);
       },
-      plugins: () => [useCustomFetch(upstream.fetch)],
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          upstream.fetch,
+        ),
+      ],
     });
 
     const sse = createSSEClient({
@@ -117,7 +122,12 @@ describe('Subscriptions', () => {
           },
         ]);
       },
-      plugins: () => [useCustomFetch(upstream.fetch)],
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          upstream.fetch,
+        ),
+      ],
     });
 
     const sse = createSSEClient({

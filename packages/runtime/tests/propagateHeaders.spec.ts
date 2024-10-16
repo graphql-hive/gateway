@@ -41,7 +41,12 @@ describe('usePropagateHeaders', () => {
             };
           },
         },
-        plugins: () => [useCustomFetch(upstream.fetch)],
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+        ],
         logging: isDebug(),
       });
       const response = await serveRuntime.fetch(
@@ -104,7 +109,12 @@ describe('usePropagateHeaders', () => {
             };
           },
         },
-        plugins: () => [useCustomFetch(upstream.fetch)],
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+        ],
         maskedErrors: false,
       });
       const response = await serveRuntime.fetch(
