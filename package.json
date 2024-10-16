@@ -11,7 +11,7 @@
     "build": "yarn workspaces foreach -A -p run build",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
-    "check:type": "yarn tsc",
+    "check:types": "yarn tsc",
     "format": "yarn check:format --write",
     "test": "vitest"
   },
