@@ -1895,6 +1895,7 @@ __metadata:
   dependencies:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
+    "@whatwg-node/server": "npm:^0.9.49"
   languageName: unknown
   linkType: soft
 
@@ -4311,7 +4312,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.44, @whatwg-node/server@npm:^0.9.46":
+"@whatwg-node/server@npm:^0.9.44, @whatwg-node/server@npm:^0.9.46, @whatwg-node/server@npm:^0.9.49":
   version: 0.9.49
   resolution: "@whatwg-node/server@npm:0.9.49"
   dependencies:

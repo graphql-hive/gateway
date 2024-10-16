@@ -24,7 +24,7 @@ describe('Upstream Cancellation', () => {
       await createDisposableServer(dataSourceAdapter);
     const upstreamGraphQL = createYoga({
       logging: false,
-      schema: createSchema({
+      schema: createSchema<{}>({
         typeDefs: /* GraphQL */ `
           type Query {
             hello: String
