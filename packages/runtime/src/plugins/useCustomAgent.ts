@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-nodejs-modules
-import type { Agent as HttpAgent } from 'http';
+import type { Agent as HttpAgent } from 'node:http';
 // eslint-disable-next-line import/no-nodejs-modules
-import type { Agent as HttpsAgent } from 'https';
+import type { Agent as HttpsAgent } from 'node:https';
 import type { OnFetchHookPayload } from '@graphql-mesh/types';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
