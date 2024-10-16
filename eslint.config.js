@@ -9,7 +9,7 @@ export default tseslint.config(
     languageOptions: { parser: tseslint.parser },
     files: ['**/*.ts'],
   },
-  // @graphql-hive/gateway
+  // node
   {
     files: ['packages/gateway/src/**/*.ts'],
     plugins: {
@@ -19,13 +19,15 @@ export default tseslint.config(
       'n/prefer-node-protocol': 'error',
     },
   },
-  // @graphql-hive/gateway-runtime
+  // edge
   {
     files: ['packages/runtime/src/**/*.ts'],
     plugins: {
       import: importPlugin,
+      n: nPlugin,
     },
     rules: {
+      'n/prefer-global/process': ['error', 'never'],
       'import/no-nodejs-modules': 'error',
       'import/no-extraneous-dependencies': 'error',
     },
