@@ -9,8 +9,15 @@
     "target": "esnext",
     // packages
     "paths": {
+      "@internal/testing": ["./internal/testing/src/index.ts"],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"]
     }
   },
-  "include": ["eslint.config.js", "packages/**/src", "packages/**/scripts"]
+  "include": [
+    "./eslint.config.js",
+    "./internal/**/src",
+    "./packages/**/src",
+    "./packages/**/tests",
+    "./packages/**/scripts"
+  ]
 }

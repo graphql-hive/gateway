@@ -1,0 +1,8 @@
+{
+  "name": "@internal/testing",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@whatwg-node/disposablestack": "^0.0.5"
+  }
+}
