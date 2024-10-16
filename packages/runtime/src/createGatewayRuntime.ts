@@ -136,7 +136,7 @@ export function createGatewayRuntime<
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
     logger,
-    cwd: 'cwd' in config ? config.cwd : process.cwd?.(),
+    cwd: config.cwd || process.cwd(),
     ...('cache' in config ? { cache: config.cache } : {}),
     ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
   };

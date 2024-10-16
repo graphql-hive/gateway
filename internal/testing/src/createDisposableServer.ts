@@ -1,11 +1,7 @@
-import type { Server } from 'node:http';
+import type { RequestListener, Server } from 'node:http';
 import { createServer } from 'node:http';
 import type { AddressInfo, Socket } from 'node:net';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type {
-  ServerAdapter,
-  ServerAdapterBaseObject,
-} from '@whatwg-node/server';
 
 export interface DisposableServerOpts {
   port?: number;
@@ -17,17 +13,11 @@ export interface DisposableServer {
   server: Server;
 }
 
-export async function createDisposableServer<
-  TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext>,
->(
-  adapter: ServerAdapter<TServerContext, TBaseObject>,
+export async function createDisposableServer(
+  listener: RequestListener,
   opts?: DisposableServerOpts,
 ): Promise<DisposableServer> {
-  const server = createServer(
-    // @ts-expect-error TODO: type 'IncomingMessage' is not assignable to type 'NodeRequest' when using exactOptionalPropertyTypes
-    adapter,
-  );
+  const server = createServer(listener);
   const port = opts?.port || 0;
   await new Promise<void>((resolve, reject) => {
     server.once('error', (err) => reject(err));

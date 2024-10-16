@@ -143,7 +143,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           graphRef: apolloGraphRef,
         };
       } else if ('supergraph' in loadedConfig) {
-        supergraph = loadedConfig.supergraph;
+        supergraph = loadedConfig.supergraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
         // TODO: how to provide hive-cdn-key?
       } else {
         ctx.log.info(`Using default supergraph location: ${supergraph}`);

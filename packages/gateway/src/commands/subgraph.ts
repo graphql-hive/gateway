@@ -53,7 +53,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       if (schemaPathOrUrl) {
         subgraph = schemaPathOrUrl;
       } else if ('subgraph' in loadedConfig) {
-        subgraph = loadedConfig.subgraph;
+        subgraph = loadedConfig.subgraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
       }
 
       const pubsub = loadedConfig.pubsub || new PubSub();
