@@ -27,8 +27,8 @@ export default tseslint.config(
       n: nPlugin,
     },
     rules: {
-      'n/prefer-global/process': ['error', 'never'],
       'import/no-nodejs-modules': 'error',
+      'n/prefer-global/process': ['error', 'never'], // in combination with 'import/no-nodejs-modules', usage of process is disallowed
       'import/no-extraneous-dependencies': 'error',
     },
   },
