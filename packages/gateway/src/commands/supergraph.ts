@@ -182,6 +182,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         logger: ctx.log,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, {
+        logger: ctx.log,
         cache,
       });
 
