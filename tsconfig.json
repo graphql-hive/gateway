@@ -12,6 +12,7 @@
     // packages
     "paths": {
       "@internal/testing": ["./internal/testing/src/index.ts"],
+      "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"]
     }
   },

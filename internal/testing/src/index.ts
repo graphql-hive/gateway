@@ -1,2 +1,4 @@
 export * from './createDisposableServer';
-export * from './isDebug';
+export * from './env';
+export * from './getLocalHostName';
+export * from './opts';
