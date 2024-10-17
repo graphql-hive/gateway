@@ -1,4 +1,5 @@
 import { defineWorkspace } from 'vitest/config';
+import { timeout as testTimeout } from './internal/e2e/src/timeout';
 
 export default defineWorkspace([
   {
@@ -13,6 +14,7 @@ export default defineWorkspace([
     test: {
       name: 'e2e',
       include: ['**/*.e2e.ts'],
+      testTimeout,
     },
   },
   {
@@ -20,6 +22,7 @@ export default defineWorkspace([
     test: {
       name: 'loadtest',
       include: ['**/*.loadtest.ts'],
+      testTimeout,
     },
   },
 ]);

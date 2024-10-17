@@ -1,7 +1,8 @@
 import { setTimeout } from 'timers/promises';
-import { spawn, Thread, Worker } from '../node_modules/threads/dist/index'; // pkgjson exports dont point to types
+import { spawn, Thread, Worker } from '../node_modules/threads/dist/index.js'; // pkgjson exports dont point to types
 import { leftoverStack } from './leftoverStack';
-import { timeout as jestTimeout, type Server } from './tenv';
+import { type Server } from './tenv';
+import { timeout } from './timeout';
 import type { benchGraphQLServer } from './workers/benchGraphQLServer';
 
 export interface TbenchSustainOptions {
@@ -60,8 +61,8 @@ export async function createTbench(vusCount: number): Promise<Tbench> {
   return {
     async sustain({
       server,
-      duration = jestTimeout - 10_000,
-      parallelRequestsPerVU = 10,
+      duration = timeout - 10_000,
+      parallelRequestsPerVU = 5, // TODO: having more VUS causes ECONNRESET in the workers
       params,
     }) {
       let maxCpu = 0;

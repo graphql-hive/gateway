@@ -23,11 +23,8 @@ import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
+import { interval, retries } from './timeout';
 import { trimError } from './trimError';
-
-export const retries = 120,
-  interval = 500,
-  timeout = retries * interval; // 1min
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 

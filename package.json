@@ -15,7 +15,8 @@
     "check:types": "yarn tsc",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",
-    "test:e2e": "vitest --project e2e"
+    "test:e2e": "vitest --project e2e",
+    "test:loadtest": "vitest --project loadtest"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",

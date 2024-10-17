@@ -1,5 +1,5 @@
 import { fetch } from '@whatwg-node/fetch';
-import { expose } from '../../node_modules/threads/dist/worker'; // pkgjson exports dont point to types
+import { expose } from '../../node_modules/threads/dist/worker/index.js'; // pkgjson exports dont point to types
 
 /**
  * @param {number} port Port of the server to benchmark.
