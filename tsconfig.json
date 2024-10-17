@@ -18,6 +18,8 @@
   },
   "include": [
     "./eslint.config.js",
+    "./vitest.config.ts",
+    "./vitest.projects.ts",
     "./internal/**/src",
     "./packages/**/src",
     "./packages/**/tests",
