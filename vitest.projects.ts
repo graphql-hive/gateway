@@ -14,6 +14,7 @@ export default defineWorkspace([
     test: {
       name: 'e2e',
       include: ['**/*.e2e.ts'],
+      hookTimeout: testTimeout,
       testTimeout,
     },
   },
@@ -21,6 +22,8 @@ export default defineWorkspace([
     extends: './vitest.config.ts',
     test: {
       name: 'e2e:bench',
+      hookTimeout: testTimeout,
+      testTimeout,
       benchmark: {
         include: ['e2e/**/*.bench.ts'],
       },
