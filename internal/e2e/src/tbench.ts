@@ -62,7 +62,7 @@ export async function createTbench(vusCount: number): Promise<Tbench> {
     async sustain({
       server,
       duration = timeout - 10_000,
-      parallelRequestsPerVU = 5, // TODO: having more VUS causes ECONNRESET in the workers
+      parallelRequestsPerVU = 10,
       params,
     }) {
       let maxCpu = 0;
