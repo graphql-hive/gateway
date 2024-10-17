@@ -10,7 +10,7 @@ on:
 
 jobs:
   # TODO: various gateway runners
-  e2e:
+  bench:
     strategy:
       fail-fast: false
       matrix:
@@ -18,7 +18,7 @@ jobs:
           - 18
           - 20
           - 22
-    name: E2E / Node v${{matrix.node-version}}
+    name: Node v${{matrix.node-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
