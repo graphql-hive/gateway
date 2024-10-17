@@ -33,7 +33,6 @@ jobs:
 
   # TODO: various gateway runners
   e2e:
-    needs: [unit]
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +56,6 @@ jobs:
 
   # TODO: various gateway runners
   loadtest:
-    needs: [unit]
     strategy:
       fail-fast: false
       matrix:
