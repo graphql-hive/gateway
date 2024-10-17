@@ -97,6 +97,15 @@ export async function createTbench(vusCount: number): Promise<Tbench> {
         }
       }
 
+      if (maxCpu === 0) {
+        throw new Error('Max CPU usage is zero');
+      }
+      if (maxMem === 0) {
+        throw new Error('Max RAM usage is zero');
+      }
+      if (slowestRequest === 0) {
+        throw new Error('Slowest request is zero');
+      }
       return {
         maxCpu,
         maxMem,
