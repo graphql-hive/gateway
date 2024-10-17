@@ -20,9 +20,10 @@ export default defineWorkspace([
   {
     extends: './vitest.config.ts',
     test: {
-      name: 'loadtest',
-      include: ['**/*.loadtest.ts'],
-      testTimeout,
+      name: 'e2e:bench',
+      benchmark: {
+        include: ['e2e/**/*.bench.ts'],
+      },
     },
   },
 ]);

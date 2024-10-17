@@ -1,4 +1,4 @@
-name: Test
+name: Bench
 
 on:
   push:
@@ -9,28 +9,6 @@ on:
       - main
 
 jobs:
-  unit:
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version:
-          - 18
-          - 20
-          - 22
-    name: Unit / Node v${{matrix.node-version}}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up env
-        uses: the-guild-org/shared-config/setup@v1
-        with:
-          node-version: ${{matrix.node-version}}
-      - name: Install
-        run: yarn install
-      - name: Test
-        run: yarn test
-
   # TODO: various gateway runners
   e2e:
     strategy:
@@ -51,5 +29,5 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Install
         run: yarn install
-      - name: Test
-        run: yarn e2e:test
+      - name: Bench
+        run: yarn e2e:bench

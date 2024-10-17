@@ -10,7 +10,6 @@
     "@whatwg-node/fetch": "^0.9.21",
     "dockerode": "^4.0.2",
     "glob": "^11.0.0",
-    "graphql": "^16.9.0",
-    "threads": "^1.7.0"
+    "graphql": "^16.9.0"
   }
 }
