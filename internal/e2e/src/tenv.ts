@@ -420,7 +420,7 @@ export function createTenv(cwd: string): Tenv {
         ...proc,
         port,
         async execute({ headers, ...args }) {
-          const res = await fetch(`http://localhost:${port}/graphql`, {
+          const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
@@ -783,7 +783,7 @@ export function createTenv(cwd: string): Tenv {
       for (const service of services) {
         subgraphs.push({
           name: service.name,
-          url: `http://localhost:${service.port}/graphql`,
+          url: `http://0.0.0.0:${service.port}/graphql`,
         });
       }
 
