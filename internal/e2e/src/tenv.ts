@@ -29,7 +29,7 @@ export const retries = 120,
   interval = 500,
   timeout = retries * interval; // 1min
 
-const __project = path.resolve(__dirname, '..', '..') + path.sep;
+const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
 const docker = new Dockerode();
 
@@ -412,7 +412,7 @@ export function createTenv(cwd: string): Tenv {
           'node',
           '--import',
           'tsx',
-          path.resolve(__project, 'packages', 'serve-cli', 'src', 'bin.ts'),
+          path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
           ...(supergraph ? ['supergraph', supergraph] : []),
           ...args,
           createPortOpt(port),
@@ -488,10 +488,8 @@ export function createTenv(cwd: string): Tenv {
       }
       const [proc, waitForExit] = await spawn(
         { cwd, pipeLogs, env },
-        'node',
-        '--import',
-        'tsx',
-        path.resolve(__project, 'packages', 'compose-cli', 'src', 'bin.ts'),
+        'yarn',
+        'mesh-compose',
         output && createOpt('output', output),
         ...services.map(({ name, port }) => createServicePortOpt(name, port)),
         ...args,

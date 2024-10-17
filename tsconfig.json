@@ -21,6 +21,7 @@
     "./internal/**/src",
     "./packages/**/src",
     "./packages/**/tests",
-    "./packages/**/scripts"
+    "./packages/**/scripts",
+    "./e2e"
   ]
 }

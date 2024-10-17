@@ -2,14 +2,15 @@
   "name": "@internal/e2e",
   "type": "module",
   "private": true,
-  "dependencies": {
+  "devDependencies": {
     "@apollo/gateway": "^2.8.3",
     "@types/dockerode": "^3.3.28",
     "@types/node": "^22.7.6",
     "@whatwg-node/disposablestack": "^0.0.5",
+    "@whatwg-node/fetch": "^0.9.21",
     "dockerode": "^4.0.2",
     "glob": "^11.0.0",
-    "threads": "^1.7.0",
-    "tsx": "^4.16.5"
+    "graphql": "^16.9.0",
+    "threads": "^1.7.0"
   }
 }
