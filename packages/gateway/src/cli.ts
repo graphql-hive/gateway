@@ -108,7 +108,12 @@ export interface GatewayCLIBuiltinPluginConfig {
     Parameters<typeof useMeshRateLimit>[0],
     GatewayConfigContext
   >;
-
+  /**
+   * Enable Just-In-Time compilation of GraphQL documents.
+   *
+   * [Learn more](https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks)
+   */
+  jit?: boolean;
   cache?:
     | KeyValueCache
     | GatewayCLILocalforageCacheConfig
@@ -173,8 +178,9 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
+const maxAvailableFork = Math.max(availableParallelism() - 1, 1);
 export const defaultOptions = {
-  fork: process.env['NODE_ENV'] === 'production' ? availableParallelism() : 1,
+  fork: process.env['NODE_ENV'] === 'production' ? maxAvailableFork : 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -194,13 +200,18 @@ let cli = new Command()
   .addOption(
     new Option(
       '--fork <count>',
-      `count of workers to spawn. defaults to "os.availableParallelism()" when NODE_ENV is "production", otherwise only one (the main) worker (default: ${JSON.stringify(defaultOptions.fork)}`,
+      `count of workers to spawn. uses "${maxAvailableFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${JSON.stringify(defaultOptions.fork)}`,
     )
       .env('FORK')
       .argParser((v) => {
         const count = parseInt(v);
         if (isNaN(count)) {
           throw new InvalidArgumentError('not a number.');
+        }
+        if (count > maxAvailableFork) {
+          throw new InvalidArgumentError(
+            `exceedes number of available parallelism "${maxAvailableFork}".`,
+          );
         }
         return count;
       }),
@@ -290,6 +301,12 @@ let cli = new Command()
       '--apollo-key <apiKey>',
       'Apollo API key to use to authenticate with the managed federation up link',
     ).env('APOLLO_KEY'),
+  )
+  .addOption(
+    new Option(
+      '--jit',
+      'Enable Just-In-Time compilation of GraphQL documents',
+    ).env('JIT'),
   );
 
 export async function run(userCtx: Partial<CLIContext>) {
