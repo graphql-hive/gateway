@@ -111,6 +111,7 @@ export type GatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 > = YogaServerInstance<any, TContext> & {
   invalidateUnifiedGraph(): void;
+  getSchema(): MaybePromise<GraphQLSchema>;
 } & AsyncDisposable;
 
 export function createGatewayRuntime<
@@ -947,20 +948,23 @@ export function createGatewayRuntime<
         req?: { headers?: Record<string, string> };
         connectionParams?: Record<string, string>;
       };
+      let headers = // Maybe Node-like environment
+        req?.headers
+          ? getHeadersObj(req.headers)
+          : // Fetch environment
+            request?.headers
+            ? getHeadersObj(request.headers)
+            : // Unknown environment
+              {};
+      if (connectionParams) {
+        headers = { ...headers, ...connectionParams };
+      }
       const baseContext = {
         ...configContext,
         request,
         params,
-        headers:
-          // Maybe Node-like environment
-          req?.headers
-            ? getHeadersObj(req.headers)
-            : // Fetch environment
-              request?.headers
-              ? getHeadersObj(request.headers)
-              : // Unknown environment
-                {},
-        connectionParams,
+        headers,
+        connectionParams: headers,
       };
       if (contextBuilder) {
         return contextBuilder(baseContext);
@@ -981,6 +985,10 @@ export function createGatewayRuntime<
   Object.defineProperties(yoga, {
     invalidateUnifiedGraph: {
       value: schemaInvalidator,
+      configurable: true,
+    },
+    getSchema: {
+      value: getSchema,
       configurable: true,
     },
   });

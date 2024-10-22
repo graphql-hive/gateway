@@ -302,6 +302,7 @@ let cli = new Command()
       'Apollo API key to use to authenticate with the managed federation up link',
     ).env('APOLLO_KEY'),
   )
+  .option('--disable-websockets', 'Disable WebSockets support')
   .addOption(
     new Option(
       '--jit',

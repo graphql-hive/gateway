@@ -1106,10 +1106,12 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
+    "@types/ws": "npm:^8.5.12"
     adm-zip: "npm:^0.5.15"
     commander: "npm:^12.0.0"
     dotenv: "npm:^16.3.1"
     graphql: "npm:^16.9.0"
+    graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.7.0"
     parse-duration: "npm:^1.1.0"
     pkgroll: "npm:^2.5.0"
@@ -1117,6 +1119,7 @@ __metadata:
     rollup: "npm:^4.18.1"
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.0"
+    ws: "npm:^8.18.0"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
     graphql: ^16.9.0
@@ -4636,7 +4639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.0.0":
+"@types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
   version: 8.5.12
   resolution: "@types/ws@npm:8.5.12"
   dependencies:
