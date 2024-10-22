@@ -7,6 +7,12 @@
     "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/gateway"
   },
+  "homepage": "https://the-guild.dev/graphql/hive/docs/gateway",
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
