@@ -17,7 +17,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "bin": "./dist/bin.js",
+  "bin": {
+    "hive-gateway": "./dist/bin.js"
+  },
   "main": "./dist/index.js",
   "exports": {
     ".": {
