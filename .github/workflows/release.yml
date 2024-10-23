@@ -9,6 +9,14 @@ on:
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
+  dependencies:
+    if: github.event_name == 'pull_request' && github.event.pull_request.title != 'Upcoming Release Changes'
+    name: Dependencies
+    uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yml@v1
+    with:
+      node-version-file: .node-version
+    secrets:
+      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
   snapshot:
     if: github.event_name == 'pull_request'
     name: Snapshot
