@@ -37,7 +37,8 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist",
-    "generate-landing-page": "tsx scripts/generate-landing-page-html.ts"
+    "generate-landing-page": "tsx scripts/generate-landing-page-html.ts",
+    "prepack": "yarn build"
   },
   "peerDependencies": {
     "@parcel/watcher": "^2.1.0",
