@@ -10,7 +10,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   snapshot:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: github.event_name == 'pull_request'
     name: Snapshot
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
     with:
