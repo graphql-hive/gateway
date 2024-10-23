@@ -53,7 +53,7 @@
   "dependencies": {
     "@commander-js/extra-typings": "^12.1.0",
     "@envelop/core": "^5.0.2",
-    "@graphql-hive/gateway-runtime": "^0.0.0",
+    "@graphql-hive/gateway-runtime": "workspace:*",
     "@graphql-mesh/cache-cfw-kv": "^0.102.6",
     "@graphql-mesh/cache-localforage": "^0.102.6",
     "@graphql-mesh/cache-redis": "^0.102.6",
