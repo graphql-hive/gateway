@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  snapshot:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Snapshot
+    uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
+    with:
+      node-version-file: .node-version
+      npmTag: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && 'alpha' || 'rc' }}
+    secrets:
+      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
+      npmToken: ${{ secrets.NPM_TOKEN }}
