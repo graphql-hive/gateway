@@ -37,7 +37,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist",
-    "generate-landing-page": "tsx scripts/generate-landing-page.ts"
+    "generate-landing-page": "tsx scripts/generate-landing-page-html.ts"
   },
   "peerDependencies": {
     "@parcel/watcher": "^2.1.0",
@@ -84,11 +84,13 @@
     "@envelop/disable-introspection": "^6.0.0",
     "@graphql-mesh/fusion-composition": "^0.6.1",
     "@graphql-mesh/transport-rest": "^0.7.8",
+    "@types/html-minifier-terser": "^7.0.2",
     "@whatwg-node/fetch": "^0.9.21",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "^2.5.0"
+    "pkgroll": "^2.5.0",
+    "tsx": "^4.19.1"
   },
   "sideEffects": false
 }

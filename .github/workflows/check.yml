@@ -1,5 +1,7 @@
 name: Check
 
+# TODO: check whether runtime generated landing page html has changed
+
 on:
   push:
     branches:
