@@ -47,7 +47,7 @@ export type GatewayCLIConfig = (
   } & GatewayCLIBuiltinPluginConfig;
 
 export interface GatewayCLISupergraphConfig
-  extends Omit<GatewayConfigSupergraph, 'supergraph'> {
+  extends Omit<GatewayConfigSupergraph, 'supergraph' | 'cache'> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -60,7 +60,7 @@ export interface GatewayCLISupergraphConfig
 }
 
 export interface GatewayCLISubgraphConfig
-  extends Omit<GatewayConfigSubgraph, 'subgraph'> {
+  extends Omit<GatewayConfigSubgraph, 'subgraph' | 'cache'> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -73,7 +73,7 @@ export interface GatewayCLISubgraphConfig
 }
 
 export interface GatewayCLIProxyConfig
-  extends Omit<GatewayConfigProxy, 'proxy'> {
+  extends Omit<GatewayConfigProxy, 'proxy' | 'cache'> {
   /**
    * HTTP executor to proxy all incoming requests to another HTTP endpoint.
    */
