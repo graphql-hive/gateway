@@ -7520,7 +7520,6 @@ __metadata:
     prettier: "npm:^3.3.3"
     prettier-plugin-pkg: "npm:^0.18.1"
     prettier-plugin-sh: "npm:^0.14.0"
-    tsx: "npm:^4.16.5"
     typescript: "npm:^5.6.3"
     typescript-eslint: "npm:^8.9.0"
     vite: "npm:^5.4.9"
@@ -11361,7 +11360,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.16.5, tsx@npm:^4.19.1":
+"tsx@npm:^4.19.1":
   version: 4.19.1
   resolution: "tsx@npm:4.19.1"
   dependencies:
