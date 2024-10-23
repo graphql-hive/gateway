@@ -1612,6 +1612,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-mesh/transport-common@npm:^0.7.10":
+  version: 0.7.10
+  resolution: "@graphql-mesh/transport-common@npm:0.7.10"
+  dependencies:
+    "@envelop/core": "npm:^5.0.1"
+    "@graphql-tools/delegate": "npm:^10.0.26"
+    "@graphql-tools/utils": "npm:^10.5.5"
+  peerDependencies:
+    "@graphql-mesh/types": ^0.102.9
+    graphql: "*"
+    tslib: ^2.4.0
+  checksum: 10c0/0265f49d0c150edea648a5488c65f3d44a75b162dcffa94c064e38c8feccf519ced4499703a0eacbead410e25ffb1cc9966a397cbc125a3ead5d4673b1f006df
+  languageName: node
+  linkType: hard
+
 "@graphql-mesh/transport-common@npm:^0.7.7, @graphql-mesh/transport-common@npm:^0.7.8":
   version: 0.7.8
   resolution: "@graphql-mesh/transport-common@npm:0.7.8"
@@ -1660,6 +1675,29 @@ __metadata:
     graphql: "*"
     tslib: ^2.4.0
   checksum: 10c0/a05ddd886c29988dbe146277d44c6f2a1a5d6e4e26140b7e9833fdf175af0e715a1b251dabcac9df067b6af0f24e03b8b460195abaf4ac59fe2158994c9e9499
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/transport-rest@npm:^0.7.10":
+  version: 0.7.10
+  resolution: "@graphql-mesh/transport-rest@npm:0.7.10"
+  dependencies:
+    "@graphql-mesh/string-interpolation": "npm:^0.5.6"
+    dset: "npm:^3.1.3"
+    graphql-fields: "npm:^2.0.3"
+    graphql-scalars: "npm:^1.22.4"
+    qs: "npm:6.13.0"
+    url-join: "npm:4.0.1"
+  peerDependencies:
+    "@graphql-mesh/cross-helpers": ^0.4.7
+    "@graphql-mesh/transport-common": ^0.7.10
+    "@graphql-mesh/types": ^0.102.9
+    "@graphql-mesh/utils": ^0.102.9
+    "@graphql-tools/utils": ^10.5.5
+    "@whatwg-node/fetch": ^0.9.15
+    graphql: "*"
+    tslib: ^2.4.0
+  checksum: 10c0/553320333e04a6f6695fdbf7b140868fcb318865235efda7759cae2dbe6cd5349fa48a24be976c07a2aedddc8368529c49ccb8f057db8bbdf51df78e34e3d2bf
   languageName: node
   linkType: hard
 
@@ -2467,14 +2505,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@omnigraph/json-schema@npm:^0.107.1":
-  version: 0.107.1
-  resolution: "@omnigraph/json-schema@npm:0.107.1"
+"@omnigraph/json-schema@npm:^0.107.3":
+  version: 0.107.3
+  resolution: "@omnigraph/json-schema@npm:0.107.3"
   dependencies:
     "@graphql-mesh/string-interpolation": "npm:0.5.6"
-    "@graphql-mesh/transport-common": "npm:^0.7.8"
-    "@graphql-mesh/transport-rest": "npm:^0.7.8"
-    "@graphql-tools/delegate": "npm:^10.0.23"
+    "@graphql-mesh/transport-common": "npm:^0.7.10"
+    "@graphql-mesh/transport-rest": "npm:^0.7.10"
+    "@graphql-tools/delegate": "npm:^10.0.26"
     "@json-schema-tools/meta-schema": "npm:1.7.5"
     "@whatwg-node/fetch": "npm:^0.9.0"
     ajv: "npm:8.17.1"
@@ -2490,32 +2528,32 @@ __metadata:
     url-join: "npm:4.0.1"
   peerDependencies:
     "@graphql-mesh/cross-helpers": ^0.4.7
-    "@graphql-mesh/types": ^0.102.7
-    "@graphql-mesh/utils": ^0.102.7
+    "@graphql-mesh/types": ^0.102.9
+    "@graphql-mesh/utils": ^0.102.9
     "@graphql-tools/utils": ^10.5.5
     graphql: "*"
     tslib: ^2.4.0
-  checksum: 10c0/8a2eeeeee01e56c1115681ada3b9a0f4d9cfba59931870edfcd857acc879323c27666693f7a5d2d24d16571bb43a36294b015d262c18bfc251864e1bffa534c3
+  checksum: 10c0/8e06331c6040159237211f3103eeedb7a5ee340fb973f380f302618e1da4ba1cc12692bf013e3e8dd19bf8485f792f2e0252b0ce94a0ac152ed95e7322cf0b92
   languageName: node
   linkType: hard
 
 "@omnigraph/openapi@npm:^0.107.1":
-  version: 0.107.1
-  resolution: "@omnigraph/openapi@npm:0.107.1"
+  version: 0.107.3
+  resolution: "@omnigraph/openapi@npm:0.107.3"
   dependencies:
     "@graphql-mesh/string-interpolation": "npm:^0.5.6"
-    "@graphql-tools/delegate": "npm:^10.0.23"
-    "@omnigraph/json-schema": "npm:^0.107.1"
+    "@graphql-tools/delegate": "npm:^10.0.26"
+    "@omnigraph/json-schema": "npm:^0.107.3"
     change-case: "npm:^4.1.2"
     json-machete: "npm:^0.97.4"
     openapi-types: "npm:^12.1.0"
   peerDependencies:
     "@graphql-mesh/cross-helpers": ^0.4.7
-    "@graphql-mesh/types": ^0.102.7
-    "@graphql-mesh/utils": ^0.102.7
+    "@graphql-mesh/types": ^0.102.9
+    "@graphql-mesh/utils": ^0.102.9
     graphql: "*"
     tslib: ^2.4.0
-  checksum: 10c0/ec8f197f446e9a327d6d478e36ae388aaf19e1bcd626bc2511046f29fd58dbbcfa9a5c2bb30c4de1c9e7b0d57bf7a45bc6ee87b7b55a8efe4ebbf047d958b59a
+  checksum: 10c0/4b47ed41743a8057a5bca6a3001f9f0321c029eaf513c121d85a2714afe9f8e40808e3dc48cbf02c6f5af41b6816300d685385c461a0d79fe3d9c1580bce7f2f
   languageName: node
   linkType: hard
 
