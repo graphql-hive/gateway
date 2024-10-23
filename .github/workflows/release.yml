@@ -15,7 +15,7 @@ jobs:
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
     with:
       node-version-file: .node-version
-      npmTag: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && 'alpha' || 'rc' }}
+      npmTag: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && 'rc' || 'alpha' }}
     secrets:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
