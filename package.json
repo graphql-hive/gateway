@@ -7,7 +7,7 @@
     "internal/*",
     "e2e/*"
   ],
-  "packageManager": "yarn@4.5.0",
+  "packageManager": "yarn@4.5.1",
   "scripts": {
     "build": "yarn workspaces foreach -A -p run build",
     "check:format": "prettier --check .",
