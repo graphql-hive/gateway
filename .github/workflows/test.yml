@@ -51,5 +51,16 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Install
         run: yarn install
+      - name: Hash Docker Images
+        if: runner.os == 'Linux'
+        id: hash-docker-images
+        run: | # get all "image: '" occurrences in the e2e tests and hash them
+          echo "result=$(grep -r -h "image: '" e2e | shasum | base64)" >> "$GITHUB_OUTPUT"
+      - name: Cache Docker Images
+        if: runner.os == 'Linux'
+        uses: ScribeMD/docker-cache@0.5.0
+        continue-on-error: true
+        with:
+          key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
         run: yarn e2e:test
