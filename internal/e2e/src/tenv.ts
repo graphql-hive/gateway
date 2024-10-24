@@ -30,32 +30,32 @@ const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
 const docker = new Dockerode();
 
-const E2E_SERVE_RUNNERS = ['node', 'docker', 'bin'] as const;
+const E2E_GATEWAY_RUNNERS = ['node', 'docker', 'bin'] as const;
 
-type ServeRunner = (typeof E2E_SERVE_RUNNERS)[number];
+type ServeRunner = (typeof E2E_GATEWAY_RUNNERS)[number];
 
-const serveRunner = (function getServeRunner() {
-  const runner = (process.env['E2E_SERVE_RUNNER'] || 'node')
+const gatewayRunner = (function getServeRunner() {
+  const runner = (process.env['E2E_GATEWAY_RUNNER'] || 'node')
     .trim()
     .toLowerCase();
   if (
-    !E2E_SERVE_RUNNERS.includes(
+    !E2E_GATEWAY_RUNNERS.includes(
       // @ts-expect-error
       runner,
     )
   ) {
-    throw new Error(`Unsupported E2E serve runner "${runner}"`);
+    throw new Error(`Unsupported E2E gateway runner "${runner}"`);
   }
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
-⚠️ Using docker serve runner! Make sure you have built the containers with:
-E2E_SERVE_RUNNER=docker yarn bundle && docker buildx bake e2e
+⚠️ Using docker gateway runner! Make sure you have built the containers with:
+E2E_GATEWAY_RUNNER=docker yarn bundle && docker buildx bake e2e
 
 `);
   }
   if (runner === 'bin' && !boolEnv('CI')) {
     process.stderr.write(`
-⚠️ Using bin serve runner! Make sure you have built the binary with:
+⚠️ Using bin gateway runner! Make sure you have built the binary with:
 yarn build && yarn bundle && yarn package-binary
 
 `);
@@ -98,7 +98,7 @@ export interface Server extends Proc {
 export interface ServeOptions extends ProcOptions {
   port?: number;
   supergraph?: string;
-  /** {@link serveRunner Serve runner} specific options. */
+  /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
     docker?: {
@@ -107,7 +107,7 @@ export interface ServeOptions extends ProcOptions {
   };
 }
 
-export interface Serve extends Server {
+export interface Gateway extends Server {
   execute(args: {
     query: string;
     variables?: Record<string, unknown>;
@@ -124,10 +124,10 @@ export interface ServiceOptions extends ProcOptions {
    */
   port?: number;
   /**
-   * Custom port of the serve instance.
+   * Custom port of the gateway instance.
    * Is set to the `--port` argument (available under `Args.getPort()`).
    */
-  servePort?: number;
+  gatewayPort?: number;
 }
 
 export interface Service extends Server {
@@ -224,8 +224,8 @@ export interface Tenv {
     command: string | (string | number)[],
     opts?: ProcOptions,
   ): Promise<[proc: Proc, waitForExit: Promise<void>]>;
-  serveRunner: ServeRunner;
-  serve(opts?: ServeOptions): Promise<Serve>;
+  gatewayRunner: ServeRunner;
+  gateway(opts?: ServeOptions): Promise<Gateway>;
   compose(opts?: ComposeOptions): Promise<Compose>;
   /**
    * Starts a service by name. Services are services that serve data, not necessarily GraphQL.
@@ -270,8 +270,8 @@ export function createTenv(cwd: string): Tenv {
         : command.split(' ');
       return spawn({ ...opts, cwd }, String(cmd), ...args, ...extraArgs);
     },
-    serveRunner,
-    async serve(opts) {
+    gatewayRunner,
+    async gateway(opts) {
       let {
         port = await getAvailablePort(),
         supergraph,
@@ -284,7 +284,7 @@ export function createTenv(cwd: string): Tenv {
       let proc: Proc,
         waitForExit: Promise<void> | null = null;
 
-      if (serveRunner === 'docker') {
+      if (gatewayRunner === 'docker') {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
 
@@ -322,35 +322,21 @@ export function createTenv(cwd: string): Tenv {
             );
             volumes.push({
               host: supergraph,
-              container: `/serve/${path.basename(supergraph)}`,
+              container: `/gateway/${path.basename(supergraph)}`,
             });
             supergraph = path.basename(supergraph);
           }
         }
-        const configFileNames = ['mesh.config.*', 'gateway.config.*'];
-        const configFiles = (
-          await Promise.all(
-            configFileNames.map((configFileName) =>
-              glob(configFileName, { cwd }),
-            ),
-          )
-        ).flat();
-        for (const configfile of configFiles) {
-          const contents = await fs.readFile(
-            path.join(cwd, configfile),
-            'utf8',
-          );
-          if (contents.includes('@graphql-hive/gateway')) {
-            volumes.push({
-              host: configfile,
-              container: `/serve/${path.basename(configfile)}`,
-            });
-          }
+        for (const configfile of await glob('gateway.config.*', { cwd })) {
+          volumes.push({
+            host: configfile,
+            container: `/gateway/${path.basename(configfile)}`,
+          });
         }
         for (const dbfile of await glob('*.db', { cwd })) {
           volumes.push({
             host: dbfile,
-            container: `/serve/${path.basename(dbfile)}`,
+            container: `/gateway/${path.basename(dbfile)}`,
           });
         }
         const packageJsonExists = await fs
@@ -360,12 +346,12 @@ export function createTenv(cwd: string): Tenv {
         if (packageJsonExists) {
           volumes.push({
             host: 'package.json',
-            container: '/serve/package.json',
+            container: '/gateway/package.json',
           });
         }
 
         const dockerfileExists = await fs
-          .stat(path.join(cwd, 'serve.Dockerfile'))
+          .stat(path.join(cwd, 'gateway.Dockerfile'))
           .then(() => true)
           .catch(() => false);
 
@@ -375,7 +361,7 @@ export function createTenv(cwd: string): Tenv {
           image:
             'ghcr.io/graphql-hive/gateway:' +
             (dockerfileExists
-              ? // if the test contains a serve dockerfile, use it instead of the default e2e image
+              ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
                 `e2e.${path.basename(cwd)}`
               : 'e2e'),
           // TODO: changing port from within gateway.config.ts wont work in docker runner
@@ -394,7 +380,7 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs,
         });
         proc = cont;
-      } else if (serveRunner === 'bin') {
+      } else if (gatewayRunner === 'bin') {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
@@ -403,7 +389,7 @@ export function createTenv(cwd: string): Tenv {
           createPortOpt(port),
           ...args,
         );
-      } /* serveRunner === 'node' */ else {
+      } /* gatewayRunner === 'node' */ else {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           'node',
@@ -416,7 +402,7 @@ export function createTenv(cwd: string): Tenv {
         );
       }
 
-      const serve: Serve = {
+      const gw: Gateway = {
         ...proc,
         port,
         async execute({ headers, ...args }) {
@@ -459,9 +445,9 @@ export function createTenv(cwd: string): Tenv {
           )
           // stop reachability wait after exit
           .finally(() => ctrl.abort()),
-        waitForReachable(serve, ctrl.signal),
+        waitForReachable(gw, ctrl.signal),
       ]);
-      return serve;
+      return gw;
     },
     async compose(opts) {
       const {
@@ -529,7 +515,7 @@ export function createTenv(cwd: string): Tenv {
     },
     async service(
       name,
-      { port, servePort, pipeLogs = boolEnv('DEBUG'), args = [] } = {},
+      { port, gatewayPort, pipeLogs = boolEnv('DEBUG'), args = [] } = {},
     ) {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
@@ -540,7 +526,7 @@ export function createTenv(cwd: string): Tenv {
         'tsx',
         path.join(cwd, 'services', name),
         createServicePortOpt(name, port),
-        servePort && createPortOpt(servePort),
+        gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
       const service: Service = { ...proc, name, port };

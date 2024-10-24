@@ -1,7 +1,7 @@
 import { createTenv, type Container } from '@internal/e2e';
 import { beforeAll, expect, it } from 'vitest';
 
-const { compose, service, serve, container } = createTenv(__dirname);
+const { compose, service, gateway, container } = createTenv(__dirname);
 
 let petstore!: Container;
 beforeAll(async () => {
@@ -32,6 +32,6 @@ it.concurrent.each([
     output: 'graphql',
     services: [petstore, await service('vaccination')],
   });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({ supergraph: output });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });

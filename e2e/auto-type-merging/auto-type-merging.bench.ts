@@ -1,9 +1,9 @@
-import { createTenv, Serve } from '@internal/e2e';
+import { createTenv, Gateway } from '@internal/e2e';
 import { beforeAll, bench, expect } from 'vitest';
 
-const { serve, compose, service, container } = createTenv(__dirname);
+const { gateway, compose, service, container } = createTenv(__dirname);
 
-let server!: Serve;
+let gw!: Gateway;
 beforeAll(async () => {
   const petstore = await container({
     name: 'petstore',
@@ -17,12 +17,12 @@ beforeAll(async () => {
     output: 'graphql',
   });
 
-  server = await serve({ supergraph: output });
+  gw = await gateway({ supergraph: output });
 });
 
 bench('GetPet', async () => {
   await expect(
-    server.execute({
+    gw.execute({
       query: /* GraphQL */ `
         query GetPet {
           getPetById(petId: 1) {
