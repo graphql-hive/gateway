@@ -87,7 +87,7 @@ jobs:
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
-        run: yarn workspace @graphql-hive/gateway inject-version ${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
+        run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
       - name: Bake and Push
         uses: docker/bake-action@v5
         env:
