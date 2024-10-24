@@ -149,10 +149,15 @@ jobs:
         uses: fbactions/setup-winsdk@v2
         with:
           winsdk-build-version: 18362
-      - uses: the-guild-org/shared-config/setup@v1
-        name: Set up env
+      - name: Enable corepack
+        run: corepack enable
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
+          cache: yarn
+      - name: Install
+        run: yarn install
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
