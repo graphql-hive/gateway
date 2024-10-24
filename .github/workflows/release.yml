@@ -104,7 +104,7 @@ jobs:
         with:
           header: Docker Image for `@graphql-hive/gateway`
           message: |
-            Published image for this PR are available at:
+            Published image for this PR is available at:
             ```
             ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
             ```
