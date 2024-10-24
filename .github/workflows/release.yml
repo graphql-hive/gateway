@@ -38,3 +38,73 @@ jobs:
     secrets:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
+  ghcr:
+    name: GitHub Container Registry
+    runs-on: ubuntu-latest
+    needs: [stable, snapshot]
+    if: always() && (
+      contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
+      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
+      )
+    steps:
+      - name: Version
+        uses: actions/github-script@v7
+        id: ver-mesh-serve
+        with:
+          script: |
+            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
+            const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
+            if (!gateway) {
+              return core.setFailed('@graphql-hive/gateway was not published!');
+            }
+            const { version } = gateway;
+            let r;
+            if (context.eventName === 'pull_request') {
+              r = { version, tags: version };
+            } else {
+              const [major, minor] = version.split('.');
+              if (!major || !minor) {
+                return core.setFailed(`Unknown major or minor in version "${version}"!`);
+              }
+              r = { version, tags: `latest,${major},${major}.${minor},${version}` };
+            }
+            console.log(r);
+            return r;
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Bundle
+        run: yarn workspace @graphql-hive/gateway bundle
+      - name: Inject version
+        run: yarn workspace @graphql-hive/gateway inject-version ${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
+      - name: Bake and Push
+        uses: docker/bake-action@v5
+        env:
+          GATEWAY_TAGS: ${{ fromJSON(steps.ver-mesh-serve.outputs.result).tags }}
+        with:
+          targets: gateway
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+          push: true
+      - if: github.event_name == 'pull_request'
+        name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Docker Image for `@graphql-hive/gateway`
+          message: |
+            Published image for this PR are available at:
+            ```
+            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
+            ```
