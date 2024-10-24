@@ -58,7 +58,7 @@ it.each([
 
 it.each([
   {
-    argv: ['yarn', 'mesh', createOpt('output', 'internet')],
+    argv: ['yarn', 'gateway', createOpt('output', 'internet')],
     key: 'output',
     val: 'internet',
   },
@@ -68,7 +68,7 @@ it.each([
 
 it.each([
   {
-    argv: ['yarn', 'mesh', createPortOpt(5000)],
+    argv: ['yarn', 'gateway', createPortOpt(5000)],
     val: 5000,
   },
 ])('should get port $val from $argv', ({ argv, val }) => {
@@ -77,7 +77,7 @@ it.each([
 
 it.each([
   {
-    argv: ['yarn', 'mesh'],
+    argv: ['yarn', 'gateway'],
     key: 'output',
   },
 ])('should get undefined by "$key" from $argv', ({ argv, key }) => {
@@ -86,11 +86,11 @@ it.each([
 
 it.each([
   {
-    argv: ['yarn', 'mesh'],
+    argv: ['yarn', 'gateway'],
     key: 'output',
   },
   {
-    argv: ['yarn', 'mesh', '--output space=internet'],
+    argv: ['yarn', 'gateway', '--output space=internet'],
     key: 'output space',
   },
 ])('should throw when requiring "$key" from $argv', ({ argv, key }) => {

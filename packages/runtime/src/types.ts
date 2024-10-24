@@ -274,7 +274,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @example Providing a module exporting a transport.
    *
    * ```ts
-   * import { defineConfig } from '@graphql-mesh/serve-cli';
+   * import { defineConfig } from '@graphql-hive/gateway';
    *
    * export const gatewayConfig = defineConfig({
    *   transports: {
@@ -290,7 +290,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @example Adding subscriptions support for Federation v2 subgraphs.
    *
    * ```ts
-   * import { defineConfig } from '@graphql-mesh/serve-cli';
+   * import { defineConfig } from '@graphql-hive/gateway';
    *
    * export const gatewayConfig = defineConfig({
    *   transportEntries: {
@@ -404,7 +404,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * The name of the package.
    *
-   * @default '@graphql-mesh/serve-cli'
+   * @default '@graphql-hive/gateway'
    */
   productPackageName?: string;
 

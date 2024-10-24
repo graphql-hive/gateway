@@ -253,7 +253,7 @@ export function createTenv(cwd: string): Tenv {
       },
       async tempfile(name, content) {
         const tempDir = await fs.mkdtemp(
-          path.join(os.tmpdir(), 'graphql-mesh_e2e_fs'),
+          path.join(os.tmpdir(), 'hive-gateway_e2e_fs'),
         );
         leftoverStack.defer(() => fs.rm(tempDir, { recursive: true }));
         const tempFile = path.join(tempDir, name);
@@ -340,7 +340,7 @@ export function createTenv(cwd: string): Tenv {
             path.join(cwd, configfile),
             'utf8',
           );
-          if (contents.includes('@graphql-mesh/serve-cli')) {
+          if (contents.includes('@graphql-hive/gateway')) {
             volumes.push({
               host: configfile,
               container: `/serve/${path.basename(configfile)}`,
@@ -371,14 +371,14 @@ export function createTenv(cwd: string): Tenv {
 
         const cont = await tenv.container({
           env,
-          name: 'mesh-serve-e2e-' + Math.random().toString(32).slice(6),
+          name: 'gateway-e2e-' + Math.random().toString(32).slice(6),
           image:
-            'ghcr.io/ardatan/mesh-serve:' +
+            'ghcr.io/graphql-hive/gateway:' +
             (dockerfileExists
               ? // if the test contains a serve dockerfile, use it instead of the default e2e image
                 `e2e.${path.basename(cwd)}`
               : 'e2e'),
-          // TODO: changing port from within mesh.config.ts or gateway.config.ts wont work in docker runner
+          // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
           healthcheck: [
@@ -397,7 +397,7 @@ export function createTenv(cwd: string): Tenv {
       } else if (serveRunner === 'bin') {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
-          path.resolve(__project, 'packages', 'serve-cli', 'mesh-serve'),
+          path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
           'supergraph',
           supergraph,
           createPortOpt(port),

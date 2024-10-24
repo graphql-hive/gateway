@@ -19,7 +19,7 @@ for (const file of [
   // bundle
   resolve(__dirname, '../bundle/dist/bin.mjs'),
   // binary bundle
-  resolve(__dirname, '../bundle/mesh-serve.cjs'),
+  resolve(__dirname, '../bundle/hive-gateway.cjs'),
 ]) {
   try {
     const content = await readFile(file, 'utf-8');

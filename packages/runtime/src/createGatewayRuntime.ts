@@ -767,14 +767,14 @@ export function createGatewayRuntime<
     },
   };
 
-  const productName = config.productName || 'GraphQL Mesh';
+  const productName = config.productName || 'Hive Gateway';
   const productDescription =
-    config.productDescription || 'Federated architecture for any API service';
+    config.productDescription || 'Federated GraphQL Gateway';
   const productPackageName =
-    config.productPackageName || '@graphql-mesh/serve-cli';
+    config.productPackageName || '@graphql-hive/gateway';
   const productLogo = config.productLogo || defaultProductLogo;
   const productLink =
-    config.productLink || 'https://the-guild.dev/graphql/mesh';
+    config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
 

@@ -147,23 +147,23 @@ export interface CLIContext {
   log: Logger;
   /** @default 'Mesh Serve' */
   productName: string;
-  /** @default 'serve GraphQL federated architecture for any API service(s)' */
+  /** @default 'Federated GraphQL Gateway' */
   productDescription: string;
-  /** @default '@graphql-mesh/serve-cli' */
+  /** @default '@graphql-hive/gateway' */
   productPackageName: string;
-  /** @default Mesh logo */
+  /** @default 'Hive Gateway logo' */
   productLogo?: string;
-  /** @default https://the-guild.dev/graphql/mesh */
+  /** @default https://the-guild.dev/graphql/hive/docs/gateway */
   productLink: string;
-  /** @default 'mesh-serve' */
+  /** @default 'hive-gateway' */
   /**
    * A safe binary executable name, should not contain any special
    * characters or white-spaces.
    *
-   * @default 'mesh-serve'
+   * @default 'hive-gateway'
    */
   binName: string;
-  /** @default 'mesh.config' */
+  /** @default 'gateway.config' */
   configFileName: string;
   /** @default globalThis.__VERSION__ */
   version: string;
@@ -191,7 +191,7 @@ export const defaultOptions = {
   polling: '10s',
 };
 
-/** The root cli of serve-cli. */
+/** Root cli for the gateway. */
 let cli = new Command()
   .configureHelp({
     // will print help of global options for each command
@@ -322,13 +322,12 @@ export async function run(userCtx: Partial<CLIContext>) {
 
   const ctx: CLIContext = {
     log: new DefaultLogger(),
-    productName: 'Mesh',
-    productDescription:
-      'serve GraphQL federated architecture for any API service(s)',
-    productPackageName: '@graphql-mesh/serve-cli',
-    productLink: 'https://the-guild.dev/graphql/mesh',
-    binName: 'mesh-serve',
-    configFileName: 'mesh.config',
+    productName: 'Hive Gateway',
+    productDescription: 'Federated GraphQL Gateway',
+    productPackageName: '@graphql-hive/gateway',
+    productLink: 'https://the-guild.dev/graphql/hive/docs/gateway',
+    binName: 'hive-gateway',
+    configFileName: 'gateway.config',
     version: globalThis.__VERSION__ || 'dev',
     ...userCtx,
   };
