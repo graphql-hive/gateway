@@ -135,7 +135,7 @@ describe('Gateway Runtime', () => {
               },
             );
             const text = await res.text();
-            expect(text).toContain('<title>GraphQL Mesh</title>');
+            expect(text).toContain('<title>Hive Gateway</title>');
           });
         });
       });
