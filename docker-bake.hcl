@@ -11,9 +11,9 @@ target "gateway" {
   platforms = ["linux/amd64", "linux/arm64"]
   tags = formatlist("ghcr.io/graphql-hive/gateway:%s", split(",", GATEWAY_TAGS))
   annotations = [
-    "index:org.opencontainers.image.title=\"Hive Gateway\"",
-    "index:org.opencontainers.image.description=\"GraphQL Gateway by The Guild\"",
-    "index:org.opencontainers.image.authors=\"The Guild\"",
+    "index:org.opencontainers.image.title=Hive Gateway",
+    "index:org.opencontainers.image.description=GraphQL Gateway by The Guild that can act as a Apollo Federation Gateway or a Proxy Gateway for any GraphQL service.",
+    "index:org.opencontainers.image.authors=The Guild",
     "index:org.opencontainers.image.licenses=MIT",
     "index:org.opencontainers.image.source=https://github.com/graphql-hive/gateway/tree/main/packages/gateway",
     "index:org.opencontainers.image.documentation=https://the-guild.dev/graphql/hive/docs/gateway/deployment/docker"
