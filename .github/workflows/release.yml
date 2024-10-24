@@ -155,7 +155,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: yarn
+          cache: ${{ runner.os == 'Windows' && '' || 'yarn'}}
       - name: Install
         run: yarn install
       - name: Bundle
