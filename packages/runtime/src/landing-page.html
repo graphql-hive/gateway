@@ -139,11 +139,13 @@
         </p>
         <pre>
           <code>
-import { defineConfig as defineGatewayConfig } from '__PRODUCT_PACKAGE_NAME__';
+// gateway.config.ts
 
-export const gatewayConfig = defineGatewayConfig({
-  landingPage: false
-})
+import { defineConfig } from '__PRODUCT_PACKAGE_NAME__';
+
+export const gatewayConfig = defineConfig({
+  landingPage: false,
+});
           </code>
         </pre>
 
@@ -154,11 +156,13 @@ export const gatewayConfig = defineGatewayConfig({
         </p>
         <pre>
           <code>
-import { defineConfig as defineGatewayConfig } from '__PRODUCT_PACKAGE_NAME__';
+// gateway.config.ts
 
-export const gatewayConfig = defineGatewayConfig({
+import { defineConfig } from '__PRODUCT_PACKAGE_NAME__';
+
+export const gatewayConfig = defineConfig({
   graphqlEndpoint: '__REQUEST_PATH__',
-})
+});
           </code>
         </pre>
       </section>
