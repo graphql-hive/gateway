@@ -165,8 +165,8 @@ jobs:
         id: compressed-binary
         run: |
           gzip -9 packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}
-          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe.gz' || '.gz'}}" >> "$GITHUB_OUTPUT"
-          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe.gz' || '.gz' }}" >> "$GITHUB_OUTPUT"
+          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe.gz' || '.gz'}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe.gz' || '.gz' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Upload release
         uses: svenstaro/upload-release-action@v2
