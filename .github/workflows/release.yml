@@ -112,3 +112,86 @@ jobs:
             ```
             ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
             ```
+  bin:
+    name: Binary built on ${{ matrix.os }}
+    needs: [stable, snapshot]
+    if: always() && (
+      contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
+      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
+      )
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
+    steps:
+      - name: Version
+        uses: actions/github-script@v7
+        id: ver-gateway
+        with:
+          script: |
+            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
+            const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
+            if (!gateway) {
+              return core.setFailed('@graphql-hive/gateway was not published!');
+            }
+            const { version } = gateway;
+            console.log({ version });
+            return version;
+      - name: Checkout
+        uses: actions/checkout@v4
+      - if: runner.os == 'Windows'
+        name: Disable Windows Defender
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
+        shell: powershell
+      - if: runner.os == 'Windows'
+        name: Install Windows SDK
+        uses: fbactions/setup-winsdk@v2
+        with:
+          winsdk-build-version: 18362
+      - uses: the-guild-org/shared-config/setup@v1
+        name: Set up env
+        with:
+          node-version-file: .node-version
+      - name: Bundle
+        run: yarn workspace @graphql-hive/gateway bundle
+      - name: Inject version
+        run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ steps.ver-gateway.outputs.result }}
+      - name: Package binary
+        run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+      - name: Compress binary
+        id: compressed-binary
+        run: |
+          gzip -9 packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}
+          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe.gz' || '.gz'}}" >> "$GITHUB_OUTPUT"
+          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe.gz' || '.gz' }}" >> "$GITHUB_OUTPUT"
+      - if: github.ref == 'refs/heads/main'
+        name: Upload release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
+          release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
+          asset_name: ${{ steps.compressed-binary.outputs.name }}
+          file: ${{ steps.compressed-binary.outputs.path }}
+          overwrite: true
+      - if: github.event_name == 'pull_request'
+        name: Upload artifact
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.compressed-binary.outputs.name }}
+          path: ${{ steps.compressed-binary.outputs.path }}
+      - if: github.event_name == 'pull_request'
+        name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          # match pr comment like with changesets-snapshot-action from the guild's shared-config
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          header: snapshot-release-binary-${{ runner.os }}-${{ runner.arch }}
+          message: |
+            ### 🚀 Snapshot Release (Binary for `${{ runner.os }}-${{ runner.arch }}`)
+
+            The latest changes of this PR are available for download (based on the declared `changesets`):
+
+            [🔗 Download](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload.outputs.artifact-id }})
