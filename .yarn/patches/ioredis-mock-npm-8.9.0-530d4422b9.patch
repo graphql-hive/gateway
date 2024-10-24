@@ -1,0 +1,21 @@
+diff --git a/lib/index.js b/lib/index.js
+index a82c2975d19bfcce4179d27594e26e0c47ef7a1f..c137fc868769255aff7d3d83e884431e6c34057b 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -6274,9 +6274,14 @@ var defaultOptions = {
+ RedisMock.Command = Command;
+ RedisMock.Cluster = class extends RedisMock {
+   constructor(nodesOptions, clusterOptions) {
+-    clusterOptions && clusterOptions.redisOptions ? super(clusterOptions.redisOptions) : super(), nodesOptions.forEach(
++    if (clusterOptions && clusterOptions.redisOptions) {
++      super(clusterOptions.redisOptions);
++    } else {
++      super();
++    }
++    nodesOptions.forEach(
+       (options) => this.clusterNodes.all.push(new RedisMock(options))
+-    );
++    );    
+   }
+   clusterNodes = {
+     all: [],

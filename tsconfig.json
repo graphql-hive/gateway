@@ -24,6 +24,7 @@
     "./packages/**/src",
     "./packages/**/tests",
     "./packages/**/scripts",
+    "./packages/**/rollup.config.js",
     "./e2e"
   ]
 }

@@ -40,6 +40,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version.ts",
+    "bundle": "rimraf bundle && rollup -c",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts"
   },
@@ -86,6 +87,8 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@graphql-mesh/transport-common": "^0.7.9",
+    "@graphql-mesh/transport-http": "^0.6.9",
     "@parcel/watcher": "^2.3.0",
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
@@ -98,6 +101,7 @@
     "graphql": "^16.9.0",
     "pkgroll": "^2.5.0",
     "postject": "^1.0.0-alpha.6",
+    "rimraf": "^6.0.1",
     "rollup": "^4.18.1",
     "rollup-plugin-tsconfig-paths": "^1.5.2",
     "tsx": "^4.19.1"

@@ -10,6 +10,7 @@
   "packageManager": "yarn@4.5.1",
   "scripts": {
     "build": "yarn workspaces foreach -A -p run build",
+    "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
     "check:types": "yarn tsc",
@@ -36,6 +37,8 @@
     "vitest": "^2.1.3"
   },
   "resolutions": {
-    "graphql": "^16.9.0"
+    "graphql": "^16.9.0",
+    "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
+    "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch"
   }
 }

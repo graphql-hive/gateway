@@ -70,3 +70,18 @@ jobs:
         run: yarn install
       - name: Check
         run: yarn build
+
+  bundle: # making sure bundle works so it doesn't fail on us during release
+    name: Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Install
+        run: yarn install
+      - name: Check
+        run: yarn bundle
