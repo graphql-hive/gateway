@@ -101,11 +101,10 @@ jobs:
       - if: github.event_name == 'pull_request'
         name: Comment on PR
         uses: marocchino/sticky-pull-request-comment@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
-          header: 🚀 Snapshot Release (Docker Image)
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          header: '🚀 Snapshot Release (Docker Image)'
           message: |
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
