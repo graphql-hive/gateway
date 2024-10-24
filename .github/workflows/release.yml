@@ -49,7 +49,7 @@ jobs:
     steps:
       - name: Version
         uses: actions/github-script@v7
-        id: ver-mesh-serve
+        id: ver-gateway
         with:
           script: |
             const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
@@ -87,11 +87,11 @@ jobs:
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
-        run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
+        run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
       - name: Bake and Push
         uses: docker/bake-action@v5
         env:
-          GATEWAY_TAGS: ${{ fromJSON(steps.ver-mesh-serve.outputs.result).tags }}
+          GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
           targets: gateway
           set: |
@@ -110,5 +110,5 @@ jobs:
 
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
-            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
+            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
             ```
