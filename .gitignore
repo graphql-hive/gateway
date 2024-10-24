@@ -5,3 +5,5 @@ bundle/
 .yarn/*
 !.yarn/patches
 tsconfig.tsbuildinfo
+sea-prep.blob
+hive-gateway

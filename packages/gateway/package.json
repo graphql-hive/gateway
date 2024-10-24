@@ -40,7 +40,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version.ts",
-    "bundle": "rimraf bundle && rollup -c",
+    "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts"
   },
