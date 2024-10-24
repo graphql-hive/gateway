@@ -149,13 +149,18 @@ jobs:
         uses: fbactions/setup-winsdk@v2
         with:
           winsdk-build-version: 18362
-      - name: Enable corepack
+      - if: runner.os == 'Windows'
+        name: Enable corepack on CMD
+        shell: cmd
+        run: corepack enable
+      - if: runner.os != 'Windows'
+        name: Enable corepack
         run: corepack enable
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: ${{ runner.os == 'Windows' && '' || 'yarn'}}
+          cache: yarn
       - name: Install
         run: yarn install
       - name: Bundle
