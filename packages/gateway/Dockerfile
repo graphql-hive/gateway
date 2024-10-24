@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
   # clean
   apt-get clean
 
-WORKDIR /serve
+WORKDIR /gateway
 
 COPY --chown=root --from=install /install/node_modules /node_modules
 COPY --chown=root bundle/node_modules /node_modules
