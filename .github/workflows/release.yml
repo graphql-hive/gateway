@@ -149,23 +149,10 @@ jobs:
         uses: fbactions/setup-winsdk@v2
         with:
           winsdk-build-version: 18362
-      - name: Enable corepack
-        run: corepack enable
-        shell: powershell
-      - if: runner.os == 'Windows'
-        name: Set up Node on Windows
-        uses: actions/setup-node@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-          # TODO: no cache because corepack is not installing yarn on windows from setup-node action
-      - if: runner.os != 'Windows'
-        name: Set up Node on Unix
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: yarn
-      - name: Install
-        run: yarn install
       - name: Bundle
         env:
           NODE_OPTIONS: ${{ runner.os == 'macOS' && '--max_old_space_size=4096' || '' }}
