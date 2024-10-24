@@ -104,8 +104,10 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: '🚀 Snapshot Release (Docker Image)'
+          header: snapshot-release-docker-image
           message: |
+            ### 🚀 Snapshot Release (Docker Image)
+
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
             ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-mesh-serve.outputs.result).version }}
