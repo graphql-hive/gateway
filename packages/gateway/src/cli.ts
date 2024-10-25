@@ -362,9 +362,7 @@ export function enableModuleCachingIfPossible() {
   if (globalThis.__PACKED_DEPS_PATH__) {
     cacheDir = join(globalThis.__PACKED_DEPS_PATH__, 'node-compile-cache');
   }
-  // @ts-expect-error - enableCompileCache has recently been added to the module object
   if (module.enableCompileCache) {
-    // @ts-expect-error - enableCompileCache has recently been added to the module object
     module.enableCompileCache(cacheDir);
   }
 }
