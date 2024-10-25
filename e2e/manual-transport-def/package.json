@@ -1,0 +1,21 @@
+{
+  "name": "@e2e/manual-transport-def",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@graphql-mesh/compose-cli": "^1.1.4",
+    "@graphql-mesh/cross-helpers": "^0.4.7",
+    "@graphql-mesh/store": "^0.102.10",
+    "@graphql-mesh/transport-common": "^0.7.11",
+    "@graphql-mesh/transport-http": "^0.6.11",
+    "@graphql-mesh/transport-rest": "^0.7.11",
+    "@graphql-mesh/types": "^0.102.10",
+    "@graphql-mesh/utils": "^0.102.10",
+    "@graphql-tools/utils": "^10.5.5",
+    "@omnigraph/openapi": "^0.107.4",
+    "@whatwg-node/fetch": "^0.9.22",
+    "fets": "^0.8.3",
+    "graphql": "^16.9.0",
+    "tslib": "^2.8.0"
+  }
+}
