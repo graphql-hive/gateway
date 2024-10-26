@@ -1,7 +1,7 @@
 import { createTenv } from '@internal/e2e';
 import { fetch, File, FormData } from '@whatwg-node/fetch';
 
-const { compose, serve, service } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, service } = createTenv(__dirname);
 
 it('should upload file', async () => {
   const { output } = await compose({

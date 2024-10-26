@@ -1,6 +1,6 @@
 import { createTenv } from '@internal/e2e';
 
-const { compose, serve } = createTenv(__dirname);
+const { composeWithMesh: compose, serve } = createTenv(__dirname);
 
 it('should compose the appropriate schema', async () => {
   const { result } = await compose({ trimHostPaths: true });

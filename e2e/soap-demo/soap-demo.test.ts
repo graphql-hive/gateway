@@ -1,6 +1,6 @@
 import { createTenv, type Container } from '@internal/e2e';
 
-const { compose, serve, container } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, container } = createTenv(__dirname);
 
 let soapDemo: Container;
 

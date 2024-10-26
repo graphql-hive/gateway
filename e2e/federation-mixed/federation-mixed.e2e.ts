@@ -70,6 +70,7 @@ it.concurrent.each([
 ])('should execute $name', async ({ query }) => {
   const { execute } = await gateway({
     supergraph: {
+      with: 'mesh',
       services: [
         await service('accounts'),
         await service('inventory'),

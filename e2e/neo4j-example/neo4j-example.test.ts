@@ -1,6 +1,11 @@
 import { createTenv, type Container } from '@internal/e2e';
 
-const { compose, container, serve, spawn } = createTenv(__dirname);
+const {
+  composeWithMesh: compose,
+  container,
+  serve,
+  spawn,
+} = createTenv(__dirname);
 
 let neo4j: Container;
 beforeAll(async () => {

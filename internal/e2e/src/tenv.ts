@@ -101,7 +101,12 @@ export interface ServeOptions extends ProcOptions {
    * Path to the supergraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
-  supergraph?: string | Omit<ComposeOptions, 'output'>;
+  supergraph?:
+    | string
+    | {
+        with: 'mesh' | 'apollo';
+        services: Service[];
+      };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -230,7 +235,6 @@ export interface Tenv {
   ): Promise<[proc: Proc, waitForExit: Promise<void>]>;
   gatewayRunner: ServeRunner;
   gateway(opts?: ServeOptions): Promise<Gateway>;
-  compose(opts?: ComposeOptions): Promise<Compose>;
   /**
    * Starts a service by name. Services are services that serve data, not necessarily GraphQL.
    * The TypeScript service executable must be at `services/<name>.ts` or `services/<name>/index.ts`.
@@ -238,6 +242,7 @@ export interface Tenv {
    */
   service(name: string, opts?: ServiceOptions): Promise<Service>;
   container(opts: ContainerOptions): Promise<Container>;
+  composeWithMesh(opts?: ComposeOptions): Promise<Compose>;
   composeWithApollo(services: Service[]): Promise<string>;
 }
 
@@ -291,11 +296,14 @@ export function createTenv(cwd: string): Tenv {
       let supergraph: string | null = null;
       if (typeof supergraphOpt === 'string') {
         supergraph = supergraphOpt;
-      } /** ComposeOptions */ else {
-        const { output } = await tenv.compose({
-          ...supergraphOpt,
+      } else if (supergraphOpt?.with === 'mesh') {
+        const { output } = await tenv.composeWithMesh({
           output: 'graphql',
+          services: supergraphOpt.services,
         });
+        supergraph = output;
+      } else if (supergraphOpt?.with === 'apollo') {
+        const output = await tenv.composeWithApollo(supergraphOpt.services);
         supergraph = output;
       }
 
@@ -464,7 +472,7 @@ export function createTenv(cwd: string): Tenv {
       ]);
       return gw;
     },
-    async compose(opts) {
+    async composeWithMesh(opts) {
       const {
         services = [],
         trimHostPaths,

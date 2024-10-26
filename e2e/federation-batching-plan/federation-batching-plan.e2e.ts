@@ -1,20 +1,20 @@
 import { createTenv } from '@internal/e2e';
-import { beforeAll, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 
-const { service, gateway, composeWithApollo } = createTenv(__dirname);
-
-let supergraph!: string;
-beforeAll(async () => {
-  supergraph = await composeWithApollo([
-    await service('accounts'),
-    await service('inventory'),
-    await service('products'),
-    await service('reviews'),
-  ]);
-});
+const { service, gateway } = createTenv(__dirname);
 
 it('should consistently explain the query plan', async () => {
-  const { execute } = await gateway({ supergraph });
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [
+        await service('accounts'),
+        await service('inventory'),
+        await service('products'),
+        await service('reviews'),
+      ],
+    },
+  });
   await expect(
     execute({
       query: /* GraphQL */ `

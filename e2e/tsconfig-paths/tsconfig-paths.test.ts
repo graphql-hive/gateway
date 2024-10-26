@@ -1,7 +1,7 @@
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 
-const { compose, serve, fs } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, fs } = createTenv(__dirname);
 
 it('should compose', async () => {
   const proc = await compose({

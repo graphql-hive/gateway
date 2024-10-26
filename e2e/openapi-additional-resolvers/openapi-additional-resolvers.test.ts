@@ -1,6 +1,6 @@
 import { createTenv } from '@internal/e2e';
 
-const { compose, serve } = createTenv(__dirname);
+const { composeWithMesh: compose, serve } = createTenv(__dirname);
 
 it('should execute Metrics with banana', async () => {
   const { output } = await compose({ output: 'graphql' });

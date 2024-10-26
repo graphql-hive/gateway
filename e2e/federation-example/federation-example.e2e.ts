@@ -1,20 +1,7 @@
-import { createTenv, type Service } from '@internal/e2e';
-import { beforeAll, expect, it } from 'vitest';
+import { createTenv } from '@internal/e2e';
+import { expect, it } from 'vitest';
 
-const { fs, service, gateway, composeWithApollo } = createTenv(__dirname);
-
-let services!: Service[];
-let supergraph!: string;
-beforeAll(async () => {
-  services = [
-    await service('accounts'),
-    await service('inventory'),
-    await service('products'),
-    await service('reviews'),
-  ];
-
-  supergraph = await fs.read(await composeWithApollo(services));
-});
+const { service, gateway } = createTenv(__dirname);
 
 it.concurrent.each([
   {
@@ -81,8 +68,16 @@ it.concurrent.each([
     `,
   },
 ])('should execute $name', async ({ query }) => {
-  const supergraphFile = await fs.tempfile('supergraph.graphql');
-  await fs.write(supergraphFile, supergraph);
-  const { execute } = await gateway({ supergraph: supergraphFile });
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [
+        await service('accounts'),
+        await service('inventory'),
+        await service('products'),
+        await service('reviews'),
+      ],
+    },
+  });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });

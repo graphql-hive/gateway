@@ -1,6 +1,6 @@
 import { createTenv } from '@internal/e2e';
 
-const { compose, serve, service } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, service } = createTenv(__dirname);
 
 describe('OpenAPI w/ Prune Transform', () => {
   it('composes', async () => {

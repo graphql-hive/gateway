@@ -2,7 +2,7 @@ import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 
-const { compose, service, serve } = createTenv(__dirname);
+const { composeWithMesh: compose, service, serve } = createTenv(__dirname);
 
 it('should compose the appropriate schema', async () => {
   const { result } = await compose({

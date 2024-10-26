@@ -2,7 +2,7 @@ import os from 'os';
 import { createTbench, type Tbench, type TbenchResult } from '@e2e/tbench';
 import { createTenv, type Container } from '@internal/e2e';
 
-const { compose, serve, container } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, container } = createTenv(__dirname);
 
 let tbench: Tbench;
 beforeAll(async () => {

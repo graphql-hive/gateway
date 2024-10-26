@@ -12,10 +12,11 @@ import {
   type Client as WSClient,
   type ClientOptions as WSClientOptions,
 } from 'graphql-ws';
+import { afterEach, describe, expect, it } from 'vitest';
 import webSocketImpl from 'ws';
 import { TOKEN } from './services/products/server';
 
-const { composeWithApollo, service, serve } = createTenv(__dirname);
+const { composeWithApollo, service, gateway } = createTenv(__dirname);
 
 let client: WSClient | SSEClient | null = null;
 
@@ -44,7 +45,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         await service('products'),
         await service('reviews'),
       ]);
-      const { port } = await serve({ supergraph: supergraphFile });
+      const { port } = await gateway({ supergraph: supergraphFile });
 
       client = createClient({
         url: `http://localhost:${port}/graphql`,
@@ -131,7 +132,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         await service('products'),
         await service('reviews'),
       ]);
-      const { port } = await serve({ supergraph: supergraphFile });
+      const { port } = await gateway({ supergraph: supergraphFile });
 
       client = createClient({
         url: `http://localhost:${port}/graphql`,
@@ -175,7 +176,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const availablePort = await getAvailablePort();
 
       const publicUrl = `http://${getLocalHostName()}:${availablePort}`;
-      await serve({
+      await gateway({
         supergraph: supergraphFile,
         port: availablePort,
         env: {

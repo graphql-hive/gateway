@@ -1,6 +1,6 @@
 import { createTenv } from '@internal/e2e';
 
-const { serve, compose, fs } = createTenv(__dirname);
+const { serve, composeWithMesh: compose, fs } = createTenv(__dirname);
 
 it('should write serve logs to stderr', async () => {
   await using serveInstance = await serve({

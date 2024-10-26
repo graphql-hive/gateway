@@ -6,6 +6,7 @@ const { gateway, service } = createTenv(__dirname);
 it('resolves extra fields', async () => {
   const { execute } = await gateway({
     supergraph: {
+      with: 'mesh',
       services: [await service('foo'), await service('bar')],
     },
   });

@@ -30,6 +30,7 @@ it.concurrent.each([
 ])('should execute $name', async ({ query }) => {
   const { execute } = await gateway({
     supergraph: {
+      with: 'mesh',
       services: [petstore, await service('vaccination')],
     },
   });

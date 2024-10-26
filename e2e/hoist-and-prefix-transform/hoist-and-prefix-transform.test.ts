@@ -1,6 +1,6 @@
 import { createTenv } from '@internal/e2e';
 
-const { compose, serve, service, fs } = createTenv(__dirname);
+const { composeWithMesh: compose, serve, service, fs } = createTenv(__dirname);
 
 it('should compose and execute', async () => {
   const { output } = await compose({

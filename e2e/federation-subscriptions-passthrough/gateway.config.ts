@@ -2,7 +2,7 @@ import {
   defineConfig,
   type HTTPCallbackTransportOptions,
   type WSTransportOptions,
-} from '@graphql-mesh/serve-cli';
+} from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
   webhooks: true,
@@ -25,7 +25,7 @@ export const gatewayConfig = defineConfig({
         subscriptions: {
           kind: 'http-callback',
           options: {
-            public_url: process.env.PUBLIC_URL,
+            public_url: process.env['PUBLIC_URL'],
           } satisfies HTTPCallbackTransportOptions,
         },
       },
