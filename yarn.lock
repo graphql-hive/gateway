@@ -1196,7 +1196,7 @@ __metadata:
     graphql-sse: "npm:^2.5.3"
     graphql-yoga: "npm:^5.7.0"
     html-minifier-terser: "npm:7.2.0"
-    pkgroll: "npm:^2.5.0"
+    pkgroll: "npm:^2.5.1"
     tslib: "npm:^2.8.0"
     tsx: "npm:^4.19.1"
   peerDependencies:
@@ -1253,7 +1253,7 @@ __metadata:
     graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.7.0"
     parse-duration: "npm:^1.1.0"
-    pkgroll: "npm:^2.5.0"
+    pkgroll: "npm:^2.5.1"
     postject: "npm:^1.0.0-alpha.6"
     rimraf: "npm:^6.0.1"
     rollup: "npm:^4.18.1"
@@ -7401,7 +7401,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     prettier-plugin-pkg: "npm:^0.18.1"
     prettier-plugin-sh: "npm:^0.14.0"
-    tsx: "npm:^4.16.5"
+    tsx: "npm:^4.19.1"
     typescript: "npm:^5.6.3"
     typescript-eslint: "npm:^8.9.0"
     vite: "npm:^5.4.9"
@@ -9785,9 +9785,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pkgroll@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "pkgroll@npm:2.5.0"
+"pkgroll@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "pkgroll@npm:2.5.1"
   dependencies:
     "@rollup/plugin-alias": "npm:^5.1.0"
     "@rollup/plugin-commonjs": "npm:^26.0.1"
@@ -9806,7 +9806,7 @@ __metadata:
       optional: true
   bin:
     pkgroll: dist/cli.js
-  checksum: 10c0/9fe0ba5b8f35d04e4fcc4ec34239c480c2610cb2021caf8014a718ff0e8b00dbdaf41d57816f0ca143b42c73cedc5ac6cc2d5ee911a22bdcd364e857d92327dc
+  checksum: 10c0/15c1dcb982c27056579f27615f49366bca634df19450e7eb1b44d2ac86ebe80266e4ec5b419190c0cf591a7acf839c22f9029749e15ec7d6736b3ceb8660e896
   languageName: node
   linkType: hard
 
@@ -11188,7 +11188,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.16.5, tsx@npm:^4.19.1":
+"tsx@npm:^4.19.1":
   version: 4.19.1
   resolution: "tsx@npm:4.19.1"
   dependencies:
