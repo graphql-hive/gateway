@@ -1,23 +1,17 @@
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, service, serve } = createTenv(__dirname);
-
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [await service('api')],
-    maskServicePorts: true,
-  });
-  expect(result).toMatchSnapshot();
-});
+const { service, gateway } = createTenv(__dirname);
 
 it('should listen for webhooks', async () => {
-  const { output } = await compose({
-    output: 'graphql',
-    services: [await service('api')],
+  const { execute, port } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [await service('api')],
+    },
   });
-  const { execute, port } = await serve({ supergraph: output });
 
   const res = await execute({
     query: /* GraphQL */ `

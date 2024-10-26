@@ -1,8 +1,8 @@
 import {
   createOtlpHttpExporter,
-  defineConfig as defineGatewayConfig,
-} from '@graphql-mesh/serve-cli';
-import type { GatewayPlugin } from '@graphql-mesh/serve-runtime';
+  defineConfig,
+  GatewayPlugin,
+} from '@graphql-hive/gateway';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
@@ -25,12 +25,12 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
-export const gatewayConfig = defineGatewayConfig({
+export const gatewayConfig = defineConfig({
   openTelemetry: {
     exporters: [
       createOtlpHttpExporter(
         {
-          url: process.env.OTLP_EXPORTER_URL,
+          url: process.env['OTLP_EXPORTER_URL'],
         },
         // Batching config is set in order to make it easier to test.
         {
@@ -38,7 +38,7 @@ export const gatewayConfig = defineGatewayConfig({
         },
       ),
     ],
-    serviceName: process.env.OTLP_SERVICE_NAME,
+    serviceName: process.env['OTLP_SERVICE_NAME'],
   },
   plugins: () => [useOnFetchTracer()],
 });

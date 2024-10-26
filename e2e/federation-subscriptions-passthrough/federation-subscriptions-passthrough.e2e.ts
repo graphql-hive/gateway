@@ -51,11 +51,6 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         fetchFn: fetch,
         webSocketImpl,
       });
-      await using _ = {
-        async [Symbol.asyncDispose]() {
-          await client.dispose();
-        },
-      };
 
       const sub = client.iterate({
         query: /* GraphQL */ `
@@ -143,11 +138,6 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         fetchFn: fetch,
         webSocketImpl,
       });
-      await using _ = {
-        async [Symbol.asyncDispose]() {
-          await client.dispose();
-        },
-      };
 
       const query = /* GraphQL */ `
         subscription OnProductPriceChanged {
@@ -194,11 +184,6 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         fetchFn: fetch,
         webSocketImpl,
       });
-      await using _ = {
-        async [Symbol.asyncDispose]() {
-          await client.dispose();
-        },
-      };
 
       const sub = client.iterate({
         query: /* GraphQL */ `
