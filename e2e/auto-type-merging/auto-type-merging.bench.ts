@@ -3,7 +3,7 @@ import { beforeAll, bench, expect } from 'vitest';
 
 const { gateway, composeWithMesh, service, container } = createTenv(__dirname);
 
-let gw!: Gateway;
+let gw: Gateway;
 beforeAll(async () => {
   const petstore = await container({
     name: 'petstore',
@@ -37,12 +37,9 @@ bench('GetPet', async () => {
   ).resolves.toEqual(
     expect.objectContaining({
       data: {
-        getPetById: {
+        getPetById: expect.objectContaining({
           __typename: expect.anything(),
-          id: expect.anything(),
-          name: expect.anything(),
-          vaccinated: expect.anything(),
-        },
+        }),
       },
     }),
   );

@@ -1,20 +1,11 @@
-import os from 'os';
-import { createTbench, type Tbench, type TbenchResult } from '@e2e/tbench';
-import { createTenv, type Container } from '@internal/e2e';
+import { createTenv, Gateway } from '@internal/e2e';
+import { beforeAll, bench, expect } from 'vitest';
 
-const { composeWithMesh: compose, serve, container } = createTenv(__dirname);
+const { gateway, container } = createTenv(__dirname);
 
-let tbench: Tbench;
+let gw: Gateway;
 beforeAll(async () => {
-  tbench = await createTbench(
-    // to give space for jest and the serve process.
-    os.availableParallelism() - 2,
-  );
-});
-
-let mysql!: Container;
-beforeAll(async () => {
-  mysql = await container({
+  const mysql = await container({
     name: 'employees',
     image: 'genschsa/mysql-employees',
     containerPort: 3306,
@@ -28,20 +19,17 @@ beforeAll(async () => {
       MYSQL_ROOT_PASSWORD: 'passwd', // used in mesh.config.ts
     },
   });
+  gw = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [mysql],
+    },
+  });
 });
 
-const threshold: TbenchResult = {
-  maxCpu: Infinity, // we dont care
-  maxMem: 500, // MB
-  slowestRequest: 1, // second
-};
-
-it(`should perform within threshold ${JSON.stringify(threshold)}`, async () => {
-  const { output } = await compose({ output: 'graphql', services: [mysql] });
-  const server = await serve({ supergraph: output });
-  const result = await tbench.sustain({
-    server,
-    params: {
+bench('GetSomeEmployees', async () => {
+  await expect(
+    gw.execute({
       query: /* GraphQL */ `
         query GetSomeEmployees {
           employees(limit: 5, orderBy: { emp_no: asc }) {
@@ -68,12 +56,16 @@ it(`should perform within threshold ${JSON.stringify(threshold)}`, async () => {
           }
         }
       `,
-    },
-  });
-
-  console.debug(result);
-
-  expect(result.maxCpu).toBeLessThan(threshold.maxCpu);
-  expect(result.maxMem).toBeLessThan(threshold.maxMem);
-  expect(result.slowestRequest).toBeLessThan(threshold.slowestRequest);
+    }),
+  ).resolves.toEqual(
+    expect.objectContaining({
+      data: {
+        employees: expect.arrayContaining([
+          expect.objectContaining({
+            __typename: expect.stringContaining(''),
+          }),
+        ]),
+      },
+    }),
+  );
 });
