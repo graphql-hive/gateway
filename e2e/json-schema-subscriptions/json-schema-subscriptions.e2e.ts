@@ -1,22 +1,20 @@
 import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, service } = createTenv(__dirname);
-
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [await service('api')],
-    maskServicePorts: true,
-  });
-  expect(result).toMatchSnapshot();
-});
+const { gateway, service } = createTenv(__dirname);
 
 it('should query, mutate and subscribe', async () => {
-  const servePort = await getAvailablePort();
-  const api = await service('api', { servePort });
-  const { output } = await compose({ output: 'graphql', services: [api] });
-  const { execute } = await serve({ supergraph: output, port: servePort });
+  const gatewayPort = await getAvailablePort();
+  const api = await service('api', { gatewayPort });
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [api],
+    },
+    port: gatewayPort,
+  });
 
   await expect(
     execute({
@@ -38,7 +36,7 @@ it('should query, mutate and subscribe', async () => {
 `);
 
   const sse = createClient({
-    url: `http://localhost:${servePort}/graphql`,
+    url: `http://0.0.0.0:${gatewayPort}/graphql`,
     retryAttempts: 0,
     fetchFn: fetch,
   });

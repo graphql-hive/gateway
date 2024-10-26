@@ -1,8 +1,7 @@
+import { defineConfig } from '@graphql-mesh/compose-cli';
 import { GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
-import { defineConfig as defineComposeConfig } from '@graphql-mesh/compose-cli';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: () => ({
@@ -21,14 +20,4 @@ export const composeConfig = defineComposeConfig({
       }),
     },
   ],
-});
-
-export const gatewayConfig = defineGatewayConfig({
-  additionalResolvers: {
-    Query: {
-      hello() {
-        return 'world';
-      },
-    },
-  },
 });

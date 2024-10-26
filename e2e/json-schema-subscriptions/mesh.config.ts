@@ -1,13 +1,11 @@
-import { defineConfig as defineComposeConfig } from '@graphql-mesh/compose-cli';
-import useMeshLiveQuery from '@graphql-mesh/plugin-live-query';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
+import { defineConfig } from '@graphql-mesh/compose-cli';
 import { Opts } from '@internal/testing';
 import { loadJSONSchemaSubgraph } from '@omnigraph/json-schema';
 import { OperationTypeNode } from 'graphql';
 
 const opts = Opts(process.argv);
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadJSONSchemaSubgraph('API', {
@@ -44,19 +42,4 @@ export const composeConfig = defineComposeConfig({
   additionalTypeDefs: /* GraphQL */ `
     directive @live on QUERY
   `,
-});
-
-export const gatewayConfig = defineGatewayConfig({
-  webhooks: true,
-  plugins: (ctx) => [
-    useMeshLiveQuery({
-      ...ctx,
-      invalidations: [
-        {
-          field: 'Mutation.addTodo',
-          invalidate: ['Query.todos'],
-        },
-      ],
-    }),
-  ],
 });

@@ -1,15 +1,13 @@
 import {
-  defineConfig as defineComposeConfig,
+  defineConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
-import rest from '@graphql-mesh/transport-rest';
 import { Opts } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
 const opts = Opts(process.argv);
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadOpenAPISubgraph('greetings', {
@@ -23,11 +21,4 @@ export const composeConfig = defineComposeConfig({
       }),
     },
   ],
-});
-
-export const gatewayConfig = defineGatewayConfig({
-  transports: {
-    rest,
-    http: import('@graphql-mesh/transport-http'),
-  },
 });

@@ -1,19 +1,20 @@
 import { createTenv } from '@internal/e2e';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, service, fs } = createTenv(__dirname);
+const { composeWithMesh, gateway, service, fs } = createTenv(__dirname);
 
-it('should compose and execute', async () => {
-  const { output } = await compose({
+it('should execute', async () => {
+  const { output } = await composeWithMesh({
     output: 'graphql',
     services: [await service('weather')],
   });
 
-  // hoisted
+  // expect correct compose
   const supergraph = await fs.read(output);
   expect(supergraph).toContain('Test_Weather');
   expect(supergraph).toContain('chanceOfRain');
 
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({ supergraph: output });
   await expect(
     execute({
       query: /* GraphQL */ `
