@@ -8,6 +8,12 @@ export default tseslint.config(
   {
     languageOptions: { parser: tseslint.parser },
     files: ['**/*.ts'],
+    plugins: {
+      import: importPlugin,
+    },
+    rules: {
+      'import/no-extraneous-dependencies': 'error',
+    },
   },
   // node
   {
