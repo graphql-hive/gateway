@@ -50,7 +50,8 @@ export const server = createRouter()
         200: UserType,
       },
     },
-    handler: ({ params }) => Response.json(users.find(user => user.id === params.id)),
+    handler: ({ params }) =>
+      Response.json(users.find((user) => user.id === params.id)),
   })
   .route({
     operationId: 'users',

@@ -1,11 +1,11 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { setTimeout } from 'timers/promises';
-import { parse } from 'graphql';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { parse } from 'graphql';
 
 const schema = buildSubgraphSchema([
   {
@@ -13,7 +13,7 @@ const schema = buildSubgraphSchema([
     resolvers: {
       Product: {
         reviews(product: any) {
-          return reviews.filter(review => review.product.id === product.id);
+          return reviews.filter((review) => review.product.id === product.id);
         },
       },
       Subscription: {
@@ -31,7 +31,10 @@ const schema = buildSubgraphSchema([
   },
 ]);
 
-const server = new ApolloServer({ schema, plugins: [ApolloServerPluginSubscriptionCallback()] });
+const server = new ApolloServer({
+  schema,
+  plugins: [ApolloServerPluginSubscriptionCallback()],
+});
 
 export async function start(port: number): Promise<ApolloServer> {
   await startStandaloneServer(server, { listen: { port } });

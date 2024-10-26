@@ -5,7 +5,8 @@ export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadODataSubgraph('Trippin', {
-        endpoint: 'https://services.odata.org/TripPinRESTierService/(S(qzsyox3345c15qeq305pblvw))/',
+        endpoint:
+          'https://services.odata.org/TripPinRESTierService/(S(qzsyox3345c15qeq305pblvw))/',
         batch: 'multipart',
         expandNavProps: true,
       }),

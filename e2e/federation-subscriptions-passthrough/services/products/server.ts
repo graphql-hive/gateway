@@ -1,15 +1,15 @@
 import { readFileSync } from 'fs';
 import { createServer, Server } from 'http';
 import { join } from 'path';
-import express from 'express';
-import { parse } from 'graphql';
-import { useServer } from 'graphql-ws/lib/use/ws';
-import { WebSocketServer } from 'ws';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Repeater } from '@repeaterjs/repeater';
+import express from 'express';
+import { parse } from 'graphql';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { WebSocketServer } from 'ws';
 
 export const TOKEN = 'wowmuchsecret';
 
@@ -21,7 +21,7 @@ const schema = buildSubgraphSchema([
         __resolveReference(object: any) {
           return {
             ...object,
-            ...products.find(product => product.id === object.id),
+            ...products.find((product) => product.id === object.id),
           };
         },
       },
@@ -38,7 +38,9 @@ const schema = buildSubgraphSchema([
               const interval = setInterval(() => {
                 const product = products[i];
 
-                push({ productPriceChanged: { ...product, price: product.price * 2 } });
+                push({
+                  productPriceChanged: { ...product, price: product.price * 2 },
+                });
 
                 i++;
                 if (i >= products.length) {
@@ -106,7 +108,7 @@ const server = new ApolloServer({
 export async function start(port: number): Promise<Server> {
   await server.start();
   app.use('/graphql', express.json(), expressMiddleware(server));
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     httpServer.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}/graphql`);
       resolve(httpServer);
