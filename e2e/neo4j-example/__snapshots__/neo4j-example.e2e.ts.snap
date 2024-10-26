@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`should execute 'MovieWithActedIn' 1`] = `
+{
+  "data": {
+    "movies": [
+      {
+        "peopleActedIn": [
+          {
+            "name": "Emil Eifrem",
+          },
+          {
+            "name": "Hugo Weaving",
+          },
+        ],
+        "released": 1999,
+        "tagline": "Welcome to the Real World",
+        "title": "The Matrix",
+      },
+      {
+        "peopleActedIn": [
+          {
+            "name": "Hugo Weaving",
+          },
+          {
+            "name": "Laurence Fishburne",
+          },
+        ],
+        "released": 2003,
+        "tagline": "Free your mind",
+        "title": "The Matrix Reloaded",
+      },
+    ],
+  },
+}
+`;

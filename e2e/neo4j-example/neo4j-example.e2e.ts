@@ -1,11 +1,7 @@
 import { createTenv, type Container } from '@internal/e2e';
+import { beforeAll, expect, it } from 'vitest';
 
-const {
-  composeWithMesh: compose,
-  container,
-  serve,
-  spawn,
-} = createTenv(__dirname);
+const { container, gateway, spawn } = createTenv(__dirname);
 
 let neo4j: Container;
 beforeAll(async () => {
@@ -36,14 +32,6 @@ beforeAll(async () => {
   await waitForLoad;
 });
 
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [neo4j],
-    maskServicePorts: true,
-  });
-  expect(result).toMatchSnapshot();
-});
-
 it.concurrent.each([
   {
     name: 'MovieWithActedIn',
@@ -61,10 +49,11 @@ it.concurrent.each([
     `,
   },
 ])('should execute $name', async ({ query }) => {
-  const { output } = await compose({
-    services: [neo4j],
-    output: 'graphql',
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [neo4j],
+    },
   });
-  const { execute } = await serve({ supergraph: output });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });
