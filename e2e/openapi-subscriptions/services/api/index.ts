@@ -4,9 +4,10 @@ import { fetch } from '@whatwg-node/fetch';
 import { createRouter, Response } from 'fets';
 import urljoin from 'url-join';
 
-const app = createRouter<FetchEvent>().route({
+const app = createRouter().route({
   method: 'POST',
   path: '/streams',
+  // @ts-expect-error TODO: something's wrong with fets types
   handler(req, { waitUntil }) {
     const subscriptionId = Date.now().toString();
     waitUntil(

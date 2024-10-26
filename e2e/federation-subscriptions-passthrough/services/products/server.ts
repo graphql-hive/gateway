@@ -36,7 +36,7 @@ const schema = buildSubgraphSchema([
             new Repeater(async (push, stop) => {
               let i = 0;
               const interval = setInterval(() => {
-                const product = products[i];
+                const product = products[i]!;
 
                 push({
                   productPriceChanged: { ...product, price: product.price * 2 },
@@ -77,10 +77,11 @@ const graphqlWsServer = useServer(
         process.exit(1);
       }
       // make sure the authorization header is propagated by the gateway
-      if (connectionParams.token !== TOKEN) {
+      if (connectionParams?.['token'] !== TOKEN) {
         return false;
       }
       hasConnectedWebSocket = true;
+      return true;
     },
     onClose() {
       hasConnectedWebSocket = false;

@@ -5,9 +5,9 @@ import { createRouter, Response } from 'fets';
 
 const opts = Opts(process.argv);
 
-let todos = [];
+const todos: unknown[] = [];
 
-const app = createRouter<FetchEvent>()
+const app = createRouter()
   .route({
     path: '/todos',
     method: 'GET',
@@ -16,6 +16,7 @@ const app = createRouter<FetchEvent>()
   .route({
     path: '/todo',
     method: 'POST',
+    // @ts-expect-error TODO: something's wrong with fets types
     async handler(request, { waitUntil }) {
       const reqBody = await request.json();
       const todo = {

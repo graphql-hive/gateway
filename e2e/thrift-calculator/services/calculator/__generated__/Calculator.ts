@@ -88,8 +88,8 @@ export const Add__ArgsCodec: thrift.IStructCodec<IAdd__ArgsArgs, IAdd__Args> = {
 };
 export class Add__Args extends thrift.StructLike implements IAdd__Args {
     public request: AddRequest.IAddRequest;
-    public readonly _annotations: thrift.IThriftAnnotations = {};
-    public readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
+    public override readonly _annotations: thrift.IThriftAnnotations = {};
+    public override readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
     constructor(args: IAdd__ArgsArgs) {
         super();
         if (args.request != null) {
@@ -195,8 +195,8 @@ export const Subtract__ArgsCodec: thrift.IStructCodec<ISubtract__ArgsArgs, ISubt
 export class Subtract__Args extends thrift.StructLike implements ISubtract__Args {
     public left: number;
     public right: number;
-    public readonly _annotations: thrift.IThriftAnnotations = {};
-    public readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
+    public override readonly _annotations: thrift.IThriftAnnotations = {};
+    public override readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
     constructor(args: ISubtract__ArgsArgs) {
         super();
         if (args.left != null) {
@@ -279,8 +279,8 @@ export const Add__ResultCodec: thrift.IStructCodec<IAdd__ResultArgs, IAdd__Resul
 };
 export class Add__Result extends thrift.StructLike implements IAdd__Result {
     public success?: number;
-    public readonly _annotations: thrift.IThriftAnnotations = {};
-    public readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
+    public override readonly _annotations: thrift.IThriftAnnotations = {};
+    public override readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
     constructor(args: IAdd__ResultArgs = {}) {
         super();
         if (args.success != null) {
@@ -353,8 +353,8 @@ export const Subtract__ResultCodec: thrift.IStructCodec<ISubtract__ResultArgs, I
 };
 export class Subtract__Result extends thrift.StructLike implements ISubtract__Result {
     public success?: number;
-    public readonly _annotations: thrift.IThriftAnnotations = {};
-    public readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
+    public override readonly _annotations: thrift.IThriftAnnotations = {};
+    public override readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
     constructor(args: ISubtract__ResultArgs = {}) {
         super();
         if (args.success != null) {
@@ -373,14 +373,14 @@ export class Subtract__Result extends thrift.StructLike implements ISubtract__Re
     }
 }
 export class Client<Context = any> extends thrift.ThriftClient<Context> {
-    public static readonly serviceName: string = serviceName;
-    public static readonly annotations: thrift.IThriftAnnotations = annotations;
-    public static readonly methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
-    public static readonly methodNames: Array<string> = methodNames;
-    public readonly _serviceName: string = serviceName;
-    public readonly _annotations: thrift.IThriftAnnotations = annotations;
-    public readonly _methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
-    public readonly _methodNames: Array<string> = methodNames;
+    public static override readonly serviceName: string = serviceName;
+    public static override readonly annotations: thrift.IThriftAnnotations = annotations;
+    public static override readonly methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
+    public static override readonly methodNames: Array<string> = methodNames;
+    public override readonly _serviceName: string = serviceName;
+    public override readonly _annotations: thrift.IThriftAnnotations = annotations;
+    public override readonly _methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
+    public override readonly _methodNames: Array<string> = methodNames;
     public readonly _methodParameters?: {
         [methodName: string]: number;
     } = methodParameters;
@@ -467,20 +467,20 @@ export interface IHandler<Context = any> {
 }
 export class Processor<Context = any> extends thrift.ThriftProcessor<Context, IHandler<Context>> {
     protected readonly _handler: IHandler<Context>;
-    public static readonly serviceName: string = serviceName;
-    public static readonly annotations: thrift.IThriftAnnotations = annotations;
-    public static readonly methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
-    public static readonly methodNames: Array<string> = methodNames;
-    public readonly _serviceName: string = serviceName;
-    public readonly _annotations: thrift.IThriftAnnotations = annotations;
-    public readonly _methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
-    public readonly _methodNames: Array<string> = methodNames;
+    public static override readonly serviceName: string = serviceName;
+    public static override readonly annotations: thrift.IThriftAnnotations = annotations;
+    public static override readonly methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
+    public static override readonly methodNames: Array<string> = methodNames;
+    public override readonly _serviceName: string = serviceName;
+    public override readonly _annotations: thrift.IThriftAnnotations = annotations;
+    public override readonly _methodAnnotations: thrift.IMethodAnnotations = methodAnnotations;
+    public override readonly _methodNames: Array<string> = methodNames;
     constructor(handler: IHandler<Context>) {
         super();
         this._handler = handler;
     }
     public process(input: thrift.TProtocol, output: thrift.TProtocol, context: Context): Promise<Buffer> {
-        return new Promise<Buffer>((resolve, reject): void => {
+        return new Promise<Buffer>((resolve, _reject): void => {
             const metadata: thrift.IThriftMessage = input.readMessageBegin();
             const fieldName: string = metadata.fieldName;
             const requestId: number = metadata.requestId;

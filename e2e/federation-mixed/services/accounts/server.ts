@@ -34,7 +34,7 @@ export const server = createRouter()
         200: UserType,
       },
     },
-    handler: () => Response.json(users[0]),
+    handler: () => Response.json(users[0]) as any, // TODO: somethings wrong with fets types
   })
   .route({
     operationId: 'user',
@@ -51,7 +51,7 @@ export const server = createRouter()
       },
     },
     handler: ({ params }) =>
-      Response.json(users.find((user) => user.id === params.id)),
+      Response.json(users.find((user) => user.id === params.id)) as any, // TODO: somethings wrong with fets types
   })
   .route({
     operationId: 'users',

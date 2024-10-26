@@ -90,8 +90,8 @@ export const AddRequestCodec: thrift.IStructCodec<IAddRequestArgs, IAddRequest> 
 export class AddRequest extends thrift.StructLike implements IAddRequest {
     public left: number;
     public right: number;
-    public readonly _annotations: thrift.IThriftAnnotations = {};
-    public readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
+    public override readonly _annotations: thrift.IThriftAnnotations = {};
+    public override readonly _fieldAnnotations: thrift.IFieldAnnotations = {};
     constructor(args: IAddRequestArgs) {
         super();
         if (args.left != null) {

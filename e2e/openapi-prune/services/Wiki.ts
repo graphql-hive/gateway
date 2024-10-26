@@ -4,7 +4,7 @@ import { Opts } from '@internal/testing';
 const opts = Opts(process.argv);
 
 const server = http.createServer((req, res) => {
-  const u = new URL(req.url, 'http://localhost');
+  const u = new URL(req.url!, 'http://localhost');
   if (u.pathname === '/main') {
     if (req.method === 'POST') {
       return res
