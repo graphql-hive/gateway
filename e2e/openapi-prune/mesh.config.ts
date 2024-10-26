@@ -1,14 +1,10 @@
-import {
-  createPruneTransform,
-  defineConfig as defineComposeConfig,
-} from '@graphql-mesh/compose-cli';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
+import { createPruneTransform, defineConfig } from '@graphql-mesh/compose-cli';
 import { Opts } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
 const opts = Opts(process.argv);
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadOpenAPISubgraph('Wiki', {
@@ -19,4 +15,3 @@ export const composeConfig = defineComposeConfig({
     },
   ],
 });
-export const gatewayConfig = defineGatewayConfig({});

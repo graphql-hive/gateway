@@ -1,10 +1,10 @@
 import { createTenv } from '@internal/e2e';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve } = createTenv(__dirname);
+const { gateway } = createTenv(__dirname);
 
 it('should execute Metrics with banana', async () => {
-  const { output } = await compose({ output: 'graphql' });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   const result = await execute({
     query: /* GraphQL */ `
       query Metrics {
@@ -37,8 +37,7 @@ it('should execute Metrics with banana', async () => {
 });
 
 it('should execute Metrics with apple', async () => {
-  const { output } = await compose({ output: 'graphql' });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   const result = await execute({
     query: /* GraphQL */ `
       query Metrics {

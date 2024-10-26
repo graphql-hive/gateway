@@ -1,12 +1,12 @@
-import { defineConfig as defineComposeConfig } from '@graphql-mesh/compose-cli';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
+import { defineConfig } from '@graphql-mesh/compose-cli';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadOpenAPISubgraph('Wiki', {
-        source: 'https://api.apis.guru/v2/specs/wikimedia.org/1.0.0/swagger.yaml',
+        source:
+          'https://api.apis.guru/v2/specs/wikimedia.org/1.0.0/swagger.yaml',
         endpoint: 'https://wikimedia.org/api/rest_v1',
       }),
     },
@@ -17,17 +17,4 @@ export const composeConfig = defineComposeConfig({
       apple: String!
     }
   `,
-});
-
-export const gatewayConfig = defineGatewayConfig({
-  additionalResolvers: {
-    pageview_project: {
-      banana() {
-        return '🍌';
-      },
-      apple() {
-        return '🍎';
-      },
-    },
-  },
 });

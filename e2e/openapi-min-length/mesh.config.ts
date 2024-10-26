@@ -1,8 +1,7 @@
-import { defineConfig as defineComposeConfig } from '@graphql-mesh/compose-cli';
-import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
+import { defineConfig } from '@graphql-mesh/compose-cli';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadOpenAPISubgraph('Wiki', {
@@ -12,5 +11,3 @@ export const composeConfig = defineComposeConfig({
     },
   ],
 });
-
-export const gatewayConfig = defineGatewayConfig({});
