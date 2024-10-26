@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`should execute 'User' 1`] = `
+{
+  "data": {
+    "jane": {
+      "id": 2,
+      "name": "Jane Doe",
+    },
+    "john": {
+      "id": 1,
+      "name": "John Doe",
+    },
+  },
+}
+`;

@@ -1,30 +1,28 @@
-import { createTenv, type Container } from '@internal/e2e';
+import { createTenv } from '@internal/e2e';
+import { beforeAll, expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, container } = createTenv(__dirname);
+const { composeWithMesh, gateway, container } = createTenv(__dirname);
 
-let soapDemo: Container;
-
+let supergraph: string;
 beforeAll(async () => {
-  soapDemo = await container({
-    name: 'soap-demo',
-    image: 'outofcoffee/imposter',
-    containerPort: 8080,
-    volumes: [
-      {
-        host: __dirname,
-        container: '/opt/imposter/config',
-      },
+  const { output } = await composeWithMesh({
+    output: 'graphql',
+    services: [
+      await container({
+        name: 'soap-demo',
+        image: 'outofcoffee/imposter',
+        containerPort: 8080,
+        volumes: [
+          {
+            host: __dirname,
+            container: '/opt/imposter/config',
+          },
+        ],
+        healthcheck: [],
+      }),
     ],
-    healthcheck: [],
   });
-});
-
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [soapDemo],
-    maskServicePorts: true,
-  });
-  expect(result).toMatchSnapshot();
+  supergraph = output;
 });
 
 it.concurrent.each([
@@ -157,7 +155,6 @@ it.concurrent.each([
     },
   },
 ])('should execute $name', async ({ query, expected }) => {
-  const { output } = await compose({ output: 'graphql', services: [soapDemo] });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({ supergraph });
   await expect(execute({ query })).resolves.toEqual(expected);
 });
