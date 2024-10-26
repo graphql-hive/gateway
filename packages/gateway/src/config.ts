@@ -98,8 +98,8 @@ export async function loadConfig<
 export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: { cache: KeyValueCache; logger: Logger },
-): Promise<GatewayPlugin[]> {
-  const plugins = [];
+) {
+  const plugins: GatewayPlugin[] = [];
   if (config.jwt) {
     const { useJWT } = await import('@graphql-mesh/plugin-jwt-auth');
     plugins.push(useJWT(config.jwt));
