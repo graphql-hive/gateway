@@ -709,8 +709,16 @@ __metadata:
   dependencies:
     "@apollo/server": "npm:^4.10.3"
     "@apollo/subgraph": "npm:^2.7.2"
+    "@graphql-mesh/compose-cli": "npm:^1.1.4"
+    "@graphql-mesh/cross-helpers": "npm:^0.4.7"
+    "@graphql-mesh/store": "npm:^0.102.10"
+    "@graphql-mesh/types": "npm:^0.102.10"
+    "@graphql-mesh/utils": "npm:^0.102.10"
+    "@graphql-tools/utils": "npm:^10.5.5"
+    "@omnigraph/openapi": "npm:^0.107.4"
     fets: "npm:^0.8.1"
     graphql: "npm:^16.9.0"
+    tslib: "npm:^2.8.0"
   languageName: unknown
   linkType: soft
 

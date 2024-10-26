@@ -1,7 +1,7 @@
 import {
   createFederationTransform,
   createTypeReplaceTransform,
-  defineConfig as defineComposeConfig,
+  defineConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
 import { Opts } from '@internal/testing';
@@ -10,7 +10,7 @@ import { GraphQLID, GraphQLNonNull } from 'graphql';
 
 const opts = Opts(process.argv);
 
-export const composeConfig = defineComposeConfig({
+export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadOpenAPISubgraph('accounts', {
