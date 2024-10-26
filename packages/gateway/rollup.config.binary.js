@@ -40,7 +40,7 @@ function packDeps() {
   }
 
   const zip = new ADMZip();
-  const graphqlPath = path.join('node_modules', 'graphql');
+  const graphqlPath = path.join('..', '..', 'node_modules', 'graphql');
   zip.addLocalFolder(graphqlPath, './graphql'); // graphql is zero-dep
   zip.addLocalFolder('bundle/node_modules');
   const zipBuf = zip.toBuffer();
@@ -61,7 +61,13 @@ function packDeps() {
       ].join('\n');
 
       // bundle adm-zip and inject it to the script
-      const admZipPath = path.join('node_modules', 'adm-zip', 'adm-zip.js');
+      const admZipPath = path.join(
+        '..',
+        '..',
+        'node_modules',
+        'adm-zip',
+        'adm-zip.js',
+      );
       const bundle = await rollup({
         input: admZipPath,
         plugins: [nodeResolve(), commonjs(), json()],

@@ -42,21 +42,21 @@ const deps = {
   'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
   'node_modules/@graphql-mesh/include/hooks':
-    'node_modules/@graphql-mesh/include/esm/hooks.js',
+    '../../node_modules/@graphql-mesh/include/esm/hooks.js',
   // default transports should be in the container
   'node_modules/@graphql-mesh/transport-common/index':
-    'node_modules/@graphql-mesh/transport-common/esm/index.js',
+    '../../node_modules/@graphql-mesh/transport-common/esm/index.js',
   'node_modules/@graphql-mesh/transport-http/index':
-    'node_modules/@graphql-mesh/transport-http/esm/index.js',
+    '../../node_modules/@graphql-mesh/transport-http/esm/index.js',
   'node_modules/@graphql-mesh/transport-ws/index':
-    'node_modules/@graphql-mesh/transport-ws/esm/index.js',
+    '../../node_modules/@graphql-mesh/transport-ws/esm/index.js',
   'node_modules/@graphql-mesh/transport-http-callback/index':
-    'node_modules/@graphql-mesh/transport-http-callback/esm/index.js',
+    '../../node_modules/@graphql-mesh/transport-http-callback/esm/index.js',
   // extras for docker only
   'node_modules/@graphql-mesh/plugin-http-cache/index':
-    'node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
+    '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
   'node_modules/@graphql-mesh/hmac-upstream-signature/index':
-    'node_modules/@graphql-mesh/hmac-upstream-signature/esm/index.js',
+    '../../node_modules/@graphql-mesh/hmac-upstream-signature/esm/index.js',
 };
 
 export default defineConfig({
