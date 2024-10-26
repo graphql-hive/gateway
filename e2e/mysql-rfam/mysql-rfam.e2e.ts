@@ -24,7 +24,6 @@ it.concurrent.each([
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
-      services: [],
     },
   });
   await expect(execute({ query })).resolves.toMatchSnapshot();

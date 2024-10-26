@@ -104,7 +104,11 @@ export interface ServeOptions extends ProcOptions {
   supergraph?:
     | string
     | {
-        with: 'mesh' | 'apollo';
+        with: 'mesh';
+        services?: Service[];
+      }
+    | {
+        with: 'apollo';
         services: Service[];
       };
   /** {@link gatewayRunner Gateway Runner} specific options. */

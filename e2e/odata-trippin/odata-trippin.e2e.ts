@@ -7,7 +7,6 @@ it('executes a query', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
-      services: [],
     },
   });
   const result = await execute({
