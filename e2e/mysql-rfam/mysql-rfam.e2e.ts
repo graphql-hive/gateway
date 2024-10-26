@@ -1,11 +1,7 @@
 import { createTenv } from '@internal/e2e';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve } = createTenv(__dirname);
-
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose();
-  expect(result).toMatchSnapshot();
-});
+const { gateway } = createTenv(__dirname);
 
 it.concurrent.each([
   {
@@ -25,7 +21,11 @@ it.concurrent.each([
     `,
   },
 ])('should execute $name', async ({ query }) => {
-  const { output } = await compose({ output: 'graphql' });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [],
+    },
+  });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });

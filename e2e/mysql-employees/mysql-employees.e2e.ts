@@ -1,6 +1,7 @@
 import { createTenv, type Container } from '@internal/e2e';
+import { beforeAll, expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, container } = createTenv(__dirname);
+const { gateway, container } = createTenv(__dirname);
 
 let mysql!: Container;
 beforeAll(async () => {
@@ -18,14 +19,6 @@ beforeAll(async () => {
       MYSQL_ROOT_PASSWORD: 'passwd', // used in mesh.config.ts
     },
   });
-});
-
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [mysql],
-    maskServicePorts: true,
-  });
-  expect(result).toMatchSnapshot();
 });
 
 it.concurrent.each([
@@ -59,7 +52,11 @@ it.concurrent.each([
     `,
   },
 ])('should execute $name', async ({ query }) => {
-  const { output } = await compose({ output: 'graphql', services: [mysql] });
-  const { execute } = await serve({ supergraph: output });
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [mysql],
+    },
+  });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });
