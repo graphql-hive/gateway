@@ -15,7 +15,7 @@ import {
   createOpt,
   createPortOpt,
   createServicePortOpt,
-  localHostnames,
+  hostnames,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
@@ -943,7 +943,7 @@ export function getAvailablePort(): Promise<number> {
 
 async function waitForPort(port: number, signal: AbortSignal) {
   outer: while (!signal.aborted) {
-    for (const localHostname of localHostnames) {
+    for (const localHostname of hostnames) {
       try {
         await fetch(`http://${localHostname}:${port}`, { signal });
         break outer;

@@ -1,6 +1,5 @@
 import { setTimeout } from 'timers/promises';
 import { createTenv, getAvailablePort } from '@internal/e2e';
-import { getLocalHostName } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import {
   createClient as createSSEClient,
@@ -12,15 +11,11 @@ import {
   type Client as WSClient,
   type ClientOptions as WSClientOptions,
 } from 'graphql-ws';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import webSocketImpl from 'ws';
 import { TOKEN } from './services/products/server';
 
-const { composeWithApollo, service, gateway } = createTenv(__dirname);
-
-let client: WSClient | SSEClient | null = null;
-
-afterEach(() => client?.dispose());
+const { service, gateway } = createTenv(__dirname);
 
 const subscriptionsClientFactories = [
   ['SSE', createSSEClient],
@@ -41,13 +36,14 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       authorization: TOKEN,
     };
     it('should subscribe and resolve via websockets', async () => {
-      const supergraphFile = await composeWithApollo([
-        await service('products'),
-        await service('reviews'),
-      ]);
-      const { port } = await gateway({ supergraph: supergraphFile });
+      const { port } = await gateway({
+        supergraph: {
+          with: 'apollo',
+          services: [await service('products'), await service('reviews')],
+        },
+      });
 
-      client = createClient({
+      const client = createClient({
         url: `http://localhost:${port}/graphql`,
         retryAttempts: 0,
         headers,
@@ -55,6 +51,12 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         fetchFn: fetch,
         webSocketImpl,
       });
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await client.dispose();
+        },
+      };
+
       const sub = client.iterate({
         query: /* GraphQL */ `
           subscription OnProductPriceChanged {
@@ -79,62 +81,61 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         }
       }
 
-      expect(msgs).toMatchInlineSnapshot(`
-[
-  {
-    "data": {
-      "productPriceChanged": {
-        "name": "Table",
-        "price": 1798,
-        "reviews": [
-          {
-            "score": 10,
+      expect(msgs).toEqual([
+        {
+          data: {
+            productPriceChanged: {
+              name: 'Table',
+              price: 1798,
+              reviews: [
+                {
+                  score: 10,
+                },
+                {
+                  score: 10,
+                },
+              ],
+            },
           },
-          {
-            "score": 10,
+        },
+        {
+          data: {
+            productPriceChanged: {
+              name: 'Couch',
+              price: 2598,
+              reviews: [
+                {
+                  score: 10,
+                },
+              ],
+            },
           },
-        ],
-      },
-    },
-  },
-  {
-    "data": {
-      "productPriceChanged": {
-        "name": "Couch",
-        "price": 2598,
-        "reviews": [
-          {
-            "score": 10,
+        },
+        {
+          data: {
+            productPriceChanged: {
+              name: 'Chair',
+              price: 108,
+              reviews: [
+                {
+                  score: 10,
+                },
+              ],
+            },
           },
-        ],
-      },
-    },
-  },
-  {
-    "data": {
-      "productPriceChanged": {
-        "name": "Chair",
-        "price": 108,
-        "reviews": [
-          {
-            "score": 10,
-          },
-        ],
-      },
-    },
-  },
-]
-`);
+        },
+      ]);
     });
 
     it('should recycle websocket connections', async () => {
-      const supergraphFile = await composeWithApollo([
-        await service('products'),
-        await service('reviews'),
-      ]);
-      const { port } = await gateway({ supergraph: supergraphFile });
+      const { port } = await gateway({
+        supergraph: {
+          with: 'apollo',
+          services: [await service('products'), await service('reviews')],
+        },
+      });
 
-      client = createClient({
+      const client = createClient({
         url: `http://localhost:${port}/graphql`,
         retryAttempts: 0,
         headers,
@@ -142,6 +143,11 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         fetchFn: fetch,
         webSocketImpl,
       });
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await client.dispose();
+        },
+      };
 
       const query = /* GraphQL */ `
         subscription OnProductPriceChanged {
@@ -167,28 +173,33 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
     });
 
     it('should subscribe and resolve via http callbacks', async () => {
-      const supergraphFile = await composeWithApollo([
-        await service('products'),
-        await service('reviews'),
-      ]);
-
       // Get a random available port
       const availablePort = await getAvailablePort();
 
-      const publicUrl = `http://${getLocalHostName()}:${availablePort}`;
+      const publicUrl = `http://0.0.0.0:${availablePort}`;
       await gateway({
-        supergraph: supergraphFile,
+        supergraph: {
+          with: 'apollo',
+          services: [await service('products'), await service('reviews')],
+        },
         port: availablePort,
         env: {
           PUBLIC_URL: publicUrl,
         },
       });
-      client = createClient({
+
+      const client = createClient({
         url: `${publicUrl}/graphql`,
         retryAttempts: 0,
         fetchFn: fetch,
         webSocketImpl,
       });
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await client.dispose();
+        },
+      };
+
       const sub = client.iterate({
         query: /* GraphQL */ `
           subscription CountDown {
