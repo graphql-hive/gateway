@@ -7,7 +7,7 @@ export default tseslint.config(
   // all
   {
     languageOptions: { parser: tseslint.parser },
-    files: ['**/*.ts'],
+    files: ['packages/**/src/**/*.ts'], // match what's checked in check:lint script
     plugins: {
       import: importPlugin,
     },
