@@ -1,14 +1,16 @@
 import { createTenv } from '@internal/e2e';
 import { fetch, File, FormData } from '@whatwg-node/fetch';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, service } = createTenv(__dirname);
+const { gateway, service } = createTenv(__dirname);
 
 it('should upload file', async () => {
-  const { output } = await compose({
-    output: 'graphql',
-    services: [await service('bucket')],
+  const { port } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [await service('bucket')],
+    },
   });
-  const { port } = await serve({ supergraph: output });
 
   const form = new FormData();
   form.append(
