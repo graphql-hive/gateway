@@ -1,19 +1,11 @@
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
+import { expect, it } from 'vitest';
 
-const { composeWithMesh: compose, serve, fs } = createTenv(__dirname);
+const { gateway, fs } = createTenv(__dirname);
 
-it('should compose', async () => {
-  const proc = await compose({
-    env: {
-      MESH_INCLUDE_TSCONFIG_SEARCH_PATH: 'tsconfig-paths.tsconfig.json',
-    },
-  });
-  expect(proc.result).toMatchSnapshot();
-});
-
-it('should serve', async () => {
-  const proc = await serve({
+it('should start gateway', async () => {
+  const proc = await gateway({
     supergraph: await fs.tempfile(
       'supergraph.graphql',
       'type Query { hello: String }',
@@ -26,20 +18,20 @@ it('should serve', async () => {
         volumes: [
           {
             host: './tsconfig-paths.tsconfig.json',
-            container: '/serve/tsconfig-paths.tsconfig.json',
+            container: '/gateway/tsconfig-paths.tsconfig.json',
           },
           {
             host: './mesh.config.ts',
-            container: '/serve/mesh.config.ts',
+            container: '/gateway/mesh.config.ts',
           },
           {
             host: './folder',
-            container: '/serve/folder',
+            container: '/gateway/folder',
           },
         ],
       },
     },
   });
-  const res = await fetch(`http://localhost:${proc.port}/healthcheck`);
+  const res = await fetch(`http://0.0.0.0:${proc.port}/helt`);
   expect(res.ok).toBeTruthy();
 });

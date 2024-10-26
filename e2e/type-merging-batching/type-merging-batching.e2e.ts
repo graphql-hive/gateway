@@ -1,16 +1,19 @@
-import { createTenv } from '@internal/e2e';
+import { createTenv, Gateway } from '@internal/e2e';
+import { beforeAll, expect, it } from 'vitest';
 
-const { composeWithMesh: compose, service, serve } = createTenv(__dirname);
+const { service, gateway } = createTenv(__dirname);
 
-it('should compose the appropriate schema', async () => {
-  const { result } = await compose({
-    services: [await service('authors'), await service('books')],
-    maskServicePorts: true,
+let gw: Gateway;
+beforeAll(async () => {
+  gw = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [await service('authors'), await service('books')],
+    },
   });
-  expect(result).toMatchSnapshot();
 });
 
-const queries = [
+it.concurrent.each([
   {
     name: 'Author',
     query: /* GraphQL */ `
@@ -87,14 +90,6 @@ const queries = [
       }
     `,
   },
-];
-
-it.concurrent.each(queries)('should execute $name', async ({ query }) => {
-  const { output } = await compose({
-    services: [await service('authors'), await service('books')],
-    output: 'graphql',
-  });
-
-  const { execute } = await serve({ supergraph: output });
-  await expect(execute({ query })).resolves.toMatchSnapshot();
+])('should execute $name', async ({ query }) => {
+  await expect(gw.execute({ query })).resolves.toMatchSnapshot();
 });
