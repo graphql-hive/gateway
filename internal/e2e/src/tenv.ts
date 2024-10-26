@@ -97,7 +97,11 @@ export interface Server extends Proc {
 
 export interface ServeOptions extends ProcOptions {
   port?: number;
-  supergraph?: string;
+  /**
+   * Path to the supergraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
+   * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
+   */
+  supergraph?: string | Omit<ComposeOptions, 'output'>;
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -274,7 +278,7 @@ export function createTenv(cwd: string): Tenv {
     async gateway(opts) {
       let {
         port = await getAvailablePort(),
-        supergraph,
+        supergraph: supergraphOpt,
         pipeLogs = boolEnv('DEBUG'),
         env,
         runner,
@@ -283,6 +287,17 @@ export function createTenv(cwd: string): Tenv {
 
       let proc: Proc,
         waitForExit: Promise<void> | null = null;
+
+      let supergraph: string | null = null;
+      if (typeof supergraphOpt === 'string') {
+        supergraph = supergraphOpt;
+      } /** ComposeOptions */ else {
+        const { output } = await tenv.compose({
+          ...supergraphOpt,
+          output: 'graphql',
+        });
+        supergraph = output;
+      }
 
       if (gatewayRunner === 'docker') {
         const volumes: ContainerOptions['volumes'] =

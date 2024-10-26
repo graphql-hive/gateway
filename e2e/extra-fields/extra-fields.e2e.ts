@@ -1,14 +1,14 @@
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
-const { gateway, compose, service } = createTenv(__dirname);
+const { gateway, service } = createTenv(__dirname);
 
 it('resolves extra fields', async () => {
-  const { output } = await compose({
-    services: [await service('foo'), await service('bar')],
-    output: 'graphql',
+  const { execute } = await gateway({
+    supergraph: {
+      services: [await service('foo'), await service('bar')],
+    },
   });
-  const { execute } = await gateway({ supergraph: output });
   await expect(
     execute({
       query: /* GraphQL */ `
