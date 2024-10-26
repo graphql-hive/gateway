@@ -1,10 +1,10 @@
-import { Opts } from '@e2e/opts';
 import {
   createHoistFieldTransform,
   createPrefixTransform,
   defineConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
+import { Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
 

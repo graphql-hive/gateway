@@ -1,6 +1,6 @@
 import { createServer } from 'http';
+import { Opts } from '@internal/testing';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { Opts } from '@e2e/opts';
 
 const opts = Opts(process.argv);
 

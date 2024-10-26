@@ -1,4 +1,4 @@
-import { createTenv, type Container } from '@e2e/tenv';
+import { createTenv, type Container } from '@internal/e2e';
 
 const { compose, serve, container } = createTenv(__dirname);
 

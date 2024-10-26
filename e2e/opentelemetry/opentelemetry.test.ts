@@ -1,15 +1,20 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
-import { boolEnv, createTenv, type Container } from '@e2e/tenv';
+import { boolEnv, createTenv, type Container } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 
-const { service, serve, container, composeWithApollo, serveRunner } = createTenv(__dirname);
+const { service, serve, container, composeWithApollo, serveRunner } =
+  createTenv(__dirname);
 
 let supergraph!: string;
 let jaeger: Container;
 
 const JAEGER_HOSTNAME =
-  serveRunner === 'docker' ? (boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal') : 'localhost';
+  serveRunner === 'docker'
+    ? boolEnv('CI')
+      ? '172.17.0.1'
+      : 'host.docker.internal'
+    : 'localhost';
 
 const TEST_QUERY = /* GraphQL */ `
   fragment User on User {
@@ -116,7 +121,7 @@ describe('opentelemetry', () => {
 
     let res: JaegerTracesApiResponse;
     for (let i = 0; i < 25; i++) {
-      res = await fetch(url).then(r => r.json<JaegerTracesApiResponse>());
+      res = await fetch(url).then((r) => r.json<JaegerTracesApiResponse>());
       if (res.data.length >= expectedDataLength) {
         break;
       }
@@ -139,8 +144,8 @@ describe('opentelemetry', () => {
     await expect(execute({ query: TEST_QUERY })).resolves.toMatchSnapshot();
     const traces = await getJaegerTraces(serviceName, 2);
     expect(traces.data.length).toBe(2);
-    const relevantTraces = traces.data.filter(trace =>
-      trace.spans.some(span => span.operationName === 'POST /graphql'),
+    const relevantTraces = traces.data.filter((trace) =>
+      trace.spans.some((span) => span.operationName === 'POST /graphql'),
     );
     expect(relevantTraces.length).toBe(1);
     const relevantTrace = relevantTraces[0];
@@ -160,16 +165,24 @@ describe('opentelemetry', () => {
       expect.objectContaining({ operationName: 'graphql.execute' }),
     );
     expect(
-      relevantTrace?.spans.filter(r => r.operationName === 'subgraph.execute (accounts)').length,
+      relevantTrace?.spans.filter(
+        (r) => r.operationName === 'subgraph.execute (accounts)',
+      ).length,
     ).toBe(2);
     expect(
-      relevantTrace?.spans.filter(r => r.operationName === 'subgraph.execute (products)').length,
+      relevantTrace?.spans.filter(
+        (r) => r.operationName === 'subgraph.execute (products)',
+      ).length,
     ).toBe(2);
     expect(
-      relevantTrace?.spans.filter(r => r.operationName === 'subgraph.execute (inventory)').length,
+      relevantTrace?.spans.filter(
+        (r) => r.operationName === 'subgraph.execute (inventory)',
+      ).length,
     ).toBe(1);
     expect(
-      relevantTrace?.spans.filter(r => r.operationName === 'subgraph.execute (reviews)').length,
+      relevantTrace?.spans.filter(
+        (r) => r.operationName === 'subgraph.execute (reviews)',
+      ).length,
     ).toBe(2);
   });
 
@@ -186,8 +199,8 @@ describe('opentelemetry', () => {
     await expect(execute({ query: 'query { test' })).rejects.toMatchSnapshot();
     const traces = await getJaegerTraces(serviceName, 2);
     expect(traces.data.length).toBe(2);
-    const relevantTrace = traces.data.find(trace =>
-      trace.spans.some(span => span.operationName === 'POST /graphql'),
+    const relevantTrace = traces.data.find((trace) =>
+      trace.spans.some((span) => span.operationName === 'POST /graphql'),
     );
     expect(relevantTrace).toBeDefined();
     expect(relevantTrace?.spans.length).toBe(2);
@@ -222,7 +235,9 @@ describe('opentelemetry', () => {
       expect.objectContaining({ operationName: 'graphql.execute' }),
     );
     expect(
-      relevantTrace?.spans.filter(r => r.operationName.includes('subgraph.execute')).length,
+      relevantTrace?.spans.filter((r) =>
+        r.operationName.includes('subgraph.execute'),
+      ).length,
     ).toBe(0);
   });
 
@@ -236,12 +251,14 @@ describe('opentelemetry', () => {
       },
     });
 
-    await expect(execute({ query: 'query { nonExistentField }' })).rejects.toMatchSnapshot();
+    await expect(
+      execute({ query: 'query { nonExistentField }' }),
+    ).rejects.toMatchSnapshot();
     await setTimeout(300);
     const traces = await getJaegerTraces(serviceName, 2);
     expect(traces.data.length).toBe(2);
-    const relevantTrace = traces.data.find(trace =>
-      trace.spans.some(span => span.operationName === 'POST /graphql'),
+    const relevantTrace = traces.data.find((trace) =>
+      trace.spans.some((span) => span.operationName === 'POST /graphql'),
     );
     expect(relevantTrace).toBeDefined();
     expect(relevantTrace?.spans.length).toBe(3);
@@ -279,7 +296,9 @@ describe('opentelemetry', () => {
       expect.objectContaining({ operationName: 'graphql.execute' }),
     );
     expect(
-      relevantTrace?.spans.filter(r => r.operationName.includes('subgraph.execute')).length,
+      relevantTrace?.spans.filter((r) =>
+        r.operationName.includes('subgraph.execute'),
+      ).length,
     ).toBe(0);
   });
 
@@ -296,8 +315,8 @@ describe('opentelemetry', () => {
     await fetch(`http://localhost:${port}/non-existing`).catch(() => {});
     const traces = await getJaegerTraces(serviceName, 2);
     expect(traces.data.length).toBe(2);
-    const relevantTrace = traces.data.find(trace =>
-      trace.spans.some(span => span.operationName === 'GET /non-existing'),
+    const relevantTrace = traces.data.find((trace) =>
+      trace.spans.some((span) => span.operationName === 'GET /non-existing'),
     );
     expect(relevantTrace).toBeDefined();
     expect(relevantTrace?.spans.length).toBe(1);
@@ -343,7 +362,9 @@ describe('opentelemetry', () => {
       }),
     ).resolves.toMatchSnapshot();
 
-    const upstreamHttpCalls = await fetch(`http://localhost:${port}/upstream-fetch`).then(r =>
+    const upstreamHttpCalls = await fetch(
+      `http://localhost:${port}/upstream-fetch`,
+    ).then((r) =>
       r.json<
         Array<{
           url: string;
@@ -355,8 +376,8 @@ describe('opentelemetry', () => {
     const traces = await getJaegerTraces(serviceName, 3);
     expect(traces.data.length).toBe(3);
 
-    const relevantTraces = traces.data.filter(trace =>
-      trace.spans.some(span => span.operationName === 'POST /graphql'),
+    const relevantTraces = traces.data.filter((trace) =>
+      trace.spans.some((span) => span.operationName === 'POST /graphql'),
     );
     expect(relevantTraces.length).toBe(1);
     const relevantTrace = relevantTraces[0];

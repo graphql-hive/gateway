@@ -1,9 +1,12 @@
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 
 const { compose, serve, service, fs } = createTenv(__dirname);
 
 it('should compose and execute', async () => {
-  const { output } = await compose({ output: 'graphql', services: [await service('weather')] });
+  const { output } = await compose({
+    output: 'graphql',
+    services: [await service('weather')],
+  });
 
   // hoisted
   const supergraph = await fs.read(output);

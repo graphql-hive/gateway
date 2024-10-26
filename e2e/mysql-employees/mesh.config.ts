@@ -1,5 +1,5 @@
-import { Opts } from '@e2e/opts';
 import { defineConfig } from '@graphql-mesh/compose-cli';
+import { Opts } from '@internal/testing';
 import { loadMySQLSubgraph } from '@omnigraph/mysql';
 
 const opts = Opts(process.argv);

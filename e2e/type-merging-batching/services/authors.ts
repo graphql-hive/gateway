@@ -1,6 +1,6 @@
 import { createServer } from 'http';
+import { Opts } from '@internal/testing';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { Opts } from '@e2e/opts';
 
 const authors = [
   {
@@ -28,9 +28,13 @@ const yoga = createYoga({
     `,
     resolvers: {
       Query: {
-        author: (_, { id }) => authors.find(author => author.id === id),
+        author: (_, { id }) => authors.find((author) => author.id === id),
         authors: (_, { ids }) =>
-          ids ? ids.map((id: string) => authors.find(author => author.id === id)) : authors,
+          ids
+            ? ids.map((id: string) =>
+                authors.find((author) => author.id === id),
+              )
+            : authors,
       },
     },
   }),

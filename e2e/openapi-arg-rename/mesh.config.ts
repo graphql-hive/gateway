@@ -1,10 +1,10 @@
-import { Opts } from '@e2e/opts';
 import {
   camelCase,
   createNamingConventionTransform,
   createRenameTransform,
   defineConfig as defineComposeConfig,
 } from '@graphql-mesh/compose-cli';
+import { Opts } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
 const opts = Opts(process.argv);

@@ -1,5 +1,8 @@
-import { Opts } from '@e2e/opts';
-import { defineConfig, loadGraphQLHTTPSubgraph } from '@graphql-mesh/compose-cli';
+import {
+  defineConfig,
+  loadGraphQLHTTPSubgraph,
+} from '@graphql-mesh/compose-cli';
+import { Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
 
@@ -18,11 +21,21 @@ export const composeConfig = defineConfig({
   ],
   additionalTypeDefs: /* GraphQL */ `
     extend type Foo {
-      bar: Bar @resolveTo(sourceName: "bar", sourceTypeName: "Query", sourceFieldName: "bar")
+      bar: Bar
+        @resolveTo(
+          sourceName: "bar"
+          sourceTypeName: "Query"
+          sourceFieldName: "bar"
+        )
     }
 
     extend type Bar {
-      foo: Foo @resolveTo(sourceName: "foo", sourceTypeName: "Query", sourceFieldName: "foo")
+      foo: Foo
+        @resolveTo(
+          sourceName: "foo"
+          sourceTypeName: "Query"
+          sourceFieldName: "foo"
+        )
     }
   `,
 });

@@ -1,6 +1,6 @@
-import * as express from 'express';
 import { createThriftServer } from '@creditkarma/thrift-server-express';
-import { Opts } from '@e2e/opts';
+import { Opts } from '@internal/testing';
+import * as express from 'express';
 import { Calculator } from './__generated__';
 
 const opts = Opts(process.argv);

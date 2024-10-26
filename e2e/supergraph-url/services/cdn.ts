@@ -1,5 +1,5 @@
 import { createServer } from 'http';
-import { Opts } from '@e2e/opts';
+import { Opts } from '@internal/testing';
 
 const port = Opts(process.argv).getServicePort('cdn', true);
 

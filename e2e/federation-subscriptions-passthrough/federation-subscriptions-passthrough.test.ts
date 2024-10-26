@@ -1,4 +1,7 @@
 import { setTimeout } from 'timers/promises';
+import { createTenv, getAvailablePort } from '@internal/e2e';
+import { getLocalHostName } from '@internal/testing';
+import { fetch } from '@whatwg-node/fetch';
 import {
   createClient as createSSEClient,
   type Client as SSEClient,
@@ -10,9 +13,6 @@ import {
   type ClientOptions as WSClientOptions,
 } from 'graphql-ws';
 import webSocketImpl from 'ws';
-import { getLocalHostName } from '@e2e/opts';
-import { createTenv, getAvailablePort } from '@e2e/tenv';
-import { fetch } from '@whatwg-node/fetch';
 import { TOKEN } from './services/products/server';
 
 const { composeWithApollo, service, serve } = createTenv(__dirname);
@@ -26,7 +26,9 @@ const subscriptionsClientFactories = [
   ['WS', createWSClient],
 ] as [
   string,
-  (opts: Partial<SSEClientOptions> & Partial<WSClientOptions>) => SSEClient | WSClient,
+  (
+    opts: Partial<SSEClientOptions> & Partial<WSClientOptions>,
+  ) => SSEClient | WSClient,
 ][];
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {

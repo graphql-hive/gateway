@@ -1,6 +1,6 @@
 import { createServer } from 'http';
+import { Opts } from '@internal/testing';
 import { createRouter, Response, Type } from 'fets';
-import { Opts } from '@e2e/opts';
 
 const users = [
   { id: 1, name: 'John Doe' },
@@ -42,7 +42,7 @@ const app = createRouter().route({
   async handler(req) {
     const body = await req.json();
     const ids = body.ids;
-    const results = users.filter(user => ids.includes(user.id));
+    const results = users.filter((user) => ids.includes(user.id));
     return Response.json({
       results,
     });

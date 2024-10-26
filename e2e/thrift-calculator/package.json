@@ -1,6 +1,5 @@
 {
   "name": "@e2e/thrift-calculator",
-  "type": "module",
   "private": true,
   "scripts": {
     "codegen": "thrift-typescript --target thrift-server --sourceDir ./services/calculator --outDir ./services/calculator/__generated__"

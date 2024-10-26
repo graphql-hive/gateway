@@ -1,6 +1,5 @@
 {
   "name": "@e2e/top-level-await",
-  "type": "module",
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.1.4",

@@ -1,6 +1,6 @@
-import { createClient } from 'graphql-sse';
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
+import { createClient } from 'graphql-sse';
 
 const { compose, service, serve } = createTenv(__dirname);
 
@@ -13,7 +13,10 @@ it('should compose the appropriate schema', async () => {
 });
 
 it('should listen for webhooks', async () => {
-  const { output } = await compose({ output: 'graphql', services: [await service('api')] });
+  const { output } = await compose({
+    output: 'graphql',
+    services: [await service('api')],
+  });
   const { execute, port } = await serve({ supergraph: output });
 
   const res = await execute({

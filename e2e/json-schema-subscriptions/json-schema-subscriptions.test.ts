@@ -1,11 +1,14 @@
-import { createClient } from 'graphql-sse';
-import { createTenv, getAvailablePort } from '@e2e/tenv';
+import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
+import { createClient } from 'graphql-sse';
 
 const { compose, serve, service } = createTenv(__dirname);
 
 it('should compose the appropriate schema', async () => {
-  const { result } = await compose({ services: [await service('api')], maskServicePorts: true });
+  const { result } = await compose({
+    services: [await service('api')],
+    maskServicePorts: true,
+  });
   expect(result).toMatchSnapshot();
 });
 

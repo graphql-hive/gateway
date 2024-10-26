@@ -1,4 +1,4 @@
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 
 const { compose, service, serve } = createTenv(__dirname);
 
@@ -29,7 +29,10 @@ it.concurrent.each([
     `,
   },
 ])('should execute $name', async ({ query }) => {
-  const { output } = await compose({ output: 'graphql', services: [await service('api')] });
+  const { output } = await compose({
+    output: 'graphql',
+    services: [await service('api')],
+  });
   const { execute } = await serve({ supergraph: output });
   await expect(execute({ query })).resolves.toMatchSnapshot();
 });

@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { Opts } from '@e2e/opts';
+import { Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
 

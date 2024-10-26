@@ -1,8 +1,8 @@
 import { createServer } from 'http';
+import { Opts } from '@internal/testing';
+import { fetch } from '@whatwg-node/fetch';
 import { createRouter, Response } from 'fets';
 import urljoin from 'url-join';
-import { Opts } from '@e2e/opts';
-import { fetch } from '@whatwg-node/fetch';
 
 const app = createRouter<FetchEvent>().route({
   method: 'POST',
@@ -17,7 +17,11 @@ const app = createRouter<FetchEvent>().route({
             userData: 'RANDOM_DATA',
           });
           const fullCallbackUrl = urljoin(callbackUrl, subscriptionId);
-          console.info(`Webhook ping ${i + 1} out of 10 -> `, fullCallbackUrl, body);
+          console.info(
+            `Webhook ping ${i + 1} out of 10 -> `,
+            fullCallbackUrl,
+            body,
+          );
           await fetch(fullCallbackUrl, {
             method: 'POST',
             headers: {
@@ -25,10 +29,14 @@ const app = createRouter<FetchEvent>().route({
             },
             body,
           })
-            .then(res => {
-              console.info(`Webhook response ${i + 1} -> `, res.status, res.statusText);
+            .then((res) => {
+              console.info(
+                `Webhook response ${i + 1} -> `,
+                res.status,
+                res.statusText,
+              );
             })
-            .catch(err => console.error(`Webhook error ${i + 1} -> `, err));
+            .catch((err) => console.error(`Webhook error ${i + 1} -> `, err));
         }
       }),
     );

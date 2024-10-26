@@ -1,12 +1,12 @@
-import { GraphQLID, GraphQLNonNull } from 'graphql';
-import { Opts } from '@e2e/opts';
 import {
   createFederationTransform,
   createTypeReplaceTransform,
   defineConfig as defineComposeConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
+import { Opts } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
+import { GraphQLID, GraphQLNonNull } from 'graphql';
 
 const opts = Opts(process.argv);
 
@@ -19,7 +19,9 @@ export const composeConfig = defineComposeConfig({
       }),
       transforms: [
         createTypeReplaceTransform((typeName, fieldName) =>
-          typeName === 'User' && fieldName === 'id' ? new GraphQLNonNull(GraphQLID) : undefined,
+          typeName === 'User' && fieldName === 'id'
+            ? new GraphQLNonNull(GraphQLID)
+            : undefined,
         ),
         createFederationTransform({
           User: {

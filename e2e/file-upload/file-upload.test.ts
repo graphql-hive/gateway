@@ -1,10 +1,13 @@
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 import { fetch, File, FormData } from '@whatwg-node/fetch';
 
 const { compose, serve, service } = createTenv(__dirname);
 
 it('should upload file', async () => {
-  const { output } = await compose({ output: 'graphql', services: [await service('bucket')] });
+  const { output } = await compose({
+    output: 'graphql',
+    services: [await service('bucket')],
+  });
   const { port } = await serve({ supergraph: output });
 
   const form = new FormData();
@@ -22,7 +25,10 @@ it('should upload file', async () => {
     }),
   );
   form.append('map', JSON.stringify({ 0: ['variables.file'] }));
-  form.append('0', new File(['Hello World!'], 'hello.txt', { type: 'text/plain' }));
+  form.append(
+    '0',
+    new File(['Hello World!'], 'hello.txt', { type: 'text/plain' }),
+  );
   const res = await fetch(`http://localhost:${port}/graphql`, {
     method: 'POST',
     body: form,

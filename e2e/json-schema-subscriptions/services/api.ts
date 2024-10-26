@@ -1,7 +1,7 @@
 import { createServer } from 'http';
-import { createRouter, Response } from 'fets';
-import { Opts } from '@e2e/opts';
+import { Opts } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
+import { createRouter, Response } from 'fets';
 
 const opts = Opts(process.argv);
 
@@ -31,8 +31,8 @@ const app = createRouter<FetchEvent>()
           },
           body: JSON.stringify(todo),
         })
-          .then(res =>
-            res.text().then(resText =>
+          .then((res) =>
+            res.text().then((resText) =>
               console.log('Webhook payload sent', {
                 status: res.status,
                 statusText: res.statusText,
@@ -41,7 +41,7 @@ const app = createRouter<FetchEvent>()
               }),
             ),
           )
-          .catch(err => console.error('Webhook payload failed', err)),
+          .catch((err) => console.error('Webhook payload failed', err)),
       );
       return Response.json(todo);
     },

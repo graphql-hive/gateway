@@ -1,4 +1,4 @@
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 
 describe('OpenAPI Arg Rename', () => {
   const { compose, serve, service } = createTenv(__dirname);

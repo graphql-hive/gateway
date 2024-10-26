@@ -1,4 +1,4 @@
-import { createTenv, type Container } from '@e2e/tenv';
+import { createTenv, type Container } from '@internal/e2e';
 
 const { compose, serve, container } = createTenv(__dirname);
 
@@ -49,7 +49,9 @@ it.concurrent.each([
     name: 'DivideInteger',
     query: /* GraphQL */ `
       mutation DivideInteger {
-        s0_SOAPDemo_SOAPDemoSoap_DivideInteger(DivideInteger: { Arg1: 10, Arg2: 2 }) {
+        s0_SOAPDemo_SOAPDemoSoap_DivideInteger(
+          DivideInteger: { Arg1: 10, Arg2: 2 }
+        ) {
           DivideIntegerResult
         }
       }
@@ -123,7 +125,9 @@ it.concurrent.each([
     name: 'GetListByName',
     query: /* GraphQL */ `
       query GetListByName {
-        s0_SOAPDemo_SOAPDemoSoap_GetListByName(GetListByName: { name: "Newton" }) {
+        s0_SOAPDemo_SOAPDemoSoap_GetListByName(
+          GetListByName: { name: "Newton" }
+        ) {
           GetListByNameResult {
             PersonIdentification {
               Name

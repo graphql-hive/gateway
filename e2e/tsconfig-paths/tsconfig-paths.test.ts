@@ -1,4 +1,4 @@
-import { createTenv } from '@e2e/tenv';
+import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 
 const { compose, serve, fs } = createTenv(__dirname);
@@ -14,7 +14,10 @@ it('should compose', async () => {
 
 it('should serve', async () => {
   const proc = await serve({
-    supergraph: await fs.tempfile('supergraph.graphql', 'type Query { hello: String }'),
+    supergraph: await fs.tempfile(
+      'supergraph.graphql',
+      'type Query { hello: String }',
+    ),
     env: {
       MESH_INCLUDE_TSCONFIG_SEARCH_PATH: 'tsconfig-paths.tsconfig.json',
     },

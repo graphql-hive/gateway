@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
+import { Opts } from '@internal/testing';
 import { createRouter, Response, Type } from 'fets';
-import { Opts } from '@e2e/opts';
 
 const opts = Opts(process.argv);
 

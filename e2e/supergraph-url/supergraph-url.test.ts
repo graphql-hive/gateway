@@ -1,5 +1,5 @@
+import { createTenv } from '@internal/e2e';
 import { getIntrospectionQuery } from 'graphql';
-import { createTenv } from '@e2e/tenv';
 
 const { serve, service } = createTenv(__dirname);
 
@@ -10,7 +10,9 @@ it('should serve a schema from a url without pathname', async () => {
     supergraph: `http://localhost:${cdn.port}`,
   });
 
-  await expect(execute({ query: getIntrospectionQuery() })).resolves.toMatchSnapshot();
+  await expect(
+    execute({ query: getIntrospectionQuery() }),
+  ).resolves.toMatchSnapshot();
 });
 
 it('should serve a schema from a url with pathname', async () => {
@@ -20,7 +22,9 @@ it('should serve a schema from a url with pathname', async () => {
     supergraph: `http://localhost:${cdn.port}/schema`,
   });
 
-  await expect(execute({ query: getIntrospectionQuery() })).resolves.toMatchSnapshot();
+  await expect(
+    execute({ query: getIntrospectionQuery() }),
+  ).resolves.toMatchSnapshot();
 });
 
 it('should serve a schema from a url with pathname and extension', async () => {
@@ -30,5 +34,7 @@ it('should serve a schema from a url with pathname and extension', async () => {
     supergraph: `http://localhost:${cdn.port}/schema.graphql`,
   });
 
-  await expect(execute({ query: getIntrospectionQuery() })).resolves.toMatchSnapshot();
+  await expect(
+    execute({ query: getIntrospectionQuery() }),
+  ).resolves.toMatchSnapshot();
 });

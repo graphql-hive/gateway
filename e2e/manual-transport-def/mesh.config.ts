@@ -1,10 +1,10 @@
-import { Opts } from '@e2e/opts';
 import {
   defineConfig as defineComposeConfig,
   loadGraphQLHTTPSubgraph,
 } from '@graphql-mesh/compose-cli';
 import { defineConfig as defineGatewayConfig } from '@graphql-mesh/serve-cli';
 import rest from '@graphql-mesh/transport-rest';
+import { Opts } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 
 const opts = Opts(process.argv);
