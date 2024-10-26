@@ -48,11 +48,11 @@ const deps = {
     'node_modules/@graphql-mesh/transport-common/esm/index.js',
   'node_modules/@graphql-mesh/transport-http/index':
     'node_modules/@graphql-mesh/transport-http/esm/index.js',
-  // extras for docker only
   'node_modules/@graphql-mesh/transport-ws/index':
     'node_modules/@graphql-mesh/transport-ws/esm/index.js',
   'node_modules/@graphql-mesh/transport-http-callback/index':
     'node_modules/@graphql-mesh/transport-http-callback/esm/index.js',
+  // extras for docker only
   'node_modules/@graphql-mesh/plugin-http-cache/index':
     'node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
   'node_modules/@graphql-mesh/hmac-upstream-signature/index':
