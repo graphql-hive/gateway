@@ -1,6 +1,7 @@
 import { createTenv } from '@internal/e2e';
+import { beforeAll, expect, it } from 'vitest';
 
-const { service, serve, composeWithApollo } = createTenv(__dirname);
+const { service, gateway, composeWithApollo } = createTenv(__dirname);
 
 let supergraph!: string;
 beforeAll(async () => {
@@ -13,7 +14,7 @@ beforeAll(async () => {
 });
 
 it('should consistently explain the query plan', async () => {
-  const { execute } = await serve({ supergraph });
+  const { execute } = await gateway({ supergraph });
   await expect(
     execute({
       query: /* GraphQL */ `

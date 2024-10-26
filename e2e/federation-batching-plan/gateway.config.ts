@@ -1,6 +1,5 @@
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 import { print } from 'graphql';
-import { defineConfig } from '@graphql-mesh/serve-cli';
-import type { GatewayPlugin } from '@graphql-mesh/serve-runtime';
 
 export function useExplainQueryPlan(): GatewayPlugin {
   const plans = new WeakMap<
@@ -16,7 +15,7 @@ export function useExplainQueryPlan(): GatewayPlugin {
       plans.set(request, []);
       return {
         onExecuteDone({ result, setResult }) {
-          const plan = plans.get(request);
+          const plan = plans.get(request)!;
 
           // stabilise
           plan.sort((a, b) => a.query.localeCompare(b.query));
@@ -24,6 +23,7 @@ export function useExplainQueryPlan(): GatewayPlugin {
           setResult({
             ...result,
             extensions: {
+              // @ts-expect-error this will always be an ExecutionResult
               ...result['extensions'],
               plan,
             },
@@ -33,13 +33,9 @@ export function useExplainQueryPlan(): GatewayPlugin {
     },
     onSubgraphExecute({
       subgraphName,
-      executionRequest: {
-        context: { request },
-        document,
-        variables,
-      },
+      executionRequest: { context, document, variables },
     }) {
-      const plan = plans.get(request)!;
+      const plan = plans.get(context!.request)!;
       plan.push({ subgraphName, query: print(document), variables });
     },
   };
