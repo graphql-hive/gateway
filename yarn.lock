@@ -890,6 +890,7 @@ __metadata:
     "@graphql-mesh/compose-cli": "npm:^1.1.4"
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/store": "npm:^0.102.10"
+    "@graphql-mesh/transport-odata": "npm:^0.0.11"
     "@graphql-mesh/types": "npm:^0.102.10"
     "@graphql-mesh/utils": "npm:^0.102.10"
     "@graphql-tools/utils": "npm:^10.5.5"
@@ -2503,6 +2504,19 @@ __metadata:
     graphql: "*"
     tslib: ^2.4.0
   checksum: 10c0/3041ff8ab3517618e70fd0dbbacea56b85065cbe6afef948d95fdf513fbc260ae33806399979c0494f7f2997a1fcbc6445917f6326a0747abeed4173bc245d20
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/transport-odata@npm:^0.0.11":
+  version: 0.0.11
+  resolution: "@graphql-mesh/transport-odata@npm:0.0.11"
+  dependencies:
+    "@graphql-mesh/transport-common": "npm:^0.7.11"
+    "@omnigraph/odata": "npm:^0.0.10"
+  peerDependencies:
+    graphql: "*"
+    tslib: ^2.4.0
+  checksum: 10c0/9c1ea0762a1ca5672dd7d9ae1080a08b93dd71c8da9e266397413248eeb884293c6439d71baf17dcffadff0e8484491bbc163028d2348ffc3138a5613af1f3d6
   languageName: node
   linkType: hard
 
