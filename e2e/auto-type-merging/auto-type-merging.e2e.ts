@@ -1,7 +1,7 @@
 import { createTenv, type Container } from '@internal/e2e';
 import { beforeAll, expect, it } from 'vitest';
 
-const { compose, service, gateway, container } = createTenv(__dirname);
+const { service, gateway, container } = createTenv(__dirname);
 
 let petstore!: Container;
 beforeAll(async () => {
@@ -13,25 +13,36 @@ beforeAll(async () => {
   });
 });
 
-it.concurrent.each([
-  {
-    name: 'GetPet',
-    query: /* GraphQL */ `
-      query GetPet {
-        getPetById(petId: 1) {
-          __typename
-          id
-          name
-          vaccinated
-        }
-      }
-    `,
-  },
-])('should execute $name', async ({ query }) => {
-  const { output } = await compose({
-    output: 'graphql',
-    services: [petstore, await service('vaccination')],
+it('should execute', async () => {
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [petstore, await service('vaccination')],
+    },
   });
-  const { execute } = await gateway({ supergraph: output });
-  await expect(execute({ query })).resolves.toMatchSnapshot();
+  await expect(
+    execute({
+      query: /* GraphQL */ `
+        query GetPet {
+          getPetById(petId: 1) {
+            __typename
+            id
+            name
+            vaccinated
+          }
+        }
+      `,
+    }),
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "getPetById": {
+          "__typename": "Pet",
+          "id": 1,
+          "name": "Cat 1",
+          "vaccinated": false,
+        },
+      },
+    }
+  `);
 });

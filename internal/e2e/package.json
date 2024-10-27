@@ -1,6 +1,5 @@
 {
   "name": "@internal/e2e",
-  "type": "module",
   "private": true,
   "devDependencies": {
     "@apollo/gateway": "^2.8.3",

@@ -1,0 +1,21 @@
+{
+  "name": "@e2e/federation-subscriptions-passthrough",
+  "private": true,
+  "dependencies": {
+    "@graphql-mesh/transport-ws": "^0.3.11",
+    "@whatwg-node/fetch": "^0.9.22",
+    "graphql": "^16.9.0",
+    "tslib": "^2.8.0"
+  },
+  "devDependencies": {
+    "@apollo/server": "^4.10.3",
+    "@apollo/subgraph": "^2.7.2",
+    "@repeaterjs/repeater": "^3.0.6",
+    "@types/express": "^5.0.0",
+    "@types/ws": "^8",
+    "express": "^4.19.2",
+    "graphql-sse": "^2.5.3",
+    "graphql-ws": "^5.16.0",
+    "ws": "^8.17.1"
+  }
+}

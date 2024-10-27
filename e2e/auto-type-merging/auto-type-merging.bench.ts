@@ -1,9 +1,9 @@
 import { createTenv, Gateway } from '@internal/e2e';
 import { beforeAll, bench, expect } from 'vitest';
 
-const { gateway, compose, service, container } = createTenv(__dirname);
+const { gateway, composeWithMesh, service, container } = createTenv(__dirname);
 
-let gw!: Gateway;
+let gw: Gateway;
 beforeAll(async () => {
   const petstore = await container({
     name: 'petstore',
@@ -12,9 +12,9 @@ beforeAll(async () => {
     healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:8080'],
   });
 
-  const { output } = await compose({
-    services: [petstore, await service('vaccination')],
+  const { output } = await composeWithMesh({
     output: 'graphql',
+    services: [petstore, await service('vaccination')],
   });
 
   gw = await gateway({ supergraph: output });
@@ -37,12 +37,9 @@ bench('GetPet', async () => {
   ).resolves.toEqual(
     expect.objectContaining({
       data: {
-        getPetById: {
+        getPetById: expect.objectContaining({
           __typename: expect.anything(),
-          id: expect.anything(),
-          name: expect.anything(),
-          vaccinated: expect.anything(),
-        },
+        }),
       },
     }),
   );

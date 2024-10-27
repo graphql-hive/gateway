@@ -15,7 +15,7 @@ import {
   createOpt,
   createPortOpt,
   createServicePortOpt,
-  localHostnames,
+  hostnames,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
@@ -49,14 +49,14 @@ const gatewayRunner = (function getServeRunner() {
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
-E2E_GATEWAY_RUNNER=docker yarn bundle && docker buildx bake e2e
+E2E_GATEWAY_RUNNER=docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
 
 `);
   }
   if (runner === 'bin' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using bin gateway runner! Make sure you have built the binary with:
-yarn build && yarn bundle && yarn package-binary
+yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway tsx scripts/package-binary
 
 `);
   }
@@ -97,13 +97,24 @@ export interface Server extends Proc {
 
 export interface ServeOptions extends ProcOptions {
   port?: number;
-  supergraph?: string;
+  /**
+   * Path to the supergraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
+   * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
+   */
+  supergraph?:
+    | string
+    | {
+        with: 'mesh';
+        services?: Service[];
+      }
+    | {
+        with: 'apollo';
+        services: Service[];
+      };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
-    docker?: {
-      volumes?: ContainerOptions['volumes'];
-    };
+    docker?: Partial<Pick<ContainerOptions, 'volumes' | 'healthcheck'>>;
   };
 }
 
@@ -226,7 +237,6 @@ export interface Tenv {
   ): Promise<[proc: Proc, waitForExit: Promise<void>]>;
   gatewayRunner: ServeRunner;
   gateway(opts?: ServeOptions): Promise<Gateway>;
-  compose(opts?: ComposeOptions): Promise<Compose>;
   /**
    * Starts a service by name. Services are services that serve data, not necessarily GraphQL.
    * The TypeScript service executable must be at `services/<name>.ts` or `services/<name>/index.ts`.
@@ -234,6 +244,7 @@ export interface Tenv {
    */
   service(name: string, opts?: ServiceOptions): Promise<Service>;
   container(opts: ContainerOptions): Promise<Container>;
+  composeWithMesh(opts?: ComposeOptions): Promise<Compose>;
   composeWithApollo(services: Service[]): Promise<string>;
 }
 
@@ -274,7 +285,7 @@ export function createTenv(cwd: string): Tenv {
     async gateway(opts) {
       let {
         port = await getAvailablePort(),
-        supergraph,
+        supergraph: supergraphOpt,
         pipeLogs = boolEnv('DEBUG'),
         env,
         runner,
@@ -283,6 +294,20 @@ export function createTenv(cwd: string): Tenv {
 
       let proc: Proc,
         waitForExit: Promise<void> | null = null;
+
+      let supergraph: string | null = null;
+      if (typeof supergraphOpt === 'string') {
+        supergraph = supergraphOpt;
+      } else if (supergraphOpt?.with === 'mesh') {
+        const { output } = await tenv.composeWithMesh({
+          output: 'graphql',
+          services: supergraphOpt.services,
+        });
+        supergraph = output;
+      } else if (supergraphOpt?.with === 'apollo') {
+        const output = await tenv.composeWithApollo(supergraphOpt.services);
+        supergraph = output;
+      }
 
       if (gatewayRunner === 'docker') {
         const volumes: ContainerOptions['volumes'] =
@@ -367,7 +392,7 @@ export function createTenv(cwd: string): Tenv {
           // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
-          healthcheck: [
+          healthcheck: runner?.docker?.healthcheck || [
             'CMD-SHELL',
             `wget --spider http://0.0.0.0:${port}/healthcheck`,
           ],
@@ -449,7 +474,7 @@ export function createTenv(cwd: string): Tenv {
       ]);
       return gw;
     },
-    async compose(opts) {
+    async composeWithMesh(opts) {
       const {
         services = [],
         trimHostPaths,
@@ -471,8 +496,15 @@ export function createTenv(cwd: string): Tenv {
       }
       const [proc, waitForExit] = await spawn(
         { cwd, pipeLogs, env },
-        'yarn',
-        'mesh-compose',
+        'node', // TODO: using yarn does not work on Windows in the CI
+        path.join(
+          __project,
+          'node_modules',
+          '@graphql-mesh',
+          'compose-cli',
+          'esm',
+          'bin.js',
+        ),
         output && createOpt('output', output),
         ...services.map(({ name, port }) => createServicePortOpt(name, port)),
         ...args,
@@ -920,7 +952,7 @@ export function getAvailablePort(): Promise<number> {
 
 async function waitForPort(port: number, signal: AbortSignal) {
   outer: while (!signal.aborted) {
-    for (const localHostname of localHostnames) {
+    for (const localHostname of hostnames) {
       try {
         await fetch(`http://${localHostname}:${port}`, { signal });
         break outer;
