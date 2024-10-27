@@ -497,7 +497,14 @@ export function createTenv(cwd: string): Tenv {
       const [proc, waitForExit] = await spawn(
         { cwd, pipeLogs, env },
         'node',
-        path.join(__project, 'node_modules', '.bin', 'mesh-compose'), // TODO: using yarn does not work on Windows in the CI
+        path.join(
+          __project,
+          'node_modules',
+          '@graphql-mesh',
+          'compose-cli',
+          'esm',
+          'bin.js',
+        ), // TODO: using yarn does not work on Windows in the CI
         output && createOpt('output', output),
         ...services.map(({ name, port }) => createServicePortOpt(name, port)),
         ...args,
