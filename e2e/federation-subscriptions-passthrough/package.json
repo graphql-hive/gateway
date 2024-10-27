@@ -2,7 +2,7 @@
   "name": "@e2e/federation-subscriptions-passthrough",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/transport-ws": "^0.3.11",
+    "@graphql-mesh/transport-ws": "^0.4.0",
     "@whatwg-node/fetch": "^0.9.22",
     "graphql": "^16.9.0",
     "tslib": "^2.8.0"
