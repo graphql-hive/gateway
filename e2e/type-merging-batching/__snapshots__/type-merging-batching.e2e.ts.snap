@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`should execute 'Books' 1`] = `
+exports[`should execute 'Author' 1`] = `
 {
   "data": {
     "author": {
@@ -21,7 +21,7 @@ exports[`should execute 'Books' 1`] = `
 }
 `;
 
-exports[`should execute 'Books' 2`] = `
+exports[`should execute 'Authors' 1`] = `
 {
   "data": {
     "authors": [
@@ -58,7 +58,7 @@ exports[`should execute 'Books' 2`] = `
 }
 `;
 
-exports[`should execute 'Books' 3`] = `
+exports[`should execute 'Book' 1`] = `
 {
   "data": {
     "book": {
@@ -79,7 +79,7 @@ exports[`should execute 'Books' 3`] = `
 }
 `;
 
-exports[`should execute 'Books' 4`] = `
+exports[`should execute 'Books' 1`] = `
 {
   "data": {
     "books": [

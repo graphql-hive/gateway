@@ -13,7 +13,7 @@ beforeAll(async () => {
   });
 });
 
-it.concurrent.each([
+it.each([
   {
     name: 'Author',
     query: /* GraphQL */ `
