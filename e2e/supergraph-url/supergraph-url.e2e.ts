@@ -11,9 +11,8 @@ it('should gateway a schema from a url without pathname', async () => {
     supergraph: `http://0.0.0.0:${cdn.port}`,
   });
 
-  await expect(
-    execute({ query: getIntrospectionQuery() }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(execute({ query: getIntrospectionQuery() })).resolves
+    .toMatchInlineSnapshot(`
     {
       "data": {
         "__schema": {
@@ -1102,9 +1101,8 @@ it('should gateway a schema from a url with pathname', async () => {
     supergraph: `http://0.0.0.0:${cdn.port}/schema`,
   });
 
-  await expect(
-    execute({ query: getIntrospectionQuery() }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(execute({ query: getIntrospectionQuery() })).resolves
+    .toMatchInlineSnapshot(`
     {
       "data": {
         "__schema": {
@@ -2193,9 +2191,8 @@ it('should gateway a schema from a url with pathname and extension', async () =>
     supergraph: `http://0.0.0.0:${cdn.port}/schema.graphql`,
   });
 
-  await expect(
-    execute({ query: getIntrospectionQuery() }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(execute({ query: getIntrospectionQuery() })).resolves
+    .toMatchInlineSnapshot(`
     {
       "data": {
         "__schema": {
