@@ -32,28 +32,60 @@ beforeAll(async () => {
   await waitForLoad;
 });
 
-it.concurrent.each([
-  {
-    name: 'MovieWithActedIn',
-    query: /* GraphQL */ `
-      query MovieWithActedIn {
-        movies(options: { limit: 2 }) {
-          title
-          released
-          tagline
-          peopleActedIn(options: { limit: 2 }) {
-            name
-          }
-        }
-      }
-    `,
-  },
-])('should execute $name', async ({ query }) => {
+it('should execute', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
       services: [neo4j],
     },
   });
-  await expect(execute({ query })).resolves.toMatchSnapshot();
+  await expect(
+    execute({
+      query: /* GraphQL */ `
+        query MovieWithActedIn {
+          movies(options: { limit: 2 }) {
+            title
+            released
+            tagline
+            peopleActedIn(options: { limit: 2 }) {
+              name
+            }
+          }
+        }
+      `,
+    }),
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "movies": [
+          {
+            "peopleActedIn": [
+              {
+                "name": "Emil Eifrem",
+              },
+              {
+                "name": "Hugo Weaving",
+              },
+            ],
+            "released": 1999,
+            "tagline": "Welcome to the Real World",
+            "title": "The Matrix",
+          },
+          {
+            "peopleActedIn": [
+              {
+                "name": "Hugo Weaving",
+              },
+              {
+                "name": "Laurence Fishburne",
+              },
+            ],
+            "released": 2003,
+            "tagline": "Free your mind",
+            "title": "The Matrix Reloaded",
+          },
+        ],
+      },
+    }
+  `);
 });

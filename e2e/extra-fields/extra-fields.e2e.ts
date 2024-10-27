@@ -26,5 +26,19 @@ it('resolves extra fields', async () => {
         }
       `,
     }),
-  ).resolves.toMatchSnapshot();
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "foo": {
+          "bar": {
+            "foo": {
+              "id": "1",
+            },
+            "id": "1",
+          },
+          "id": "1",
+        },
+      },
+    }
+  `);
 });

@@ -142,7 +142,466 @@ it('should report telemetry metrics correctly to jaeger', async () => {
     },
   });
 
-  await expect(execute({ query: TEST_QUERY })).resolves.toMatchSnapshot();
+  await expect(execute({ query: TEST_QUERY })).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "topProducts": [
+          {
+            "inStock": true,
+            "name": "Table",
+            "price": 899,
+            "reviews": [
+              {
+                "author": {
+                  "id": "1",
+                  "name": "Ada Lovelace",
+                  "reviews": [
+                    {
+                      "body": "Love it!",
+                      "id": "1",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                    {
+                      "body": "Too expensive.",
+                      "id": "2",
+                      "product": {
+                        "inStock": false,
+                        "name": "Couch",
+                        "price": 1299,
+                        "shippingEstimate": 0,
+                        "upc": "2",
+                        "weight": 1000,
+                      },
+                    },
+                  ],
+                  "username": "@ada",
+                },
+                "body": "Love it!",
+                "id": "1",
+              },
+              {
+                "author": {
+                  "id": "2",
+                  "name": "Alan Turing",
+                  "reviews": [
+                    {
+                      "body": "Could be better.",
+                      "id": "3",
+                      "product": {
+                        "inStock": true,
+                        "name": "Chair",
+                        "price": 54,
+                        "shippingEstimate": 25,
+                        "upc": "3",
+                        "weight": 50,
+                      },
+                    },
+                    {
+                      "body": "Prefer something else.",
+                      "id": "4",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                  ],
+                  "username": "@complete",
+                },
+                "body": "Prefer something else.",
+                "id": "4",
+              },
+            ],
+            "shippingEstimate": 50,
+            "upc": "1",
+            "weight": 100,
+          },
+          {
+            "inStock": false,
+            "name": "Couch",
+            "price": 1299,
+            "reviews": [
+              {
+                "author": {
+                  "id": "1",
+                  "name": "Ada Lovelace",
+                  "reviews": [
+                    {
+                      "body": "Love it!",
+                      "id": "1",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                    {
+                      "body": "Too expensive.",
+                      "id": "2",
+                      "product": {
+                        "inStock": false,
+                        "name": "Couch",
+                        "price": 1299,
+                        "shippingEstimate": 0,
+                        "upc": "2",
+                        "weight": 1000,
+                      },
+                    },
+                  ],
+                  "username": "@ada",
+                },
+                "body": "Too expensive.",
+                "id": "2",
+              },
+            ],
+            "shippingEstimate": 0,
+            "upc": "2",
+            "weight": 1000,
+          },
+          {
+            "inStock": true,
+            "name": "Chair",
+            "price": 54,
+            "reviews": [
+              {
+                "author": {
+                  "id": "2",
+                  "name": "Alan Turing",
+                  "reviews": [
+                    {
+                      "body": "Could be better.",
+                      "id": "3",
+                      "product": {
+                        "inStock": true,
+                        "name": "Chair",
+                        "price": 54,
+                        "shippingEstimate": 25,
+                        "upc": "3",
+                        "weight": 50,
+                      },
+                    },
+                    {
+                      "body": "Prefer something else.",
+                      "id": "4",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                  ],
+                  "username": "@complete",
+                },
+                "body": "Could be better.",
+                "id": "3",
+              },
+            ],
+            "shippingEstimate": 25,
+            "upc": "3",
+            "weight": 50,
+          },
+        ],
+        "users": [
+          {
+            "id": "1",
+            "name": "Ada Lovelace",
+            "reviews": [
+              {
+                "body": "Love it!",
+                "id": "1",
+                "product": {
+                  "inStock": true,
+                  "name": "Table",
+                  "price": 899,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Love it!",
+                      "id": "1",
+                    },
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Prefer something else.",
+                      "id": "4",
+                    },
+                  ],
+                  "shippingEstimate": 50,
+                  "upc": "1",
+                  "weight": 100,
+                },
+              },
+              {
+                "body": "Too expensive.",
+                "id": "2",
+                "product": {
+                  "inStock": false,
+                  "name": "Couch",
+                  "price": 1299,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Too expensive.",
+                      "id": "2",
+                    },
+                  ],
+                  "shippingEstimate": 0,
+                  "upc": "2",
+                  "weight": 1000,
+                },
+              },
+            ],
+            "username": "@ada",
+          },
+          {
+            "id": "2",
+            "name": "Alan Turing",
+            "reviews": [
+              {
+                "body": "Could be better.",
+                "id": "3",
+                "product": {
+                  "inStock": true,
+                  "name": "Chair",
+                  "price": 54,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Could be better.",
+                      "id": "3",
+                    },
+                  ],
+                  "shippingEstimate": 25,
+                  "upc": "3",
+                  "weight": 50,
+                },
+              },
+              {
+                "body": "Prefer something else.",
+                "id": "4",
+                "product": {
+                  "inStock": true,
+                  "name": "Table",
+                  "price": 899,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Love it!",
+                      "id": "1",
+                    },
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Prefer something else.",
+                      "id": "4",
+                    },
+                  ],
+                  "shippingEstimate": 50,
+                  "upc": "1",
+                  "weight": 100,
+                },
+              },
+            ],
+            "username": "@complete",
+          },
+        ],
+      },
+    }
+  `);
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
   const relevantTraces = traces.data.filter((trace) =>
@@ -197,7 +656,12 @@ it('should report parse failures correctly', async () => {
     },
   });
 
-  await expect(execute({ query: 'query { test' })).rejects.toMatchSnapshot();
+  await expect(
+    execute({ query: 'query { test' }),
+  ).rejects.toMatchInlineSnapshot(`
+    [ResponseError: 400 Bad Request
+    {"errors":[{"message":"Syntax Error: Expected Name, found <EOF>.","locations":[{"line":1,"column":13}]}]}]
+  `);
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
   const relevantTrace = traces.data.find((trace) =>
@@ -254,7 +718,10 @@ it('should report validate failures correctly', async () => {
 
   await expect(
     execute({ query: 'query { nonExistentField }' }),
-  ).rejects.toMatchSnapshot();
+  ).rejects.toMatchInlineSnapshot(`
+    [ResponseError: 400 Bad Request
+    {"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}]
+  `);
   await setTimeout(300);
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
@@ -361,7 +828,466 @@ it('context propagation should work correctly', async () => {
         traceparent: `00-${traceId}-b7ad6b7169203331-01`,
       },
     }),
-  ).resolves.toMatchSnapshot();
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "topProducts": [
+          {
+            "inStock": true,
+            "name": "Table",
+            "price": 899,
+            "reviews": [
+              {
+                "author": {
+                  "id": "1",
+                  "name": "Ada Lovelace",
+                  "reviews": [
+                    {
+                      "body": "Love it!",
+                      "id": "1",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                    {
+                      "body": "Too expensive.",
+                      "id": "2",
+                      "product": {
+                        "inStock": false,
+                        "name": "Couch",
+                        "price": 1299,
+                        "shippingEstimate": 0,
+                        "upc": "2",
+                        "weight": 1000,
+                      },
+                    },
+                  ],
+                  "username": "@ada",
+                },
+                "body": "Love it!",
+                "id": "1",
+              },
+              {
+                "author": {
+                  "id": "2",
+                  "name": "Alan Turing",
+                  "reviews": [
+                    {
+                      "body": "Could be better.",
+                      "id": "3",
+                      "product": {
+                        "inStock": true,
+                        "name": "Chair",
+                        "price": 54,
+                        "shippingEstimate": 25,
+                        "upc": "3",
+                        "weight": 50,
+                      },
+                    },
+                    {
+                      "body": "Prefer something else.",
+                      "id": "4",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                  ],
+                  "username": "@complete",
+                },
+                "body": "Prefer something else.",
+                "id": "4",
+              },
+            ],
+            "shippingEstimate": 50,
+            "upc": "1",
+            "weight": 100,
+          },
+          {
+            "inStock": false,
+            "name": "Couch",
+            "price": 1299,
+            "reviews": [
+              {
+                "author": {
+                  "id": "1",
+                  "name": "Ada Lovelace",
+                  "reviews": [
+                    {
+                      "body": "Love it!",
+                      "id": "1",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                    {
+                      "body": "Too expensive.",
+                      "id": "2",
+                      "product": {
+                        "inStock": false,
+                        "name": "Couch",
+                        "price": 1299,
+                        "shippingEstimate": 0,
+                        "upc": "2",
+                        "weight": 1000,
+                      },
+                    },
+                  ],
+                  "username": "@ada",
+                },
+                "body": "Too expensive.",
+                "id": "2",
+              },
+            ],
+            "shippingEstimate": 0,
+            "upc": "2",
+            "weight": 1000,
+          },
+          {
+            "inStock": true,
+            "name": "Chair",
+            "price": 54,
+            "reviews": [
+              {
+                "author": {
+                  "id": "2",
+                  "name": "Alan Turing",
+                  "reviews": [
+                    {
+                      "body": "Could be better.",
+                      "id": "3",
+                      "product": {
+                        "inStock": true,
+                        "name": "Chair",
+                        "price": 54,
+                        "shippingEstimate": 25,
+                        "upc": "3",
+                        "weight": 50,
+                      },
+                    },
+                    {
+                      "body": "Prefer something else.",
+                      "id": "4",
+                      "product": {
+                        "inStock": true,
+                        "name": "Table",
+                        "price": 899,
+                        "shippingEstimate": 50,
+                        "upc": "1",
+                        "weight": 100,
+                      },
+                    },
+                  ],
+                  "username": "@complete",
+                },
+                "body": "Could be better.",
+                "id": "3",
+              },
+            ],
+            "shippingEstimate": 25,
+            "upc": "3",
+            "weight": 50,
+          },
+        ],
+        "users": [
+          {
+            "id": "1",
+            "name": "Ada Lovelace",
+            "reviews": [
+              {
+                "body": "Love it!",
+                "id": "1",
+                "product": {
+                  "inStock": true,
+                  "name": "Table",
+                  "price": 899,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Love it!",
+                      "id": "1",
+                    },
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Prefer something else.",
+                      "id": "4",
+                    },
+                  ],
+                  "shippingEstimate": 50,
+                  "upc": "1",
+                  "weight": 100,
+                },
+              },
+              {
+                "body": "Too expensive.",
+                "id": "2",
+                "product": {
+                  "inStock": false,
+                  "name": "Couch",
+                  "price": 1299,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Too expensive.",
+                      "id": "2",
+                    },
+                  ],
+                  "shippingEstimate": 0,
+                  "upc": "2",
+                  "weight": 1000,
+                },
+              },
+            ],
+            "username": "@ada",
+          },
+          {
+            "id": "2",
+            "name": "Alan Turing",
+            "reviews": [
+              {
+                "body": "Could be better.",
+                "id": "3",
+                "product": {
+                  "inStock": true,
+                  "name": "Chair",
+                  "price": 54,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Could be better.",
+                      "id": "3",
+                    },
+                  ],
+                  "shippingEstimate": 25,
+                  "upc": "3",
+                  "weight": 50,
+                },
+              },
+              {
+                "body": "Prefer something else.",
+                "id": "4",
+                "product": {
+                  "inStock": true,
+                  "name": "Table",
+                  "price": 899,
+                  "reviews": [
+                    {
+                      "author": {
+                        "id": "1",
+                        "name": "Ada Lovelace",
+                        "reviews": [
+                          {
+                            "body": "Love it!",
+                            "id": "1",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                          {
+                            "body": "Too expensive.",
+                            "id": "2",
+                            "product": {
+                              "inStock": false,
+                              "name": "Couch",
+                              "price": 1299,
+                              "shippingEstimate": 0,
+                              "upc": "2",
+                              "weight": 1000,
+                            },
+                          },
+                        ],
+                        "username": "@ada",
+                      },
+                      "body": "Love it!",
+                      "id": "1",
+                    },
+                    {
+                      "author": {
+                        "id": "2",
+                        "name": "Alan Turing",
+                        "reviews": [
+                          {
+                            "body": "Could be better.",
+                            "id": "3",
+                            "product": {
+                              "inStock": true,
+                              "name": "Chair",
+                              "price": 54,
+                              "shippingEstimate": 25,
+                              "upc": "3",
+                              "weight": 50,
+                            },
+                          },
+                          {
+                            "body": "Prefer something else.",
+                            "id": "4",
+                            "product": {
+                              "inStock": true,
+                              "name": "Table",
+                              "price": 899,
+                              "shippingEstimate": 50,
+                              "upc": "1",
+                              "weight": 100,
+                            },
+                          },
+                        ],
+                        "username": "@complete",
+                      },
+                      "body": "Prefer something else.",
+                      "id": "4",
+                    },
+                  ],
+                  "shippingEstimate": 50,
+                  "upc": "1",
+                  "weight": 100,
+                },
+              },
+            ],
+            "username": "@complete",
+          },
+        ],
+      },
+    }
+  `);
 
   const upstreamHttpCalls = await fetch(
     `http://localhost:${port}/upstream-fetch`,
