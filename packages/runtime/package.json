@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@parcel/watcher": "^2.1.0",
-    "graphql": "^16.9.0"
+    "graphql": "^15.9.0 || ^16.9.0"
   },
   "peerDependenciesMeta": {
     "@parcel/watcher": {
