@@ -162,11 +162,16 @@ jobs:
       - if: runner.os != 'Windows'
         name: Package Unix binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-      - name: Compress binary
+      - name: Set binary info
+        id: binary
+        run: |
+          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+      - if: github.ref == 'refs/heads/main'
+        name: Compress binary
         id: compressed-binary
         run: |
-          gzip -9 packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}
-          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe.gz' || '.gz'}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          gzip -9 ${{ steps.binary.outputs.path }}
           echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe.gz' || '.gz' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Upload release
@@ -175,7 +180,7 @@ jobs:
           repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
           tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
           release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
-          asset_name: ${{ steps.compressed-binary.outputs.name }}
+          asset_name: ${{ steps.binary.outputs.name }}
           file: ${{ steps.compressed-binary.outputs.path }}
           overwrite: true
       - if: github.event_name == 'pull_request'
@@ -183,8 +188,8 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.compressed-binary.outputs.name }}
-          path: ${{ steps.compressed-binary.outputs.path }}
+          name: ${{ steps.binary.outputs.name }}
+          path: ${{ steps.binary.outputs.path }}
       - if: github.event_name == 'pull_request'
         name: Comment on PR
         uses: marocchino/sticky-pull-request-comment@v2
