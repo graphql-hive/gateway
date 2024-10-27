@@ -44,7 +44,6 @@ import {
   mergeDeep,
   parseSelectionSet,
   type Executor,
-  type IResolvers,
   type MaybePromise,
   type TypeSource,
 } from '@graphql-tools/utils';
@@ -396,7 +395,6 @@ export function createGatewayRuntime<
           };
           const transportEntryMap: Record<string, TransportEntry> = {};
           const additionalTypeDefs: TypeSource[] = [];
-          const additionalResolvers: IResolvers<unknown, any>[] = [];
 
           const stitchingDirectivesTransformer =
             getStitchingDirectivesTransformerForSubschema();
@@ -414,7 +412,6 @@ export function createGatewayRuntime<
             subschemaConfig,
             transportEntryMap,
             additionalTypeDefs,
-            additionalResolvers,
             stitchingDirectivesTransformer,
             onSubgraphExecute,
           });
