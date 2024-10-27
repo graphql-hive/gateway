@@ -79,7 +79,7 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn workspace @graphql-hive/gateway bundle
-      - if: matrix.setup.serve-runner == 'docker'
+      - if: matrix.setup.gateway-runner == 'docker'
         name: Bake
         uses: docker/bake-action@v5
         with:
