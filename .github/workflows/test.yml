@@ -105,9 +105,6 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-      - if: runner.os == 'macOS'
-        name: Remap Docker socket
-        run: sudo ln -s ~/.docker/run/docker.sock /var/run/docker.sock
       - name: Test
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
