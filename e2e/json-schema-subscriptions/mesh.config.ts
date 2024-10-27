@@ -9,7 +9,7 @@ export const composeConfig = defineConfig({
   subgraphs: [
     {
       sourceHandler: loadJSONSchemaSubgraph('API', {
-        endpoint: `http://localhost:${opts.getServicePort('api')}`,
+        endpoint: `http://0.0.0.0:${opts.getServicePort('api')}`,
         operationHeaders: {
           'Content-Type': 'application/json',
         },

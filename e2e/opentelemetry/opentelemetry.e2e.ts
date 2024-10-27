@@ -16,7 +16,7 @@ const JAEGER_HOSTNAME =
     ? boolEnv('CI')
       ? '172.17.0.1'
       : 'host.docker.internal'
-    : 'localhost';
+    : '0.0.0.0';
 
 const TEST_QUERY = /* GraphQL */ `
   fragment User on User {
@@ -98,7 +98,7 @@ beforeAll(async () => {
     },
     containerPort: 4318,
     additionalContainerPorts: [16686],
-    healthcheck: ['CMD-SHELL', 'wget --spider http://localhost:14269'],
+    healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
   });
 });
 
@@ -118,7 +118,7 @@ async function getJaegerTraces(
   service: string,
   expectedDataLength: number,
 ): Promise<JaegerTracesApiResponse> {
-  const url = `http://localhost:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
+  const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
   let res!: JaegerTracesApiResponse;
   for (let i = 0; i < 25; i++) {
@@ -656,9 +656,8 @@ it('should report parse failures correctly', async () => {
     },
   });
 
-  await expect(
-    execute({ query: 'query { test' }),
-  ).rejects.toMatchInlineSnapshot(`
+  await expect(execute({ query: 'query { test' })).rejects
+    .toMatchInlineSnapshot(`
     [ResponseError: 400 Bad Request
     {"errors":[{"message":"Syntax Error: Expected Name, found <EOF>.","locations":[{"line":1,"column":13}]}]}]
   `);
@@ -716,9 +715,8 @@ it('should report validate failures correctly', async () => {
     },
   });
 
-  await expect(
-    execute({ query: 'query { nonExistentField }' }),
-  ).rejects.toMatchInlineSnapshot(`
+  await expect(execute({ query: 'query { nonExistentField }' })).rejects
+    .toMatchInlineSnapshot(`
     [ResponseError: 400 Bad Request
     {"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}]
   `);
@@ -780,7 +778,7 @@ it('should report http failures', async () => {
     },
   });
 
-  await fetch(`http://localhost:${port}/non-existing`).catch(() => {});
+  await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
   const relevantTrace = traces.data.find((trace) =>
@@ -1290,7 +1288,7 @@ it('context propagation should work correctly', async () => {
   `);
 
   const upstreamHttpCalls = await fetch(
-    `http://localhost:${port}/upstream-fetch`,
+    `http://0.0.0.0:${port}/upstream-fetch`,
   ).then(
     (r) =>
       r.json() as unknown as Array<{

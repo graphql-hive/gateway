@@ -31,7 +31,7 @@ it('should upload file', async () => {
     '0',
     new File(['Hello World!'], 'hello.txt', { type: 'text/plain' }),
   );
-  const res = await fetch(`http://localhost:${port}/graphql`, {
+  const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
     method: 'POST',
     body: form,
   });

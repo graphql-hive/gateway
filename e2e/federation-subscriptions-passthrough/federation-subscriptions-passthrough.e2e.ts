@@ -44,7 +44,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       });
 
       const client = createClient({
-        url: `http://localhost:${port}/graphql`,
+        url: `http://0.0.0.0:${port}/graphql`,
         retryAttempts: 0,
         headers,
         connectionParams: headers,
@@ -131,7 +131,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       });
 
       const client = createClient({
-        url: `http://localhost:${port}/graphql`,
+        url: `http://0.0.0.0:${port}/graphql`,
         retryAttempts: 0,
         headers,
         connectionParams: headers,

@@ -22,7 +22,7 @@ it('should listen for webhooks', async () => {
       }
     `,
     variables: {
-      url: `http://localhost:${port.toString()}/callback`,
+      url: `http://0.0.0.0:${port.toString()}/callback`,
     },
   });
 
@@ -30,7 +30,7 @@ it('should listen for webhooks', async () => {
   expect(subscriptionId).toBeTruthy();
 
   const sse = createClient({
-    url: `http://localhost:${port}/graphql`,
+    url: `http://0.0.0.0:${port}/graphql`,
     retryAttempts: 0,
     fetchFn: fetch,
   });
