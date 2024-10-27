@@ -108,12 +108,8 @@ jobs:
           # we must load so that the e2e tests can use the cached image
           # also, in order for loading to work - we must define the platform above
           load: true
-      - if: matrix.setup.gateway-runner == 'bin' && runner.os == 'Windows'
-        name: Package Windows binary
-        shell: powershell
-        run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-      - if: matrix.setup.gateway-runner == 'bin' && runner.os != 'Windows'
-        name: Package Unix binary
+      - if: matrix.setup.gateway-runner == 'bin'
+        name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - name: Test
         env:
