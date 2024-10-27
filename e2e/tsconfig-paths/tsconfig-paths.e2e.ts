@@ -1,11 +1,13 @@
-import { createTenv } from '@internal/e2e';
+import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
 
 const { gateway, fs } = createTenv(__dirname);
 
 it('should start gateway', async () => {
+  const port = await getAvailablePort();
   const proc = await gateway({
+    port,
     supergraph: await fs.tempfile(
       'supergraph.graphql',
       'type Query { hello: String }',
@@ -15,14 +17,11 @@ it('should start gateway', async () => {
     },
     runner: {
       docker: {
+        healthcheck: ['CMD-SHELL', `wget --spider http://0.0.0.0:${port}/helt`],
         volumes: [
           {
             host: './tsconfig-paths.tsconfig.json',
             container: '/gateway/tsconfig-paths.tsconfig.json',
-          },
-          {
-            host: './mesh.config.ts',
-            container: '/gateway/mesh.config.ts',
           },
           {
             host: './folder',

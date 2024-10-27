@@ -114,9 +114,7 @@ export interface ServeOptions extends ProcOptions {
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
-    docker?: {
-      volumes?: ContainerOptions['volumes'];
-    };
+    docker?: Partial<Pick<ContainerOptions, 'volumes' | 'healthcheck'>>;
   };
 }
 
@@ -394,7 +392,7 @@ export function createTenv(cwd: string): Tenv {
           // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
-          healthcheck: [
+          healthcheck: runner?.docker?.healthcheck || [
             'CMD-SHELL',
             `wget --spider http://0.0.0.0:${port}/healthcheck`,
           ],
