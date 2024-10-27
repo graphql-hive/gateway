@@ -110,7 +110,7 @@ jobs:
         shell: powershell
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - if: matrix.setup.gateway-runner == 'bin' && runner.os != 'Windows'
-        name: Package UNIX binary
+        name: Package Unix binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - name: Test
         env:
