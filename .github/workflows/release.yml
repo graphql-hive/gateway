@@ -151,8 +151,6 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Bundle
-        env:
-          NODE_OPTIONS: ${{ runner.os == 'macOS' && '--max_old_space_size=4096' || '' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ steps.ver-gateway.outputs.result }}
