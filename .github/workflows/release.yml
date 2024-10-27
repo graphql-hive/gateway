@@ -144,6 +144,7 @@ jobs:
         name: Install Windows SDK
         uses: fbactions/setup-winsdk@v2
         with:
+          # we want exact version because the signtool path depends on it in package-binary.ts
           winsdk-build-version: 18362
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
