@@ -20,6 +20,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /gateway
 
+# DEPRECATED: the /serve mount point has been deprecated in faviour of /gateway
+#             we're keeping a symlink just for an easier transition
+RUN ln -s /gateway /serve
+
 COPY --chown=root --from=install /install/node_modules /node_modules
 COPY --chown=root bundle/node_modules /node_modules
 COPY --chown=root bundle/dist .
