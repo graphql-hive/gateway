@@ -17,6 +17,9 @@ if (!isDarwin && !isWindows && !isLinux) {
 
 const dest = 'hive-gateway' + (isWindows ? '.exe' : '');
 
+const signToolPath =
+  'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0\\x64\\signtool.exe';
+
 console.log(
   `Packaging binary with Node SEA for ${platform}-${arch} to ${dest}`,
 );
@@ -33,7 +36,7 @@ if (isDarwin) {
 } else if (isWindows) {
   try {
     console.log('Removing the signature w/ signtool');
-    execSync(`signtool remove /s ${dest}`);
+    execSync(`"${signToolPath}" remove /s ${dest}`);
   } catch (e) {
     console.warn('Removing signature failed w/ signtool', e);
   }
@@ -52,7 +55,7 @@ if (isDarwin) {
 } else if (isWindows) {
   try {
     console.log('Signing binary w/ signtool');
-    execSync(`signtool sign /fd SHA256 ${dest}`);
+    execSync(`"${signToolPath}" sign /fd SHA256 ${dest}`);
   } catch (e) {
     console.warn('Signing failed w/ signtool', e);
   }
