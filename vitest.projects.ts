@@ -1,6 +1,6 @@
 import { defineWorkspace } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI, isNotPlatform } from './internal/testing/src/env';
+import { isCI, isPlatform } from './internal/testing/src/env';
 
 export default defineWorkspace([
   {
@@ -16,9 +16,9 @@ export default defineWorkspace([
       name: 'e2e',
       include: [
         '**/*.e2e.ts',
-        ...(isCI() && isNotPlatform('linux')
+        ...(isCI() && isPlatform('darwin')
           ? [
-              // TODO: containers are not starting on non-linux environments
+              // TODO: containers are not starting in macOS
               '!**/e2e/auto-type-merging',
               '!**/e2e/neo4j-example',
               '!**/e2e/soap-demo',
