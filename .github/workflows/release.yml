@@ -154,12 +154,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ steps.ver-gateway.outputs.result }}
-      - if: runner.os == 'Windows'
-        name: Package Windows binary
-        shell: powershell
-        run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-      - if: runner.os != 'Windows'
-        name: Package Unix binary
+      - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - name: Set binary info
         id: binary
