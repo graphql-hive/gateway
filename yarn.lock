@@ -1776,7 +1776,7 @@ __metadata:
     tsx: "npm:^4.19.1"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
-    graphql: ^16.9.0
+    graphql: ^15.9.0 || ^16.9.0
   peerDependenciesMeta:
     "@parcel/watcher":
       optional: true
@@ -1838,7 +1838,7 @@ __metadata:
     ws: "npm:^8.18.0"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
-    graphql: ^16.9.0
+    graphql: ^15.9.0 || ^16.9.0
   peerDependenciesMeta:
     "@parcel/watcher":
       optional: true
