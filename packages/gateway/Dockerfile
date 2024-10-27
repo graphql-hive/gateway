@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /gateway
 
-# DEPRECATED: the /serve mount point has been deprecated in faviour of /gateway
+# DEPRECATED: the /serve mount point has been deprecated in favour of /gateway
 #             we're keeping a symlink just for an easier transition
 RUN ln -s /gateway /serve
 
