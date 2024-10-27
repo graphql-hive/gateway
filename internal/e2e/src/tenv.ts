@@ -56,7 +56,7 @@ E2E_GATEWAY_RUNNER=docker yarn bundle && docker buildx bake e2e
   if (runner === 'bin' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using bin gateway runner! Make sure you have built the binary with:
-yarn build && yarn bundle && yarn package-binary
+yarn bundle && yarn package-binary
 
 `);
   }
