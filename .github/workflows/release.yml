@@ -141,10 +141,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - if: runner.os == 'Windows'
-        name: Disable Windows Defender
-        run: Set-MpPreference -DisableRealtimeMonitoring $true
-        shell: powershell
-      - if: runner.os == 'Windows'
         name: Install Windows SDK
         uses: fbactions/setup-winsdk@v2
         with:
@@ -159,7 +155,12 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ steps.ver-gateway.outputs.result }}
-      - name: Package binary
+      - if: runner.os == 'Windows'
+        name: Package Windows binary
+        shell: powershell
+        run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+      - if: runner.os != 'Windows'
+        name: Package Unix binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - name: Compress binary
         id: compressed-binary
