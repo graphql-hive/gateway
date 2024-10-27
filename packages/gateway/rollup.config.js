@@ -59,6 +59,41 @@ const deps = {
     '../../node_modules/@graphql-mesh/hmac-upstream-signature/esm/index.js',
 };
 
+if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+  // extras specific to the docker serve runner in e2e tests
+  console.warn('⚠️ Bundling extra modules for e2e tests!');
+  deps['node_modules/@internal/testing/index'] =
+    '../../internal/testing/src/index.ts';
+  deps['node_modules/@graphql-mesh/utils/index'] =
+    '../../node_modules/@graphql-mesh/utils/esm/index.js';
+  deps['node_modules/@omnigraph/openapi/index'] =
+    '../../node_modules/@omnigraph/openapi/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-rest/index'] =
+    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-soap/index'] =
+    '../../node_modules/@graphql-mesh/transport-soap/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-mysql/index'] =
+    '../../node_modules/@graphql-mesh/transport-mysql/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-neo4j/index'] =
+    '../../node_modules/@graphql-mesh/transport-neo4j/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-sqlite/index'] =
+    '../../node_modules/@graphql-mesh/transport-sqlite/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-thrift/index'] =
+    '../../node_modules/@graphql-mesh/transport-thrift/esm/index.js';
+  deps['node_modules/@omnigraph/sqlite/index'] =
+    '../../node_modules/@omnigraph/sqlite/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-sqlite/index'] =
+    '../../node_modules/@graphql-mesh/transport-sqlite/esm/index.js';
+  deps['node_modules/@omnigraph/json-schema/index'] =
+    '../../node_modules/@omnigraph/json-schema/esm/index.js';
+  deps['node_modules/@graphql-mesh/plugin-live-query/index'] =
+    '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
+  deps['node_modules/@omnigraph/odata/index'] =
+    '../../node_modules/@omnigraph/odata/esm/index.js';
+  deps['node_modules/@graphql-mesh/transport-odata/index'] =
+    '../../node_modules/@graphql-mesh/transport-odata/esm/index.js';
+}
+
 export default defineConfig({
   input: {
     'dist/bin': 'src/bin.ts',
