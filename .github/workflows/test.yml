@@ -50,7 +50,7 @@ jobs:
           - os: ubuntu-latest
             gateway-runner: docker
             node-version: 22
-    name: E2E / Runner ${{matrix.setup.gateway-runner}} on ${{matrix.setup.os}} / Node v${{matrix.setup.node-version}}
+    name: E2E / ${{matrix.setup.gateway-runner == 'node' && format('Node v{0}', matrix.setup.node-version) || ''}}${{matrix.setup.gateway-runner == 'docker' && 'Docker' || ''}}${{matrix.setup.gateway-runner == 'bin' && format('Binary on {0}', matrix.setup.os) || ''}}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
