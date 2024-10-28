@@ -115,11 +115,6 @@ jobs:
             ```
   bin:
     name: Binary built on ${{ matrix.os }}
-    needs: [stable, snapshot]
-    if: always() && (
-      contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
-      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
-      )
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -132,7 +127,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
+            const publishedPackages = [{"name":"@graphql-hive/gateway","version":"1.4.1"},{"name":"@graphql-hive/gateway-runtime","version":"1.0.0"}];
             const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
             if (!gateway) {
               return core.setFailed('@graphql-hive/gateway was not published!');
