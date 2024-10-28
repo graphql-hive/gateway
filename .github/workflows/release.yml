@@ -167,7 +167,8 @@ jobs:
         id: compressed-binary
         run: |
           gzip -9 ${{ steps.binary.outputs.path }}
-          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe.gz' || '.gz' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "name=${{ steps.binary.outputs.name }}.gz" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "path=${{ steps.binary.outputs.path }}.gz" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Upload release
         uses: svenstaro/upload-release-action@v2
@@ -175,7 +176,7 @@ jobs:
           repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
           tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
           release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
-          asset_name: ${{ steps.binary.outputs.name }}
+          asset_name: ${{ steps.compressed-binary.outputs.name }}
           file: ${{ steps.compressed-binary.outputs.path }}
           overwrite: true
       - if: github.event_name == 'pull_request'
