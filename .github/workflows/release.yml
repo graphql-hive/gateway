@@ -179,6 +179,7 @@ jobs:
           release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
           asset_name: ${{ steps.compressed-binary.outputs.name }}
           file: ${{ steps.compressed-binary.outputs.path }}
+          body: Pre-built binaries of the Hive Gateway for the **@graphql-hive/gateway@${{ steps.ver-gateway.outputs.result }}** release.
           overwrite: true
       - if: github.event_name == 'pull_request'
         name: Upload artifact
