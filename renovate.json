@@ -9,5 +9,21 @@
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
-  }
+  },
+  "packageRules": [
+    {
+      "excludePackagePatterns": [
+        "@changesets/*",
+        "typescript",
+        "^@theguild/",
+        "@whatwg-node/*",
+        "graphql-jit",
+        "@opentelemetry/*"
+      ],
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    }
+  ]
 }
