@@ -33,6 +33,7 @@ jobs:
 
   # TODO: various gateway runners
   e2e:
+    needs: [unit]
     runs-on: ${{ matrix.setup.os }}
     strategy:
       fail-fast: false
