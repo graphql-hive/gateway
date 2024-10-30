@@ -6,7 +6,7 @@
     "@graphql-mesh/compose-cli": "^1.1.4",
     "@graphql-mesh/cross-helpers": "^0.4.7",
     "@graphql-mesh/store": "^0.102.10",
-    "@graphql-mesh/transport-odata": "^0.0.11",
+    "@graphql-mesh/transport-odata": "^0.0.12",
     "@graphql-mesh/types": "^0.102.10",
     "@graphql-mesh/utils": "^0.102.10",
     "@graphql-tools/utils": "^10.5.5",
