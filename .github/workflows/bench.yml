@@ -27,8 +27,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Install
-        run: yarn install
       - name: Hash Docker Images
         id: hash-docker-images
         run: | # get all "image: '" occurrences in the e2e tests and hash them

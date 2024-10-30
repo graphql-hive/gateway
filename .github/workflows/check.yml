@@ -21,8 +21,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Install
-        run: yarn install
       - name: Check
         run: yarn check:format
 
@@ -37,8 +35,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Install
-        run: yarn install
       - name: Check
         run: yarn check:lint
 
@@ -53,8 +49,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Install
-        run: yarn install
       - name: Check
         run: yarn check:types
 
@@ -69,8 +63,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Install
-        run: yarn install
       - name: Check
         run: yarn build
 
@@ -85,7 +77,5 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Install
-        run: yarn install
       - name: Check
         run: yarn bundle
