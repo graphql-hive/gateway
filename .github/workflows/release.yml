@@ -85,6 +85,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
+      - name: Build
+        run: yarn build
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Inject version

@@ -93,6 +93,8 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
+      - name: Build
+        run: yarn build
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
         env:
