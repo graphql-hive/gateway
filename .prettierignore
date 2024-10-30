@@ -2,3 +2,6 @@
 Dockerfile
 packages/runtime/src/landing-page-html.ts
 __generated__
+.changeset/*
+!.changeset/README.md
+!.changeset/config.json
