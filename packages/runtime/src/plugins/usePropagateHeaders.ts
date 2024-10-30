@@ -23,18 +23,15 @@ export interface PropagateHeadersOpts {
   fromSubgraphsToClient?: (
     payload: FromSubgraphsToClientPayload,
   ) =>
-    | Record<string, string>
+    | Record<string, string | string[]>
     | void
-    | Promise<Record<string, string | null | undefined> | void>;
+    | Promise<Record<string, string | string[] | null | undefined> | void>;
 }
 
 export function usePropagateHeaders<TContext extends Record<string, any>>(
   opts: PropagateHeadersOpts,
 ): GatewayPlugin<TContext> {
-  const resHeadersByRequest = new WeakMap<
-    Request,
-    Record<string, string | null | undefined>
-  >();
+  const resHeadersByRequest = new WeakMap<Request, Record<string, string[]>>();
   return {
     onFetch({ executionRequest, context, options, setOptions }) {
       const request = context?.request || executionRequest?.context?.request;
@@ -69,7 +66,26 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
                 }),
                 (headers) => {
                   if (headers && request) {
-                    resHeadersByRequest.set(request, headers);
+                    let existingHeaders = resHeadersByRequest.get(request);
+                    if (!existingHeaders) {
+                      existingHeaders = {};
+                      resHeadersByRequest.set(request, existingHeaders);
+                    }
+
+                    // Merge headers across multiple subgraph calls
+                    for (const key in headers) {
+                      const value = headers[key];
+                      if (value) {
+                        const headerAsArray = Array.isArray(value)
+                          ? value
+                          : [value];
+                        if (existingHeaders[key]) {
+                          existingHeaders[key].push(...headerAsArray);
+                        } else {
+                          existingHeaders[key] = headerAsArray;
+                        }
+                      }
+                    }
                   }
                 },
               );
@@ -84,7 +100,9 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
         for (const key in headers) {
           const value = headers[key];
           if (value) {
-            response.headers.set(key, value);
+            for (const v of value) {
+              response.headers.append(key, v);
+            }
           }
         }
       }
