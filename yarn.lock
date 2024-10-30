@@ -2660,24 +2660,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-mysql@npm:^0.7.11":
-  version: 0.7.11
-  resolution: "@graphql-mesh/transport-mysql@npm:0.7.11"
+"@graphql-mesh/transport-mysql@npm:^0.7.12":
+  version: 0.7.12
+  resolution: "@graphql-mesh/transport-mysql@npm:0.7.12"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/string-interpolation": "npm:^0.5.6"
-    "@graphql-mesh/transport-common": "npm:^0.7.11"
-    "@graphql-mesh/types": "npm:^0.102.10"
-    "@graphql-mesh/utils": "npm:^0.102.10"
-    "@graphql-tools/delegate": "npm:^10.0.27"
+    "@graphql-mesh/transport-common": "npm:^0.7.12"
+    "@graphql-mesh/types": "npm:^0.102.11"
+    "@graphql-mesh/utils": "npm:^0.102.11"
+    "@graphql-tools/delegate": "npm:^10.0.28"
     "@graphql-tools/utils": "npm:^10.5.5"
+    "@whatwg-node/fetch": "npm:^0.9.22"
     graphql-fields: "npm:^2.0.3"
     mysql: "npm:^2.18.1"
     mysql-utilities: "npm:^1.1.4"
   peerDependencies:
     graphql: "*"
     tslib: ^2.4.0
-  checksum: 10c0/e130ba5272764f9455edd5220eb3f330765dfd7dc04962364200f3ae13f653172d52681bbb89a401ec67691e94977dd4a1f6fdaf0e916e954f699ec3df5b5160
+  checksum: 10c0/5eb1a67579fb0d8f919beb13e4abf97acadab5ec3faebde7884152410f1427185f982e14a2729934b135136e90beab807ce29f0e4542c567c5b9be4bdb1db17a
   languageName: node
   linkType: hard
 
@@ -3816,14 +3817,14 @@ __metadata:
   linkType: hard
 
 "@omnigraph/mysql@npm:^0.7.11":
-  version: 0.7.11
-  resolution: "@omnigraph/mysql@npm:0.7.11"
+  version: 0.7.12
+  resolution: "@omnigraph/mysql@npm:0.7.12"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/string-interpolation": "npm:^0.5.6"
-    "@graphql-mesh/transport-mysql": "npm:^0.7.11"
-    "@graphql-mesh/utils": "npm:^0.102.10"
-    "@graphql-tools/delegate": "npm:^10.0.27"
+    "@graphql-mesh/transport-mysql": "npm:^0.7.12"
+    "@graphql-mesh/utils": "npm:^0.102.11"
+    "@graphql-tools/delegate": "npm:^10.0.28"
     "@graphql-tools/utils": "npm:^10.5.5"
     graphql-compose: "npm:^9.0.11"
     graphql-fields: "npm:^2.0.3"
@@ -3831,9 +3832,9 @@ __metadata:
     mysql: "npm:^2.18.1"
     mysql-utilities: "npm:^1.1.4"
   peerDependencies:
-    "@graphql-mesh/types": ^0.102.10
+    "@graphql-mesh/types": ^0.102.11
     graphql: "*"
-  checksum: 10c0/34f104467ffe8fbe15fd0496588f84408d7a4e2a727f7dda4d79fb363e476ea6f72a69ca345e2710b5633c5b97be6e6df0a62595ff521adf6fb32970b82bc477
+  checksum: 10c0/19196a68ec9222dbfa17eedd65ee1b5c058debaa59fb4ae37bfbf1f98a68a7cc52082d3c55166f994783687c16be6b66f8c20cc06055d18f2f9e0ace7fddc95a
   languageName: node
   linkType: hard
 
