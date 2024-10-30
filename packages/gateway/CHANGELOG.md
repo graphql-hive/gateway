@@ -1,5 +1,13 @@
 # @graphql-hive/gateway
 
+## 1.4.2
+
+### Patch Changes
+
+- [#41](https://github.com/graphql-hive/gateway/pull/41) [`2f9b289`](https://github.com/graphql-hive/gateway/commit/2f9b2899ab9a05ab79ca47399809f4bfbb9092ec) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.0.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.0.5) (from `^0.0.4`, in `dependencies`)
+
 ## 1.4.1
 
 ### Patch Changes
