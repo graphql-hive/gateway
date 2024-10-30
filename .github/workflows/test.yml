@@ -26,8 +26,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Install
-        run: yarn install
       - name: Test
         run: yarn test
 
@@ -80,8 +78,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.setup.node-version}}
-      - name: Install
-        run: yarn install
       - if: runner.os == 'Linux'
         name: Hash Docker Images
         id: hash-docker-images
