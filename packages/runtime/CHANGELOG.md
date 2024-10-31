@@ -1,5 +1,13 @@
 # @graphql-hive/gateway-runtime
 
+## 1.1.1
+
+### Patch Changes
+
+- [#50](https://github.com/graphql-hive/gateway/pull/50) [`07fe045`](https://github.com/graphql-hive/gateway/commit/07fe0458935ff0f171db8c9fa96bdbdd02884716) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.2.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.2.0) (from `^0.1.0`, in `dependencies`)
+
 ## 1.1.0
 
 ### Minor Changes
