@@ -225,26 +225,38 @@ describe('usePropagateHeaders', () => {
         propagateHeaders: {
           fromSubgraphsToClient({ response }) {
             const cookies = response.headers.getSetCookie();
-            return {
-              upstream1: response.headers.get('upstream1'),
-              upstream2: response.headers.get('upstream2'),
+            const returns: Record<string, string | string[]> = {
               'set-cookie': cookies,
             };
+
+            const up1 = response.headers.get('upstream1');
+            if (up1) {
+              returns['upstream1'] = up1;
+            }
+
+            const up2 = response.headers.get('upstream2');
+            if (up2) {
+              returns['upstream2'] = up2;
+            }
+
+            return returns;
           },
         },
         plugins: () => [
           useCustomFetch((url, options, context, info) => {
             switch (url) {
               case 'http://localhost:4001/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
                 return upstream1Fetch(url, options, context, info);
               case 'http://localhost:4002/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
                 return upstream2Fetch(url, options, context, info);
               default:
                 throw new Error('Invalid URL');
             }
           }),
         ],
-        logging: !!process.env.DEBUG,
+        logging: isDebug(),
       });
       const response = await serveRuntime.fetch(
         'http://localhost:4000/graphql',
