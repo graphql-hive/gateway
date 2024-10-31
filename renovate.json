@@ -21,7 +21,7 @@
         "!/^@theguild//",
         "!/@whatwg-node/*/",
         "!/graphql-jit/",
-        "!/*opentelemetry*/",
+        "!/opentelemetry/",
         "*"
       ]
     }
