@@ -1,5 +1,21 @@
 # @graphql-hive/gateway-runtime
 
+## 1.1.0
+
+### Minor Changes
+
+- [#46](https://github.com/graphql-hive/gateway/pull/46) [`106eace`](https://github.com/graphql-hive/gateway/commit/106eacee488670155a11e539655d8c4c22d54ffe) Thanks [@aarne](https://github.com/aarne)! - Ability to return headers with multiple values from propagateHeaders.fromSubgraphsToClient
+
+### Patch Changes
+
+- [#51](https://github.com/graphql-hive/gateway/pull/51) [`7f5e0b0`](https://github.com/graphql-hive/gateway/commit/7f5e0b07a3e3bdd6d84bc9527fa1f83db5fe0c45) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/batch-delegate@^9.0.11` ↗︎](https://www.npmjs.com/package/@graphql-tools/batch-delegate/v/9.0.11) (from `^9.0.3`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/delegate@^10.0.29` ↗︎](https://www.npmjs.com/package/@graphql-tools/delegate/v/10.0.29) (from `^10.0.21`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/federation@^2.2.23` ↗︎](https://www.npmjs.com/package/@graphql-tools/federation/v/2.2.23) (from `^2.2.10`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/stitch@^9.3.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/stitch/v/9.3.1) (from `^9.2.10`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/wrap@^10.0.13` ↗︎](https://www.npmjs.com/package/@graphql-tools/wrap/v/10.0.13) (from `^10.0.5`, in `dependencies`)
+
 ## 1.0.0
 
 ### Major Changes
