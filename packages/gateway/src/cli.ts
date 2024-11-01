@@ -2,7 +2,7 @@ import 'dotenv/config'; // inject dotenv options to process.env
 
 import cluster from 'node:cluster';
 import module from 'node:module';
-import { availableParallelism, platform, release } from 'node:os';
+import { platform, release } from 'node:os';
 import { join } from 'node:path';
 import {
   Command,
