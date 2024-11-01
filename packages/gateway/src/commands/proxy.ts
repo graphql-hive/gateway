@@ -100,10 +100,16 @@ export const addCommand: AddCommand = (ctx, cli) =>
         pubsub,
         logger: ctx.log,
       });
-      const builtinPlugins = await getBuiltinPluginsFromConfig(loadedConfig, {
-        logger: ctx.log,
-        cache,
-      });
+      const builtinPlugins = await getBuiltinPluginsFromConfig(
+        {
+          ...loadedConfig,
+          ...opts,
+        },
+        {
+          logger: ctx.log,
+          cache,
+        },
+      );
 
       const config: ProxyConfig = {
         ...defaultOptions,
