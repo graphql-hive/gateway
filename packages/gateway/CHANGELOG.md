@@ -1,5 +1,11 @@
 # @graphql-hive/gateway
 
+## 1.4.5
+
+### Patch Changes
+
+- [`4aa45c3`](https://github.com/graphql-hive/gateway/commit/4aa45c356a703055bf16934755fd1c13aea9eccf) Thanks [@ardatan](https://github.com/ardatan)! - Pass configuration from the CLI parameters to the plugins
+
 ## 1.4.4
 
 ### Patch Changes
