@@ -25,6 +25,7 @@ import { DefaultLogger } from '@graphql-mesh/utils';
 import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
+import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './server';
 
 export type GatewayCLIConfig = (
@@ -178,9 +179,9 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
-const maxAvailableFork = Math.max(availableParallelism() - 1, 1);
+const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: process.env['NODE_ENV'] === 'production' ? maxAvailableFork : 1,
+  fork: process.env['NODE_ENV'] === 'production' ? maxFork : 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -200,7 +201,7 @@ let cli = new Command()
   .addOption(
     new Option(
       '--fork <count>',
-      `count of workers to spawn. uses "${maxAvailableFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${JSON.stringify(defaultOptions.fork)}`,
+      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${JSON.stringify(defaultOptions.fork)}`,
     )
       .env('FORK')
       .argParser((v) => {
@@ -208,9 +209,9 @@ let cli = new Command()
         if (isNaN(count)) {
           throw new InvalidArgumentError('not a number.');
         }
-        if (count > maxAvailableFork) {
+        if (count > maxFork) {
           throw new InvalidArgumentError(
-            `exceedes number of available parallelism "${maxAvailableFork}".`,
+            `exceedes number of available parallelism "${maxFork}".`,
           );
         }
         return count;
