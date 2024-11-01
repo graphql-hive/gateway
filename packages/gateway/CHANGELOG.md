@@ -1,5 +1,11 @@
 # @graphql-hive/gateway
 
+## 1.4.8
+
+### Patch Changes
+
+- [`106f6c1`](https://github.com/graphql-hive/gateway/commit/106f6c128b4a1d188645eba850ff6935d26ef74a) Thanks [@ardatan](https://github.com/ardatan)! - Support `mesh.config` configuration file name for backwards compatibility
+
 ## 1.4.7
 
 ### Patch Changes
