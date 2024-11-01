@@ -1,5 +1,11 @@
 # @graphql-hive/gateway
 
+## 1.4.6
+
+### Patch Changes
+
+- [`33eb2e5`](https://github.com/graphql-hive/gateway/commit/33eb2e5963b7e0edaa7fae1fde412222d6e5e364) Thanks [@ardatan](https://github.com/ardatan)! - Respect available memory on forking the processes not just CPU
+
 ## 1.4.5
 
 ### Patch Changes
