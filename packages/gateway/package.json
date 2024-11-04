@@ -73,6 +73,7 @@
     "@graphql-mesh/plugin-rate-limit": "^0.102.6",
     "@graphql-mesh/plugin-snapshot": "^0.102.6",
     "@graphql-mesh/store": "^0.102.10",
+    "@graphql-mesh/transport-http": "^0.6.7",
     "@graphql-mesh/transport-http-callback": "^0.5.2",
     "@graphql-mesh/transport-ws": "^0.4.0",
     "@graphql-mesh/types": "^0.102.10",
@@ -87,8 +88,6 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@graphql-mesh/transport-common": "^0.7.9",
-    "@graphql-mesh/transport-http": "^0.6.9",
     "@parcel/watcher": "^2.3.0",
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",

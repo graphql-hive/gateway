@@ -61,7 +61,6 @@
     "@graphql-mesh/plugin-response-cache": "^0.102.6",
     "@graphql-mesh/store": "^0.102.10",
     "@graphql-mesh/transport-common": "^0.7.7",
-    "@graphql-mesh/transport-http": "^0.6.7",
     "@graphql-mesh/types": "^0.102.10",
     "@graphql-mesh/utils": "^0.102.10",
     "@graphql-tools/batch-delegate": "^9.0.13",
@@ -84,7 +83,6 @@
   "devDependencies": {
     "@envelop/disable-introspection": "^6.0.0",
     "@graphql-mesh/fusion-composition": "^0.6.1",
-    "@graphql-mesh/transport-rest": "^0.7.8",
     "@types/html-minifier-terser": "^7.0.2",
     "@whatwg-node/fetch": "^0.9.21",
     "graphql": "^16.9.0",
