@@ -6363,17 +6363,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.13, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.4":
-  version: 0.9.22
-  resolution: "@whatwg-node/fetch@npm:0.9.22"
+"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.13, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.23, @whatwg-node/fetch@npm:^0.9.4":
+  version: 0.9.23
+  resolution: "@whatwg-node/fetch@npm:0.9.23"
   dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.5.27"
+    "@whatwg-node/node-fetch": "npm:^0.6.0"
     urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/67a8668b2dd491b24a20a03ba23b6463481e209b16e2ffc9444ed9f52fb82de744a6076278499cea60737985204fca44f68dccea7e2af1a5fb68c2721e3bb1a6
+  checksum: 10c0/f025ea59f026e2f1be34a33d6eba5fcfa69a3f2df6046198893cd7bc361f28bea10c0a79daa14e78034714940d0968c3c5f439d463f159c7703e94502bd0a279
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.5.23, @whatwg-node/node-fetch@npm:^0.5.27":
+"@whatwg-node/node-fetch@npm:^0.5.23":
   version: 0.5.27
   resolution: "@whatwg-node/node-fetch@npm:0.5.27"
   dependencies:
@@ -6382,6 +6382,18 @@ __metadata:
     fast-querystring: "npm:^1.1.1"
     tslib: "npm:^2.6.3"
   checksum: 10c0/1cd036e1ef36bfc71436a3e7438b180b94c33d7958c02e33540c35d37db19fb598f2ab09f0aef538a3bbc771c32d34c5728a596ffabf8be7961435a80fcb8f62
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/node-fetch@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@whatwg-node/node-fetch@npm:0.6.0"
+  dependencies:
+    "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
+    busboy: "npm:^1.6.0"
+    fast-querystring: "npm:^1.1.1"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/3ec3405e581abd811823f7c5f7dcb2e4c291d01a7a714c34b6b368eefff8b72f92b4d749322433d754b76725c814b03714cc6e929083021568e1ebd8240a04a8
   languageName: node
   linkType: hard
 
@@ -6398,12 +6410,12 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.9.15, @whatwg-node/server@npm:^0.9.46, @whatwg-node/server@npm:^0.9.50":
-  version: 0.9.50
-  resolution: "@whatwg-node/server@npm:0.9.50"
+  version: 0.9.51
+  resolution: "@whatwg-node/server@npm:0.9.51"
   dependencies:
-    "@whatwg-node/fetch": "npm:^0.9.22"
+    "@whatwg-node/fetch": "npm:^0.9.23"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/0e88b6b553f3a322cf79fa749414163dab58dba1d5d071c4d4482d4dcc0025d3511a5a93c286505caed20e9f048b3ff0bb4040f676b63d83aa3dd69d608b5c84
+  checksum: 10c0/23f46c9fa277b16fac31752ef8ca9eb753894aa69f1d185589bbb328a93d19ecb0d05a5b8d6a22533b507e3a012417f7ce9e121d8b24fdb191b128d6c8cd1635
   languageName: node
   linkType: hard
 
