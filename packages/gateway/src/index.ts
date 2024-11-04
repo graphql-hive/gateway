@@ -19,3 +19,7 @@ export {
   type HTTPCallbackTransportOptions,
   default as HTTPCallbackTransport,
 } from '@graphql-mesh/transport-http-callback';
+export {
+  type HTTPTransportOptions,
+  default as HTTPTransport,
+} from '@graphql-mesh/transport-http';

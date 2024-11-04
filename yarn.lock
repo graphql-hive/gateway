@@ -2009,7 +2009,6 @@ __metadata:
     "@graphql-mesh/plugin-response-cache": "npm:^0.102.6"
     "@graphql-mesh/store": "npm:^0.102.10"
     "@graphql-mesh/transport-common": "npm:^0.7.7"
-    "@graphql-mesh/transport-http": "npm:^0.6.7"
     "@graphql-mesh/transport-rest": "npm:^0.7.8"
     "@graphql-mesh/types": "npm:^0.102.10"
     "@graphql-mesh/utils": "npm:^0.102.10"
@@ -2590,7 +2589,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-http@npm:^0.6.11, @graphql-mesh/transport-http@npm:^0.6.7, @graphql-mesh/transport-http@npm:^0.6.9":
+"@graphql-mesh/transport-http@npm:^0.6.11, @graphql-mesh/transport-http@npm:^0.6.9":
   version: 0.6.13
   resolution: "@graphql-mesh/transport-http@npm:0.6.13"
   dependencies:
