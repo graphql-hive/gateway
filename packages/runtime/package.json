@@ -83,7 +83,6 @@
   "devDependencies": {
     "@envelop/disable-introspection": "^6.0.0",
     "@graphql-mesh/fusion-composition": "^0.6.1",
-    "@graphql-mesh/transport-rest": "^0.7.8",
     "@types/html-minifier-terser": "^7.0.2",
     "@whatwg-node/fetch": "^0.9.21",
     "graphql": "^16.9.0",

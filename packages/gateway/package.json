@@ -88,8 +88,6 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@graphql-mesh/transport-common": "^0.7.9",
-    "@graphql-mesh/transport-http": "^0.6.9",
     "@parcel/watcher": "^2.3.0",
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
