@@ -1,5 +1,13 @@
 # @graphql-hive/gateway-runtime
 
+## 1.1.3
+
+### Patch Changes
+
+- [#71](https://github.com/graphql-hive/gateway/pull/71) [`ccee7f2`](https://github.com/graphql-hive/gateway/commit/ccee7f2bc36a5990bb9b944b6c6bad47305bcb17) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`@graphql-mesh/transport-http@^0.6.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-http/v/0.6.7) (from `dependencies`)
+
 ## 1.1.2
 
 ### Patch Changes
