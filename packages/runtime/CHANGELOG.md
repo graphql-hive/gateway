@@ -1,5 +1,13 @@
 # @graphql-hive/gateway-runtime
 
+## 1.1.4
+
+### Patch Changes
+
+- [#77](https://github.com/graphql-hive/gateway/pull/77) [`9a0b434`](https://github.com/graphql-hive/gateway/commit/9a0b4346a9344add8e933c7d1a2706e759cb56de) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/fusion-runtime@^0.10.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/fusion-runtime/v/0.10.0) (from `^0.9.0`, in `dependencies`)
+
 ## 1.1.3
 
 ### Patch Changes
