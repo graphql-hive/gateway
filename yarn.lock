@@ -2003,7 +2003,7 @@ __metadata:
     "@graphql-hive/core": "npm:^0.8.1"
     "@graphql-mesh/cross-helpers": "npm:^0.4.6"
     "@graphql-mesh/fusion-composition": "npm:^0.6.1"
-    "@graphql-mesh/fusion-runtime": "npm:^0.10.0"
+    "@graphql-mesh/fusion-runtime": "npm:^0.10.1"
     "@graphql-mesh/hmac-upstream-signature": "npm:^1.1.0"
     "@graphql-mesh/plugin-hive": "npm:^0.102.8"
     "@graphql-mesh/plugin-response-cache": "npm:^0.102.6"
@@ -2234,9 +2234,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-runtime@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@graphql-mesh/fusion-runtime@npm:0.10.0"
+"@graphql-mesh/fusion-runtime@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "@graphql-mesh/fusion-runtime@npm:0.10.1"
   dependencies:
     "@envelop/core": "npm:^5.0.1"
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
@@ -2258,7 +2258,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/89e8597162f0f7f88f4d5d35e1c7d4c27129f46f7c0b01a9e366c6a213b99d1382834815b21ca800624f8b7faf76734d9d0d0ffa9d2ee166ae2cd4dc26d3cf78
+  checksum: 10c0/642fec939f539e8abe16dc9b8a5cc1cb37364bc3e470be8c917bde88baf850309a8259c48902b679cc24a81da51ff6e1368fa3b550d40818921e92e4ae429f3a
   languageName: node
   linkType: hard
 
