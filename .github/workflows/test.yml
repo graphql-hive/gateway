@@ -37,35 +37,45 @@ jobs:
       fail-fast: false
       matrix:
         setup:
-          - os: ubuntu-latest
+          - name: Node 18 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 18
-          - os: ubuntu-latest
+          - name: Node 20 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 20
-          - os: ubuntu-latest
+          - name: Node 22 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 22
-          - os: ubuntu-latest
+          - name: Docker on Ubuntu
+            os: ubuntu-latest
             gateway-runner: docker
             node-version: 22
-          - os: ubuntu-latest
+          - name: Node Binary on Ubuntu
+            os: ubuntu-latest
             gateway-runner: bin
             node-version: 22
-          - os: windows-latest
+          - name: Node Binary on Windows
+            os: windows-latest
             gateway-runner: bin
             node-version: 22
-          - os: macos-14 # MacOS Arm64
+          - name: Node Binary on MacOS Arm64
+            os: macos-14 # MacOS Arm64
             gateway-runner: bin
             node-version: 22
-          - os: macos-13 # MacOS x86_64
+          - name: Node Binary on MacOS x86_64
+            os: macos-13 # MacOS x86_64
             gateway-runner: bin
             node-version: 22
 
-          - os: ubuntu-latest
+          - name: Bun on Ubuntu
+            os: ubuntu-latest
             gateway-runner: bun
             node-version: 22
-          - os: ubuntu-latest
+          - name: Bun Binary on Ubuntu
+            os: ubuntu-latest
             gateway-runner: bun-bin
             node-version: 22
 
