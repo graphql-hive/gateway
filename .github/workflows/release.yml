@@ -186,7 +186,7 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-binary-${{ runner.os }}-${{ runner.arch }}
+          header: snapshot-release-bun-binary-${{ runner.os }}-${{ runner.arch }}
           message: |
             ### 🚀 Snapshot Release (Bun Binary for `${{ runner.os }}-${{ runner.arch }}`)
 
