@@ -116,7 +116,7 @@ jobs:
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - if: matrix.setup.gateway-runner == 'bun-bin'
-        name: Install binary
+        name: Build binary with Bun
         run: yarn workspace @graphql-hive/gateway build-bun-bin
       - name: Test
         env:

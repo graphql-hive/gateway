@@ -1,0 +1,12 @@
+diff --git a/jsutils/instanceOf.js b/jsutils/instanceOf.js
+index 18403cf..61ce6be 100644
+--- a/jsutils/instanceOf.js
++++ b/jsutils/instanceOf.js
+@@ -44,6 +44,7 @@ const instanceOf =
+               : _value$constructor.name;
+ 
+           if (className === valueClassName) {
++            return true;
+             const stringifiedValue = (0, _inspect.inspect)(value);
+             throw new Error(`Cannot use ${className} "${stringifiedValue}" from another module or realm.
+ 
