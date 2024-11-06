@@ -2010,6 +2010,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
+    "@types/bun": "npm:^1.1.13"
     "@types/ws": "npm:^8.5.12"
     adm-zip: "npm:^0.5.15"
     commander: "npm:^12.0.0"
@@ -5641,6 +5642,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bun@npm:^1.1.13":
+  version: 1.1.13
+  resolution: "@types/bun@npm:1.1.13"
+  dependencies:
+    bun-types: "npm:1.1.34"
+  checksum: 10c0/46cae932a64074b3e3596858d38099589f7c394e0b27b42e49ad5bd884974784e2929ac72336515ce20579da2c90033f8b01578f9e1f8f7558a58e78f721e832
+  languageName: node
+  linkType: hard
+
 "@types/bunyan@npm:1.8.9":
   version: 1.8.9
   resolution: "@types/bunyan@npm:1.8.9"
@@ -5917,6 +5927,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:~20.12.8":
+  version: 20.12.14
+  resolution: "@types/node@npm:20.12.14"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10c0/d6e383a09139efdedd91f4e8b584bb9b7537382d3dd276296a68b20a7819a562ae651efdd007a60036116f286b9c9a8a31af698f93b4024e569b0d129f293165
+  languageName: node
+  linkType: hard
+
 "@types/pg-pool@npm:2.0.6":
   version: 2.0.6
   resolution: "@types/pg-pool@npm:2.0.6"
@@ -6038,7 +6057,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
   version: 8.5.13
   resolution: "@types/ws@npm:8.5.13"
   dependencies:
@@ -6956,6 +6975,16 @@ __metadata:
   version: 0.0.6
   resolution: "buildcheck@npm:0.0.6"
   checksum: 10c0/8cbdb89f41bc484b8325f4828db4135b206a0dffb641eb6cdb2b7022483c45dd0e5aac6d820c9a67bdd2caab3a02c76d7ceec7bd9ec494b5a2270d2806b01a76
+  languageName: node
+  linkType: hard
+
+"bun-types@npm:1.1.34":
+  version: 1.1.34
+  resolution: "bun-types@npm:1.1.34"
+  dependencies:
+    "@types/node": "npm:~20.12.8"
+    "@types/ws": "npm:~8.5.10"
+  checksum: 10c0/922552b70f1d43c9990cd440b732793bcd7a4e277a645885532a0e1b605c857aba23ba993df484e053a4699ef1949b5056d9ef7971c9ba409d3c67917216734f
   languageName: node
   linkType: hard
 

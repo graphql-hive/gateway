@@ -1,5 +1,3 @@
-import 'dotenv/config'; // inject dotenv options to process.env
-
 import cluster from 'node:cluster';
 import module from 'node:module';
 import { platform, release } from 'node:os';
@@ -26,7 +24,7 @@ import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
-import type { ServerConfig } from './server';
+import type { ServerConfig } from './servers/types';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig

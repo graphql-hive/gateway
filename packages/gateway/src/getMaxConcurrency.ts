@@ -1,7 +1,7 @@
 import { availableParallelism, freemem } from 'node:os';
 
 function getFreeMemInGb() {
-  return freemem() / 1024 ** 3;
+  return freemem() / 1024 ** 2;
 }
 
 function getMaxConcurrencyPerMem() {
@@ -13,6 +13,9 @@ function getMaxConcurrencyPerCpu() {
 }
 
 export function getMaxConcurrency() {
+  if (globalThis.navigator?.hardwareConcurrency) {
+    return navigator.hardwareConcurrency;
+  }
   const result = Math.min(getMaxConcurrencyPerMem(), getMaxConcurrencyPerCpu());
   if (result < 1) {
     return 1;
