@@ -79,7 +79,7 @@ jobs:
             gateway-runner: bun-bin
             node-version: 22
 
-    name: E2E / ${{matrix.workflow-name}}
+    name: E2E / ${{matrix.setup.workflow-name}}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
