@@ -1,10 +1,10 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { getTerminateStack, mapMaybePromise } from '@graphql-mesh/utils';
+import { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
 import { startNodeHttpServer } from './nodeHttp';
 import { ServerForRuntimeOptions } from './types';
-import { MaybePromise } from '@graphql-tools/utils';
 
 export function startServerForRuntime<
   TContext extends Record<string, any> = Record<string, any>,
@@ -38,8 +38,8 @@ export function startServerForRuntime<
   };
 
   const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
-  
-  return mapMaybePromise(startServer(runtime, serverOpts), server => {
+
+  return mapMaybePromise(startServer(runtime, serverOpts), (server) => {
     terminateStack.use(server);
     return server;
   });

@@ -5,8 +5,8 @@ import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { createAsyncDisposable } from '@graphql-mesh/utils';
 import { defaultOptions } from '../cli';
-import type { ServerForRuntimeOptions } from './types';
 import { getGraphQLWSOptions } from './graphqlWs';
+import type { ServerForRuntimeOptions } from './types';
 
 export async function startNodeHttpServer<TContext extends Record<string, any>>(
   gwRuntime: GatewayRuntime<TContext>,
@@ -83,11 +83,8 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       server,
     });
     const { useServer } = await import('graphql-ws/lib/use/ws');
-    
-    useServer(
-      getGraphQLWSOptions(gwRuntime),
-      wsServer,
-    );
+
+    useServer(getGraphQLWSOptions(gwRuntime), wsServer);
   }
   return new Promise((resolve, reject) => {
     server.once('error', reject);

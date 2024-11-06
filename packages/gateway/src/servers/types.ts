@@ -1,4 +1,4 @@
-import { Logger } from "@graphql-mesh/types";
+import { Logger } from '@graphql-mesh/types';
 
 export interface ServerConfig {
   /**
