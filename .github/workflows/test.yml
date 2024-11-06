@@ -63,6 +63,9 @@ jobs:
             node-version: 22
 
           - os: ubuntu-latest
+            gateway-runner: bun
+            node-version: 22
+          - os: ubuntu-latest
             gateway-runner: bun-bin
             node-version: 22
 
