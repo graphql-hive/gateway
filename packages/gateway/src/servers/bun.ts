@@ -1,5 +1,5 @@
 import { createAsyncDisposable } from '@graphql-mesh/utils';
-import { TLSServeOptions, WebSocketServeOptions } from 'bun';
+import type { Server, TLSServeOptions, WebSocketServeOptions } from 'bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import { getGraphQLWSOptions } from './graphqlWs';
 import { ServerForRuntimeOptions } from './types';
@@ -14,9 +14,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
     hostname: opts.host || defaultOptions.host,
     reusePort: true,
   };
-  let protocol = 'http';
   if (opts.sslCredentials) {
-    protocol = 'https';
     if (opts.sslCredentials.ca_file_name) {
       serverOptions.ca = Bun.file(opts.sslCredentials.ca_file_name);
     }
@@ -44,6 +42,15 @@ export async function startBunServer<TContext extends Record<string, any>>(
     const { makeHandler } = await import('graphql-ws/lib/use/bun');
     const wsOptions = getGraphQLWSOptions(gwRuntime);
     serverOptions.websocket = makeHandler(wsOptions);
+    serverOptions.fetch = function (req: Request, server: Server) {
+      // header to check if websocket
+      if (req.headers.has('Sec-WebSocket-Key') && server.upgrade(req)) {
+        if (server.upgrade(req)) {
+          return;
+        }
+      }
+      return gwRuntime.handleRequest(req, server);
+    } as any;
   }
   const server = Bun.serve(serverOptions);
   opts.log.info(`Listening on ${server.url}`);
