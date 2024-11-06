@@ -6,7 +6,7 @@ const { gateway, fs, gatewayRunner } = createTenv(__dirname);
 
 const skipIfIt = function (condition: boolean) {
   return condition ? it.skip : it;
-}
+};
 
 skipIfIt(gatewayRunner.includes('bun'))('should start gateway', async () => {
   const port = await getAvailablePort();

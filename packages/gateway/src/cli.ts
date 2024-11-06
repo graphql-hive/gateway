@@ -2,8 +2,17 @@ import cluster from 'node:cluster';
 import module from 'node:module';
 import { platform, release } from 'node:os';
 import { join } from 'node:path';
-import { Command, InvalidArgumentError, Option } from '@commander-js/extra-typings';
-import type { GatewayConfigContext, GatewayConfigProxy, GatewayConfigSubgraph, GatewayConfigSupergraph } from '@graphql-hive/gateway-runtime';
+import {
+  Command,
+  InvalidArgumentError,
+  Option,
+} from '@commander-js/extra-typings';
+import type {
+  GatewayConfigContext,
+  GatewayConfigProxy,
+  GatewayConfigSubgraph,
+  GatewayConfigSupergraph,
+} from '@graphql-hive/gateway-runtime';
 import type { InitializeData } from '@graphql-mesh/include/hooks';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -16,7 +25,6 @@ import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './servers/types';
-
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig
