@@ -40,6 +40,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version",
+    "build-bun-bin": "bun build ./src/bin.ts --compile --outfile hive-gateway",
     "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts"
@@ -98,7 +99,9 @@
     "@types/bun": "^1.1.13",
     "@types/ws": "^8.5.12",
     "adm-zip": "^0.5.15",
+    "bun": "^1.1.34",
     "graphql": "^16.9.0",
+    "graphql-middleware": "^6.1.35",
     "pkgroll": "2.5.1",
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.0.1",

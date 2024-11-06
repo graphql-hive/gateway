@@ -10,6 +10,7 @@
   "packageManager": "yarn@4.5.1",
   "scripts": {
     "build": "yarn workspaces foreach -A -p run build",
+    "build-bun-bin": "yarn workspaces foreach -A -p run build-bun-bin",
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",

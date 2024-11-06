@@ -2013,9 +2013,11 @@ __metadata:
     "@types/bun": "npm:^1.1.13"
     "@types/ws": "npm:^8.5.12"
     adm-zip: "npm:^0.5.15"
+    bun: "npm:^1.1.34"
     commander: "npm:^12.0.0"
     dotenv: "npm:^16.3.1"
     graphql: "npm:^16.9.0"
+    graphql-middleware: "npm:^6.1.35"
     graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.7.0"
     parse-duration: "npm:^1.1.0"
@@ -2741,6 +2743,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/batch-execute@npm:8.5.1":
+  version: 8.5.1
+  resolution: "@graphql-tools/batch-execute@npm:8.5.1"
+  dependencies:
+    "@graphql-tools/utils": "npm:8.9.0"
+    dataloader: "npm:2.1.0"
+    tslib: "npm:^2.4.0"
+    value-or-promise: "npm:1.0.11"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/f41d05247c6d6218e874dfbb7ffc45bcdd957e00954dd6c8a6848fde76de727250b38a71904f973688c70cd1199a4538a4272f66deee6066acdb7442798d59c1
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/batch-execute@npm:^9.0.5":
   version: 9.0.5
   resolution: "@graphql-tools/batch-execute@npm:9.0.5"
@@ -2770,6 +2786,22 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/98ad9219ba84f7914133f711a1cfcb692bd13b6e3feebaa1c71b4b861b4f6ea6f8d235710468ec5b8cdf8c2c5a649c95912e8080dca1e0c26d77ded50328f76f
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/delegate@npm:^8.8.1":
+  version: 8.8.1
+  resolution: "@graphql-tools/delegate@npm:8.8.1"
+  dependencies:
+    "@graphql-tools/batch-execute": "npm:8.5.1"
+    "@graphql-tools/schema": "npm:8.5.1"
+    "@graphql-tools/utils": "npm:8.9.0"
+    dataloader: "npm:2.1.0"
+    tslib: "npm:~2.4.0"
+    value-or-promise: "npm:1.0.11"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/2cd43a18f4f0ca4bccc52ad405b894933996b1269b676632651ca54e3e9f602615f453a235556dea1c9806ac8223079a1eae8f9d5dc624de7f2a8f822c3ceab4
   languageName: node
   linkType: hard
 
@@ -2887,6 +2919,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/merge@npm:8.3.1":
+  version: 8.3.1
+  resolution: "@graphql-tools/merge@npm:8.3.1"
+  dependencies:
+    "@graphql-tools/utils": "npm:8.9.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/dce29916fa6bd134947f584080ab18908b23537ec8dff74d838bf6c7be34b3e14c527d4ffd18b8f91efe6bb967f170f7393a2383035ed952f88010b60536a106
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/merge@npm:^8.4.1":
   version: 8.4.2
   resolution: "@graphql-tools/merge@npm:8.4.2"
@@ -2936,6 +2980,20 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/0747efa0c82aecc8134020e4890285acc03c83194bd3e1076cc90789119ab95906d7884362a8f57f3cd156a3978528f8e30a02454854979c043c6dc6c805ee98
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/schema@npm:8.5.1, @graphql-tools/schema@npm:^8.5.1":
+  version: 8.5.1
+  resolution: "@graphql-tools/schema@npm:8.5.1"
+  dependencies:
+    "@graphql-tools/merge": "npm:8.3.1"
+    "@graphql-tools/utils": "npm:8.9.0"
+    tslib: "npm:^2.4.0"
+    value-or-promise: "npm:1.0.11"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/06000908fc5d3143f7f70eaee82874b87df4dfdd24316e88231e71e6f62f50df2e5a4b6a063b36e98f05caac09afa17861bbc5bf1c886b3f2155b96ea15c973b
   languageName: node
   linkType: hard
 
@@ -2996,6 +3054,17 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/fa13506ba5e22dde1186ca5b9eee010560d0950c9b2121959fc9163cd76f7b0aaae9783f7344c011c398aa90b53641ad8c2768d4d1ad9d900c281d4fd9194444
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/utils@npm:8.9.0":
+  version: 8.9.0
+  resolution: "@graphql-tools/utils@npm:8.9.0"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/dd589d970fee9ce093a545c69d6306b61af0f38358361295af1274164a87db2985a51d05ca0e0dd08a4e709f0b5c7c201e69ab0b30480fe2fa0c7a7b8310da0a
   languageName: node
   linkType: hard
 
@@ -5035,6 +5104,62 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-darwin-aarch64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-aarch64@npm:1.1.34"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-darwin-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.34"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-darwin-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-x64@npm:1.1.34"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-aarch64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-aarch64@npm:1.1.34"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.34"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-x64@npm:1.1.34"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.34"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-windows-x64@npm:1.1.34"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@parcel/watcher-android-arm64@npm:2.5.0":
   version: 2.5.0
   resolution: "@parcel/watcher-android-arm64@npm:2.5.0"
@@ -6988,6 +7113,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bun@npm:^1.1.34":
+  version: 1.1.34
+  resolution: "bun@npm:1.1.34"
+  dependencies:
+    "@oven/bun-darwin-aarch64": "npm:1.1.34"
+    "@oven/bun-darwin-x64": "npm:1.1.34"
+    "@oven/bun-darwin-x64-baseline": "npm:1.1.34"
+    "@oven/bun-linux-aarch64": "npm:1.1.34"
+    "@oven/bun-linux-x64": "npm:1.1.34"
+    "@oven/bun-linux-x64-baseline": "npm:1.1.34"
+    "@oven/bun-windows-x64": "npm:1.1.34"
+    "@oven/bun-windows-x64-baseline": "npm:1.1.34"
+  dependenciesMeta:
+    "@oven/bun-darwin-aarch64":
+      optional: true
+    "@oven/bun-darwin-x64":
+      optional: true
+    "@oven/bun-darwin-x64-baseline":
+      optional: true
+    "@oven/bun-linux-aarch64":
+      optional: true
+    "@oven/bun-linux-x64":
+      optional: true
+    "@oven/bun-linux-x64-baseline":
+      optional: true
+    "@oven/bun-windows-x64":
+      optional: true
+    "@oven/bun-windows-x64-baseline":
+      optional: true
+  bin:
+    bun: bin/bun.exe
+    bunx: bin/bun.exe
+  checksum: 10c0/d7a69a3e6a7545d7c76edaf86633f23f791641732fb0f5a6378f1503d267d03a3353afcc01e735acb6981b12acc83827d73bca701f8e3f62183bb00ad7e22e9d
+  conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
+  languageName: node
+  linkType: hard
+
 "busboy@npm:^1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
@@ -7553,6 +7715,13 @@ __metadata:
     es-errors: "npm:^1.3.0"
     is-data-view: "npm:^1.0.1"
   checksum: 10c0/21b0d2e53fd6e20cc4257c873bf6d36d77bd6185624b84076c0a1ddaa757b49aaf076254006341d35568e89f52eecd1ccb1a502cfb620f2beca04f48a6a62a8f
+  languageName: node
+  linkType: hard
+
+"dataloader@npm:2.1.0":
+  version: 2.1.0
+  resolution: "dataloader@npm:2.1.0"
+  checksum: 10c0/91749b97c6cf218874aecc57116defbe28eb5dd102a2a6e292e084939f725d123dd49c186796069492a77eb105ff2aabae9c8b144cf82f92c1f673eb1abff7da
   languageName: node
   linkType: hard
 
@@ -9403,6 +9572,18 @@ __metadata:
   peerDependencies:
     graphql: ">=15"
   checksum: 10c0/b261c259ec5db6c1291d002fba87a3b99faf4104b5c7dd90d35904eedaa2fe7e6b1a56c20e46a05211a7029f92304105f68af739d341637fdb9234e12466a611
+  languageName: node
+  linkType: hard
+
+"graphql-middleware@npm:^6.1.35":
+  version: 6.1.35
+  resolution: "graphql-middleware@npm:6.1.35"
+  dependencies:
+    "@graphql-tools/delegate": "npm:^8.8.1"
+    "@graphql-tools/schema": "npm:^8.5.1"
+  peerDependencies:
+    graphql: ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/faa948e9490493e39a096b9a44941aa0ad66a760ca9413c02b7d177c38251cf6db8560aa182b6efa01e6d519f5e76c4802243e30b87f510fe6e31a89740885d0
   languageName: node
   linkType: hard
 
@@ -13929,6 +14110,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tslib@npm:~2.4.0":
+  version: 2.4.1
+  resolution: "tslib@npm:2.4.1"
+  checksum: 10c0/9ac0e4fd1033861f0b4f0d848dc3009ebcc3aa4757a06e8602a2d8a7aed252810e3540e54e70709f06c0f95311faa8584f769bcbede48aff785eb7e4d399b9ec
+  languageName: node
+  linkType: hard
+
 "tsx@npm:^4.19.1":
   version: 4.19.2
   resolution: "tsx@npm:4.19.2"
@@ -14307,6 +14495,13 @@ __metadata:
   version: 13.12.0
   resolution: "validator@npm:13.12.0"
   checksum: 10c0/21d48a7947c9e8498790550f56cd7971e0e3d724c73388226b109c1bac2728f4f88caddfc2f7ed4b076f9b0d004316263ac786a17e9c4edf075741200718cd32
+  languageName: node
+  linkType: hard
+
+"value-or-promise@npm:1.0.11":
+  version: 1.0.11
+  resolution: "value-or-promise@npm:1.0.11"
+  checksum: 10c0/7499b744ae18729cfe5a2211a678a2e023859a49e2cd2f3e28da6f3d84ed94fe3167e828026f8a123927420f075cd69b927be5a5a50b1768ea5c53bf1e75a52f
   languageName: node
   linkType: hard
 

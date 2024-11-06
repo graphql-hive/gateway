@@ -30,7 +30,7 @@ const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
 const docker = new Dockerode();
 
-const E2E_GATEWAY_RUNNERS = ['node', 'docker', 'bin'] as const;
+const E2E_GATEWAY_RUNNERS = ['node', 'docker', 'bin', 'bun-bin'] as const;
 
 type ServeRunner = (typeof E2E_GATEWAY_RUNNERS)[number];
 
@@ -405,7 +405,7 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs,
         });
         proc = cont;
-      } else if (gatewayRunner === 'bin') {
+      } else if (gatewayRunner === 'bin' || gatewayRunner === 'bun-bin') {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
@@ -414,7 +414,7 @@ export function createTenv(cwd: string): Tenv {
           createPortOpt(port),
           ...args,
         );
-      } /* gatewayRunner === 'node' */ else {
+      } /* if (gatewayRunner === 'node') */ else {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           'node',
