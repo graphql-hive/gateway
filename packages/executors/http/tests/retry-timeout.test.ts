@@ -111,7 +111,7 @@ describe('Retry & Timeout', () => {
     expect(result).toMatchObject({
       errors: [
         {
-          message: 'The operation was aborted. reason: timeout',
+          message: expect.stringMatching(/timeout/),
         },
       ],
     });

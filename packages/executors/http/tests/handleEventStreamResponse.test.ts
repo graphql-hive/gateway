@@ -1,4 +1,4 @@
-import { ReadableStream, Response } from '@whatwg-node/fetch';
+import { ReadableStream, Response, TextEncoder } from '@whatwg-node/fetch';
 import { describe, expect, it } from 'vitest';
 import { handleEventStreamResponse } from '../src/handleEventStreamResponse.js';
 
@@ -57,14 +57,12 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": false,
-  "value": {
-    "foo": "bar",
-  },
-}
-`);
+    expect(await iterator.next()).toEqual({
+      done: false,
+      value: {
+        foo: 'bar',
+      },
+    });
   });
 
   it('should handle a chunked event with data', async () => {
@@ -97,35 +95,27 @@ describe('handleEventStreamResponse', () => {
     const asyncIterable = handleEventStreamResponse(response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": false,
-  "value": {
-    "foo": "bar",
-  },
-}
-`);
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": false,
-  "value": {
-    "foo": "baz",
-  },
-}
-`);
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": false,
-  "value": {
-    "foo": "bay",
-  },
-}
-`);
-    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": true,
-  "value": undefined,
-}
-`);
+    expect(await iterator.next()).toEqual({
+      done: false,
+      value: {
+        foo: 'bar',
+      },
+    });
+    expect(await iterator.next()).toEqual({
+      done: false,
+      value: {
+        foo: 'baz',
+      },
+    });
+    expect(await iterator.next()).toEqual({
+      done: false,
+      value: {
+        foo: 'bay',
+      },
+    });
+    expect(await iterator.next()).toEqual({
+      done: true,
+      value: undefined,
+    });
   });
 });

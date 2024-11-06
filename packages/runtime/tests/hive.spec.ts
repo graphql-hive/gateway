@@ -2,6 +2,8 @@ import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { createDisposableServer, isDebug } from '@internal/testing';
+import { Response } from '@whatwg-node/fetch';
+import { createServerAdapter } from '@whatwg-node/server';
 import {
   buildClientSchema,
   getIntrospectionQuery,
@@ -11,7 +13,7 @@ import {
   type IntrospectionQuery,
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
@@ -35,20 +37,24 @@ function createUpstreamSchema() {
 
 describe('Hive CDN', () => {
   it('respects env vars', async () => {
-    await using cdnServer = await createDisposableServer((_req, res) => {
-      const supergraph = getUnifiedGraphGracefully([
-        {
-          name: 'upstream',
-          schema: createUpstreamSchema(),
-          url: 'http://upstream/graphql',
-        },
-      ]);
-      res.end(supergraph);
-    });
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter(
+        () =>
+          new Response(
+            getUnifiedGraphGracefully([
+              {
+                name: 'upstream',
+                schema: createUpstreamSchema(),
+                url: 'http://upstream/graphql',
+              },
+            ]),
+          ),
+      ),
+    );
     await using gateway = createGatewayRuntime({
       supergraph: {
         type: 'hive',
-        endpoint: `http://localhost:${cdnServer.address().port}`,
+        endpoint: cdnServer.url,
         key: 'key',
       },
       logging: isDebug(),
@@ -84,20 +90,20 @@ describe('Hive CDN', () => {
   });
   it('uses Hive CDN instead of introspection for Proxy mode', async () => {
     const upstreamSchema = createUpstreamSchema();
-    await using cdnServer = await createDisposableServer((_req, res) => {
-      res.end(
-        JSON.stringify({
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter(() =>
+        Response.json({
           sdl: printSchemaWithDirectives(upstreamSchema),
         }),
-      );
-    });
+      ),
+    );
     const upstreamServer = createYoga({
       schema: upstreamSchema,
       // Make sure introspection is not fetched from the service itself
       plugins: [useDisableIntrospection()],
     });
-    let schemaChangeSpy = vitest.fn((_schema: GraphQLSchema) => {});
-    const hiveEndpoint = `http://localhost:${cdnServer.address().port}`;
+    let schemaChangeSpy = vi.fn((_schema: GraphQLSchema) => {});
+    const hiveEndpoint = cdnServer.url;
     const hiveKey = 'key';
     await using gateway = createGatewayRuntime({
       proxy: { endpoint: 'http://upstream/graphql' },
@@ -151,24 +157,26 @@ describe('Hive CDN', () => {
   });
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
-    await using cdnServer = await createDisposableServer((req, res) => {
-      if (
-        req.url ===
-        '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00'
-      ) {
-        const hiveCdnKey = req.headers['x-hive-cdn-key'];
-        if (hiveCdnKey !== token) {
-          res.statusCode = 401;
-          res.end('Unauthorized');
-          return;
-        }
-        res.end(/* GraphQL */ `
-          query MyTest {
-            foo
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (
+          req.url.endsWith(
+            '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
+          )
+        ) {
+          const hiveCdnKey = req.headers.get('x-hive-cdn-key');
+          if (hiveCdnKey !== token) {
+            return new Response('Unauthorized', { status: 401 });
           }
-        `);
-      }
-    });
+          return new Response(/* GraphQL */ `
+            query MyTest {
+              foo
+            }
+          `);
+        }
+        return new Response('Not Found', { status: 404 });
+      }),
+    );
     await using upstreamServer = await createDisposableServer(
       createYoga({
         schema: createSchema({
@@ -187,11 +195,11 @@ describe('Hive CDN', () => {
     );
     await using gateway = createGatewayRuntime({
       proxy: {
-        endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
+        endpoint: `${upstreamServer.url}/graphql`,
       },
       persistedDocuments: {
         type: 'hive',
-        endpoint: `http://localhost:${cdnServer.address().port}`,
+        endpoint: cdnServer.url,
         token,
       },
       logging: isDebug(),
@@ -215,24 +223,26 @@ describe('Hive CDN', () => {
   });
   it('handles persisted documents with reporting', async () => {
     const token = 'secret';
-    await using cdnServer = await createDisposableServer((req, res) => {
-      if (
-        req.url ===
-        '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00'
-      ) {
-        const hiveCdnKey = req.headers['x-hive-cdn-key'];
-        if (hiveCdnKey !== token) {
-          res.statusCode = 401;
-          res.end('Unauthorized');
-          return;
-        }
-        res.end(/* GraphQL */ `
-          query MyTest {
-            foo
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter((req) => {
+        if (
+          req.url.endsWith(
+            '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
+          )
+        ) {
+          const hiveCdnKey = req.headers.get('x-hive-cdn-key');
+          if (hiveCdnKey !== token) {
+            return new Response('Unauthorized', { status: 401 });
           }
-        `);
-      }
-    });
+          return new Response(/* GraphQL */ `
+            query MyTest {
+              foo
+            }
+          `);
+        }
+        return new Response('Not Found', { status: 404 });
+      }),
+    );
     await using upstreamServer = await createDisposableServer(
       createYoga<{}>({
         schema: createSchema({
@@ -251,7 +261,7 @@ describe('Hive CDN', () => {
     );
     await using gateway = createGatewayRuntime({
       proxy: {
-        endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
+        endpoint: `${upstreamServer.url}/graphql`,
       },
       reporting: {
         type: 'hive',
@@ -259,7 +269,7 @@ describe('Hive CDN', () => {
       },
       persistedDocuments: {
         type: 'hive',
-        endpoint: `http://localhost:${cdnServer.address().port}`,
+        endpoint: cdnServer.url,
         token,
       },
       logging: isDebug(),

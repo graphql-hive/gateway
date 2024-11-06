@@ -1,6 +1,6 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Hive CDN > respects env vars > hive-cdn 1`] = `
+exports[`Hive CDN respects env vars: hive-cdn 1`] = `
 "type Query {
   foo: String
 }"

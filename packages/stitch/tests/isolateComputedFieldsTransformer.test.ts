@@ -543,8 +543,7 @@ describe('isolateComputedFieldsTransformer', () => {
         throw new Error('Expected both configs to be defined');
       }
       expect(printSchema(new Subschema(baseConfig).transformedSchema).trim())
-        .toMatchInlineSnapshot(`
-"interface IProduct {
+        .toBe(`interface IProduct {
   base: String!
 }
 
@@ -558,12 +557,10 @@ type Query {
 
 type Mutation {
   addProduct(name: String!): Product!
-}"
-`);
+}`);
       expect(
         printSchema(new Subschema(computedConfig).transformedSchema).trim(),
-      ).toMatchInlineSnapshot(`
-"interface IProduct {
+      ).toBe(`interface IProduct {
   base: String!
   computeMe: String!
 }
@@ -579,8 +576,7 @@ type Query {
 
 type Mutation {
   addProduct(name: String!): Product!
-}"
-`);
+}`);
     });
     it.each([
       {
@@ -1018,9 +1014,7 @@ type Mutation {
       ],
     });
 
-    expect(printSchemaWithDirectives(stitchedSchema2).trim())
-      .toMatchInlineSnapshot(`
-"schema {
+    expect(printSchemaWithDirectives(stitchedSchema2).trim()).toBe(`schema {
   query: Query
 }
 
@@ -1039,8 +1033,7 @@ type User implements Node {
   id: ID!
   nickname: String
   name: String!
-}"
-`);
+}`);
     const result = await normalizedExecutor({
       schema: stitchedSchema2,
       document: parse(/* GraphQL */ `

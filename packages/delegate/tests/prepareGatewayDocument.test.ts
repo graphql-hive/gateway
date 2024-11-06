@@ -5,7 +5,7 @@ import { prepareGatewayDocument } from '../src/prepareGatewayDocument';
 import '@internal/testing/to-be-similar-gql-doc';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { Executor } from '@graphql-tools/utils';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createDefaultExecutor } from '../src/delegateToSchema';
 
 describe('prepareGatewayDocument', () => {
@@ -440,8 +440,8 @@ describe('prepareGatewayDocument', () => {
       },
     });
 
-    const executorA = vitest.fn(createDefaultExecutor(schemaA));
-    const executorB = vitest.fn(createDefaultExecutor(schemaB));
+    const executorA = vi.fn(createDefaultExecutor(schemaA));
+    const executorB = vi.fn(createDefaultExecutor(schemaB));
 
     const gatewaySchema = stitchSchemas({
       subschemas: [

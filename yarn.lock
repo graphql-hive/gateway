@@ -625,7 +625,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.23.9, @babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.0, @babel/parser@npm:^7.26.2":
+"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.23.9, @babel/parser@npm:^7.26.2":
   version: 7.26.2
   resolution: "@babel/parser@npm:7.26.2"
   dependencies:
@@ -633,6 +633,17 @@ __metadata:
   bin:
     parser: ./bin/babel-parser.js
   checksum: 10c0/751a743087b3a9172a7599f1421830d44c38f065ef781588d2bfb1c98f9b461719a226feb13c868d7a284783eee120c88ea522593118f2668f46ebfb1105c4d7
+  languageName: node
+  linkType: hard
+
+"@babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.0":
+  version: 7.26.1
+  resolution: "@babel/parser@npm:7.26.1"
+  dependencies:
+    "@babel/types": "npm:^7.26.0"
+  bin:
+    parser: ./bin/babel-parser.js
+  checksum: 10c0/dc7d4e6b7eb667fa0784e7e2c3f6f92ca12ad72242f6d4311995310dae55093f02acdb595b69b0dbbf04cb61ad87156ac03186ff32eacfa35149c655bc22c14b
   languageName: node
   linkType: hard
 
@@ -2943,7 +2954,7 @@ __metadata:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
-    "@whatwg-node/server": "npm:^0.9.46"
+    "@whatwg-node/server": "npm:^0.9.56"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
     graphql-yoga: "npm:^5.7.0"
@@ -2999,12 +3010,15 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
+    "@types/bun": "npm:^1.1.13"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.1"
     adm-zip: "npm:^0.5.15"
+    bun: "npm:^1.1.34"
     commander: "npm:^12.0.0"
     dotenv: "npm:^16.3.1"
     graphql: "npm:^16.9.0"
+    graphql-middleware: "npm:^6.1.35"
     graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.7.0"
     parse-duration: "npm:^1.1.0"
@@ -5083,6 +5097,62 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@oven/bun-darwin-aarch64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-aarch64@npm:1.1.34"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-darwin-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.34"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-darwin-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-darwin-x64@npm:1.1.34"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-aarch64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-aarch64@npm:1.1.34"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.34"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-linux-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-linux-x64@npm:1.1.34"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-x64-baseline@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.34"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@oven/bun-windows-x64@npm:1.1.34":
+  version: 1.1.34
+  resolution: "@oven/bun-windows-x64@npm:1.1.34"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@parcel/watcher-android-arm64@npm:2.5.0":
   version: 2.5.0
   resolution: "@parcel/watcher-android-arm64@npm:2.5.0"
@@ -5770,6 +5840,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bun@npm:^1.1.13":
+  version: 1.1.13
+  resolution: "@types/bun@npm:1.1.13"
+  dependencies:
+    bun-types: "npm:1.1.34"
+  checksum: 10c0/46cae932a64074b3e3596858d38099589f7c394e0b27b42e49ad5bd884974784e2929ac72336515ce20579da2c90033f8b01578f9e1f8f7558a58e78f721e832
+  languageName: node
+  linkType: hard
+
 "@types/connect@npm:*":
   version: 3.4.38
   resolution: "@types/connect@npm:3.4.38"
@@ -6014,6 +6093,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:~20.12.8":
+  version: 20.12.14
+  resolution: "@types/node@npm:20.12.14"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10c0/d6e383a09139efdedd91f4e8b584bb9b7537382d3dd276296a68b20a7819a562ae651efdd007a60036116f286b9c9a8a31af698f93b4024e569b0d129f293165
+  languageName: node
+  linkType: hard
+
 "@types/qs@npm:*":
   version: 6.9.17
   resolution: "@types/qs@npm:6.9.17"
@@ -6086,7 +6174,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
   version: 8.5.13
   resolution: "@types/ws@npm:8.5.13"
   dependencies:
@@ -6300,6 +6388,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/snapshot@patch:@vitest/snapshot@npm%3A2.1.5#~/.yarn/patches/@vitest+snapshot+2.1.5.patch":
+  version: 2.1.5
+  resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A2.1.5#~/.yarn/patches/@vitest+snapshot+2.1.5.patch::version=2.1.5&hash=74f701"
+  dependencies:
+    "@vitest/pretty-format": "npm:2.1.5"
+    magic-string: "npm:^0.30.12"
+    pathe: "npm:^1.1.2"
+  checksum: 10c0/7640f62b921e037fa64d9894c15523836cb37da4fae0898c8f8d739dbde389686dca5982a03440d1c64440970c0c47c189194bf5d306d336c088ddae6a7a6ec8
+  languageName: node
+  linkType: hard
+
 "@vitest/spy@npm:2.1.5":
   version: 2.1.5
   resolution: "@vitest/spy@npm:2.1.5"
@@ -6425,7 +6524,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.46, @whatwg-node/server@npm:^0.9.55":
+"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.56":
   version: 0.9.56
   resolution: "@whatwg-node/server@npm:0.9.56"
   dependencies:
@@ -7160,6 +7259,53 @@ __metadata:
   version: 0.0.6
   resolution: "buildcheck@npm:0.0.6"
   checksum: 10c0/8cbdb89f41bc484b8325f4828db4135b206a0dffb641eb6cdb2b7022483c45dd0e5aac6d820c9a67bdd2caab3a02c76d7ceec7bd9ec494b5a2270d2806b01a76
+  languageName: node
+  linkType: hard
+
+"bun-types@npm:1.1.34":
+  version: 1.1.34
+  resolution: "bun-types@npm:1.1.34"
+  dependencies:
+    "@types/node": "npm:~20.12.8"
+    "@types/ws": "npm:~8.5.10"
+  checksum: 10c0/922552b70f1d43c9990cd440b732793bcd7a4e277a645885532a0e1b605c857aba23ba993df484e053a4699ef1949b5056d9ef7971c9ba409d3c67917216734f
+  languageName: node
+  linkType: hard
+
+"bun@npm:^1.1.34":
+  version: 1.1.34
+  resolution: "bun@npm:1.1.34"
+  dependencies:
+    "@oven/bun-darwin-aarch64": "npm:1.1.34"
+    "@oven/bun-darwin-x64": "npm:1.1.34"
+    "@oven/bun-darwin-x64-baseline": "npm:1.1.34"
+    "@oven/bun-linux-aarch64": "npm:1.1.34"
+    "@oven/bun-linux-x64": "npm:1.1.34"
+    "@oven/bun-linux-x64-baseline": "npm:1.1.34"
+    "@oven/bun-windows-x64": "npm:1.1.34"
+    "@oven/bun-windows-x64-baseline": "npm:1.1.34"
+  dependenciesMeta:
+    "@oven/bun-darwin-aarch64":
+      optional: true
+    "@oven/bun-darwin-x64":
+      optional: true
+    "@oven/bun-darwin-x64-baseline":
+      optional: true
+    "@oven/bun-linux-aarch64":
+      optional: true
+    "@oven/bun-linux-x64":
+      optional: true
+    "@oven/bun-linux-x64-baseline":
+      optional: true
+    "@oven/bun-windows-x64":
+      optional: true
+    "@oven/bun-windows-x64-baseline":
+      optional: true
+  bin:
+    bun: bin/bun.exe
+    bunx: bin/bun.exe
+  checksum: 10c0/d7a69a3e6a7545d7c76edaf86633f23f791641732fb0f5a6378f1503d267d03a3353afcc01e735acb6981b12acc83827d73bca701f8e3f62183bb00ad7e22e9d
+  conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
   languageName: node
   linkType: hard
 
@@ -9221,6 +9367,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
     "@types/node": "npm:^22.9.0"
+    bun: "npm:^1.1.34"
     cross-env: "npm:^7.0.3"
     eslint: "npm:^9.12.0"
     eslint-plugin-import: "npm:^2.31.0"
@@ -10836,7 +10983,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"jest-snapshot@npm:29.7.0":
+"jest-snapshot@npm:^29.7.0":
   version: 29.7.0
   resolution: "jest-snapshot@npm:29.7.0"
   dependencies:
@@ -10861,34 +11008,6 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
     pretty-format: "npm:^29.7.0"
     semver: "npm:^7.5.3"
   checksum: 10c0/6e9003c94ec58172b4a62864a91c0146513207bedf4e0a06e1e2ac70a4484088a2683e3a0538d8ea913bcfd53dc54a9b98a98cdfa562e7fe1d1339aeae1da570
-  languageName: node
-  linkType: hard
-
-"jest-snapshot@patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch":
-  version: 29.7.0
-  resolution: "jest-snapshot@patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch::version=29.7.0&hash=e42261"
-  dependencies:
-    "@babel/core": "npm:^7.11.6"
-    "@babel/generator": "npm:^7.7.2"
-    "@babel/plugin-syntax-jsx": "npm:^7.7.2"
-    "@babel/plugin-syntax-typescript": "npm:^7.7.2"
-    "@babel/types": "npm:^7.3.3"
-    "@jest/expect-utils": "npm:^29.7.0"
-    "@jest/transform": "npm:^29.7.0"
-    "@jest/types": "npm:^29.6.3"
-    babel-preset-current-node-syntax: "npm:^1.0.0"
-    chalk: "npm:^4.0.0"
-    expect: "npm:^29.7.0"
-    graceful-fs: "npm:^4.2.9"
-    jest-diff: "npm:^29.7.0"
-    jest-get-type: "npm:^29.6.3"
-    jest-matcher-utils: "npm:^29.7.0"
-    jest-message-util: "npm:^29.7.0"
-    jest-util: "npm:^29.7.0"
-    natural-compare: "npm:^1.4.0"
-    pretty-format: "npm:^29.7.0"
-    semver: "npm:^7.5.3"
-  checksum: 10c0/c91f977ed810d466a3088853301ac5480fd05d5d3c9249282d17ac9a8ae7c3224edbad68285877c78b5988563eb34bfb5951524189a19c35363f97b3c709b467
   languageName: node
   linkType: hard
 

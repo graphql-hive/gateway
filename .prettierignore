@@ -6,3 +6,4 @@ __generated__
 !.changeset/README.md
 !.changeset/config.json
 .wrangler/
+*.Dockerfile

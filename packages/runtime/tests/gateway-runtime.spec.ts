@@ -9,14 +9,14 @@ import {
   printSchema,
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vitest } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 import type { GatewayPlugin } from '../src/types';
 
 describe('Gateway Runtime', () => {
   beforeEach(() => {
-    vitest.useFakeTimers();
+    vi.useFakeTimers?.();
   });
   function createSupergraphRuntime() {
     return createGatewayRuntime({
@@ -165,7 +165,7 @@ describe('Gateway Runtime', () => {
         fetchedSchema = schema;
       },
       onValidate({ validateFn, setValidationFn }) {
-        mockValidateFn = vitest.fn(validateFn);
+        mockValidateFn = vi.fn(validateFn);
         setValidationFn(mockValidateFn);
       },
     };

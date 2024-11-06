@@ -16,6 +16,7 @@ import {
   createPortOpt,
   createServicePortOpt,
   hostnames,
+  isDebug,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
@@ -30,7 +31,14 @@ const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
 const docker = new Dockerode();
 
-const E2E_GATEWAY_RUNNERS = ['node', 'docker', 'bin'] as const;
+const E2E_GATEWAY_RUNNERS = [
+  'node',
+  'docker',
+  'bin',
+  'bun-bin',
+  'bun',
+  'bun-docker',
+] as const;
 
 type ServeRunner = (typeof E2E_GATEWAY_RUNNERS)[number];
 
@@ -288,7 +296,7 @@ export function createTenv(cwd: string): Tenv {
       let {
         port = await getAvailablePort(),
         supergraph: supergraphOpt,
-        pipeLogs = boolEnv('DEBUG'),
+        pipeLogs = isDebug(),
         env,
         runner,
         args = [],
@@ -311,49 +319,32 @@ export function createTenv(cwd: string): Tenv {
         supergraph = output;
       }
 
-      if (gatewayRunner === 'docker') {
+      if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
 
+        // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
+        // and locally the host.docker.internal (or just on macos?) should just work
+        const dockerLocalHost = boolEnv('CI')
+          ? '172.17.0.1'
+          : 'host.docker.internal';
         if (supergraph) {
           // we need to replace all local servers in the supergraph to use docker's local hostname.
           // without this, the services running on the host wont be accessible by the docker container
           if (/^http(s?):\/\//.test(supergraph)) {
             // supergraph is a url
             supergraph = supergraph
-              // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-              // and locally the host.docker.internal (or just on macos?) should just work
-              .replaceAll(
-                '0.0.0.0',
-                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-              )
-              .replaceAll(
-                '127.0.0.1',
-                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-              )
-              .replaceAll(
-                'localhost',
-                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-              );
+              .replaceAll('0.0.0.0', dockerLocalHost)
+              .replaceAll('localhost', dockerLocalHost)
+              .replaceAll('127.0.0.1', dockerLocalHost);
           } else {
             // supergraph is a path
             await fs.writeFile(
               supergraph,
               (await fs.readFile(supergraph, 'utf8'))
-                // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-                // and locally the host.docker.internal (or just on macos?) should just work
-                .replaceAll(
-                  '0.0.0.0',
-                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-                )
-                .replaceAll(
-                  'localhost',
-                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-                )
-                .replaceAll(
-                  '127.0.0.1',
-                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-                ),
+                .replaceAll('0.0.0.0', dockerLocalHost)
+                .replaceAll('localhost', dockerLocalHost)
+                .replaceAll('127.0.0.1', dockerLocalHost),
             );
             volumes.push({
               host: supergraph,
@@ -386,19 +377,30 @@ export function createTenv(cwd: string): Tenv {
         }
 
         const dockerfileExists = await fs
-          .stat(path.join(cwd, 'gateway.Dockerfile'))
+          .stat(
+            path.join(
+              cwd,
+              gatewayRunner === 'bun-docker'
+                ? 'gateway_bun.Dockerfile'
+                : 'gateway.Dockerfile',
+            ),
+          )
           .then(() => true)
           .catch(() => false);
 
         const cont = await tenv.container({
           env,
-          name: 'gateway-e2e-' + Math.random().toString(32).slice(6),
+          name:
+            'gateway-e2e-' +
+            Math.random().toString(32).slice(6) +
+            (gatewayRunner === 'bun-docker' ? '-bun' : ''),
           image:
             'ghcr.io/graphql-hive/gateway:' +
             (dockerfileExists
               ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
                 `e2e.${path.basename(cwd)}`
-              : 'e2e'),
+              : 'e2e') +
+            (gatewayRunner === 'bun-docker' ? '-bun' : ''),
           // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
@@ -415,7 +417,7 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs,
         });
         proc = cont;
-      } else if (gatewayRunner === 'bin') {
+      } else if (gatewayRunner === 'bin' || gatewayRunner === 'bun-bin') {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
@@ -424,7 +426,17 @@ export function createTenv(cwd: string): Tenv {
           createPortOpt(port),
           ...args,
         );
-      } /* gatewayRunner === 'node' */ else {
+      } else if (gatewayRunner === 'bun') {
+        [proc, waitForExit] = await spawn(
+          { env, cwd, pipeLogs },
+          'npx',
+          'bun',
+          path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
+          ...(supergraph ? ['supergraph', supergraph] : []),
+          ...args,
+          createPortOpt(port),
+        );
+      } /* if (gatewayRunner === 'node') */ else {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },
           'node',
@@ -487,7 +499,7 @@ export function createTenv(cwd: string): Tenv {
         services = [],
         trimHostPaths,
         maskServicePorts,
-        pipeLogs = boolEnv('DEBUG'),
+        pipeLogs = isDebug(),
         env,
         args = [],
       } = opts || {};
@@ -557,7 +569,7 @@ export function createTenv(cwd: string): Tenv {
     },
     async service(
       name,
-      { port, gatewayPort, pipeLogs = boolEnv('DEBUG'), args = [] } = {},
+      { port, gatewayPort, pipeLogs = isDebug(), args = [] } = {},
     ) {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
@@ -737,13 +749,13 @@ export function createTenv(cwd: string): Tenv {
         getStats() {
           throw new Error('Cannot get stats of a container.');
         },
-        async [DisposableSymbols.asyncDispose]() {
+        [DisposableSymbols.asyncDispose]() {
           if (ctrl.signal.aborted) {
             // noop if already disposed
-            return;
+            return undefined as unknown as Promise<void>;
           }
           ctrl.abort();
-          ctr.stop({ t: 0 });
+          return ctr.stop({ t: 0 });
         },
       };
       leftoverStack.use(container);
@@ -834,7 +846,7 @@ interface SpawnOptions extends ProcOptions {
 }
 
 function spawn(
-  { cwd, pipeLogs = boolEnv('DEBUG'), env = {}, shell, signal }: SpawnOptions,
+  { cwd, pipeLogs = isDebug(), env = {}, shell, signal }: SpawnOptions,
   cmd: string,
   ...args: (string | number | boolean | null | undefined)[]
 ): Promise<[proc: Proc, waitForExit: Promise<void>]> {
@@ -877,7 +889,7 @@ function spawn(
     },
     async getStats() {
       const [proc, waitForExit] = await spawn(
-        { cwd, pipeLogs: false },
+        { cwd, pipeLogs: isDebug() },
         'ps',
         '-o',
         'pcpu=,rss=',

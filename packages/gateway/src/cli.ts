@@ -23,7 +23,7 @@ import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
-import type { ServerConfig } from './server';
+import type { ServerConfig } from './servers/types';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig

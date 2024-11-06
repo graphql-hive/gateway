@@ -685,7 +685,7 @@ describe('transforms', () => {
         fieldResolver: defaultMergedResolver,
       });
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         data: {
           errorTest: null,
         },

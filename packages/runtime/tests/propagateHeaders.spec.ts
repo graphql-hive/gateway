@@ -1,14 +1,14 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { isDebug } from '@internal/testing';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vitest } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
 describe('usePropagateHeaders', () => {
   describe('From Client to the Subgraphs', () => {
     const requestTrackerPlugin = {
-      onParams: vitest.fn((() => {}) as Plugin['onParams']),
+      onParams: vi.fn((() => {}) as Plugin['onParams']),
     };
     const upstream = createYoga({
       schema: createSchema({

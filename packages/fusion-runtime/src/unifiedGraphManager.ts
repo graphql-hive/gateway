@@ -114,7 +114,7 @@ export class UnifiedGraphManager<TContext> {
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
   private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
   private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
-  private currentTimeout: NodeJS.Timeout | undefined;
+  private currentTimeout: ReturnType<typeof setTimeout> | undefined;
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<true>;
   private disposableStack = new AsyncDisposableStack();

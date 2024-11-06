@@ -31,7 +31,10 @@ export type WSTransportOptions = Omit<
 };
 
 export default {
-  getSubgraphExecutor({ transportEntry, logger }) {
+  getSubgraphExecutor(
+    { transportEntry, logger },
+    buildExecutor = buildGraphQLWSExecutor,
+  ) {
     const wsExecutorMap = new Map<string, DisposableExecutor>();
     if (!transportEntry.location) {
       throw new Error(
@@ -69,7 +72,7 @@ export default {
       let wsExecutor = wsExecutorMap.get(hash);
       if (!wsExecutor) {
         const executorLogger = logger?.child('GraphQL WS').child(hash);
-        wsExecutor = buildGraphQLWSExecutor({
+        wsExecutor = buildExecutor({
           url: wsUrl,
           lazy: true,
           lazyCloseTimeout: 3_000,

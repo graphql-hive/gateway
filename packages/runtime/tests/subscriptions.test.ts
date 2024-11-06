@@ -85,18 +85,17 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toMatchInlineSnapshot(`
-{
-  "errors": [
-    {
-      "extensions": {
-        "code": "SHUTTING_DOWN",
-      },
-      "message": "subscription has been closed because the server is shutting down",
-    },
-  ],
-}
-`);
+    expect(msgs[msgs.length - 1]).toEqual({
+      errors: [
+        {
+          extensions: {
+            code: 'SHUTTING_DOWN',
+          },
+          message:
+            'subscription has been closed because the server is shutting down',
+        },
+      ],
+    });
   });
 
   it('should terminate subscriptions gracefully on schema update', async () => {
@@ -148,17 +147,15 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toMatchInlineSnapshot(`
-      {
-        "errors": [
-          {
-            "extensions": {
-              "code": "SUBSCRIPTION_SCHEMA_RELOAD",
-            },
-            "message": "subscription has been closed due to a schema reload",
+    expect(msgs[msgs.length - 1]).toEqual({
+      errors: [
+        {
+          extensions: {
+            code: 'SUBSCRIPTION_SCHEMA_RELOAD',
           },
-        ],
-      }
-      `);
+          message: 'subscription has been closed due to a schema reload',
+        },
+      ],
+    });
   });
 });

@@ -2,17 +2,17 @@ import { createDisposableServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 
 describe('Upstream Cancellation', () => {
   it('cancels upstream requests when the client cancels', async () => {
     const serveRuntimeFetchCallAbortCtrl = new AbortController();
     let resolveDataSource: (response: Response) => void;
-    const abortSpyOnDataSource = vitest.fn(() => {
+    const abortSpyOnDataSource = vi.fn(() => {
       resolveDataSource(new Response('Bye!'));
     });
-    const dataSourceFetchSpy = vitest.fn((res: Response) => res.text());
+    const dataSourceFetchSpy = vi.fn((res: Response) => res.text());
     const dataSourceAdapter = createServerAdapter((req) => {
       serveRuntimeFetchCallAbortCtrl.abort();
       req.signal.addEventListener('abort', abortSpyOnDataSource);
@@ -33,7 +33,7 @@ describe('Upstream Cancellation', () => {
         resolvers: {
           Query: {
             hello: (_root, _args, context) =>
-              fetch(`http://localhost:${dataSourceServer.address().port}`, {
+              fetch(dataSourceServer.url, {
                 signal: context.request.signal,
               }).then(dataSourceFetchSpy),
           },
@@ -44,29 +44,26 @@ describe('Upstream Cancellation', () => {
       await createDisposableServer(upstreamGraphQL);
     await using gateway = createGatewayRuntime({
       proxy: {
-        endpoint: `http://localhost:${upstreamGraphQLServer.address().port}/graphql`,
+        endpoint: `${upstreamGraphQLServer.url}/graphql`,
       },
       upstreamCancellation: true,
       logging: false,
     });
     await using serveRuntimeServer = await createDisposableServer(gateway);
-    const res$ = fetch(
-      `http://localhost:${serveRuntimeServer.address().port}/graphql`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              hello
-            }
-          `,
-        }),
-        signal: serveRuntimeFetchCallAbortCtrl.signal,
+    const res$ = fetch(`${serveRuntimeServer.url}/graphql`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            hello
+          }
+        `,
+      }),
+      signal: serveRuntimeFetchCallAbortCtrl.signal,
+    });
     await expect(res$).rejects.toThrow();
     expect(dataSourceFetchSpy).not.toHaveBeenCalled();
     await new Promise<void>((resolve) => setTimeout(resolve, 300));

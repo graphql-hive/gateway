@@ -20,17 +20,17 @@ function handleSuppressedError(e: any) {
   }
 }
 
-afterAll(async () => {
+afterAll(() => {
   try {
-    const disposeRes$ = leftoverStack.disposeAsync();
-    if (disposeRes$?.catch) {
-      await disposeRes$.catch(handleSuppressedError).finally(() => {
+    return leftoverStack
+      ?.disposeAsync()
+      ?.catch?.(handleSuppressedError)
+      ?.finally?.(() => {
         leftoverStack = new AsyncDisposableStack();
       });
-      return;
-    }
   } catch (e) {
     handleSuppressedError(e);
   }
   leftoverStack = new AsyncDisposableStack();
+  return;
 });

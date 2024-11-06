@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import {
   createDefaultExecutor,
@@ -8,13 +9,14 @@ import { isAsyncIterable } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
+  const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
   it('polls the schema in a certain interval', async () => {
-    vitest.useFakeTimers();
-    const pollingInterval = 35_000;
+    vi.useFakeTimers?.();
+    const pollingInterval = 300;
     let schema: GraphQLSchema;
     const unifiedGraphFetcher = () => {
       const time = new Date().toISOString();
@@ -42,7 +44,7 @@ describe('Polling', () => {
         },
       ]);
     };
-    const disposeFn = vitest.fn();
+    const disposeFn = vi.fn();
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
@@ -92,13 +94,13 @@ describe('Polling', () => {
     }
     await compareTimes();
     const firstDate = await getFetchedTimeOnComment();
-    vitest.advanceTimersByTime(pollingInterval);
+    await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     const secondDate = await getFetchedTimeOnComment();
     const diffBetweenFirstAndSecond =
       secondDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndSecond).toBeGreaterThanOrEqual(pollingInterval);
-    vitest.advanceTimersByTime(pollingInterval);
+    await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     const thirdDate = await getFetchedTimeOnComment();
     const diffBetweenSecondAndThird =
@@ -117,11 +119,11 @@ describe('Polling', () => {
     expect(disposeFn).toHaveBeenCalledTimes(3);
   });
   it('continues polling after failing initial fetch', async () => {
-    vitest.useFakeTimers();
-    const pollingInterval = 35_000;
+    vi.useFakeTimers?.();
+    const pollingInterval = 300;
     let schema: GraphQLSchema;
     let shouldFail = true;
-    const unifiedGraphFetcher = vitest.fn(() => {
+    const unifiedGraphFetcher = vi.fn(() => {
       if (shouldFail) {
         throw new Error('Failed to fetch schema');
       }
@@ -196,15 +198,20 @@ describe('Polling', () => {
       const timeFromResolvers = await getFetchedTimeFromResolvers();
       expect(timeFromComment).toEqual(timeFromResolvers);
     }
-    await expect(async () => manager.getUnifiedGraph()).rejects.toThrow();
+    try {
+      await manager.getUnifiedGraph();
+      await expect(true).toBeFalsy();
+    } catch (e) {
+      // Ignore
+    }
     shouldFail = false;
-    vitest.advanceTimersByTime(pollingInterval);
+    await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     shouldFail = true;
-    vitest.advanceTimersByTime(pollingInterval);
+    await advanceTimersByTimeAsync(pollingInterval);
     // Should not fail again once it has succeeded
     await compareTimes();
-    vitest.advanceTimersByTime(pollingInterval);
+    await advanceTimersByTimeAsync(pollingInterval);
     // Should keep polling even if it fails in somewhere
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
   });

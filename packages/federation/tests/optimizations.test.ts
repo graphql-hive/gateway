@@ -707,29 +707,27 @@ it('nested recursive requirements', async () => {
         }
       `),
     }),
-  ).toMatchInlineSnapshot(`
-{
-  "data": {
-    "colos": [
-      {
-        "cages": {
-          "cabinets": [
-            {
-              "id": "1",
-              "number": 1,
-              "spatialCabinet": {
-                "spatialId": "1",
+  ).toEqual({
+    data: {
+      colos: [
+        {
+          cages: {
+            cabinets: [
+              {
+                id: '1',
+                number: 1,
+                spatialCabinet: {
+                  spatialId: '1',
+                },
               },
-            },
-          ],
-          "id": "1",
-          "number": 1,
+            ],
+            id: '1',
+            number: 1,
+          },
         },
-      },
-    ],
-  },
-}
-`);
+      ],
+    },
+  });
 
   expect(subgraphCalls).toEqual({
     inventory: 1,

@@ -6,7 +6,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { MeshFetch } from '@graphql-mesh/types';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, test, vitest } from 'vitest';
+import { beforeEach, describe, expect, it, test, vi } from 'vitest';
 import {
   defaultParamsSerializer,
   useHmacSignatureValidation,
@@ -57,16 +57,14 @@ describe('useHmacSignatureValidation', () => {
       }),
     });
 
-    expect(await response.json()).toMatchInlineSnapshot(`
-{
-  "errors": [
-    {
-      "extensions": {},
-      "message": "Unexpected error.",
-    },
-  ],
-}
-`);
+    expect(await response.json()).toEqual({
+      errors: [
+        {
+          extensions: {},
+          message: 'Unexpected error.',
+        },
+      ],
+    });
     response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
@@ -84,16 +82,14 @@ describe('useHmacSignatureValidation', () => {
       }),
     });
 
-    expect(await response.json()).toMatchInlineSnapshot(`
-{
-  "errors": [
-    {
-      "extensions": {},
-      "message": "Unexpected error.",
-    },
-  ],
-}
-`);
+    expect(await response.json()).toEqual({
+      errors: [
+        {
+          extensions: {},
+          message: 'Unexpected error.',
+        },
+      ],
+    });
   });
 
   test('should build a valid hmac and validate it correctly in a Yoga setup', async () => {
@@ -160,7 +156,7 @@ describe('useHmacSignatureValidation', () => {
 
 describe('useHmacUpstreamSignature', () => {
   const requestTrackerPlugin = {
-    onParams: vitest.fn((() => {}) as Plugin['onParams']),
+    onParams: vi.fn((() => {}) as Plugin['onParams']),
   };
   const upstream = createYoga({
     schema: createSchema({

@@ -3,7 +3,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { TransformCompositeFields, wrapSchema } from '@graphql-tools/wrap';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { parse } from 'graphql';
-import { describe, expect, test, vitest } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 const baseSchema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -103,7 +103,7 @@ describe('TransformCompositeFields', () => {
   });
 
   test('does not include __typename more than once on execution when a data transformer exists', async () => {
-    const transformSelectionSetSpy = vitest.spyOn(
+    const transformSelectionSetSpy = vi.spyOn(
       TransformCompositeFields.prototype as any,
       'transformSelectionSet',
     );
@@ -123,9 +123,11 @@ describe('TransformCompositeFields', () => {
       document: parse('{ product { _id __typename } }'),
     });
 
-    expect(transformSelectionSetSpy).toHaveNthReturnedWith(
-      2,
-      expect.objectContaining({
+    console.log();
+
+    expect(transformSelectionSetSpy.mock.results[1]).toMatchObject({
+      type: 'return',
+      value: expect.objectContaining({
         selections: [
           expect.objectContaining({
             name: expect.objectContaining({ kind: 'Name', value: 'product' }),
@@ -151,6 +153,6 @@ describe('TransformCompositeFields', () => {
           }),
         ],
       }),
-    );
+    });
   });
 });

@@ -62,7 +62,10 @@ const deps = {
     '../plugins/hmac-upstream-signature/src/index.ts',
 };
 
-if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+if (
+  process.env['E2E_GATEWAY_RUNNER'] === 'docker' ||
+  process.env['E2E_GATEWAY_RUNNER'] === 'bun-docker'
+) {
   // extras specific to the docker serve runner in e2e tests
   console.warn('⚠️ Bundling extra modules for e2e tests!');
   deps['node_modules/@internal/testing/index'] =

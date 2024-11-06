@@ -1,5 +1,6 @@
+import { setTimeout } from 'timers/promises';
 import { Response } from '@whatwg-node/fetch';
-import { afterEach, beforeEach, describe, expect, it, vitest } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchSupergraphSdlFromManagedFederation,
   SupergraphSchemaManager,
@@ -7,9 +8,10 @@ import {
 import { getSupergraph } from './fixtures/gateway/supergraph';
 
 describe('Managed Federation', () => {
-  vitest.useFakeTimers();
+  vi.useFakeTimers?.();
+  const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
   let supergraphSdl: string;
-  const mockSDL = vitest.fn(async () =>
+  const mockSDL = vi.fn(async () =>
     Response.json({
       data: {
         routerConfig: {
@@ -23,7 +25,7 @@ describe('Managed Federation', () => {
     }),
   );
 
-  const mockUnchanged = vitest.fn(async () =>
+  const mockUnchanged = vi.fn(async () =>
     Response.json({
       data: {
         routerConfig: {
@@ -35,7 +37,7 @@ describe('Managed Federation', () => {
     }),
   );
 
-  const mockFetchError = vitest.fn(async () =>
+  const mockFetchError = vi.fn(async () =>
     Response.json({
       data: {
         routerConfig: {
@@ -48,13 +50,13 @@ describe('Managed Federation', () => {
     }),
   );
 
-  const mockError = vitest.fn(async () => {
+  const mockError = vi.fn(async () => {
     throw new Error('Test Error');
   });
 
   beforeEach(async () => {
     supergraphSdl ||= await getSupergraph();
-    vitest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Supergraph SDL Fetcher', () => {
@@ -163,7 +165,7 @@ describe('Managed Federation', () => {
 
       const schema$ = new Promise((resolve) => manager.once('schema', resolve));
 
-      await vitest.advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(50);
 
       await schema$;
 
@@ -176,13 +178,13 @@ describe('Managed Federation', () => {
         maxRetries: 3,
       });
 
-      const onFailure = vitest.fn();
+      const onFailure = vi.fn();
       manager.on('failure', onFailure);
-      const onError = vitest.fn();
+      const onError = vi.fn();
       manager.on('error', onError);
       manager.start();
 
-      await vitest.advanceTimersByTimeAsync(250);
+      await advanceTimersByTimeAsync(250);
       expect(mockFetchError).toHaveBeenCalledTimes(3);
       expect(onError).toHaveBeenCalledTimes(3);
       expect(onFailure).toHaveBeenCalledTimes(1);
@@ -193,11 +195,11 @@ describe('Managed Federation', () => {
         fetch: mockSDL,
       });
 
-      const onSchemaChange = vitest.fn();
+      const onSchemaChange = vi.fn();
       manager.on('schema', onSchemaChange);
       manager.start();
 
-      await vitest.advanceTimersByTimeAsync(290);
+      await advanceTimersByTimeAsync(290);
       expect(onSchemaChange).toHaveBeenCalledTimes(3);
     });
 
@@ -206,12 +208,12 @@ describe('Managed Federation', () => {
         fetch: mockSDL,
       });
 
-      const onSchemaChange = vitest.fn();
+      const onSchemaChange = vi.fn();
       manager.once('schema', onSchemaChange);
       manager.on('schema', onSchemaChange);
       manager.start();
 
-      await vitest.advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(50);
       expect(onSchemaChange).toHaveBeenCalledTimes(2);
     });
 
@@ -221,13 +223,13 @@ describe('Managed Federation', () => {
         maxRetries: 3,
       });
 
-      const onFailure = vitest.fn();
+      const onFailure = vi.fn();
       manager.on('failure', onFailure);
-      const onError = vitest.fn();
+      const onError = vi.fn();
       manager.on('error', onError);
       manager.start();
 
-      await vitest.advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(50);
       expect(onError).toHaveBeenCalledTimes(3);
       expect(mockError).toHaveBeenCalledTimes(3);
       expect(onFailure).toHaveBeenCalledTimes(1);
@@ -249,11 +251,11 @@ describe('Managed Federation', () => {
           }),
       });
 
-      const onMessage = vitest.fn();
+      const onMessage = vi.fn();
       manager.on('log', onMessage);
       manager.start();
 
-      await vitest.advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(50);
       expect(onMessage).toHaveBeenCalledWith({
         message: 'test-message',
         level: 'info',

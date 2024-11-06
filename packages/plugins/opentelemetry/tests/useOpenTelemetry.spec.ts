@@ -1,10 +1,14 @@
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeAll, beforeEach, describe, expect, it, vitest } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockRegisterProvider = vitest.fn();
+let mockModule = vi.mock;
+if (globalThis.Bun) {
+  mockModule = require('bun:test').mock.module;
+}
+const mockRegisterProvider = vi.fn();
 describe('useOpenTelemetry', () => {
-  vitest.mock('@opentelemetry/sdk-trace-web', () => ({
-    WebTracerProvider: vitest.fn(() => ({ register: mockRegisterProvider })),
+  mockModule('@opentelemetry/sdk-trace-web', () => ({
+    WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
   }));
 
   let gw: typeof import('@graphql-hive/gateway');
@@ -12,7 +16,7 @@ describe('useOpenTelemetry', () => {
     gw = await import('@graphql-hive/gateway');
   });
   beforeEach(() => {
-    vitest.clearAllMocks();
+    vi.clearAllMocks();
   });
   describe('when not passing a custom provider', () => {
     it('initializes and starts a new provider', async () => {

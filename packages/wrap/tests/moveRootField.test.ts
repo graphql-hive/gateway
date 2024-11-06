@@ -26,20 +26,18 @@ describe('MoveRootField', () => {
         }),
       ],
     });
-    expect(printSchemaWithDirectives(newSchema).trim()).toMatchInlineSnapshot(`
-      "schema {
-        query: Query
-        mutation: Mutation
-      }
+    expect(printSchemaWithDirectives(newSchema).trim()).toBe(`schema {
+  query: Query
+  mutation: Mutation
+}
 
-      type Query {
-        bar: String
-      }
+type Query {
+  bar: String
+}
 
-      type Mutation {
-        foo: String
-      }"
-    `);
+type Mutation {
+  foo: String
+}`);
   });
   it('executes the field on the new type', async () => {
     const schema = makeExecutableSchema({

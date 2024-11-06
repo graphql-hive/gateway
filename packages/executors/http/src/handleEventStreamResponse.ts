@@ -23,10 +23,17 @@ export function handleEventStreamResponse(response: Response) {
 
     const reader = body.getReader();
     reader.closed.then(stop).catch(stop); // we dont use `finally` because we want to catch errors
-    stop.finally(() => reader.cancel());
+    stop
+      .then(() => reader.releaseLock())
+      .catch((err) => {
+        reader.cancel(err);
+      });
 
     let currChunk = '';
     async function pump() {
+      if (!body?.locked) {
+        return stop();
+      }
       const { done, value: chunk } = await reader.read();
       if (done) {
         return stop();
