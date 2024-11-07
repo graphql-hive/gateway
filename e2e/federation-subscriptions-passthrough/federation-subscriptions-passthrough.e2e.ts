@@ -1,19 +1,11 @@
 import { setTimeout } from 'timers/promises';
 import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
-import {
-  createClient as createSSEClient,
-  type Client as SSEClient,
-  type ClientOptions as SSEClientOptions,
-} from 'graphql-sse';
-import {
-  createClient as createWSClient,
-  type Client as WSClient,
-  type ClientOptions as WSClientOptions,
-} from 'graphql-ws';
-import { describe, expect, it } from 'vitest';
-import webSocketImpl from 'ws';
+import { createClient as createSSEClient, type Client as SSEClient, type ClientOptions as SSEClientOptions } from 'graphql-sse';
+import { createClient as createWSClient, type Client as WSClient, type ClientOptions as WSClientOptions } from 'graphql-ws';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { TOKEN } from './services/products/server';
+
 
 const { service, gateway } = createTenv(__dirname);
 
@@ -26,6 +18,12 @@ const subscriptionsClientFactories = [
     opts: Partial<SSEClientOptions> & Partial<WSClientOptions>,
   ) => SSEClient | WSClient,
 ][];
+
+let webSocketImpl: typeof WebSocket;
+
+beforeAll(async () => {
+  webSocketImpl = globalThis.WebSocket || (await import('ws'));
+});
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
   if (protocol === 'WS' && process.version.startsWith('v18')) {

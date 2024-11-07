@@ -45,9 +45,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
     serverOptions.fetch = function (req: Request, server: Server) {
       // header to check if websocket
       if (req.headers.has('Sec-WebSocket-Key') && server.upgrade(req)) {
-        if (server.upgrade(req)) {
-          return;
-        }
+        return;
       }
       return gwRuntime.handleRequest(req, server);
     } as any;

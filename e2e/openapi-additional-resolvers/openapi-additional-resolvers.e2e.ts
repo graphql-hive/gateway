@@ -37,7 +37,7 @@ it('should execute Metrics with banana', async () => {
 });
 
 it('should execute Metrics with apple', async () => {
-  const { execute } = await gateway({ supergraph: { with: 'mesh' }, pipeLogs: true });
+  const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   const result = await execute({
     query: /* GraphQL */ `
       query Metrics {
