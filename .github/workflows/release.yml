@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         runtime: [Node, Bun]
-    name: Docker image built with ${{ matrix.runtime }}
+    name: ${{ matrix.runtime }} Docker image
     needs: [stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
