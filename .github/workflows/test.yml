@@ -37,6 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         setup:
+          # Node
           - workflow-name: Node 18 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
@@ -49,10 +50,14 @@ jobs:
             os: ubuntu-latest
             gateway-runner: node
             node-version: 22
-          - workflow-name: Docker on Ubuntu
+
+          # Node on Docker
+          - workflow-name: Node Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: docker
             node-version: 22
+
+          # Node Binary
           - workflow-name: Node Binary on Ubuntu
             os: ubuntu-latest
             gateway-runner: bin
@@ -62,7 +67,7 @@ jobs:
             gateway-runner: bin
             node-version: 22
 
-          # Should be the same with Linux  
+          # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
           #   os: macos-14 # MacOS Arm64
           #   gateway-runner: bin
@@ -72,6 +77,7 @@ jobs:
           #   gateway-runner: bin
           #   node-version: 22
 
+          # Bun
           - workflow-name: Bun on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun
