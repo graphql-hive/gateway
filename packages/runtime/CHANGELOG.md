@@ -1,5 +1,11 @@
 # @graphql-hive/gateway-runtime
 
+## 1.1.6
+
+### Patch Changes
+
+- [`eebfc84`](https://github.com/graphql-hive/gateway/commit/eebfc84567720f771296ead420bfbc1015c8e0c3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Inject helpers containing code that detects at runtime if the required value contains the `__esModule` property.
+
 ## 1.1.5
 
 ### Patch Changes
