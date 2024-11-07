@@ -311,37 +311,28 @@ export function createTenv(cwd: string): Tenv {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
 
+        // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
+        // and locally the host.docker.internal (or just on macos?) should just work
+        const dockerLocalHost = boolEnv('CI')
+          ? '172.17.0.1'
+          : 'host.docker.internal';
         if (supergraph) {
           // we need to replace all local servers in the supergraph to use docker's local hostname.
           // without this, the services running on the host wont be accessible by the docker container
           if (/^http(s?):\/\//.test(supergraph)) {
             // supergraph is a url
             supergraph = supergraph
-              // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-              // and locally the host.docker.internal (or just on macos?) should just work
-              .replaceAll(
-                '0.0.0.0',
-                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-              )
-              .replaceAll(
-                'localhost',
-                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-              );
+              .replaceAll('0.0.0.0', dockerLocalHost)
+              .replaceAll('localhost', dockerLocalHost)
+              .replaceAll('127.0.0.1', dockerLocalHost);
           } else {
             // supergraph is a path
             await fs.writeFile(
               supergraph,
               (await fs.readFile(supergraph, 'utf8'))
-                // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-                // and locally the host.docker.internal (or just on macos?) should just work
-                .replaceAll(
-                  '0.0.0.0',
-                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-                )
-                .replaceAll(
-                  'localhost',
-                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
-                ),
+              .replaceAll('0.0.0.0', dockerLocalHost)
+              .replaceAll('localhost', dockerLocalHost)
+              .replaceAll('127.0.0.1', dockerLocalHost)
             );
             volumes.push({
               host: supergraph,
@@ -374,7 +365,14 @@ export function createTenv(cwd: string): Tenv {
         }
 
         const dockerfileExists = await fs
-          .stat(path.join(cwd, gatewayRunner === 'bun-docker' ? 'gateway_bun.Dockerfile' : 'gateway.Dockerfile'))
+          .stat(
+            path.join(
+              cwd,
+              gatewayRunner === 'bun-docker'
+                ? 'gateway_bun.Dockerfile'
+                : 'gateway.Dockerfile',
+            ),
+          )
           .then(() => true)
           .catch(() => false);
 

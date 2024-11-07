@@ -1,11 +1,18 @@
 import { setTimeout } from 'timers/promises';
-import { createTenv, getAvailablePort } from '@internal/e2e';
+import { createTenv, getAvailablePort, Service } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
-import { createClient as createSSEClient, type Client as SSEClient, type ClientOptions as SSEClientOptions } from 'graphql-sse';
-import { createClient as createWSClient, type Client as WSClient, type ClientOptions as WSClientOptions } from 'graphql-ws';
+import {
+  createClient as createSSEClient,
+  type Client as SSEClient,
+  type ClientOptions as SSEClientOptions,
+} from 'graphql-sse';
+import {
+  createClient as createWSClient,
+  type Client as WSClient,
+  type ClientOptions as WSClientOptions,
+} from 'graphql-ws';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { TOKEN } from './services/products/server';
-
 
 const { service, gateway } = createTenv(__dirname);
 
@@ -21,8 +28,12 @@ const subscriptionsClientFactories = [
 
 let webSocketImpl: typeof WebSocket;
 
+let products: Service;
+let reviews: Service;
 beforeAll(async () => {
-  webSocketImpl = globalThis.WebSocket || (await import('ws'));
+  webSocketImpl = globalThis.WebSocket || (await import('ws')).WebSocket;
+  products = await service('products');
+  reviews = await service('reviews');
 });
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
@@ -37,7 +48,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [await service('products'), await service('reviews')],
+          services: [products, reviews],
         },
       });
 
@@ -124,7 +135,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [await service('products'), await service('reviews')],
+          services: [products, reviews],
         },
       });
 
@@ -168,7 +179,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       await gateway({
         supergraph: {
           with: 'apollo',
-          services: [await service('products'), await service('reviews')],
+          services: [products, reviews],
         },
         port: availablePort,
         env: {

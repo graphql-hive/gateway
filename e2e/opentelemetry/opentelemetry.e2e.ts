@@ -121,7 +121,7 @@ async function getJaegerTraces(
   const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
   let res!: JaegerTracesApiResponse;
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 50; i++) {
     res = await fetch(url).then((r) => r.json());
     if (res.data.length >= expectedDataLength) {
       break;
