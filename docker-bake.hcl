@@ -27,6 +27,10 @@ group "e2e" {
   targets = ["gateway_e2e", "gateway_e2e_sqlite-chinook", "gateway_e2e_openapi-javascript-wiki"]
 }
 
+group "e2e_bun" {
+  targets = ["gateway_e2e_bun",  "gateway_e2e_sqlite-chinook", "gateway_e2e_openapi-javascript-wiki"]
+}
+
 target "gateway_e2e" {
   context = "packages/gateway"
   dockerfile = "node.Dockerfile"
