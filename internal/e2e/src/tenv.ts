@@ -5,19 +5,8 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
-import {
-  IntrospectAndCompose,
-  RemoteGraphQLDataSource,
-  type ServiceEndpointDefinition,
-} from '@apollo/gateway';
-import {
-  boolEnv,
-  createOpt,
-  createPortOpt,
-  createServicePortOpt,
-  hostnames,
-  isDebug,
-} from '@internal/testing';
+import { IntrospectAndCompose, RemoteGraphQLDataSource, type ServiceEndpointDefinition } from '@apollo/gateway';
+import { boolEnv, createOpt, createPortOpt, createServicePortOpt, hostnames, isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
@@ -26,6 +15,7 @@ import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
+
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
@@ -384,20 +374,23 @@ export function createTenv(cwd: string): Tenv {
         }
 
         const dockerfileExists = await fs
-          .stat(path.join(cwd, 'gateway.Dockerfile'))
+          .stat(path.join(cwd, gatewayRunner === 'bun-docker' ? 'gateway_bun.Dockerfile' : 'gateway.Dockerfile'))
           .then(() => true)
           .catch(() => false);
 
         const cont = await tenv.container({
           env,
-          name: 'gateway-e2e-' + Math.random().toString(32).slice(6),
+          name:
+            'gateway-e2e-' +
+            Math.random().toString(32).slice(6) +
+            (gatewayRunner === 'bun-docker' ? '-bun' : ''),
           image:
             'ghcr.io/graphql-hive/gateway:' +
             (dockerfileExists
               ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
                 `e2e.${path.basename(cwd)}`
               : 'e2e') +
-            (gatewayRunner.includes('bun') ? '.bun' : ''),
+            (gatewayRunner === 'bun-docker' ? '.bun' : ''),
           // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
