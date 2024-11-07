@@ -90,13 +90,10 @@ jobs:
           node-version-file: .node-version
       - name: Build
         run: yarn build
-        if: matrix.setup.runtime == 'Node'
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
-        if: matrix.setup.runtime == 'Node'
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
-        if: matrix.setup.runtime == 'Node'
       - name: Bake and Push
         uses: docker/bake-action@v5
         env:
