@@ -28,7 +28,7 @@ group "e2e" {
 }
 
 group "e2e_bun" {
-  targets = ["gateway_e2e_bun",  "gateway_e2e_sqlite-chinook", "gateway_e2e_openapi-javascript-wiki"]
+  targets = ["gateway_e2e_bun",  "gateway_e2e_sqlite-chinook_bun", "gateway_e2e_openapi-javascript-wiki_bun"]
 }
 
 target "gateway_e2e" {
@@ -52,12 +52,30 @@ target "gateway_e2e_sqlite-chinook" {
   }
 }
 
+target "gateway_e2e_sqlite-chinook_bun" {
+  context = "e2e/sqlite-chinook"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.sqlite-chinook.bun"]
+  contexts = {
+    "gateway_e2e_bun": "target:gateway_e2e_bun"
+  }
+}
+
 target "gateway_e2e_openapi-javascript-wiki" {
   context = "e2e/openapi-javascript-wiki"
   dockerfile = "gateway.Dockerfile"
   tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki"]
   contexts = {
     "gateway_e2e": "target:gateway_e2e"
+  }
+}
+
+target "gateway_e2e_openapi-javascript-wiki_bun" {
+  context = "e2e/openapi-javascript-wiki"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki.bun"]
+  contexts = {
+    "gateway_e2e_bun": "target:gateway_e2e_bun"
   }
 }
 
