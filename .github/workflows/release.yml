@@ -57,13 +57,13 @@ jobs:
         with:
           script: |
             const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
-            const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
+            const gateway = publishedPackages.find((p) => p.name == '@graphql-hive/gateway');
             if (!gateway) {
               return core.setFailed('@graphql-hive/gateway was not published!');
             }
             const { version } = gateway;
             let r;
-            if (context.eventName === 'pull_request') {
+            if (context.eventName == 'pull_request') {
               r = { version, tags: version };
             } else {
               const [major, minor] = version.split('.');
@@ -99,7 +99,7 @@ jobs:
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
-          targets: gateway${{ matrix.setup.runtime === 'Bun' && '_bun' || '' }}
+          targets: gateway${{ matrix.setup.runtime == 'Bun' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
@@ -110,13 +110,13 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-${{ matrix.setup.runtime === 'Bun' && 'bun-' || '' }}docker-image
+          header: snapshot-release-${{ matrix.setup.runtime == 'Bun' && 'bun-' || '' }}docker-image
           message: |
             ### 🚀 Snapshot Release (${{matrix.setup.runtime}} Docker Image)
 
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
-            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}${{ matrix.setup.runtime === 'Bun' && '.bun' || '' }}
+            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}${{ matrix.setup.runtime == 'Bun' && '.bun' || '' }}
             ```
 
   bin:
@@ -140,7 +140,7 @@ jobs:
           result-encoding: string
           script: |
             const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
-            const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
+            const gateway = publishedPackages.find((p) => p.name == '@graphql-hive/gateway');
             if (!gateway) {
               return core.setFailed('@graphql-hive/gateway was not published!');
             }
@@ -177,7 +177,7 @@ jobs:
       - name: Set binary info
         id: binary
         run: |
-          echo "name=hive-gateway-${{matrix.setup.runtime === 'Bun' && 'bun-'}}${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "name=hive-gateway-${{matrix.setup.runtime == 'Bun' && 'bun-'}}${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
           echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Compress binary
@@ -210,7 +210,7 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-${{matrix.setup.runtime === 'Bun' && 'bun-'}}binary-${{ runner.os }}-${{ runner.arch }}
+          header: snapshot-release-${{matrix.setup.runtime == 'Bun' && 'bun-'}}binary-${{ runner.os }}-${{ runner.arch }}
           message: |
             ### 🚀 Snapshot Release (Node Binary for `${{ runner.os }}-${{ runner.arch }}`)
 
