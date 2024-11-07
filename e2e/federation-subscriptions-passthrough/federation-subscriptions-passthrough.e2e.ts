@@ -44,7 +44,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [ await service('products'), await service('reviews')],
+          services: [await service('products'), await service('reviews')],
         },
       });
 
@@ -131,7 +131,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [ await service('products'), await service('reviews')],
+          services: [await service('products'), await service('reviews')],
         },
       });
 
@@ -175,7 +175,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       await gateway({
         supergraph: {
           with: 'apollo',
-          services: [ await service('products'), await service('reviews')],
+          services: [await service('products'), await service('reviews')],
         },
         port: availablePort,
         env: {
