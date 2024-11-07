@@ -42,6 +42,9 @@ jobs:
   ghcr:
     name: GitHub Container Registry
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime: [Node, Bun]
     needs: [stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
@@ -87,16 +90,19 @@ jobs:
           node-version-file: .node-version
       - name: Build
         run: yarn build
+        if: matrix.setup.runtime == 'Node'
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
+        if: matrix.setup.runtime == 'Node'
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
+        if: matrix.setup.runtime == 'Node'
       - name: Bake and Push
         uses: docker/bake-action@v5
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
-          targets: gateway
+          targets: gateway${{ matrix.setup.runtime === 'Bun' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
@@ -107,95 +113,17 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-docker-image
+          header: snapshot-release-${{ matrix.setup.runtime === 'Bun' && 'bun-' || '' }}docker-image
           message: |
-            ### 🚀 Snapshot Release (Docker Image)
+            ### 🚀 Snapshot Release (${{matrix.setup.runtime}} Docker Image)
 
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
-            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
+            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}${{ matrix.setup.runtime === 'Bun' && '.bun' || '' }}
             ```
-  bun-binary:
-    name: Bun Binary built on ${{ matrix.os }}
-    needs: [stable, snapshot]
-    if: always() && (
-      contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
-      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
-      )
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
-    steps:
-      - name: Version
-        uses: actions/github-script@v7
-        id: ver-gateway
-        with:
-          result-encoding: string
-          script: |
-            const publishedPackages = ${{ needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages }};
-            const gateway = publishedPackages.find((p) => p.name === '@graphql-hive/gateway');
-            if (!gateway) {
-              return core.setFailed('@graphql-hive/gateway was not published!');
-            }
-            const { version } = gateway;
-            console.log({ version });
-            return version;
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up env
-        uses: the-guild-org/shared-config/setup@v1
-        with:
-          node-version-file: .node-version
-      - name: Package binary
-        run: yarn workspace @graphql-hive/gateway build-bun-bin
-      - name: Set binary info
-        id: binary
-        run: |
-          echo "name=hive-gateway-bun-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
-          echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
-      - if: github.ref == 'refs/heads/main'
-        name: Compress binary
-        id: compressed-binary
-        run: |
-          gzip -9 ${{ steps.binary.outputs.path }}
-          echo "name=${{ steps.binary.outputs.name }}.gz" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
-          echo "path=${{ steps.binary.outputs.path }}.gz" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
-      - if: github.ref == 'refs/heads/main'
-        name: Upload release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
-          tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
-          release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
-          asset_name: ${{ steps.compressed-binary.outputs.name }}
-          file: ${{ steps.compressed-binary.outputs.path }}
-          body: Pre-built binaries of the Hive Gateway for the **@graphql-hive/gateway@${{ steps.ver-gateway.outputs.result }}** release.
-          overwrite: true
-      - if: github.event_name == 'pull_request'
-        name: Upload artifact
-        id: upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.binary.outputs.name }}
-          path: ${{ steps.binary.outputs.path }}
-      - if: github.event_name == 'pull_request'
-        name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          # match pr comment like with changesets-snapshot-action from the guild's shared-config
-          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-bun-binary-${{ runner.os }}-${{ runner.arch }}
-          message: |
-            ### 🚀 Snapshot Release (Bun Binary for `${{ runner.os }}-${{ runner.arch }}`)
-
-            The latest changes of this PR are available for download (based on the declared `changesets`).
-
-            [![Download](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload.outputs.artifact-id }})
 
   bin:
-    name: Node Binary built on ${{ matrix.os }}
+    name: ${{matrix.setup.runtime}} Binary built on ${{ matrix.os }}
     needs: [stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
@@ -206,6 +134,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-13, macos-14, windows-latest]
+        runtime: [Node, Bun]
     steps:
       - name: Version
         uses: actions/github-script@v7
@@ -223,7 +152,7 @@ jobs:
             return version;
       - name: Checkout
         uses: actions/checkout@v4
-      - if: runner.os == 'Windows'
+      - if: runner.os == 'Windows' && matrix.setup.runtime == 'Node'
         name: Install Windows SDK
         uses: fbactions/setup-winsdk@v2
         with:
@@ -235,16 +164,23 @@ jobs:
           node-version-file: .node-version
       - name: Build
         run: yarn build
+        if: matrix.setup.runtime == 'Node'
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
+        if: matrix.setup.runtime == 'Node'
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version "${{ steps.ver-gateway.outputs.result }}"
+        if: matrix.setup.runtime == 'Node'
       - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+        if: matrix.setup.runtime == 'Node'
+      - name: Build binary
+        run: yarn workspace @graphql-hive/gateway build-bun-bin
+        if: matrix.setup.runtime == 'Bun'
       - name: Set binary info
         id: binary
         run: |
-          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "name=hive-gateway-${{matrix.setup.runtime === 'Bun' && 'bun-'}}${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
           echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Compress binary
@@ -277,7 +213,7 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-binary-${{ runner.os }}-${{ runner.arch }}
+          header: snapshot-release-${{matrix.setup.runtime === 'Bun' && 'bun-'}}binary-${{ runner.os }}-${{ runner.arch }}
           message: |
             ### 🚀 Snapshot Release (Node Binary for `${{ runner.os }}-${{ runner.arch }}`)
 

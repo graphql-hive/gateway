@@ -8,6 +8,7 @@ variable "GATEWAY_TAGS" {
 
 target "gateway" {
   context = "packages/gateway"
+  dockerfile = "node.Dockerfile"
   platforms = ["linux/amd64", "linux/arm64"]
   tags = formatlist("ghcr.io/graphql-hive/gateway:%s", split(",", GATEWAY_TAGS))
   annotations = [
@@ -28,7 +29,14 @@ group "e2e" {
 
 target "gateway_e2e" {
   context = "packages/gateway"
+  dockerfile = "node.Dockerfile"
   tags = ["ghcr.io/graphql-hive/gateway:e2e"]
+}
+
+target "gateway_e2e_bun" {
+  context = "packages/gateway"
+  dockerfile = "bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.bun"]
 }
 
 target "gateway_e2e_sqlite-chinook" {
@@ -47,4 +55,19 @@ target "gateway_e2e_openapi-javascript-wiki" {
   contexts = {
     "gateway_e2e": "target:gateway_e2e"
   }
+}
+
+target "gateway_bun" {
+  context = "packages/gateway"
+  dockerfile = "bun.Dockerfile"
+  platforms = ["linux/amd64", "linux/arm64"]
+  tags = formatlist("ghcr.io/graphql-hive/gateway:%s.bun", split(",", GATEWAY_TAGS))
+  annotations = [
+    "index:org.opencontainers.image.title=Hive Gateway on Bun",
+    "index:org.opencontainers.image.description=GraphQL Gateway by The Guild that can act as a Apollo Federation Gateway or a Proxy Gateway for any GraphQL service.",
+    "index:org.opencontainers.image.authors=The Guild",
+    "index:org.opencontainers.image.licenses=MIT",
+    "index:org.opencontainers.image.source=https://github.com/graphql-hive/gateway/tree/main/packages/gateway",
+    "index:org.opencontainers.image.documentation=https://the-guild.dev/graphql/hive/docs/gateway/deployment/docker"
+  ]
 }

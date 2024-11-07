@@ -5,18 +5,8 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
-import {
-  IntrospectAndCompose,
-  RemoteGraphQLDataSource,
-  type ServiceEndpointDefinition,
-} from '@apollo/gateway';
-import {
-  boolEnv,
-  createOpt,
-  createPortOpt,
-  createServicePortOpt,
-  hostnames,
-} from '@internal/testing';
+import { IntrospectAndCompose, RemoteGraphQLDataSource, type ServiceEndpointDefinition } from '@apollo/gateway';
+import { boolEnv, createOpt, createPortOpt, createServicePortOpt, hostnames, isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
@@ -25,6 +15,7 @@ import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
+
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
@@ -36,6 +27,7 @@ const E2E_GATEWAY_RUNNERS = [
   'bin',
   'bun-bin',
   'bun',
+  'bun-docker'
 ] as const;
 
 type ServeRunner = (typeof E2E_GATEWAY_RUNNERS)[number];
@@ -292,7 +284,7 @@ export function createTenv(cwd: string): Tenv {
       let {
         port = await getAvailablePort(),
         supergraph: supergraphOpt,
-        pipeLogs = boolEnv('DEBUG'),
+        pipeLogs = isDebug(),
         env,
         runner,
         args = [],
@@ -315,7 +307,7 @@ export function createTenv(cwd: string): Tenv {
         supergraph = output;
       }
 
-      if (gatewayRunner === 'docker') {
+      if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
 
@@ -394,7 +386,8 @@ export function createTenv(cwd: string): Tenv {
             (dockerfileExists
               ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
                 `e2e.${path.basename(cwd)}`
-              : 'e2e'),
+              : 'e2e') +
+            (gatewayRunner.includes('bun') ? '.bun' : ''),
           // TODO: changing port from within gateway.config.ts wont work in docker runner
           hostPort: port,
           containerPort: port,
@@ -495,7 +488,7 @@ export function createTenv(cwd: string): Tenv {
         services = [],
         trimHostPaths,
         maskServicePorts,
-        pipeLogs = boolEnv('DEBUG'),
+        pipeLogs = isDebug(),
         env,
         args = [],
       } = opts || {};
@@ -563,7 +556,7 @@ export function createTenv(cwd: string): Tenv {
     },
     async service(
       name,
-      { port, gatewayPort, pipeLogs = boolEnv('DEBUG'), args = [] } = {},
+      { port, gatewayPort, pipeLogs = isDebug(), args = [] } = {},
     ) {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
@@ -846,7 +839,7 @@ interface SpawnOptions extends ProcOptions {
 }
 
 function spawn(
-  { cwd, pipeLogs = boolEnv('DEBUG'), env = {}, shell, signal }: SpawnOptions,
+  { cwd, pipeLogs = isDebug(), env = {}, shell, signal }: SpawnOptions,
   cmd: string,
   ...args: (string | number | boolean | null | undefined)[]
 ): Promise<[proc: Proc, waitForExit: Promise<void>]> {
@@ -889,7 +882,7 @@ function spawn(
     },
     async getStats() {
       const [proc, waitForExit] = await spawn(
-        { cwd, pipeLogs: false },
+        { cwd, pipeLogs: isDebug() },
         'ps',
         '-o',
         'pcpu=,rss=',

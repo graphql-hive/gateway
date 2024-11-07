@@ -78,6 +78,10 @@ jobs:
             os: ubuntu-latest
             gateway-runner: bun-bin
             node-version: 22
+          - workflow-name: Bun Docker on Windows
+            os: ubuntu-latest
+            gateway-runner: bun-docker
+            node-version: 22
 
     name: E2E / ${{matrix.setup.workflow-name}}
     steps:
