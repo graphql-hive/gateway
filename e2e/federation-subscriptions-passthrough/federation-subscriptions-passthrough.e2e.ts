@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { createTenv, getAvailablePort, Service } from '@internal/e2e';
+import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import {
   createClient as createSSEClient,
@@ -28,12 +28,8 @@ const subscriptionsClientFactories = [
 
 let webSocketImpl: typeof WebSocket;
 
-let products: Service;
-let reviews: Service;
 beforeAll(async () => {
   webSocketImpl = globalThis.WebSocket || (await import('ws')).WebSocket;
-  products = await service('products');
-  reviews = await service('reviews');
 });
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
@@ -48,7 +44,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [products, reviews],
+          services: [ await service('products'), await service('reviews')],
         },
       });
 
@@ -135,7 +131,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       const { port } = await gateway({
         supergraph: {
           with: 'apollo',
-          services: [products, reviews],
+          services: [ await service('products'), await service('reviews')],
         },
       });
 
@@ -179,7 +175,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
       await gateway({
         supergraph: {
           with: 'apollo',
-          services: [products, reviews],
+          services: [ await service('products'), await service('reviews')],
         },
         port: availablePort,
         env: {
