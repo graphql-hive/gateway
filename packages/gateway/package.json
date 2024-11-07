@@ -98,7 +98,7 @@
     "@types/ws": "^8.5.12",
     "adm-zip": "^0.5.15",
     "graphql": "^16.9.0",
-    "pkgroll": "^2.5.1",
+    "pkgroll": "2.5.1",
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.0.1",
     "rollup": "^4.18.1",
