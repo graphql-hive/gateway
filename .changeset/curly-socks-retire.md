@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/gateway': patch
+'@graphql-hive/gateway': minor
 ---
 
 Make `useRateLimit` plugin publicly exposed
