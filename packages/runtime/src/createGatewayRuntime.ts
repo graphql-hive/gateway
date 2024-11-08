@@ -183,7 +183,7 @@ export function createGatewayRuntime<
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments
   ) {
-    persistedDocumentsPlugin = usePersistedOperations({
+    persistedDocumentsPlugin = usePersistedOperations<GatewayContext>({
       ...configContext,
       ...config.persistedDocuments,
     });
