@@ -12,7 +12,7 @@ let supergraph!: string;
 let jaeger: Container;
 
 const JAEGER_HOSTNAME =
-  gatewayRunner === 'docker'
+  (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker')
     ? boolEnv('CI')
       ? '172.17.0.1'
       : 'host.docker.internal'
