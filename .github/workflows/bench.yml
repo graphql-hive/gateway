@@ -36,9 +36,5 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - name: Build
-        run: yarn build
-      - name: Relink
-        run: yarn install
       - name: Bench
         run: yarn e2e:bench

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import 'dotenv/config'; // inject dotenv options to process.env
 import { DefaultLogger } from '@graphql-mesh/utils';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 

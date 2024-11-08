@@ -1,7 +1,7 @@
 import { availableParallelism, freemem } from 'node:os';
 
 function getFreeMemInGb() {
-  return freemem() / 1024 ** 2;
+  return freemem() / 1024 ** 3;
 }
 
 function getMaxConcurrencyPerMem() {

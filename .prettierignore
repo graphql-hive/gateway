@@ -5,4 +5,3 @@ __generated__
 .changeset/*
 !.changeset/README.md
 !.changeset/config.json
-*.Dockerfile

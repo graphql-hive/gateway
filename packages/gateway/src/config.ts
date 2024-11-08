@@ -8,7 +8,7 @@ import type {
 } from '@graphql-hive/gateway-runtime';
 import type { KeyValueCache, Logger } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
-import type { ServerConfig } from './servers/types';
+import type { ServerConfig } from './server';
 
 export const defaultConfigExtensions = [
   '.ts',

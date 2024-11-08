@@ -2010,14 +2010,11 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:^1.1.13"
     "@types/ws": "npm:^8.5.12"
     adm-zip: "npm:^0.5.15"
-    bun: "npm:^1.1.34"
     commander: "npm:^12.0.0"
     dotenv: "npm:^16.3.1"
     graphql: "npm:^16.9.0"
-    graphql-middleware: "npm:^6.1.35"
     graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.7.0"
     parse-duration: "npm:^1.1.0"
@@ -5104,62 +5101,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-darwin-aarch64@npm:1.1.34"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-darwin-x64-baseline@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.34"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-darwin-x64@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-darwin-x64@npm:1.1.34"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-aarch64@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-linux-aarch64@npm:1.1.34"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-x64-baseline@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.34"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-x64@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-linux-x64@npm:1.1.34"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-windows-x64-baseline@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.34"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-windows-x64@npm:1.1.34":
-  version: 1.1.34
-  resolution: "@oven/bun-windows-x64@npm:1.1.34"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@parcel/watcher-android-arm64@npm:2.5.0":
   version: 2.5.0
   resolution: "@parcel/watcher-android-arm64@npm:2.5.0"
@@ -5767,15 +5708,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:^1.1.13":
-  version: 1.1.13
-  resolution: "@types/bun@npm:1.1.13"
-  dependencies:
-    bun-types: "npm:1.1.34"
-  checksum: 10c0/46cae932a64074b3e3596858d38099589f7c394e0b27b42e49ad5bd884974784e2929ac72336515ce20579da2c90033f8b01578f9e1f8f7558a58e78f721e832
-  languageName: node
-  linkType: hard
-
 "@types/bunyan@npm:1.8.9":
   version: 1.8.9
   resolution: "@types/bunyan@npm:1.8.9"
@@ -6052,15 +5984,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:~20.12.8":
-  version: 20.12.14
-  resolution: "@types/node@npm:20.12.14"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 10c0/d6e383a09139efdedd91f4e8b584bb9b7537382d3dd276296a68b20a7819a562ae651efdd007a60036116f286b9c9a8a31af698f93b4024e569b0d129f293165
-  languageName: node
-  linkType: hard
-
 "@types/pg-pool@npm:2.0.6":
   version: 2.0.6
   resolution: "@types/pg-pool@npm:2.0.6"
@@ -6182,7 +6105,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
   version: 8.5.13
   resolution: "@types/ws@npm:8.5.13"
   dependencies:
@@ -7100,53 +7023,6 @@ __metadata:
   version: 0.0.6
   resolution: "buildcheck@npm:0.0.6"
   checksum: 10c0/8cbdb89f41bc484b8325f4828db4135b206a0dffb641eb6cdb2b7022483c45dd0e5aac6d820c9a67bdd2caab3a02c76d7ceec7bd9ec494b5a2270d2806b01a76
-  languageName: node
-  linkType: hard
-
-"bun-types@npm:1.1.34":
-  version: 1.1.34
-  resolution: "bun-types@npm:1.1.34"
-  dependencies:
-    "@types/node": "npm:~20.12.8"
-    "@types/ws": "npm:~8.5.10"
-  checksum: 10c0/922552b70f1d43c9990cd440b732793bcd7a4e277a645885532a0e1b605c857aba23ba993df484e053a4699ef1949b5056d9ef7971c9ba409d3c67917216734f
-  languageName: node
-  linkType: hard
-
-"bun@npm:^1.1.34":
-  version: 1.1.34
-  resolution: "bun@npm:1.1.34"
-  dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.1.34"
-    "@oven/bun-darwin-x64": "npm:1.1.34"
-    "@oven/bun-darwin-x64-baseline": "npm:1.1.34"
-    "@oven/bun-linux-aarch64": "npm:1.1.34"
-    "@oven/bun-linux-x64": "npm:1.1.34"
-    "@oven/bun-linux-x64-baseline": "npm:1.1.34"
-    "@oven/bun-windows-x64": "npm:1.1.34"
-    "@oven/bun-windows-x64-baseline": "npm:1.1.34"
-  dependenciesMeta:
-    "@oven/bun-darwin-aarch64":
-      optional: true
-    "@oven/bun-darwin-x64":
-      optional: true
-    "@oven/bun-darwin-x64-baseline":
-      optional: true
-    "@oven/bun-linux-aarch64":
-      optional: true
-    "@oven/bun-linux-x64":
-      optional: true
-    "@oven/bun-linux-x64-baseline":
-      optional: true
-    "@oven/bun-windows-x64":
-      optional: true
-    "@oven/bun-windows-x64-baseline":
-      optional: true
-  bin:
-    bun: bin/bun.exe
-    bunx: bin/bun.exe
-  checksum: 10c0/d7a69a3e6a7545d7c76edaf86633f23f791641732fb0f5a6378f1503d267d03a3353afcc01e735acb6981b12acc83827d73bca701f8e3f62183bb00ad7e22e9d
-  conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
   languageName: node
   linkType: hard
 
@@ -9748,17 +9624,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql@npm:16.9.0":
+"graphql@npm:^16.9.0":
   version: 16.9.0
   resolution: "graphql@npm:16.9.0"
   checksum: 10c0/a8850f077ff767377237d1f8b1da2ec70aeb7623cdf1dfc9e1c7ae93accc0c8149c85abe68923be9871a2934b1bce5a2496f846d4d56e1cfb03eaaa7ddba9b6a
-  languageName: node
-  linkType: hard
-
-"graphql@patch:graphql@npm%3A16.9.0#~/.yarn/patches/graphql+16.9.0.patch":
-  version: 16.9.0
-  resolution: "graphql@patch:graphql@npm%3A16.9.0#~/.yarn/patches/graphql+16.9.0.patch::version=16.9.0&hash=095ee9"
-  checksum: 10c0/c862c9a9317095e544c52220318cc9e8d787f7546e015849ae77eec853580e88ab20c462ea83be6bbbe60f4a2208b64f5279ea197bf794e50b69af912465ee2e
   languageName: node
   linkType: hard
 

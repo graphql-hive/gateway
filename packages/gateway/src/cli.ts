@@ -1,3 +1,5 @@
+import 'dotenv/config'; // inject dotenv options to process.env
+
 import cluster from 'node:cluster';
 import module from 'node:module';
 import { platform, release } from 'node:os';
@@ -24,7 +26,7 @@ import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
-import type { ServerConfig } from './servers/types';
+import type { ServerConfig } from './server';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig
@@ -310,16 +312,14 @@ let cli = new Command()
   );
 
 export async function run(userCtx: Partial<CLIContext>) {
-  if (!globalThis.Bun) {
-    module.register('@graphql-mesh/include/hooks', {
-      parentURL:
-        // @ts-ignore bob will complain when bundling for cjs
-        import.meta.url,
-      data: {
-        packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
-      } satisfies InitializeData,
-    });
-  }
+  module.register('@graphql-mesh/include/hooks', {
+    parentURL:
+      // @ts-ignore bob will complain when bundling for cjs
+      import.meta.url,
+    data: {
+      packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
+    } satisfies InitializeData,
+  });
 
   const ctx: CLIContext = {
     log: new DefaultLogger(),

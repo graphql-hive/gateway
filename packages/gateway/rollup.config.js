@@ -59,10 +59,7 @@ const deps = {
     '../../node_modules/@graphql-mesh/hmac-upstream-signature/esm/index.js',
 };
 
-if (
-  process.env['E2E_GATEWAY_RUNNER'] === 'docker' ||
-  process.env['E2E_GATEWAY_RUNNER'] === 'bun-docker'
-) {
+if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
   // extras specific to the docker serve runner in e2e tests
   console.warn('⚠️ Bundling extra modules for e2e tests!');
   deps['node_modules/@internal/testing/index'] =

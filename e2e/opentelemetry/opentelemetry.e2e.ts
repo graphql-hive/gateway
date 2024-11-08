@@ -12,7 +12,7 @@ let supergraph!: string;
 let jaeger: Container;
 
 const JAEGER_HOSTNAME =
-  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
+  gatewayRunner === 'docker'
     ? boolEnv('CI')
       ? '172.17.0.1'
       : 'host.docker.internal'
@@ -121,7 +121,7 @@ async function getJaegerTraces(
   const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
   let res!: JaegerTracesApiResponse;
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 25; i++) {
     res = await fetch(url).then((r) => r.json());
     if (res.data.length >= expectedDataLength) {
       break;

@@ -20,7 +20,7 @@ import {
   getCacheInstanceFromConfig,
   loadConfig,
 } from '../config';
-import { startServerForRuntime } from '../servers/startServerForRuntime';
+import { startServerForRuntime } from '../server';
 import { handleFork } from './handleFork';
 
 export const addCommand: AddCommand = (ctx, cli) =>
