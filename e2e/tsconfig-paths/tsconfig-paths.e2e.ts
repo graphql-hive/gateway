@@ -2,9 +2,13 @@ import { createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
 
-const { gateway, fs } = createTenv(__dirname);
+const { gateway, fs, gatewayRunner } = createTenv(__dirname);
 
-it('should start gateway', async () => {
+const skipIfIt = function (condition: boolean) {
+  return condition ? it.skip : it;
+};
+
+skipIfIt(gatewayRunner.includes('bun'))('should start gateway', async () => {
   const port = await getAvailablePort();
   const proc = await gateway({
     port,
