@@ -212,7 +212,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           header: snapshot-release-${{matrix.runtime == 'Bun' && 'bun-' || ''}}binary-${{ runner.os }}-${{ runner.arch }}
           message: |
-            ### 🚀 Snapshot Release (Node Binary for `${{ runner.os }}-${{ runner.arch }}`)
+            ### 🚀 Snapshot Release (${{matrix.runtime}} Binary for `${{ runner.os }}-${{ runner.arch }}`)
 
             The latest changes of this PR are available for download (based on the declared `changesets`).
 
