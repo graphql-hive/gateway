@@ -10490,21 +10490,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"isomorphic-ws@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "isomorphic-ws@npm:4.0.1"
-  peerDependencies:
-    ws: "*"
-  checksum: 10c0/7cb90dc2f0eb409825558982fb15d7c1d757a88595efbab879592f9d2b63820d6bbfb5571ab8abe36c715946e165a413a99f6aafd9f40ab1f514d73487bc9996
-  languageName: node
-  linkType: hard
-
-"isomorphic-ws@npm:^5.0.0":
+"isomorphic-ws@npm:5.0.0":
   version: 5.0.0
   resolution: "isomorphic-ws@npm:5.0.0"
   peerDependencies:
     ws: "*"
   checksum: 10c0/a058ac8b5e6efe9e46252cb0bc67fd325005d7216451d1a51238bc62d7da8486f828ef017df54ddf742e0fffcbe4b1bcc2a66cc115b027ed0180334cd18df252
+  languageName: node
+  linkType: hard
+
+"isomorphic-ws@patch:isomorphic-ws@npm%3A5.0.0#~/.yarn/patches/isomorphic-ws+5.0.0.patch":
+  version: 5.0.0
+  resolution: "isomorphic-ws@patch:isomorphic-ws@npm%3A5.0.0#~/.yarn/patches/isomorphic-ws+5.0.0.patch::version=5.0.0&hash=66e7c7"
+  peerDependencies:
+    ws: "*"
+  checksum: 10c0/c2427bb5345e80cd127a9f3b9e4c54a2dc8ecf6dec98403c55668a59da88adafee0c4640e5f613bf3d744a0e93b46da6d73b485da5441e49bc127eebabae6486
   languageName: node
   linkType: hard
 
