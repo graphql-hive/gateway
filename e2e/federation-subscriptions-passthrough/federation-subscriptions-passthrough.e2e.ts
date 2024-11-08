@@ -11,10 +11,11 @@ import {
   type Client as WSClient,
   type ClientOptions as WSClientOptions,
 } from 'graphql-ws';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { TOKEN } from './services/products/server';
+import webSocketImpl from 'ws';
 
-const { service, gateway } = createTenv(__dirname);
+const { service, gateway, gatewayRunner } = createTenv(__dirname);
 
 const subscriptionsClientFactories = [
   ['SSE', createSSEClient],
@@ -26,17 +27,16 @@ const subscriptionsClientFactories = [
   ) => SSEClient | WSClient,
 ][];
 
-let webSocketImpl: typeof WebSocket;
-
-beforeAll(async () => {
-  webSocketImpl = globalThis.WebSocket || (await import('ws')).WebSocket;
-});
-
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
+  describe(`with ${protocol}`, () => {
   if (protocol === 'WS' && process.version.startsWith('v18')) {
+    it.skip('WebSocket tests are skipped on Node.js v18 due to a bug in the WebSocket implementation');
     return;
   }
-  describe(`with ${protocol}`, () => {
+  if (gatewayRunner === 'bun-docker') {
+    it.skip('WebSocket tests are skipped on bun-docker runner');
+    return;
+  }
     const headers = {
       authorization: TOKEN,
     };
