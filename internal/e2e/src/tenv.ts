@@ -65,12 +65,14 @@ yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gate
 
 export interface ProcOptions {
   /**
-   * Pipe the logs from the spawned process to the current process.
+   * Pipe the logs from the spawned process to the current process, or to a file
+   * relative to the Tenv cwd when passing a string.
+   *
    * Useful for debugging.
    *
    * @default boolEnv('DEBUG')
    */
-  pipeLogs?: boolean;
+  pipeLogs?: boolean | string;
   /**
    * Additional environment variables to pass to the spawned process.
    *
@@ -656,9 +658,7 @@ export function createTenv(cwd: string): Tenv {
             );
           });
         } else {
-          if (pipeLogs) {
-            process.stderr.write(`Image "${image}" exists, pull skipped`);
-          }
+          pipeLog({ cwd, pipeLogs }, `Image "${image}" exists, pull skipped`);
         }
       }
 
@@ -714,9 +714,7 @@ export function createTenv(cwd: string): Tenv {
       });
       stream.on('data', (data) => {
         stdboth += data.toString();
-        if (pipeLogs) {
-          process.stderr.write(data);
-        }
+        pipeLog({ cwd, pipeLogs }, data);
       });
 
       await ctr.start();
@@ -894,18 +892,14 @@ function spawn(
   child.stdout.on('data', (x) => {
     stdout += x.toString();
     stdboth += x.toString();
-    if (pipeLogs) {
-      process.stdout.write(x);
-    }
+    pipeLog({ cwd, pipeLogs }, x);
   });
   child.stderr.on('data', (x) => {
     // prefer relative paths for logs consistency
     const str = x.toString().replaceAll(__project, '');
     stderr += str;
     stdboth += str;
-    if (pipeLogs) {
-      process.stderr.write(x);
-    }
+    pipeLog({ cwd, pipeLogs }, x);
   });
 
   child.once('exit', () => {
@@ -980,5 +974,17 @@ class DockerError extends Error {
     super();
     this.name = 'DockerError';
     this.message = message + '\n' + container.getStd('both');
+  }
+}
+
+/** Maybe pipes the log entry to the stderr of the current process, or appends it to a file relative to the {@link cwd} - if {@link pipeLogs} is a `string`. */
+function pipeLog(
+  { cwd, pipeLogs }: { cwd: string; pipeLogs: boolean | string },
+  log: string,
+) {
+  if (pipeLogs === true) {
+    process.stderr.write(log);
+  } else if (typeof pipeLogs === 'string') {
+    fs.appendFile(path.join(cwd, pipeLogs), log);
   }
 }
