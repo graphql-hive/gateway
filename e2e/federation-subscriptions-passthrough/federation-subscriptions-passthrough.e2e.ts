@@ -12,8 +12,8 @@ import {
   type ClientOptions as WSClientOptions,
 } from 'graphql-ws';
 import { describe, expect, it } from 'vitest';
-import { TOKEN } from './services/products/server';
 import webSocketImpl from 'ws';
+import { TOKEN } from './services/products/server';
 
 const { service, gateway, gatewayRunner } = createTenv(__dirname);
 
@@ -29,14 +29,16 @@ const subscriptionsClientFactories = [
 
 subscriptionsClientFactories.forEach(([protocol, createClient]) => {
   describe(`with ${protocol}`, () => {
-  if (protocol === 'WS' && process.version.startsWith('v18')) {
-    it.skip('WebSocket tests are skipped on Node.js v18 due to a bug in the WebSocket implementation');
-    return;
-  }
-  if (gatewayRunner === 'bun-docker') {
-    it.skip('WebSocket tests are skipped on bun-docker runner');
-    return;
-  }
+    if (protocol === 'WS' && process.version.startsWith('v18')) {
+      it.skip(
+        'WebSocket tests are skipped on Node.js v18 due to a bug in the WebSocket implementation',
+      );
+      return;
+    }
+    if (gatewayRunner === 'bun-docker') {
+      it.skip('WebSocket tests are skipped on bun-docker runner');
+      return;
+    }
     const headers = {
       authorization: TOKEN,
     };
