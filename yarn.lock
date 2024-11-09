@@ -1992,6 +1992,7 @@ __metadata:
     "@graphql-mesh/store": "npm:^0.102.10"
     "@graphql-mesh/transport-http": "npm:^0.6.15"
     "@graphql-mesh/transport-http-callback": "npm:^0.5.2"
+    "@graphql-mesh/transport-soap": "npm:^0.7.13"
     "@graphql-mesh/transport-ws": "npm:^0.4.0"
     "@graphql-mesh/types": "npm:^0.102.10"
     "@graphql-mesh/utils": "npm:^0.102.10"
@@ -2608,23 +2609,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-soap@npm:^0.7.12":
-  version: 0.7.12
-  resolution: "@graphql-mesh/transport-soap@npm:0.7.12"
+"@graphql-mesh/transport-soap@npm:^0.7.12, @graphql-mesh/transport-soap@npm:^0.7.13":
+  version: 0.7.13
+  resolution: "@graphql-mesh/transport-soap@npm:0.7.13"
   dependencies:
     "@graphql-mesh/string-interpolation": "npm:^0.5.6"
-    "@graphql-mesh/utils": "npm:^0.102.11"
+    "@graphql-mesh/utils": "npm:^0.102.12"
     fast-xml-parser: "npm:^4.5.0"
   peerDependencies:
     "@graphql-mesh/cross-helpers": ^0.4.7
-    "@graphql-mesh/transport-common": ^0.7.12
-    "@graphql-mesh/types": ^0.102.11
+    "@graphql-mesh/transport-common": ^0.7.13
+    "@graphql-mesh/types": ^0.102.12
     "@graphql-tools/executor": ^1.3.2
     "@graphql-tools/utils": ^10.5.5
-    "@whatwg-node/fetch": ^0.9.15
+    "@whatwg-node/fetch": ^0.9.15 || ^0.10.0
     graphql: "*"
     tslib: ^2.4.0
-  checksum: 10c0/11ef21b9216453e614259f4ed2a695bec6ec7a03cfcdc8f20c08dd7fa9d04f471d93e848c0619a2f9e0fdb7b912992037ec4a4ebd7dbcf7c5c050a731d4b4eeb
+  checksum: 10c0/473c36e12b749d00d8c053bed9140c19225534e16c28b093d5c0c0052b625ebc5712d2e094c3c77c488eb52d88fb87926ef0e67a7616c029c858d265856566d3
   languageName: node
   linkType: hard
 
