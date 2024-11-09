@@ -84,7 +84,7 @@
     "@envelop/disable-introspection": "^6.0.0",
     "@graphql-mesh/fusion-composition": "^0.6.1",
     "@types/html-minifier-terser": "^7.0.2",
-    "@whatwg-node/fetch": "^0.9.21",
+    "@whatwg-node/fetch": "^0.10.0",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
