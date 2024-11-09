@@ -901,7 +901,7 @@ __metadata:
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@types/express": "npm:^5.0.0"
     "@types/ws": "npm:^8"
-    "@whatwg-node/fetch": "npm:^0.9.22"
+    "@whatwg-node/fetch": "npm:^0.10.0"
     express: "npm:^4.19.2"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -997,7 +997,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.102.10"
     "@graphql-tools/utils": "npm:^10.5.5"
     "@omnigraph/openapi": "npm:^0.107.4"
-    "@whatwg-node/fetch": "npm:^0.9.22"
+    "@whatwg-node/fetch": "npm:^0.10.0"
     fets: "npm:^0.8.3"
     graphql: "npm:^16.9.0"
     tslib: "npm:^2.8.0"
@@ -1949,7 +1949,7 @@ __metadata:
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.9.21"
+    "@whatwg-node/fetch": "npm:^0.10.0"
     "@whatwg-node/server": "npm:^0.9.46"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3356,7 +3356,7 @@ __metadata:
     "@types/dockerode": "npm:^3.3.28"
     "@types/node": "npm:^22.7.6"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.9.21"
+    "@whatwg-node/fetch": "npm:^0.10.0"
     dockerode: "npm:^4.0.2"
     glob: "npm:^11.0.0"
     graphql: "npm:^16.9.0"
@@ -3369,7 +3369,7 @@ __metadata:
   dependencies:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.9.21"
+    "@whatwg-node/fetch": "npm:^0.10.0"
   languageName: unknown
   linkType: soft
 
@@ -6358,7 +6358,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.4":
+"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.4":
   version: 0.9.23
   resolution: "@whatwg-node/fetch@npm:0.9.23"
   dependencies:
