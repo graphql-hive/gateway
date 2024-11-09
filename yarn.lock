@@ -358,20 +358,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:^7.25.9":
-  version: 7.26.0
-  resolution: "@babel/generator@npm:7.26.0"
-  dependencies:
-    "@babel/parser": "npm:^7.26.0"
-    "@babel/types": "npm:^7.26.0"
-    "@jridgewell/gen-mapping": "npm:^0.3.5"
-    "@jridgewell/trace-mapping": "npm:^0.3.25"
-    jsesc: "npm:^3.0.2"
-  checksum: 10c0/b6bb9185f19a97eaf58e04a6d39a13237076678e7ed16b6321dea914535d4bf6a8d7727c9dcb65539845aa0096b326eb67be4bab764bd74bcfd848e2eda68609
-  languageName: node
-  linkType: hard
-
-"@babel/generator@npm:^7.26.2":
+"@babel/generator@npm:^7.25.9, @babel/generator@npm:^7.26.2":
   version: 7.26.2
   resolution: "@babel/generator@npm:7.26.2"
   dependencies:
@@ -398,18 +385,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.0":
-  version: 7.26.1
-  resolution: "@babel/parser@npm:7.26.1"
-  dependencies:
-    "@babel/types": "npm:^7.26.0"
-  bin:
-    parser: ./bin/babel-parser.js
-  checksum: 10c0/dc7d4e6b7eb667fa0784e7e2c3f6f92ca12ad72242f6d4311995310dae55093f02acdb595b69b0dbbf04cb61ad87156ac03186ff32eacfa35149c655bc22c14b
-  languageName: node
-  linkType: hard
-
-"@babel/parser@npm:^7.26.2":
+"@babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.2":
   version: 7.26.2
   resolution: "@babel/parser@npm:7.26.2"
   dependencies:
@@ -2502,22 +2478,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-common@npm:^0.7.11, @graphql-mesh/transport-common@npm:^0.7.12, @graphql-mesh/transport-common@npm:^0.7.7":
-  version: 0.7.12
-  resolution: "@graphql-mesh/transport-common@npm:0.7.12"
-  dependencies:
-    "@envelop/core": "npm:^5.0.1"
-    "@graphql-tools/delegate": "npm:^10.0.28"
-    "@graphql-tools/utils": "npm:^10.5.5"
-  peerDependencies:
-    "@graphql-mesh/types": ^0.102.11
-    graphql: "*"
-    tslib: ^2.4.0
-  checksum: 10c0/260580fd526ef691c026cb174329ace5d34037ce1fabd4cd795aa12cb7aa2e42a0beddcfbf6fab97e5b0f3f7cecf6e80f2bccbbe6e929f5dd2427156bef81f54
-  languageName: node
-  linkType: hard
-
-"@graphql-mesh/transport-common@npm:^0.7.13":
+"@graphql-mesh/transport-common@npm:^0.7.11, @graphql-mesh/transport-common@npm:^0.7.12, @graphql-mesh/transport-common@npm:^0.7.13, @graphql-mesh/transport-common@npm:^0.7.7":
   version: 0.7.13
   resolution: "@graphql-mesh/transport-common@npm:0.7.13"
   dependencies:
@@ -2734,30 +2695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/utils@npm:^0.102.10, @graphql-mesh/utils@npm:^0.102.11":
-  version: 0.102.11
-  resolution: "@graphql-mesh/utils@npm:0.102.11"
-  dependencies:
-    "@graphql-mesh/string-interpolation": "npm:^0.5.6"
-    "@graphql-tools/delegate": "npm:^10.0.28"
-    "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.9.13"
-    dset: "npm:^3.1.2"
-    js-yaml: "npm:^4.1.0"
-    lodash.get: "npm:^4.4.2"
-    lodash.topath: "npm:^4.5.2"
-    tiny-lru: "npm:^11.0.0"
-  peerDependencies:
-    "@graphql-mesh/cross-helpers": ^0.4.7
-    "@graphql-mesh/types": ^0.102.11
-    "@graphql-tools/utils": ^10.5.5
-    graphql: "*"
-    tslib: ^2.4.0
-  checksum: 10c0/cf942d3f2f4360b8fa0d51f37c82b9efcb4c32d5c0d8a58fe6501a2051ec4a44d078bc51b8abb60712f4c99ad77efb61b85ef509d9419b4b23fb06c03156284d
-  languageName: node
-  linkType: hard
-
-"@graphql-mesh/utils@npm:^0.102.12":
+"@graphql-mesh/utils@npm:^0.102.10, @graphql-mesh/utils@npm:^0.102.11, @graphql-mesh/utils@npm:^0.102.12":
   version: 0.102.12
   resolution: "@graphql-mesh/utils@npm:0.102.12"
   dependencies:
@@ -2873,24 +2811,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/executor-http@npm:^1.1.5, @graphql-tools/executor-http@npm:^1.1.7":
-  version: 1.1.7
-  resolution: "@graphql-tools/executor-http@npm:1.1.7"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.5.5"
-    "@repeaterjs/repeater": "npm:^3.0.4"
-    "@whatwg-node/fetch": "npm:^0.9.0"
-    extract-files: "npm:^11.0.0"
-    meros: "npm:^1.2.1"
-    tslib: "npm:^2.4.0"
-    value-or-promise: "npm:^1.0.12"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/3110bcafc7ce7132f6508c47722f901eacac01077618317a2e7532e5a0557ab1e9060e18949f60637b896b1d5b1396e7bb0a7d44c6090ed05455c73ee544aacd
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/executor-http@npm:^1.1.8":
+"@graphql-tools/executor-http@npm:^1.1.5, @graphql-tools/executor-http@npm:^1.1.7, @graphql-tools/executor-http@npm:^1.1.8":
   version: 1.1.8
   resolution: "@graphql-tools/executor-http@npm:1.1.8"
   dependencies:
@@ -6437,7 +6358,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.13, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.4":
+"@whatwg-node/fetch@npm:^0.9.0, @whatwg-node/fetch@npm:^0.9.14, @whatwg-node/fetch@npm:^0.9.15, @whatwg-node/fetch@npm:^0.9.17, @whatwg-node/fetch@npm:^0.9.18, @whatwg-node/fetch@npm:^0.9.21, @whatwg-node/fetch@npm:^0.9.22, @whatwg-node/fetch@npm:^0.9.4":
   version: 0.9.23
   resolution: "@whatwg-node/fetch@npm:0.9.23"
   dependencies:
@@ -6592,7 +6513,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.12.0, acorn@npm:^8.14.0, acorn@npm:^8.8.2":
+"acorn@npm:^8.14.0, acorn@npm:^8.8.2":
   version: 8.14.0
   resolution: "acorn@npm:8.14.0"
   bin:
@@ -8549,13 +8470,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-visitor-keys@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "eslint-visitor-keys@npm:4.1.0"
-  checksum: 10c0/5483ef114c93a136aa234140d7aa3bd259488dae866d35cb0d0b52e6a158f614760a57256ac8d549acc590a87042cb40f6951815caa821e55dc4fd6ef4c722eb
-  languageName: node
-  linkType: hard
-
 "eslint-visitor-keys@npm:^4.2.0":
   version: 4.2.0
   resolution: "eslint-visitor-keys@npm:4.2.0"
@@ -8613,18 +8527,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"espree@npm:^10.0.1":
-  version: 10.2.0
-  resolution: "espree@npm:10.2.0"
-  dependencies:
-    acorn: "npm:^8.12.0"
-    acorn-jsx: "npm:^5.3.2"
-    eslint-visitor-keys: "npm:^4.1.0"
-  checksum: 10c0/2b6bfb683e7e5ab2e9513949879140898d80a2d9867ea1db6ff5b0256df81722633b60a7523a7c614f05a39aeea159dd09ad2a0e90c0e218732fc016f9086215
-  languageName: node
-  linkType: hard
-
-"espree@npm:^10.3.0":
+"espree@npm:^10.0.1, espree@npm:^10.3.0":
   version: 10.3.0
   resolution: "espree@npm:10.3.0"
   dependencies:
