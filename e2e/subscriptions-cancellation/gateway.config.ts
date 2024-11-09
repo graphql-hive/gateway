@@ -1,5 +1,4 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import { isAsyncIterable } from '@graphql-tools/utils';
 
 export const gatewayConfig = defineConfig({
   plugins() {
@@ -8,7 +7,7 @@ export const gatewayConfig = defineConfig({
         onSubgraphExecute:
           () =>
           ({ result }) => {
-            if (isAsyncIterable(result)) {
+            if (Symbol.asyncIterator in result) {
               process.stdout.write('ITERABLE');
               return {
                 onNext: () => {
