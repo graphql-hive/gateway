@@ -1,5 +1,5 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import { isAsyncIterable } from 'graphql-sse';
+import { isAsyncIterable } from '@graphql-tools/utils';
 
 export const gatewayConfig = defineConfig({
   plugins() {
