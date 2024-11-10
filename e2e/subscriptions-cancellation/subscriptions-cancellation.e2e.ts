@@ -37,11 +37,13 @@ it('should subscribe and cancel', async () => {
 
   await setTimeout(1_000); // allow some calmdown time (TODO: avoid magic numbers, any other approach to this?)
 
-  expect(gw.getStd('out')).toContain('ITERABLE');
-  expect(gw.getStd('out')).toContain('NEXT');
-  expect(gw.getStd('out')).toContain('END');
+  const gwOut = gw.getStd('out');
+  expect(gwOut).toContain('ITERABLE');
+  expect(gwOut).toContain('NEXT');
+  expect(gwOut).toContain('END');
 
-  expect(srv.getStd('out')).toBe('ITERABLE');
-  expect(srv.getStd('out')).toBe('NEXT');
-  expect(srv.getStd('out')).toBe('END');
+  const srvOut = srv.getStd('out');
+  expect(srvOut).toContain('ITERABLE');
+  expect(srvOut).toContain('NEXT');
+  expect(srvOut).toContain('END');
 });
