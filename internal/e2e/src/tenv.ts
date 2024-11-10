@@ -5,18 +5,8 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
-import {
-  IntrospectAndCompose,
-  RemoteGraphQLDataSource,
-  type ServiceEndpointDefinition,
-} from '@apollo/gateway';
-import {
-  boolEnv,
-  createOpt,
-  createPortOpt,
-  createServicePortOpt,
-  hostnames,
-} from '@internal/testing';
+import { IntrospectAndCompose, RemoteGraphQLDataSource, type ServiceEndpointDefinition } from '@apollo/gateway';
+import { boolEnv, createOpt, createPortOpt, createServicePortOpt, hostnames } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
@@ -25,6 +15,7 @@ import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
+
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
@@ -713,7 +704,7 @@ export function createTenv(cwd: string): Tenv {
         abortSignal: ctrl.signal,
       });
       stream.on('data', (data) => {
-        stdboth += data.toString();
+        stdboth += data.toString().trim();
         pipeLog({ cwd, pipeLogs }, data);
       });
 
@@ -890,13 +881,14 @@ function spawn(
   leftoverStack.use(proc);
 
   child.stdout.on('data', (x) => {
-    stdout += x.toString();
-    stdboth += x.toString();
+    const str = x.toString().trim();
+    stdout += str;
+    stdboth += str;
     pipeLog({ cwd, pipeLogs }, x);
   });
   child.stderr.on('data', (x) => {
     // prefer relative paths for logs consistency
-    const str = x.toString().replaceAll(__project, '');
+    const str = x.toString().trim().replaceAll(__project, '');
     stderr += str;
     stdboth += str;
     pipeLog({ cwd, pipeLogs }, x);
