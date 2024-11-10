@@ -5,8 +5,18 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
-import { IntrospectAndCompose, RemoteGraphQLDataSource, type ServiceEndpointDefinition } from '@apollo/gateway';
-import { boolEnv, createOpt, createPortOpt, createServicePortOpt, hostnames } from '@internal/testing';
+import {
+  IntrospectAndCompose,
+  RemoteGraphQLDataSource,
+  type ServiceEndpointDefinition,
+} from '@apollo/gateway';
+import {
+  boolEnv,
+  createOpt,
+  createPortOpt,
+  createServicePortOpt,
+  hostnames,
+} from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
@@ -15,7 +25,6 @@ import type { ExecutionResult } from 'graphql';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
-
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
