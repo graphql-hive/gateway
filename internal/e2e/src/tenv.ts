@@ -713,7 +713,7 @@ export function createTenv(cwd: string): Tenv {
         abortSignal: ctrl.signal,
       });
       stream.on('data', (data) => {
-        stdboth += data.toString().trim();
+        stdboth += data.toString();
         pipeLog({ cwd, pipeLogs }, data);
       });
 
@@ -890,14 +890,14 @@ function spawn(
   leftoverStack.use(proc);
 
   child.stdout.on('data', (x) => {
-    const str = x.toString().trim();
+    const str = x.toString();
     stdout += str;
     stdboth += str;
     pipeLog({ cwd, pipeLogs }, x);
   });
   child.stderr.on('data', (x) => {
     // prefer relative paths for logs consistency
-    const str = x.toString().trim().replaceAll(__project, '');
+    const str = x.toString().replaceAll(__project, '');
     stderr += str;
     stdboth += str;
     pipeLog({ cwd, pipeLogs }, x);

@@ -40,10 +40,10 @@ it('should subscribe and cancel', async () => {
   const gwOut = gw.getStd('out');
   expect(gwOut).toContain('ITERABLE');
   expect(gwOut).toContain('NEXT');
-  expect(gwOut).toContain('END');
+  expect(gwOut).toContain('END'); // TODO: there shouldnt be multiple "END"s
 
   const srvOut = srv.getStd('out');
   expect(srvOut).toContain('ITERABLE');
   expect(srvOut).toContain('NEXT');
-  expect(srvOut).toContain('END');
+  expect(srvOut).toContain('END'); // TODO: there shouldnt be multiple "END"s
 });
