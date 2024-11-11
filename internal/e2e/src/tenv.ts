@@ -890,8 +890,9 @@ function spawn(
   leftoverStack.use(proc);
 
   child.stdout.on('data', (x) => {
-    stdout += x.toString();
-    stdboth += x.toString();
+    const str = x.toString();
+    stdout += str;
+    stdboth += str;
     pipeLog({ cwd, pipeLogs }, x);
   });
   child.stderr.on('data', (x) => {
