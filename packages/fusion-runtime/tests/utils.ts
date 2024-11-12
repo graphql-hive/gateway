@@ -15,6 +15,7 @@ import {
   validate,
 } from 'graphql';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager.js';
+import { expect } from 'vitest';
 
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
   const manager = new UnifiedGraphManager({
@@ -22,9 +23,13 @@ export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
     transports() {
       return {
         getSubgraphExecutor({ subgraphName }) {
-          return createDefaultExecutor(
-            subgraphs.find((subgraph) => subgraph.name === subgraphName).schema,
-          );
+          const schema = subgraphs.find(
+            (subgraph) => subgraph.name === subgraphName,
+          )?.schema;
+          if (!schema) {
+            throw new Error(`Subgraph not found: ${subgraphName}`);
+          }
+          return createDefaultExecutor(schema);
         },
       };
     },
@@ -80,7 +85,7 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
             if (res.errors?.length === 1) {
               throw res.errors[0];
             }
-            if (res.errors?.length > 1) {
+            if (res.errors?.length) {
               throw new AggregateError(res.errors);
             }
             return res.data;
