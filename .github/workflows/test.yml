@@ -29,9 +29,29 @@ jobs:
       - name: Test
         run: yarn test
 
+  leaks:
+    needs: [unit]
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 18
+          - 22
+    name: Leaks / Node v${{matrix.node-version}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version: ${{matrix.node-version}}
+      - name: Test
+        run: yarn test:leaks
+
   # TODO: various gateway runners
   e2e:
-    needs: [unit]
+    needs: [leaks]
     runs-on: ${{ matrix.setup.os }}
     strategy:
       fail-fast: false
@@ -114,16 +134,18 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn e2e:test
-
-  leaks:
-    needs: [unit, e2e]
+  
+        # TODO: various gateway runners
+  bench:
+    needs: [e2e]
     strategy:
       fail-fast: false
       matrix:
         node-version:
           - 18
+          - 20
           - 22
-    name: Leaks / Node v${{matrix.node-version}}
+    name: Node v${{matrix.node-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -132,5 +154,14 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Test
-        run: yarn test:leaks
+      - name: Hash Docker Images
+        id: hash-docker-images
+        run: | # get all "image: '" occurrences in the e2e tests and hash them
+          echo "result=$(grep -r -h "image: '" e2e | shasum | base64)" >> "$GITHUB_OUTPUT"
+      - name: Cache Docker Images
+        uses: ScribeMD/docker-cache@0.5.0
+        continue-on-error: true
+        with:
+          key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
+      - name: Bench
+        run: yarn e2e:bench
