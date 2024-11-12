@@ -9,10 +9,11 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
+import { vitest, describe, expect, it } from 'vitest';
 
 describe('Polling', () => {
   it('polls the schema in a certain interval', async () => {
-    jest.useFakeTimers();
+    vitest.useFakeTimers();
     const pollingInterval = 35_000;
     let schema: GraphQLSchema;
     const unifiedGraphFetcher = () => {
@@ -41,7 +42,7 @@ describe('Polling', () => {
         },
       ]);
     };
-    const disposeFn = jest.fn();
+    const disposeFn = vitest.fn();
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
@@ -50,7 +51,9 @@ describe('Polling', () => {
         return {
           getSubgraphExecutor() {
             const executor: DisposableExecutor = createDefaultExecutor(schema);
-            executor[DisposableSymbols.asyncDispose] = disposeFn;
+            Object.defineProperty(executor, DisposableSymbols.asyncDispose, {
+              value: disposeFn,
+            });
             return executor;
           },
         };
@@ -60,7 +63,10 @@ describe('Polling', () => {
       const schema = await manager.getUnifiedGraph();
       const queryType = schema.getQueryType();
       const lastFetchedDateStr =
-        queryType.description.match(/Fetched on (.*)/)[1];
+        queryType?.description?.match(/Fetched on (.*)/)?.[1];
+      if (!lastFetchedDateStr) {
+        throw new Error('Fetched date not found');
+      }
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }
@@ -86,13 +92,13 @@ describe('Polling', () => {
     }
     await compareTimes();
     const firstDate = await getFetchedTimeOnComment();
-    jest.advanceTimersByTime(pollingInterval);
+    vitest.advanceTimersByTime(pollingInterval);
     await compareTimes();
     const secondDate = await getFetchedTimeOnComment();
     const diffBetweenFirstAndSecond =
       secondDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndSecond).toBeGreaterThanOrEqual(pollingInterval);
-    jest.advanceTimersByTime(pollingInterval);
+    vitest.advanceTimersByTime(pollingInterval);
     await compareTimes();
     const thirdDate = await getFetchedTimeOnComment();
     const diffBetweenSecondAndThird =
@@ -111,11 +117,11 @@ describe('Polling', () => {
     expect(disposeFn).toHaveBeenCalledTimes(3);
   });
   it('continues polling after failing initial fetch', async () => {
-    jest.useFakeTimers();
+    vitest.useFakeTimers();
     const pollingInterval = 35_000;
     let schema: GraphQLSchema;
     let shouldFail = true;
-    const unifiedGraphFetcher = jest.fn(() => {
+    const unifiedGraphFetcher = vitest.fn(() => {
       if (shouldFail) {
         throw new Error('Failed to fetch schema');
       }
@@ -159,8 +165,14 @@ describe('Polling', () => {
     async function getFetchedTimeOnComment() {
       const schema = await manager.getUnifiedGraph();
       const queryType = schema.getQueryType();
+      if (!queryType) {
+        throw new Error('Query type not found');
+      }
       const lastFetchedDateStr =
-        queryType.description.match(/Fetched on (.*)/)[1];
+        queryType.description?.match(/Fetched on (.*)/)?.[1];
+        if (!lastFetchedDateStr) {
+          throw new Error('Fetched date not found');
+        }
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }
@@ -186,13 +198,13 @@ describe('Polling', () => {
     }
     await expect(async () => manager.getUnifiedGraph()).rejects.toThrow();
     shouldFail = false;
-    jest.advanceTimersByTime(pollingInterval);
+    vitest.advanceTimersByTime(pollingInterval);
     await compareTimes();
     shouldFail = true;
-    jest.advanceTimersByTime(pollingInterval);
+    vitest.advanceTimersByTime(pollingInterval);
     // Should not fail again once it has succeeded
     await compareTimes();
-    jest.advanceTimersByTime(pollingInterval);
+    vitest.advanceTimersByTime(pollingInterval);
     // Should keep polling even if it fails in somewhere
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
   });
