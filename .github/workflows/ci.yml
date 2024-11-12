@@ -9,7 +9,6 @@ on:
       - main
 
 jobs:
-
   # --- START CHECK --- #
   format:
     name: Format
@@ -209,7 +208,7 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn e2e:test
-  
+
         # TODO: various gateway runners
 
   # --- START BENCH --- #
