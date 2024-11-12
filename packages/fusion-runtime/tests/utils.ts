@@ -14,8 +14,8 @@ import {
   printSchema,
   validate,
 } from 'graphql';
-import { UnifiedGraphManager } from '../src/unifiedGraphManager.js';
 import { expect } from 'vitest';
+import { UnifiedGraphManager } from '../src/unifiedGraphManager.js';
 
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
   const manager = new UnifiedGraphManager({
