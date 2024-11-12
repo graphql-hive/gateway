@@ -252,7 +252,7 @@ jobs:
       - name: Bench
         run: yarn e2e:bench
 
-# --- START RELEASE ---
+  # --- START RELEASE ---
   snapshot:
     needs: [e2e]
     if: github.event_name == 'pull_request'
