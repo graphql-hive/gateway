@@ -246,10 +246,7 @@ export class UnifiedGraphManager<TContext> {
 
   public getUnifiedGraph(): MaybePromise<GraphQLSchema> {
     return mapMaybePromise(this.ensureUnifiedGraph(), () => {
-      if (!this.unifiedGraph) {
-        throw new Error(`This should not happen!`);
-      }
-      return this.unifiedGraph;
+      return this.unifiedGraph!;
     });
   }
 
@@ -264,10 +261,12 @@ export class UnifiedGraphManager<TContext> {
   }
 
   public getTransportEntryMap() {
-    return mapMaybePromise(
-      this.ensureUnifiedGraph(),
-      () => this._transportEntryMap,
-    );
+    return mapMaybePromise(this.ensureUnifiedGraph(), () => {
+      if (!this._transportEntryMap) {
+        throw new Error(`This should not happen!`);
+      }
+      return this._transportEntryMap;
+    });
   }
 
   invalidateUnifiedGraph() {
