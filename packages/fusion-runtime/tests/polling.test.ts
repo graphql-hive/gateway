@@ -8,8 +8,8 @@ import { isAsyncIterable } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
+import { describe, expect, it, vitest } from 'vitest';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
-import { vitest, describe, expect, it } from 'vitest';
 
 describe('Polling', () => {
   it('polls the schema in a certain interval', async () => {
@@ -170,9 +170,9 @@ describe('Polling', () => {
       }
       const lastFetchedDateStr =
         queryType.description?.match(/Fetched on (.*)/)?.[1];
-        if (!lastFetchedDateStr) {
-          throw new Error('Fetched date not found');
-        }
+      if (!lastFetchedDateStr) {
+        throw new Error('Fetched date not found');
+      }
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }
