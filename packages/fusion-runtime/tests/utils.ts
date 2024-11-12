@@ -1,4 +1,12 @@
 import {
+  getUnifiedGraphGracefully,
+  type SubgraphConfig,
+} from '@graphql-mesh/fusion-composition';
+import { mapMaybePromise } from '@graphql-mesh/utils';
+import { createDefaultExecutor } from '@graphql-tools/delegate';
+import { normalizedExecutor } from '@graphql-tools/executor';
+import { isAsyncIterable } from '@graphql-tools/utils';
+import {
   buildSchema,
   GraphQLSchema,
   lexicographicSortSchema,
@@ -6,11 +14,6 @@ import {
   printSchema,
   validate,
 } from 'graphql';
-import { getUnifiedGraphGracefully, type SubgraphConfig } from '@graphql-mesh/fusion-composition';
-import { mapMaybePromise } from '@graphql-mesh/utils';
-import { createDefaultExecutor } from '@graphql-tools/delegate';
-import { normalizedExecutor } from '@graphql-tools/executor';
-import { isAsyncIterable } from '@graphql-tools/utils';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager.js';
 
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
@@ -20,7 +23,7 @@ export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
       return {
         getSubgraphExecutor({ subgraphName }) {
           return createDefaultExecutor(
-            subgraphs.find(subgraph => subgraph.name === subgraphName).schema,
+            subgraphs.find((subgraph) => subgraph.name === subgraphName).schema,
           );
         },
       };
@@ -35,7 +38,9 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
     transports() {
       return {
         getSubgraphExecutor({ subgraphName }) {
-          const subgraph = subgraphs.find(subgraph => subgraph.name === subgraphName);
+          const subgraph = subgraphs.find(
+            (subgraph) => subgraph.name === subgraphName,
+          );
           if (!subgraph) {
             throw new Error(`Subgraph not found: ${subgraphName}`);
           }
@@ -52,7 +57,7 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
     variables?: Record<string, any>;
   }) {
     const document = parse(query);
-    return mapMaybePromise(manager.getUnifiedGraph(), schema => {
+    return mapMaybePromise(manager.getUnifiedGraph(), (schema) => {
       const validationErrors = validate(schema, document);
       if (validationErrors.length === 1) {
         throw validationErrors[0];
@@ -60,7 +65,7 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
       if (validationErrors.length > 1) {
         throw new AggregateError(validationErrors);
       }
-      return mapMaybePromise(manager.getContext(), contextValue =>
+      return mapMaybePromise(manager.getContext(), (contextValue) =>
         mapMaybePromise(
           normalizedExecutor({
             schema,
@@ -68,7 +73,7 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
             contextValue,
             variableValues,
           }),
-          res => {
+          (res) => {
             if (isAsyncIterable(res)) {
               throw new Error('AsyncIterable is not supported');
             }
@@ -92,7 +97,9 @@ export function expectTheSchemaSDLToBe(schema: GraphQLSchema, sdl: string) {
     assumeValid: true,
     assumeValidSDL: true,
   });
-  const sortedSchemaFromSdl = printSchema(lexicographicSortSchema(schemaFromSdl));
+  const sortedSchemaFromSdl = printSchema(
+    lexicographicSortSchema(schemaFromSdl),
+  );
   const sortedGivenSchema = printSchema(lexicographicSortSchema(schema));
   expect(sortedGivenSchema).toBe(sortedSchemaFromSdl);
 }

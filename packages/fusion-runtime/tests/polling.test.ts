@@ -1,10 +1,13 @@
-import { GraphQLSchema, parse } from 'graphql';
-import { createSchema } from 'graphql-yoga';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { createDefaultExecutor, type DisposableExecutor } from '@graphql-mesh/transport-common';
+import {
+  createDefaultExecutor,
+  type DisposableExecutor,
+} from '@graphql-mesh/transport-common';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { GraphQLSchema, parse } from 'graphql';
+import { createSchema } from 'graphql-yoga';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
@@ -56,7 +59,8 @@ describe('Polling', () => {
     async function getFetchedTimeOnComment() {
       const schema = await manager.getUnifiedGraph();
       const queryType = schema.getQueryType();
-      const lastFetchedDateStr = queryType.description.match(/Fetched on (.*)/)[1];
+      const lastFetchedDateStr =
+        queryType.description.match(/Fetched on (.*)/)[1];
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }
@@ -85,15 +89,19 @@ describe('Polling', () => {
     jest.advanceTimersByTime(pollingInterval);
     await compareTimes();
     const secondDate = await getFetchedTimeOnComment();
-    const diffBetweenFirstAndSecond = secondDate.getTime() - firstDate.getTime();
+    const diffBetweenFirstAndSecond =
+      secondDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndSecond).toBeGreaterThanOrEqual(pollingInterval);
     jest.advanceTimersByTime(pollingInterval);
     await compareTimes();
     const thirdDate = await getFetchedTimeOnComment();
-    const diffBetweenSecondAndThird = thirdDate.getTime() - secondDate.getTime();
+    const diffBetweenSecondAndThird =
+      thirdDate.getTime() - secondDate.getTime();
     expect(diffBetweenSecondAndThird).toBeGreaterThanOrEqual(pollingInterval);
     const diffBetweenFirstAndThird = thirdDate.getTime() - firstDate.getTime();
-    expect(diffBetweenFirstAndThird).toBeGreaterThanOrEqual(pollingInterval * 2);
+    expect(diffBetweenFirstAndThird).toBeGreaterThanOrEqual(
+      pollingInterval * 2,
+    );
 
     // Check if transport executor is disposed per schema change
     expect(disposeFn).toHaveBeenCalledTimes(2);
@@ -151,7 +159,8 @@ describe('Polling', () => {
     async function getFetchedTimeOnComment() {
       const schema = await manager.getUnifiedGraph();
       const queryType = schema.getQueryType();
-      const lastFetchedDateStr = queryType.description.match(/Fetched on (.*)/)[1];
+      const lastFetchedDateStr =
+        queryType.description.match(/Fetched on (.*)/)[1];
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }

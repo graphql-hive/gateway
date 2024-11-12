@@ -1,7 +1,15 @@
-import { GraphQLObjectType, GraphQLSchema, printSchema, type GraphQLField } from 'graphql';
-import { createFilterTransform, createHoistFieldTransform } from '@graphql-mesh/fusion-composition';
+import {
+  createFilterTransform,
+  createHoistFieldTransform,
+} from '@graphql-mesh/fusion-composition';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  GraphQLObjectType,
+  GraphQLSchema,
+  printSchema,
+  type GraphQLField,
+} from 'graphql';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
 
 describe('Hoist Field', () => {

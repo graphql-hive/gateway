@@ -1,7 +1,11 @@
-import { GraphQLObjectType, GraphQLSchema } from 'graphql';
 import { createPrefixTransform } from '@graphql-mesh/fusion-composition';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { composeAndGetExecutor, composeAndGetPublicSchema, expectTheSchemaSDLToBe } from '../utils';
+import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import {
+  composeAndGetExecutor,
+  composeAndGetPublicSchema,
+  expectTheSchemaSDLToBe,
+} from '../utils';
 
 describe('Prefix', () => {
   let schema: GraphQLSchema;
@@ -57,9 +61,9 @@ describe('Prefix', () => {
     ]);
     expect(newSchema.getType('User')).toBeUndefined();
     expect(newSchema.getType('T_User')).toBeDefined();
-    expect((newSchema.getType('Query') as GraphQLObjectType).getFields()).not.toHaveProperty(
-      'T_user',
-    );
+    expect(
+      (newSchema.getType('Query') as GraphQLObjectType).getFields(),
+    ).not.toHaveProperty('T_user');
     expectTheSchemaSDLToBe(
       newSchema,
       /* GraphQL */ `
@@ -109,7 +113,9 @@ describe('Prefix', () => {
         ],
       },
     ]);
-    const postFields = (newSchema.getType('T_Post') as GraphQLObjectType).getFields();
+    const postFields = (
+      newSchema.getType('T_Post') as GraphQLObjectType
+    ).getFields();
     expect(postFields.id.type.toString()).toBe('ID!');
     expect(postFields.title.type.toString()).toBe('String!');
   });
@@ -157,7 +163,9 @@ describe('Prefix', () => {
     ]);
     expect(newSchema.getType('Query')).toBeDefined();
     expect(newSchema.getType('T_User')).toBeDefined();
-    expect((newSchema.getType('Query') as GraphQLObjectType).getFields()).toHaveProperty('T_user');
+    expect(
+      (newSchema.getType('Query') as GraphQLObjectType).getFields(),
+    ).toHaveProperty('T_user');
   });
   it('allows to ignore all fields in a type', async () => {
     const transform = createPrefixTransform({
@@ -173,7 +181,9 @@ describe('Prefix', () => {
       },
     ]);
 
-    const queryFields = (newSchema.getType('Query') as GraphQLObjectType).getFields();
+    const queryFields = (
+      newSchema.getType('Query') as GraphQLObjectType
+    ).getFields();
     expect(newSchema.getType('Query')).toBeDefined();
     expect(newSchema.getType('T_User')).toBeDefined();
     expect(newSchema.getType('User')).toBeUndefined();
@@ -196,7 +206,9 @@ describe('Prefix', () => {
       },
     ]);
 
-    const queryFields = (newSchema.getType('Query') as GraphQLObjectType).getFields();
+    const queryFields = (
+      newSchema.getType('Query') as GraphQLObjectType
+    ).getFields();
     expect(newSchema.getType('Query')).toBeDefined();
     expect(newSchema.getType('T_User')).toBeDefined();
     expect(newSchema.getType('User')).toBeUndefined();

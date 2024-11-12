@@ -1,18 +1,10 @@
-import type { GraphQLArgument, GraphQLArgumentConfig, GraphQLFieldConfigArgumentMap } from 'graphql';
-import {
-  DirectiveLocation,
-  GraphQLDirective,
-  GraphQLSchema,
-  GraphQLString,
-  isObjectType,
-  isOutputType,
-  Kind,
-  parseType,
-  typeFromAST,
-  visit,
-} from 'graphql';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
-import type { MergedTypeConfig, SubschemaConfig, Transform } from '@graphql-tools/delegate';
+import { YamlConfig } from '@graphql-mesh/types';
+import type {
+  MergedTypeConfig,
+  SubschemaConfig,
+  Transform,
+} from '@graphql-tools/delegate';
 import {
   astFromField,
   getDirectiveExtensions,
@@ -30,8 +22,24 @@ import {
   RenameTypes,
   TransformEnumValues,
 } from '@graphql-tools/wrap';
+import type {
+  GraphQLArgument,
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+} from 'graphql';
+import {
+  DirectiveLocation,
+  GraphQLDirective,
+  GraphQLSchema,
+  GraphQLString,
+  isObjectType,
+  isOutputType,
+  Kind,
+  parseType,
+  typeFromAST,
+  visit,
+} from 'graphql';
 import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils.js';
-import { YamlConfig } from '@graphql-mesh/types';
 
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };
@@ -39,7 +47,9 @@ export interface HandleFederationSubschemaOpts {
   schemaDirectives?: Record<string, any>;
   transportEntryMap: Record<string, TransportEntry>;
   additionalTypeDefs: TypeSource[];
-  stitchingDirectivesTransformer: (subschemaConfig: SubschemaConfig) => SubschemaConfig;
+  stitchingDirectivesTransformer: (
+    subschemaConfig: SubschemaConfig,
+  ) => SubschemaConfig;
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
 }
 
@@ -53,15 +63,20 @@ export function handleFederationSubschema({
   onSubgraphExecute,
 }: HandleFederationSubschemaOpts) {
   // Fix name
-  const subgraphName = (subschemaConfig.name =
-    realSubgraphNameMap?.get(subschemaConfig.name || '') || subschemaConfig.name) || '';
+  const subgraphName =
+    (subschemaConfig.name =
+      realSubgraphNameMap?.get(subschemaConfig.name || '') ||
+      subschemaConfig.name) || '';
   const subgraphDirectives = getDirectiveExtensions<{
     transport: TransportEntry;
     [key: string]: any;
   }>(subschemaConfig.schema);
   const directivesToLook = schemaDirectives || subgraphDirectives;
   for (const directiveName in directivesToLook) {
-    if (!subgraphDirectives[directiveName]?.length && schemaDirectives?.[directiveName]?.length) {
+    if (
+      !subgraphDirectives[directiveName]?.length &&
+      schemaDirectives?.[directiveName]?.length
+    ) {
       const directives = schemaDirectives[directiveName];
       for (const directive of directives) {
         if (directive.subgraph && directive.subgraph !== subgraphName) {
@@ -72,7 +87,8 @@ export function handleFederationSubschema({
       }
     }
   }
-  const subgraphExtensions: Record<string, unknown> = (subschemaConfig.schema.extensions ||= {});
+  const subgraphExtensions: Record<string, unknown> =
+    (subschemaConfig.schema.extensions ||= {});
   subgraphExtensions['directives'] = subgraphDirectives;
   const transportDirectives = (subgraphDirectives.transport ||= []);
   const transportDirective = transportDirectives[0];
@@ -96,7 +112,7 @@ export function handleFederationSubschema({
   interface FieldDirectives {
     additionalField: {};
     merge: {};
-    resolveTo: YamlConfig.AdditionalStitchingResolverObject
+    resolveTo: YamlConfig.AdditionalStitchingResolverObject;
     source: SourceDirective;
     hoist: any;
     [key: string]: any;
@@ -108,19 +124,37 @@ export function handleFederationSubschema({
   }
   const renameTypeNames: Record<string, string> = {};
   const renameTypeNamesReversed: Record<string, string> = {};
-  const renameFieldByObjectTypeNames: Record<string, Record<string, string>> = {};
-  const renameFieldByInputTypeNames: Record<string, Record<string, string>> = {};
-  const renameFieldByInterfaceTypeNames: Record<string, Record<string, string>> = {};
-  const renameEnumValueByEnumTypeNames: Record<string, Record<string, string>> = {};
-  const renameFieldByTypeNamesReversed: Record<string, Record<string, string>> = {};
-  const renameArgByFieldByTypeNames: Record<string, Record<string, Record<string, string>>> = {};
+  const renameFieldByObjectTypeNames: Record<
+    string,
+    Record<string, string>
+  > = {};
+  const renameFieldByInputTypeNames: Record<
+    string,
+    Record<string, string>
+  > = {};
+  const renameFieldByInterfaceTypeNames: Record<
+    string,
+    Record<string, string>
+  > = {};
+  const renameEnumValueByEnumTypeNames: Record<
+    string,
+    Record<string, string>
+  > = {};
+  const renameFieldByTypeNamesReversed: Record<
+    string,
+    Record<string, string>
+  > = {};
+  const renameArgByFieldByTypeNames: Record<
+    string,
+    Record<string, Record<string, string>>
+  > = {};
   const transforms: Transform[] = (subschemaConfig.transforms ||= []);
   let mergeDirectiveUsed = false;
   subschemaConfig.schema = mapSchema(subschemaConfig.schema, {
-    [MapperKind.TYPE]: type => {
+    [MapperKind.TYPE]: (type) => {
       const typeDirectives = getDirectiveExtensions<TypeDirectives>(type);
       const sourceDirectives = typeDirectives.source;
-      const sourceDirective = sourceDirectives?.find(directive =>
+      const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
       if (sourceDirective != null) {
@@ -136,7 +170,8 @@ export function handleFederationSubschema({
       }
     },
     [MapperKind.OBJECT_FIELD]: (fieldConfig, fieldName, typeName, schema) => {
-      const fieldDirectives = getDirectiveExtensions<FieldDirectives>(fieldConfig);
+      const fieldDirectives =
+        getDirectiveExtensions<FieldDirectives>(fieldConfig);
       if (fieldDirectives.merge?.length) {
         mergeDirectiveUsed = true;
       }
@@ -144,7 +179,9 @@ export function handleFederationSubschema({
       if (resolveToDirectives?.length) {
         const type = schema.getType(typeName);
         if (!isObjectType(type)) {
-          throw new Error(`Type ${typeName} for field ${fieldName} is not an object type`);
+          throw new Error(
+            `Type ${typeName} for field ${fieldName} is not an object type`,
+          );
         }
         const fieldMap = type.getFields();
         const field = fieldMap[fieldName];
@@ -167,7 +204,7 @@ export function handleFederationSubschema({
         return null;
       }
       const sourceDirectives = fieldDirectives.source;
-      const sourceDirective = sourceDirectives?.find(directive =>
+      const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
       const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
@@ -203,7 +240,10 @@ export function handleFederationSubschema({
                   : () => true,
               };
             });
-            transforms.push(new HoistField(realTypeName, pathConfig, fieldName), new PruneSchema());
+            transforms.push(
+              new HoistField(realTypeName, pathConfig, fieldName),
+              new PruneSchema(),
+            );
           }
         }
       }
@@ -211,9 +251,10 @@ export function handleFederationSubschema({
       if (fieldConfig.args) {
         for (const argName in fieldConfig.args) {
           const argConfig: GraphQLArgumentConfig = fieldConfig.args[argName]!;
-          const argDirectives = getDirectiveExtensions<ArgDirectives>(argConfig);
+          const argDirectives =
+            getDirectiveExtensions<ArgDirectives>(argConfig);
           const argSourceDirectives = argDirectives.source;
-          const argSourceDirective = argSourceDirectives?.find(directive =>
+          const argSourceDirective = argSourceDirectives?.find((directive) =>
             compareSubgraphNames(directive.subgraph, subgraphName),
           );
           if (argSourceDirective != null) {
@@ -226,7 +267,8 @@ export function handleFederationSubschema({
               if (!renameArgByFieldByTypeNames[realTypeName][realName]) {
                 renameArgByFieldByTypeNames[realTypeName][realName] = {};
               }
-              renameArgByFieldByTypeNames[realTypeName][realName][realArgName] = argName;
+              renameArgByFieldByTypeNames[realTypeName][realName][realArgName] =
+                argName;
             }
           } else {
             newArgs[argName] = argConfig;
@@ -235,7 +277,10 @@ export function handleFederationSubschema({
       }
       let fieldType = fieldConfig.type;
       if (sourceDirective?.type) {
-        const fieldTypeNode = parseTypeNodeWithRenames(sourceDirective.type, renameTypeNames);
+        const fieldTypeNode = parseTypeNodeWithRenames(
+          sourceDirective.type,
+          renameTypeNames,
+        );
         const newType = typeFromAST(subschemaConfig.schema, fieldTypeNode);
         if (!newType) {
           throw new Error(
@@ -259,9 +304,10 @@ export function handleFederationSubschema({
       ];
     },
     [MapperKind.INPUT_OBJECT_FIELD]: (fieldConfig, fieldName, typeName) => {
-      const fieldDirectives = getDirectiveExtensions<FieldDirectives>(fieldConfig);
+      const fieldDirectives =
+        getDirectiveExtensions<FieldDirectives>(fieldConfig);
       const sourceDirectives = fieldDirectives.source;
-      const sourceDirective = sourceDirectives?.find(directive =>
+      const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
       if (sourceDirective != null) {
@@ -282,9 +328,10 @@ export function handleFederationSubschema({
       return undefined;
     },
     [MapperKind.INTERFACE_FIELD]: (fieldConfig, fieldName, typeName) => {
-      const fieldDirectives = getDirectiveExtensions<FieldDirectives>(fieldConfig);
+      const fieldDirectives =
+        getDirectiveExtensions<FieldDirectives>(fieldConfig);
       const sourceDirectives = fieldDirectives.source;
-      const sourceDirective = sourceDirectives?.find(directive =>
+      const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
       if (sourceDirective != null) {
@@ -304,10 +351,17 @@ export function handleFederationSubschema({
       }
       return undefined;
     },
-    [MapperKind.ENUM_VALUE]: (enumValueConfig, typeName, _schema, externalValue) => {
-      const enumDirectives = getDirectiveExtensions<{ source: SourceDirective }>(enumValueConfig);
+    [MapperKind.ENUM_VALUE]: (
+      enumValueConfig,
+      typeName,
+      _schema,
+      externalValue,
+    ) => {
+      const enumDirectives = getDirectiveExtensions<{
+        source: SourceDirective;
+      }>(enumValueConfig);
       const sourceDirectives = enumDirectives.source;
-      const sourceDirective = sourceDirectives?.find(directive =>
+      const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
       );
       if (sourceDirective != null) {
@@ -317,7 +371,8 @@ export function handleFederationSubschema({
           if (!renameEnumValueByEnumTypeNames[realTypeName]) {
             renameEnumValueByEnumTypeNames[realTypeName] = {};
           }
-          renameEnumValueByEnumTypeNames[realTypeName][realValue] = externalValue;
+          renameEnumValueByEnumTypeNames[realTypeName][realValue] =
+            externalValue;
         }
         return [
           realValue,
@@ -331,13 +386,17 @@ export function handleFederationSubschema({
     },
   });
   if (Object.keys(renameTypeNames).length > 0) {
-    transforms.push(new RenameTypes(typeName => renameTypeNames[typeName] || typeName));
+    transforms.push(
+      new RenameTypes((typeName) => renameTypeNames[typeName] || typeName),
+    );
   }
   if (Object.keys(renameFieldByObjectTypeNames).length > 0) {
     transforms.push(
       new RenameObjectFields((typeName, fieldName, _fieldConfig) => {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
-        return renameFieldByObjectTypeNames[realTypeName]?.[fieldName] ?? fieldName;
+        return (
+          renameFieldByObjectTypeNames[realTypeName]?.[fieldName] ?? fieldName
+        );
       }),
     );
   }
@@ -345,7 +404,9 @@ export function handleFederationSubschema({
     transforms.push(
       new RenameInputObjectFields((typeName, fieldName, _fieldConfig) => {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
-        return renameFieldByInputTypeNames[realTypeName]?.[fieldName] ?? fieldName;
+        return (
+          renameFieldByInputTypeNames[realTypeName]?.[fieldName] ?? fieldName
+        );
       }),
     );
   }
@@ -353,7 +414,10 @@ export function handleFederationSubschema({
     transforms.push(
       new RenameInterfaceFields((typeName, fieldName, _fieldConfig) => {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
-        return renameFieldByInterfaceTypeNames[realTypeName]?.[fieldName] ?? fieldName;
+        return (
+          renameFieldByInterfaceTypeNames[realTypeName]?.[fieldName] ??
+          fieldName
+        );
       }),
     );
   }
@@ -362,8 +426,9 @@ export function handleFederationSubschema({
       new TransformEnumValues((typeName, externalValue, enumValueConfig) => {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
         const realValue =
-          renameEnumValueByEnumTypeNames[realTypeName]?.[enumValueConfig.value || externalValue] ??
-          enumValueConfig.value;
+          renameEnumValueByEnumTypeNames[realTypeName]?.[
+            enumValueConfig.value || externalValue
+          ] ?? enumValueConfig.value;
         return [
           realValue,
           {
@@ -379,8 +444,13 @@ export function handleFederationSubschema({
       new RenameObjectFieldArguments((typeName, fieldName, argName) => {
         const realTypeName = renameTypeNamesReversed[typeName] ?? typeName;
         const realFieldName =
-          renameFieldByTypeNamesReversed[realTypeName]?.[fieldName] ?? fieldName;
-        return renameArgByFieldByTypeNames[realTypeName]?.[realFieldName]?.[argName] ?? argName;
+          renameFieldByTypeNamesReversed[realTypeName]?.[fieldName] ??
+          fieldName;
+        return (
+          renameArgByFieldByTypeNames[realTypeName]?.[realFieldName]?.[
+            argName
+          ] ?? argName
+        );
       }),
     );
   }
@@ -394,7 +464,8 @@ export function handleFederationSubschema({
       assumeValid: true,
     });
 
-    subschemaConfig.merge = stitchingDirectivesTransformer(subschemaConfig).merge;
+    subschemaConfig.merge =
+      stitchingDirectivesTransformer(subschemaConfig).merge;
     const queryType = subschemaConfig.schema.getQueryType();
     if (!queryType) {
       throw new Error('Query type is required');
@@ -402,23 +473,30 @@ export function handleFederationSubschema({
     // Transformer doesn't respect transforms
     if (transforms.length && subschemaConfig.merge) {
       const subschemaConfigMerge = subschemaConfig.merge;
-      const mergeConfig: Record<string, MergedTypeConfig<any, any, Record<string, any>>> = {};
+      const mergeConfig: Record<
+        string,
+        MergedTypeConfig<any, any, Record<string, any>>
+      > = {};
       for (const realTypeName in subschemaConfig.merge) {
         const renamedTypeName = renameTypeNames[realTypeName] ?? realTypeName;
         mergeConfig[renamedTypeName] = subschemaConfigMerge[realTypeName]!;
         const realQueryFieldName = mergeConfig[renamedTypeName].fieldName;
         if (realQueryFieldName) {
           mergeConfig[renamedTypeName].fieldName =
-            renameFieldByObjectTypeNames[queryType.name]?.[realQueryFieldName] ??
-            realQueryFieldName;
+            renameFieldByObjectTypeNames[queryType.name]?.[
+              realQueryFieldName
+            ] ?? realQueryFieldName;
         }
         mergeConfig[renamedTypeName].entryPoints = subschemaConfigMerge[
           realTypeName
-        ]?.entryPoints?.map(entryPoint => ({
+        ]?.entryPoints?.map((entryPoint) => ({
           ...entryPoint,
           fieldName:
-            entryPoint.fieldName && (renameFieldByObjectTypeNames[queryType.name]?.[entryPoint.fieldName] ??
-            entryPoint.fieldName),
+            entryPoint.fieldName &&
+            (renameFieldByObjectTypeNames[queryType.name]?.[
+              entryPoint.fieldName
+            ] ??
+              entryPoint.fieldName),
         }));
       }
       subschemaConfig.merge = mergeConfig;
@@ -454,10 +532,13 @@ const mergeDirective = new GraphQLDirective({
   },
 });
 
-function parseTypeNodeWithRenames(typeString: string, renameTypeNames: Record<string, string>) {
+function parseTypeNodeWithRenames(
+  typeString: string,
+  renameTypeNames: Record<string, string>,
+) {
   const typeNode = parseType(typeString);
   return visit(typeNode, {
-    NamedType: node => {
+    NamedType: (node) => {
       const realName = renameTypeNames[node.name.value] ?? node.name.value;
       return {
         ...node,

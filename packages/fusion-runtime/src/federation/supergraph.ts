@@ -1,10 +1,3 @@
-import {
-  isEnumType,
-  Kind,
-  visit,
-  type GraphQLSchema,
-  type ObjectTypeDefinitionNode,
-} from 'graphql';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type { YamlConfig } from '@graphql-mesh/types';
 import { resolveAdditionalResolversWithoutImport } from '@graphql-mesh/utils';
@@ -21,6 +14,13 @@ import {
   memoize1,
   mergeDeep,
 } from '@graphql-tools/utils';
+import {
+  isEnumType,
+  Kind,
+  visit,
+  type GraphQLSchema,
+  type ObjectTypeDefinitionNode,
+} from 'graphql';
 import { filterHiddenPartsInSchema } from '../filterHiddenPartsInSchema.js';
 import type { UnifiedGraphHandler } from '../unifiedGraphManager.js';
 import { handleFederationSubschema } from './subgraph.js';
@@ -37,10 +37,11 @@ export const restoreExtraDirectives = memoize1(function restoreExtraDirectives(
   const queryTypeExtensions = getDirectiveExtensions<{
     extraSchemaDefinitionDirective?: { directives: Record<string, any[]> };
   }>(queryType);
-  const extraSchemaDefinitionDirectives = queryTypeExtensions?.extraSchemaDefinitionDirective;
+  const extraSchemaDefinitionDirectives =
+    queryTypeExtensions?.extraSchemaDefinitionDirective;
   if (extraSchemaDefinitionDirectives?.length) {
     schema = mapSchema(schema, {
-      [MapperKind.TYPE]: type => {
+      [MapperKind.TYPE]: (type) => {
         const typeDirectiveExtensions = getDirectiveExtensions(type) || {};
         const TypeCtor = Object.getPrototypeOf(type).constructor;
         if (type.name === queryType.name) {
@@ -75,7 +76,8 @@ export const restoreExtraDirectives = memoize1(function restoreExtraDirectives(
           }
         }
       }
-      const schemaExtensions: Record<string, unknown> = (schema.extensions ||= {});
+      const schemaExtensions: Record<string, unknown> = (schema.extensions ||=
+        {});
       schemaExtensions['directives'] = schemaDirectives;
     }
   }
@@ -93,9 +95,9 @@ export function getStitchingDirectivesTransformerForSubschema() {
 }
 
 interface EnumDirectives {
-  [key: string]: any
-  join__graph?: { 
-    name: string 
+  [key: string]: any;
+  join__graph?: {
+    name: string;
   };
 }
 
@@ -111,7 +113,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
   const transportEntryMap: Record<string, TransportEntry> = {};
   let subschemas: SubschemaConfig[] = [];
-  const stitchingDirectivesTransformer = getStitchingDirectivesTransformerForSubschema();
+  const stitchingDirectivesTransformer =
+    getStitchingDirectivesTransformerForSubschema();
   unifiedGraph = restoreExtraDirectives(unifiedGraph);
   // Get Transport Information from Schema Directives
   const schemaDirectives = getDirectiveExtensions(unifiedGraph);
@@ -120,7 +123,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   const joinGraphType = unifiedGraph.getType('join__Graph');
   if (isEnumType(joinGraphType)) {
     for (const enumValue of joinGraphType.getValues()) {
-      const enumValueDirectives = getDirectiveExtensions<EnumDirectives>(enumValue);
+      const enumValueDirectives =
+        getDirectiveExtensions<EnumDirectives>(enumValue);
       const joinGraphDirectives = enumValueDirectives?.join__graph;
       if (joinGraphDirectives?.length) {
         for (const joinGraphDirective of joinGraphDirectives) {
@@ -141,7 +145,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
      * - Type Merging Configuration for the subgraph (subschemaConfig.merge)
      * - Set the executor for the subschema (subschemaConfig.executor)
      */
-    onSubschemaConfig: subschemaConfig =>
+    onSubschemaConfig: (subschemaConfig) =>
       handleFederationSubschema({
         subschemaConfig,
         realSubgraphNameMap,
@@ -162,8 +166,9 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
           }>({ astNode: field });
           const resolveToDirectives = fieldDirectives?.resolveTo;
           if (resolveToDirectives?.length) {
-            const targetTypeName = (ancestors[ancestors.length - 1] as ObjectTypeDefinitionNode)
-              .name.value;
+            const targetTypeName = (
+              ancestors[ancestors.length - 1] as ObjectTypeDefinitionNode
+            ).name.value;
             const targetFieldName = field.name.value;
             for (const resolveToDirective of resolveToDirectives) {
               additionalResolvers.push(
@@ -186,10 +191,10 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
           const typeName = node.name.value;
           return {
             ...node,
-            fields: node.fields?.filter(fieldNode => {
-              const fieldDirectives = getDirectiveExtensions <{
+            fields: node.fields?.filter((fieldNode) => {
+              const fieldDirectives = getDirectiveExtensions<{
                 resolveTo: YamlConfig.AdditionalStitchingResolverObject;
-                additionalField: {},
+                additionalField: {};
               }>({ astNode: fieldNode });
               const resolveToDirectives = fieldDirectives.resolveTo;
               if (resolveToDirectives?.length) {
@@ -231,7 +236,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       if (transportOptionBySubgraph) {
         toBeMerged.push(transportOptionBySubgraph);
       }
-      const transportOptionByKind = transportEntryAdditions['*.' + transportEntry?.kind];
+      const transportOptionByKind =
+        transportEntryAdditions['*.' + transportEntry?.kind];
       if (transportOptionByKind) {
         toBeMerged.push(transportOptionByKind);
       }

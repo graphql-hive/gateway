@@ -1,3 +1,5 @@
+import { createRenameTransform } from '@graphql-mesh/fusion-composition';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
   buildSchema,
   GraphQLNonNull,
@@ -5,8 +7,6 @@ import {
   GraphQLScalarType,
   GraphQLSchema,
 } from 'graphql';
-import { createRenameTransform } from '@graphql-mesh/fusion-composition';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
 
 describe('Rename', () => {
@@ -257,26 +257,48 @@ describe('Rename', () => {
         transforms: [transform],
       },
     ]);
-    const userField = (newSchema.getType('Prefixed_MyUser') as GraphQLObjectType).getFields();
-    const profileField = (newSchema.getType('Prefixed_Profile') as GraphQLObjectType).getFields();
-    const bookField = (newSchema.getType('Prefixed_MyBook') as GraphQLObjectType).getFields();
+    const userField = (
+      newSchema.getType('Prefixed_MyUser') as GraphQLObjectType
+    ).getFields();
+    const profileField = (
+      newSchema.getType('Prefixed_Profile') as GraphQLObjectType
+    ).getFields();
+    const bookField = (
+      newSchema.getType('Prefixed_MyBook') as GraphQLObjectType
+    ).getFields();
 
-    expect((userField.id.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString()).toBe('ID');
-    expect((userField.name.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString()).toBe(
-      'String',
-    );
-
-    expect((profileField.id.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString()).toBe(
-      'ID',
-    );
     expect(
-      (profileField.isActive.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString(),
+      (
+        userField.id.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
+    ).toBe('ID');
+    expect(
+      (
+        userField.name.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
+    ).toBe('String');
+
+    expect(
+      (
+        profileField.id.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
+    ).toBe('ID');
+    expect(
+      (
+        profileField.isActive.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
     ).toBe('Boolean');
 
-    expect((bookField.id.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString()).toBe('ID');
-    expect((bookField.hits.type as GraphQLNonNull<GraphQLScalarType>).ofType.toString()).toBe(
-      'Int',
-    );
+    expect(
+      (
+        bookField.id.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
+    ).toBe('ID');
+    expect(
+      (
+        bookField.hits.type as GraphQLNonNull<GraphQLScalarType>
+      ).ofType.toString(),
+    ).toBe('Int');
   });
   it('changes the name of multiple fields', async () => {
     const transform = createRenameTransform({
@@ -565,12 +587,20 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeUndefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeDefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeUndefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeDefined();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'another_argument')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'some_argument')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'another_argument'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'some_argument'),
+    ).toBeDefined();
   });
   it('affects specified field match argument', async () => {
     const transform = createRenameTransform({
@@ -600,12 +630,20 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeUndefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeDefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeUndefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeDefined();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'another_argument')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'some_argument')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'another_argument'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'some_argument'),
+    ).toBeDefined();
   });
   it('affects only specified matched field and matched argument', async () => {
     const transform = createRenameTransform({
@@ -635,12 +673,20 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeUndefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeDefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeUndefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeDefined();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'another_argument')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'some_argument')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'another_argument'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'some_argument'),
+    ).toBeDefined();
   });
   it('affects only specified match type and match field argument', async () => {
     const transform = createRenameTransform({
@@ -672,12 +718,20 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeUndefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeDefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeUndefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeDefined();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'another_argument')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'some_argument')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'another_argument'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'some_argument'),
+    ).toBeDefined();
   });
   it('affects only specified match type, field and argument', async () => {
     const transform = createRenameTransform({
@@ -709,12 +763,20 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeUndefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeDefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeUndefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeDefined();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'another_argument')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'some_argument')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'another_argument'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'some_argument'),
+    ).toBeDefined();
   });
   it('resolves the field correctly with renamed argument', async () => {
     const transform = createRenameTransform({
@@ -780,9 +842,13 @@ describe('Rename', () => {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     const fieldMap = queryType.getFields();
 
-    expect(fieldMap.profile.args.find(a => a.name === 'role')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profile_id')).toBeDefined();
-    expect(fieldMap.profile.args.find(a => a.name === 'profileId')).toBeUndefined();
+    expect(fieldMap.profile.args.find((a) => a.name === 'role')).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profile_id'),
+    ).toBeDefined();
+    expect(
+      fieldMap.profile.args.find((a) => a.name === 'profileId'),
+    ).toBeUndefined();
   });
 
   it('renames the scalars', async () => {
@@ -835,11 +901,15 @@ describe('Rename', () => {
     expect(newSchema.getType('MyPrefix_RandomInt')).toBeDefined();
     // Check fields
     expect(
-      (newSchema.getType('MyPrefix_SomeEntity') as any)._fields.id.type.ofType.toString(),
+      (
+        newSchema.getType('MyPrefix_SomeEntity') as any
+      )._fields.id.type.ofType.toString(),
     ).toBe('MyPrefix_RandomInt');
     // Check arguments
     expect(
-      (newSchema.getQueryType() as any)._fields.getSomeEntityById.args[0].type.ofType.toString(),
+      (
+        newSchema.getQueryType() as any
+      )._fields.getSomeEntityById.args[0].type.ofType.toString(),
     ).toBe('MyPrefix_RandomInt');
     expect(newSchema.getType('MyPrefix_RandomInt')).toBeDefined();
   });
@@ -896,11 +966,15 @@ describe('Rename', () => {
     expect(newSchema.getType('MyPrefix_UUID')).toBeDefined();
     // Check fields
     expect(
-      (newSchema.getType('MyPrefix_SomeEntity') as any)._fields.id.type.ofType.toString(),
+      (
+        newSchema.getType('MyPrefix_SomeEntity') as any
+      )._fields.id.type.ofType.toString(),
     ).toBe('MyPrefix_UUID');
     // Check arguments
     expect(
-      (newSchema.getQueryType() as any)._fields.getSomeEntityById.args[0].type.ofType.toString(),
+      (
+        newSchema.getQueryType() as any
+      )._fields.getSomeEntityById.args[0].type.ofType.toString(),
     ).toBe('MyPrefix_UUID');
     expect(newSchema.getType('MyPrefix_UUID')).toBeDefined();
   });

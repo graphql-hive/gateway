@@ -250,10 +250,10 @@
       {
         typeName: 'Query',
         pathConfig: ['users', 'results'],
-        newFieldName: 'usersResults'
-      }
-    ]
-  })
+        newFieldName: 'usersResults',
+      },
+    ],
+  });
   ```
 
   ```diff
@@ -801,8 +801,8 @@
         // This forwards `authorization` from the upstream to downstream
         ['authorization', '{context.headers.authorization}'],
         // Or some static value
-        ['x-extra', process.env.SOME_THING]
-      ]
+        ['x-extra', process.env.SOME_THING],
+      ];
     }
   }
   ```
@@ -844,31 +844,32 @@
     subgraphs: [
       {
         sourceHandler: loadOpenAPISubgraph('Wiki', {
-          source: 'https://api.apis.guru/v2/specs/wikimedia.org/1.0.0/swagger.yaml',
-          endpoint: 'https://wikimedia.org/api/rest_v1'
-        })
-      }
+          source:
+            'https://api.apis.guru/v2/specs/wikimedia.org/1.0.0/swagger.yaml',
+          endpoint: 'https://wikimedia.org/api/rest_v1',
+        }),
+      },
     ],
     additionalTypeDefs: /* GraphQL */ `
       extend type pageview_project {
         banana: String
         apple: String!
       }
-    `
-  })
+    `,
+  });
 
   export const serveConfig = defineServeConfig({
     additionalResolvers: {
       pageview_project: {
         banana() {
-          return '🍌'
+          return '🍌';
         },
         apple() {
-          return '🍎' // This is ignored
-        }
-      }
-    }
-  })
+          return '🍎'; // This is ignored
+        },
+      },
+    },
+  });
   ```
 
 - [#7266](https://github.com/ardatan/graphql-mesh/pull/7266)
@@ -1030,7 +1031,12 @@
     needed to get an executor to execute queries against that subgraph.
 
   ```graphql
-  schema @transport(subgraph: "API", kind: "rest", location: "http://0.0.0.0:<api_port>") {
+  schema
+    @transport(
+      subgraph: "API"
+      kind: "rest"
+      location: "http://0.0.0.0:<api_port>"
+    ) {
     query: Query
     mutation: Mutation
     subscription: Subscription

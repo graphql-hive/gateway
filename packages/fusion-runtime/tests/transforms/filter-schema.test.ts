@@ -1,5 +1,8 @@
+import {
+  createFilterTransform,
+  createPruneTransform,
+} from '@graphql-mesh/fusion-composition';
 import { buildSchema, printSchema } from 'graphql';
-import { createFilterTransform, createPruneTransform } from '@graphql-mesh/fusion-composition';
 import { composeAndGetPublicSchema, expectTheSchemaSDLToBe } from '../utils.js';
 
 describe('filter-schema', () => {

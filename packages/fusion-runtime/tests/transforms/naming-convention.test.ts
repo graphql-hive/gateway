@@ -1,8 +1,17 @@
-import { buildSchema, GraphQLEnumType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
 import { createNamingConventionTransform } from '@graphql-mesh/fusion-composition';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { composeAndGetExecutor, composeAndGetPublicSchema, expectTheSchemaSDLToBe } from '../utils';
+import {
+  buildSchema,
+  GraphQLEnumType,
+  GraphQLObjectType,
+  GraphQLUnionType,
+} from 'graphql';
+import {
+  composeAndGetExecutor,
+  composeAndGetPublicSchema,
+  expectTheSchemaSDLToBe,
+} from '../utils';
 
 describe('Naming Convention', () => {
   it('changes the name of a types, enums, fields and fieldArguments', async () => {
@@ -189,7 +198,9 @@ describe('Naming Convention', () => {
     const result = await executor({
       query: /* GraphQL */ `
         {
-          user(Input: { id: "0", firstName: "John", lastName: "Doe", type: ADMIN }) {
+          user(
+            Input: { id: "0", firstName: "John", lastName: "Doe", type: ADMIN }
+          ) {
             id
             firstName
             lastName
@@ -335,7 +346,7 @@ describe('Naming Convention', () => {
     ]);
     const userTypeEnum = newSchema.getType('UserType') as GraphQLEnumType;
     expect(userTypeEnum).toBeDefined();
-    const enumTypeValues = userTypeEnum.getValues().map(x => x.name);
+    const enumTypeValues = userTypeEnum.getValues().map((x) => x.name);
     expect(enumTypeValues).toContain('ADMIN');
     expect(enumTypeValues).toContain('MODERATOR');
     expect(enumTypeValues).toContain('NEWBIE');
@@ -374,8 +385,8 @@ describe('Naming Convention', () => {
           },
         },
         Cart: {
-          Id: root => root.Id,
-          Amount: root => root.Amount,
+          Id: (root) => root.Id,
+          Amount: (root) => root.Amount,
         },
       },
     });

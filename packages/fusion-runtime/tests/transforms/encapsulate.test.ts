@@ -1,9 +1,9 @@
-import { GraphQLSchema, parse } from 'graphql';
 import { createEncapsulateTransform } from '@graphql-mesh/fusion-composition';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
+import { GraphQLSchema, parse } from 'graphql';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
 
 describe('encapsulate', () => {
@@ -62,7 +62,9 @@ describe('encapsulate', () => {
     ]);
     expect(newSchema.getMutationType().getFields().TEST).toBeDefined();
     expect(newSchema.getMutationType().getFields().notify).not.toBeDefined();
-    expect(newSchema.getMutationType().getFields().TEST.type.toString()).toBe('TESTMutation!');
+    expect(newSchema.getMutationType().getFields().TEST.type.toString()).toBe(
+      'TESTMutation!',
+    );
   });
   it('groups Subscription correctly', async () => {
     const transform = createEncapsulateTransform();
@@ -74,10 +76,12 @@ describe('encapsulate', () => {
       },
     ]);
     expect(newSchema.getSubscriptionType().getFields().TEST).toBeDefined();
-    expect(newSchema.getSubscriptionType().getFields().getSomething).not.toBeDefined();
-    expect(newSchema.getSubscriptionType().getFields().TEST.type.toString()).toBe(
-      'TESTSubscription!',
-    );
+    expect(
+      newSchema.getSubscriptionType().getFields().getSomething,
+    ).not.toBeDefined();
+    expect(
+      newSchema.getSubscriptionType().getFields().TEST.type.toString(),
+    ).toBe('TESTSubscription!');
   });
   it('groups Query correctly', async () => {
     const transform = createEncapsulateTransform();
@@ -89,7 +93,9 @@ describe('encapsulate', () => {
       },
     ]);
     expect(newSchema.getQueryType().getFields().TEST).toBeDefined();
-    expect(newSchema.getQueryType().getFields().TEST.type.toString()).toBe('TESTQuery!');
+    expect(newSchema.getQueryType().getFields().TEST.type.toString()).toBe(
+      'TESTQuery!',
+    );
     expect(newSchema.getQueryType().getFields().getSomething).not.toBeDefined();
   });
   it('executes queries the same way and preserves the execution flow', async () => {
