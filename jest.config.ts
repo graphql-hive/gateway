@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import type { Config } from 'jest';
 import JSON5 from 'json5';
 import { pathsToModuleNameMapper } from 'ts-jest';
-import type { Config } from 'jest';
 
 const CI = !!process.env['CI'];
 const ROOT_DIR = __dirname;
