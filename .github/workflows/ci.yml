@@ -9,7 +9,82 @@ on:
       - main
 
 jobs:
+
+  # --- START CHECK --- #
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Check
+        run: yarn check:format
+
+  lint:
+    needs: [format]
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Check
+        run: yarn check:lint
+
+  types:
+    needs: [lint]
+    name: Types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Check
+        run: yarn check:types
+
+  build: # making sure build works so it doesn't fail on us during release
+    needs: [types]
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Check
+        run: yarn build
+
+  bundle: # making sure bundle works so it doesn't fail on us during release
+    needs: [build]
+    name: Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Build
+        run: yarn build
+      - name: Check
+        run: yarn bundle
+
+  # --- START TEST --- #
   unit:
+    needs: [bundle]
     strategy:
       fail-fast: false
       matrix:
@@ -136,6 +211,8 @@ jobs:
         run: yarn e2e:test
   
         # TODO: various gateway runners
+
+  # --- START BENCH --- #
   bench:
     needs: [e2e]
     strategy:
