@@ -93,7 +93,6 @@ jobs:
 
   # --- START TEST --- #
   unit:
-    needs: [bundle]
     strategy:
       fail-fast: false
       matrix:
@@ -135,7 +134,6 @@ jobs:
 
   # TODO: various gateway runners
   e2e:
-    needs: [leaks]
     runs-on: ${{ matrix.setup.os }}
     strategy:
       fail-fast: false
@@ -254,7 +252,7 @@ jobs:
 
   # --- START RELEASE ---
   snapshot:
-    needs: [e2e]
+    needs: [build]
     if: github.event_name == 'pull_request'
     name: Snapshot
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
@@ -266,7 +264,7 @@ jobs:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   stable:
-    needs: [bench]
+    needs: [build]
     if: github.ref == 'refs/heads/main'
     name: Stable
     uses: the-guild-org/shared-config/.github/workflows/release-stable.yml@v1
@@ -278,7 +276,7 @@ jobs:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   ghcr:
-    needs: [stable, snapshot]
+    needs: [build, bundle, stable, snapshot]
     name: GitHub Container Registry
     runs-on: ubuntu-latest
     if: always() && (
@@ -354,7 +352,7 @@ jobs:
             ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
             ```
   bin:
-    needs: [stable, snapshot]
+    needs: [build, bundle, stable, snapshot]
     name: Binary built on ${{ matrix.os }}
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
