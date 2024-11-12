@@ -134,6 +134,7 @@ jobs:
 
   # TODO: various gateway runners
   e2e:
+    needs: [build, bundle]
     runs-on: ${{ matrix.setup.os }}
     strategy:
       fail-fast: false
