@@ -3459,6 +3459,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     change-case: "npm:^4.1.2"
     graphql-yoga: "npm:^5.7.0"
+    pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0

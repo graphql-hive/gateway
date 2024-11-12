@@ -7,8 +7,8 @@ import { pathsToModuleNameMapper } from 'ts-jest';
 const isCI = !!process.env['CI'];
 const rootDir = __dirname;
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
-const tsconfigStr = readFileSync(tsconfigPath, 'utf8');
-const tsconfig = JSON5.parse(tsconfigStr);
+const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
+const tsconfig = JSON5.parse(tsconfigContents);
 
 export default {
   testEnvironment: 'node',
