@@ -6,6 +6,7 @@ import {
   composeAndGetPublicSchema,
   expectTheSchemaSDLToBe,
 } from '../utils';
+import { describe, it, beforeEach, expect } from 'vitest';
 
 describe('Prefix', () => {
   let schema: GraphQLSchema;
@@ -116,8 +117,8 @@ describe('Prefix', () => {
     const postFields = (
       newSchema.getType('T_Post') as GraphQLObjectType
     ).getFields();
-    expect(postFields.id.type.toString()).toBe('ID!');
-    expect(postFields.title.type.toString()).toBe('String!');
+    expect(postFields['id']?.type.toString()).toBe('ID!');
+    expect(postFields['title']?.type.toString()).toBe('String!');
   });
   it('uses the name of the subgraph when it is available', async () => {
     const newSchema = await composeAndGetPublicSchema([

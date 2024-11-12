@@ -3,7 +3,6 @@ import {
   createHoistFieldTransform,
 } from '@graphql-mesh/fusion-composition';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import {
   GraphQLObjectType,
   GraphQLSchema,
@@ -11,6 +10,7 @@ import {
   type GraphQLField,
 } from 'graphql';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
+import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('Hoist Field', () => {
   let schema: GraphQLSchema;
@@ -69,7 +69,7 @@ describe('Hoist Field', () => {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
 "type Query {
@@ -109,7 +109,7 @@ type User {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
 "type Query {
@@ -144,9 +144,9 @@ type User {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
-    const args = (fields.users as GraphQLField<any, any>).args;
+    const args = (fields['users'] as GraphQLField<any, any>).args;
     expect(args.length).toEqual(0);
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
@@ -187,11 +187,11 @@ type User {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
-    const args = (fields.users as GraphQLField<any, any>).args;
+    const args = (fields['users'] as GraphQLField<any, any>).args;
     expect(args.length).toEqual(1);
-    expect(args[0].name).toEqual('page');
+    expect(args[0]?.name).toEqual('page');
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
 "type Query {
@@ -234,11 +234,11 @@ type User {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
-    const args = (fields.users as GraphQLField<any, any>).args;
+    const args = (fields['users'] as GraphQLField<any, any>).args;
     expect(args.length).toEqual(1);
-    expect(args[0].name).toEqual('page');
+    expect(args[0]?.name).toEqual('page');
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
 "type Query {
@@ -313,7 +313,7 @@ type User {
     expect(queryType).toBeDefined();
 
     const fields = queryType.getFields();
-    expect(fields.users).toBeDefined();
+    expect(fields['users']).toBeDefined();
 
     expect(printSchema(newSchema)).toMatchInlineSnapshot(`
 "type Query {
@@ -384,7 +384,7 @@ type User {
             ],
           }),
           createFilterTransform({
-            fieldFilter: (typeName, fieldName) => fieldName !== 'users',
+            fieldFilter: (_typeName, fieldName) => fieldName !== 'users',
           }),
         ],
         name: 'TEST',
@@ -394,7 +394,7 @@ type User {
     const queryType = newSchema.getType('Query') as GraphQLObjectType;
     expect(queryType).toBeDefined();
     const fields = queryType.getFields();
-    expect(fields.users).toBeUndefined();
-    expect(fields.userList).toBeDefined();
+    expect(fields['users']).toBeUndefined();
+    expect(fields['userList']).toBeDefined();
   });
 });

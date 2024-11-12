@@ -1,6 +1,5 @@
 import { createNamingConventionTransform } from '@graphql-mesh/fusion-composition';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import {
   buildSchema,
   GraphQLEnumType,
@@ -12,6 +11,7 @@ import {
   composeAndGetPublicSchema,
   expectTheSchemaSDLToBe,
 } from '../utils';
+import { describe, it, expect } from 'vitest';
 
 describe('Naming Convention', () => {
   it('changes the name of a types, enums, fields and fieldArguments', async () => {
@@ -61,13 +61,13 @@ describe('Naming Convention', () => {
     expect(nodeUnionType).toBeDefined();
 
     const userObjectTypeFields = userObjectType.getFields();
-    expect(userObjectTypeFields.Id).toBeUndefined();
-    expect(userObjectTypeFields.id).toBeDefined();
+    expect(userObjectTypeFields['Id']).toBeUndefined();
+    expect(userObjectTypeFields['id']).toBeDefined();
 
     const nodeUnionTypeTypes = nodeUnionType.getTypes();
     expect(nodeUnionTypeTypes).toHaveLength(2);
-    expect(nodeUnionTypeTypes[0].name).toBe('User');
-    expect(nodeUnionTypeTypes[1].name).toBe('Post');
+    expect(nodeUnionTypeTypes[0]?.name).toBe('User');
+    expect(nodeUnionTypeTypes[1]?.name).toBe('Post');
 
     expect(newSchema.getType('userType')).toBeUndefined();
     const userTypeEnumType = newSchema.getType('UserType') as GraphQLEnumType;
@@ -142,7 +142,7 @@ describe('Naming Convention', () => {
       `,
       resolvers: {
         Query: {
-          user: (root, args) => {
+          user: (_root, args) => {
             return {
               id: args.Input.id,
               first_name: args.Input.first_name,
@@ -150,7 +150,7 @@ describe('Naming Convention', () => {
               Type: args.Input.type,
             };
           },
-          userById: (root, args) => {
+          userById: (_root, args) => {
             return {
               id: args.userId,
               first_name: 'John',
@@ -353,14 +353,14 @@ describe('Naming Convention', () => {
 
     const query = newSchema.getType('Query') as GraphQLObjectType;
     const fields = query.getFields();
-    const fieldUsersByType = fields.usersByType;
+    const fieldUsersByType = fields['usersByType'];
     expect(fieldUsersByType).toBeDefined();
-    expect(fieldUsersByType.args).toBeDefined();
-    const userTypeArg = fieldUsersByType.args[0];
+    expect(fieldUsersByType?.args).toBeDefined();
+    const userTypeArg = fieldUsersByType?.args[0];
     expect(userTypeArg).toBeDefined();
-    expect(userTypeArg.defaultValue).toBeDefined();
-    expect(userTypeArg.defaultValue).not.toBeNull();
-    expect(userTypeArg.defaultValue).toBe('NEWBIE');
+    expect(userTypeArg?.defaultValue).toBeDefined();
+    expect(userTypeArg?.defaultValue).not.toBeNull();
+    expect(userTypeArg?.defaultValue).toBe('NEWBIE');
   });
 
   it('resolves the data of renamed fields correctly when arguments are not changed', async () => {

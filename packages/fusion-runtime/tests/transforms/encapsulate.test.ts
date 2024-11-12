@@ -5,6 +5,7 @@ import { isAsyncIterable } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { GraphQLSchema, parse } from 'graphql';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
+import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('encapsulate', () => {
   let schema: GraphQLSchema;
@@ -60,9 +61,11 @@ describe('encapsulate', () => {
         name: 'TEST',
       },
     ]);
-    expect(newSchema.getMutationType().getFields().TEST).toBeDefined();
-    expect(newSchema.getMutationType().getFields().notify).not.toBeDefined();
-    expect(newSchema.getMutationType().getFields().TEST.type.toString()).toBe(
+    const mutationType = newSchema.getMutationType();
+    const mutationFields = mutationType?.getFields();
+    expect(mutationFields?.['TEST']).toBeDefined();
+    expect(mutationFields?.['notify']).not.toBeDefined();
+    expect(mutationFields?.['TEST']?.type.toString()).toBe(
       'TESTMutation!',
     );
   });
@@ -75,12 +78,14 @@ describe('encapsulate', () => {
         name: 'TEST',
       },
     ]);
-    expect(newSchema.getSubscriptionType().getFields().TEST).toBeDefined();
+    const subscriptionType = newSchema.getSubscriptionType();
+    const subscriptionFields = subscriptionType?.getFields();
+    expect(subscriptionFields?.['TEST']).toBeDefined();
     expect(
-      newSchema.getSubscriptionType().getFields().getSomething,
+      subscriptionFields?.['getSomething'],
     ).not.toBeDefined();
     expect(
-      newSchema.getSubscriptionType().getFields().TEST.type.toString(),
+      subscriptionFields?.['TEST']?.type.toString(),
     ).toBe('TESTSubscription!');
   });
   it('groups Query correctly', async () => {
@@ -92,11 +97,13 @@ describe('encapsulate', () => {
         name: 'TEST',
       },
     ]);
-    expect(newSchema.getQueryType().getFields().TEST).toBeDefined();
-    expect(newSchema.getQueryType().getFields().TEST.type.toString()).toBe(
+    const queryType = newSchema.getQueryType();
+    const queryFields = queryType?.getFields();
+    expect(queryFields?.['TEST']).toBeDefined();
+    expect(queryFields?.['TEST']?.type?.toString()).toBe(
       'TESTQuery!',
     );
-    expect(newSchema.getQueryType().getFields().getSomething).not.toBeDefined();
+    expect(queryFields?.['getSomething']).not.toBeDefined();
   });
   it('executes queries the same way and preserves the execution flow', async () => {
     const resultBefore = await normalizedExecutor({

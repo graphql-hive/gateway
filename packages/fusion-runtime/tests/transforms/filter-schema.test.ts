@@ -4,6 +4,7 @@ import {
 } from '@graphql-mesh/fusion-composition';
 import { buildSchema, printSchema } from 'graphql';
 import { composeAndGetPublicSchema, expectTheSchemaSDLToBe } from '../utils.js';
+import { describe, it, expect } from 'vitest';
 
 describe('filter-schema', () => {
   it('filters correctly with array of rules', async () => {
