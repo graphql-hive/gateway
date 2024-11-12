@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import JSON5 from 'json5';
 import { pathsToModuleNameMapper } from 'ts-jest';
+import type { Config } from 'jest';
 
 const CI = !!process.env['CI'];
 const ROOT_DIR = __dirname;
@@ -31,4 +32,4 @@ export default {
     }),
   },
   testMatch: ['**/*.(test|spec).ts'],
-};
+} satisfies Config;
