@@ -95,7 +95,7 @@ function getTransportExecutor({
   transports = defaultTransportsGetter,
 }: {
   transportContext: TransportContext;
-  transportEntry?: TransportEntry;
+  transportEntry: TransportEntry;
   subgraphName?: string;
   subgraph: GraphQLSchema;
   transports?: Transports;
@@ -196,7 +196,7 @@ export function getOnSubgraphExecute({
               return getSubgraphSchema(subgraphName);
             },
             get transportEntry() {
-              return transportEntryMap[subgraphName];
+              return transportEntryMap[subgraphName]!;
             },
             transports,
           }),
