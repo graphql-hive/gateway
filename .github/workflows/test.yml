@@ -114,3 +114,23 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn e2e:test
+
+  leaks:
+    needs: [unit, e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 18
+          - 22
+    name: Leaks / Node v${{matrix.node-version}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version: ${{matrix.node-version}}
+      - name: Test
+        run: yarn test:leaks
