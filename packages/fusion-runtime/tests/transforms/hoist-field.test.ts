@@ -9,8 +9,8 @@ import {
   printSchema,
   type GraphQLField,
 } from 'graphql';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
-import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('Hoist Field', () => {
   let schema: GraphQLSchema;

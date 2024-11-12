@@ -6,12 +6,12 @@ import {
   GraphQLObjectType,
   GraphQLUnionType,
 } from 'graphql';
+import { describe, expect, it } from 'vitest';
 import {
   composeAndGetExecutor,
   composeAndGetPublicSchema,
   expectTheSchemaSDLToBe,
 } from '../utils';
-import { describe, it, expect } from 'vitest';
 
 describe('Naming Convention', () => {
   it('changes the name of a types, enums, fields and fieldArguments', async () => {

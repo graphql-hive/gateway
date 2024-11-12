@@ -1,7 +1,7 @@
 import { createFederationTransform } from '@graphql-mesh/fusion-composition';
 import { createSchema } from 'graphql-yoga';
+import { describe, expect, it } from 'vitest';
 import { composeAndGetExecutor } from '../utils';
-import { describe, it, expect } from 'vitest';
 
 describe('Federation', () => {
   it('works', async () => {

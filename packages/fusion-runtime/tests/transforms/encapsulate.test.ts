@@ -4,8 +4,8 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { GraphQLSchema, parse } from 'graphql';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { composeAndGetExecutor, composeAndGetPublicSchema } from '../utils';
-import { describe, beforeEach, it, expect } from 'vitest';
 
 describe('encapsulate', () => {
   let schema: GraphQLSchema;
@@ -65,9 +65,7 @@ describe('encapsulate', () => {
     const mutationFields = mutationType?.getFields();
     expect(mutationFields?.['TEST']).toBeDefined();
     expect(mutationFields?.['notify']).not.toBeDefined();
-    expect(mutationFields?.['TEST']?.type.toString()).toBe(
-      'TESTMutation!',
-    );
+    expect(mutationFields?.['TEST']?.type.toString()).toBe('TESTMutation!');
   });
   it('groups Subscription correctly', async () => {
     const transform = createEncapsulateTransform();
@@ -81,12 +79,10 @@ describe('encapsulate', () => {
     const subscriptionType = newSchema.getSubscriptionType();
     const subscriptionFields = subscriptionType?.getFields();
     expect(subscriptionFields?.['TEST']).toBeDefined();
-    expect(
-      subscriptionFields?.['getSomething'],
-    ).not.toBeDefined();
-    expect(
-      subscriptionFields?.['TEST']?.type.toString(),
-    ).toBe('TESTSubscription!');
+    expect(subscriptionFields?.['getSomething']).not.toBeDefined();
+    expect(subscriptionFields?.['TEST']?.type.toString()).toBe(
+      'TESTSubscription!',
+    );
   });
   it('groups Query correctly', async () => {
     const transform = createEncapsulateTransform();
@@ -100,9 +96,7 @@ describe('encapsulate', () => {
     const queryType = newSchema.getQueryType();
     const queryFields = queryType?.getFields();
     expect(queryFields?.['TEST']).toBeDefined();
-    expect(queryFields?.['TEST']?.type?.toString()).toBe(
-      'TESTQuery!',
-    );
+    expect(queryFields?.['TEST']?.type?.toString()).toBe('TESTQuery!');
     expect(queryFields?.['getSomething']).not.toBeDefined();
   });
   it('executes queries the same way and preserves the execution flow', async () => {
