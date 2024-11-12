@@ -254,7 +254,7 @@ jobs:
 
 # --- START RELEASE ---
   snapshot:
-    needs: [bench]
+    needs: [e2e]
     if: github.event_name == 'pull_request'
     name: Snapshot
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
@@ -354,7 +354,7 @@ jobs:
             ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
             ```
   bin:
-    needs: [stable, snapshot, ghcr]
+    needs: [stable, snapshot]
     name: Binary built on ${{ matrix.os }}
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
