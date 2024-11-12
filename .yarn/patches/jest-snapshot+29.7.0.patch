@@ -1,0 +1,45 @@
+diff --git a/build/index.js b/build/index.js
+index df9f897..8b062c6 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -336,6 +336,7 @@ const _toMatchSnapshot = config => {
+   const {currentConcurrentTestName, isNot, snapshotState} = context;
+   const currentTestName =
+     currentConcurrentTestName?.() ?? context.currentTestName;
++
+   if (isNot) {
+     throw new Error(
+       (0, _jestMatcherUtils.matcherErrorMessage)(
+@@ -360,7 +361,7 @@ const _toMatchSnapshot = config => {
+   }
+   const fullTestName =
+     currentTestName && hint
+-      ? `${currentTestName}: ${hint}`
++      ? `${currentTestName} > ${hint}`
+       : currentTestName || ''; // future BREAKING change: || hint
+ 
+   if (typeof properties === 'object') {
+diff --git a/build/utils.js b/build/utils.js
+index 7c49470..fdae122 100644
+--- a/build/utils.js
++++ b/build/utils.js
+@@ -87,8 +87,8 @@ var jestExistsFile =
+  */
+ const SNAPSHOT_VERSION = '1';
+ exports.SNAPSHOT_VERSION = SNAPSHOT_VERSION;
+-const SNAPSHOT_VERSION_REGEXP = /^\/\/ Jest Snapshot v(.+),/;
+-const SNAPSHOT_GUIDE_LINK = 'https://goo.gl/fbAQLP';
++const SNAPSHOT_VERSION_REGEXP = /^\/\/ Vitest Snapshot v(.+),/;
++const SNAPSHOT_GUIDE_LINK = 'https://vitest.dev/guide/snapshot.html';
+ exports.SNAPSHOT_GUIDE_LINK = SNAPSHOT_GUIDE_LINK;
+ const SNAPSHOT_VERSION_WARNING = _chalk.default.yellow(
+   `${_chalk.default.bold('Warning')}: Before you upgrade snapshots, ` +
+@@ -97,7 +97,7 @@ const SNAPSHOT_VERSION_WARNING = _chalk.default.yellow(
+ );
+ exports.SNAPSHOT_VERSION_WARNING = SNAPSHOT_VERSION_WARNING;
+ const writeSnapshotVersion = () =>
+-  `// Jest Snapshot v${SNAPSHOT_VERSION}, ${SNAPSHOT_GUIDE_LINK}`;
++  `// Vitest Snapshot v${SNAPSHOT_VERSION}, ${SNAPSHOT_GUIDE_LINK}`;
+ const validateSnapshotVersion = snapshotContents => {
+   const versionTest = SNAPSHOT_VERSION_REGEXP.exec(snapshotContents);
+   const version = versionTest && versionTest[1];
