@@ -14978,7 +14978,7 @@ __metadata:
 
 "pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch":
   version: 2.5.1
-  resolution: "pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch::version=2.5.1&hash=838457"
+  resolution: "pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch::version=2.5.1&hash=7edda2"
   dependencies:
     "@rollup/plugin-alias": "npm:^5.1.0"
     "@rollup/plugin-commonjs": "npm:^26.0.1"
@@ -14997,7 +14997,7 @@ __metadata:
       optional: true
   bin:
     pkgroll: dist/cli.js
-  checksum: 10c0/9fd9b18a87c0ff880263035481c0a4be15ba1f71919a5a6bf05d96059383c1bf95edf6d79bb30380167cfdf704d0e71d9dc9b857aef5f9151942539a399177de
+  checksum: 10c0/a2401134091b4f501081faa916d2111738044b7dbf6e0fe310c07ddf947b4f9a9005e24723427d68dcedb0feef0696c63fb8844f9f0152b8a90ccb202ceb6986
   languageName: node
   linkType: hard
 
