@@ -671,7 +671,7 @@ export function createGatewayRuntime<
       const htmlParts: string[] = [];
       let loaded = false;
       let loadError!: unknown;
-      let transportEntryMap!: Record<string, TransportEntry>;
+      let transportEntryMap: Record<string, TransportEntry> = {};
       try {
         transportEntryMap = await unifiedGraphManager.getTransportEntryMap();
         loaded = true;

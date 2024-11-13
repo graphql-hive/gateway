@@ -41,6 +41,8 @@ console.log('Bundling...');
 const deps = {
   'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
+  'node_modules/@graphql-mesh/fusion-runtime/index':
+    '../fusion-runtime/src/index.ts',
   'node_modules/@graphql-mesh/include/hooks':
     '../../node_modules/@graphql-mesh/include/esm/hooks.js',
   // default transports should be in the container

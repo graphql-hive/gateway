@@ -8,3 +8,4 @@ bundle/
 tsconfig.tsbuildinfo
 sea-prep.blob
 hive-gateway
+.cache/
