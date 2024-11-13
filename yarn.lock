@@ -3206,7 +3206,7 @@ __metadata:
     "@graphql-hive/core": "npm:^0.8.1"
     "@graphql-mesh/cross-helpers": "npm:^0.4.6"
     "@graphql-mesh/fusion-composition": "npm:^0.6.1"
-    "@graphql-mesh/fusion-runtime": "npm:^0.10.2"
+    "@graphql-mesh/fusion-runtime": "workspace:*"
     "@graphql-mesh/hmac-upstream-signature": "npm:^1.1.0"
     "@graphql-mesh/plugin-hive": "npm:^0.102.8"
     "@graphql-mesh/plugin-response-cache": "npm:^0.102.6"
@@ -3438,7 +3438,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-runtime@npm:^0.10.2, @graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime":
+"@graphql-mesh/fusion-runtime@workspace:*, @graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
   dependencies:
