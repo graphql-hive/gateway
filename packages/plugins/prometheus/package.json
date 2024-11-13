@@ -1,0 +1,63 @@
+{
+  "name": "@graphql-mesh/plugin-prometheus",
+  "version": "1.2.7",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/plugins/prometheus"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^15.9.0 || ^16.9.0",
+    "graphql-yoga": "^4.0.5 || ^5.0.0",
+    "prom-client": "^13 || ^14.0.0 || ^15.0.0"
+  },
+  "dependencies": {
+    "@graphql-hive/gateway": "workspace:^",
+    "@graphql-mesh/cross-helpers": "^0.4.7",
+    "@graphql-mesh/store": "^0.102.12",
+    "@graphql-mesh/types": "^0.102.12",
+    "@graphql-mesh/utils": "^0.102.12",
+    "@graphql-tools/utils": "^10.5.5",
+    "@graphql-yoga/plugin-prometheus": "^6.1.0",
+    "prom-client": "^15.0.0",
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.7.0",
+    "prom-client": "15.1.3"
+  },
+  "sideEffects": false
+}

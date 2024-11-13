@@ -24,6 +24,9 @@
       ],
       "@graphql-mesh/plugin-opentelemetry": [
         "./packages/plugins/opentelemetry/src/index.ts"
+      ],
+      "@graphql-mesh/plugin-prometheus": [
+        "./packages/plugins/prometheus/src/index.ts"
       ]
     }
   },
