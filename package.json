@@ -5,6 +5,7 @@
   "workspaces": [
     "packages/*",
     "packages/transports/*",
+    "packages/plugins/*",
     "internal/*",
     "e2e/*"
   ],
