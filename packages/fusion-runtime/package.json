@@ -46,6 +46,7 @@
     "@envelop/core": "^5.0.1",
     "@graphql-mesh/cross-helpers": "^0.4.7",
     "@graphql-mesh/runtime": "^0.104.1",
+    "@graphql-mesh/store": "^0.102.12",
     "@graphql-mesh/transport-common": "^0.7.13",
     "@graphql-mesh/types": "^0.102.12",
     "@graphql-mesh/utils": "^0.102.12",
@@ -63,6 +64,7 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
+    "graphql": "^16.9.0",
     "pkgroll": "2.5.1"
   },
   "sideEffects": false

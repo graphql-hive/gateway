@@ -44,6 +44,9 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
+    "@graphql-mesh/cross-helpers": "^0.4.7",
+    "@graphql-mesh/store": "^0.102.12",
+    "@graphql-mesh/utils": "^0.102.12",
     "graphql": "^16.9.0",
     "pkgroll": "2.5.1"
   },
