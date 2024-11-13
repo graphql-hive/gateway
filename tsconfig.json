@@ -21,6 +21,9 @@
       "@graphql-mesh/transport-*": ["./packages/transports/*/src/index.ts"],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
+      ],
+      "@graphql-mesh/plugin-opentelemetry": [
+        "./packages/plugins/opentelemetry/src/index.ts"
       ]
     }
   },
