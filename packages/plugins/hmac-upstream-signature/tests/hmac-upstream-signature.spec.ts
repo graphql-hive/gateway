@@ -5,7 +5,7 @@ import {
   useCustomFetch,
 } from '@graphql-hive/gateway';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, test } from 'vitest';
+import { beforeEach, describe, expect, it, test, vitest } from 'vitest';
 import {
   defaultParamsSerializer,
   useHmacSignatureValidation,
@@ -142,7 +142,7 @@ describe('useHmacSignatureValidation', () => {
 
 describe('useHmacUpstreamSignature', () => {
   const requestTrackerPlugin = {
-    onParams: jest.fn((() => {}) as Plugin['onParams']),
+    onParams: vitest.fn((() => {}) as Plugin['onParams']),
   };
   const upstream = createYoga({
     schema: createSchema({
