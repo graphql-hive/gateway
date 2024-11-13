@@ -3461,7 +3461,7 @@ __metadata:
     "@graphql-tools/utils": "npm:^10.5.6"
     "@graphql-tools/wrap": "npm:^10.0.12"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
-    change-case: "npm:^4.1.2"
+    constant-case: "npm:^4.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.7.0"
     pkgroll: "npm:2.5.1"
@@ -9411,6 +9411,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"constant-case@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "constant-case@npm:4.0.0"
+  dependencies:
+    no-case: "npm:^4.0.0"
+  checksum: 10c0/8691a281254b51f8cded330431ea3f232b5dba29da6f04770ab8e0d0273b90af35389a905d20e034a8c7e07765b8e6338c2ca0b1d1a90810754cbf8098bf0434
+  languageName: node
+  linkType: hard
+
 "content-disposition@npm:0.5.4":
   version: 0.5.4
   resolution: "content-disposition@npm:0.5.4"
@@ -14320,6 +14329,13 @@ __metadata:
     lower-case: "npm:^2.0.2"
     tslib: "npm:^2.0.3"
   checksum: 10c0/8ef545f0b3f8677c848f86ecbd42ca0ff3cd9dd71c158527b344c69ba14710d816d8489c746b6ca225e7b615108938a0bda0a54706f8c255933703ac1cf8e703
+  languageName: node
+  linkType: hard
+
+"no-case@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "no-case@npm:4.0.0"
+  checksum: 10c0/619860434dc33e65cec2cb0b57942903bac864dd1efc834f71d04f5e060f5eb2189224c8557aa5ad3dacf5594d26e33882b3fb7f975a9bf3481c7e7867011a2f
   languageName: node
   linkType: hard
 

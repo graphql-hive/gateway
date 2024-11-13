@@ -23,7 +23,7 @@ import {
   type Maybe,
   type MaybePromise,
 } from '@graphql-tools/utils';
-import { constantCase } from 'change-case';
+import { constantCase } from 'constant-case';
 import {
   print,
   type DocumentNode,
