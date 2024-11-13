@@ -58,7 +58,7 @@
     "@graphql-tools/utils": "^10.5.5",
     "@graphql-tools/wrap": "^10.0.12",
     "@whatwg-node/disposablestack": "^0.0.5",
-    "change-case": "^4.1.2",
+    "change-case": "^5.0.0",
     "graphql-yoga": "^5.7.0",
     "tslib": "^2.4.0"
   },
