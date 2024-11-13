@@ -1,4 +1,3 @@
-import type { ClientOptions } from 'graphql-ws';
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
@@ -6,8 +5,13 @@ import {
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
-import { dispose, isDisposable, makeAsyncDisposable } from '@graphql-mesh/utils';
+import {
+  dispose,
+  isDisposable,
+  makeAsyncDisposable,
+} from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
+import type { ClientOptions } from 'graphql-ws';
 
 function switchProtocols(url: string) {
   if (url.startsWith('https://')) {
@@ -19,7 +23,10 @@ function switchProtocols(url: string) {
   return url;
 }
 
-export type WSTransportOptions = Omit<ClientOptions, 'url' | 'on' | 'connectionParams'> & {
+export type WSTransportOptions = Omit<
+  ClientOptions,
+  'url' | 'on' | 'connectionParams'
+> & {
   connectionParams?: Record<string, string>;
 };
 
@@ -27,17 +34,23 @@ export default {
   getSubgraphExecutor({ transportEntry, logger }) {
     const wsExecutorMap = new Map<string, DisposableExecutor>();
     if (!transportEntry.location) {
-      throw new Error('WS Transport: location is required in the transport entry');
+      throw new Error(
+        'WS Transport: location is required in the transport entry',
+      );
     }
     const wsUrl = switchProtocols(transportEntry.location);
     const connectionParamsFactory = transportEntry.options?.connectionParams
       ? getInterpolatedHeadersFactory(transportEntry.options.connectionParams)
       : undefined;
     const headersFactory = transportEntry.headers
-      ? getInterpolatedHeadersFactory(Object.fromEntries(transportEntry.headers))
+      ? getInterpolatedHeadersFactory(
+          Object.fromEntries(transportEntry.headers),
+        )
       : undefined;
 
-    const mergedExecutor: DisposableExecutor = function mergedExecutor(execReq) {
+    const mergedExecutor: DisposableExecutor = function mergedExecutor(
+      execReq,
+    ) {
       const connectionParams = connectionParamsFactory?.({
         env: process.env as Record<string, string>,
         root: execReq.rootValue,
@@ -101,7 +114,7 @@ export default {
     return makeAsyncDisposable(mergedExecutor, () =>
       Promise.all(
         Array.from(wsExecutorMap.values()).map(
-          executor => isDisposable(executor) && dispose(executor),
+          (executor) => isDisposable(executor) && dispose(executor),
         ),
       ).then(() => {}),
     );

@@ -1,12 +1,16 @@
-import type { GraphQLSchema } from 'graphql';
 import type { Logger, MeshFetch, MeshPubSub } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
+import type { GraphQLSchema } from 'graphql';
 
-export interface Transport<Options extends Record<string, any> = Record<string, any>> {
+export interface Transport<
+  Options extends Record<string, any> = Record<string, any>,
+> {
   getSubgraphExecutor: TransportGetSubgraphExecutor<Options>;
 }
 
-export interface TransportEntry<Options extends Record<string, any> = Record<string, any>> {
+export interface TransportEntry<
+  Options extends Record<string, any> = Record<string, any>,
+> {
   kind: string;
   subgraph: string;
   location?: string;
@@ -36,9 +40,12 @@ export type TransportExecutorFactoryGetter = (
 
 export type TransportGetSubgraphExecutor<
   Options extends Record<string, any> = Record<string, any>,
-> = (opts: TransportGetSubgraphExecutorOptions<Options>) => MaybePromise<Executor>;
+> = (
+  opts: TransportGetSubgraphExecutorOptions<Options>,
+) => MaybePromise<Executor>;
 
-export type DisposableExecutor = Executor & Partial<Disposable | AsyncDisposable>;
+export type DisposableExecutor = Executor &
+  Partial<Disposable | AsyncDisposable>;
 
 export interface UpstreamErrorExtensions {
   subgraph?: string;

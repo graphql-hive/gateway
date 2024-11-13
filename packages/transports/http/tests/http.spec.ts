@@ -1,7 +1,7 @@
-import { buildSchema, parse } from 'graphql';
 import type { MeshFetch } from '@graphql-mesh/types';
+import { buildSchema, parse } from 'graphql';
+import { describe, expect, it, vitest } from 'vitest';
 import httpTransport from '../src';
-import { describe, it, expect, vitest } from 'vitest';
 
 describe('HTTP Transport', () => {
   const subgraphName = 'test';

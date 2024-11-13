@@ -32,7 +32,7 @@
   [WebSocket HTTP upgrade request](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism#upgrading_http1.1_connections):
 
   ```ts
-  import { defineConfig } from '@graphql-hive/gateway'
+  import { defineConfig } from '@graphql-hive/gateway';
 
   export const gatewayConfig = defineConfig({
     transportEntries: {
@@ -41,12 +41,12 @@
           subscriptions: {
             kind: 'ws',
             location: '/subscriptions',
-            headers: [['authentication', '{context.headers.authentication}']]
-          }
-        }
-      }
-    }
-  })
+            headers: [['authentication', '{context.headers.authentication}']],
+          },
+        },
+      },
+    },
+  });
   ```
 
 ### Patch Changes

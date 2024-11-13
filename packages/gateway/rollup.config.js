@@ -7,7 +7,6 @@ import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
-
 console.log('Bundling...');
 
 /**

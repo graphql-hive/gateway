@@ -2,7 +2,7 @@ import { GraphQLScalarType, valueFromASTUntyped } from 'graphql';
 
 export const ObjMapScalar = new GraphQLScalarType({
   name: 'ObjMap',
-  serialize: value => {
+  serialize: (value) => {
     if (typeof value === 'string') {
       return value;
     }
@@ -13,7 +13,7 @@ export const ObjMapScalar = new GraphQLScalarType({
     // }
     return stringifiedValue;
   },
-  parseValue: value => {
+  parseValue: (value) => {
     if (value == null) {
       return null;
     }

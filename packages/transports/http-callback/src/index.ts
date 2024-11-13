@@ -1,4 +1,3 @@
-import type { ExecutionResult, GraphQLError } from 'graphql';
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
@@ -7,9 +6,13 @@ import {
   type Transport,
 } from '@graphql-mesh/transport-common';
 import { makeDisposable, mapMaybePromise } from '@graphql-mesh/utils';
-import { createGraphQLError, type ExecutionRequest } from '@graphql-tools/utils';
+import {
+  createGraphQLError,
+  type ExecutionRequest,
+} from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
 import { crypto } from '@whatwg-node/fetch';
+import type { ExecutionResult, GraphQLError } from 'graphql';
 
 export interface HTTPCallbackTransportOptions {
   /**
@@ -61,7 +64,12 @@ function createTimeoutError() {
 }
 
 export default {
-  getSubgraphExecutor({ transportEntry, fetch, pubsub, logger }): DisposableExecutor {
+  getSubgraphExecutor({
+    transportEntry,
+    fetch,
+    pubsub,
+    logger,
+  }): DisposableExecutor {
     let headersInConfig: Record<string, string> | undefined;
     if (typeof transportEntry.headers === 'string') {
       headersInConfig = JSON.parse(transportEntry.headers);
@@ -85,10 +93,14 @@ export default {
     const reqAbortCtrls = new Set<AbortController>();
     const heartbeats = new Map<string, ReturnType<typeof setTimeout>>();
     const stopFnSet = new Set<VoidFunction>();
-    const publicUrl = transportEntry.options?.public_url || 'http://localhost:4000';
+    const publicUrl =
+      transportEntry.options?.public_url || 'http://localhost:4000';
     const callbackPath = transportEntry.options?.path || '/callback';
-    const heartbeatIntervalMs = transportEntry.options?.heartbeat_interval || 50000;
-    const httpCallbackExecutor = function httpCallbackExecutor(execReq: ExecutionRequest) {
+    const heartbeatIntervalMs =
+      transportEntry.options?.heartbeat_interval || 50000;
+    const httpCallbackExecutor = function httpCallbackExecutor(
+      execReq: ExecutionRequest,
+    ) {
       const query = defaultPrintFn(execReq.document);
       const subscriptionId = crypto.randomUUID();
       const subscriptionLogger = logger?.child(subscriptionId);
@@ -108,7 +120,7 @@ export default {
           },
         },
       });
-      let stopSubscription: (error?: Error) => void = error => {
+      let stopSubscription: (error?: Error) => void = (error) => {
         if (error) {
           throw error;
         }
@@ -123,14 +135,20 @@ export default {
         `Subscribing to ${transportEntry.location} with callbackUrl: ${callbackUrl}`,
       );
       let pushFn: Push<ExecutionResult> = () => {
-        throw new Error('HTTP Callback Transport: Subgraph does not look like configured correctly. Check your subgraph setup.');
+        throw new Error(
+          'HTTP Callback Transport: Subgraph does not look like configured correctly. Check your subgraph setup.',
+        );
       };
       const reqAbortCtrl = new AbortController();
       if (!fetch) {
-        throw new Error('HTTP Callback Transport: \`fetch\` implementation is missing!');
+        throw new Error(
+          'HTTP Callback Transport: `fetch` implementation is missing!',
+        );
       }
       if (!transportEntry.location) {
-        throw new Error(`HTTP Callback Transport: \`location\` is missing in the transport entry!`);
+        throw new Error(
+          `HTTP Callback Transport: \`location\` is missing in the transport entry!`,
+        );
       }
       const subFetchCall$ = mapMaybePromise(
         fetch(
@@ -153,8 +171,8 @@ export default {
           execReq.context,
           execReq.info,
         ),
-        res =>
-          mapMaybePromise(res.text(), resText => {
+        (res) =>
+          mapMaybePromise(res.text(), (resText) => {
             let resJson: ExecutionResult;
             try {
               resJson = JSON.parse(resText);
@@ -178,8 +196,10 @@ export default {
               } else {
                 stopSubscription(
                   new AggregateError(
-                    resJson.errors.map(err => createGraphQLError(err.message, err)),
-                    resJson.errors.map(err => err.message).join('\n'),
+                    resJson.errors.map((err) =>
+                      createGraphQLError(err.message, err),
+                    ),
+                    resJson.errors.map((err) => err.message).join('\n'),
                   ),
                 );
               }
@@ -188,7 +208,7 @@ export default {
               stopSubscription();
             }
           }),
-        e => {
+        (e) => {
           logger?.debug(`Subscription request failed`, e);
           stopSubscription(e);
         },
@@ -202,7 +222,10 @@ export default {
         const subId = pubsub.subscribe(
           `webhook:post:${subscriptionCallbackPath}`,
           (message: HTTPCallbackMessage) => {
-            logger?.debug(`Received message from ${subscriptionCallbackPath}`, message);
+            logger?.debug(
+              `Received message from ${subscriptionCallbackPath}`,
+              message,
+            );
             if (message.verifier !== verifier) {
               return;
             }
@@ -238,7 +261,7 @@ export default {
                   } else {
                     stopSubscription(
                       new AggregateError(
-                        message.errors.map(err =>
+                        message.errors.map((err) =>
                           createGraphQLError(err.message, {
                             ...err,
                             extensions: {

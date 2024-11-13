@@ -303,8 +303,8 @@
         // This forwards `authorization` from the upstream to downstream
         ['authorization', '{context.headers.authorization}'],
         // Or some static value
-        ['x-extra', process.env.SOME_THING]
-      ]
+        ['x-extra', process.env.SOME_THING],
+      ];
     }
   }
   ```
@@ -341,17 +341,17 @@
   ```ts
   // http-transport.ts
 
-  import { Transport } from '@graphql-mesh/transport-common'
+  import { Transport } from '@graphql-mesh/transport-common';
 
   export interface HTTPTransportOptions {
-    cache?: boolean
+    cache?: boolean;
   }
 
   export default {
     getSubgraphExecutor(opts) {
       // <the implementation of your executor getter>
-    }
-  } satisfies Transport<'http', HTTPTransportOptions>
+    },
+  } satisfies Transport<'http', HTTPTransportOptions>;
   ```
 
   and is used for Mesh serve like this:
@@ -359,13 +359,13 @@
   ```ts
   // mesh.config.ts
 
-  import { defineConfig } from '@graphql-mesh/serve-cli'
+  import { defineConfig } from '@graphql-mesh/serve-cli';
 
   export const serveConfig = defineConfig({
     transport: {
-      http: import('./http-transport')
-    }
-  })
+      http: import('./http-transport'),
+    },
+  });
   ```
 
   or like this:
@@ -373,14 +373,14 @@
   ```ts
   // mesh.config.ts
 
-  import { defineConfig } from '@graphql-mesh/serve-cli'
-  import httpTransport from './http-transport'
+  import { defineConfig } from '@graphql-mesh/serve-cli';
+  import httpTransport from './http-transport';
 
   export const serveConfig = defineConfig({
     transport: {
-      http: httpTransport
-    }
-  })
+      http: httpTransport,
+    },
+  });
   ```
 
 ### Patch Changes

@@ -25,7 +25,9 @@
         "./packages/transport-http/src/index.ts"
       ],
       "@graphql-mesh/transport-ws": ["./packages/transport-ws/src/index.ts"],
-      "@graphql-mesh/transport-http-callback": ["./packages/transport-http-callback/src/index.ts"]
+      "@graphql-mesh/transport-http-callback": [
+        "./packages/transport-http-callback/src/index.ts"
+      ]
     }
   },
   "include": [

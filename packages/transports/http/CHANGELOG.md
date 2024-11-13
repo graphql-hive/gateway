@@ -326,8 +326,8 @@
         // This forwards `authorization` from the upstream to downstream
         ['authorization', '{context.headers.authorization}'],
         // Or some static value
-        ['x-extra', process.env.SOME_THING]
-      ]
+        ['x-extra', process.env.SOME_THING],
+      ];
     }
   }
   ```
