@@ -465,8 +465,10 @@ export function handleFederationSubschema({
       assumeValid: true,
     });
 
-    subschemaConfig.merge =
-      Object.assign(existingMergeConfig, stitchingDirectivesTransformer(subschemaConfig).merge);
+    subschemaConfig.merge = Object.assign(
+      existingMergeConfig,
+      stitchingDirectivesTransformer(subschemaConfig).merge,
+    );
     const queryType = subschemaConfig.schema.getQueryType();
     if (!queryType) {
       throw new Error('Query type is required');
