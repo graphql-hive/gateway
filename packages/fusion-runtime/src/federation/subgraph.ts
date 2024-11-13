@@ -455,7 +455,6 @@ export function handleFederationSubschema({
     );
   }
   if (mergeDirectiveUsed) {
-    subschemaConfig.merge = {};
     // Workaround because transformer needs the directive definition itself
     const subgraphSchemaConfig = subschemaConfig.schema.toConfig();
     subschemaConfig.schema = new GraphQLSchema({
@@ -505,7 +504,7 @@ export function handleFederationSubschema({
   subschemaConfig.executor = function subschemaExecutor(req) {
     return onSubgraphExecute(subgraphName, req);
   };
-
+  
   return subschemaConfig;
 }
 
