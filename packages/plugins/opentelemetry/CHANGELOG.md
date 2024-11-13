@@ -279,11 +279,11 @@
   For example;
 
   ```ts
-  productName = 'Mesh Gateway'
+  productName = 'Mesh Gateway';
   productDescription =
-    'Mesh Gateway is a GraphQL Gateway that can be used to serve a supergraph schema.'
-  productLogo = '<svg>...</svg>'
-  productPackageName = '@graphql-mesh/gateway'
+    'Mesh Gateway is a GraphQL Gateway that can be used to serve a supergraph schema.';
+  productLogo = '<svg>...</svg>';
+  productPackageName = '@graphql-mesh/gateway';
   ```
 
 ### Patch Changes
