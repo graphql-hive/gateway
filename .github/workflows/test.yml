@@ -26,6 +26,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
+      - name: Build
+        run: yarn build # Will be removed after all dependencies are moved to here
       - name: Test
         run: yarn test
 
