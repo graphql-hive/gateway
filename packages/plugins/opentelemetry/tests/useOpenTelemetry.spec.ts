@@ -1,9 +1,9 @@
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vitest } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vitest } from 'vitest';
 
 const mockStartSdk = vitest.fn();
 
-describe('useOpenTelemetry', async () => {
+describe('useOpenTelemetry', () => {
   if (process.env['LEAK_TEST']) {
     it('noop', () => {});
     return;
@@ -11,10 +11,11 @@ describe('useOpenTelemetry', async () => {
   vitest.mock('@opentelemetry/sdk-node', () => ({
     NodeSDK: vitest.fn(() => ({ start: mockStartSdk })),
   }));
-  const { createGatewayRuntime, useCustomFetch } = await import(
-    '@graphql-hive/gateway'
-  );
 
+  let gw: typeof import('@graphql-hive/gateway');
+  beforeAll(async () => {
+    gw = await import('@graphql-hive/gateway');
+  });
   beforeEach(() => {
     vitest.clearAllMocks();
   });
@@ -37,12 +38,12 @@ describe('useOpenTelemetry', async () => {
         logging: false,
       });
 
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = gw.createGatewayRuntime({
         proxy: {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          useCustomFetch(
+          gw.useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
             upstream.fetch,
           ),
@@ -97,12 +98,12 @@ describe('useOpenTelemetry', async () => {
         logging: false,
       });
 
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = gw.createGatewayRuntime({
         proxy: {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          useCustomFetch(
+          gw.useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
             upstream.fetch,
           ),
