@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vitest } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime.js';
+import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
 function createUpstreamSchema() {

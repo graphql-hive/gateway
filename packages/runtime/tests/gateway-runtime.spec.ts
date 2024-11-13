@@ -10,9 +10,9 @@ import {
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, vitest } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime.js';
-import { useCustomFetch } from '../src/plugins/useCustomFetch.js';
-import type { GatewayPlugin } from '../src/types.js';
+import { createGatewayRuntime } from '../src/createGatewayRuntime';
+import { useCustomFetch } from '../src/plugins/useCustomFetch';
+import type { GatewayPlugin } from '../src/types';
 
 describe('Gateway Runtime', () => {
   beforeEach(() => {

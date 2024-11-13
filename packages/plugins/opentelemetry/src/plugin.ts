@@ -23,7 +23,7 @@ import { Resource } from '@opentelemetry/resources';
 import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-node';
 import type { OnRequestEventPayload } from '@whatwg-node/server';
-import { SEMRESATTRS_SERVICE_NAME } from './attributes.js';
+import { SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
   completeHttpSpan,
   createGraphQLExecuteSpan,
@@ -32,7 +32,7 @@ import {
   createHttpSpan,
   createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
-} from './spans.js';
+} from './spans';
 
 type PrimitiveOrEvaluated<TExpectedResult, TInput = never> =
   | TExpectedResult

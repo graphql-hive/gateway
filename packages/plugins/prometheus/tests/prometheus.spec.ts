@@ -5,7 +5,7 @@ import { isDebug } from '@internal/testing';
 import { createSchema } from 'graphql-yoga';
 import { register as registry } from 'prom-client';
 import { describe, expect, it } from 'vitest';
-import usePrometheus from '../src/index.js';
+import usePrometheus from '../src/index';
 
 describe('Prometheus', () => {
   const subgraphSchema = createSchema({

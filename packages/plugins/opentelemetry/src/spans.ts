@@ -27,7 +27,7 @@ import {
   SEMATTRS_HTTP_URL,
   SEMATTRS_HTTP_USER_AGENT,
   SEMATTRS_NET_HOST_NAME,
-} from './attributes.js';
+} from './attributes';
 
 export function createHttpSpan(input: {
   tracer: Tracer;
