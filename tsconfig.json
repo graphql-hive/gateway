@@ -18,16 +18,7 @@
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
       ],
-      "@graphql-mesh/transport-common": [
-        "./packages/transport-common/src/index.ts"
-      ],
-      "@graphql-mesh/transport-http": [
-        "./packages/transport-http/src/index.ts"
-      ],
-      "@graphql-mesh/transport-ws": ["./packages/transport-ws/src/index.ts"],
-      "@graphql-mesh/transport-http-callback": [
-        "./packages/transport-http-callback/src/index.ts"
-      ]
+      "@graphql-mesh/transport-*": ["./packages/transports/*/src/index.ts"]
     }
   },
   "include": [
