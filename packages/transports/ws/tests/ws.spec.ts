@@ -18,8 +18,12 @@ declare global {
   var jest: typeof vitest;
 }
 
-if (!jest) {
-  jest = vitest;
+if (typeof jest === 'undefined') {
+  globalThis.jest = vitest;
+  // This is weird but needed...
+  vitest.mock('@graphql-tools/executor-graphql-ws', () => ({
+    buildGraphQLWSExecutor: vitest.fn(() => mockWsExecutor),
+  }));
 }
 
 jest.mock('@graphql-tools/executor-graphql-ws', () => ({
