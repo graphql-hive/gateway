@@ -7,6 +7,7 @@ import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
+
 console.log('Bundling...');
 
 /**
@@ -39,10 +40,9 @@ console.log('Bundling...');
  * @type {Record<string, string>}
  */
 const deps = {
-  'node_modules/@graphql-hive/gateway/dist/index.js': 'src/index.ts',
-  'node_modules/@graphql-hive/gateway-runtime/dist/index.js':
-    '../runtime/src/index.ts',
-  'node_modules/@graphql-mesh/fusion-runtime/dist/index.js':
+  'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
+  'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
+  'node_modules/@graphql-mesh/fusion-runtime/index':
     '../fusion-runtime/src/index.ts',
   'node_modules/@graphql-mesh/include/hooks':
     '../../node_modules/@graphql-mesh/include/esm/hooks.js',
