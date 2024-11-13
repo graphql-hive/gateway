@@ -8,13 +8,13 @@ export const gatewayConfig = defineConfig({
           () =>
           ({ result }) => {
             if (Symbol.asyncIterator in result) {
-              process.stdout.write('ITERABLE');
+              process.stdout.write('__ITERABLE__');
               return {
                 onNext: () => {
-                  process.stdout.write('>NEXT');
+                  process.stdout.write('__NEXT__');
                 },
                 onEnd: () => {
-                  process.stdout.write('>END');
+                  process.stdout.write('__END__');
                 },
               };
             }

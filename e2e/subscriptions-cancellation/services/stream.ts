@@ -21,11 +21,11 @@ const schema = createSchema<any>({
       emitsOnceAndStalls: {
         subscribe: () =>
           new Repeater(async (push, stop) => {
-            process.stdout.write('ITERABLE');
+            process.stdout.write('__ITERABLE__');
             push({ emitsOnceAndStalls: '👋' });
-            process.stdout.write('>NEXT');
+            process.stdout.write('__NEXT__');
             await stop;
-            process.stdout.write('>END');
+            process.stdout.write('__END__');
           }),
       },
     },
