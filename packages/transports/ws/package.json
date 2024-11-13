@@ -4,12 +4,17 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "ardatan/graphql-mesh",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/transports/ws"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
   },
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "main": "./dist/index.js",
   "exports": {
@@ -34,12 +39,12 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "*"
+    "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
     "@graphql-mesh/cross-helpers": "0.4.7",
     "@graphql-mesh/string-interpolation": "^0.5.6",
-    "@graphql-mesh/transport-common": "workspace:*",
+    "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.102.12",
     "@graphql-mesh/utils": "^0.102.12",
     "@graphql-tools/executor-graphql-ws": "^1.3.0",
