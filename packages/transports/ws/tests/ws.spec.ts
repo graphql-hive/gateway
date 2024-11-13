@@ -1,12 +1,17 @@
-import { parse } from 'graphql';
 import type {
   TransportEntry,
   TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
-import { DefaultLogger, dispose, makeAsyncDisposable, makeDisposable } from '@graphql-mesh/utils';
+import {
+  DefaultLogger,
+  dispose,
+  makeAsyncDisposable,
+  makeDisposable,
+} from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
+import { parse } from 'graphql';
+import { beforeEach, describe, expect, it, vitest } from 'vitest';
 import wsTransport, { type WSTransportOptions } from '../src';
-import { vitest, describe, beforeEach, it, expect } from 'vitest';
 
 // Workaround for jest.mock
 declare global {
@@ -99,15 +104,30 @@ describe('HTTP Transport', () => {
       },
     });
 
-    await executor({ document, context: { connectionParams: 'test1', headers: 'test1' } });
+    await executor({
+      document,
+      context: { connectionParams: 'test1', headers: 'test1' },
+    });
 
-    await executor({ document, context: { connectionParams: 'test2', headers: 'test1' } });
+    await executor({
+      document,
+      context: { connectionParams: 'test2', headers: 'test1' },
+    });
 
-    await executor({ document, context: { connectionParams: 'test1', headers: 'test2' } });
+    await executor({
+      document,
+      context: { connectionParams: 'test1', headers: 'test2' },
+    });
 
-    await executor({ document, context: { connectionParams: 'test2', headers: 'test2' } });
+    await executor({
+      document,
+      context: { connectionParams: 'test2', headers: 'test2' },
+    });
 
-    await executor({ document, context: { connectionParams: 'test1', headers: 'test1' } });
+    await executor({
+      document,
+      context: { connectionParams: 'test1', headers: 'test1' },
+    });
 
     expect(buildExecutorMock).toHaveBeenCalledTimes(4);
   });
@@ -129,7 +149,9 @@ describe('HTTP Transport', () => {
     });
 
     const disposeMock = vitest.fn();
-    buildExecutorMock.mockImplementationOnce(() => makeDisposable(vitest.fn(), disposeMock));
+    buildExecutorMock.mockImplementationOnce(() =>
+      makeDisposable(vitest.fn(), disposeMock),
+    );
     await executor({ document, context: { test: '1' } });
 
     const asyncDisposeMock = vitest.fn().mockReturnValue(Promise.resolve());
@@ -145,7 +167,9 @@ describe('HTTP Transport', () => {
   });
 });
 
-function makeExecutor(transportEntry?: Partial<TransportEntry<WSTransportOptions>>) {
+function makeExecutor(
+  transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
+) {
   return wsTransport.getSubgraphExecutor({
     transportEntry: {
       location: 'http://localhost/ws',
