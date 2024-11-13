@@ -65,7 +65,8 @@
   },
   "devDependencies": {
     "graphql": "^16.9.0",
-    "graphql-yoga": "^5.7.0"
+    "graphql-yoga": "^5.7.0",
+    "pkgroll": "2.5.1"
   },
   "sideEffects": false
 }
