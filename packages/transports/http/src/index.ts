@@ -50,9 +50,9 @@ export default {
         ? (execReq) =>
             headersFactory({
               env: process.env as Record<string, string>,
-              root: execReq.rootValue,
-              context: execReq.context,
-              info: execReq.info,
+              root: execReq?.rootValue,
+              context: execReq?.context,
+              info: execReq?.info,
             })
         : undefined,
       print: defaultPrintFn,
