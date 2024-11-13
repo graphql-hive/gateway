@@ -44,7 +44,7 @@
     "prettier-plugin-sh": "^0.14.0",
     "ts-jest": "29.2.5",
     "ts-node": "^10.9.2",
-    "tsx": "4.19.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.9.0",
     "vite": "^5.4.9",
@@ -59,7 +59,6 @@
     "jest-snapshot": "patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "sequelize": "^6.37.5",
-    "sqlite3": "^5.1.7",
-    "tsx": "patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch"
+    "sqlite3": "^5.1.7"
   }
 }
