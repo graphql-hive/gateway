@@ -4315,15 +4315,15 @@ __metadata:
   linkType: hard
 
 "@graphql-tools/stitching-directives@npm:^3.1.9":
-  version: 3.1.9
-  resolution: "@graphql-tools/stitching-directives@npm:3.1.9"
+  version: 3.1.12
+  resolution: "@graphql-tools/stitching-directives@npm:3.1.12"
   dependencies:
-    "@graphql-tools/delegate": "npm:^10.0.28"
+    "@graphql-tools/delegate": "npm:^10.1.1"
     "@graphql-tools/utils": "npm:^10.5.5"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/fa13506ba5e22dde1186ca5b9eee010560d0950c9b2121959fc9163cd76f7b0aaae9783f7344c011c398aa90b53641ad8c2768d4d1ad9d900c281d4fd9194444
+  checksum: 10c0/4d582e0eb4117183134beaa2a14d2ab674ac7cd809397c27d2dc50b36aa647f6d464ed4d1ec83543e7c42031f533873f91f444a01920bd4642389ff9b223d07c
   languageName: node
   linkType: hard
 
