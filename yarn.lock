@@ -3773,6 +3773,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-mesh/transport-common@workspace:packages/transports/common":
+  version: 0.0.0-use.local
+  resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
+  dependencies:
+    "@envelop/core": "npm:^5.0.1"
+    "@graphql-mesh/types": "npm:^0.102.12"
+    "@graphql-tools/delegate": "npm:^10.0.28"
+    "@graphql-tools/utils": "npm:^10.5.5"
+    graphql: "npm:^16.9.0"
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-mesh/transport-http-callback@npm:^0.5.2":
   version: 0.5.4
   resolution: "@graphql-mesh/transport-http-callback@npm:0.5.4"
@@ -3790,6 +3806,26 @@ __metadata:
   checksum: 10c0/ffb4a58b196b62650e4115e0676588223a2b4912af7f2b7e136caaba8adb3b5dec55bea0b3decca78d1dddbecd60208f317e5b22488e86c66c9b1eb2519497e5
   languageName: node
   linkType: hard
+
+"@graphql-mesh/transport-http-callback@workspace:packages/transports/http-callback":
+  version: 0.0.0-use.local
+  resolution: "@graphql-mesh/transport-http-callback@workspace:packages/transports/http-callback"
+  dependencies:
+    "@graphql-mesh/cross-helpers": "npm:^0.4.7"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.6"
+    "@graphql-mesh/transport-common": "npm:^0.7.13"
+    "@graphql-mesh/types": "npm:^0.102.12"
+    "@graphql-mesh/utils": "npm:^0.102.12"
+    "@graphql-tools/utils": "npm:^10.5.5"
+    "@repeaterjs/repeater": "npm:^3.0.6"
+    "@whatwg-node/fetch": "npm:^0.10.0"
+    graphql: "npm:^16.9.0"
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  languageName: unknown
+  linkType: soft
 
 "@graphql-mesh/transport-http@npm:^0.6.15":
   version: 0.6.15
@@ -3809,6 +3845,25 @@ __metadata:
   checksum: 10c0/fa91a9a57bfbb0730985b01ecf7b1a5f50377573bf30eddb3e057e3a85daa9f8f92057eb22e6694593950d1ba64fbb69efda7e34ed02a379737720040d0da861
   languageName: node
   linkType: hard
+
+"@graphql-mesh/transport-http@workspace:packages/transports/http":
+  version: 0.0.0-use.local
+  resolution: "@graphql-mesh/transport-http@workspace:packages/transports/http"
+  dependencies:
+    "@graphql-mesh/cross-helpers": "npm:^0.4.7"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.6"
+    "@graphql-mesh/transport-common": "npm:^0.7.13"
+    "@graphql-mesh/types": "npm:^0.102.12"
+    "@graphql-mesh/utils": "npm:^0.102.12"
+    "@graphql-tools/executor-http": "npm:^1.1.8"
+    "@graphql-tools/utils": "npm:^10.5.5"
+    graphql: "npm:^16.9.0"
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  languageName: unknown
+  linkType: soft
 
 "@graphql-mesh/transport-mysql@npm:^0.7.13":
   version: 0.7.13
@@ -3958,6 +4013,28 @@ __metadata:
   checksum: 10c0/f0a224ee24b6a0811ef21eead52d19c82688fd4adda4c6efbb26ec271a090211d2384c41226e176168ad55bd5a9213089db4c7fd66fb89e83e099235cceb7694
   languageName: node
   linkType: hard
+
+"@graphql-mesh/transport-ws@workspace:packages/transports/ws":
+  version: 0.0.0-use.local
+  resolution: "@graphql-mesh/transport-ws@workspace:packages/transports/ws"
+  dependencies:
+    "@graphql-mesh/cross-helpers": "npm:0.4.7"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.6"
+    "@graphql-mesh/transport-common": "npm:^0.7.13"
+    "@graphql-mesh/types": "npm:^0.102.12"
+    "@graphql-mesh/utils": "npm:^0.102.12"
+    "@graphql-tools/executor-graphql-ws": "npm:^1.3.0"
+    "@graphql-tools/utils": "npm:^10.5.5"
+    "@types/ws": "npm:^8"
+    graphql: "npm:^16.9.0"
+    graphql-ws: "npm:^5.16.0"
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.4.0"
+    ws: "npm:^8.18.0"
+  peerDependencies:
+    graphql: "*"
+  languageName: unknown
+  linkType: soft
 
 "@graphql-mesh/types@npm:^0.102.10, @graphql-mesh/types@npm:^0.102.12":
   version: 0.102.12
@@ -7604,7 +7681,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.7.5, @types/node@npm:^22.7.6":
+"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.7.5, @types/node@npm:^22.7.6, @types/node@npm:^22.9.0":
   version: 22.9.0
   resolution: "@types/node@npm:22.9.0"
   dependencies:
@@ -11199,6 +11276,7 @@ __metadata:
     "@changesets/cli": "patch:@changesets/cli@npm%3A2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
+    "@types/node": "npm:^22.9.0"
     eslint: "npm:^9.12.0"
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-n: "npm:^17.11.1"

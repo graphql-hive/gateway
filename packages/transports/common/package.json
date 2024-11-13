@@ -1,0 +1,51 @@
+{
+  "name": "@graphql-mesh/transport-common",
+  "version": "0.7.13",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "ardatan/graphql-mesh",
+    "directory": "packages/transports/common"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "*"
+  },
+  "dependencies": {
+    "@envelop/core": "^5.0.1",
+    "@graphql-mesh/types": "^0.102.12",
+    "@graphql-tools/delegate": "^10.0.28",
+    "@graphql-tools/utils": "^10.5.5",
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "graphql": "^16.9.0",
+    "pkgroll": "2.5.1"
+  },
+  "sideEffects": false
+}

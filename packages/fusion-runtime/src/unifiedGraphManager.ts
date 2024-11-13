@@ -1,4 +1,3 @@
-import type { TransportEntryAdditions } from '@graphql-hive/gateway';
 import { getInContextSDK } from '@graphql-mesh/runtime';
 import type {
   TransportContext,
@@ -27,6 +26,10 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils.js';
+
+export type TransportEntryAdditions = {
+  [subgraph: '*' | string]: Partial<TransportEntry>;
+};
 
 export function ensureSchema(source: GraphQLSchema | DocumentNode | string) {
   if (isSchema(source)) {

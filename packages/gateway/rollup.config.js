@@ -7,6 +7,7 @@ import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
+
 console.log('Bundling...');
 
 /**
@@ -45,15 +46,16 @@ const deps = {
     '../fusion-runtime/src/index.ts',
   'node_modules/@graphql-mesh/include/hooks':
     '../../node_modules/@graphql-mesh/include/esm/hooks.js',
+
   // default transports should be in the container
   'node_modules/@graphql-mesh/transport-common/index':
-    '../../node_modules/@graphql-mesh/transport-common/esm/index.js',
+    '../transports/common/src/index.ts',
   'node_modules/@graphql-mesh/transport-http/index':
-    '../../node_modules/@graphql-mesh/transport-http/esm/index.js',
+    '../transports/http/src/index.ts',
   'node_modules/@graphql-mesh/transport-ws/index':
-    '../../node_modules/@graphql-mesh/transport-ws/esm/index.js',
+    '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
-    '../../node_modules/@graphql-mesh/transport-http-callback/esm/index.js',
+    '../transports/http-callback/src/index.ts',
   // extras for docker only
   'node_modules/@graphql-mesh/plugin-http-cache/index':
     '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
