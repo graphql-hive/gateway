@@ -1,12 +1,13 @@
 import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, vitest } from 'vitest';
 
+const mockStartSdk = vitest.fn();
+
 describe('useOpenTelemetry', async () => {
   if (process.env['LEAK_TEST']) {
     it('noop', () => {});
     return;
   }
-  const mockStartSdk = vitest.fn();
   vitest.mock('@opentelemetry/sdk-node', () => ({
     NodeSDK: vitest.fn(() => ({ start: mockStartSdk })),
   }));
