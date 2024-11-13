@@ -504,7 +504,7 @@ export function handleFederationSubschema({
   subschemaConfig.executor = function subschemaExecutor(req) {
     return onSubgraphExecute(subgraphName, req);
   };
-  
+
   return subschemaConfig;
 }
 
