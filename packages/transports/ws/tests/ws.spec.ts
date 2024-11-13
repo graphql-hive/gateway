@@ -163,7 +163,7 @@ function makeExecutor(
 ) {
   return wsTransport.getSubgraphExecutor({
     transportEntry: {
-      location: '/ws',
+      location: 'http://localhost/ws',
       ...transportEntry,
     },
     logger: new DefaultLogger(),
