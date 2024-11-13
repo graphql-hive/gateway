@@ -455,6 +455,8 @@ export function handleFederationSubschema({
     );
   }
   if (mergeDirectiveUsed) {
+    const existingMergeConfig = subschemaConfig.merge || {};
+    subschemaConfig.merge = {};
     // Workaround because transformer needs the directive definition itself
     const subgraphSchemaConfig = subschemaConfig.schema.toConfig();
     subschemaConfig.schema = new GraphQLSchema({
@@ -464,7 +466,7 @@ export function handleFederationSubschema({
     });
 
     subschemaConfig.merge =
-      stitchingDirectivesTransformer(subschemaConfig).merge;
+      Object.assign(existingMergeConfig, stitchingDirectivesTransformer(subschemaConfig).merge);
     const queryType = subschemaConfig.schema.getQueryType();
     if (!queryType) {
       throw new Error('Query type is required');
