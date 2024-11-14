@@ -50,28 +50,25 @@ describe('usePropagateHeaders', () => {
         ],
         logging: isDebug(),
       });
-      const response = await gateway.fetch(
-        'http://localhost:4000/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'x-my-header': 'my-value',
-            'x-my-other': 'other-value',
-            'x-extra-header': 'extra-value',
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
-              query {
-                hello
-              }
-            `,
-            extensions: {
-              randomThing: 'randomValue',
-            },
-          }),
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'x-my-header': 'my-value',
+          'x-my-other': 'other-value',
+          'x-extra-header': 'extra-value',
+          'content-type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello
+            }
+          `,
+          extensions: {
+            randomThing: 'randomValue',
+          },
+        }),
+      });
 
       const resJson = await response.json();
       expect(resJson).toEqual({
@@ -118,24 +115,21 @@ describe('usePropagateHeaders', () => {
         ],
         maskedErrors: false,
       });
-      const response = await gateway.fetch(
-        'http://localhost:4000/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-my-header': 'my-new-value',
-            'x-my-other': 'other-value',
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
-              query {
-                hello
-              }
-            `,
-          }),
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-my-header': 'my-new-value',
+          'x-my-other': 'other-value',
         },
-      );
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello
+            }
+          `,
+        }),
+      });
 
       const resJson = await response.json();
       expect(resJson).toEqual({
@@ -258,23 +252,20 @@ describe('usePropagateHeaders', () => {
         ],
         logging: isDebug(),
       });
-      const response = await gateway.fetch(
-        'http://localhost:4000/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
-              query {
-                hello1
-                hello2
-              }
-            `,
-          }),
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello1
+              hello2
+            }
+          `,
+        }),
+      });
 
       const resJson = await response.json();
       expect(resJson).toEqual({

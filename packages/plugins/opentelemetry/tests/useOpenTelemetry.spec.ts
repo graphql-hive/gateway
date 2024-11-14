@@ -55,22 +55,19 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      const response = await gateway.fetch(
-        'http://localhost:4000/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
-              query {
-                hello
-              }
-            `,
-          }),
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello
+            }
+          `,
+        }),
+      });
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -112,22 +109,19 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      const response = await gateway.fetch(
-        'http://localhost:4000/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: /* GraphQL */ `
-              query {
-                hello
-              }
-            `,
-          }),
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello
+            }
+          `,
+        }),
+      });
 
       expect(response.status).toBe(200);
       const body = await response.json();

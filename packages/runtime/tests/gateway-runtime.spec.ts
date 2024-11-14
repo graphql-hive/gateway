@@ -112,28 +112,21 @@ describe('Gateway Runtime', () => {
         describe('readiness check', () => {
           it('fail if the upstream API is not ready', async () => {
             upstreamIsUp = false;
-            const res = await gateway.fetch(
-              'http://localhost:4000/readiness',
-            );
+            const res = await gateway.fetch('http://localhost:4000/readiness');
             expect(res.status).toBe(503);
           });
           it('succeed if the upstream API is ready', async () => {
-            const res = await gateway.fetch(
-              'http://localhost:4000/readiness',
-            );
+            const res = await gateway.fetch('http://localhost:4000/readiness');
             expect(res.status).toBe(200);
           });
         });
         describe('GraphiQL', () => {
           it('has correct GraphiQL title', async () => {
-            const res = await gateway.fetch(
-              'http://localhost:4000/graphql',
-              {
-                headers: {
-                  accept: 'text/html',
-                },
+            const res = await gateway.fetch('http://localhost:4000/graphql', {
+              headers: {
+                accept: 'text/html',
               },
-            );
+            });
             const text = await res.text();
             expect(text).toContain('<title>Hive Gateway</title>');
           });
