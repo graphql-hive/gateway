@@ -30,6 +30,10 @@
   "files": [
     "dist"
   ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
   "peerDependencies": {
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
@@ -42,7 +46,8 @@
   },
   "devDependencies": {
     "@graphql-tools/schema": "^10.0.7",
-    "@graphql-tools/stitch": "workspace:^"
+    "graphql": "^16.9.0",
+    "pkgroll": "2.5.1"
   },
   "sideEffects": false
 }

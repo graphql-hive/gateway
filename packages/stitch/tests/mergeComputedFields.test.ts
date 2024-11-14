@@ -519,7 +519,7 @@ describe('test merged composite computed fields', () => {
       });
     });
 
-    it.only('selection set is remote', async () => {
+    it('selection set is remote', async () => {
       const result = await graphql({
         schema: gatewaySchema,
         source: /* GraphQL */ `
