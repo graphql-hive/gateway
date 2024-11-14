@@ -54,6 +54,7 @@
     "vitest": "^2.1.3"
   },
   "resolutions": {
+    "@graphql-tools/delegate": "workspace:^",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.25.1#~/.yarn/patches/@opentelemetry-resources-npm-1.25.1-d294145a2e.patch",
     "graphql": "^16.9.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
@@ -61,7 +62,6 @@
     "jest-snapshot": "patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "sequelize": "^6.37.5",
-    "@graphql-tools/delegate": "workspace:^",
     "sqlite3": "^5.1.7"
   }
 }
