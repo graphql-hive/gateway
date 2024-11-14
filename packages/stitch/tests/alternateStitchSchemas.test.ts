@@ -51,7 +51,7 @@ import {
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 
-const linkSchema = /* GraphQL */ `
+const linkSchema = `
   """
   A new type linking the Property type.
   """
@@ -96,12 +96,9 @@ const linkSchema = /* GraphQL */ `
 `;
 
 describe('merge schemas through transforms', () => {
-  let bookingSubschemaConfig: SubschemaConfig;
   let stitchedSchema: GraphQLSchema;
 
-  beforeAll(async () => {
-    bookingSubschemaConfig = await remoteBookingSchema;
-
+  beforeAll(() => {
     // namespace and strip schemas
     const propertySchemaTransforms = [
       new FilterRootFields(
@@ -145,7 +142,7 @@ describe('merge schemas through transforms', () => {
       batch: true,
     };
     const bookingSubschema = {
-      ...bookingSubschemaConfig,
+      ...remoteBookingSchema,
       transforms: bookingSchemaTransforms,
       batch: true,
     };

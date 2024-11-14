@@ -340,10 +340,10 @@ for (const combination of testCombinations) {
     let productSchema: GraphQLSchema | SubschemaConfig;
     let bookingSchema: GraphQLSchema | SubschemaConfig;
 
-    beforeAll(async () => {
-      propertySchema = await combination.property;
-      bookingSchema = await combination.booking;
-      productSchema = await combination.product;
+    beforeAll(() => {
+      propertySchema = combination.property;
+      bookingSchema = combination.booking;
+      productSchema = combination.product;
 
       stitchedSchema = stitchSchemas({
         subschemas: [

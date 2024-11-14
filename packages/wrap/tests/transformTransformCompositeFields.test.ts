@@ -1,6 +1,7 @@
-import { execute, isIncrementalResult } from '@graphql-tools/executor';
+import { execute } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { TransformCompositeFields, wrapSchema } from '@graphql-tools/wrap';
+import { assertSingleExecutionValue } from '@internal/testing';
 import { parse } from 'graphql';
 import { describe, expect, test, vitest } from 'vitest';
 
@@ -36,7 +37,7 @@ describe('TransformCompositeFields', () => {
       schema: transformedSchema,
       document: parse('{ product { id, theId: id } }'),
     });
-    if (isIncrementalResult(result)) throw Error('result is incremental');
+    assertSingleExecutionValue(result);
     expect(result.data).toEqual({
       product: { id: 'r2d2c3p0', theId: 'r2d2c3p0' },
     });
@@ -67,7 +68,7 @@ describe('TransformCompositeFields', () => {
       schema: transformedSchema,
       document: parse('{ product { theId: id } }'),
     });
-    if (isIncrementalResult(result)) throw Error('result is incremental');
+    assertSingleExecutionValue(result);
     expect(result.data).toEqual({
       product: { theId: 'R2D2C3P0' },
     });
@@ -94,7 +95,7 @@ describe('TransformCompositeFields', () => {
       schema: transformedSchema,
       document: parse('{ product { _id } }'),
     });
-    if (isIncrementalResult(result)) throw Error('result is incremental');
+    assertSingleExecutionValue(result);
     expect(dataObjects).toEqual(['Query', 'Product']);
     expect(result.data).toEqual({
       product: { _id: 'R2D2C3P0' },

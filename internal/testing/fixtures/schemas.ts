@@ -5,9 +5,9 @@ import {
 } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
-  AsyncExecutor,
   createGraphQLError,
   IResolvers,
+  SyncExecutor,
 } from '@graphql-tools/utils';
 import { schemaFromExecutor } from '@graphql-tools/wrap';
 import {
@@ -668,11 +668,9 @@ export const subscriptionSchema: GraphQLSchema = makeExecutableSchema({
   resolvers: subscriptionResolvers,
 });
 
-export async function makeSchemaRemote(
-  schema: GraphQLSchema,
-): Promise<SubschemaConfig> {
+export function makeSchemaRemote(schema: GraphQLSchema): SubschemaConfig {
   const executor = createDefaultExecutor(schema);
-  const clientSchema = await schemaFromExecutor(executor as AsyncExecutor);
+  const clientSchema = schemaFromExecutor(executor as SyncExecutor);
   return {
     schema: clientSchema,
     executor,
