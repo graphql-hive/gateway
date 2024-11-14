@@ -27,7 +27,19 @@
       ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"
-      ]
+      ],
+      "@graphql-tools/batch-delegate": [
+        "./packages/batch-delegate/src/index.ts"
+      ],
+      "@graphql-tools/batch-execute": ["./packages/batch-execute/src/index.ts"],
+      "@graphql-tools/delegate": ["./packages/delegate/src/index.ts"],
+      "@graphql-tools/federation": ["./packages/federation/src/index.ts"],
+      "@graphql-tools/stitch": ["./packages/stitch/src/index.ts"],
+      "@graphql-tools/stitching-directives": [
+        "./packages/stitching-directives/src/index.ts"
+      ],
+      "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
+      "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"]
     }
   },
   "include": [
@@ -35,6 +47,7 @@
     "./vitest.config.ts",
     "./vitest.projects.ts",
     "./internal/**/src",
+    "./internal/**/fixtures",
     "./packages/**/src",
     "./packages/**/tests",
     "./packages/**/scripts",

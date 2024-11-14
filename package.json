@@ -6,6 +6,7 @@
     "packages/*",
     "packages/transports/*",
     "packages/plugins/*",
+    "packages/executors/*",
     "internal/*",
     "e2e/*"
   ],
@@ -60,6 +61,7 @@
     "jest-snapshot": "patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "sequelize": "^6.37.5",
+    "@graphql-tools/delegate": "workspace:^",
     "sqlite3": "^5.1.7"
   }
 }
