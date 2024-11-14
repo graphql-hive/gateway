@@ -30,7 +30,7 @@ describe('usePropagateHeaders', () => {
       requestTrackerPlugin.onParams.mockClear();
     });
     it('forwards specified headers', async () => {
-      await using serveRuntime = createGatewayRuntime({
+      await using gateway = createGatewayRuntime({
         proxy: {
           endpoint: 'http://localhost:4001/graphql',
         },
@@ -50,7 +50,7 @@ describe('usePropagateHeaders', () => {
         ],
         logging: isDebug(),
       });
-      const response = await serveRuntime.fetch(
+      const response = await gateway.fetch(
         'http://localhost:4000/graphql',
         {
           method: 'POST',
@@ -93,7 +93,7 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-extra-header']).toBeUndefined();
     });
     it("forwards specified headers but doesn't override the provided headers", async () => {
-      await using serveRuntime = createGatewayRuntime({
+      await using gateway = createGatewayRuntime({
         logging: isDebug(),
         proxy: {
           endpoint: 'http://localhost:4001/graphql',
@@ -118,7 +118,7 @@ describe('usePropagateHeaders', () => {
         ],
         maskedErrors: false,
       });
-      const response = await serveRuntime.fetch(
+      const response = await gateway.fetch(
         'http://localhost:4000/graphql',
         {
           method: 'POST',
@@ -207,7 +207,7 @@ describe('usePropagateHeaders', () => {
       ],
     }).fetch;
     it('Aggregates cookies from all subgraphs', async () => {
-      await using serveRuntime = createGatewayRuntime({
+      await using gateway = createGatewayRuntime({
         supergraph: () => {
           return getUnifiedGraphGracefully([
             {
@@ -258,7 +258,7 @@ describe('usePropagateHeaders', () => {
         ],
         logging: isDebug(),
       });
-      const response = await serveRuntime.fetch(
+      const response = await gateway.fetch(
         'http://localhost:4000/graphql',
         {
           method: 'POST',

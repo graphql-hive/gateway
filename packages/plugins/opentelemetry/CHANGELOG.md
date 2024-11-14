@@ -356,7 +356,7 @@
 - [#7407](https://github.com/ardatan/graphql-mesh/pull/7407)
   [`3ea4ea7`](https://github.com/ardatan/graphql-mesh/commit/3ea4ea7e62f4a957a3733eab59ccefd37d8b9e8e)
   Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Export DisposableSymbols from
-  serveRuntime and use it in plugins
+  gateway and use it in plugins
 
 - Updated dependencies
   [[`3ea4ea7`](https://github.com/ardatan/graphql-mesh/commit/3ea4ea7e62f4a957a3733eab59ccefd37d8b9e8e),

@@ -92,18 +92,18 @@ describe('Gateway Runtime', () => {
     beforeEach(() => {
       upstreamIsUp = true;
     });
-    Object.entries(serveRuntimes).forEach(([name, serveRuntime]) => {
+    Object.entries(serveRuntimes).forEach(([name, gateway]) => {
       describe(name, () => {
         describe('health check', () => {
           it('succeed even if the upstream API is down', async () => {
             upstreamIsUp = false;
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/healthcheck',
             );
             expect(res.status).toBe(200);
           });
           it('succeed if the upstream API is up', async () => {
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/healthcheck',
             );
             expect(res.status).toBe(200);
@@ -112,13 +112,13 @@ describe('Gateway Runtime', () => {
         describe('readiness check', () => {
           it('fail if the upstream API is not ready', async () => {
             upstreamIsUp = false;
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/readiness',
             );
             expect(res.status).toBe(503);
           });
           it('succeed if the upstream API is ready', async () => {
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/readiness',
             );
             expect(res.status).toBe(200);
@@ -126,7 +126,7 @@ describe('Gateway Runtime', () => {
         });
         describe('GraphiQL', () => {
           it('has correct GraphiQL title', async () => {
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/graphql',
               {
                 headers: {
@@ -176,7 +176,7 @@ describe('Gateway Runtime', () => {
         setValidationFn(mockValidateFn);
       },
     };
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       skipValidation: true,
       proxy: {
         endpoint: 'http://localhost:4000/graphql',
@@ -184,7 +184,7 @@ describe('Gateway Runtime', () => {
       plugins: () => [useCustomFetch(fetchFn), mockPlugin],
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

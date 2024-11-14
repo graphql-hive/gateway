@@ -38,14 +38,14 @@ describe('Custom Agent', () => {
       // @ts-expect-error - `createConnection` is not available in typings
       'createConnection',
     );
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
       },
       customAgent: () => disposableAgent.agent,
     });
     expect(spy.mock.calls.length).toBe(0);
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

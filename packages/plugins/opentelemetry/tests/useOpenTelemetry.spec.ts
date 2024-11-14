@@ -38,7 +38,7 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      await using serveRuntime = gw.createGatewayRuntime({
+      await using gateway = gw.createGatewayRuntime({
         proxy: {
           endpoint: 'https://example.com/graphql',
         },
@@ -55,7 +55,7 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      const response = await serveRuntime.fetch(
+      const response = await gateway.fetch(
         'http://localhost:4000/graphql',
         {
           method: 'POST',
@@ -98,7 +98,7 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      await using serveRuntime = gw.createGatewayRuntime({
+      await using gateway = gw.createGatewayRuntime({
         proxy: {
           endpoint: 'https://example.com/graphql',
         },
@@ -112,7 +112,7 @@ describe('useOpenTelemetry', () => {
         logging: false,
       });
 
-      const response = await serveRuntime.fetch(
+      const response = await gateway.fetch(
         'http://localhost:4000/graphql',
         {
           method: 'POST',

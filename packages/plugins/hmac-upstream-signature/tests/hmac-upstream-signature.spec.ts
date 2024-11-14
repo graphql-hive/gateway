@@ -13,7 +13,7 @@ import {
 
 describe('useHmacSignatureValidation', () => {
   test('should throw when header is missing or invalid', async () => {
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -25,7 +25,7 @@ describe('useHmacSignatureValidation', () => {
       logging: false,
     });
 
-    let response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    let response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -49,7 +49,7 @@ describe('useHmacSignatureValidation', () => {
   ],
 }
 `);
-    response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -100,7 +100,7 @@ describe('useHmacSignatureValidation', () => {
       ],
       logging: false,
     });
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -122,7 +122,7 @@ describe('useHmacSignatureValidation', () => {
       logging: false,
     });
 
-    const response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -166,7 +166,7 @@ describe('useHmacUpstreamSignature', () => {
 
   it('should build valid hmac signature based on the request body even when its modified in other plugins', async () => {
     const secret = 'secret';
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -188,7 +188,7 @@ describe('useHmacUpstreamSignature', () => {
       logging: false,
     });
 
-    const response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -218,7 +218,7 @@ describe('useHmacUpstreamSignature', () => {
 
   it('should include hmac signature based on the request body', async () => {
     const secret = 'secret';
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -234,7 +234,7 @@ describe('useHmacUpstreamSignature', () => {
       logging: false,
     });
 
-    const response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -265,7 +265,7 @@ describe('useHmacUpstreamSignature', () => {
   it('should allow to customize header name', async () => {
     const secret = 'secret';
     const customExtensionName = 'custom-hmac-signature';
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -282,7 +282,7 @@ describe('useHmacUpstreamSignature', () => {
       logging: false,
     });
 
-    const response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -312,7 +312,7 @@ describe('useHmacUpstreamSignature', () => {
 
   it('should allow to filter upstream calls', async () => {
     const secret = 'secret';
-    const serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
       },
@@ -329,7 +329,7 @@ describe('useHmacUpstreamSignature', () => {
       logging: false,
     });
 
-    const response = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

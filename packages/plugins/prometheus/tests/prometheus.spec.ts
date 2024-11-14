@@ -56,8 +56,8 @@ describe('Prometheus', () => {
   }
 
   it('should track subgraph requests', async () => {
-    await using serveRuntime = newTestRuntime();
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    await using gateway = newTestRuntime();
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -78,8 +78,8 @@ describe('Prometheus', () => {
     expect(metrics).toContain('operationType="query"');
   });
   it('should track subgraph request errors', async () => {
-    await using serveRuntime = newTestRuntime();
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    await using gateway = newTestRuntime();
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -104,9 +104,9 @@ describe('Prometheus', () => {
   });
 
   it('can be initialized multiple times in the same node process', async () => {
-    await using serveRuntime = newTestRuntime();
+    await using gateway = newTestRuntime();
     async function testQuery() {
-      const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+      const res = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
