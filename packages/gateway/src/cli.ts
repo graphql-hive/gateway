@@ -13,7 +13,6 @@ import type {
   GatewayConfigSubgraph,
   GatewayConfigSupergraph,
 } from '@graphql-hive/gateway-runtime';
-import type { InitializeData } from '@graphql-mesh/include/hooks';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
@@ -310,15 +309,6 @@ let cli = new Command()
   );
 
 export async function run(userCtx: Partial<CLIContext>) {
-  module.register('@graphql-mesh/include/hooks', {
-    parentURL:
-      // @ts-ignore bob will complain when bundling for cjs
-      import.meta.url,
-    data: {
-      packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
-    } satisfies InitializeData,
-  });
-
   const ctx: CLIContext = {
     log: new DefaultLogger(),
     productName: 'Hive Gateway',
