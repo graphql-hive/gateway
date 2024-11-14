@@ -12,7 +12,7 @@ import {
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vitest } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime.js';
+import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
 function createUpstreamSchema() {
@@ -45,7 +45,7 @@ describe('Hive CDN', () => {
       ]);
       res.end(supergraph);
     });
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       supergraph: {
         type: 'hive',
         endpoint: `http://localhost:${cdnServer.address().port}`,
@@ -53,7 +53,7 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -71,7 +71,7 @@ describe('Hive CDN', () => {
     expect(printSchema(clientSchema)).toMatchSnapshot('hive-cdn');
 
     // Landing page
-    const landingPageRes = await serveRuntime.fetch('http://localhost:4000', {
+    const landingPageRes = await gateway.fetch('http://localhost:4000', {
       method: 'GET',
       headers: {
         accept: 'text/html',
@@ -99,7 +99,7 @@ describe('Hive CDN', () => {
     let schemaChangeSpy = vitest.fn((_schema: GraphQLSchema) => {});
     const hiveEndpoint = `http://localhost:${cdnServer.address().port}`;
     const hiveKey = 'key';
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: { endpoint: 'http://upstream/graphql' },
       schema: {
         type: 'hive',
@@ -115,7 +115,7 @@ describe('Hive CDN', () => {
               opts,
             );
           }
-          return serveRuntime.fetchAPI.Response.error();
+          return gateway.fetchAPI.Response.error();
         }),
         {
           onSchemaChange({ schema }) {
@@ -125,7 +125,7 @@ describe('Hive CDN', () => {
       ],
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -185,7 +185,7 @@ describe('Hive CDN', () => {
         }),
       }),
     );
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
       },
@@ -196,7 +196,7 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -249,7 +249,7 @@ describe('Hive CDN', () => {
         }),
       }),
     );
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
       },
@@ -264,7 +264,7 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

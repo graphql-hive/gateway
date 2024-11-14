@@ -1,0 +1,62 @@
+{
+  "name": "@graphql-mesh/hmac-upstream-signature",
+  "version": "1.2.6",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/plugins/hmac-upstream-signature"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^15.9.0 || ^16.9.0"
+  },
+  "dependencies": {
+    "@graphql-mesh/cross-helpers": "^0.4.7",
+    "@graphql-mesh/store": "^0.102.12",
+    "@graphql-mesh/transport-common": "workspace:^",
+    "@graphql-mesh/types": "^0.102.12",
+    "@graphql-mesh/utils": "^0.102.12",
+    "@graphql-tools/utils": "^10.5.5",
+    "json-stable-stringify": "^1.1.1",
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "@graphql-hive/gateway": "workspace:*",
+    "@types/json-stable-stringify": "^1.1.0",
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.7.0",
+    "pkgroll": "2.5.1"
+  },
+  "sideEffects": false
+}

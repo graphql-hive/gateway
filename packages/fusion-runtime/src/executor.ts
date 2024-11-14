@@ -12,7 +12,7 @@ import type { DocumentNode } from 'graphql';
 import {
   UnifiedGraphManager,
   type UnifiedGraphManagerOptions,
-} from './unifiedGraphManager.js';
+} from './unifiedGraphManager';
 
 type SdkRequester = (
   document: DocumentNode,

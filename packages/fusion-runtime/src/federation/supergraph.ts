@@ -21,9 +21,9 @@ import {
   type GraphQLSchema,
   type ObjectTypeDefinitionNode,
 } from 'graphql';
-import { filterHiddenPartsInSchema } from '../filterHiddenPartsInSchema.js';
-import type { UnifiedGraphHandler } from '../unifiedGraphManager.js';
-import { handleFederationSubschema } from './subgraph.js';
+import { filterHiddenPartsInSchema } from '../filterHiddenPartsInSchema';
+import type { UnifiedGraphHandler } from '../unifiedGraphManager';
+import { handleFederationSubschema } from './subgraph';
 
 // Memoize to avoid re-parsing the same schema AST
 // Workaround for unsupported directives on composition: restore extra directives

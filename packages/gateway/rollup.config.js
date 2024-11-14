@@ -45,20 +45,21 @@ const deps = {
     '../fusion-runtime/src/index.ts',
   'node_modules/@graphql-mesh/include/hooks':
     '../../node_modules/@graphql-mesh/include/esm/hooks.js',
+
   // default transports should be in the container
   'node_modules/@graphql-mesh/transport-common/index':
-    '../../node_modules/@graphql-mesh/transport-common/esm/index.js',
+    '../transports/common/src/index.ts',
   'node_modules/@graphql-mesh/transport-http/index':
-    '../../node_modules/@graphql-mesh/transport-http/esm/index.js',
+    '../transports/http/src/index.ts',
   'node_modules/@graphql-mesh/transport-ws/index':
-    '../../node_modules/@graphql-mesh/transport-ws/esm/index.js',
+    '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
-    '../../node_modules/@graphql-mesh/transport-http-callback/esm/index.js',
+    '../transports/http-callback/src/index.ts',
   // extras for docker only
   'node_modules/@graphql-mesh/plugin-http-cache/index':
     '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
   'node_modules/@graphql-mesh/hmac-upstream-signature/index':
-    '../../node_modules/@graphql-mesh/hmac-upstream-signature/esm/index.js',
+    '../plugins/hmac-upstream-signature/src/index.ts',
 };
 
 if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {

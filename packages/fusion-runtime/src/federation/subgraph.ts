@@ -39,7 +39,7 @@ import {
   typeFromAST,
   visit,
 } from 'graphql';
-import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils.js';
+import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils';
 
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };

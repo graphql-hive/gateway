@@ -15,7 +15,19 @@
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
-      "@graphql-mesh/fusion-runtime": ["./packages/fusion-runtime/src/index.ts"]
+      "@graphql-mesh/fusion-runtime": [
+        "./packages/fusion-runtime/src/index.ts"
+      ],
+      "@graphql-mesh/transport-*": ["./packages/transports/*/src/index.ts"],
+      "@graphql-mesh/hmac-upstream-signature": [
+        "./packages/plugins/hmac-upstream-signature/src/index.ts"
+      ],
+      "@graphql-mesh/plugin-opentelemetry": [
+        "./packages/plugins/opentelemetry/src/index.ts"
+      ],
+      "@graphql-mesh/plugin-prometheus": [
+        "./packages/plugins/prometheus/src/index.ts"
+      ]
     }
   },
   "include": [

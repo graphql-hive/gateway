@@ -37,8 +37,9 @@ export function useSubgraphExecuteDebug<
           `subgraph-response`,
           JSON.stringify(
             {
-              data: result.data,
-              errors: result.errors,
+              data: result?.data,
+              errors: result?.errors,
+              extensions: result?.extensions,
             },
             null,
             '  ',

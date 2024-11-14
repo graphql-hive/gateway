@@ -56,7 +56,7 @@
     "@graphql-hive/core": "^0.8.1",
     "@graphql-mesh/cross-helpers": "^0.4.6",
     "@graphql-mesh/fusion-runtime": "workspace:^",
-    "@graphql-mesh/hmac-upstream-signature": "^1.1.0",
+    "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-hive": "^0.102.8",
     "@graphql-mesh/plugin-response-cache": "^0.102.6",
     "@graphql-mesh/store": "^0.102.10",
@@ -89,7 +89,7 @@
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
     "pkgroll": "2.5.1",
-    "tsx": "4.19.2"
+    "tsx": "^4.19.2"
   },
   "sideEffects": false
 }

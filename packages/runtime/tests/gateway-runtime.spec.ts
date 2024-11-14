@@ -10,9 +10,9 @@ import {
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, vitest } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime.js';
-import { useCustomFetch } from '../src/plugins/useCustomFetch.js';
-import type { GatewayPlugin } from '../src/types.js';
+import { createGatewayRuntime } from '../src/createGatewayRuntime';
+import { useCustomFetch } from '../src/plugins/useCustomFetch';
+import type { GatewayPlugin } from '../src/types';
 
 describe('Gateway Runtime', () => {
   beforeEach(() => {
@@ -92,18 +92,18 @@ describe('Gateway Runtime', () => {
     beforeEach(() => {
       upstreamIsUp = true;
     });
-    Object.entries(serveRuntimes).forEach(([name, serveRuntime]) => {
+    Object.entries(serveRuntimes).forEach(([name, gateway]) => {
       describe(name, () => {
         describe('health check', () => {
           it('succeed even if the upstream API is down', async () => {
             upstreamIsUp = false;
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/healthcheck',
             );
             expect(res.status).toBe(200);
           });
           it('succeed if the upstream API is up', async () => {
-            const res = await serveRuntime.fetch(
+            const res = await gateway.fetch(
               'http://localhost:4000/healthcheck',
             );
             expect(res.status).toBe(200);
@@ -112,28 +112,21 @@ describe('Gateway Runtime', () => {
         describe('readiness check', () => {
           it('fail if the upstream API is not ready', async () => {
             upstreamIsUp = false;
-            const res = await serveRuntime.fetch(
-              'http://localhost:4000/readiness',
-            );
+            const res = await gateway.fetch('http://localhost:4000/readiness');
             expect(res.status).toBe(503);
           });
           it('succeed if the upstream API is ready', async () => {
-            const res = await serveRuntime.fetch(
-              'http://localhost:4000/readiness',
-            );
+            const res = await gateway.fetch('http://localhost:4000/readiness');
             expect(res.status).toBe(200);
           });
         });
         describe('GraphiQL', () => {
           it('has correct GraphiQL title', async () => {
-            const res = await serveRuntime.fetch(
-              'http://localhost:4000/graphql',
-              {
-                headers: {
-                  accept: 'text/html',
-                },
+            const res = await gateway.fetch('http://localhost:4000/graphql', {
+              headers: {
+                accept: 'text/html',
               },
-            );
+            });
             const text = await res.text();
             expect(text).toContain('<title>Hive Gateway</title>');
           });
@@ -176,7 +169,7 @@ describe('Gateway Runtime', () => {
         setValidationFn(mockValidateFn);
       },
     };
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       skipValidation: true,
       proxy: {
         endpoint: 'http://localhost:4000/graphql',
@@ -184,7 +177,7 @@ describe('Gateway Runtime', () => {
       plugins: () => [useCustomFetch(fetchFn), mockPlugin],
       logging: isDebug(),
     });
-    const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

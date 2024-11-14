@@ -1,4 +1,3 @@
-import type { TransportEntryAdditions } from '@graphql-hive/gateway';
 import { getInContextSDK } from '@graphql-mesh/runtime';
 import type {
   TransportContext,
@@ -19,14 +18,18 @@ import {
 } from '@whatwg-node/disposablestack';
 import type { DocumentNode, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph.js';
+import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   compareSubgraphNames,
   getOnSubgraphExecute,
   type OnSubgraphExecuteHook,
   type Transports,
-} from './utils.js';
+} from './utils';
+
+export type TransportEntryAdditions = {
+  [subgraph: '*' | string]: Partial<TransportEntry>;
+};
 
 export function ensureSchema(source: GraphQLSchema | DocumentNode | string) {
   if (isSchema(source)) {

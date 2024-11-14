@@ -42,14 +42,14 @@ describe('Upstream Cancellation', () => {
     });
     await using upstreamGraphQLServer =
       await createDisposableServer(upstreamGraphQL);
-    await using serveRuntime = createGatewayRuntime({
+    await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: `http://localhost:${upstreamGraphQLServer.address().port}/graphql`,
       },
       upstreamCancellation: true,
       logging: false,
     });
-    await using serveRuntimeServer = await createDisposableServer(serveRuntime);
+    await using serveRuntimeServer = await createDisposableServer(gateway);
     const res$ = fetch(
       `http://localhost:${serveRuntimeServer.address().port}/graphql`,
       {

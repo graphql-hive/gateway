@@ -2,12 +2,12 @@ import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { DisableIntrospectionOptions } from '@envelop/disable-introspection';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
+  TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
 } from '@graphql-mesh/fusion-runtime';
 import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-signature';
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
-import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
   KeyValueCache,
   Logger,
@@ -35,11 +35,7 @@ import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 
-export type { UnifiedGraphConfig };
-
-export type TransportEntryAdditions = {
-  [subgraph: '*' | string]: Partial<TransportEntry>;
-};
+export type { UnifiedGraphConfig, TransportEntryAdditions };
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
