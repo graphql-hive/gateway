@@ -1,6 +1,5 @@
 import {
   delegateToSchema,
-  SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
 import { execute, subscribe } from '@graphql-tools/executor';
@@ -29,12 +28,11 @@ import {
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLScalarType,
-  GraphQLSchema,
   OperationTypeNode,
   parse,
   printSchema,
 } from 'graphql';
-import { beforeAll, describe, expect, it, test, vitest } from 'vitest';
+import { describe, expect, it, test, vitest } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 
 const removeLocations = ({
@@ -333,19 +331,14 @@ const schemaDirectiveTypeDefs = /* GraphQL */ `
   }
 `;
 
-for (const combination of testCombinations) {
-  describe('merging ' + combination.name, () => {
-    let stitchedSchema: GraphQLSchema;
-    let propertySchema: GraphQLSchema | SubschemaConfig;
-    let productSchema: GraphQLSchema | SubschemaConfig;
-    let bookingSchema: GraphQLSchema | SubschemaConfig;
-
-    beforeAll(() => {
-      propertySchema = combination.property;
-      bookingSchema = combination.booking;
-      productSchema = combination.product;
-
-      stitchedSchema = stitchSchemas({
+for (const {
+  name: combinationName,
+  property: propertySchema,
+  product: productSchema,
+  booking: bookingSchema,
+} of testCombinations.slice(0, -1)) {
+  describe('merging ' + combinationName, () => {
+    const stitchedSchema = stitchSchemas({
         subschemas: [
           propertySchema,
           bookingSchema,
@@ -520,7 +513,6 @@ for (const combination of testCombinations) {
           },
         },
       });
-    });
 
     describe('basic', () => {
       test('works with context', async () => {
@@ -3151,16 +3143,17 @@ bookingById(id: "b1") {
       });
     });
   });
+}
 
-  describe('scalars without executable schema', () => {
-    test('can merge and query schema', async () => {
-      const BookSchema = /* GraphQL */ `
+describe('scalars without executable schema', () => {
+  test('can merge and query schema', async () => {
+    const BookSchema = /* GraphQL */ `
         type Book {
           name: String
         }
       `;
 
-      const AuthorSchema = /* GraphQL */ `
+    const AuthorSchema = /* GraphQL */ `
         type Query {
           book: Book
         }
@@ -3174,22 +3167,22 @@ bookingById(id: "b1") {
         }
       `;
 
-      const resolvers = {
-        Query: {
-          book: () => ({
-            author: {
-              name: 'JRR Tolkien',
-            },
-          }),
-        },
-      };
-
-      const result = await graphql({
-        schema: stitchSchemas({
-          typeDefs: [BookSchema, AuthorSchema],
-          resolvers,
+    const resolvers = {
+      Query: {
+        book: () => ({
+          author: {
+            name: 'JRR Tolkien',
+          },
         }),
-        source: /* GraphQL */ `
+      },
+    };
+
+    const result = await graphql({
+      schema: stitchSchemas({
+        typeDefs: [BookSchema, AuthorSchema],
+        resolvers,
+      }),
+      source: /* GraphQL */ `
           query {
             book {
               author {
@@ -3199,26 +3192,26 @@ bookingById(id: "b1") {
           }
         `,
 
-        variableValues: {
-          test: 'Foo',
-        },
-      });
+      variableValues: {
+        test: 'Foo',
+      },
+    });
 
-      expect(result).toEqual({
-        data: {
-          book: {
-            author: {
-              name: 'JRR Tolkien',
-            },
+    expect(result).toEqual({
+      data: {
+        book: {
+          author: {
+            name: 'JRR Tolkien',
           },
         },
-      });
+      },
     });
   });
+});
 
-  describe('empty typeDefs array', () => {
-    test('works', async () => {
-      const typeDefs = /* GraphQL */ `
+describe('empty typeDefs array', () => {
+  test('works', async () => {
+    const typeDefs = /* GraphQL */ `
         type Query {
           book: Book
         }
@@ -3226,34 +3219,34 @@ bookingById(id: "b1") {
           category: String!
         }
       `;
-      let schema = makeExecutableSchema({ typeDefs });
+    let schema = makeExecutableSchema({ typeDefs });
 
-      const resolvers = {
-        Query: {
-          book: () => ({ category: 'Test' }),
-        },
-      };
+    const resolvers = {
+      Query: {
+        book: () => ({ category: 'Test' }),
+      },
+    };
 
-      schema = stitchSchemas({
-        subschemas: [schema],
-        resolvers,
-        typeDefs: [],
-      });
-
-      const result = await graphql({
-        schema,
-        source: '{ book { cat: category } }',
-      });
-      assertSome(result.data);
-      const bookData: any = result.data['book'];
-      expect(bookData.cat).toBe('Test');
+    schema = stitchSchemas({
+      subschemas: [schema],
+      resolvers,
+      typeDefs: [],
     });
-  });
 
-  describe('new root type name', () => {
-    test('works', async () => {
-      let bookSchema = makeExecutableSchema({
-        typeDefs: /* GraphQL */ `
+    const result = await graphql({
+      schema,
+      source: '{ book { cat: category } }',
+    });
+    assertSome(result.data);
+    const bookData: any = result.data['book'];
+    expect(bookData.cat).toBe('Test');
+  });
+});
+
+describe('new root type name', () => {
+  test('works', async () => {
+    let bookSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
           type Query {
             book: Book
           }
@@ -3261,10 +3254,10 @@ bookingById(id: "b1") {
             name: String
           }
         `,
-      });
+    });
 
-      let movieSchema = makeExecutableSchema({
-        typeDefs: /* GraphQL */ `
+    let movieSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
           type Query {
             movie: Movie
           }
@@ -3273,23 +3266,23 @@ bookingById(id: "b1") {
             name: String
           }
         `,
-      });
+    });
 
-      bookSchema = addMocksToSchema({ schema: bookSchema });
-      movieSchema = addMocksToSchema({ schema: movieSchema });
+    bookSchema = addMocksToSchema({ schema: bookSchema });
+    movieSchema = addMocksToSchema({ schema: movieSchema });
 
-      const stitchedSchema = stitchSchemas({
-        subschemas: [bookSchema, movieSchema],
-        typeDefs: /* GraphQL */ `
+    const stitchedSchema = stitchSchemas({
+      subschemas: [bookSchema, movieSchema],
+      typeDefs: /* GraphQL */ `
           schema {
             query: RootQuery
           }
         `,
-      });
+    });
 
-      const result = await graphql({
-        schema: stitchedSchema,
-        source: /* GraphQL */ `
+    const result = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
           query {
             ... on RootQuery {
               book {
@@ -3298,29 +3291,29 @@ bookingById(id: "b1") {
             }
           }
         `,
-      });
+    });
 
-      expect(result).toEqual({
-        data: {
-          book: {
-            name: 'Hello World',
-          },
+    expect(result).toEqual({
+      data: {
+        book: {
+          name: 'Hello World',
         },
-      });
+      },
     });
   });
+});
 
-  describe('stitching from existing interfaces', () => {
-    test('works', async () => {
-      const STOCK_RECORDS: Record<number, { id: number; stock: number }> = {
-        1: {
-          id: 1,
-          stock: 100,
-        },
-      };
+describe('stitching from existing interfaces', () => {
+  test('works', async () => {
+    const STOCK_RECORDS: Record<number, { id: number; stock: number }> = {
+      1: {
+        id: 1,
+        stock: 100,
+      },
+    };
 
-      const stockSchema = makeExecutableSchema({
-        typeDefs: /* GraphQL */ `
+    const stockSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
           type StockRecord {
             id: ID!
             stock: Int!
@@ -3329,30 +3322,30 @@ bookingById(id: "b1") {
             stockRecord(id: ID!): StockRecord
           }
         `,
-        resolvers: {
-          Query: {
-            stockRecord: (_, { id }: { id: number }) => STOCK_RECORDS[id],
-          },
+      resolvers: {
+        Query: {
+          stockRecord: (_, { id }: { id: number }) => STOCK_RECORDS[id],
         },
-      });
+      },
+    });
 
-      const PRODUCTS = [
-        {
-          id: 1,
-          title: 'T-Shirt',
-        },
-      ];
+    const PRODUCTS = [
+      {
+        id: 1,
+        title: 'T-Shirt',
+      },
+    ];
 
-      const COLLECTIONS = [
-        {
-          id: 1,
-          name: 'Apparel',
-          products: PRODUCTS,
-        },
-      ];
+    const COLLECTIONS = [
+      {
+        id: 1,
+        name: 'Apparel',
+        products: PRODUCTS,
+      },
+    ];
 
-      const productSchema = makeExecutableSchema({
-        typeDefs: /* GraphQL */ `
+    const productSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
           interface IProduct {
             id: ID!
             title: String!
@@ -3370,32 +3363,32 @@ bookingById(id: "b1") {
             collections: [Collection!]!
           }
         `,
-        resolvers: {
-          Query: {
-            collections: () => COLLECTIONS,
-          },
+      resolvers: {
+        Query: {
+          collections: () => COLLECTIONS,
         },
-      });
+      },
+    });
 
-      const stitchedSchema = stitchSchemas({
-        inheritResolversFromInterfaces: true,
-        subschemas: [stockSchema, productSchema],
-        resolvers: {
-          IProduct: {
-            stockRecord: {
-              selectionSet: `{ id } `,
-              resolve: (obj, _args, _context, info) =>
-                delegateToSchema({
-                  schema: stockSchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'stockRecord',
-                  args: { id: obj.id },
-                  info,
-                }),
-            },
+    const stitchedSchema = stitchSchemas({
+      inheritResolversFromInterfaces: true,
+      subschemas: [stockSchema, productSchema],
+      resolvers: {
+        IProduct: {
+          stockRecord: {
+            selectionSet: `{ id } `,
+            resolve: (obj, _args, _context, info) =>
+              delegateToSchema({
+                schema: stockSchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'stockRecord',
+                args: { id: obj.id },
+                info,
+              }),
           },
         },
-        typeDefs: /* GraphQL */ `
+      },
+      typeDefs: /* GraphQL */ `
           extend interface IProduct {
             stockRecord: StockRecord
           }
@@ -3403,11 +3396,11 @@ bookingById(id: "b1") {
             stockRecord: StockRecord
           }
         `,
-      });
+    });
 
-      const concreteResult = await graphql({
-        schema: stitchedSchema,
-        source: /* GraphQL */ `
+    const concreteResult = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
           query {
             collections {
               name
@@ -3420,29 +3413,29 @@ bookingById(id: "b1") {
             }
           }
         `,
-      });
+    });
 
-      expect(concreteResult).toEqual({
-        data: {
-          collections: [
-            {
-              name: 'Apparel',
-              products: [
-                {
-                  title: 'T-Shirt',
-                  stockRecord: {
-                    stock: 100,
-                  },
+    expect(concreteResult).toEqual({
+      data: {
+        collections: [
+          {
+            name: 'Apparel',
+            products: [
+              {
+                title: 'T-Shirt',
+                stockRecord: {
+                  stock: 100,
                 },
-              ],
-            },
-          ],
-        },
-      });
+              },
+            ],
+          },
+        ],
+      },
+    });
 
-      const fragmentResult = await graphql({
-        schema: stitchedSchema,
-        source: /* GraphQL */ `
+    const fragmentResult = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
           query {
             collections {
               name
@@ -3459,29 +3452,29 @@ bookingById(id: "b1") {
             }
           }
         `,
-      });
+    });
 
-      expect(fragmentResult).toEqual({
-        data: {
-          collections: [
-            {
-              name: 'Apparel',
-              products: [
-                {
-                  title: 'T-Shirt',
-                  stockRecord: {
-                    stock: 100,
-                  },
+    expect(fragmentResult).toEqual({
+      data: {
+        collections: [
+          {
+            name: 'Apparel',
+            products: [
+              {
+                title: 'T-Shirt',
+                stockRecord: {
+                  stock: 100,
                 },
-              ],
-            },
-          ],
-        },
-      });
+              },
+            ],
+          },
+        ],
+      },
+    });
 
-      const interfaceResult = await graphql({
-        schema: stitchedSchema,
-        source: /* GraphQL */ `
+    const interfaceResult = await graphql({
+      schema: stitchedSchema,
+      source: /* GraphQL */ `
           query {
             collections {
               name
@@ -3496,28 +3489,27 @@ bookingById(id: "b1") {
             }
           }
         `,
-      });
+    });
 
-      expect(interfaceResult).toEqual({
-        data: {
-          collections: [
-            {
-              name: 'Apparel',
-              products: [
-                {
-                  title: 'T-Shirt',
-                  stockRecord: {
-                    stock: 100,
-                  },
+    expect(interfaceResult).toEqual({
+      data: {
+        collections: [
+          {
+            name: 'Apparel',
+            products: [
+              {
+                title: 'T-Shirt',
+                stockRecord: {
+                  stock: 100,
                 },
-              ],
-            },
-          ],
-        },
-      });
+              },
+            ],
+          },
+        ],
+      },
     });
   });
-}
+});
 
 it(`stitchSchemas shouldn't call transformSchema more than once`, async () => {
   const transform: Transform = {
