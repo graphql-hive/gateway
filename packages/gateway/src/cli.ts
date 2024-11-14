@@ -1,5 +1,5 @@
 import cluster from 'node:cluster';
-import module from 'node:module';
+import { enableCompileCache } from 'node:module';
 import { platform, release } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -351,7 +351,7 @@ export function enableModuleCachingIfPossible() {
   if (globalThis.__PACKED_DEPS_PATH__) {
     cacheDir = join(globalThis.__PACKED_DEPS_PATH__, 'node-compile-cache');
   }
-  if (module.enableCompileCache) {
-    module.enableCompileCache(cacheDir);
+  if (enableCompileCache) {
+    enableCompileCache(cacheDir);
   }
 }
