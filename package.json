@@ -21,7 +21,7 @@
     "e2e:test": "vitest --project e2e",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks"
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks --runInBand"
   },
   "devDependencies": {
     "@babel/core": "7.26.0",

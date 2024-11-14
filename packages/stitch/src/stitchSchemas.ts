@@ -14,7 +14,7 @@ import {
   assertResolversPresent,
   extendResolversFromInterfaces,
 } from '@graphql-tools/schema';
-import { IResolvers } from '@graphql-tools/utils';
+import { inspect, IResolvers } from '@graphql-tools/utils';
 import {
   extendSchema,
   GraphQLDirective,
@@ -188,7 +188,9 @@ function applySubschemaConfigTransforms<TContext = Record<string, any>>(
   } else if (subschemaOrSubschemaConfig instanceof GraphQLSchema) {
     subschemaConfig = { schema: subschemaOrSubschemaConfig };
   } else {
-    throw new TypeError('Received invalid input.');
+    throw new TypeError(
+      'Received invalid input.' + inspect(subschemaOrSubschemaConfig),
+    );
   }
 
   const transformedSubschemaConfigs = subschemaConfigTransforms
