@@ -4,13 +4,13 @@ import {
   GatewayPlugin,
   useCustomFetch,
 } from '@graphql-hive/gateway';
+import { MeshFetch } from '@graphql-mesh/types';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, test, vitest } from 'vitest';
 import {
   defaultParamsSerializer,
   useHmacSignatureValidation,
 } from '../src/index';
-import { MeshFetch } from '@graphql-mesh/types';
 
 describe('useHmacSignatureValidation', () => {
   test('should throw when header is missing or invalid', async () => {
