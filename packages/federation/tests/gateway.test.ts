@@ -24,7 +24,6 @@ import {
   print,
   printSchema,
   validate,
-  versionInfo,
 } from 'graphql';
 import '@internal/testing/to-be-similar-gql-doc';
 import { ApolloGateway, LocalGraphQLDataSource } from '@apollo/gateway';
@@ -124,11 +123,6 @@ const exampleQuery = parse(/* GraphQL */ `
 `);
 
 describe('Federation', () => {
-  if (versionInfo.major < 16) {
-    it('should work', () => {});
-    return;
-  }
-
   const buildStitchingGateway = async (
     serviceInputs: ServiceInput[],
   ): Promise<BuiltGateway> => {
