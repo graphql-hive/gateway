@@ -1,7 +1,4 @@
-import {
-  delegateToSchema,
-  Transform,
-} from '@graphql-tools/delegate';
+import { delegateToSchema, Transform } from '@graphql-tools/delegate';
 import { execute, subscribe } from '@graphql-tools/executor';
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -339,109 +336,77 @@ for (const {
 } of testCombinations.slice(0, -1)) {
   describe('merging ' + combinationName, () => {
     const stitchedSchema = stitchSchemas({
-        subschemas: [
-          propertySchema,
-          bookingSchema,
-          productSchema,
-          scalarSchema,
-          enumSchema,
-          localSubscriptionSchema,
-        ],
-        typeDefs: [
-          linkSchema,
-          interfaceExtensionTest,
-          loneExtend,
-          codeCoverageTypeDefs,
-          schemaDirectiveTypeDefs,
-        ],
-        mergeDirectives: true,
-        resolvers: {
-          Property: {
-            bookings: {
-              selectionSet: '{ id }',
-              resolve(parent, args, context, info) {
-                return delegateToSchema({
-                  schema: bookingSchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'bookingsByPropertyId',
-                  args: {
-                    propertyId: parent.id,
-                    limit: args.limit ? args.limit : null,
-                  },
-                  context,
-                  info,
-                });
-              },
-            },
-            someField: {
-              resolve() {
-                return 'someField';
-              },
-            },
-          },
-          Booking: {
-            property: {
-              selectionSet: '{ propertyId }',
-              resolve(parent, _args, context, info) {
-                return delegateToSchema({
-                  schema: propertySchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'propertyById',
-                  args: {
-                    id: parent.propertyId,
-                  },
-                  context,
-                  info,
-                });
-              },
-            },
-            textDescription: {
-              selectionSet: '{ id }',
-              resolve(parent, _args, _context, _info) {
-                return `Booking #${parent.id as string}`;
-              },
-            },
-          },
-          DownloadableProduct: {
-            filesize() {
-              return 1024;
-            },
-          },
-          LinkType: {
-            property: {
-              resolve(_parent, _args, context, info) {
-                return delegateToSchema({
-                  schema: propertySchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'propertyById',
-                  args: {
-                    id: 'p1',
-                  },
-                  context,
-                  info,
-                });
-              },
-            },
-          },
-          TestScalar: new GraphQLScalarType({
-            name: 'TestScalar',
-            description: undefined,
-            serialize: (value) => value,
-          }),
-          Query: {
-            delegateInterfaceTest(_parent, _args, context, info) {
+      subschemas: [
+        propertySchema,
+        bookingSchema,
+        productSchema,
+        scalarSchema,
+        enumSchema,
+        localSubscriptionSchema,
+      ],
+      typeDefs: [
+        linkSchema,
+        interfaceExtensionTest,
+        loneExtend,
+        codeCoverageTypeDefs,
+        schemaDirectiveTypeDefs,
+      ],
+      mergeDirectives: true,
+      resolvers: {
+        Property: {
+          bookings: {
+            selectionSet: '{ id }',
+            resolve(parent, args, context, info) {
               return delegateToSchema({
-                schema: propertySchema,
+                schema: bookingSchema,
                 operation: 'query' as OperationTypeNode,
-                fieldName: 'interfaceTest',
+                fieldName: 'bookingsByPropertyId',
                 args: {
-                  kind: 'ONE',
+                  propertyId: parent.id,
+                  limit: args.limit ? args.limit : null,
                 },
                 context,
                 info,
               });
             },
-            delegateArgumentTest(_parent, _args, context, info) {
+          },
+          someField: {
+            resolve() {
+              return 'someField';
+            },
+          },
+        },
+        Booking: {
+          property: {
+            selectionSet: '{ propertyId }',
+            resolve(parent, _args, context, info) {
+              return delegateToSchema({
+                schema: propertySchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'propertyById',
+                args: {
+                  id: parent.propertyId,
+                },
+                context,
+                info,
+              });
+            },
+          },
+          textDescription: {
+            selectionSet: '{ id }',
+            resolve(parent, _args, _context, _info) {
+              return `Booking #${parent.id as string}`;
+            },
+          },
+        },
+        DownloadableProduct: {
+          filesize() {
+            return 1024;
+          },
+        },
+        LinkType: {
+          property: {
+            resolve(_parent, _args, context, info) {
               return delegateToSchema({
                 schema: propertySchema,
                 operation: 'query' as OperationTypeNode,
@@ -453,66 +418,98 @@ for (const {
                 info,
               });
             },
-            linkTest() {
-              return {
-                test: 'test',
-              };
-            },
-            node: {
-              selectionSet: '{ id }',
-              resolve(_parent, args, context, info) {
-                if (args.id.startsWith('p')) {
-                  return delegateToSchema({
-                    schema: propertySchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'propertyById',
-                    args,
-                    context,
-                    info,
-                  });
-                } else if (args.id.startsWith('b')) {
-                  return delegateToSchema({
-                    schema: bookingSchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'bookingById',
-                    args,
-                    context,
-                    info,
-                  });
-                } else if (args.id.startsWith('c')) {
-                  return delegateToSchema({
-                    schema: bookingSchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'customerById',
-                    args,
-                    context,
-                    info,
-                  });
-                }
-
-                throw new Error('invalid id');
-              },
-            },
-            async nodes(_parent, _args, context, info) {
-              const bookings = await delegateToSchema({
-                schema: bookingSchema,
-                operation: 'query' as OperationTypeNode,
-                fieldName: 'bookings',
-                context,
-                info,
-              });
-              const properties = await delegateToSchema({
-                schema: propertySchema,
-                operation: 'query' as OperationTypeNode,
-                fieldName: 'properties',
-                context,
-                info,
-              });
-              return [...bookings, ...properties];
-            },
           },
         },
-      });
+        TestScalar: new GraphQLScalarType({
+          name: 'TestScalar',
+          description: undefined,
+          serialize: (value) => value,
+        }),
+        Query: {
+          delegateInterfaceTest(_parent, _args, context, info) {
+            return delegateToSchema({
+              schema: propertySchema,
+              operation: 'query' as OperationTypeNode,
+              fieldName: 'interfaceTest',
+              args: {
+                kind: 'ONE',
+              },
+              context,
+              info,
+            });
+          },
+          delegateArgumentTest(_parent, _args, context, info) {
+            return delegateToSchema({
+              schema: propertySchema,
+              operation: 'query' as OperationTypeNode,
+              fieldName: 'propertyById',
+              args: {
+                id: 'p1',
+              },
+              context,
+              info,
+            });
+          },
+          linkTest() {
+            return {
+              test: 'test',
+            };
+          },
+          node: {
+            selectionSet: '{ id }',
+            resolve(_parent, args, context, info) {
+              if (args.id.startsWith('p')) {
+                return delegateToSchema({
+                  schema: propertySchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'propertyById',
+                  args,
+                  context,
+                  info,
+                });
+              } else if (args.id.startsWith('b')) {
+                return delegateToSchema({
+                  schema: bookingSchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'bookingById',
+                  args,
+                  context,
+                  info,
+                });
+              } else if (args.id.startsWith('c')) {
+                return delegateToSchema({
+                  schema: bookingSchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'customerById',
+                  args,
+                  context,
+                  info,
+                });
+              }
+
+              throw new Error('invalid id');
+            },
+          },
+          async nodes(_parent, _args, context, info) {
+            const bookings = await delegateToSchema({
+              schema: bookingSchema,
+              operation: 'query' as OperationTypeNode,
+              fieldName: 'bookings',
+              context,
+              info,
+            });
+            const properties = await delegateToSchema({
+              schema: propertySchema,
+              operation: 'query' as OperationTypeNode,
+              fieldName: 'properties',
+              context,
+              info,
+            });
+            return [...bookings, ...properties];
+          },
+        },
+      },
+    });
 
     describe('basic', () => {
       test('works with context', async () => {
@@ -3148,24 +3145,24 @@ bookingById(id: "b1") {
 describe('scalars without executable schema', () => {
   test('can merge and query schema', async () => {
     const BookSchema = /* GraphQL */ `
-        type Book {
-          name: String
-        }
-      `;
+      type Book {
+        name: String
+      }
+    `;
 
     const AuthorSchema = /* GraphQL */ `
-        type Query {
-          book: Book
-        }
+      type Query {
+        book: Book
+      }
 
-        type Author {
-          name: String
-        }
+      type Author {
+        name: String
+      }
 
-        type Book {
-          author: Author
-        }
-      `;
+      type Book {
+        author: Author
+      }
+    `;
 
     const resolvers = {
       Query: {
@@ -3183,14 +3180,14 @@ describe('scalars without executable schema', () => {
         resolvers,
       }),
       source: /* GraphQL */ `
-          query {
-            book {
-              author {
-                name
-              }
+        query {
+          book {
+            author {
+              name
             }
           }
-        `,
+        }
+      `,
 
       variableValues: {
         test: 'Foo',
@@ -3212,13 +3209,13 @@ describe('scalars without executable schema', () => {
 describe('empty typeDefs array', () => {
   test('works', async () => {
     const typeDefs = /* GraphQL */ `
-        type Query {
-          book: Book
-        }
-        type Book {
-          category: String!
-        }
-      `;
+      type Query {
+        book: Book
+      }
+      type Book {
+        category: String!
+      }
+    `;
     let schema = makeExecutableSchema({ typeDefs });
 
     const resolvers = {
@@ -3247,25 +3244,25 @@ describe('new root type name', () => {
   test('works', async () => {
     let bookSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-          type Query {
-            book: Book
-          }
-          type Book {
-            name: String
-          }
-        `,
+        type Query {
+          book: Book
+        }
+        type Book {
+          name: String
+        }
+      `,
     });
 
     let movieSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-          type Query {
-            movie: Movie
-          }
+        type Query {
+          movie: Movie
+        }
 
-          type Movie {
-            name: String
-          }
-        `,
+        type Movie {
+          name: String
+        }
+      `,
     });
 
     bookSchema = addMocksToSchema({ schema: bookSchema });
@@ -3274,23 +3271,23 @@ describe('new root type name', () => {
     const stitchedSchema = stitchSchemas({
       subschemas: [bookSchema, movieSchema],
       typeDefs: /* GraphQL */ `
-          schema {
-            query: RootQuery
-          }
-        `,
+        schema {
+          query: RootQuery
+        }
+      `,
     });
 
     const result = await graphql({
       schema: stitchedSchema,
       source: /* GraphQL */ `
-          query {
-            ... on RootQuery {
-              book {
-                name
-              }
+        query {
+          ... on RootQuery {
+            book {
+              name
             }
           }
-        `,
+        }
+      `,
     });
 
     expect(result).toEqual({
@@ -3314,14 +3311,14 @@ describe('stitching from existing interfaces', () => {
 
     const stockSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-          type StockRecord {
-            id: ID!
-            stock: Int!
-          }
-          type Query {
-            stockRecord(id: ID!): StockRecord
-          }
-        `,
+        type StockRecord {
+          id: ID!
+          stock: Int!
+        }
+        type Query {
+          stockRecord(id: ID!): StockRecord
+        }
+      `,
       resolvers: {
         Query: {
           stockRecord: (_, { id }: { id: number }) => STOCK_RECORDS[id],
@@ -3346,23 +3343,23 @@ describe('stitching from existing interfaces', () => {
 
     const productSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-          interface IProduct {
-            id: ID!
-            title: String!
-          }
-          type Product implements IProduct {
-            id: ID!
-            title: String!
-          }
-          type Collection {
-            id: ID!
-            name: String!
-            products: [Product!]!
-          }
-          type Query {
-            collections: [Collection!]!
-          }
-        `,
+        interface IProduct {
+          id: ID!
+          title: String!
+        }
+        type Product implements IProduct {
+          id: ID!
+          title: String!
+        }
+        type Collection {
+          id: ID!
+          name: String!
+          products: [Product!]!
+        }
+        type Query {
+          collections: [Collection!]!
+        }
+      `,
       resolvers: {
         Query: {
           collections: () => COLLECTIONS,
@@ -3389,30 +3386,30 @@ describe('stitching from existing interfaces', () => {
         },
       },
       typeDefs: /* GraphQL */ `
-          extend interface IProduct {
-            stockRecord: StockRecord
-          }
-          extend type Product {
-            stockRecord: StockRecord
-          }
-        `,
+        extend interface IProduct {
+          stockRecord: StockRecord
+        }
+        extend type Product {
+          stockRecord: StockRecord
+        }
+      `,
     });
 
     const concreteResult = await graphql({
       schema: stitchedSchema,
       source: /* GraphQL */ `
-          query {
-            collections {
-              name
-              products {
-                title
-                stockRecord {
-                  stock
-                }
+        query {
+          collections {
+            name
+            products {
+              title
+              stockRecord {
+                stock
               }
             }
           }
-        `,
+        }
+      `,
     });
 
     expect(concreteResult).toEqual({
@@ -3436,22 +3433,22 @@ describe('stitching from existing interfaces', () => {
     const fragmentResult = await graphql({
       schema: stitchedSchema,
       source: /* GraphQL */ `
-          query {
-            collections {
-              name
-              products {
-                ...InterfaceFragment
-              }
+        query {
+          collections {
+            name
+            products {
+              ...InterfaceFragment
             }
           }
+        }
 
-          fragment InterfaceFragment on IProduct {
-            title
-            stockRecord {
-              stock
-            }
+        fragment InterfaceFragment on IProduct {
+          title
+          stockRecord {
+            stock
           }
-        `,
+        }
+      `,
     });
 
     expect(fragmentResult).toEqual({
@@ -3475,20 +3472,20 @@ describe('stitching from existing interfaces', () => {
     const interfaceResult = await graphql({
       schema: stitchedSchema,
       source: /* GraphQL */ `
-          query {
-            collections {
-              name
-              products {
-                ... on IProduct {
-                  title
-                  stockRecord {
-                    stock
-                  }
+        query {
+          collections {
+            name
+            products {
+              ... on IProduct {
+                title
+                stockRecord {
+                  stock
                 }
               }
             }
           }
-        `,
+        }
+      `,
     });
 
     expect(interfaceResult).toEqual({
