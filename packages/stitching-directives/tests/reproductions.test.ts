@@ -210,7 +210,7 @@ describe('Reproductions for issues', () => {
     });
   });
 
-  it.only('multiple endpoints', async () => {
+  it('multiple endpoints', async () => {
     const { stitchingDirectivesTransformer, stitchingDirectivesTypeDefs } =
       stitchingDirectives();
     const users = [
