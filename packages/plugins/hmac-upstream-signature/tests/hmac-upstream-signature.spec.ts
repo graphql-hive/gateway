@@ -10,9 +10,26 @@ import {
   defaultParamsSerializer,
   useHmacSignatureValidation,
 } from '../src/index';
+import { MeshFetch } from '@graphql-mesh/types';
 
 describe('useHmacSignatureValidation', () => {
   test('should throw when header is missing or invalid', async () => {
+    const upstream = createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
+        },
+      }),
+      plugins: [],
+      logging: false,
+    });
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
@@ -21,6 +38,7 @@ describe('useHmacSignatureValidation', () => {
         useHmacSignatureValidation({
           secret: 'topSecret',
         }),
+        useCustomFetch(upstream.fetch as MeshFetch),
       ],
       logging: false,
     });

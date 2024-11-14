@@ -7,12 +7,15 @@ module.exports = new Proxy(require('@jest/globals'), {
       return jestGlobals.jest;
     }
     if (prop === 'describe') {
-      return function describe(name, ...args) {
+      const describeFn = function describe(name, ...args) {
         if (typeof name === 'string') {
           return jestGlobals.describe(`${name} >`, ...args);
         }
         return jestGlobals.describe(name, ...args);
       };
+      describeFn.skip = jestGlobals.describe.skip;
+      describeFn.only = jestGlobals.describe.only;
+      return describeFn;
     }
     return Reflect.get(jestGlobals, prop, receiver);
   },
