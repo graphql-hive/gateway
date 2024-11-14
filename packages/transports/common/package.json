@@ -44,7 +44,7 @@
   "dependencies": {
     "@envelop/core": "^5.0.1",
     "@graphql-mesh/types": "^0.102.12",
-    "@graphql-tools/delegate": "^10.0.28",
+    "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/utils": "^10.5.5",
     "tslib": "^2.4.0"
   },

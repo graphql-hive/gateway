@@ -1,0 +1,52 @@
+{
+  "name": "@graphql-tools/executor-http",
+  "version": "1.1.9",
+  "type": "module",
+  "description": "A set of utils for faster development of GraphQL tools",
+  "repository": {
+    "type": "git",
+    "url": "graphql-hive/gateway",
+    "directory": "packages/executors/http"
+  },
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
+  },
+  "dependencies": {
+    "@graphql-tools/utils": "^10.5.6",
+    "@repeaterjs/repeater": "^3.0.4",
+    "@whatwg-node/fetch": "^0.10.0",
+    "extract-files": "^11.0.0",
+    "meros": "^1.2.1",
+    "tslib": "^2.4.0",
+    "value-or-promise": "^1.0.12"
+  },
+  "devDependencies": {
+    "@types/extract-files": "8.1.3",
+    "@whatwg-node/disposablestack": "^0.0.5",
+    "graphql-yoga": "^5.8.0"
+  },
+  "sideEffects": false
+}

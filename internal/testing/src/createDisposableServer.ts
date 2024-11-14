@@ -14,7 +14,7 @@ export interface DisposableServer {
 }
 
 export async function createDisposableServer(
-  listener: RequestListener,
+  listener?: RequestListener,
   opts?: DisposableServerOpts,
 ): Promise<DisposableServer> {
   const server = createServer(listener);
