@@ -9532,6 +9532,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cross-env@npm:^7.0.3":
+  version: 7.0.3
+  resolution: "cross-env@npm:7.0.3"
+  dependencies:
+    cross-spawn: "npm:^7.0.1"
+  bin:
+    cross-env: src/bin/cross-env.js
+    cross-env-shell: src/bin/cross-env-shell.js
+  checksum: 10c0/f3765c25746c69fcca369655c442c6c886e54ccf3ab8c16847d5ad0e91e2f337d36eedc6599c1227904bf2a228d721e690324446876115bc8e7b32a866735ecf
+  languageName: node
+  linkType: hard
+
 "cross-inspect@npm:1.0.1":
   version: 1.0.1
   resolution: "cross-inspect@npm:1.0.1"
@@ -9563,7 +9575,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-spawn@npm:^7.0.3":
+"cross-spawn@npm:^7.0.1, cross-spawn@npm:^7.0.3":
   version: 7.0.5
   resolution: "cross-spawn@npm:7.0.5"
   dependencies:
@@ -11255,6 +11267,7 @@ __metadata:
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
     "@types/node": "npm:^22.9.0"
+    cross-env: "npm:^7.0.3"
     eslint: "npm:^9.12.0"
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-n: "npm:^17.11.1"
