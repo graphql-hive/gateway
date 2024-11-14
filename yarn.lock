@@ -4394,22 +4394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/wrap@npm:^10.0.12":
-  version: 10.0.16
-  resolution: "@graphql-tools/wrap@npm:10.0.16"
-  dependencies:
-    "@graphql-tools/delegate": "npm:^10.1.2"
-    "@graphql-tools/schema": "npm:^10.0.8"
-    "@graphql-tools/utils": "npm:^10.5.6"
-    tslib: "npm:^2.4.0"
-    value-or-promise: "npm:^1.0.12"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/02f58bc8ca7fe6f2168ba3b315fc12b8f8d25dac0b987441cc3b31a0461528451a79391c685490425ec7ad87f6a4a9fb136b3b535b459f3ddb2754a1dde6f20d
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/wrap@workspace:^, @graphql-tools/wrap@workspace:packages/wrap":
+"@graphql-tools/wrap@npm:^10.0.12, @graphql-tools/wrap@workspace:^, @graphql-tools/wrap@workspace:packages/wrap":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/wrap@workspace:packages/wrap"
   dependencies:
