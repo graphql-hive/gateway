@@ -1,5 +1,6 @@
-const { gql } = require('graphql-tag');
-const { buildSubgraphSchema } = require('@apollo/subgraph');
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import type { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
+import { gql } from 'graphql-tag';
 
 const typeDefs = gql`
   extend type Query {
@@ -14,7 +15,7 @@ const typeDefs = gql`
   }
 `;
 
-const listSize = parseInt(process.env.PRODUCTS_SIZE || '3');
+const listSize = parseInt(process.env['PRODUCTS_SIZE'] || '3');
 
 const definedProducts = [
   {
@@ -40,10 +41,10 @@ const products = [...Array(listSize)].map(
   (_, index) => definedProducts[index % 3],
 );
 
-const resolvers = {
+const resolvers: GraphQLResolverMap = {
   Product: {
     __resolveReference(object) {
-      return products.find((product) => product.upc === object.upc);
+      return products.find((product: any) => product.upc === object.upc);
     },
   },
   Query: {
@@ -59,8 +60,4 @@ const schema = buildSubgraphSchema([
   },
 ]);
 
-module.exports = {
-  typeDefs,
-  resolvers,
-  schema,
-};
+export { typeDefs, resolvers, schema };

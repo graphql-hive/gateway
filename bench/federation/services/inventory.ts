@@ -1,5 +1,6 @@
-const { gql } = require('graphql-tag');
-const { buildSubgraphSchema } = require('@apollo/subgraph');
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import type { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
+import { gql } from 'graphql-tag';
 
 const typeDefs = gql`
   extend type Product @key(fields: "upc") {
@@ -11,7 +12,7 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers = {
+const resolvers: GraphQLResolverMap = {
   Product: {
     __resolveReference(object) {
       return {
@@ -35,11 +36,7 @@ const schema = buildSubgraphSchema([
   },
 ]);
 
-module.exports = {
-  typeDefs,
-  resolvers,
-  schema,
-};
+export { typeDefs, resolvers, schema };
 
 const inventory = [
   { upc: '1', inStock: true },

@@ -69,6 +69,7 @@ describe('Federation', async () => {
 
   const monolithParse = memoize1(parse);
 
+  // Only if you want to see the latency that the gateway adds
   bench.skip(
     'Monolith',
     () =>

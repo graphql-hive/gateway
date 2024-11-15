@@ -1,5 +1,6 @@
-const { gql } = require('graphql-tag');
-const { buildSubgraphSchema } = require('@apollo/subgraph');
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import type { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
+import { gql } from 'graphql-tag';
 
 const typeDefs = gql`
   type Review @key(fields: "id") {
@@ -21,7 +22,7 @@ const typeDefs = gql`
   }
 `;
 
-const resolvers = {
+const resolvers: GraphQLResolverMap = {
   Review: {
     author(review) {
       return { __typename: 'User', id: review.authorID };
@@ -53,11 +54,7 @@ const schema = buildSubgraphSchema([
   },
 ]);
 
-module.exports = {
-  typeDefs,
-  resolvers,
-  schema,
-};
+export { typeDefs, resolvers, schema };
 
 const usernames = [
   { id: '1', username: '@ada' },
