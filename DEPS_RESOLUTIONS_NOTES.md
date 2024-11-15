@@ -10,3 +10,7 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### tsx
 
 1. https://github.com/privatenumber/tsx/issues/159#issuecomment-2473632866 (did what was suggested)
+
+### vitest-tsconfig-paths
+
+1. Resolve tsconfig paths in modules that have been [inlined](https://vitest.dev/config/#server-deps-inline).
