@@ -5,6 +5,8 @@ import apolloGateway from './apollo';
 import monolith from './monolith';
 import stitching from './stitching';
 
+const duration = 10_000;
+
 function memoize1<T extends (...args: any) => any>(fn: T): T {
   const memoize1cache = new Map();
   return function memoized(a1: Parameters<T>[0]): ReturnType<T> {
@@ -108,6 +110,8 @@ describe('Federation', async () => {
       logger: console,
       context: {},
     }) as unknown as Promise<void>;
+  }, {
+    time: duration,
   });
 
   const stitchingSchema = await stitching;
@@ -121,5 +125,8 @@ describe('Federation', async () => {
         document: stitchingParse(query),
         contextValue: {},
       }) as Promise<void>,
+      {
+        time: duration,
+      }
   );
 });
