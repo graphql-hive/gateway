@@ -3225,7 +3225,7 @@ __metadata:
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.8.0"
-    tsx: "npm:^4.19.2"
+    tsx: "npm:4.19.2"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
     graphql: ^15.9.0 || ^16.9.0
@@ -3289,7 +3289,7 @@ __metadata:
     rollup: "npm:^4.18.1"
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.0"
-    tsx: "npm:^4.19.2"
+    tsx: "npm:4.19.2"
     ws: "npm:^8.18.0"
   peerDependencies:
     "@parcel/watcher": ^2.1.0
@@ -11219,7 +11219,7 @@ __metadata:
     prettier-plugin-sh: "npm:^0.14.0"
     ts-jest: "npm:29.2.5"
     ts-node: "npm:^10.9.2"
-    tsx: "npm:^4.19.2"
+    tsx: "npm:4.19.2"
     typescript: "npm:^5.6.3"
     typescript-eslint: "npm:^8.9.0"
     vite: "npm:^5.4.9"
@@ -17074,7 +17074,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.19.2":
+"tsx@npm:4.19.2":
   version: 4.19.2
   resolution: "tsx@npm:4.19.2"
   dependencies:
@@ -17087,6 +17087,22 @@ __metadata:
   bin:
     tsx: dist/cli.mjs
   checksum: 10c0/63164b889b1d170403e4d8753a6755dec371f220f5ce29a8e88f1f4d6085a784a12d8dc2ee669116611f2c72757ac9beaa3eea5c452796f541bdd2dc11753721
+  languageName: node
+  linkType: hard
+
+"tsx@patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch":
+  version: 4.19.2
+  resolution: "tsx@patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch::version=4.19.2&hash=ccdea0"
+  dependencies:
+    esbuild: "npm:~0.23.0"
+    fsevents: "npm:~2.3.3"
+    get-tsconfig: "npm:^4.7.5"
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    tsx: dist/cli.mjs
+  checksum: 10c0/b03dc12f6c87886a34eb3b122404a360201c2f9acebd8749b9ab1dc19089f97efba2095b55fb7e8b12e28c99683cdcd42f85c9f31f9640d70436ab6e44cd684d
   languageName: node
   linkType: hard
 
