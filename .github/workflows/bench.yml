@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        product-size:
+        products_size:
           - 3
           - 10
           - 100
@@ -35,3 +35,5 @@ jobs:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Bench
         run: yarn bench
+        env:
+          PRODUCTS_SIZE: ${{matrix.products_size}}
