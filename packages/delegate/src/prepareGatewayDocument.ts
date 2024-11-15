@@ -331,7 +331,6 @@ function visitSelectionSet(
           }
         }
 
-
         if (interfaceExtensions?.[fieldName]) {
           interfaceExtensionFields.push(selection);
         } else {

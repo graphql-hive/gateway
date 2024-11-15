@@ -1,7 +1,14 @@
 import { delegateToSchema, Transform } from '@graphql-tools/delegate';
-import { execute, normalizedExecutor, subscribe } from '@graphql-tools/executor';
+import {
+  execute,
+  normalizedExecutor,
+  subscribe,
+} from '@graphql-tools/executor';
 import { addMocksToSchema } from '@graphql-tools/mock';
-import { addResolversToSchema, makeExecutableSchema } from '@graphql-tools/schema';
+import {
+  addResolversToSchema,
+  makeExecutableSchema,
+} from '@graphql-tools/schema';
 import {
   assertSome,
   createGraphQLError,
@@ -3582,7 +3589,9 @@ it('should respect selectionSet in the additional resolvers to override a field'
         schema: sub_schema,
         createProxyingResolver: (options) => {
           return (_parent, _args, context, info) => {
-            const operationName = info.operation.name ? info.operation.name.value : undefined;
+            const operationName = info.operation.name
+              ? info.operation.name.value
+              : undefined;
             return delegateToSchema({
               schema: options.subschemaConfig,
               operation: options.operation,
@@ -3623,5 +3632,5 @@ it('should respect selectionSet in the additional resolvers to override a field'
         name: 'John Doe(10)',
       },
     },
-  })
-})
+  });
+});
