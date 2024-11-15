@@ -49,7 +49,6 @@ jobs:
       - name: Test
         run: yarn test:leaks
 
-  # TODO: various gateway runners
   e2e:
     needs: [unit]
     runs-on: ${{ matrix.setup.os }}
