@@ -500,7 +500,7 @@ export function createTenv(cwd: string): Tenv {
         { cwd, pipeLogs, env },
         'node',
         '--import',
-        'tsx', // we use tsx because we want to leverate tsconfig paths
+        'tsx', // we use tsx because we want to leverage tsconfig paths
         path.join(
           __project,
           'node_modules',
