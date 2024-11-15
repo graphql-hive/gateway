@@ -16,7 +16,6 @@ export default {
   rootDir,
   restoreMocks: true,
   reporters: ['default'],
-  verbose: isCI,
   modulePathIgnorePatterns: ['dist'],
   collectCoverage: false,
   cacheDirectory: resolve(rootDir, `${isCI ? '' : 'node_modules/'}.cache/jest`),
