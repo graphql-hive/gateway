@@ -17,7 +17,7 @@
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
     "check:types": "yarn tsc",
-    "e2e:bench": "vitest bench --project e2e:bench",
+    "bench": "vitest bench --project bench",
     "e2e:test": "vitest --project e2e",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",

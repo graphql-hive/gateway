@@ -31,4 +31,15 @@ export default defineWorkspace([
       testTimeout,
     },
   },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'bench',
+      hookTimeout: testTimeout,
+      testTimeout,
+      benchmark: {
+        include: ['bench/**/*.bench.ts'],
+      },
+    },
+  },
 ]);

@@ -53,6 +53,7 @@
     "./packages/**/tests",
     "./packages/**/scripts",
     "./packages/**/rollup.config.*",
-    "./e2e"
+    "./e2e",
+    "./bench"
   ]
 }
