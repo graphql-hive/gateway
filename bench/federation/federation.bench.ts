@@ -87,32 +87,36 @@ describe('Federation', async () => {
 
   const apolloGWResult = await apolloGateway.load();
 
-  bench('Apollo Gateway', () => {
-    const document = apolloParse(query);
-    return apolloGWResult.executor({
-      document,
-      operationName: 'TestQuery',
-      request: {
-        query,
-      },
-      operation: getOperationASTMemoized(document, operationName)!,
-      metrics: {} as any,
-      overallCachePolicy: undefined as any,
-      schemaHash: printSchemaMemoized(apolloGWResult.schema) as any,
-      queryHash: query,
-      source: query,
-      cache: {
-        get: async () => undefined,
-        set: async () => {},
-        delete: async () => true,
-      },
-      schema: apolloGWResult.schema,
-      logger: console,
-      context: {},
-    }) as unknown as Promise<void>;
-  }, {
-    time: duration,
-  });
+  bench(
+    'Apollo Gateway',
+    () => {
+      const document = apolloParse(query);
+      return apolloGWResult.executor({
+        document,
+        operationName: 'TestQuery',
+        request: {
+          query,
+        },
+        operation: getOperationASTMemoized(document, operationName)!,
+        metrics: {} as any,
+        overallCachePolicy: undefined as any,
+        schemaHash: printSchemaMemoized(apolloGWResult.schema) as any,
+        queryHash: query,
+        source: query,
+        cache: {
+          get: async () => undefined,
+          set: async () => {},
+          delete: async () => true,
+        },
+        schema: apolloGWResult.schema,
+        logger: console,
+        context: {},
+      }) as unknown as Promise<void>;
+    },
+    {
+      time: duration,
+    },
+  );
 
   const stitchingSchema = await stitching;
   const stitchingParse = memoize1(parse);
@@ -125,8 +129,8 @@ describe('Federation', async () => {
         document: stitchingParse(query),
         contextValue: {},
       }) as Promise<void>,
-      {
-        time: duration,
-      }
+    {
+      time: duration,
+    },
   );
 });
