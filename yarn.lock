@@ -11689,8 +11689,8 @@ __metadata:
   linkType: hard
 
 "graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit#expose-server-logic":
-  version: 1.0.0
-  resolution: "graphql-federation-gateway-audit@https://github.com/the-guild-org/graphql-federation-gateway-audit.git#commit=7cbb30c3ead0f9279b966a14a2d1ff7f14456f30"
+  version: 0.0.1
+  resolution: "graphql-federation-gateway-audit@https://github.com/the-guild-org/graphql-federation-gateway-audit.git#commit=e4e080f8e21257655b8fe26dbba1af0f26ff8775"
   dependencies:
     "@apollo/composition": "npm:2.9.3"
     "@apollo/subgraph": "npm:2.9.3"
@@ -11707,7 +11707,7 @@ __metadata:
     yargs: "npm:17.7.2"
   bin:
     graphql-federation-audit: ./dist/cli.js
-  checksum: 10c0/43a391de76713d8c8f5454c59e713089849054f96e05d51ee5695745b9c62bbd703f083ca5594f2d8532d4e3809a732c9c0cafb86d3f775bab031ce9c7fc9f21
+  checksum: 10c0/6ba9f3caea10edf23f26871ba51ffc45c2962503ee35ec95a6672e3d1b5e3545831c2fdfee339cdf9af903429c2379755a834bb9c884b057dd26308d0da85e6f
   languageName: node
   linkType: hard
 

@@ -37,6 +37,10 @@ describe('Federation Compatibility', () => {
     const supergraphPathListRes = await auditRouter.fetch(
       'http://localhost/supergraphs',
     );
+    if (!supergraphPathListRes.ok) {
+      const error = await supergraphPathListRes.text();
+      throw new Error(`Failed to fetch supergraph list: ${error}`);
+    }
     const supergraphPathList = await supergraphPathListRes.json();
     for (const supergraphPath of supergraphPathList) {
       if (supergraphPath) {
