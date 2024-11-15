@@ -36,12 +36,14 @@ const definedProducts = [
     weight: 50,
   },
 ];
-const products = [...Array(listSize)].map((_, index) => definedProducts[index % 3]);
+const products = [...Array(listSize)].map(
+  (_, index) => definedProducts[index % 3],
+);
 
 const resolvers = {
   Product: {
     __resolveReference(object) {
-      return products.find(product => product.upc === object.upc);
+      return products.find((product) => product.upc === object.upc);
     },
   },
   Query: {

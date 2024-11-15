@@ -8,7 +8,7 @@ const serviceMap = {
   accounts,
   inventory,
   products,
-  reviews
+  reviews,
 };
 
 export default new ApolloGateway({
@@ -21,4 +21,3 @@ export default new ApolloGateway({
     return new LocalGraphQLDataSource(serviceMap[serviceName].schema);
   },
 });
-

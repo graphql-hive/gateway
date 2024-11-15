@@ -12,12 +12,12 @@
   ],
   "packageManager": "yarn@4.5.1",
   "scripts": {
+    "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
     "check:types": "yarn tsc",
-    "bench": "vitest bench --project bench",
     "e2e:test": "vitest --project e2e",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",

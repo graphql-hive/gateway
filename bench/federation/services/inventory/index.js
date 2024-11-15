@@ -16,7 +16,7 @@ const resolvers = {
     __resolveReference(object) {
       return {
         ...object,
-        ...inventory.find(product => product.upc === object.upc),
+        ...inventory.find((product) => product.upc === object.upc),
       };
     },
     shippingEstimate(object) {

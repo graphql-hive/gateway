@@ -1,16 +1,15 @@
 // vitest.config.ts
-import tsconfigPaths from "file:///home/ardatan/Guild/hive-gateway/node_modules/vite-tsconfig-paths/dist/index.js";
-import { defineConfig } from "file:///home/ardatan/Guild/hive-gateway/node_modules/vitest/dist/config.js";
+import tsconfigPaths from 'file:///home/ardatan/Guild/hive-gateway/node_modules/vite-tsconfig-paths/dist/index.js';
+import { defineConfig } from 'file:///home/ardatan/Guild/hive-gateway/node_modules/vitest/dist/config.js';
+
 var vitest_config_default = defineConfig({
   plugins: [tsconfigPaths()],
   resolve: {
     alias: {
-      graphql: "graphql/index.js"
+      graphql: 'graphql/index.js',
       // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
-    }
-  }
+    },
+  },
 });
-export {
-  vitest_config_default as default
-};
+export { vitest_config_default as default };
 //# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZXN0LmNvbmZpZy50cyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiY29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2Rpcm5hbWUgPSBcIi9ob21lL2FyZGF0YW4vR3VpbGQvaGl2ZS1nYXRld2F5XCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ZpbGVuYW1lID0gXCIvaG9tZS9hcmRhdGFuL0d1aWxkL2hpdmUtZ2F0ZXdheS92aXRlc3QuY29uZmlnLnRzXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ltcG9ydF9tZXRhX3VybCA9IFwiZmlsZTovLy9ob21lL2FyZGF0YW4vR3VpbGQvaGl2ZS1nYXRld2F5L3ZpdGVzdC5jb25maWcudHNcIjtpbXBvcnQgdHNjb25maWdQYXRocyBmcm9tICd2aXRlLXRzY29uZmlnLXBhdGhzJztcbmltcG9ydCB7IGRlZmluZUNvbmZpZyB9IGZyb20gJ3ZpdGVzdC9jb25maWcnO1xuXG5leHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoe1xuICBwbHVnaW5zOiBbdHNjb25maWdQYXRocygpXSxcbiAgcmVzb2x2ZToge1xuICAgIGFsaWFzOiB7XG4gICAgICBncmFwaHFsOiAnZ3JhcGhxbC9pbmRleC5qcycsIC8vIFRPRE86IHdoeSBkdXBsaWNhdGUgZ3JhcGhxbCBlcnJvcnMgd2hlbiB0aGVyZSdzIG5vIG11bHRpcGxlIGdyYXBocWxzIGluc3RhbGxlZD8gbWlzdGVyeVxuICAgIH0sXG4gIH0sXG59KTtcbiJdLAogICJtYXBwaW5ncyI6ICI7QUFBc1IsT0FBTyxtQkFBbUI7QUFDaFQsU0FBUyxvQkFBb0I7QUFFN0IsSUFBTyx3QkFBUSxhQUFhO0FBQUEsRUFDMUIsU0FBUyxDQUFDLGNBQWMsQ0FBQztBQUFBLEVBQ3pCLFNBQVM7QUFBQSxJQUNQLE9BQU87QUFBQSxNQUNMLFNBQVM7QUFBQTtBQUFBLElBQ1g7QUFBQSxFQUNGO0FBQ0YsQ0FBQzsiLAogICJuYW1lcyI6IFtdCn0K

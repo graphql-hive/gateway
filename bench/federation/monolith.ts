@@ -1,6 +1,6 @@
-import { parse } from 'graphql'
-import { makeExecutableSchema, } from '@graphql-tools/schema'
-import {IResolvers }from '@graphql-tools/utils'
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { IResolvers } from '@graphql-tools/utils';
+import { parse } from 'graphql';
 
 const typeDefs = parse(/* GraphQL */ `
   type Query {
@@ -77,9 +77,9 @@ const resolvers: IResolvers<any> = {
 };
 
 export default makeExecutableSchema({
-    typeDefs,
-    resolvers,
-  });
+  typeDefs,
+  resolvers,
+});
 
 const users = [
   {
