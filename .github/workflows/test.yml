@@ -108,7 +108,8 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - name: Build # TODO: necessary only because we're in a mid-state with moving packages from graphql-mesh. this step wont be necessary once all gateway components have been moved
+      - if: matrix.setup.gateway-runner == 'docker'
+        name: Build # TODO: necessary only because we're in a mid-state with moving packages from graphql-mesh. this step wont be necessary once all gateway components have been moved
         run: yarn build
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
