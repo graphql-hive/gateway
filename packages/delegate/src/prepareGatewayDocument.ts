@@ -25,7 +25,6 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
-import { extractUnavailableFields } from './extractUnavailableFields.js';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { StitchingInfo } from './types.js';
 
@@ -107,8 +106,6 @@ export function prepareGatewayDocument(
     visitorKeyMap as any,
   );
 }
-
-const shouldAdd = () => true;
 
 const getExtraPossibleTypesFn = memoize2(function getExtraPossibleTypes(
   transformedSchema: GraphQLSchema,
@@ -300,11 +297,9 @@ function visitSelectionSet(
         }
       } else {
         const fieldName = selection.name.value;
-        let skipAddingDependencyNodes = false;
 
         // TODO: Optimization to prevent extra fields to the subgraph
         if (isAbstractType(parentType)) {
-          skipAddingDependencyNodes = false;
           const fieldNodesForTypeName =
             fieldNodesByField[parentTypeName]?.['__typename'];
           if (fieldNodesForTypeName) {
@@ -312,43 +307,30 @@ function visitSelectionSet(
               newSelections.add(fieldNode);
             }
           }
-        } else if (isObjectType(parentType) || isInterfaceType(parentType)) {
-          const fieldMap = parentType.getFields();
-          const field = fieldMap[fieldName];
-          if (field) {
-            const unavailableFields = extractUnavailableFields(
-              transformedSchema,
-              field,
-              selection,
-              shouldAdd,
-            );
-            skipAddingDependencyNodes = unavailableFields.length === 0;
-          }
         }
-        if (!skipAddingDependencyNodes) {
-          const fieldNodesMapForType = fieldNodesByField[parentTypeName];
-          if (fieldNodesMapForType) {
-            addDependenciesNestedly(
-              selection,
-              new Set(),
-              fieldNodesMapForType,
-              newSelections,
-            );
-          }
+        const fieldNodesMapForType = fieldNodesByField[parentTypeName];
+        if (fieldNodesMapForType) {
+          addDependenciesNestedly(
+            selection,
+            new Set(),
+            fieldNodesMapForType,
+            newSelections,
+          );
+        }
 
-          const dynamicSelectionSets =
-            dynamicSelectionSetsByField[parentTypeName]?.[fieldName];
-          if (dynamicSelectionSets != null) {
-            for (const selectionSetFn of dynamicSelectionSets) {
-              const selectionSet = selectionSetFn(selection);
-              if (selectionSet != null) {
-                for (const selection of selectionSet.selections) {
-                  newSelections.add(selection);
-                }
+        const dynamicSelectionSets =
+          dynamicSelectionSetsByField[parentTypeName]?.[fieldName];
+        if (dynamicSelectionSets != null) {
+          for (const selectionSetFn of dynamicSelectionSets) {
+            const selectionSet = selectionSetFn(selection);
+            if (selectionSet != null) {
+              for (const selection of selectionSet.selections) {
+                newSelections.add(selection);
               }
             }
           }
         }
+
 
         if (interfaceExtensions?.[fieldName]) {
           interfaceExtensionFields.push(selection);

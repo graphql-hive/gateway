@@ -1,7 +1,7 @@
 import { delegateToSchema, Transform } from '@graphql-tools/delegate';
-import { execute, subscribe } from '@graphql-tools/executor';
+import { execute, normalizedExecutor, subscribe } from '@graphql-tools/executor';
 import { addMocksToSchema } from '@graphql-tools/mock';
-import { makeExecutableSchema } from '@graphql-tools/schema';
+import { addResolversToSchema, makeExecutableSchema } from '@graphql-tools/schema';
 import {
   assertSome,
   createGraphQLError,
@@ -21,6 +21,7 @@ import {
   subscriptionPubSubTrigger,
 } from '@internal/testing/fixtures/schemas.js';
 import {
+  buildSchema,
   graphql,
   GraphQLObjectType,
   GraphQLResolveInfo,
@@ -3554,3 +3555,73 @@ it(`stitchSchemas shouldn't call transformSchema more than once`, async () => {
 
   expect(transform.transformSchema).toHaveBeenCalledTimes(1);
 });
+
+it('should respect selectionSet in the additional resolvers to override a field', async () => {
+  const sub_schema = addResolversToSchema({
+    schema: buildSchema(`
+  type Query {
+    current_user: User
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    age: Int!
+  }
+`),
+    resolvers: {
+      Query: {
+        current_user: () => ({ id: '5', name: 'John Doe', age: 10 }),
+      },
+    },
+  });
+
+  const stitched_schema = stitchSchemas({
+    subschemas: [
+      {
+        schema: sub_schema,
+        createProxyingResolver: (options) => {
+          return (_parent, _args, context, info) => {
+            const operationName = info.operation.name ? info.operation.name.value : undefined;
+            return delegateToSchema({
+              schema: options.subschemaConfig,
+              operation: options.operation,
+              context,
+              info,
+              operationName,
+            });
+          };
+        },
+      },
+    ],
+    resolvers: {
+      User: {
+        name: {
+          selectionSet: '{ age }',
+          resolve: (parent) => {
+            console.log({ parent });
+            return `${parent.name}(${parent.age})`;
+          },
+        },
+      },
+    },
+  });
+
+  const result = await normalizedExecutor({
+    schema: stitched_schema,
+    document: parse(/* GraphQL */ `
+      query {
+        current_user {
+          name
+        }
+      }
+    `),
+  });
+  expect(result).toEqual({
+    data: {
+      current_user: {
+        name: 'John Doe(10)',
+      },
+    },
+  })
+})

@@ -654,7 +654,7 @@ it('nested recursive requirements', async () => {
   const spatial = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Cabinet @key(fields: "spatialId") {
-        id: ID!
+        id: ID
         spatialId: String
         spatialCabinet: SpatialCabinet
       }

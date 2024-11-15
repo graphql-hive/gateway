@@ -50,9 +50,11 @@ it('should not do a fragment spread on a union', () => {
   fooBar {
     __typename
     ... on Foo {
+      id
       name
     }
     ... on Bar {
+      id
       name
     }
   }
@@ -62,9 +64,11 @@ it('should not do a fragment spread on a union', () => {
   mustFooBar {
     __typename
     ... on Foo {
+      id
       name
     }
     ... on Bar {
+      id
       name
     }
   }
