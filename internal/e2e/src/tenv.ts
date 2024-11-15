@@ -498,7 +498,9 @@ export function createTenv(cwd: string): Tenv {
       }
       const [proc, waitForExit] = await spawn(
         { cwd, pipeLogs, env },
-        'node', // TODO: using yarn does not work on Windows in the CI
+        'node',
+        '--import',
+        'tsx', // we use tsx because we want to leverate tsconfig paths
         path.join(
           __project,
           'node_modules',
