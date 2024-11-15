@@ -1,0 +1,48 @@
+diff --git a/dist/index.js b/dist/index.js
+index 272aa3b7abc2f889e8feddd1ae4b11f81594472d..16fdcc182f32d04809440d2ec390e7e146888711 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -48,6 +48,7 @@ var debug = _debug("vite-tsconfig-paths");
+ var noMatch = [void 0, false];
+ var src_default = (opts = {}) => {
+   let resolversByDir;
++  let inlinedModules;
+   return {
+     name: "vite-tsconfig-paths",
+     enforce: "pre",
+@@ -60,9 +61,11 @@ var src_default = (opts = {}) => {
+       } else {
+         workspaceRoot = searchForWorkspaceRoot(projectRoot);
+       }
++      inlinedModules = config.test?.server?.deps?.inline || [];
+       debug("options.root   ==", root);
+       debug("project root   ==", projectRoot);
+       debug("workspace root ==", workspaceRoot);
++      debug("inlined modules ==", inlinedModules);
+       if (root) {
+         projectRoot = root;
+         workspaceRoot = root;
+@@ -257,12 +260,17 @@ var src_default = (opts = {}) => {
+       }
+       importer = normalizePath2(importer);
+       const importerFile = importer.replace(/[#?].+$/, "");
+-      if (!importerExtRE.test(importerFile)) {
+-        return noMatch;
+-      }
+-      const relativeImporterFile = relative(configDir, importerFile);
+-      if (!isIncludedRelative(relativeImporterFile)) {
+-        return noMatch;
++      const inlined = inlinedModules.some((m) => m.test(importerFile));
++      if (inlined) {
++        debug(`module inlined:`, importer);
++      } else {
++        if (!importerExtRE.test(importerFile)) {
++          return noMatch;
++        }
++        const relativeImporterFile = relative(configDir, importerFile);
++        if (!isIncludedRelative(relativeImporterFile)) {
++          return noMatch;
++        }
+       }
+       const suffix = (_a2 = /\?.+$/.exec(id)) == null ? void 0 : _a2[0];
+       if (suffix) {

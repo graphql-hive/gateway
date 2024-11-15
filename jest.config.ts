@@ -9,13 +9,13 @@ const rootDir = __dirname;
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
 const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
 const tsconfig = JSON5.parse(tsconfigContents);
+const ESM_PACKAGES = ['graphql-federation-gateway-audit'];
 
 export default {
   testEnvironment: 'node',
   rootDir,
   restoreMocks: true,
   reporters: ['default'],
-  verbose: isCI,
   modulePathIgnorePatterns: ['dist'],
   collectCoverage: false,
   cacheDirectory: resolve(rootDir, `${isCI ? '' : 'node_modules/'}.cache/jest`),
@@ -31,5 +31,6 @@ export default {
       useESM: true,
     }),
   },
+  transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
   testMatch: ['**/*.(test|spec).ts'],
 } satisfies Config;

@@ -6,21 +6,22 @@
     "packages/*",
     "packages/transports/*",
     "packages/plugins/*",
+    "packages/executors/*",
     "internal/*",
     "e2e/*"
   ],
   "packageManager": "yarn@4.5.1",
   "scripts": {
+    "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
     "check:types": "yarn tsc",
-    "e2e:bench": "vitest bench --project e2e:bench",
     "e2e:test": "vitest --project e2e",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks"
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --no-watchman --detectOpenHandles --detectLeaks --logHeapUsage"
   },
   "devDependencies": {
     "@babel/core": "7.26.0",
@@ -49,10 +50,11 @@
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.9.0",
     "vite": "^5.4.9",
-    "vite-tsconfig-paths": "^5.1.2",
+    "vite-tsconfig-paths": "5.1.2",
     "vitest": "^2.1.3"
   },
   "resolutions": {
+    "@graphql-tools/delegate": "workspace:^",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.25.1#~/.yarn/patches/@opentelemetry-resources-npm-1.25.1-d294145a2e.patch",
     "graphql": "^16.9.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
@@ -61,6 +63,7 @@
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
-    "tsx": "patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch"
+    "tsx": "patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
+    "vite-tsconfig-paths": "patch:vite-tsconfig-paths@npm%3A5.1.2#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.2-40407aa097.patch"
   }
 }

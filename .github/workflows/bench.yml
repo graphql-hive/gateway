@@ -1,0 +1,31 @@
+name: Bench
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  bench:
+    strategy:
+      fail-fast: false
+      matrix:
+        products_size:
+          - 3
+          - 10
+          - 50
+          - 100
+          - 1000
+    name: Federation Benchmark with ${{matrix.products_size}} Products
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version: 22
+      - name: Bench
+        run: yarn bench
+        env:
+          PRODUCTS_SIZE: ${{matrix.products_size}}

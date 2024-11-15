@@ -34,11 +34,11 @@ export default defineWorkspace([
   {
     extends: './vitest.config.ts',
     test: {
-      name: 'e2e:bench',
+      name: 'bench',
       hookTimeout: testTimeout,
       testTimeout,
       benchmark: {
-        include: ['e2e/**/*.bench.ts'],
+        include: ['bench/**/*.bench.ts'],
       },
     },
   },

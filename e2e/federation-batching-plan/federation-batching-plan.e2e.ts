@@ -549,6 +549,8 @@ it('should consistently explain the query plan', async () => {
     }
 
     fragment User on User {
+      __typename
+      id
       id
       username
       name
@@ -562,6 +564,7 @@ it('should consistently explain the query plan', async () => {
       _0__entities: _entities(representations: $_0__v0_representations) {
         __typename
         ... on Product {
+          upc
           inStock
         }
       }
@@ -648,6 +651,7 @@ it('should consistently explain the query plan', async () => {
       _entities(representations: $_v0_representations) {
         __typename
         ... on Product {
+          upc
           name
           price
           price
@@ -680,12 +684,19 @@ it('should consistently explain the query plan', async () => {
       _entities(representations: $_v0_representations) {
         __typename
         ... on Product {
+          upc
           reviews {
+            __typename
             ...Review
+            id
             author {
+              __typename
               ...User
+              id
               reviews {
+                __typename
                 ...Review
+                id
                 product {
                   ...Product
                 }
@@ -705,11 +716,13 @@ it('should consistently explain the query plan', async () => {
     fragment User on User {
       __typename
       id
-      username
       id
+      username
     }
 
     fragment Review on Review {
+      __typename
+      id
       id
       body
     }",
@@ -737,6 +750,7 @@ it('should consistently explain the query plan', async () => {
       _entities(representations: $_v0_representations) {
         __typename
         ... on User {
+          id
           name
         }
       }
@@ -761,16 +775,27 @@ it('should consistently explain the query plan', async () => {
       _entities(representations: $_v0_representations) {
         __typename
         ... on User {
+          id
           reviews {
+            __typename
             ...Review
+            id
             product {
+              __typename
               ...Product
+              upc
               reviews {
+                __typename
                 ...Review
+                id
                 author {
+                  __typename
                   ...User
+                  id
                   reviews {
+                    __typename
                     ...Review
+                    id
                     product {
                       ...Product
                     }
@@ -786,8 +811,8 @@ it('should consistently explain the query plan', async () => {
     fragment User on User {
       __typename
       id
-      username
       id
+      username
     }
 
     fragment Product on Product {
@@ -797,6 +822,8 @@ it('should consistently explain the query plan', async () => {
     }
 
     fragment Review on Review {
+      __typename
+      id
       id
       body
     }",
