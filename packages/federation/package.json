@@ -57,6 +57,7 @@
     "@apollo/subgraph": "^2.5.4",
     "@types/lodash.pick": "4.4.9",
     "graphql": "^16.9.0",
+    "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#expose-server-logic",
     "pkgroll": "2.5.1"
   },
   "sideEffects": false,

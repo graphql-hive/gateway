@@ -1,6 +1,5 @@
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { ApolloGateway } from '@apollo/gateway';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   ExecutionResult,
@@ -9,6 +8,7 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
+import { assertSingleExecutionValue } from '@internal/testing';
 import {
   buildSchema,
   getNamedType,
@@ -19,86 +19,72 @@ import {
   printSchema,
   validate,
 } from 'graphql';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createRouter } from 'graphql-federation-gateway-audit';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
 describe('Federation Compatibility', () => {
-  if (!existsSync(join(__dirname, 'fixtures', 'federation-compatibility'))) {
-    console.warn('Make sure you fetched the fixtures from the API first');
-    it.skip('skipping tests', () => {});
-    return;
-  }
-  const fixturesDir = join(__dirname, 'fixtures', 'federation-compatibility');
-  readdirSync(fixturesDir).forEach((supergraphName) => {
-    const supergraphFixturesDir = join(fixturesDir, supergraphName);
-    const supergraphSdlPath = join(supergraphFixturesDir, 'supergraph.graphql');
-    if (!existsSync(supergraphSdlPath)) {
-      return;
+  const auditRouter = createRouter();
+  const supergraphList = readdirSync(
+    join(
+      __dirname,
+      '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+    ),
+  );
+  const supergraphSdlMap = new Map<string, string>();
+  const supergraphTestMap = new Map<string, any>();
+  beforeAll(async () => {
+    const supergraphPathListRes = await auditRouter.fetch(
+      'http://localhost/supergraphs',
+    );
+    const supergraphPathList = await supergraphPathListRes.json();
+    for (const supergraphPath of supergraphPathList) {
+      if (supergraphPath) {
+        const supergraphRes = await auditRouter.fetch(supergraphPath);
+        const supergraphPathParts = supergraphPath.split('/');
+        const supergraphName =
+          supergraphPathParts[supergraphPathParts.length - 2];
+        const supergraphSdl = await supergraphRes.text();
+        supergraphSdlMap.set(supergraphName, supergraphSdl);
+        const testsPath = supergraphPath.replace('/supergraph', '/tests');
+        const testsRes = await auditRouter.fetch(testsPath);
+        const testsContent = await testsRes.json();
+        supergraphTestMap.set(supergraphName, testsContent);
+      }
     }
+  });
+
+  for (const supergraphName of supergraphList) {
     describe(supergraphName, () => {
-      const supergraphSdl = readFileSync(supergraphSdlPath, 'utf-8');
       let stitchedSchema: GraphQLSchema;
-      // let apolloExecutor: Executor;
-      // let apolloSubgraphCalls: Record<string, number> = {};
-      let stitchingSubgraphCalls: Record<string, number> = {};
-      let apolloGW: ApolloGateway;
-      beforeAll(async () => {
+      let supergraphSdl: string;
+      const testFile = readFileSync(
+        join(
+          __dirname,
+          '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+          supergraphName,
+          'test.ts',
+        ),
+        'utf-8',
+      );
+      let tests: { query: string; expected: any }[] = new Array<{
+        query: string;
+        expected: any;
+      }>(testFile.match(/createTest\(/g)?.length ?? 0).fill({
+        query: '',
+        expected: {},
+      });
+      beforeAll(() => {
+        supergraphSdl = supergraphSdlMap.get(supergraphName)!;
+        tests = supergraphTestMap.get(supergraphName)!;
         stitchedSchema = getStitchedSchemaFromSupergraphSdl({
           supergraphSdl,
-          onSubschemaConfig(subschemaConfig) {
-            const actualExecutor = subschemaConfig.executor;
-            subschemaConfig.executor = function tracedExecutor(execReq) {
-              stitchingSubgraphCalls[subschemaConfig.name.toLowerCase()] =
-                (stitchingSubgraphCalls[subschemaConfig.name] || 0) + 1;
-              return actualExecutor(execReq);
-            };
+          httpExecutorOpts: {
+            fetch: auditRouter.fetch,
           },
           batch: true,
         });
-        /*         apolloGW = new ApolloGateway({
-          supergraphSdl,
-          buildService({ name, url }) {
-            const subgraphName = name;
-            const actualService = new RemoteGraphQLDataSource({ url });
-            return {
-              process(options) {
-                apolloSubgraphCalls[subgraphName.toLowerCase()] =
-                  (apolloSubgraphCalls[subgraphName.toLowerCase()] || 0) + 1;
-                return actualService.process(options);
-              },
-            };
-          },
-        });
-        const loadedGw = await apolloGW.load();
-        apolloExecutor = function apolloExecutor(execReq) {
-          const operationAST = getOperationAST(execReq.document, execReq.operationName);
-          if (!operationAST) {
-            throw new Error('Operation not found');
-          }
-          const printedDoc = print(execReq.document);
-          return loadedGw.executor({
-            request: {},
-            logger: console,
-            schema: loadedGw.schema,
-            schemaHash: 'hash' as any,
-            context: execReq.context as any,
-            cache: new Map() as any,
-            queryHash: 'hash' as any,
-            document: execReq.document,
-            source: printedDoc,
-            operationName: execReq.operationName || null,
-            operation: operationAST,
-            metrics: {},
-            overallCachePolicy: {},
-          }) as ExecutionResult;
-        }; */
       });
-      afterAll(async () => {
-        await apolloGW?.stop?.();
-      });
-      const tests: { query: string; expected: any }[] = JSON.parse(
-        readFileSync(join(supergraphFixturesDir, 'tests.json'), 'utf-8'),
-      );
       it('generates the expected schema', () => {
         const inputSchema = buildSchema(supergraphSdl, {
           noLocation: true,
@@ -153,26 +139,28 @@ describe('Federation Compatibility', () => {
           printSchema(sortedInputSchema).trim(),
         );
       });
-      tests.forEach((test, i) => {
+      tests.forEach((_, i) => {
         describe(`test-query-${i}`, () => {
-          let result: ExecutionResult;
-          beforeAll(async () => {
-            // apolloSubgraphCalls = {};
-            stitchingSubgraphCalls = {};
+          it('gives the correct result', async () => {
+            const test = tests[i];
+            if (!test) {
+              throw new Error(`Test ${i} not found`);
+            }
             const document = parse(test.query, { noLocation: true });
             const validationErrors = validate(stitchedSchema, document);
+            let result: ExecutionResult;
             if (validationErrors.length > 0) {
               result = {
                 errors: validationErrors,
               };
             } else {
-              result = (await normalizedExecutor({
+              const execRes = await normalizedExecutor({
                 schema: stitchedSchema,
                 document,
-              })) as ExecutionResult;
+              });
+              assertSingleExecutionValue(execRes);
+              result = execRes;
             }
-          });
-          it('gives the correct result', () => {
             const received = {
               data: result.data ?? null,
               errors: !!result.errors?.length,
@@ -195,5 +183,5 @@ describe('Federation Compatibility', () => {
         });
       });
     });
-  });
+  }
 });
