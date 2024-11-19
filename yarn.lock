@@ -8233,12 +8233,12 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.9.46, @whatwg-node/server@npm:^0.9.55":
-  version: 0.9.55
-  resolution: "@whatwg-node/server@npm:0.9.55"
+  version: 0.9.56
+  resolution: "@whatwg-node/server@npm:0.9.56"
   dependencies:
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/422ce0d508bfcd5c2bcc4c83af37922b2a3771df7c729505c8aa3e63c96d5bdc082b3a03f060aef9d2f2b84b2d98379050e273755a21e0a9fac4b9d511cf470c
+  checksum: 10c0/3de6bea3ef5821a3543f23ea487cedd2c919c84187c9737f3f69bb239db80c8e98553f02d744834242fb1f88dde47a527889d6f37ccba5e8d01297593afa9cd6
   languageName: node
   linkType: hard
 
