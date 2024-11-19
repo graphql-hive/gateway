@@ -9,7 +9,7 @@ import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import {
-  context,
+  context as globalContextAPI,
   type ContextManager,
   diag,
   DiagLogLevel,
@@ -18,6 +18,8 @@ import {
   type Context,
   type TextMapGetter,
   type Tracer,
+  ContextAPI,
+  TracerProvider,
 } from '@opentelemetry/api';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { Resource } from '@opentelemetry/resources';
@@ -138,12 +140,12 @@ export type OpenTelemetryGatewayPluginOptions =
     };
   };
 
-const HeadersTextMapGetter: TextMapGetter = {
+const HeadersTextMapGetter: TextMapGetter<Headers> = {
   keys(carrier) {
-    return carrier.keys();
+    return [...carrier.keys()];
   },
   get(carrier, key) {
-    return carrier.get(key);
+    return carrier.get(key) || undefined;
   },
 };
 
@@ -155,8 +157,8 @@ export function useOpenTelemetry(
     activeContext: () => Context;
   };
 }> {
-  let contextManager: ContextManager;
-  let provider: WebTracerProvider;
+  let contextAPI: ContextManager | ContextAPI = globalContextAPI;
+  let provider: TracerProvider;
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
 
@@ -170,18 +172,19 @@ export function useOpenTelemetry(
       if (
         !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
       ) {
-        contextManager = new ZoneContextManager();
+        contextAPI = new ZoneContextManager().enable();
         const serviceName = options.serviceName ?? 'Gateway';
-        provider = new WebTracerProvider({
+        const webProvider = new WebTracerProvider({
           resource: new Resource({
             [SEMRESATTRS_SERVICE_NAME]: serviceName,
           }),
           // @ts-expect-error Some inconsistencies in the typings
           spanProcessors,
         });
-        provider.register({
-          contextManager,
+        webProvider.register({
+          contextManager: contextAPI,
         });
+        provider = webProvider;
       }
       const pluginLogger = options.logger.child('OpenTelemetry');
       diag.setLogger(
@@ -194,8 +197,8 @@ export function useOpenTelemetry(
         },
         DiagLogLevel.VERBOSE,
       );
-      contextManager?.enable();
-      tracer = options.tracer || trace.getTracer('gateway');
+      tracer = options.tracer || provider?.getTracer?.('gateway') || trace.getTracer('gateway');
+      provider ||= trace.getTracerProvider();
     },
     onContextBuilding({ extendContext, context }) {
       extendContext({
@@ -219,11 +222,11 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-          context.active(),
+          contextAPI.active(),
           request.headers,
           HeadersTextMapGetter,
         )
-        : context.active();
+        : contextAPI.active();
 
       const httpSpan = createHttpSpan({
         request,
@@ -380,12 +383,20 @@ export function useOpenTelemetry(
       requestContextMapping.delete(request);
     },
     async [DisposableSymbols.asyncDispose]() {
-      contextManager?.disable();
-      trace.disable();
       await Promise.all(
-        spanProcessors.map((processor) => processor.forceFlush().then(() => processor.shutdown())));
-      await provider?.forceFlush?.();
-      return provider?.shutdown?.();
+        spanProcessors.map((processor) => processor.forceFlush()));
+      if ('forceFlush' in provider && typeof provider.forceFlush === 'function') {
+        await provider.forceFlush();
+      }
+      contextAPI.disable();
+      trace.disable();
+      propagation.disable();
+      await Promise.all(
+        spanProcessors.map((processor) => processor.shutdown())
+      );
+      if ('shutdown' in provider && typeof provider.shutdown === 'function') {
+        await provider.shutdown();
+      }
     },
   };
 }
