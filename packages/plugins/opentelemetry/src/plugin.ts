@@ -10,7 +10,7 @@ import { getHeadersObj } from '@graphql-mesh/utils';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import {
   context,
-  ContextManager,
+  type ContextManager,
   diag,
   DiagLogLevel,
   propagation,
@@ -163,6 +163,8 @@ export function useOpenTelemetry(
   const requestContextMapping = new WeakMap<Request, Context>();
   let tracer: Tracer;
 
+  const spanProcessors = 'exporters' in options ? options.exporters : [];
+
   return {
     onYogaInit() {
       if (
@@ -175,7 +177,7 @@ export function useOpenTelemetry(
             [SEMRESATTRS_SERVICE_NAME]: serviceName,
           }),
           // @ts-expect-error Some inconsistencies in the typings
-          spanProcessors: options.exporters,
+          spanProcessors,
         });
         provider.register({
           contextManager,
@@ -217,10 +219,10 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-            context.active(),
-            request.headers,
-            HeadersTextMapGetter,
-          )
+          context.active(),
+          request.headers,
+          HeadersTextMapGetter,
+        )
         : context.active();
 
       const httpSpan = createHttpSpan({
@@ -308,8 +310,8 @@ export function useOpenTelemetry(
 
       const otelContext = onSubgraphPayload.executionRequest.context?.request
         ? requestContextMapping.get(
-            onSubgraphPayload.executionRequest.context.request,
-          )
+          onSubgraphPayload.executionRequest.context.request,
+        )
         : undefined;
 
       if (shouldTraceSubgraphExecute && otelContext) {
@@ -377,8 +379,12 @@ export function useOpenTelemetry(
 
       requestContextMapping.delete(request);
     },
-    [DisposableSymbols.asyncDispose]() {
+    async [DisposableSymbols.asyncDispose]() {
       contextManager?.disable();
+      trace.disable();
+      await Promise.all(
+        spanProcessors.map((processor) => processor.forceFlush().then(() => processor.shutdown())));
+      await provider?.forceFlush?.();
       return provider?.shutdown?.();
     },
   };
