@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-runtime",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "type": "module",
   "repository": {
     "type": "git",
@@ -60,7 +60,7 @@
     "@graphql-mesh/plugin-hive": "^0.102.8",
     "@graphql-mesh/plugin-response-cache": "^0.102.6",
     "@graphql-mesh/store": "^0.102.10",
-    "@graphql-mesh/transport-common": "^0.7.7",
+    "@graphql-mesh/transport-common": "^0.7.14",
     "@graphql-mesh/types": "^0.102.10",
     "@graphql-mesh/utils": "^0.102.10",
     "@graphql-tools/batch-delegate": "workspace:^",

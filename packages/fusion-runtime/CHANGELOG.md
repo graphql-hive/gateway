@@ -1,5 +1,36 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.3
+
+### Patch Changes
+
+- [#108](https://github.com/graphql-hive/gateway/pull/108) [`86c7ac1`](https://github.com/graphql-hive/gateway/commit/86c7ac1df787e9d38bdb001483b0588ada962c5c) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/transport-common@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-common/v/workspace:^) (from `^0.7.13`, in `dependencies`)
+  - Added dependency [`@graphql-mesh/store@^0.102.12` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.102.12) (to `dependencies`)
+  - Added dependency [`constant-case@^3` ↗︎](https://www.npmjs.com/package/constant-case/v/3.0.0) (to `dependencies`)
+  - Removed dependency [`change-case@^4.1.2` ↗︎](https://www.npmjs.com/package/change-case/v/4.1.2) (from `dependencies`)
+
+- [#118](https://github.com/graphql-hive/gateway/pull/118) [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/delegate@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/delegate/v/workspace:^) (from `^10.0.28`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/federation@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/federation/v/workspace:^) (from `^2.2.21`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/stitch@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/stitch/v/workspace:^) (from `^9.2.17`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/stitching-directives@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/stitching-directives/v/workspace:^) (from `^3.1.9`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/wrap@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/wrap/v/workspace:^) (from `^10.0.12`, in `dependencies`)
+
+- [#110](https://github.com/graphql-hive/gateway/pull/110) [`b84b8f9`](https://github.com/graphql-hive/gateway/commit/b84b8f99d9431a6865303aee001dd62ef9eb5d26) Thanks [@ardatan](https://github.com/ardatan)! - Do not override existing merge configuration
+
+- [`c95d25e`](https://github.com/graphql-hive/gateway/commit/c95d25e3a2dbe20795f88965cdcd22a49f51f1c1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `onError` and `onEnd` callbacks from `onSubgraphExecute` are invoked only once regardless of how many times throw/return was called on the iterator
+
+- Updated dependencies [[`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`19bc6a4`](https://github.com/graphql-hive/gateway/commit/19bc6a4c222ff157553785ea16760888cdfe10bb)]:
+  - @graphql-mesh/transport-common@0.7.14
+  - @graphql-tools/delegate@10.1.3
+  - @graphql-tools/wrap@10.0.17
+  - @graphql-tools/federation@2.2.28
+  - @graphql-tools/stitch@9.3.5
+  - @graphql-tools/stitching-directives@3.1.14
+
 ## 0.10.2
 
 ### Patch Changes

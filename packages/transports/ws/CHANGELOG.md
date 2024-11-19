@@ -1,5 +1,18 @@
 # @graphql-mesh/transport-ws
 
+## 0.4.3
+
+### Patch Changes
+
+- [#118](https://github.com/graphql-hive/gateway/pull/118) [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/executor-graphql-ws@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor-graphql-ws/v/workspace:^) (from `^1.3.0`, in `dependencies`)
+
+- [`19bc6a4`](https://github.com/graphql-hive/gateway/commit/19bc6a4c222ff157553785ea16760888cdfe10bb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `onError` and `onEnd` callbacks when mapping async iterators are invoked only once regardless of how many times throw/return was called on the iterator
+
+- Updated dependencies [[`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`19bc6a4`](https://github.com/graphql-hive/gateway/commit/19bc6a4c222ff157553785ea16760888cdfe10bb)]:
+  - @graphql-mesh/transport-common@0.7.14
+
 ## 0.4.2
 
 ### Patch Changes

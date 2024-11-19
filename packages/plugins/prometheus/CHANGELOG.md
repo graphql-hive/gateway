@@ -1,5 +1,14 @@
 # @graphql-mesh/plugin-prometheus
 
+## 1.2.8
+
+### Patch Changes
+
+- [`19bc6a4`](https://github.com/graphql-hive/gateway/commit/19bc6a4c222ff157553785ea16760888cdfe10bb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `onError` and `onEnd` callbacks when mapping async iterators are invoked only once regardless of how many times throw/return was called on the iterator
+
+- Updated dependencies [[`86c7ac1`](https://github.com/graphql-hive/gateway/commit/86c7ac1df787e9d38bdb001483b0588ada962c5c), [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`bb5a756`](https://github.com/graphql-hive/gateway/commit/bb5a756588b66537bb5679d2a657f28242ee16e6), [`8b7e2a3`](https://github.com/graphql-hive/gateway/commit/8b7e2a373b475ac5c3d02e682f42e20d441636a4), [`e3e6a18`](https://github.com/graphql-hive/gateway/commit/e3e6a18a28352d96e4062f62e76b9ab36f7c88bb), [`c95d25e`](https://github.com/graphql-hive/gateway/commit/c95d25e3a2dbe20795f88965cdcd22a49f51f1c1), [`93bd019`](https://github.com/graphql-hive/gateway/commit/93bd019a3abe10a45c82c49dd0626e12bef7d33f), [`e73b2be`](https://github.com/graphql-hive/gateway/commit/e73b2bece94772fb14f33777c71524ac6a292bc4)]:
+  - @graphql-hive/gateway@1.5.0
+
 ## 1.2.7
 
 ### Patch Changes
