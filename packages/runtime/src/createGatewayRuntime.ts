@@ -4,7 +4,6 @@ import {
   createSchemaFetcher,
   createSupergraphSDLFetcher,
 } from '@graphql-hive/core';
-import { process } from '@graphql-mesh/cross-helpers';
 import type {
   OnSubgraphExecuteHook,
   TransportEntry,
@@ -136,7 +135,7 @@ export function createGatewayRuntime<
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
     logger,
-    cwd: config.cwd || process.cwd(),
+    cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     ...('cache' in config ? { cache: config.cache } : {}),
     ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
   };
