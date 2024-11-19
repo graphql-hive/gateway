@@ -2,12 +2,7 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it, vitest } from 'vitest';
 
 const mockRegisterProvider = vitest.fn();
-
-describe('useOpenTelemetry', () => {
-  if (process.env['LEAK_TEST']) {
-    it('noop', () => {});
-    return;
-  }
+describe.skipIf(!!process.env['LEAK_TEST'])('useOpenTelemetry', () => {
   vitest.mock('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vitest.fn(() => ({ register: mockRegisterProvider })),
   }));

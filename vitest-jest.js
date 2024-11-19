@@ -13,6 +13,9 @@ module.exports = new Proxy(require('@jest/globals'), {
         }
         return jestGlobals.describe(name, ...args);
       };
+      describeFn.skipIf = function describeSkipIf(condition) {
+        return condition ? describeFn.skip : describeFn;
+      };
       describeFn.skip = function describeSkip(name, ...args) {
         if (typeof name === 'string') {
           return jestGlobals.describe.skip(`${name} >`, ...args);

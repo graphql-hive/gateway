@@ -1,10 +1,10 @@
-import { createGatewayRuntime } from '@graphql-hive/gateway';
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { isDebug } from '@internal/testing';
 import { createSchema } from 'graphql-yoga';
 import { register as registry } from 'prom-client';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import usePrometheus from '../src/index';
 
 describe('Prometheus', () => {
@@ -54,6 +54,8 @@ describe('Prometheus', () => {
       logging: isDebug(),
     });
   }
+
+  afterAll(() => registry.clear());
 
   it('should track subgraph requests', async () => {
     await using gateway = newTestRuntime();

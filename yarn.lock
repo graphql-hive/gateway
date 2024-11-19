@@ -3033,7 +3033,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway@npm:^1.5.1, @graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
+"@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
@@ -3407,7 +3407,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
-    "@graphql-hive/gateway": "npm:^1.5.1"
+    "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/store": "npm:^0.103.0"
     "@graphql-mesh/transport-common": "workspace:^"
@@ -3424,6 +3424,7 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^1.25.1"
     "@opentelemetry/sdk-trace-web": "npm:^1.27.0"
     "@opentelemetry/semantic-conventions": "npm:^1.25.1"
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.7.0"
     pkgroll: "npm:2.5.1"
@@ -3437,13 +3438,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/plugin-prometheus@workspace:packages/plugins/prometheus"
   dependencies:
-    "@graphql-hive/gateway": "workspace:^"
+    "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/store": "npm:^0.103.0"
     "@graphql-mesh/types": "npm:^0.103.0"
     "@graphql-mesh/utils": "npm:^0.103.0"
     "@graphql-tools/utils": "npm:^10.5.6"
     "@graphql-yoga/plugin-prometheus": "npm:^6.1.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.7.0"
     pkgroll: "npm:2.5.1"

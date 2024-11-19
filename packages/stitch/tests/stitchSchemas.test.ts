@@ -3608,7 +3608,6 @@ it('should respect selectionSet in the additional resolvers to override a field'
         name: {
           selectionSet: '{ age }',
           resolve: (parent) => {
-            console.log({ parent });
             return `${parent.name}(${parent.age})`;
           },
         },

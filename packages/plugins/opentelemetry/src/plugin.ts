@@ -3,7 +3,7 @@ import {
   type OnParseEventPayload,
   type OnValidateEventPayload,
 } from '@envelop/types';
-import { DisposableSymbols, type GatewayPlugin } from '@graphql-hive/gateway';
+import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -23,6 +23,7 @@ import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { OnRequestEventPayload } from '@whatwg-node/server';
 import { SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
@@ -155,32 +156,31 @@ export function useOpenTelemetry(
   };
 }> {
   let contextManager: ContextManager;
+  let provider: WebTracerProvider;
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
 
-  let provider: WebTracerProvider;
-  if (
-    !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
-  ) {
-    contextManager = new ZoneContextManager();
-    const serviceName = options.serviceName ?? 'Gateway';
-    provider = new WebTracerProvider({
-      resource: new Resource({
-        [SEMRESATTRS_SERVICE_NAME]: serviceName,
-      }),
-      // @ts-expect-error Some inconsistencies in the typings
-      spanProcessors: options.exporters,
-    });
-    provider.register({
-      contextManager,
-    });
-  }
-
   const requestContextMapping = new WeakMap<Request, Context>();
-  const tracer = options.tracer || trace.getTracer('gateway');
+  let tracer: Tracer;
 
   return {
     onYogaInit() {
+      if (
+        !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
+      ) {
+        contextManager = new ZoneContextManager();
+        const serviceName = options.serviceName ?? 'Gateway';
+        provider = new WebTracerProvider({
+          resource: new Resource({
+            [SEMRESATTRS_SERVICE_NAME]: serviceName,
+          }),
+          // @ts-expect-error Some inconsistencies in the typings
+          spanProcessors: options.exporters,
+        });
+        provider.register({
+          contextManager,
+        });
+      }
       const pluginLogger = options.logger.child('OpenTelemetry');
       diag.setLogger(
         {
@@ -193,6 +193,7 @@ export function useOpenTelemetry(
         DiagLogLevel.VERBOSE,
       );
       contextManager?.enable();
+      tracer = options.tracer || trace.getTracer('gateway');
     },
     onContextBuilding({ extendContext, context }) {
       extendContext({

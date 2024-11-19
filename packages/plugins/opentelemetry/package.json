@@ -42,7 +42,7 @@
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
-    "@graphql-hive/gateway": "^1.5.1",
+    "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.7",
     "@graphql-mesh/store": "^0.103.0",
     "@graphql-mesh/transport-common": "workspace:^",
@@ -59,6 +59,7 @@
     "@opentelemetry/sdk-trace-base": "^1.25.1",
     "@opentelemetry/sdk-trace-web": "^1.27.0",
     "@opentelemetry/semantic-conventions": "^1.25.1",
+    "@whatwg-node/disposablestack": "^0.0.5",
     "tslib": "^2.4.0"
   },
   "devDependencies": {

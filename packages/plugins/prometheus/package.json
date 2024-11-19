@@ -44,13 +44,14 @@
     "prom-client": "^13 || ^14.0.0 || ^15.0.0"
   },
   "dependencies": {
-    "@graphql-hive/gateway": "workspace:^",
+    "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.7",
     "@graphql-mesh/store": "^0.103.0",
     "@graphql-mesh/types": "^0.103.0",
     "@graphql-mesh/utils": "^0.103.0",
     "@graphql-tools/utils": "^10.5.6",
     "@graphql-yoga/plugin-prometheus": "^6.1.0",
+    "@whatwg-node/disposablestack": "^0.0.5",
     "prom-client": "^15.0.0",
     "tslib": "^2.4.0"
   },
