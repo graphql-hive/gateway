@@ -3003,7 +3003,7 @@ __metadata:
     "@graphql-mesh/plugin-hive": "npm:^0.102.8"
     "@graphql-mesh/plugin-response-cache": "npm:^0.102.6"
     "@graphql-mesh/store": "npm:^0.102.10"
-    "@graphql-mesh/transport-common": "npm:^0.7.7"
+    "@graphql-mesh/transport-common": "npm:^0.7.14"
     "@graphql-mesh/types": "npm:^0.102.10"
     "@graphql-mesh/utils": "npm:^0.102.10"
     "@graphql-tools/batch-delegate": "workspace:^"
@@ -3038,7 +3038,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway@npm:^1.4.8, @graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
+"@graphql-hive/gateway@npm:^1.5.0, @graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
@@ -3412,10 +3412,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
-    "@graphql-hive/gateway": "npm:^1.4.8"
+    "@graphql-hive/gateway": "npm:^1.5.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.7"
     "@graphql-mesh/store": "npm:^0.102.12"
-    "@graphql-mesh/transport-common": "npm:^0.7.13"
+    "@graphql-mesh/transport-common": "npm:^0.7.14"
     "@graphql-mesh/types": "npm:^0.102.12"
     "@graphql-mesh/utils": "npm:^0.102.12"
     "@graphql-tools/utils": "npm:^10.5.6"
@@ -3571,7 +3571,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-common@npm:^0.7.13, @graphql-mesh/transport-common@npm:^0.7.7, @graphql-mesh/transport-common@workspace:*, @graphql-mesh/transport-common@workspace:^, @graphql-mesh/transport-common@workspace:packages/transports/common":
+"@graphql-mesh/transport-common@npm:^0.7.13, @graphql-mesh/transport-common@npm:^0.7.14, @graphql-mesh/transport-common@workspace:*, @graphql-mesh/transport-common@workspace:^, @graphql-mesh/transport-common@workspace:packages/transports/common":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:

@@ -1,5 +1,49 @@
 # @graphql-hive/gateway
 
+## 1.5.0
+
+### Minor Changes
+
+- [#87](https://github.com/graphql-hive/gateway/pull/87) [`e3e6a18`](https://github.com/graphql-hive/gateway/commit/e3e6a18a28352d96e4062f62e76b9ab36f7c88bb) Thanks [@klippx](https://github.com/klippx)! - Export `useRateLimit` and `usePrometheus`
+
+### Patch Changes
+
+- [#108](https://github.com/graphql-hive/gateway/pull/108) [`86c7ac1`](https://github.com/graphql-hive/gateway/commit/86c7ac1df787e9d38bdb001483b0588ada962c5c) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/hmac-upstream-signature@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/hmac-upstream-signature/v/workspace:^) (from `^1.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-opentelemetry@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-opentelemetry/v/workspace:^) (from `^1.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-prometheus@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-prometheus/v/workspace:^) (from `^1.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/transport-http@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-http/v/workspace:^) (from `^0.6.15`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/transport-http-callback@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-http-callback/v/workspace:^) (from `^0.5.2`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/transport-ws@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-ws/v/workspace:^) (from `^0.4.0`, in `dependencies`)
+
+- [#118](https://github.com/graphql-hive/gateway/pull/118) [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.0.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.0.7) (from `^0.0.6`, in `dependencies`)
+
+- [#122](https://github.com/graphql-hive/gateway/pull/122) [`bb5a756`](https://github.com/graphql-hive/gateway/commit/bb5a756588b66537bb5679d2a657f28242ee16e6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.0.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.0.7) (from `^0.0.6`, in `dependencies`)
+
+- [#91](https://github.com/graphql-hive/gateway/pull/91) [`8b7e2a3`](https://github.com/graphql-hive/gateway/commit/8b7e2a373b475ac5c3d02e682f42e20d441636a4) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.0.6` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+
+- [`c95d25e`](https://github.com/graphql-hive/gateway/commit/c95d25e3a2dbe20795f88965cdcd22a49f51f1c1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - `onError` and `onEnd` callbacks from `onSubgraphExecute` are invoked only once regardless of how many times throw/return was called on the iterator
+
+- [`93bd019`](https://github.com/graphql-hive/gateway/commit/93bd019a3abe10a45c82c49dd0626e12bef7d33f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Bump @graphql-mesh/transport-http. Latest includes a fix for canceling SSE streams even while waiting for next event
+
+- [`e73b2be`](https://github.com/graphql-hive/gateway/commit/e73b2bece94772fb14f33777c71524ac6a292bc4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use ranged dependencies from the monorepo
+
+- Updated dependencies [[`bca7230`](https://github.com/graphql-hive/gateway/commit/bca72302580289dd6c4fec1da988465ff894e745), [`86c7ac1`](https://github.com/graphql-hive/gateway/commit/86c7ac1df787e9d38bdb001483b0588ada962c5c), [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`4288177`](https://github.com/graphql-hive/gateway/commit/4288177ed6e6df7bb741891754d67f8ec0aea9cf), [`65b7444`](https://github.com/graphql-hive/gateway/commit/65b74449c2a01b9c229d10f5da25814397083865), [`445809e`](https://github.com/graphql-hive/gateway/commit/445809ec4f621b9f61593e92f599b6369e13f414), [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`73c621d`](https://github.com/graphql-hive/gateway/commit/73c621d98a4e6ca134527e349bc71223c03d06db), [`387e346`](https://github.com/graphql-hive/gateway/commit/387e346dbd8c27ecbdb3a6dec6fb64863432b38c), [`c95d25e`](https://github.com/graphql-hive/gateway/commit/c95d25e3a2dbe20795f88965cdcd22a49f51f1c1), [`19bc6a4`](https://github.com/graphql-hive/gateway/commit/19bc6a4c222ff157553785ea16760888cdfe10bb), [`e73b2be`](https://github.com/graphql-hive/gateway/commit/e73b2bece94772fb14f33777c71524ac6a292bc4)]:
+  - @graphql-hive/gateway-runtime@1.1.7
+  - @graphql-mesh/plugin-opentelemetry@1.3.9
+  - @graphql-mesh/transport-http@0.6.16
+  - @graphql-mesh/transport-ws@0.4.3
+  - @graphql-mesh/hmac-upstream-signature@1.2.7
+  - @graphql-mesh/transport-http-callback@0.5.5
+  - @graphql-mesh/plugin-prometheus@1.2.8
+
 ## 1.4.12
 
 ### Patch Changes
