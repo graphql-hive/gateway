@@ -1,15 +1,15 @@
 import { createSchema, createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it, vitest } from 'vitest';
 
-const mockStartSdk = vitest.fn();
+const mockRegisterProvider = vitest.fn();
 
 describe('useOpenTelemetry', () => {
   if (process.env['LEAK_TEST']) {
     it('noop', () => {});
     return;
   }
-  vitest.mock('@opentelemetry/sdk-node', () => ({
-    NodeSDK: vitest.fn(() => ({ start: mockStartSdk })),
+  vitest.mock('@opentelemetry/sdk-trace-web', () => ({
+    WebTracerProvider: vitest.fn(() => ({ register: mockRegisterProvider })),
   }));
 
   let gw: typeof import('@graphql-hive/gateway');
@@ -19,8 +19,8 @@ describe('useOpenTelemetry', () => {
   beforeEach(() => {
     vitest.clearAllMocks();
   });
-  describe('when not passing a custom sdk', () => {
-    it('initializes and starts a new NodeSDK', async () => {
+  describe('when not passing a custom provider', () => {
+    it('initializes and starts a new provider', async () => {
       const { useOpenTelemetry } = await import('../src');
       const upstream = createYoga({
         schema: createSchema({
@@ -72,12 +72,12 @@ describe('useOpenTelemetry', () => {
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data?.hello).toBe('World');
-      expect(mockStartSdk).toHaveBeenCalledTimes(1);
+      expect(mockRegisterProvider).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('when passing a custom sdk', () => {
-    it('does not initialize a new NodeSDK and does not start the provided sdk instance', async () => {
+  describe('when passing a custom provider', () => {
+    it('does not initialize a new provider and does not start the provided provider instance', async () => {
       const { useOpenTelemetry } = await import('../src');
       const upstream = createYoga({
         schema: createSchema({
@@ -126,7 +126,7 @@ describe('useOpenTelemetry', () => {
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data?.hello).toBe('World');
-      expect(mockStartSdk).not.toHaveBeenCalled();
+      expect(mockRegisterProvider).not.toHaveBeenCalled();
     });
   });
 });
