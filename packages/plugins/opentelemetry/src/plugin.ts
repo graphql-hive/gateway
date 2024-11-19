@@ -9,17 +9,17 @@ import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import {
-  context as globalContextAPI,
-  type ContextManager,
+  ContextAPI,
   diag,
   DiagLogLevel,
+  context as globalContextAPI,
   propagation,
   trace,
+  TracerProvider,
   type Context,
+  type ContextManager,
   type TextMapGetter,
   type Tracer,
-  ContextAPI,
-  TracerProvider,
 } from '@opentelemetry/api';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { Resource } from '@opentelemetry/resources';
@@ -197,7 +197,10 @@ export function useOpenTelemetry(
         },
         DiagLogLevel.VERBOSE,
       );
-      tracer = options.tracer || provider?.getTracer?.('gateway') || trace.getTracer('gateway');
+      tracer =
+        options.tracer ||
+        provider?.getTracer?.('gateway') ||
+        trace.getTracer('gateway');
       provider ||= trace.getTracerProvider();
     },
     onContextBuilding({ extendContext, context }) {
@@ -222,10 +225,10 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-          contextAPI.active(),
-          request.headers,
-          HeadersTextMapGetter,
-        )
+            contextAPI.active(),
+            request.headers,
+            HeadersTextMapGetter,
+          )
         : contextAPI.active();
 
       const httpSpan = createHttpSpan({
@@ -313,8 +316,8 @@ export function useOpenTelemetry(
 
       const otelContext = onSubgraphPayload.executionRequest.context?.request
         ? requestContextMapping.get(
-          onSubgraphPayload.executionRequest.context.request,
-        )
+            onSubgraphPayload.executionRequest.context.request,
+          )
         : undefined;
 
       if (shouldTraceSubgraphExecute && otelContext) {
@@ -384,15 +387,19 @@ export function useOpenTelemetry(
     },
     async [DisposableSymbols.asyncDispose]() {
       await Promise.all(
-        spanProcessors.map((processor) => processor.forceFlush()));
-      if ('forceFlush' in provider && typeof provider.forceFlush === 'function') {
+        spanProcessors.map((processor) => processor.forceFlush()),
+      );
+      if (
+        'forceFlush' in provider &&
+        typeof provider.forceFlush === 'function'
+      ) {
         await provider.forceFlush();
       }
       contextAPI.disable();
       trace.disable();
       propagation.disable();
       await Promise.all(
-        spanProcessors.map((processor) => processor.shutdown())
+        spanProcessors.map((processor) => processor.shutdown()),
       );
       if ('shutdown' in provider && typeof provider.shutdown === 'function') {
         await provider.shutdown();
