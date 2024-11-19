@@ -9,7 +9,7 @@
     "@graphql-mesh/transport-odata": "^0.0.14",
     "@graphql-mesh/types": "^0.102.10",
     "@graphql-mesh/utils": "^0.102.10",
-    "@graphql-tools/utils": "^10.5.5",
+    "@graphql-tools/utils": "^10.5.6",
     "@omnigraph/odata": "^0.0.13",
     "graphql": "^16.9.0",
     "tslib": "^2.8.0"
