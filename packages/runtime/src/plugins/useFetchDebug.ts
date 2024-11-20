@@ -1,6 +1,6 @@
 import type { Logger } from '@graphql-mesh/types';
-import type { GatewayPlugin } from '../types';
 import { crypto } from '@whatwg-node/fetch';
+import type { GatewayPlugin } from '../types';
 
 export function useFetchDebug<TContext extends Record<string, any>>(opts: {
   logger: Logger;
