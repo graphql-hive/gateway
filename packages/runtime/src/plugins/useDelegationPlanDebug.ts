@@ -26,7 +26,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
           typeName,
         };
         if (variables && Object.keys(variables).length) {
-          logObj['variables'] = JSON.stringify(variables, null, '  ');
+          logObj['variables'] = variables;
         }
         if (fragments && Object.keys(fragments).length) {
           logObj['fragments'] = Object.fromEntries(
@@ -44,7 +44,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
         if (info?.path) {
           logObj['path'] = pathToArray(info.path).join(' | ');
         }
-        return logObj;
+        return JSON.stringify(logObj);
       });
       return ({ delegationPlan }) => {
         logger.debug('done', () => ({
@@ -72,20 +72,32 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
     }) {
       logger = logger.child('delegation-stage-execute');
       const stageId = generateUUID();
-      logger.debug('start', () => ({
-        stageId,
-        subgraph,
-        typeName,
-        key: JSON.stringify(key),
-        object: JSON.stringify(object),
-        path: pathToArray(info.path).join(' | '),
-        selectionSet: print(selectionSet),
-      }));
+      logger.debug('start', () =>
+        JSON.stringify(
+          {
+            stageId,
+            subgraph,
+            typeName,
+            key,
+            object,
+            path: pathToArray(info.path).join(' | '),
+            selectionSet: print(selectionSet),
+          },
+          null,
+          '  ',
+        ),
+      );
       return ({ result }) => {
-        logger.debug('result', () => ({
-          stageId,
-          result: JSON.stringify(result, null, '  '),
-        }));
+        logger.debug('result', () =>
+          JSON.stringify(
+            {
+              stageId,
+              result,
+            },
+            null,
+            '  ',
+          ),
+        );
       };
     },
   };
