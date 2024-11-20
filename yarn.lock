@@ -2176,12 +2176,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@e2e/logs-to-stderr-results-to-stdout@workspace:e2e/logs-to-stderr-results-to-stdout":
-  version: 0.0.0-use.local
-  resolution: "@e2e/logs-to-stderr-results-to-stdout@workspace:e2e/logs-to-stderr-results-to-stdout"
-  languageName: unknown
-  linkType: soft
-
 "@e2e/manual-transport-def@workspace:e2e/manual-transport-def":
   version: 0.0.0-use.local
   resolution: "@e2e/manual-transport-def@workspace:e2e/manual-transport-def"
