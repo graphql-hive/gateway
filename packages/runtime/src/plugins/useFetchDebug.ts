@@ -1,6 +1,6 @@
 import type { Logger } from '@graphql-mesh/types';
-import type { GatewayPlugin } from '../types';
 import { FetchAPI } from 'graphql-yoga';
+import type { GatewayPlugin } from '../types';
 
 export function useFetchDebug<TContext extends Record<string, any>>(opts: {
   logger: Logger;

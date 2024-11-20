@@ -1,8 +1,8 @@
 import type { Logger } from '@graphql-mesh/types';
 import { pathToArray } from '@graphql-tools/utils';
 import { print } from 'graphql';
-import type { GatewayPlugin } from '../types';
 import { FetchAPI } from 'graphql-yoga';
+import type { GatewayPlugin } from '../types';
 
 export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
   logger: Logger;

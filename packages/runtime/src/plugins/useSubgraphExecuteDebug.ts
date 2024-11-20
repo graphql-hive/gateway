@@ -5,7 +5,7 @@ import type { GatewayPlugin } from '../types';
 
 export function useSubgraphExecuteDebug<
   TContext extends Record<string, any>,
-  >(opts: { logger: Logger }): GatewayPlugin<TContext> {
+>(opts: { logger: Logger }): GatewayPlugin<TContext> {
   let fetchAPI: FetchAPI;
   return {
     onYogaInit({ yoga }) {
