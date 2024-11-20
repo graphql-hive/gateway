@@ -34,7 +34,8 @@ jobs:
       matrix:
         node-version:
           - 18
-          - 23
+          - 20
+          - 22
     name: Leaks / Node v${{matrix.node-version}}
     runs-on: ubuntu-latest
     steps:
