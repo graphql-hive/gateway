@@ -1,5 +1,18 @@
 # @graphql-tools/stitch
 
+## 9.4.0
+
+### Minor Changes
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - Introduce \`onDelegationPlan\` and \`onDelegationStageExecuteDone\` hooks
+
+### Patch Changes
+
+- Updated dependencies [[`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1)]:
+  - @graphql-tools/delegate@10.2.0
+  - @graphql-tools/batch-delegate@9.0.16
+  - @graphql-tools/wrap@10.0.18
+
 ## 9.3.5
 
 ### Patch Changes

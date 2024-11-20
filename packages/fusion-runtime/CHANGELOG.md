@@ -1,5 +1,33 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.4
+
+### Patch Changes
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/runtime@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/runtime/v/0.105.0) (from `^0.104.1`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/store@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+
+- [#150](https://github.com/graphql-hive/gateway/pull/150) [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/runtime@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/runtime/v/0.105.0) (from `^0.104.1`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/store@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.0) (from `^0.102.12`, in `dependencies`)
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - Introduce \`onDelegationPlan\` and \`onDelegationStageExecuteDone\` hooks
+
+- Updated dependencies [[`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1), [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f), [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1)]:
+  - @graphql-mesh/transport-common@0.7.15
+  - @graphql-tools/delegate@10.2.0
+  - @graphql-tools/stitch@9.4.0
+  - @graphql-tools/federation@2.2.29
+  - @graphql-tools/stitching-directives@3.1.15
+  - @graphql-tools/wrap@10.0.18
+
 ## 0.10.3
 
 ### Patch Changes
