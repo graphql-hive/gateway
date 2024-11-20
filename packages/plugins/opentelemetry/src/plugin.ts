@@ -9,25 +9,21 @@ import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import {
-  ContextAPI,
+  context,
   diag,
   DiagLogLevel,
-  context as globalContextAPI,
   propagation,
   trace,
-  TracerProvider,
   type Context,
-  type ContextManager,
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
-import { ZoneContextManager } from '@opentelemetry/context-zone';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { OnRequestEventPayload } from '@whatwg-node/server';
-import { SEMRESATTRS_SERVICE_NAME } from './attributes';
+import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
   completeHttpSpan,
   createGraphQLExecuteSpan,
@@ -157,33 +153,36 @@ export function useOpenTelemetry(
     activeContext: () => Context;
   };
 }> {
-  let contextAPI: ContextManager | ContextAPI = globalContextAPI;
-  let provider: TracerProvider;
+  let provider: WebTracerProvider;
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
 
   const requestContextMapping = new WeakMap<Request, Context>();
   let tracer: Tracer;
 
-  const spanProcessors = 'exporters' in options ? options.exporters : [];
+  let spanProcessors: SpanProcessor[];
+  let serviceName: string = 'Gateway';
 
   return {
-    onYogaInit() {
+    onYogaInit({ yoga }) {
       if (
         !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
       ) {
-        contextAPI = new ZoneContextManager().enable();
-        const serviceName = options.serviceName ?? 'Gateway';
+        if (options.serviceName) {
+          serviceName = options.serviceName;
+        }
+        if (options.exporters) {
+          spanProcessors = options.exporters;
+        }
         const webProvider = new WebTracerProvider({
           resource: new Resource({
             [SEMRESATTRS_SERVICE_NAME]: serviceName,
+            [ATTR_SERVICE_VERSION]: yoga.version,
           }),
           // @ts-expect-error Some inconsistencies in the typings
           spanProcessors,
         });
-        webProvider.register({
-          contextManager: contextAPI,
-        });
+        webProvider.register();
         provider = webProvider;
       }
       const pluginLogger = options.logger.child('OpenTelemetry');
@@ -197,11 +196,7 @@ export function useOpenTelemetry(
         },
         DiagLogLevel.VERBOSE,
       );
-      tracer =
-        options.tracer ||
-        provider?.getTracer?.('gateway') ||
-        trace.getTracer('gateway');
-      provider ||= trace.getTracerProvider();
+      tracer = options.tracer || trace.getTracer('gateway');
     },
     onContextBuilding({ extendContext, context }) {
       extendContext({
@@ -225,11 +220,11 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-            contextAPI.active(),
+            context.active(),
             request.headers,
             HeadersTextMapGetter,
           )
-        : contextAPI.active();
+        : context.active();
 
       const httpSpan = createHttpSpan({
         request,
@@ -386,24 +381,18 @@ export function useOpenTelemetry(
       requestContextMapping.delete(request);
     },
     async [DisposableSymbols.asyncDispose]() {
-      await Promise.all(
-        spanProcessors.map((processor) => processor.forceFlush()),
-      );
-      if (
-        'forceFlush' in provider &&
-        typeof provider.forceFlush === 'function'
-      ) {
-        await provider.forceFlush();
+      if (spanProcessors) {
+        await Promise.all(
+          spanProcessors.map((processor) => processor.forceFlush()),
+        );
       }
-      contextAPI.disable();
-      trace.disable();
-      propagation.disable();
-      await Promise.all(
-        spanProcessors.map((processor) => processor.shutdown()),
-      );
-      if ('shutdown' in provider && typeof provider.shutdown === 'function') {
-        await provider.shutdown();
+      await provider?.forceFlush?.();
+      if (spanProcessors) {
+        await Promise.all(
+          spanProcessors.map((processor) => processor.shutdown()),
+        );
       }
+      await provider?.shutdown?.();
     },
   };
 }
