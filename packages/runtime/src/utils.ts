@@ -61,3 +61,17 @@ export const defaultQueryText = /* GraphQL */ `
   #     }
   #
 `;
+
+/**
+ * Generates a v4 UUID to be used as the ID using `Math`
+ * as the random number generator.
+ *
+ * Reference: https://gist.github.com/jed/982883
+ */
+export function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0,
+      v = c == 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}

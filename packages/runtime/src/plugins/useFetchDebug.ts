@@ -1,6 +1,6 @@
 import type { Logger } from '@graphql-mesh/types';
-import { crypto } from '@whatwg-node/fetch';
 import type { GatewayPlugin } from '../types';
+import { generateUUID } from '../utils';
 
 export function useFetchDebug<TContext extends Record<string, any>>(opts: {
   logger: Logger;
@@ -8,7 +8,7 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
   return {
     onFetch({ url, options, logger = opts.logger }) {
       logger = logger.child('fetch');
-      const fetchId = crypto.randomUUID();
+      const fetchId = generateUUID();
       logger.debug('request', () => ({
         fetchId,
         url,

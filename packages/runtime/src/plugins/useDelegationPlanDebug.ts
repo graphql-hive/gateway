@@ -1,8 +1,8 @@
 import type { Logger } from '@graphql-mesh/types';
 import { pathToArray } from '@graphql-tools/utils';
-import { crypto } from '@whatwg-node/fetch';
 import { print } from 'graphql';
 import type { GatewayPlugin } from '../types';
+import { generateUUID } from '../utils';
 
 export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
   logger: Logger;
@@ -18,7 +18,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
       logger = opts.logger,
     }) {
       logger = logger.child('delegation-plan');
-      const planId = crypto.randomUUID();
+      const planId = generateUUID();
       logger.debug('start', () => {
         const logObj: Record<string, any> = {
           planId,
@@ -71,7 +71,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
       logger = opts.logger,
     }) {
       logger = logger.child('delegation-stage-execute');
-      const stageId = crypto.randomUUID();
+      const stageId = generateUUID();
       logger.debug('start', () => ({
         stageId,
         subgraph,
