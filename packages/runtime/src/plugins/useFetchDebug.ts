@@ -13,8 +13,9 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
         fetchId,
         url,
         ...(options || {}),
-        body: options?.body && JSON.stringify(options.body),
-        headers: options?.headers && JSON.stringify(options.headers),
+        body: options?.body && JSON.stringify(options.body, null, '  '),
+        headers:
+          options?.headers && JSON.stringify(options.headers, null, '  '),
       });
       return function onFetchDone({ response }) {
         logger.debug('response', () => ({
@@ -22,6 +23,8 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
           status: response.status,
           headers: JSON.stringify(
             Object.fromEntries(response.headers.entries()),
+            null,
+            '  ',
           ),
         }));
       };

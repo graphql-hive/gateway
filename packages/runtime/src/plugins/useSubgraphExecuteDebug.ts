@@ -32,7 +32,7 @@ export function useSubgraphExecuteDebug<
             onNext({ result }) {
               logger.debug(`next`, () => ({
                 subgraphExecuteId,
-                result: JSON.stringify(result),
+                result: JSON.stringify(result, null, '  '),
               }));
             },
             onEnd() {
@@ -44,7 +44,7 @@ export function useSubgraphExecuteDebug<
         }
         logger.debug('result', () => ({
           subgraphExecuteId,
-          result: JSON.stringify(result),
+          result: JSON.stringify(result, null, '  '),
         }));
         return void 0;
       };

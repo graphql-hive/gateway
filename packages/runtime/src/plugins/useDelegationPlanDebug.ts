@@ -26,7 +26,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
           typeName,
         };
         if (variables && Object.keys(variables).length) {
-          logObj['variables'] = JSON.stringify(variables);
+          logObj['variables'] = JSON.stringify(variables, null, '  ');
         }
         if (fragments && Object.keys(fragments).length) {
           logObj['fragments'] = Object.fromEntries(
@@ -84,7 +84,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
       return ({ result }) => {
         logger.debug('result', () => ({
           stageId,
-          result: JSON.stringify(result),
+          result: JSON.stringify(result, null, '  '),
         }));
       };
     },
