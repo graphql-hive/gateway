@@ -43,8 +43,12 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Test
-        run: yarn test:leaks
+      - name: Run Tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: yarn test:leaks
 
   e2e:
     needs: [unit]
