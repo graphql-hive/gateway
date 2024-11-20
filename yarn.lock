@@ -4374,6 +4374,7 @@ __metadata:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
+    jest-leak-detector: "npm:29.7.0"
   languageName: unknown
   linkType: soft
 
