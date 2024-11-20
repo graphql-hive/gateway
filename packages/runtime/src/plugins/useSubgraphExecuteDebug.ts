@@ -30,13 +30,13 @@ export function useSubgraphExecuteDebug<
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              logger.debug(`next`, () => ({
+              logger.debug('next', () => ({
                 subgraphExecuteId,
                 result: JSON.stringify(result, null, '  '),
               }));
             },
             onEnd() {
-              logger.debug(`end`, () => ({
+              logger.debug('end', () => ({
                 subgraphExecuteId,
               }));
             },
