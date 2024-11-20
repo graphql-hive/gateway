@@ -5,6 +5,8 @@ import {
   createSupergraphSDLFetcher,
 } from '@graphql-hive/core';
 import type {
+  OnDelegationPlanHook,
+  OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   TransportEntry,
   UnifiedGraphManagerOptions,
@@ -38,6 +40,7 @@ import {
 import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
 import {
   getDirectiveExtensions,
+  IResolvers,
   isDocumentNode,
   isValidPath,
   mergeDeep,
@@ -76,6 +79,7 @@ import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscrip
 import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
+import { useDelegationPlan } from './plugins/useDelegationPlanDebug';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
@@ -146,6 +150,10 @@ export function createGatewayRuntime<
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
   // TODO: Will be deleted after v0
   const onDelegateHooks: OnDelegateHook<unknown>[] = [];
+
+  const onDelegationPlanHooks: OnDelegationPlanHook<GatewayContext>[] = [];
+  const onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<GatewayContext>[] =
+    [];
 
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator!: () => void;
@@ -624,7 +632,7 @@ export function createGatewayRuntime<
       }
     }
 
-    const unifiedGraphManager = new UnifiedGraphManager({
+    const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
       onSchemaChange(unifiedGraph) {
         setSchema(unifiedGraph);
@@ -636,12 +644,14 @@ export function createGatewayRuntime<
       ...(config.pollingInterval
         ? { pollingInterval: config.pollingInterval }
         : {}),
-      ...(config.additionalResolvers
-        ? { additionalResolvers: config.additionalResolvers }
-        : {}),
       transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
+      onDelegationPlanHooks,
+      onDelegationStageExecuteHooks,
+      ...((config.additionalResolvers
+        ? { additionalResolvers: config.additionalResolvers }
+        : {}) as IResolvers),
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -756,6 +766,12 @@ export function createGatewayRuntime<
           // @ts-expect-error For backward compatibility
           onDelegateHooks.push(plugin.onDelegate);
         }
+        if (plugin.onDelegationPlan) {
+          onDelegationPlanHooks.push(plugin.onDelegationPlan);
+        }
+        if (plugin.onDelegationStageExecute) {
+          onDelegationStageExecuteHooks.push(plugin.onDelegationStageExecute);
+        }
         if (isDisposable(plugin)) {
           disposableStack.use(plugin);
         }
@@ -855,6 +871,7 @@ export function createGatewayRuntime<
     useRequestId(),
     useSubgraphExecuteDebug(configContext),
     useFetchDebug(configContext),
+    useDelegationPlan(configContext),
   ];
 
   const extraPlugins = [];

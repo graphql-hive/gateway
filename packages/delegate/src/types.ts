@@ -121,6 +121,8 @@ export type DelegationPlanBuilder = (
   variableValues: Record<string, any>,
   fragments: Record<string, FragmentDefinitionNode>,
   fieldNodes: FieldNode[],
+  context?: any,
+  info?: GraphQLResolveInfo,
 ) => Array<Map<Subschema, SelectionSetNode>>;
 
 export interface MergedTypeInfo<TContext = Record<string, any>> {
@@ -146,6 +148,7 @@ export interface MergedTypeInfo<TContext = Record<string, any>> {
     MergedTypeResolver<TContext>
   >;
   delegationPlanBuilder: DelegationPlanBuilder;
+  nonMemoizedDelegationPlanBuilder: DelegationPlanBuilder;
 }
 
 export interface ICreateProxyingResolverOptions<
