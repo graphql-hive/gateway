@@ -46,9 +46,9 @@
   "dependencies": {
     "@graphql-hive/gateway": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.7",
-    "@graphql-mesh/store": "^0.102.12",
-    "@graphql-mesh/types": "^0.102.12",
-    "@graphql-mesh/utils": "^0.102.12",
+    "@graphql-mesh/store": "^0.103.0",
+    "@graphql-mesh/types": "^0.103.0",
+    "@graphql-mesh/utils": "^0.103.0",
     "@graphql-tools/utils": "^10.5.6",
     "@graphql-yoga/plugin-prometheus": "^6.1.0",
     "prom-client": "^15.0.0",
