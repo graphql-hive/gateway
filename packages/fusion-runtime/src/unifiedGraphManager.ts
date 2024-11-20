@@ -269,7 +269,7 @@ export class UnifiedGraphManager<TContext> {
                       [];
                     let logger = this.opts.transportContext?.logger;
                     let requestId: string | undefined;
-                    if (context.request) {
+                    if (context?.request) {
                       requestId = requestIdByRequest.get(context.request);
                       if (requestId) {
                         logger = logger?.child(requestId);

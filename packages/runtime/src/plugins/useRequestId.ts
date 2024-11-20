@@ -11,7 +11,7 @@ export function useRequestId<
       requestIdByRequest.set(request, requestId);
     },
     onContextBuilding({ context }) {
-      if (context.request) {
+      if (context?.request) {
         const requestId = requestIdByRequest.get(context.request);
         if (requestId && context.logger) {
           // @ts-expect-error - Logger is somehow read-only
@@ -20,7 +20,7 @@ export function useRequestId<
       }
     },
     onFetch({ context, options, setOptions }) {
-      if (context.request) {
+      if (context?.request) {
         const requestId = requestIdByRequest.get(context.request);
         if (requestId) {
           setOptions({
