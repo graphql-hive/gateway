@@ -1,15 +1,15 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import type { Logger } from '@graphql-mesh/types';
-import { crypto } from '@whatwg-node/fetch';
 import { isAsyncIterable } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
+import { generateUUID } from '../utils';
 
 export function useSubgraphExecuteDebug<
   TContext extends Record<string, any>,
 >(opts: { logger: Logger }): GatewayPlugin<TContext> {
   return {
     onSubgraphExecute({ executionRequest, logger = opts.logger }) {
-      const subgraphExecuteId = crypto.randomUUID();
+      const subgraphExecuteId = generateUUID();
       logger = logger.child('subgraph-execute');
       if (executionRequest) {
         logger.debug('start', () =>
