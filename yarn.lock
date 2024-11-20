@@ -10763,11 +10763,11 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
 
 "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
   version: 29.7.0
-  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=d470bc"
+  resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=ac6a77"
   dependencies:
     jest-get-type: "npm:^29.6.3"
     pretty-format: "npm:^29.7.0"
-  checksum: 10c0/78a0a056f8dcca4e195f794d9fea294c0250b974aec9e2e91d21549b0f67cc2d78812e80f1675a31788b78963e1dd0b6737a26a8e8baa98aa8d98699e493c5e5
+  checksum: 10c0/e7994766638a8e8ab5f2537295f6a083016556252a917218c811c270a3ef1b815865d4503194e22a7070099875a15c81691da75062f5dc8d4a7989d6bf750bb7
   languageName: node
   linkType: hard
 
