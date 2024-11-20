@@ -1,4 +1,5 @@
 export * from './createGatewayRuntime';
+export { LogLevel, DefaultLogger } from '@graphql-mesh/utils';
 export type * from './types';
 export * from './plugins/useCustomFetch';
 export * from './plugins/useStaticFiles';
