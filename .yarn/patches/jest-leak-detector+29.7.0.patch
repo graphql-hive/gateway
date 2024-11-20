@@ -1,0 +1,16 @@
+diff --git a/build/index.js b/build/index.js
+index a8ccb1e..8d9d635 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -76,8 +76,11 @@ class LeakDetector {
+   async isLeaking() {
+     this._runGarbageCollector();
+ 
++    (0, _v().setFlagsFromString)('--allow-natives-syntax');
++
+     // wait some ticks to allow GC to run properly, see https://github.com/nodejs/node/issues/34636#issuecomment-669366235
+     for (let i = 0; i < 10; i++) {
++      eval('%CollectGarbage(true)');
+       await tick();
+     }
+     return this._isReferenceBeingHeld;
