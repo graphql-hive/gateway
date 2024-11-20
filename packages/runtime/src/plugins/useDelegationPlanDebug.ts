@@ -2,12 +2,16 @@ import type { Logger } from '@graphql-mesh/types';
 import { pathToArray } from '@graphql-tools/utils';
 import { print } from 'graphql';
 import type { GatewayPlugin } from '../types';
-import { generateUUID } from '../utils';
+import { FetchAPI } from 'graphql-yoga';
 
 export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
   logger: Logger;
 }): GatewayPlugin<TContext> {
+  let fetchAPI: FetchAPI;
   return {
+    onYogaInit({ yoga }) {
+      fetchAPI = yoga.fetchAPI;
+    },
     onDelegationPlan({
       subgraph,
       typeName,
@@ -18,7 +22,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
       logger = opts.logger,
     }) {
       logger = logger.child('delegation-plan');
-      const planId = generateUUID();
+      const planId = fetchAPI.crypto.randomUUID();
       logger.debug('start', () => {
         const logObj: Record<string, any> = {
           planId,
@@ -71,7 +75,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
       logger = opts.logger,
     }) {
       logger = logger.child('delegation-stage-execute');
-      const stageId = generateUUID();
+      const stageId = fetchAPI.crypto.randomUUID();
       logger.debug('start', () =>
         JSON.stringify(
           {
