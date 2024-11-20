@@ -164,6 +164,12 @@ describe('Federation', () => {
         name,
         url: `http://www.${name}.com`,
       })),
+      logger: {
+        debug() {},
+        info() {},
+        warn() {},
+        error() {},
+      },
       buildService({ name }) {
         const schema = serviceInputs.find(({ name: n }) => n === name)!.schema;
         serviceCallCounts[name] = 0;

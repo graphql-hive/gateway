@@ -10,8 +10,7 @@ index a8ccb1e..70699fd 100644
 +    (0, _v().setFlagsFromString)('--allow-natives-syntax');
  
      // wait some ticks to allow GC to run properly, see https://github.com/nodejs/node/issues/34636#issuecomment-669366235
--    for (let i = 0; i < 10; i++) {
-+    for (let i = 0; i < 3; i++) {
+     for (let i = 0; i < 10; i++) {
 +      eval('%CollectGarbage(true)');
        await tick();
      }
