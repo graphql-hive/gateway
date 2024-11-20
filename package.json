@@ -59,8 +59,8 @@
     "graphql": "^16.9.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
     "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
-    "jest-snapshot": "patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch",
     "jest-leak-detector": "patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
+    "jest-snapshot": "patch:jest-snapshot@npm%3A29.7.0#~/.yarn/patches/jest-snapshot+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tsx": "patch:tsx@npm%3A4.19.2#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
     "vite-tsconfig-paths": "patch:vite-tsconfig-paths@5.1.2#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.2-40407aa097.patch"
