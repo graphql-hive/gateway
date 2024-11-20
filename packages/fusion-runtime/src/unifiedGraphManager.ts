@@ -3,9 +3,13 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { OnDelegateHook } from '@graphql-mesh/types';
-import { mapMaybePromise } from '@graphql-mesh/utils';
-import type { SubschemaConfig } from '@graphql-tools/delegate';
+import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
+import { mapMaybePromise, requestIdByRequest } from '@graphql-mesh/utils';
+import type {
+  DelegationPlanBuilder,
+  StitchingInfo,
+  SubschemaConfig,
+} from '@graphql-tools/delegate';
 import type {
   IResolvers,
   MaybePromise,
@@ -23,6 +27,9 @@ import {
   compareSchemas,
   compareSubgraphNames,
   getOnSubgraphExecute,
+  OnDelegationPlanDoneHook,
+  OnDelegationPlanHook,
+  OnDelegationStageExecuteHook,
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
@@ -53,12 +60,15 @@ export interface UnifiedGraphHandlerOpts {
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
+  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   transportEntryAdditions?: TransportEntryAdditions;
   /**
    * Whether to batch the subgraph executions.
    * @default true
    */
   batch?: boolean;
+
+  logger?: Logger;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -84,9 +94,11 @@ export interface UnifiedGraphManagerOptions<TContext> {
     | IResolvers<unknown, TContext>
     | IResolvers<unknown, TContext>[];
   transportContext?: TransportContext;
-  onSubgraphExecuteHooks?: OnSubgraphExecuteHook[];
+  onSubgraphExecuteHooks?: OnSubgraphExecuteHook<TContext>[];
   // TODO: Will be removed later once we get rid of v0
   onDelegateHooks?: OnDelegateHook<unknown>[];
+  onDelegationPlanHooks?: OnDelegationPlanHook<TContext>[];
+  onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<TContext>[];
   /**
    * Whether to batch the subgraph executions.
    * @default true
@@ -99,7 +111,9 @@ export class UnifiedGraphManager<TContext> {
   private handleUnifiedGraph: UnifiedGraphHandler;
   private unifiedGraph?: GraphQLSchema;
   private lastLoadedUnifiedGraph?: string | GraphQLSchema | DocumentNode;
-  private onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
+  private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
+  private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
+  private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
   private currentTimeout: NodeJS.Timeout | undefined;
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<true>;
@@ -111,6 +125,9 @@ export class UnifiedGraphManager<TContext> {
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
+    this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
+    this.onDelegationStageExecuteHooks =
+      opts?.onDelegationStageExecuteHooks || [];
     this.disposableStack.defer(() => {
       this.unifiedGraph = undefined;
       this.lastLoadedUnifiedGraph = undefined;
@@ -190,8 +207,10 @@ export class UnifiedGraphManager<TContext> {
               onSubgraphExecute(subgraphName, execReq) {
                 return onSubgraphExecute(subgraphName, execReq);
               },
+              onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
               transportEntryAdditions: this.opts.transportEntryAdditions,
               batch: this.batch,
+              logger: this.opts.transportContext?.logger,
             });
             this.unifiedGraph = newUnifiedGraph;
             const onSubgraphExecute = getOnSubgraphExecute({
@@ -222,6 +241,86 @@ export class UnifiedGraphManager<TContext> {
             this.continuePolling();
             this._transportEntryMap = transportEntryMap;
             this.opts.onSchemaChange?.(this.unifiedGraph);
+            const stitchingInfo = this.unifiedGraph?.extensions?.[
+              'stitchingInfo'
+            ] as StitchingInfo;
+            if (stitchingInfo && this.onDelegationPlanHooks?.length) {
+              for (const typeName in stitchingInfo.mergedTypes) {
+                const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
+                if (mergedTypeInfo) {
+                  const originalDelegationPlanBuilder =
+                    mergedTypeInfo.nonMemoizedDelegationPlanBuilder;
+                  mergedTypeInfo.nonMemoizedDelegationPlanBuilder = (
+                    supergraph,
+                    sourceSubschema,
+                    variables,
+                    fragments,
+                    fieldNodes,
+                    context,
+                    info,
+                  ) => {
+                    let delegationPlanBuilder = originalDelegationPlanBuilder;
+                    function setDelegationPlanBuilder(
+                      newDelegationPlanBuilder: DelegationPlanBuilder,
+                    ) {
+                      delegationPlanBuilder = newDelegationPlanBuilder;
+                    }
+                    const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] =
+                      [];
+                    let logger = this.opts.transportContext?.logger;
+                    let requestId: string | undefined;
+                    if (context.request) {
+                      requestId = requestIdByRequest.get(context.request);
+                      if (requestId) {
+                        logger = logger?.child(requestId);
+                      }
+                    }
+                    if (sourceSubschema.name) {
+                      logger = logger?.child(sourceSubschema.name);
+                    }
+                    for (const onDelegationPlan of this.onDelegationPlanHooks) {
+                      const onDelegationPlanDone = onDelegationPlan({
+                        supergraph,
+                        subgraph: sourceSubschema.name!,
+                        sourceSubschema,
+                        typeName: mergedTypeInfo.typeName,
+                        variables,
+                        fragments,
+                        fieldNodes,
+                        logger,
+                        context,
+                        info,
+                        delegationPlanBuilder,
+                        setDelegationPlanBuilder,
+                      });
+                      if (onDelegationPlanDone) {
+                        onDelegationPlanDoneHooks.push(onDelegationPlanDone);
+                      }
+                    }
+                    let delegationPlan = delegationPlanBuilder(
+                      supergraph,
+                      sourceSubschema,
+                      variables,
+                      fragments,
+                      fieldNodes,
+                      context,
+                    );
+                    function setDelegationPlan(
+                      newDelegationPlan: ReturnType<DelegationPlanBuilder>,
+                    ) {
+                      delegationPlan = newDelegationPlan;
+                    }
+                    for (const onDelegationPlanDone of onDelegationPlanDoneHooks) {
+                      onDelegationPlanDone({
+                        delegationPlan,
+                        setDelegationPlan,
+                      });
+                    }
+                    return delegationPlan;
+                  };
+                }
+              }
+            }
             return true;
           });
         },

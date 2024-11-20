@@ -7,12 +7,13 @@ import {
   StitchingInfo,
   Subschema,
 } from '@graphql-tools/delegate';
-import { memoize1, memoize2, memoize3, memoize5 } from '@graphql-tools/utils';
+import { memoize1, memoize2, memoize3 } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
   getNamedType,
   GraphQLObjectType,
+  GraphQLResolveInfo,
   GraphQLSchema,
   InlineFragmentNode,
   isAbstractType,
@@ -21,6 +22,7 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { getFieldsNotInSubschema } from './getFieldsNotInSubschema.js';
+import { memoize5of7 } from './memoize5of7.js';
 
 function calculateDelegationStage(
   mergedTypeInfo: MergedTypeInfo,
@@ -249,157 +251,177 @@ function getStitchingInfo(schema: GraphQLSchema): StitchingInfo {
 export function createDelegationPlanBuilder(
   mergedTypeInfo: MergedTypeInfo,
 ): DelegationPlanBuilder {
-  return memoize5(function delegationPlanBuilder(
-    schema: GraphQLSchema,
-    sourceSubschema: Subschema<any, any, any, any>,
-    variableValues: Record<string, any>,
-    fragments: Record<string, FragmentDefinitionNode>,
-    fieldNodes: FieldNode[],
-  ): Array<Map<Subschema, SelectionSetNode>> {
-    const stitchingInfo = getStitchingInfo(schema);
-    const targetSubschemas =
-      mergedTypeInfo?.targetSubschemas.get(sourceSubschema);
-    if (!targetSubschemas || !targetSubschemas.length) {
-      return [];
-    }
+  mergedTypeInfo.nonMemoizedDelegationPlanBuilder =
+    function delegationPlanBuilder(
+      schema: GraphQLSchema,
+      sourceSubschema: Subschema<any, any, any, any>,
+      variableValues: Record<string, any>,
+      fragments: Record<string, FragmentDefinitionNode>,
+      fieldNodes: FieldNode[],
+    ): Array<Map<Subschema, SelectionSetNode>> {
+      const stitchingInfo = getStitchingInfo(schema);
+      const targetSubschemas =
+        mergedTypeInfo?.targetSubschemas.get(sourceSubschema);
+      if (!targetSubschemas || !targetSubschemas.length) {
+        return [];
+      }
 
-    const typeName = mergedTypeInfo.typeName;
-    const typeInSubschema = sourceSubschema.transformedSchema.getType(
-      typeName,
-    ) as GraphQLObjectType;
-    const fieldsNotInSubschema = getFieldsNotInSubschema(
-      schema,
-      stitchingInfo,
-      schema.getType(typeName) as GraphQLObjectType,
-      mergedTypeInfo.typeMaps.get(sourceSubschema)?.[
-        typeName
-      ] as GraphQLObjectType,
-      fieldNodes,
-      fragments,
-      variableValues,
-      sourceSubschema,
-    );
-
-    if (!fieldsNotInSubschema.length) {
-      return [];
-    }
-
-    const delegationMaps: Array<Map<Subschema, SelectionSetNode>> = [];
-    let sourceSubschemas = createSubschemas(sourceSubschema);
-
-    let delegationStage = calculateDelegationStage(
-      mergedTypeInfo,
-      sourceSubschemas,
-      targetSubschemas,
-      fieldsNotInSubschema,
-    );
-    let { delegationMap } = delegationStage;
-    while (delegationMap.size) {
-      delegationMaps.push(delegationMap);
-
-      const {
-        proxiableSubschemas,
-        nonProxiableSubschemas,
-        unproxiableFieldNodes,
-      } = delegationStage;
-
-      sourceSubschemas = combineSubschemas(
-        sourceSubschemas,
-        proxiableSubschemas,
+      const typeName = mergedTypeInfo.typeName;
+      const typeInSubschema = sourceSubschema.transformedSchema.getType(
+        typeName,
+      ) as GraphQLObjectType;
+      const fieldsNotInSubschema = getFieldsNotInSubschema(
+        schema,
+        stitchingInfo,
+        schema.getType(typeName) as GraphQLObjectType,
+        mergedTypeInfo.typeMaps.get(sourceSubschema)?.[
+          typeName
+        ] as GraphQLObjectType,
+        fieldNodes,
+        fragments,
+        variableValues,
+        sourceSubschema,
       );
 
-      delegationStage = calculateDelegationStage(
+      if (!fieldsNotInSubschema.length) {
+        return [];
+      }
+
+      const delegationMaps: Array<Map<Subschema, SelectionSetNode>> = [];
+      let sourceSubschemas = createSubschemas(sourceSubschema);
+
+      let delegationStage = calculateDelegationStage(
         mergedTypeInfo,
         sourceSubschemas,
-        nonProxiableSubschemas,
-        unproxiableFieldNodes,
+        targetSubschemas,
+        fieldsNotInSubschema,
       );
-      delegationMap = delegationStage.delegationMap;
-    }
-    if (
-      isAbstractType(typeInSubschema) &&
-      fieldsNotInSubschema.some(
-        (fieldNode) => fieldNode.name.value === '__typename',
-      )
-    ) {
-      const inlineFragments: InlineFragmentNode[] = [];
-      for (const fieldNode of fieldNodes) {
-        if (fieldNode.selectionSet) {
-          for (const selection of fieldNode.selectionSet.selections) {
-            if (selection.kind === Kind.INLINE_FRAGMENT) {
-              inlineFragments.push(selection);
+      let { delegationMap } = delegationStage;
+      while (delegationMap.size) {
+        delegationMaps.push(delegationMap);
+
+        const {
+          proxiableSubschemas,
+          nonProxiableSubschemas,
+          unproxiableFieldNodes,
+        } = delegationStage;
+
+        sourceSubschemas = combineSubschemas(
+          sourceSubschemas,
+          proxiableSubschemas,
+        );
+
+        delegationStage = calculateDelegationStage(
+          mergedTypeInfo,
+          sourceSubschemas,
+          nonProxiableSubschemas,
+          unproxiableFieldNodes,
+        );
+        delegationMap = delegationStage.delegationMap;
+      }
+      if (
+        isAbstractType(typeInSubschema) &&
+        fieldsNotInSubschema.some(
+          (fieldNode) => fieldNode.name.value === '__typename',
+        )
+      ) {
+        const inlineFragments: InlineFragmentNode[] = [];
+        for (const fieldNode of fieldNodes) {
+          if (fieldNode.selectionSet) {
+            for (const selection of fieldNode.selectionSet.selections) {
+              if (selection.kind === Kind.INLINE_FRAGMENT) {
+                inlineFragments.push(selection);
+              }
             }
           }
         }
-      }
-      const implementedSubschemas = targetSubschemas.filter((subschema) => {
-        const typeInTargetSubschema =
-          mergedTypeInfo.typeMaps.get(subschema)?.[typeName];
-        return (
-          isAbstractType(typeInTargetSubschema) &&
-          subschema.transformedSchema.getPossibleTypes(typeInTargetSubschema)
-            .length
-        );
-      });
-      let added = false;
-      for (const implementedSubgraphs of implementedSubschemas) {
-        for (const delegationMap of delegationMaps) {
-          // SelectionNode is not read-only
-          const existingSelections = delegationMap.get(implementedSubgraphs)
-            ?.selections as SelectionNode[];
-          if (existingSelections) {
-            existingSelections.push({
-              kind: Kind.FIELD,
-              name: {
-                kind: Kind.NAME,
-                value: '__typename',
-              },
-            });
-            existingSelections.push(...inlineFragments);
-            added = true;
-            break;
-          }
-          if (added) {
-            break;
-          }
-        }
-      }
-      if (!added) {
-        const subschemaWithTypeName = implementedSubschemas[0];
-        if (subschemaWithTypeName) {
-          const delegationStageToFetchTypeName: Map<
-            Subschema,
-            SelectionSetNode
-          > = new Map();
-          delegationStageToFetchTypeName.set(subschemaWithTypeName, {
-            kind: Kind.SELECTION_SET,
-            selections: [
-              {
+        const implementedSubschemas = targetSubschemas.filter((subschema) => {
+          const typeInTargetSubschema =
+            mergedTypeInfo.typeMaps.get(subschema)?.[typeName];
+          return (
+            isAbstractType(typeInTargetSubschema) &&
+            subschema.transformedSchema.getPossibleTypes(typeInTargetSubschema)
+              .length
+          );
+        });
+        let added = false;
+        for (const implementedSubgraphs of implementedSubschemas) {
+          for (const delegationMap of delegationMaps) {
+            // SelectionNode is not read-only
+            const existingSelections = delegationMap.get(implementedSubgraphs)
+              ?.selections as SelectionNode[];
+            if (existingSelections) {
+              existingSelections.push({
                 kind: Kind.FIELD,
                 name: {
                   kind: Kind.NAME,
                   value: '__typename',
                 },
-              },
-              ...inlineFragments,
-            ],
-          });
-          delegationMaps.push(delegationStageToFetchTypeName);
+              });
+              existingSelections.push(...inlineFragments);
+              added = true;
+              break;
+            }
+            if (added) {
+              break;
+            }
+          }
+        }
+        if (!added) {
+          const subschemaWithTypeName = implementedSubschemas[0];
+          if (subschemaWithTypeName) {
+            const delegationStageToFetchTypeName: Map<
+              Subschema,
+              SelectionSetNode
+            > = new Map();
+            delegationStageToFetchTypeName.set(subschemaWithTypeName, {
+              kind: Kind.SELECTION_SET,
+              selections: [
+                {
+                  kind: Kind.FIELD,
+                  name: {
+                    kind: Kind.NAME,
+                    value: '__typename',
+                  },
+                },
+                ...inlineFragments,
+              ],
+            });
+            delegationMaps.push(delegationStageToFetchTypeName);
+          }
         }
       }
-    }
-    if (
-      delegationStage.unproxiableFieldNodes.length &&
-      delegationStage.nonProxiableSubschemas.length
-    ) {
-      leftOverByDelegationPlan.set(delegationMaps, {
-        unproxiableFieldNodes: delegationStage.unproxiableFieldNodes,
-        nonProxiableSubschemas: delegationStage.nonProxiableSubschemas,
-        missingFieldsParentMap: new Map(),
-        missingFieldsParentDeferredMap: new Map(),
-      });
-    }
-    return delegationMaps;
+      if (
+        delegationStage.unproxiableFieldNodes.length &&
+        delegationStage.nonProxiableSubschemas.length
+      ) {
+        leftOverByDelegationPlan.set(delegationMaps, {
+          unproxiableFieldNodes: delegationStage.unproxiableFieldNodes,
+          nonProxiableSubschemas: delegationStage.nonProxiableSubschemas,
+          missingFieldsParentMap: new Map(),
+          missingFieldsParentDeferredMap: new Map(),
+        });
+      }
+      return delegationMaps;
+    };
+  return memoize5of7(function wrappedDelegationPlanBuilder(
+    schema: GraphQLSchema,
+    sourceSubschema: Subschema<any, any, any, any>,
+    variableValues: Record<string, any>,
+    fragments: Record<string, FragmentDefinitionNode>,
+    fieldNodes: FieldNode[],
+    context?: any,
+    info?: GraphQLResolveInfo,
+  ) {
+    return mergedTypeInfo.nonMemoizedDelegationPlanBuilder(
+      schema,
+      sourceSubschema,
+      variableValues,
+      fragments,
+      fieldNodes,
+      context,
+      info,
+    );
   });
 }
 

@@ -265,7 +265,7 @@ function createMergedTypes<
           }
         }
 
-        const initialConfig = {
+        const mergedTypeConfig = {
           typeName,
           targetSubschemas: targetSubschemasBySubschema,
           typeMaps,
@@ -274,20 +274,22 @@ function createMergedTypes<
           uniqueFields: Object.create({}),
           nonUniqueFields: Object.create({}),
           resolvers,
-        };
+        } as MergedTypeInfo<TContext>;
 
-        const mergedTypeConfig = (mergedTypes[typeName] = {
-          ...initialConfig,
-          delegationPlanBuilder: createDelegationPlanBuilder(
-            initialConfig as MergedTypeInfo,
-          ),
-        });
+        mergedTypes[typeName] = mergedTypeConfig;
+
+        mergedTypeConfig.delegationPlanBuilder = createDelegationPlanBuilder(
+          mergedTypeConfig as MergedTypeInfo,
+        );
 
         for (const fieldName in supportedBySubschemas) {
-          if (supportedBySubschemas[fieldName]?.length === 1) {
+          if (
+            supportedBySubschemas[fieldName]?.length === 1 &&
+            supportedBySubschemas[fieldName][0]
+          ) {
             mergedTypeConfig.uniqueFields[fieldName] =
               supportedBySubschemas[fieldName][0];
-          } else {
+          } else if (supportedBySubschemas[fieldName]) {
             mergedTypeConfig.nonUniqueFields[fieldName] =
               supportedBySubschemas[fieldName];
           }

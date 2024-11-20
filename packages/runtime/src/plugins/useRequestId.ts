@@ -10,16 +10,27 @@ export function useRequestId<
         request.headers.get('x-request-id') || fetchAPI.crypto.randomUUID();
       requestIdByRequest.set(request, requestId);
     },
+    onContextBuilding({ context }) {
+      if (context.request) {
+        const requestId = requestIdByRequest.get(context.request);
+        if (requestId && context.logger) {
+          // @ts-expect-error - Logger is somehow read-only
+          context.logger = context.logger.child(requestId);
+        }
+      }
+    },
     onFetch({ context, options, setOptions }) {
-      const requestId = requestIdByRequest.get(context?.request);
-      if (requestId) {
-        setOptions({
-          ...(options || {}),
-          headers: {
-            ...(options.headers || {}),
-            'x-request-id': requestId,
-          },
-        });
+      if (context.request) {
+        const requestId = requestIdByRequest.get(context.request);
+        if (requestId) {
+          setOptions({
+            ...(options || {}),
+            headers: {
+              ...(options.headers || {}),
+              'x-request-id': requestId,
+            },
+          });
+        }
       }
     },
     onResponse({ request, response }) {

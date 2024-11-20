@@ -15,7 +15,10 @@ import {
   validate,
 } from 'graphql';
 import { expect } from 'vitest';
-import { UnifiedGraphManager } from '../src/unifiedGraphManager';
+import {
+  UnifiedGraphManager,
+  UnifiedGraphManagerOptions,
+} from '../src/unifiedGraphManager';
 
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
   const manager = new UnifiedGraphManager({
@@ -37,7 +40,10 @@ export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
   return manager.getUnifiedGraph();
 }
 
-export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
+export function composeAndGetExecutor<TContext>(
+  subgraphs: SubgraphConfig[],
+  opts?: Partial<UnifiedGraphManagerOptions<TContext>>,
+) {
   const manager = new UnifiedGraphManager({
     getUnifiedGraph: () => getUnifiedGraphGracefully(subgraphs),
     transports() {
@@ -53,13 +59,16 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
         },
       };
     },
+    ...opts,
   });
   return function testExecutor({
     query,
     variables: variableValues,
+    context,
   }: {
     query: string;
     variables?: Record<string, any>;
+    context?: any;
   }) {
     const document = parse(query);
     return mapMaybePromise(manager.getUnifiedGraph(), (schema) => {
@@ -70,7 +79,7 @@ export function composeAndGetExecutor(subgraphs: SubgraphConfig[]) {
       if (validationErrors.length > 1) {
         throw new AggregateError(validationErrors);
       }
-      return mapMaybePromise(manager.getContext(), (contextValue) =>
+      return mapMaybePromise(manager.getContext(context), (contextValue) =>
         mapMaybePromise(
           normalizedExecutor({
             schema,

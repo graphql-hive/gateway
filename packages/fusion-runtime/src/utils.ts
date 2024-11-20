@@ -14,6 +14,11 @@ import {
   requestIdByRequest,
 } from '@graphql-mesh/utils';
 import {
+  DelegationPlanBuilder,
+  MergedTypeResolver,
+  Subschema,
+} from '@graphql-tools/delegate';
+import {
   isAsyncIterable,
   isDocumentNode,
   mapAsyncIterator,
@@ -25,12 +30,15 @@ import {
 } from '@graphql-tools/utils';
 import { constantCase } from 'constant-case';
 import {
+  FragmentDefinitionNode,
   print,
+  SelectionNode,
+  SelectionSetNode,
   type DocumentNode,
   type ExecutionResult,
   type GraphQLSchema,
 } from 'graphql';
-import type { GraphQLResolveInfo } from 'graphql/type';
+import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
 
 export type {
   TransportEntry,
@@ -102,9 +110,13 @@ function getTransportExecutor({
 }): MaybePromise<Executor> {
   // TODO
   const kind = transportEntry?.kind || '';
-  transportContext?.logger?.debug(
-    `Loading transport "${kind}" for subgraph ${subgraphName}`,
-  );
+  let logger = transportContext?.logger;
+  if (logger) {
+    if (subgraphName) {
+      logger = logger.child(subgraphName);
+    }
+    logger?.debug(`Loading transport "${kind}"`);
+  }
   return mapMaybePromise(
     typeof transports === 'function' ? transports(kind) : transports[kind],
     (transport) => {
@@ -182,9 +194,19 @@ export function getOnSubgraphExecute({
     let executor = subgraphExecutorMap.get(subgraphName);
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
-      transportContext?.logger?.debug(
-        `Initializing executor for subgraph ${subgraphName}`,
-      );
+      let logger = transportContext?.logger;
+      if (logger) {
+        const requestId = requestIdByRequest.get(
+          executionRequest.context?.request,
+        );
+        if (requestId) {
+          logger = logger.child(requestId);
+        }
+        if (subgraphName) {
+          logger = logger.child(subgraphName);
+        }
+        logger.debug(`Initializing executor`);
+      }
       // Lazy executor that loads transport executor on demand
       executor = function lazyExecutor(subgraphExecReq: ExecutionRequest) {
         return mapMaybePromise(
@@ -259,13 +281,14 @@ export function wrapExecutorWithHooks({
     const requestId =
       executionRequest.context?.request &&
       requestIdByRequest.get(executionRequest.context.request);
-    let execReqLogger = transportContext?.logger?.child?.(subgraphName);
+    let execReqLogger = transportContext?.logger;
     if (execReqLogger) {
       if (requestId) {
         execReqLogger = execReqLogger.child(requestId);
       }
       loggerForExecutionRequest.set(executionRequest, execReqLogger);
     }
+    execReqLogger = execReqLogger?.child?.(subgraphName);
     if (onSubgraphExecuteHooks.length === 0) {
       return executor(executionRequest);
     }
@@ -376,6 +399,8 @@ export function wrapExecutorWithHooks({
 
 export interface UnifiedGraphPlugin<TContext> {
   onSubgraphExecute?: OnSubgraphExecuteHook<TContext>;
+  onDelegationPlan?: OnDelegationPlanHook<TContext>;
+  onDelegationStageExecute?: OnDelegationStageExecuteHook<TContext>;
 }
 
 export type OnSubgraphExecuteHook<TContext = any> = (
@@ -419,6 +444,69 @@ export type OnSubgraphExecuteDoneResult = {
   onEnd?: OnSubgraphExecuteDoneResultOnEnd;
 };
 
+export type OnDelegationPlanHook<TContext> = (
+  payload: OnDelegationPlanHookPayload<TContext>,
+) => Maybe<OnDelegationPlanDoneHook | void>;
+
+export interface OnDelegationPlanHookPayload<TContext> {
+  supergraph: GraphQLSchema;
+  subgraph: string;
+  sourceSubschema: Subschema<any, any, any, TContext>;
+  typeName: string;
+  variables: Record<string, any>;
+  fragments: Record<string, FragmentDefinitionNode>;
+  fieldNodes: SelectionNode[];
+  context: TContext;
+  requestId?: string;
+  logger?: Logger;
+  info?: GraphQLResolveInfo;
+  delegationPlanBuilder: DelegationPlanBuilder;
+  setDelegationPlanBuilder(delegationPlanBuilder: DelegationPlanBuilder): void;
+}
+
+export type OnDelegationPlanDoneHook = (
+  payload: OnDelegationPlanDonePayload,
+) => Maybe<void>;
+
+export interface OnDelegationPlanDonePayload {
+  delegationPlan: ReturnType<DelegationPlanBuilder>;
+  setDelegationPlan: (
+    delegationPlan: ReturnType<DelegationPlanBuilder>,
+  ) => void;
+}
+
+export type OnDelegationStageExecuteHook<TContext> = (
+  payload: OnDelegationStageExecutePayload<TContext>,
+) => Maybe<OnDelegationStageExecuteDoneHook>;
+
+export interface OnDelegationStageExecutePayload<TContext> {
+  object: any;
+  context: TContext;
+  info: GraphQLResolveInfo;
+  subgraph: string;
+  subschema: Subschema<any, any, any, TContext>;
+  selectionSet: SelectionSetNode;
+  key?: any;
+  type: GraphQLOutputType;
+
+  resolver: MergedTypeResolver<TContext>;
+  setResolver: (resolver: MergedTypeResolver<TContext>) => void;
+
+  typeName: string;
+
+  requestId?: string;
+  logger?: Logger;
+}
+
+export type OnDelegationStageExecuteDoneHook = (
+  payload: OnDelegationStageExecuteDonePayload,
+) => void;
+
+export interface OnDelegationStageExecuteDonePayload {
+  result: any;
+  setResult: (result: any) => void;
+}
+
 export function compareSchemas(
   a: DocumentNode | string | GraphQLSchema,
   b: DocumentNode | string | GraphQLSchema,
@@ -445,4 +533,74 @@ export function compareSchemas(
 // TODO: Fix this in GraphQL Tools
 export function compareSubgraphNames(name1: string, name2: string) {
   return constantCase(name1) === constantCase(name2);
+}
+
+export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
+  originalResolver: MergedTypeResolver<TContext>,
+  typeName: string,
+  onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[],
+  baseLogger?: Logger,
+): MergedTypeResolver<TContext> {
+  return (object, context, info, subschema, selectionSet, key, type) => {
+    let logger = baseLogger;
+    let requestId: string | undefined;
+    if (logger && context['request']) {
+      requestId = requestIdByRequest.get(context['request']);
+      if (requestId) {
+        logger = logger.child(requestId);
+      }
+    }
+    if (subschema.name) {
+      logger = logger?.child(subschema.name);
+    }
+    let resolver = originalResolver as MergedTypeResolver<TContext>;
+    function setResolver(newResolver: MergedTypeResolver<TContext>) {
+      resolver = newResolver;
+    }
+    const onDelegationStageExecuteDoneHooks: OnDelegationStageExecuteDoneHook[] =
+      [];
+    for (const onDelegationStageExecute of onDelegationStageExecuteHooks) {
+      const onDelegationStageExecuteDone = onDelegationStageExecute({
+        object,
+        context: context as TContext,
+        info,
+        subgraph: subschema.name!,
+        subschema: subschema as Subschema<any, any, any, TContext>,
+        selectionSet,
+        key,
+        typeName,
+        type,
+        requestId,
+        logger,
+        resolver,
+        setResolver,
+      });
+      if (onDelegationStageExecuteDone) {
+        onDelegationStageExecuteDoneHooks.push(onDelegationStageExecuteDone);
+      }
+    }
+    return mapMaybePromise(
+      resolver(
+        object,
+        context as TContext,
+        info,
+        subschema as Subschema<any, any, any, TContext>,
+        selectionSet,
+        key,
+        type,
+      ),
+      (result) => {
+        function setResult(newResult: any) {
+          result = newResult;
+        }
+        for (const onDelegationStageExecuteDone of onDelegationStageExecuteDoneHooks) {
+          onDelegationStageExecuteDone({
+            result,
+            setResult,
+          });
+        }
+        return result;
+      },
+    );
+  };
 }

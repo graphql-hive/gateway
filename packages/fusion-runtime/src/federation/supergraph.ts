@@ -4,6 +4,7 @@ import { resolveAdditionalResolversWithoutImport } from '@graphql-mesh/utils';
 import type { SubschemaConfig } from '@graphql-tools/delegate';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
 import { mergeTypeDefs } from '@graphql-tools/merge';
+import { createMergedTypeResolver } from '@graphql-tools/stitch';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import {
   asArray,
@@ -23,6 +24,7 @@ import {
 } from 'graphql';
 import { filterHiddenPartsInSchema } from '../filterHiddenPartsInSchema';
 import type { UnifiedGraphHandler } from '../unifiedGraphManager';
+import { wrapMergedTypeResolver } from '../utils';
 import { handleFederationSubschema } from './subgraph';
 
 // Memoize to avoid re-parsing the same schema AST
@@ -104,10 +106,12 @@ interface EnumDirectives {
 export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   unifiedGraph,
   onSubgraphExecute,
+  onDelegationStageExecuteHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
   transportEntryAdditions,
   batch = true,
+  logger,
 }) {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -156,7 +160,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         onSubgraphExecute,
       }),
     batch,
-    onStitchingOptions(opts: any) {
+    onStitchingOptions(opts) {
       subschemas = opts.subschemas;
       const mergedTypeDefs = mergeTypeDefs([opts.typeDefs, additionalTypeDefs]);
       visit(mergedTypeDefs, {
@@ -183,7 +187,30 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         },
       });
       opts.typeDefs = mergedTypeDefs;
+      // @ts-expect-error - Typings are wrong
       opts.resolvers = additionalResolvers;
+
+      if (onDelegationStageExecuteHooks?.length) {
+        for (const subschema of subschemas) {
+          if (subschema.merge) {
+            for (const typeName in subschema.merge) {
+              const mergedTypeConfig = subschema.merge[typeName];
+              if (mergedTypeConfig) {
+                const originalResolver =
+                  createMergedTypeResolver(mergedTypeConfig);
+                if (originalResolver) {
+                  mergedTypeConfig.resolve = wrapMergedTypeResolver(
+                    originalResolver,
+                    typeName,
+                    onDelegationStageExecuteHooks,
+                    logger,
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
     },
     onSubgraphAST(_name, subgraphAST) {
       return visit(subgraphAST, {

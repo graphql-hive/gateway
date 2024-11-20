@@ -4,6 +4,7 @@ import {
   MaybePromise,
   memoize1,
   mergeDeep,
+  pathToArray,
   relocatedError,
 } from '@graphql-tools/utils';
 import {
@@ -14,7 +15,6 @@ import {
   GraphQLSchema,
   isAbstractType,
   locatedError,
-  responsePathAsArray,
   SelectionSetNode,
 } from 'graphql';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
@@ -92,6 +92,8 @@ export function mergeFields<TContext>(
         ? getActualFieldNodes(info.fieldNodes[0])
         : (info.fieldNodes as FieldNode[])
       : EMPTY_ARRAY,
+    context,
+    info,
   );
 
   const leftOver = leftOverByDelegationPlan.get(delegationMaps);
@@ -237,7 +239,7 @@ function executeDelegationStage(
 ): MaybePromise<void> {
   const combinedErrors = object[UNPATHED_ERRORS_SYMBOL];
 
-  const path = responsePathAsArray(info.path);
+  const path = pathToArray(info.path);
 
   const combinedFieldSubschemaMap = object[FIELD_SUBSCHEMA_MAP_SYMBOL];
 
