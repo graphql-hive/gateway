@@ -1,5 +1,11 @@
 # @graphql-tools/delegate
 
+## 10.2.0
+
+### Minor Changes
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - Introduce \`onDelegationPlan\` and \`onDelegationStageExecuteDone\` hooks
+
 ## 10.1.3
 
 ### Patch Changes

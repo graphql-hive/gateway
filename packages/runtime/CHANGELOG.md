@@ -1,5 +1,49 @@
 # @graphql-hive/gateway-runtime
 
+## 1.2.0
+
+### Minor Changes
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - Introduce \`onDelegationPlan\` and \`onDelegationStageExecuteDone\` hooks
+
+### Patch Changes
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.7) (from `^0.4.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-hive@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-hive/v/0.103.0) (from `^0.102.8`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.103.0) (from `^0.102.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/store@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/transport-common@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-common/v/workspace:^) (from `^0.7.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+
+- [#150](https://github.com/graphql-hive/gateway/pull/150) [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.7) (from `^0.4.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-hive@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-hive/v/0.103.0) (from `^0.102.8`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.103.0) (from `^0.102.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/store@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/transport-common@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/transport-common/v/workspace:^) (from `^0.7.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.0) (from `^0.102.10`, in `dependencies`)
+
+- [#148](https://github.com/graphql-hive/gateway/pull/148) [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1) Thanks [@ardatan](https://github.com/ardatan)! - Fetch and subgraph debuggers stringify lazily only when debug log level is enabled
+
+- [#152](https://github.com/graphql-hive/gateway/pull/152) [`d491e7d`](https://github.com/graphql-hive/gateway/commit/d491e7d59920e94083d1b8322068bf34e6efb9d3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Generate UUID using Math as RNG keeping platform independency
+
+- [#143](https://github.com/graphql-hive/gateway/pull/143) [`3bf5c10`](https://github.com/graphql-hive/gateway/commit/3bf5c10808e6d08b985ac7fd4665a7641fa91afe) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Re-export LogLevel and DefaultLogger for easier access and logging manipulation
+
+- Updated dependencies [[`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1), [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f), [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1), [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f), [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1), [`c0e189a`](https://github.com/graphql-hive/gateway/commit/c0e189ac83901da3a101f16f151e859ff7cca19f), [`f32cb2a`](https://github.com/graphql-hive/gateway/commit/f32cb2a0289aa32e4811ced5dc1aac3efb0674f1)]:
+  - @graphql-mesh/fusion-runtime@0.10.4
+  - @graphql-mesh/hmac-upstream-signature@1.2.8
+  - @graphql-mesh/transport-common@0.7.15
+  - @graphql-tools/delegate@10.2.0
+  - @graphql-tools/stitch@9.4.0
+  - @graphql-tools/batch-delegate@9.0.16
+  - @graphql-tools/federation@2.2.29
+  - @graphql-tools/wrap@10.0.18
+
 ## 1.1.7
 
 ### Patch Changes
