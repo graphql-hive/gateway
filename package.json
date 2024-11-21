@@ -55,6 +55,7 @@
   },
   "resolutions": {
     "@graphql-tools/delegate": "workspace:^",
+    "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.55.0#~/.yarn/patches/@opentelemetry+otlp-exporter-base+0.55.0.patch",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.25.1#~/.yarn/patches/@opentelemetry-resources-npm-1.25.1-d294145a2e.patch",
     "esbuild": "0.24.0",
     "graphql": "^16.9.0",

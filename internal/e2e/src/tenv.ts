@@ -328,6 +328,10 @@ export function createTenv(cwd: string): Tenv {
                 boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
               )
               .replaceAll(
+                '127.0.0.1',
+                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
+              )
+              .replaceAll(
                 'localhost',
                 boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
               );
@@ -344,6 +348,10 @@ export function createTenv(cwd: string): Tenv {
                 )
                 .replaceAll(
                   'localhost',
+                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
+                )
+                .replaceAll(
+                  '127.0.0.1',
                   boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
                 ),
             );

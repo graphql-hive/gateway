@@ -777,7 +777,6 @@ it('should report http failures', async () => {
       OTLP_SERVICE_NAME: serviceName,
     },
   });
-
   await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
