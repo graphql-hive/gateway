@@ -56,7 +56,7 @@
   "resolutions": {
     "@graphql-tools/delegate": "workspace:^",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.25.1#~/.yarn/patches/@opentelemetry-resources-npm-1.25.1-d294145a2e.patch",
-    "esbuild": "0.23.1",
+    "esbuild": "0.24.0",
     "graphql": "^16.9.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
     "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
