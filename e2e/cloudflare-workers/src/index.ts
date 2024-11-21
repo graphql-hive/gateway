@@ -65,9 +65,7 @@ export default {
       ],
     });
     const res = await runtime(req, env, ctx);
-    ctx.waitUntil(
-      Promise.resolve(runtime[DisposableSymbols.asyncDispose]())
-    );
+    ctx.waitUntil(Promise.resolve(runtime[DisposableSymbols.asyncDispose]()));
     return res as unknown as Response;
   },
 } satisfies ExportedHandler<Env>;

@@ -57,9 +57,15 @@ export function createOtlpGrpcExporter(
 ): SpanProcessor {
   const requireFn = globalThis.require;
   if (!requireFn) {
-    throw new Error('OTLP gRPC exporter is not available in the current environment');
+    throw new Error(
+      'OTLP gRPC exporter is not available in the current environment',
+    );
   }
   const exporterModulePrefix = `@opentelemetry/exporter-trace-otlp-`;
-  const { OTLPTraceExporter: OtlpGrpcExporter }: typeof import('@opentelemetry/exporter-trace-otlp-grpc') = requireFn(`${exporterModulePrefix}grpc`);
+  const {
+    OTLPTraceExporter: OtlpGrpcExporter,
+  }: typeof import('@opentelemetry/exporter-trace-otlp-grpc') = requireFn(
+    `${exporterModulePrefix}grpc`,
+  );
   return resolveBatchingConfig(new OtlpGrpcExporter(config), batchingConfig);
 }

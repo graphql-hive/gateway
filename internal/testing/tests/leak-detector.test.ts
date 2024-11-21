@@ -48,5 +48,4 @@ describe.skipIf(process.env.LEAK_TEST)('Leak Detector', () => {
 
     await expect(detector.isLeaking()).resolves.toBeFalsy();
   });
-
-})
+});

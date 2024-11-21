@@ -18,13 +18,13 @@ export default defineWorkspace([
         '**/*.e2e.ts',
         ...(isCI() && isNotPlatform('linux')
           ? [
-            // TODO: containers are not starting on non-linux environments
-            '!**/e2e/auto-type-merging',
-            '!**/e2e/neo4j-example',
-            '!**/e2e/soap-demo',
-            '!**/e2e/mysql-employees',
-            '!**/e2e/opentelemetry',
-          ]
+              // TODO: containers are not starting on non-linux environments
+              '!**/e2e/auto-type-merging',
+              '!**/e2e/neo4j-example',
+              '!**/e2e/soap-demo',
+              '!**/e2e/mysql-employees',
+              '!**/e2e/opentelemetry',
+            ]
           : []),
       ],
       hookTimeout: testTimeout,

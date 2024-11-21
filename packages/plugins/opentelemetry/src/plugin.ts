@@ -220,10 +220,10 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-          context.active(),
-          request.headers,
-          HeadersTextMapGetter,
-        )
+            context.active(),
+            request.headers,
+            HeadersTextMapGetter,
+          )
         : context.active();
 
       const httpSpan = createHttpSpan({
@@ -311,8 +311,8 @@ export function useOpenTelemetry(
 
       const otelContext = onSubgraphPayload.executionRequest.context?.request
         ? requestContextMapping.get(
-          onSubgraphPayload.executionRequest.context.request,
-        )
+            onSubgraphPayload.executionRequest.context.request,
+          )
         : undefined;
 
       if (shouldTraceSubgraphExecute && otelContext) {
@@ -387,7 +387,7 @@ export function useOpenTelemetry(
         );
       }
       await provider?.forceFlush?.();
-      
+
       if (spanProcessors) {
         spanProcessors.forEach((processor) => processor.shutdown());
       }
