@@ -154,10 +154,10 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin' || matrix.setup.gateway-runner == 'bun-bin'
         name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
         run: yarn build
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin' || matrix.setup.gateway-runner == 'bun-bin'
         name: Bundle
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
@@ -176,9 +176,11 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+
       - if: matrix.setup.gateway-runner == 'bun-bin'
-        name: Build binary with Bun
+        name: Package binary
         run: yarn workspace @graphql-hive/gateway build-bun-bin
+
       - name: Test
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}

@@ -5,6 +5,9 @@
 
 /** Intentionally IIFE, should run immediately on CLI boot. */
 (function installSeaPackedDeps() {
+  if (globalThis.Bun) {
+    return;
+  }
   const shouldCleanPackedDeps = ['1', 'y', 'yes', 't', 'true'].includes(
     String(process.env['SEA_CLEAN_PACKED_DEPS']),
   );
