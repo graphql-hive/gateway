@@ -15,7 +15,6 @@ import {
   createOpt,
   createPortOpt,
   createServicePortOpt,
-  getLocalhost,
   hostnames,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -442,8 +441,7 @@ export function createTenv(cwd: string): Tenv {
         ...proc,
         port,
         async execute({ headers, ...args }) {
-          const localhost = await getLocalhost(port);
-          const res = await fetch(`${localhost}:${port}/graphql`, {
+          const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
@@ -809,10 +807,9 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo(services) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
-        const localhost = await getLocalhost(service.port);
         subgraphs.push({
           name: service.name,
-          url: `${localhost}:${service.port}/graphql`,
+          url: `http://0.0.0.0:${service.port}/graphql`,
         });
       }
 
