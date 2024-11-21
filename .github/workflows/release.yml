@@ -161,13 +161,10 @@ jobs:
           node-version-file: .node-version
       - name: Build
         run: yarn build
-        if: matrix.runtime == 'Node'
       - name: Bundle
         run: yarn workspace @graphql-hive/gateway bundle
-        if: matrix.runtime == 'Node'
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version "${{ steps.ver-gateway.outputs.result }}"
-        if: matrix.runtime == 'Node'
       - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
         if: matrix.runtime == 'Node'
