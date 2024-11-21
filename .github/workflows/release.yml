@@ -171,7 +171,7 @@ jobs:
       - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
         if: matrix.runtime == 'Node'
-      - name: Build binary
+      - name: Package binary
         run: yarn workspace @graphql-hive/gateway build-bun-bin
         if: matrix.runtime == 'Bun'
       - name: Set binary info
