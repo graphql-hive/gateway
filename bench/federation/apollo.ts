@@ -16,6 +16,12 @@ export default new ApolloGateway({
     name,
     typeDefs,
   })),
+  logger: {
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+  },
   buildService: ({ name }) => {
     const serviceName = name as keyof typeof serviceMap;
     return new LocalGraphQLDataSource(serviceMap[serviceName].schema);

@@ -1,0 +1,13 @@
+{
+  "name": "@e2e/cloudflare-workers",
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev src/index.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241112.0",
+    "@graphql-hive/gateway-runtime": "workspace:*",
+    "graphql": "^16.9.0",
+    "wrangler": "^3.88.0"
+  }
+}

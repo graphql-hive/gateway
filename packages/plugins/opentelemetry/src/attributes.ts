@@ -10,7 +10,8 @@ export {
   SEMATTRS_HTTP_URL,
   SEMATTRS_HTTP_USER_AGENT,
   SEMATTRS_NET_HOST_NAME,
-  SEMRESATTRS_SERVICE_NAME,
+  ATTR_SERVICE_NAME as SEMRESATTRS_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 
 // GraphQL-specific attributes

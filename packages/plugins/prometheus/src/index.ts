@@ -1,4 +1,4 @@
-import { DisposableSymbols, type GatewayPlugin } from '@graphql-hive/gateway';
+import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
   ImportFn,
@@ -27,6 +27,7 @@ import {
   getHistogramFromConfig,
   usePrometheus,
 } from '@graphql-yoga/plugin-prometheus';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isAsyncIterable, type Plugin as YogaPlugin } from 'graphql-yoga';
 import type { Registry } from 'prom-client';
 import { register as defaultRegistry } from 'prom-client';

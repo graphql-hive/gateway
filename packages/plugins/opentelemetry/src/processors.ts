@@ -1,4 +1,3 @@
-import { OTLPTraceExporter as OtlpGrpcExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPTraceExporter as OtlpHttpExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   ZipkinExporter,
@@ -13,7 +12,7 @@ import {
   type BufferConfig,
   type SpanExporter,
   type SpanProcessor,
-} from '@opentelemetry/sdk-trace-node';
+} from '@opentelemetry/sdk-trace-base';
 
 export type BatchingConfig = boolean | BufferConfig;
 
@@ -56,5 +55,17 @@ export function createOtlpGrpcExporter(
   config: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
 ): SpanProcessor {
+  const requireFn = globalThis.require;
+  if (!requireFn) {
+    throw new Error(
+      'OTLP gRPC exporter is not available in the current environment',
+    );
+  }
+  const exporterModulePrefix = `@opentelemetry/exporter-trace-otlp-`;
+  const {
+    OTLPTraceExporter: OtlpGrpcExporter,
+  }: typeof import('@opentelemetry/exporter-trace-otlp-grpc') = requireFn(
+    `${exporterModulePrefix}grpc`,
+  );
   return resolveBatchingConfig(new OtlpGrpcExporter(config), batchingConfig);
 }

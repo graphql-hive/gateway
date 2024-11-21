@@ -3,7 +3,7 @@ import {
   createGatewayRuntime,
   GatewayPlugin,
   useCustomFetch,
-} from '@graphql-hive/gateway';
+} from '@graphql-hive/gateway-runtime';
 import { MeshFetch } from '@graphql-mesh/types';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, test, vitest } from 'vitest';

@@ -3,7 +3,7 @@ import {
   type OnParseEventPayload,
   type OnValidateEventPayload,
 } from '@envelop/types';
-import { DisposableSymbols, type GatewayPlugin } from '@graphql-hive/gateway';
+import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -18,12 +18,12 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
-import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks';
 import { Resource } from '@opentelemetry/resources';
-import { NodeSDK, type NodeSDKConfiguration } from '@opentelemetry/sdk-node';
-import { type SpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { OnRequestEventPayload } from '@whatwg-node/server';
-import { SEMRESATTRS_SERVICE_NAME } from './attributes';
+import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
   completeHttpSpan,
   createGraphQLExecuteSpan,
@@ -136,12 +136,12 @@ export type OpenTelemetryGatewayPluginOptions =
     };
   };
 
-const HeadersTextMapGetter: TextMapGetter = {
+const HeadersTextMapGetter: TextMapGetter<Headers> = {
   keys(carrier) {
-    return carrier.keys();
+    return [...carrier.keys()];
   },
   get(carrier, key) {
-    return carrier.get(key);
+    return carrier.get(key) || undefined;
   },
 };
 
@@ -153,32 +153,38 @@ export function useOpenTelemetry(
     activeContext: () => Context;
   };
 }> {
-  const contextManager = new AsyncHooksContextManager();
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
 
-  let sdk: NodeSDK | undefined;
-  if (
-    !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
-  ) {
-    const serviceName = options.serviceName ?? 'Gateway';
-    const spanProcessors = options.exporters;
-    sdk = new NodeSDK({
-      resource: new Resource({
-        [SEMRESATTRS_SERVICE_NAME]: serviceName,
-      }),
-      spanProcessors:
-        spanProcessors as unknown as NodeSDKConfiguration['spanProcessors'],
-      contextManager,
-      instrumentations: [],
-    });
-  }
-
   const requestContextMapping = new WeakMap<Request, Context>();
-  const tracer = options.tracer || trace.getTracer('gateway');
+  let tracer: Tracer;
+
+  let spanProcessors: SpanProcessor[];
+  let serviceName: string = 'Gateway';
+  let provider: WebTracerProvider;
 
   return {
-    onYogaInit() {
+    onYogaInit({ yoga }) {
+      if (
+        !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
+      ) {
+        if (options.serviceName) {
+          serviceName = options.serviceName;
+        }
+        if (options.exporters) {
+          spanProcessors = options.exporters;
+        }
+        const webProvider = new WebTracerProvider({
+          resource: new Resource({
+            [SEMRESATTRS_SERVICE_NAME]: serviceName,
+            [ATTR_SERVICE_VERSION]: yoga.version,
+          }),
+          // @ts-expect-error Some inconsistencies in the typings
+          spanProcessors,
+        });
+        webProvider.register();
+        provider = webProvider;
+      }
       const pluginLogger = options.logger.child('OpenTelemetry');
       diag.setLogger(
         {
@@ -190,10 +196,7 @@ export function useOpenTelemetry(
         },
         DiagLogLevel.VERBOSE,
       );
-      if (sdk) {
-        contextManager.enable();
-        sdk.start();
-      }
+      tracer = options.tracer || trace.getTracer('gateway');
     },
     onContextBuilding({ extendContext, context }) {
       extendContext({
@@ -378,7 +381,23 @@ export function useOpenTelemetry(
       requestContextMapping.delete(request);
     },
     async [DisposableSymbols.asyncDispose]() {
-      return (await sdk?.shutdown?.()) || void 0;
+      if (spanProcessors) {
+        await Promise.all(
+          spanProcessors.map((processor) => processor.forceFlush()),
+        );
+      }
+      await provider?.forceFlush?.();
+
+      if (spanProcessors) {
+        spanProcessors.forEach((processor) => processor.shutdown());
+      }
+
+      await provider?.shutdown?.();
+
+      diag.disable();
+      trace.disable();
+      context.disable();
+      propagation.disable();
     },
   };
 }
