@@ -1,93 +1,126 @@
-import { createTenv, Gateway } from '@internal/e2e';
-import { beforeAll, bench, expect } from 'vitest';
+import { ApolloGateway } from '@apollo/gateway';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { createTenv } from '@internal/e2e';
+import { afterAll, bench, expect, describe } from 'vitest';
+import { fetch } from '@whatwg-node/fetch';
 
-const { fs, gateway, service, composeWithApollo } = createTenv(__dirname);
+const duration = 10_000;
 
-let gw: Gateway;
-beforeAll(async () => {
-  const supergraph = await composeWithApollo([
+describe('Gateway', async () => {
+  const query = /* GraphQL */ `
+  fragment User on User {
+    id
+    username
+    name
+  }
+
+  fragment Review on Review {
+    id
+    body
+  }
+
+  fragment Product on Product {
+    inStock
+    name
+    price
+    shippingEstimate
+    upc
+    weight
+  }
+
+  query TestQuery {
+    users {
+      ...User
+      reviews {
+        ...Review
+        product {
+          ...Product
+          reviews {
+            ...Review
+            author {
+              ...User
+              reviews {
+                ...Review
+                product {
+                  ...Product
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    topProducts {
+      ...Product
+      reviews {
+        ...Review
+        author {
+          ...User
+          reviews {
+            ...Review
+            product {
+              ...Product
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+  const { fs, service, composeWithApollo, gateway } = createTenv(__dirname);
+
+
+  const supergraphFile = await composeWithApollo([
     await service('accounts'),
     await service('inventory'),
     await service('products'),
     await service('reviews'),
   ]);
-  const supergraphFile = await fs.tempfile('supergraph.graphql');
-  await fs.write(supergraphFile, supergraph);
-  gw = await gateway({ supergraph: supergraphFile });
-});
-
-bench('TestQuery', async () => {
-  await expect(
-    gw.execute({
-      query: /* GraphQL */ `
-        fragment User on User {
-          id
-          username
-          name
-        }
-
-        fragment Review on Review {
-          id
-          body
-        }
-
-        fragment Product on Product {
-          inStock
-          name
-          price
-          shippingEstimate
-          upc
-          weight
-        }
-
-        query TestQuery {
-          users {
-            __typename
-            ...User
-            reviews {
-              ...Review
-              product {
-                ...Product
-                reviews {
-                  ...Review
-                  author {
-                    ...User
-                    reviews {
-                      ...Review
-                      product {
-                        ...Product
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          topProducts {
-            ...Product
-            reviews {
-              ...Review
-              author {
-                ...User
-                reviews {
-                  ...Review
-                  product {
-                    ...Product
-                  }
-                }
-              }
-            }
-          }
-        }
-      `,
-    }),
-  ).resolves.toEqual({
-    data: expect.objectContaining({
-      users: expect.arrayContaining([
-        expect.objectContaining({
-          __typename: expect.stringContaining(''),
-        }),
-      ]),
+  const supergraph = await fs.read(supergraphFile);
+  const hiveGw = await gateway({
+    supergraph,
+  })
+  const apolloGw = new ApolloServer({
+    gateway: new ApolloGateway({
+      supergraphSdl: supergraph,
     }),
   });
-});
+  const { url: apolloGwUrl } = await startStandaloneServer(apolloGw, {
+    listen: { port: 0 },
+  });
+
+
+  afterAll(() => apolloGw.stop());
+
+  bench('Apollo Gateway', async () => {
+    const res = await fetch(`${apolloGwUrl}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+      }),
+    });
+    const data = await res.json();
+    expect(data).toEqual({
+      data: expect.any(Object),
+    })
+  }, {
+    time: duration,
+  });
+
+  bench('Hive Gateway', async () => {
+    const res = await hiveGw.execute({
+      query,
+    });
+    expect(res).toEqual({
+      data: expect.any(Object),
+    })
+  }, {
+    time: duration,
+  });
+
+})

@@ -38,7 +38,7 @@ export default defineWorkspace([
       hookTimeout: testTimeout,
       testTimeout,
       benchmark: {
-        include: ['bench/**/*.bench.ts'],
+        include: ['bench/**/*.bench.ts', 'e2e/**/*.bench.ts'],
       },
     },
   },
