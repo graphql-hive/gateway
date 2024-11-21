@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext"],
+    "moduleResolution": "bundler",
+    "types": [
+      "@cloudflare/workers-types/experimental"
+    ]
+  },
+  "include": ["./**/*.ts", "../src/env.d.ts"]
+}

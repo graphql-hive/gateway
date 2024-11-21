@@ -42,6 +42,7 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
     transportContext: configContext,
     getSubgraphSchema: getSchema,
     transportExecutorStack: disposableStack,
+    transports: config.transports,
   });
   return function proxyExecutor(executionRequest) {
     return onSubgraphExecute(subgraphName, executionRequest);

@@ -153,7 +153,6 @@ export function useOpenTelemetry(
     activeContext: () => Context;
   };
 }> {
-  let provider: WebTracerProvider;
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
 
@@ -162,6 +161,7 @@ export function useOpenTelemetry(
 
   let spanProcessors: SpanProcessor[];
   let serviceName: string = 'Gateway';
+  let provider: WebTracerProvider;
 
   return {
     onYogaInit({ yoga }) {
@@ -220,10 +220,10 @@ export function useOpenTelemetry(
       const { request, url } = onRequestPayload;
       const otelContext = inheritContext
         ? propagation.extract(
-            context.active(),
-            request.headers,
-            HeadersTextMapGetter,
-          )
+          context.active(),
+          request.headers,
+          HeadersTextMapGetter,
+        )
         : context.active();
 
       const httpSpan = createHttpSpan({
@@ -311,8 +311,8 @@ export function useOpenTelemetry(
 
       const otelContext = onSubgraphPayload.executionRequest.context?.request
         ? requestContextMapping.get(
-            onSubgraphPayload.executionRequest.context.request,
-          )
+          onSubgraphPayload.executionRequest.context.request,
+        )
         : undefined;
 
       if (shouldTraceSubgraphExecute && otelContext) {
@@ -387,12 +387,17 @@ export function useOpenTelemetry(
         );
       }
       await provider?.forceFlush?.();
+      
       if (spanProcessors) {
-        await Promise.all(
-          spanProcessors.map((processor) => processor.shutdown()),
-        );
+        spanProcessors.forEach((processor) => processor.shutdown());
       }
+
       await provider?.shutdown?.();
+
+      diag.disable();
+      trace.disable();
+      context.disable();
+      propagation.disable();
     },
   };
 }

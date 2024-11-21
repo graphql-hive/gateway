@@ -136,4 +136,4 @@ jobs:
       - name: Test
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
-        run: yarn e2e:test
+        run: yarn test:e2e
