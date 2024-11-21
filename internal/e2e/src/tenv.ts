@@ -15,6 +15,7 @@ import {
   createOpt,
   createPortOpt,
   createServicePortOpt,
+  getLocalhost,
   hostnames,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -326,6 +327,10 @@ export function createTenv(cwd: string): Tenv {
               .replaceAll(
                 '0.0.0.0',
                 boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
+            )
+              .replaceAll(
+                '127.0.0.1',
+                boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
               )
               .replaceAll(
                 'localhost',
@@ -344,6 +349,10 @@ export function createTenv(cwd: string): Tenv {
                 )
                 .replaceAll(
                   'localhost',
+                  boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
+              )
+                .replaceAll(
+                  '127.0.0.1',
                   boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal',
                 ),
             );
@@ -433,7 +442,8 @@ export function createTenv(cwd: string): Tenv {
         ...proc,
         port,
         async execute({ headers, ...args }) {
-          const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
+          const localhost = await getLocalhost(port);
+          const res = await fetch(`${localhost}:${port}/graphql`, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
@@ -799,9 +809,10 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo(services) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
+        const localhost = await getLocalhost(service.port);
         subgraphs.push({
           name: service.name,
-          url: `http://0.0.0.0:${service.port}/graphql`,
+          url: `${localhost}:${service.port}/graphql`,
         });
       }
 

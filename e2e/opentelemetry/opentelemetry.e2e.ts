@@ -1,7 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createTenv, type Container } from '@internal/e2e';
-import { boolEnv } from '@internal/testing';
+import { boolEnv, getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, expect, it } from 'vitest';
 
@@ -777,8 +777,8 @@ it('should report http failures', async () => {
       OTLP_SERVICE_NAME: serviceName,
     },
   });
-
-  await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
+  const localhost = await getLocalhost(port);
+  await fetch(`${localhost}:${port}/non-existing`).catch(() => {});
   const traces = await getJaegerTraces(serviceName, 2);
   expect(traces.data.length).toBe(2);
   const relevantTrace = traces.data.find((trace) =>
