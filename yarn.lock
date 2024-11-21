@@ -8515,8 +8515,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-n@npm:^17.11.1":
-  version: 17.13.2
-  resolution: "eslint-plugin-n@npm:17.13.2"
+  version: 17.14.0
+  resolution: "eslint-plugin-n@npm:17.14.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.4.1"
     enhanced-resolve: "npm:^5.17.1"
@@ -8528,7 +8528,7 @@ __metadata:
     semver: "npm:^7.6.3"
   peerDependencies:
     eslint: ">=8.23.0"
-  checksum: 10c0/3ecb7b4e1537b23af4eb270748a961f43010cda5a1dbd0e9e52f5c4e857f0ecc82d44c3d32ef76905e60f1bd46e6206d3df6ce430deae39cb075dcc2681cd1a3
+  checksum: 10c0/ad46415e0a31431dd9c6996b6497d48dd891bf034b1880d55e292c60434022fa0ac4d74734bb08dc204200fe3947b47fac2d8300d319bd650175c0fffc62c609
   languageName: node
   linkType: hard
 
@@ -11830,9 +11830,9 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"miniflare@npm:3.20241106.0":
-  version: 3.20241106.0
-  resolution: "miniflare@npm:3.20241106.0"
+"miniflare@npm:3.20241106.1":
+  version: 3.20241106.1
+  resolution: "miniflare@npm:3.20241106.1"
   dependencies:
     "@cspotcode/source-map-support": "npm:0.8.1"
     acorn: "npm:^8.8.0"
@@ -11848,7 +11848,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
     zod: "npm:^3.22.3"
   bin:
     miniflare: bootstrap.js
-  checksum: 10c0/b3d01509def845f52084661c39e4c158aafada23ba205ddaf1a96797a590e68ddf2d6c1c1a7ebef28aa3bbdbdcb0122be56d6f26d7b6682995bd20551845f396
+  checksum: 10c0/65faf656b4a7d1e4846057ae98572f3c1bc96b86ee5c38812ef309ee92e80ca14183f021c98e3f6deb930d662856d7481f2f1b808a069fb95fb237856a46a2d7
   languageName: node
   linkType: hard
 
@@ -15236,8 +15236,8 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   linkType: hard
 
 "wrangler@npm:^3.88.0":
-  version: 3.88.0
-  resolution: "wrangler@npm:3.88.0"
+  version: 3.89.0
+  resolution: "wrangler@npm:3.89.0"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.3.4"
     "@cloudflare/workers-shared": "npm:0.7.1"
@@ -15249,7 +15249,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
     esbuild: "npm:0.17.19"
     fsevents: "npm:~2.3.2"
     itty-time: "npm:^1.0.6"
-    miniflare: "npm:3.20241106.0"
+    miniflare: "npm:3.20241106.1"
     nanoid: "npm:^3.3.3"
     path-to-regexp: "npm:^6.3.0"
     resolve: "npm:^1.22.8"
@@ -15270,7 +15270,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/88e063f8347133c172d493e33edac9a15918418bf0c61e1471d30d7e4ff9d591c8645b5741a289be99a4a6b18f1f98f1c3ddcfb9e3783c375a73d77f9b918c69
+  checksum: 10c0/3467ea1be7f5a7599ac432d3f36c97ba3de7b9966e97e1d6cc8a2333bd8dcd520eed80d4f20d573ea7b1642c803438067ceb40bec60045d5b0e43442d708840b
   languageName: node
   linkType: hard
 
