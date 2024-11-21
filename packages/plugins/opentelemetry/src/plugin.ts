@@ -179,7 +179,6 @@ export function useOpenTelemetry(
             [SEMRESATTRS_SERVICE_NAME]: serviceName,
             [ATTR_SERVICE_VERSION]: yoga.version,
           }),
-          // @ts-expect-error Some inconsistencies in the typings
           spanProcessors,
         });
         webProvider.register();
