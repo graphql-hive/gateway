@@ -10,13 +10,19 @@ import {
 } from '@graphql-mesh/plugin-opentelemetry';
 import http from '@graphql-mesh/transport-http';
 
+interface Env {
+  OTLP_EXPORTER_URL: string;
+  OTLP_SERVICE_NAME: string;
+  DEBUG: string;
+}
+
+const upstreamCallHeaders: Array<{
+  url: string;
+  headers?: HeadersInit;
+}> = [];
+
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
-  const upstreamCallHeaders: Array<{
-    url: string;
-    headers?: HeadersInit;
-  }> = [];
-
   return {
     onFetch({ url, options }) {
       upstreamCallHeaders.push({ url, headers: options.headers });
@@ -29,12 +35,6 @@ const useOnFetchTracer = (): GatewayPlugin => {
     },
   };
 };
-
-interface Env {
-  OTLP_EXPORTER_URL: string;
-  OTLP_SERVICE_NAME: string;
-  DEBUG: string;
-}
 
 export default {
   async fetch(req, env, ctx) {

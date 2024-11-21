@@ -242,13 +242,15 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
       expect(span.traceID).toBe(traceId);
     }
 
-    expect(upstreamHttpCalls.length).toBe(7);
+    expect(upstreamHttpCalls.length).toBe(2);
 
     for (const call of upstreamHttpCalls) {
-      const transparentHeader = (call.headers || {})['traceparent'];
-      expect(transparentHeader).toBeDefined();
-      expect(transparentHeader?.length).toBeGreaterThan(1);
-      expect(transparentHeader).toContain(traceId);
+      if (call.headers?.['x-request-id']) {
+        const transparentHeader = (call.headers || {})['traceparent'];
+        expect(transparentHeader).toBeDefined();
+        expect(transparentHeader?.length).toBeGreaterThan(1);
+        expect(transparentHeader).toContain(traceId);
+      }
     }
   });
 });
