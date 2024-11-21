@@ -40,5 +40,5 @@ export const gatewayConfig = defineConfig({
     ],
     serviceName: process.env['OTLP_SERVICE_NAME'],
   },
-  plugins: () => [useOnFetchTracer()]
+  plugins: () => [useOnFetchTracer()],
 });
