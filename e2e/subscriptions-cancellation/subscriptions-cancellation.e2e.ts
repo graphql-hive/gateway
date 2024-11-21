@@ -45,10 +45,6 @@ it('should subscribe and cancel', async () => {
 
   const srvOut = srv.getStd('out');
 
-  console.log({
-    gwOut,
-    srvOut,
-  });
   expect(srvOut.match(/__ITERABLE_SRV__/g)?.length).toBe(1);
   expect(srvOut.match(/__NEXT_SRV__/g)?.length).toBe(1);
   expect(srvOut.match(/__END_SRV__/g)?.length).toBe(1);
