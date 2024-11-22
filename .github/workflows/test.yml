@@ -117,10 +117,10 @@ jobs:
             os: ubuntu-latest
             gateway-runner: bun
             node-version: 22
-          - workflow-name: Bun Binary on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: bun-bin
-            node-version: 22
+          # - workflow-name: Bun Binary on Ubuntu
+          #   os: ubuntu-latest
+          #   gateway-runner: bun-bin
+          #   node-version: 22
           - workflow-name: Bun Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun-docker

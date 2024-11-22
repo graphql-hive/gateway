@@ -130,7 +130,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-13, macos-14, windows-latest]
-        runtime: [Node, Bun]
+        runtime:
+          - Node
+          # - Bun
     name: ${{matrix.runtime}} Binary built on ${{ matrix.os }}
     steps:
       - name: Version
