@@ -1,6 +1,6 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Gateway Runtime > Cache > should lookup cache, set supergraph and use default ttl 1`] = `
+exports[`Gateway Runtime Cache should lookup cache, set supergraph and use default ttl 1`] = `
 "schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) {
   query: Query
 }
