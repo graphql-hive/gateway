@@ -3208,6 +3208,7 @@ __metadata:
     "@graphql-mesh/store": "npm:^0.103.0"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.103.0"
+    "@graphql-mesh/utils": "npm:^0.103.1"
     "@graphql-tools/utils": "npm:^10.6.0"
     "@types/json-stable-stringify": "npm:^1.1.0"
     graphql: "npm:^16.9.0"
