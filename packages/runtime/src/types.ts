@@ -367,6 +367,11 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default true
    */
   maskedErrors?: boolean | Partial<YogaMaskedErrorOpts>;
+  /**
+   * Cache storage interface for various operations that can get cached.
+   *
+   * For example, the GraphQL schema will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
+   */
   cache?: KeyValueCache;
   pubsub?: MeshPubSub;
   /**
