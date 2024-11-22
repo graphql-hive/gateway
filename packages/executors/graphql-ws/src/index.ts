@@ -1,5 +1,5 @@
 import {
-  DisposableExecutor,
+  DisposableAsyncExecutor,
   ExecutionRequest,
   getOperationASTFromRequest,
   memoize1,
@@ -29,7 +29,7 @@ function isClient(client: Client | GraphQLWSExecutorOptions): client is Client {
 
 export function buildGraphQLWSExecutor(
   clientOptionsOrClient: GraphQLWSExecutorOptions | Client,
-): DisposableExecutor {
+): DisposableAsyncExecutor {
   let graphqlWSClient: Client;
   let executorConnectionParams = {};
   let printFn = defaultPrintFn;
@@ -103,10 +103,10 @@ export function buildGraphQLWSExecutor(
     }
     return iterableIterator.next().then(({ value }) => value);
   };
-  const disposableExecutor = executor as DisposableExecutor;
-  (disposableExecutor as any)[DisposableSymbols.asyncDispose] =
-    function disposeWS() {
+  Object.defineProperty(executor, DisposableSymbols.asyncDispose, {
+    value: function disposeWS() {
       return graphqlWSClient.dispose();
-    };
-  return disposableExecutor;
+    },
+  });
+  return executor as DisposableAsyncExecutor;
 }

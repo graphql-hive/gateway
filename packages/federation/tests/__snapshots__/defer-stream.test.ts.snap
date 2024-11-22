@@ -1,6 +1,6 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Defer/Stream > defers the nested fields > defer-nested-fields 1`] = `
+exports[`Defer/Stream defers the nested fields: defer-nested-fields 1`] = `
 [
   {
     "data": {
@@ -166,7 +166,7 @@ exports[`Defer/Stream > defers the nested fields > defer-nested-fields 1`] = `
 ]
 `;
 
-exports[`Defer/Stream > defers the root fields > defer-root-fields 1`] = `
+exports[`Defer/Stream defers the root fields: defer-root-fields 1`] = `
 [
   {
     "data": {},
@@ -255,7 +255,7 @@ exports[`Defer/Stream > defers the root fields > defer-root-fields 1`] = `
 ]
 `;
 
-exports[`Defer/Stream > streams > stream 1`] = `
+exports[`Defer/Stream streams: stream 1`] = `
 [
   {
     "data": {

@@ -1,17 +1,17 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import type { OnFetchHookDonePayload } from '@graphql-mesh/types';
-import { useContentEncoding } from '@whatwg-node/server';
+import { getSupportedEncodings, useContentEncoding } from '@whatwg-node/server';
 import {
   createSchema,
   createYoga,
   type FetchAPI,
   type YogaInitialContext,
 } from 'graphql-yoga';
-import { afterEach, describe, expect, it, vitest } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime, useCustomFetch } from '../src/index';
 
 describe('contentEncoding', () => {
-  const fooResolver = vitest.fn((_, __, _context: YogaInitialContext) => {
+  const fooResolver = vi.fn((_, __, _context: YogaInitialContext) => {
     return 'bar';
   });
   function decompressResponse(response: Response, fetchAPI: FetchAPI) {
@@ -23,6 +23,9 @@ describe('contentEncoding', () => {
     if (!response.body) {
       return response;
     }
+    if (!fetchAPI.DecompressionStream) {
+      return response;
+    }
     const decompressionStream = new fetchAPI.DecompressionStream(
       encodingFormat as CompressionFormat,
     );
@@ -32,7 +35,7 @@ describe('contentEncoding', () => {
     );
   }
   // Mimic the behavior of the `fetch` API in the browser
-  const onFetchDoneSpy = vitest.fn((payload: OnFetchHookDonePayload) => {
+  const onFetchDoneSpy = vi.fn((payload: OnFetchHookDonePayload) => {
     payload.setResponse(
       decompressResponse(payload.response, subgraphServer.fetchAPI),
     );
@@ -82,7 +85,9 @@ describe('contentEncoding', () => {
     fooResolver.mockClear();
     onFetchDoneSpy.mockClear();
   });
-  it('from gateway to subgraph', async () => {
+  const firstSupportedEncoding = getSupportedEncodings(gateway.fetchAPI)[0];
+  const skipIfNoEncodingSupport = firstSupportedEncoding ? it : it.skip;
+  skipIfNoEncodingSupport('from gateway to subgraph', async () => {
     const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       body: JSON.stringify({
@@ -100,9 +105,9 @@ describe('contentEncoding', () => {
     });
     expect(
       fooResolver.mock.calls[0]?.[2].request.headers.get('content-encoding'),
-    ).toBe('gzip');
+    ).toBe(firstSupportedEncoding);
   });
-  it('from subgraph to gateway', async () => {
+  skipIfNoEncodingSupport('from subgraph to gateway', async () => {
     const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       body: JSON.stringify({
@@ -120,14 +125,14 @@ describe('contentEncoding', () => {
     });
     expect(
       fooResolver.mock.calls[0]?.[2].request.headers.get('accept-encoding'),
-    ).toContain('gzip');
+    ).toContain(firstSupportedEncoding);
     expect(
       onFetchDoneSpy.mock.calls[0]?.[0].response.headers.get(
         'content-encoding',
       ),
-    ).toBe('gzip');
+    ).toBe(firstSupportedEncoding);
   });
-  it('from the client to the gateway', async () => {
+  skipIfNoEncodingSupport('from the client to the gateway', async () => {
     const origBody = JSON.stringify({
       query: `query { foo }`,
     });
@@ -161,7 +166,7 @@ describe('contentEncoding', () => {
       },
     });
   });
-  it('from the gateway to the client', async () => {
+  skipIfNoEncodingSupport('from the gateway to the client', async () => {
     const response = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       body: JSON.stringify({

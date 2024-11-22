@@ -1,15 +1,15 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`onDelegationPlanHook > should be called with the plan > onDelegationPlanPayload.fieldNodes[0] 1`] = `
+exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.fieldNodes[0] 1`] = `
 "author {
   id
   name
 }"
 `;
 
-exports[`onDelegationPlanHook > should be called with the plan > onDelegationPlanPayload.subgraph 1`] = `"posts"`;
+exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.subgraph 1`] = `"posts"`;
 
-exports[`onDelegationPlanHook > should be called with the plan > onDelegationPlanPayload.supergraph 1`] = `
+exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.supergraph 1`] = `
 "schema {
   query: Query
 }
@@ -31,6 +31,6 @@ type User {
 }"
 `;
 
-exports[`onDelegationPlanHook > should be called with the plan > onDelegationPlanPayload.typeName 1`] = `"User"`;
+exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.typeName 1`] = `"User"`;
 
-exports[`onDelegationPlanHook > should be called with the plan > onDelegationPlanPayload.variables 1`] = `{}`;
+exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.variables 1`] = `{}`;

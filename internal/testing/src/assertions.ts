@@ -1,3 +1,4 @@
+import { inspect } from 'util';
 import { isAsyncIterable } from '@graphql-tools/utils';
 import {
   ASTNode,
@@ -146,6 +147,6 @@ export function assertAsyncIterable(
   value: any,
 ): asserts value is AsyncIterable<unknown> {
   if (typeof value?.[Symbol.asyncIterator] !== 'function') {
-    throw new Error(`Value is not an AsyncIterable`);
+    throw new Error(`Expected AsyncIterable, but received ${inspect(value)}.`);
   }
 }

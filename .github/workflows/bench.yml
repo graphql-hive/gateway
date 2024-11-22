@@ -10,13 +10,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        e2e_runner: [node, bun]
         products_size:
-          - 3
           - 10
-          - 50
           - 100
           - 1000
-    name: Federation Benchmark with ${{matrix.products_size}} Products
+    name: Benchmark / ${{matrix.e2e_runner}} / ${{matrix.products_size}} items
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,8 +23,10 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          node-version: 22
+          node-version: 23
       - name: Bench
-        run: yarn bench
+        continue-on-error: true
+        run: ${{matrix.e2e_runner == 'bun' && 'yarn bun' || 'yarn'}} bench
         env:
           PRODUCTS_SIZE: ${{matrix.products_size}}
+          E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}

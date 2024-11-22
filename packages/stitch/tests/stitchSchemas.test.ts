@@ -37,7 +37,7 @@ import {
   parse,
   printSchema,
 } from 'graphql';
-import { describe, expect, it, test, vitest } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
 
 const removeLocations = ({
@@ -46,6 +46,8 @@ const removeLocations = ({
   source,
   originalError,
   nodes,
+  originalColumn,
+  originalLine,
   ...rest
 }: any): any => ({ ...rest });
 
@@ -3518,7 +3520,7 @@ describe('stitching from existing interfaces', () => {
 
 it(`stitchSchemas shouldn't call transformSchema more than once`, async () => {
   const transform: Transform = {
-    transformSchema: vitest.fn((schema) => schema),
+    transformSchema: vi.fn((schema) => schema),
   };
 
   const schema = makeExecutableSchema({

@@ -1,4 +1,3 @@
-import { AddressInfo } from 'net';
 import {
   createGraphQLError,
   ExecutionResult,
@@ -8,6 +7,10 @@ import { assertAsyncIterable, createDisposableServer } from '@internal/testing';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ReadableStream, Request, Response } from '@whatwg-node/fetch';
+import {
+  createDeferredPromise,
+  createServerAdapter,
+} from '@whatwg-node/server';
 import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
@@ -89,17 +92,20 @@ describe('buildHTTPExecutor', () => {
     },
   );
   it('should use GET for subscriptions by default', async () => {
+    expect.assertions(2);
     let method: string = '';
     const executor = buildHTTPExecutor({
+      endpoint: 'https://my.schema/graphql',
       fetch: (info, init) => {
         const request = new Request(info, init);
         method = request.method;
         return new Response(
           new ReadableStream({
-            start(controller) {
+            async start(controller) {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
+              await new Promise((resolve) => setTimeout(resolve, 100));
               controller.close();
             },
           }),
@@ -117,27 +123,29 @@ describe('buildHTTPExecutor', () => {
       `),
     });
     assertAsyncIterable(result);
-    const iterator = result[Symbol.asyncIterator]();
-    const first = await iterator.next();
-    await iterator?.return?.();
-    expect(first).toMatchObject({
-      value: { data: { hello: 'world' } },
-    });
+    for await (const item of result) {
+      expect(item).toMatchObject({
+        data: { hello: 'world' },
+      });
+      break;
+    }
     expect(method).toBe('GET');
   });
   it('should use POST if method is specified', async () => {
     let method: string = '';
     const executor = buildHTTPExecutor({
       method: 'POST',
+      endpoint: 'https://my.schema/graphql',
       fetch: (info, init) => {
         const request = new Request(info, init);
         method = request.method;
         return new Response(
           new ReadableStream({
-            start(controller) {
+            async start(controller) {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
+              await new Promise((resolve) => setTimeout(resolve, 100));
               controller.close();
             },
           }),
@@ -187,11 +195,9 @@ describe('buildHTTPExecutor', () => {
       },
     })) as ExecutionResult;
 
-    expect(result.data).toMatchInlineSnapshot(`
-      {
-        "hello": "world!",
-      }
-    `);
+    expect(result.data).toEqual({
+      hello: 'world!',
+    });
   });
 
   it('should allow setting a custom content-type header in introspection', async () => {
@@ -230,9 +236,12 @@ describe('buildHTTPExecutor', () => {
   });
   it('stops existing requests when the executor is disposed', async () => {
     // Create a server that never responds
-    await using server = await createDisposableServer();
+    const neverResolves = createDeferredPromise<Response>();
+    await using server = await createDisposableServer(
+      createServerAdapter(() => neverResolves.promise),
+    );
     const executor = buildHTTPExecutor({
-      endpoint: `http://localhost:${server.address().port}`,
+      endpoint: server.url,
       disposable: true,
     });
     const result = executor({
@@ -243,13 +252,15 @@ describe('buildHTTPExecutor', () => {
       `),
     });
     await executor[Symbol.asyncDispose]();
-    await expect(result).resolves.toEqual({
+    const res = await result;
+    expect(res).toMatchObject({
       errors: [
-        createGraphQLError(
-          'The operation was aborted. reason: Error: Executor was disposed.',
-        ),
+        {
+          message: expect.stringContaining('Executor was disposed'),
+        },
       ],
     });
+    neverResolves.resolve(Response.error());
   });
   it('does not allow new requests when the executor is disposed', async () => {
     const executor = buildHTTPExecutor({
@@ -332,7 +343,7 @@ describe('buildHTTPExecutor', () => {
     await using server = await createDisposableServer(yoga);
 
     const executor = buildHTTPExecutor({
-      endpoint: `http://localhost:${(server.address() as AddressInfo).port}/graphql`,
+      endpoint: `${server.url}/graphql`,
     });
 
     const result = await executor({
@@ -346,21 +357,20 @@ describe('buildHTTPExecutor', () => {
     assertAsyncIterable(result);
     const iter = result[Symbol.asyncIterator]();
 
-    await expect(iter.next()).resolves.toMatchInlineSnapshot(`
-{
-  "done": false,
-  "value": {
-    "data": {
-      "emitsOnceAndStalls": "👋",
-    },
-  },
-}
-`);
+    const nextValue = await iter.next();
+    expect(nextValue).toEqual({
+      done: false,
+      value: {
+        data: {
+          emitsOnceAndStalls: '👋',
+        },
+      },
+    });
 
     // request another one ☝️ (we dont await because there wont be another event)
     iter.next();
 
     // then cancel
-    await iter.return!();
+    await iter.return?.();
   });
 });

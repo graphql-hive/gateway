@@ -3,11 +3,11 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.2.0",
-    "@graphql-mesh/cross-helpers": "^0.4.7",
+    "@graphql-mesh/cross-helpers": "^0.4.8",
     "@graphql-mesh/plugin-live-query": "^0.103.0",
     "@graphql-mesh/store": "^0.103.0",
     "@graphql-mesh/types": "^0.103.0",
-    "@graphql-mesh/utils": "^0.103.0",
+    "@graphql-mesh/utils": "^0.103.1",
     "@graphql-tools/utils": "^10.6.0",
     "@omnigraph/json-schema": "^0.108.0",
     "fets": "^0.8.4",

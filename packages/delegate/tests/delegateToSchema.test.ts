@@ -310,75 +310,53 @@ describe('delegateToSchema', () => {
     for await (const value of res) {
       values.push(value);
     }
-    expect(values).toMatchInlineSnapshot(`
-[
-  {
-    "data": {
-      "test": [],
-    },
-    "hasNext": true,
-  },
-  {
-    "hasNext": true,
-    "incremental": [
+    expect(values).toEqual([
       {
-        "items": [
-          "foo",
-        ],
-        "path": [
-          "test",
-          0,
+        data: {
+          test: [],
+        },
+        hasNext: true,
+      },
+      {
+        hasNext: true,
+        incremental: [
+          {
+            items: ['foo'],
+            path: ['test', 0],
+          },
         ],
       },
-    ],
-  },
-  {
-    "hasNext": true,
-    "incremental": [
       {
-        "items": [
-          "bar",
-        ],
-        "path": [
-          "test",
-          1,
+        hasNext: true,
+        incremental: [
+          {
+            items: ['bar'],
+            path: ['test', 1],
+          },
         ],
       },
-    ],
-  },
-  {
-    "hasNext": true,
-    "incremental": [
       {
-        "items": [
-          "baz",
-        ],
-        "path": [
-          "test",
-          2,
+        hasNext: true,
+        incremental: [
+          {
+            items: ['baz'],
+            path: ['test', 2],
+          },
         ],
       },
-    ],
-  },
-  {
-    "hasNext": true,
-    "incremental": [
       {
-        "items": [
-          null,
-        ],
-        "path": [
-          "test",
-          3,
+        hasNext: true,
+        incremental: [
+          {
+            items: [null],
+            path: ['test', 3],
+          },
         ],
       },
-    ],
-  },
-  {
-    "hasNext": false,
-  },
-]
-`);
+      {
+        hasNext: false,
+      },
+    ]);
     const result = mergeIncrementalResults(values);
     expect(result).toEqual({ data: { test: ['foo', 'bar', 'baz'] } });
   });

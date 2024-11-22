@@ -1,23 +1,44 @@
-import type { RequestListener, Server } from 'node:http';
 import { createServer } from 'node:http';
 import type { AddressInfo, Socket } from 'node:net';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { ServerAdapter } from '@whatwg-node/server';
 
 export interface DisposableServerOpts {
   port?: number;
 }
 
 export interface DisposableServer {
-  address(): AddressInfo;
+  url: string;
   [DisposableSymbols.asyncDispose](): Promise<void>;
-  server: Server;
 }
 
-export async function createDisposableServer(
-  listener?: RequestListener,
+export const createDisposableServer = globalThis.Bun
+  ? createDisposableBunServer
+  : createDisposableNodeServer;
+
+function createDisposableBunServer(
+  handler?: ServerAdapter<any, any>,
+  opts?: DisposableServerOpts,
+): DisposableServer {
+  const server = Bun.serve({
+    port: opts?.port || 0,
+    fetch: handler,
+  });
+  return {
+    get url(): string {
+      return server.url.toString();
+    },
+    [DisposableSymbols.asyncDispose]() {
+      return server.stop(true);
+    },
+  };
+}
+
+async function createDisposableNodeServer(
+  handler?: ServerAdapter<any, any>,
   opts?: DisposableServerOpts,
 ): Promise<DisposableServer> {
-  const server = createServer(listener);
+  const server = createServer(handler);
   const port = opts?.port || 0;
   await new Promise<void>((resolve, reject) => {
     server.once('error', (err) => reject(err));
@@ -31,8 +52,9 @@ export async function createDisposableServer(
     });
   });
   return {
-    address() {
-      return server.address() as AddressInfo;
+    get url(): string {
+      const address = server.address() as AddressInfo;
+      return `http://localhost:${address.port}`;
     },
     [DisposableSymbols.asyncDispose]() {
       for (const socket of sockets) {
@@ -40,11 +62,14 @@ export async function createDisposableServer(
       }
       server.closeAllConnections();
       return new Promise<void>((resolve, reject) => {
-        server.close((err) => (err ? reject(err) : resolve()));
+        server.close((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
       });
-    },
-    get server(): Server {
-      return server;
     },
   };
 }

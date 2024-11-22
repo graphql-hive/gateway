@@ -1,12 +1,12 @@
 import type { MeshFetch } from '@graphql-mesh/types';
 import { buildSchema, parse } from 'graphql';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import httpTransport from '../src';
 
 describe('HTTP Transport', () => {
   const subgraphName = 'test';
   it('interpolate the strings in headers', async () => {
-    const fetch = vitest.fn<MeshFetch>(async () =>
+    const fetch = vi.fn<MeshFetch>(async () =>
       Response.json({
         data: {
           test: 'test',

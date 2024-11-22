@@ -1,9 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { Executor } from '@graphql-tools/utils';
+import { ExecutionRequest, Executor } from '@graphql-tools/utils';
 import { FilterObjectFields } from '@graphql-tools/wrap';
 import { graphql } from 'graphql';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   createDefaultExecutor,
   delegateToSchema,
@@ -27,12 +27,14 @@ describe('batch execution', () => {
       },
     });
 
-    const executor = vitest.fn(createDefaultExecutor(innerSchema));
-
+    let count = 0;
     const innerSubschemaConfig: SubschemaConfig = {
       schema: innerSchema,
       batch: true,
-      executor: executor as Executor,
+      executor(...args) {
+        count++;
+        return createDefaultExecutor(innerSchema)(...args);
+      },
     };
 
     const outerSchema = makeExecutableSchema({
@@ -65,7 +67,7 @@ describe('batch execution', () => {
     });
 
     expect(result).toEqual(expectedResult);
-    expect(executor).toHaveBeenCalledTimes(1);
+    expect(count).toBe(1);
   });
 
   it('should share batching dataloader between subschemas when using a common executor', async () => {
@@ -109,7 +111,11 @@ describe('batch execution', () => {
       },
     });
 
-    const executor = vitest.fn(createDefaultExecutor(innerSchemaA));
+    let count = 0;
+    function executor(req: ExecutionRequest) {
+      count++;
+      return createDefaultExecutor(innerSchemaA)(req);
+    }
 
     const innerSubschemaConfigA: Array<SubschemaConfig> = [
       {
@@ -180,7 +186,7 @@ describe('batch execution', () => {
     });
 
     expect(resultWhenAsArray).toEqual(expectedResult);
-    expect(executor).toHaveBeenCalledTimes(1);
+    expect(count).toBe(1);
 
     const outerSchemaWithSubschemasSpread = stitchSchemas({
       subschemas: [...innerSubschemaConfigA, innerSubschemaConfigB],
@@ -192,6 +198,6 @@ describe('batch execution', () => {
     });
 
     expect(resultWhenSpread).toEqual(expectedResult);
-    expect(executor).toHaveBeenCalledTimes(2);
+    expect(count).toBe(2);
   });
 });

@@ -6,7 +6,7 @@ import { Subschema } from '@graphql-tools/delegate';
 import { buildSubgraphSchema } from '@graphql-tools/federation';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { GraphQLSchema, Kind, parse, print } from 'graphql';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { composeAndGetExecutor } from './utils';
 
 describe('handleFederationSubschema', () => {
@@ -210,13 +210,13 @@ describe('onDelegationPlanHook', () => {
         },
       },
     });
-    const onDelegationPlanDoneHook = vitest.fn<OnDelegationPlanDoneHook>();
+    const onDelegationPlanDoneHook = vi.fn<OnDelegationPlanDoneHook>();
     const context = {
       myContextValue: 'myContextValue',
     };
-    const onDelegationPlanHook = vitest.fn<
-      OnDelegationPlanHook<typeof context>
-    >(() => onDelegationPlanDoneHook);
+    const onDelegationPlanHook = vi.fn<OnDelegationPlanHook<typeof context>>(
+      () => onDelegationPlanDoneHook,
+    );
     const executor = composeAndGetExecutor(
       [
         {

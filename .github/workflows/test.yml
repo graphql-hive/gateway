@@ -27,6 +27,19 @@ jobs:
       - name: Test
         run: yarn test
 
+  unit-bun:
+    name: Unit / Bun
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version: 22
+      - name: Test
+        run: yarn test:bun
+
   leaks:
     needs: [unit]
     strategy:
@@ -58,35 +71,61 @@ jobs:
       fail-fast: false
       matrix:
         setup:
-          - os: ubuntu-latest
+          # Node
+          - workflow-name: Node 18 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 18
-          - os: ubuntu-latest
+          - workflow-name: Node 20 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 20
-          - os: ubuntu-latest
+          - workflow-name: Node 22 on Ubuntu
+            os: ubuntu-latest
             gateway-runner: node
             node-version: 22
-          - os: ubuntu-latest
+
+          # Node on Docker
+          - workflow-name: Node Docker on Ubuntu
+            os: ubuntu-latest
             gateway-runner: docker
             node-version: 22
-          - os: ubuntu-latest
+
+          # Node Binary
+          - workflow-name: Node Binary on Ubuntu
+            os: ubuntu-latest
             gateway-runner: bin
             node-version: 22
-          - os: windows-latest
+          - workflow-name: Node Binary on Windows
+            os: windows-latest
             gateway-runner: bin
             node-version: 22
-          - os: macos-14 # MacOS Arm64
-            gateway-runner: bin
+
+          # Should be the same with Linux
+          # - workflow-name: Node Binary on MacOS Arm64
+          #   os: macos-14 # MacOS Arm64
+          #   gateway-runner: bin
+          #   node-version: 22
+          # - workflow-name: Node Binary on MacOS x86_64
+          #   os: macos-13 # MacOS x86_64
+          #   gateway-runner: bin
+          #   node-version: 22
+
+          # Bun
+          - workflow-name: Bun on Ubuntu
+            os: ubuntu-latest
+            gateway-runner: bun
             node-version: 22
-          - os: macos-13 # MacOS x86_64
-            gateway-runner: bin
+          - workflow-name: Bun Docker on Ubuntu
+            os: ubuntu-latest
+            gateway-runner: bun-docker
             node-version: 22
-    name: E2E / ${{matrix.setup.gateway-runner == 'node' && format('Node v{0}', matrix.setup.node-version) || ''}}${{matrix.setup.gateway-runner == 'docker' && 'Docker' || ''}}${{matrix.setup.gateway-runner == 'bin' && format('Binary on {0}', matrix.setup.os) || ''}}
+
+    name: E2E / ${{matrix.setup.workflow-name}}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - if: matrix.setup.gateway-runner == 'docker'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - if: runner.os == 'Windows'
@@ -110,19 +149,19 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
         run: yarn build
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn workspace @graphql-hive/gateway bundle
-      - if: matrix.setup.gateway-runner == 'docker'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
         uses: docker/bake-action@v5
         with:
-          targets: e2e
+          targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max

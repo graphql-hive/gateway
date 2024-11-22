@@ -343,20 +343,18 @@ describe('TransformEnumValues', () => {
         },
       ],
     });
-    expect(printSchemaWithDirectives(schema).trim()).toMatchInlineSnapshot(`
-      "schema {
-        query: Query
-      }
+    expect(printSchemaWithDirectives(schema).trim()).toBe(`schema {
+  query: Query
+}
 
-      type Query {
-        testEnum(argument: TestEnum = ONE): TestEnum
-      }
+type Query {
+  testEnum(argument: TestEnum = ONE): TestEnum
+}
 
-      enum TestEnum {
-        ONE
-        TWO
-        THREE
-      }"
-    `);
+enum TestEnum {
+  ONE
+  TWO
+  THREE
+}`);
   });
 });

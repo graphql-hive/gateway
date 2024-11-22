@@ -7,6 +7,7 @@ import { expect, it } from 'vitest';
 const { gateway, service } = createTenv(__dirname);
 
 it('should subscribe and cancel', async () => {
+  expect.assertions(7);
   const srv = await service('stream');
   const gw = await gateway({
     supergraph: {
@@ -38,12 +39,13 @@ it('should subscribe and cancel', async () => {
   await setTimeout(1_000); // allow some calmdown time (TODO: avoid magic numbers, any other approach to this?)
 
   const gwOut = gw.getStd('out');
-  expect(gwOut.match(/__ITERABLE__/g)?.length).toBe(1);
-  expect(gwOut.match(/__NEXT__/g)?.length).toBe(1);
-  expect(gwOut.match(/__END__/g)?.length).toBe(1);
+  expect(gwOut.match(/__ITERABLE_GW__/g)?.length).toBe(1);
+  expect(gwOut.match(/__NEXT_GW__/g)?.length).toBe(1);
+  expect(gwOut.match(/__END_GW__/g)?.length).toBe(1);
 
   const srvOut = srv.getStd('out');
-  expect(srvOut.match(/__ITERABLE__/g)?.length).toBe(1);
-  expect(srvOut.match(/__NEXT__/g)?.length).toBe(1);
-  expect(srvOut.match(/__END__/g)?.length).toBe(1);
+
+  expect(srvOut.match(/__ITERABLE_SRV__/g)?.length).toBe(1);
+  expect(srvOut.match(/__NEXT_SRV__/g)?.length).toBe(1);
+  expect(srvOut.match(/__END_SRV__/g)?.length).toBe(1);
 });

@@ -41,7 +41,7 @@ describe('GraphQL WS Executor', () => {
                   return new Repeater((push, stop) => {
                     let i = 0;
                     let closed = false;
-                    let timeout: NodeJS.Timeout;
+                    let timeout: Timer;
                     const pump = async () => {
                       if (closed) {
                         return;

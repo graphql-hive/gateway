@@ -40,8 +40,11 @@ jobs:
       githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   ghcr:
-    name: GitHub Container Registry
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime: [Node, Bun]
+    name: ${{ matrix.runtime }} Docker image
     needs: [stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
@@ -96,7 +99,7 @@ jobs:
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
-          targets: gateway
+          targets: gateway${{ matrix.runtime == 'Bun' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
@@ -107,14 +110,15 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-docker-image
+          header: snapshot-release-${{ matrix.runtime == 'Bun' && 'bun-' || '' }}docker-image
           message: |
-            ### 🚀 Snapshot Release (Docker Image)
+            ### 🚀 Snapshot Release (${{matrix.runtime}} Docker Image)
 
             The latest changes of this PR are available as image on GitHub Container Registry (based on the declared `changesets`):
             ```
-            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}
+            ghcr.io/graphql-hive/gateway:${{ fromJSON(steps.ver-gateway.outputs.result).version }}${{ matrix.runtime == 'Bun' && '-bun' || '' }}
             ```
+
   bin:
     name: Binary built on ${{ matrix.os }}
     needs: [stable, snapshot]

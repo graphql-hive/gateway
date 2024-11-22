@@ -3,7 +3,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { assertSome } from '@graphql-tools/utils';
 import { graphql, GraphQLSchema, parse } from 'graphql';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 const productSchema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -275,7 +275,7 @@ describe('test merged composite computed fields', () => {
 
     // implementation must be provided per test b/c restoreMocks: true in global config, this is the implementation:
     //  ({ id, value }: { id: string; value?: number }) => ({ representation: { id, value } })
-    const byRepresentationArgs = vitest.fn();
+    const byRepresentationArgs = vi.fn();
 
     const gatewaySchema = stitchSchemas({
       subschemas: [

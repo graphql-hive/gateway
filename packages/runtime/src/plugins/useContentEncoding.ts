@@ -33,7 +33,8 @@ export function useContentEncoding<TContext extends Record<string, any>>({
         options.body &&
         !options.headers?.['Content-Encoding'] &&
         executionRequest &&
-        execReqWithContentEncoding.has(executionRequest)
+        execReqWithContentEncoding.has(executionRequest) &&
+        fetchAPI.CompressionStream
       ) {
         const compressionStream = new fetchAPI.CompressionStream(
           compressionAlgorithm,

@@ -1,7 +1,7 @@
 import { Agent } from 'http';
 import { createDisposableServer } from '@internal/testing';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 
 function createDisposableAgent() {
@@ -14,8 +14,11 @@ function createDisposableAgent() {
   };
 }
 
+const skipIfBun = globalThis.Bun ? it.skip : it;
+
 describe('Custom Agent', () => {
-  it('should work', async () => {
+  // TODO: Agents don't work well with Bun yet
+  skipIfBun('should work', async () => {
     await using upstreamServer = await createDisposableServer(
       createYoga<any>({
         schema: createSchema({
@@ -33,14 +36,14 @@ describe('Custom Agent', () => {
       }),
     );
     using disposableAgent = createDisposableAgent();
-    const spy = vitest.spyOn(
+    const spy = vi.spyOn(
       disposableAgent.agent,
       // @ts-expect-error - `createConnection` is not available in typings
       'createConnection',
     );
     await using gateway = createGatewayRuntime({
       proxy: {
-        endpoint: `http://localhost:${upstreamServer.address().port}/graphql`,
+        endpoint: `${upstreamServer.url}/graphql`,
       },
       customAgent: () => disposableAgent.agent,
     });

@@ -1,0 +1,26 @@
+diff --git a/dist/index.js b/dist/index.js
+index c984d3d..3fec461 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1718,7 +1718,7 @@ async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
+       normalizeNewlines(snapshotData[key])
+     )};`
+   );
+-  const content = `${environment.getHeader()}
++  const content = `// Jest Snapshot v1, https://goo.gl/fbAQLP
+ 
+ ${snapshots.join("\n\n")}
+ `;
+@@ -2159,10 +2159,10 @@ class SnapshotClient {
+         throw err;
+       }
+     }
+-    const testName = [name, ...message ? [message] : []].join(" > ");
++    const testName = [name, ...message ? [message] : []].join(": ");
+     const snapshotState = this.getSnapshotState(filepath);
+     const { actual, expected, key, pass } = snapshotState.match({
+-      testName,
++      testName: testName.replaceAll(' >', ''),
+       received,
+       isInline,
+       error,

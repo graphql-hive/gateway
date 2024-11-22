@@ -22,15 +22,10 @@ function handleSuppressedError(e: any) {
 
 afterAll(async () => {
   try {
-    const disposeRes$ = leftoverStack.disposeAsync();
-    if (disposeRes$?.catch) {
-      await disposeRes$.catch(handleSuppressedError).finally(() => {
-        leftoverStack = new AsyncDisposableStack();
-      });
-      return;
-    }
+    await leftoverStack.disposeAsync();
   } catch (e) {
     handleSuppressedError(e);
+  } finally {
+    leftoverStack = new AsyncDisposableStack();
   }
-  leftoverStack = new AsyncDisposableStack();
 });

@@ -9,34 +9,22 @@ import {
   makeDisposable,
 } from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
-import { fakePromise } from '@graphql-tools/utils';
+import { DisposableAsyncExecutor, ExecutionResult } from '@graphql-tools/utils';
 import { parse } from 'graphql';
-import { beforeEach, describe, expect, it, vitest } from 'vitest';
+import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import wsTransport, { type WSTransportOptions } from '../src';
 
-// Workaround for jest.mock
-declare global {
-  var jest: typeof vitest;
-}
-
-if (typeof jest === 'undefined') {
-  globalThis.jest = vitest;
-  // This is weird but needed...
-  vitest.mock('@graphql-tools/executor-graphql-ws', () => ({
-    buildGraphQLWSExecutor: vitest.fn(() => mockWsExecutor),
-  }));
-}
-
-jest.mock('@graphql-tools/executor-graphql-ws', () => ({
-  buildGraphQLWSExecutor: jest.fn(() => mockWsExecutor),
-}));
-
-const mockWsExecutor = vitest.fn(() => ({ data: null }));
-const buildExecutorMock = vitest.mocked(buildGraphQLWSExecutor);
-
-describe('HTTP Transport', () => {
+describe('WS Transport', () => {
+  let buildExecutorMock: MockedFunction<typeof buildGraphQLWSExecutor>;
   beforeEach(() => {
-    vitest.clearAllMocks();
+    vi.clearAllMocks();
+    buildExecutorMock = vi.fn<typeof buildGraphQLWSExecutor>(
+      function (): DisposableAsyncExecutor {
+        return function mockExecutor(): ExecutionResult {
+          return { data: null };
+        } as unknown as DisposableAsyncExecutor;
+      },
+    );
   });
 
   it('should forward connection params', async () => {
@@ -148,46 +136,59 @@ describe('HTTP Transport', () => {
     expect(buildExecutorMock).toHaveBeenCalledTimes(2);
   });
 
-  it('should dispose all executors', async () => {
+  it('should dispose async', async () => {
     const executor = makeExecutor({
       options: { connectionParams: { test: '{context.test}' } },
     });
+    async function mockExecutor(): Promise<ExecutionResult> {
+      return { data: null };
+    }
 
-    const disposeMock = vitest.fn();
+    const asyncDisposeMock = vi.fn().mockReturnValue(Promise.resolve());
     buildExecutorMock.mockImplementationOnce(() =>
-      makeDisposable(vitest.fn(), disposeMock),
-    );
-    await executor({ document, context: { test: '1' } });
-
-    const asyncDisposeMock = vitest
-      .fn()
-      .mockReturnValue(fakePromise(undefined));
-    buildExecutorMock.mockImplementationOnce(() =>
-      makeAsyncDisposable(vitest.fn(), asyncDisposeMock),
+      makeAsyncDisposable(mockExecutor, asyncDisposeMock),
     );
     await executor({ document, context: { test: '2' } });
 
     await dispose(executor);
-
-    expect(disposeMock).toHaveBeenCalled();
     expect(asyncDisposeMock).toHaveBeenCalled();
   });
-});
+  it('should dispose sync', async () => {
+    const executor = makeExecutor({
+      options: { connectionParams: { test: '{context.test}' } },
+    });
+    function mockExecutor(): ExecutionResult {
+      return { data: null };
+    }
 
-function makeExecutor(
-  transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
-) {
-  return wsTransport.getSubgraphExecutor({
-    transportEntry: {
-      location: 'http://localhost/ws',
-      ...transportEntry,
-    },
-    logger: new DefaultLogger(),
-  } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>);
-}
+    const syncDisposeMock = vi.fn();
+    buildExecutorMock.mockImplementationOnce(
+      // @ts-expect-error - wrong typings for sync dispose
+      () => makeDisposable(mockExecutor, syncDisposeMock),
+    );
+    await executor({ document, context: { test: '2' } });
 
-const document = parse(/* GraphQL */ `
-  subscription {
-    test
+    await dispose(executor);
+    expect(syncDisposeMock).toHaveBeenCalled();
+  });
+  function makeExecutor(
+    transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
+  ) {
+    return wsTransport.getSubgraphExecutor(
+      {
+        transportEntry: {
+          location: 'http://localhost/ws',
+          ...transportEntry,
+        },
+        logger: new DefaultLogger(),
+      } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
+      buildExecutorMock,
+    );
   }
-`);
+
+  const document = parse(/* GraphQL */ `
+    subscription {
+      test
+    }
+  `);
+});
