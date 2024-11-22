@@ -18,11 +18,15 @@ describe('Gateway Runtime', () => {
   beforeEach(() => {
     vi.useFakeTimers?.();
   });
+
+  let upstreamIsDownForNextRequest = false;
+
   function createSupergraphRuntime() {
     return createGatewayRuntime({
       logging: isDebug(),
       supergraph: () => {
-        if (!upstreamIsUp) {
+        if (upstreamIsDownForNextRequest) {
+          upstreamIsDownForNextRequest = false;
           throw new Error('Upstream is down');
         }
         return getUnifiedGraphGracefully([
@@ -63,15 +67,12 @@ describe('Gateway Runtime', () => {
     schema: createUpstreamSchema(),
     logging: isDebug(),
   });
-  let upstreamIsUp = true;
   const upstreamFetch = function (url: string, init: RequestInit) {
-    if (url.startsWith('http://localhost:4000/graphql')) {
-      if (!upstreamIsUp) {
-        return Response.error();
-      }
-      return upstreamAPI.fetch(url, init);
+    if (upstreamIsDownForNextRequest) {
+      upstreamIsDownForNextRequest = false;
+      return Response.error();
     }
-    return new Response('Not Found', { status: 404 });
+    return upstreamAPI.fetch(url, init);
   };
   const serveRuntimes = {
     proxyAPI: createGatewayRuntime({
@@ -89,14 +90,10 @@ describe('Gateway Runtime', () => {
     supergraphAPI: createSupergraphRuntime(),
   };
   describe('Endpoints', () => {
-    beforeEach(() => {
-      upstreamIsUp = true;
-    });
     Object.entries(serveRuntimes).forEach(([name, gateway]) => {
       describe(name, () => {
         describe('health check', () => {
           it('succeed even if the upstream API is down', async () => {
-            upstreamIsUp = false;
             const res = await gateway.fetch(
               'http://localhost:4000/healthcheck',
             );
@@ -111,7 +108,7 @@ describe('Gateway Runtime', () => {
         });
         describe('readiness check', () => {
           it('fail if the upstream API is not ready', async () => {
-            upstreamIsUp = false;
+            upstreamIsDownForNextRequest = true;
             const res = await gateway.fetch('http://localhost:4000/readiness');
             expect(res.status).toBe(503);
           });
