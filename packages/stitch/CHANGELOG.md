@@ -1,5 +1,11 @@
 # @graphql-tools/stitch
 
+## 9.4.1
+
+### Patch Changes
+
+- [`725d5b7`](https://github.com/graphql-hive/gateway/commit/725d5b7952be3a2fb2caeb40d26c194fb03b35d5) Thanks [@ardatan](https://github.com/ardatan)! - Fix regression on override type interface
+
 ## 9.4.0
 
 ### Minor Changes
