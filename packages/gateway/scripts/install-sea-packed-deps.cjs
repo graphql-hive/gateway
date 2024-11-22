@@ -4,10 +4,7 @@
 //        modules with node:sea is not supported
 
 /** Intentionally IIFE, should run immediately on CLI boot. */
-(function installSeaPackedDeps() {
-  if (globalThis.Bun) {
-    return;
-  }
+(async function installSeaPackedDeps() {
   const shouldCleanPackedDeps = ['1', 'y', 'yes', 't', 'true'].includes(
     String(process.env['SEA_CLEAN_PACKED_DEPS']),
   );
@@ -31,7 +28,20 @@
   const fs = require('node:fs');
   const Module = require('node:module');
   const path = require('node:path');
-  const sea = require('node:sea');
+  /**
+   * @param {string} assetName
+   */
+  function getAsset(assetName) {
+    if (globalThis.Bun) {
+      const file = globalThis.Bun.embeddedFiles.find((f) => f.name.includes(assetName));
+      if (!file) {
+        throw new Error(`Asset "${assetName}" not found`);
+      }
+      return file.arrayBuffer();
+    }
+    const sea = require('node:sea');
+    return sea.getAsset(assetName);
+  }
   const os = require('node:os');
 
   // NOTE that the path is stable for modules hash and system,
@@ -54,7 +64,7 @@
   }
   if (!packedDepsInstalled) {
     debug(`Extracting packed dependencies to "${modulesPath}"`);
-    const zip = new ADMZip(Buffer.from(sea.getAsset('node_modules.zip')));
+    const zip = new ADMZip(Buffer.from(await getAsset('node_modules.zip')));
     zip.extractAllTo(modulesPath);
   }
 
