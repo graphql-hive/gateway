@@ -85,13 +85,6 @@
   const originalResolveFilename = Module._resolveFilename;
   // @ts-expect-error
   Module._resolveFilename = (id, ...rest) => {
-    if (globalThis.Bun && id === 'graphql') {
-      try {
-        return originalResolveFilename(id, ...rest);
-      } catch (e) {
-        // Try loading "graphql" locally then use bundled
-      }
-    }
     if (id.startsWith('node_modules/') || id.startsWith('node_modules\\')) {
       id = id
         .replace('node_modules/', '')

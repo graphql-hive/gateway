@@ -8,16 +8,14 @@ import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // @inject-version globalThis.__VERSION__ here
 
-if (!globalThis.Bun) {
-  module.register('@graphql-mesh/include/hooks', {
-    parentURL:
-      // @ts-ignore bob will complain when bundling for cjs
-      import.meta.url,
-    data: {
-      packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
-    } satisfies InitializeData,
-  });
-}
+module.register('@graphql-mesh/include/hooks', {
+  parentURL:
+    // @ts-ignore bob will complain when bundling for cjs
+    import.meta.url,
+  data: {
+    packedDepsPath: globalThis.__PACKED_DEPS_PATH__ || '',
+  } satisfies InitializeData,
+});
 
 enableModuleCachingIfPossible();
 handleNodeWarnings();
