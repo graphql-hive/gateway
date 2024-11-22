@@ -22,6 +22,7 @@ import {
 import { createRouter } from 'graphql-federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
+import { createGatewayRuntime, GatewayRuntime, useCustomFetch } from '@graphql-hive/gateway-runtime';
 
 describe('Federation Compatibility', () => {
   const auditRouter = createRouter();
@@ -78,6 +79,7 @@ describe('Federation Compatibility', () => {
         query: '',
         expected: {},
       });
+      let gatewayRuntime: GatewayRuntime;
       beforeAll(() => {
         supergraphSdl = supergraphSdlMap.get(supergraphName)!;
         tests = supergraphTestMap.get(supergraphName)!;
@@ -88,6 +90,12 @@ describe('Federation Compatibility', () => {
           },
           batch: true,
         });
+        gatewayRuntime = createGatewayRuntime({
+          supergraph: supergraphSdl,
+          plugins: () => [
+            useCustomFetch(auditRouter.fetch),
+          ]
+        })
       });
       it('generates the expected schema', () => {
         const inputSchema = buildSchema(supergraphSdl, {
@@ -145,7 +153,7 @@ describe('Federation Compatibility', () => {
       });
       tests.forEach((_, i) => {
         describe(`test-query-${i}`, () => {
-          it('gives the correct result', async () => {
+          it('gives the correct result w/ core', async () => {
             const test = tests[i];
             if (!test) {
               throw new Error(`Test ${i} not found`);
@@ -184,6 +192,40 @@ describe('Federation Compatibility', () => {
               throw e;
             }
           });
+          it('gives the correct result w/ gateway', async () => {
+            const test = tests[i];
+            if (!test) {
+              throw new Error(`Test ${i} not found`);
+            }
+            const response = await gatewayRuntime.fetch('http://localhost/graphql', {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: test.query,
+              }),
+            })
+            const result = await response.json();
+            const received = {
+              data: result.data ?? null,
+              errors: !!result.errors?.length,
+            };
+
+            const expected = {
+              data: test.expected.data ?? null,
+              errors: test.expected.errors ?? false,
+            };
+
+            try {
+              expect(received).toEqual(expected);
+            } catch (e) {
+              result.errors?.forEach((err) => {
+                console.error(err);
+              });
+              throw e;
+            }
+          })
         });
       });
     });

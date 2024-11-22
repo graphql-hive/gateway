@@ -10,15 +10,26 @@ import {
   GraphQLOutputType,
   OperationTypeNode,
 } from 'graphql';
+import { GraphQLResolveInfo } from 'graphql/type';
 
 export function createMergedTypeResolver<
   TContext extends Record<string, any> = any,
 >(
   mergedTypeResolverOptions: MergedTypeResolverOptions,
-  mergedType?: GraphQLOutputType,
+  mergedType?: GraphQLOutputType | string,
 ): MergedTypeResolver<TContext> | undefined {
   const { fieldName, argsFromKeys, valuesFromResults, args } =
     mergedTypeResolverOptions;
+
+  function getType(info: GraphQLResolveInfo): GraphQLOutputType {
+    if (!mergedType) {
+      return getNamedType(info.returnType);
+    }
+    if (typeof mergedType === 'string') {
+      return info.schema.getType(mergedType) as GraphQLOutputType;
+    }
+    return mergedType;
+  }
 
   if (argsFromKeys != null) {
     return function mergedBatchedTypeResolver(
@@ -28,7 +39,7 @@ export function createMergedTypeResolver<
       subschema,
       selectionSet,
       key,
-      type = mergedType || getNamedType(info.returnType),
+      type = getType(info),
     ) {
       return batchDelegateToSchema({
         schema: subschema,
@@ -55,7 +66,7 @@ export function createMergedTypeResolver<
       subschema,
       selectionSet,
       _key,
-      type = mergedType || getNamedType(info.returnType),
+      type = getType(info),
     ) {
       return delegateToSchema({
         schema: subschema,
