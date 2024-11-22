@@ -43,6 +43,7 @@ import {
   mapMaybePromise,
   mergeDeep,
   parseSelectionSet,
+  printSchemaWithDirectives,
   type Executor,
   type MaybePromise,
   type TypeSource,
@@ -55,8 +56,14 @@ import {
   AsyncDisposableStack,
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
-import type { ExecutionArgs, GraphQLSchema } from 'graphql';
-import { buildSchema, isSchema, parse } from 'graphql';
+import {
+  buildSchema,
+  ExecutionArgs,
+  GraphQLSchema,
+  isSchema,
+  parse,
+  print,
+} from 'graphql';
 import {
   createYoga,
   isAsyncIterable,
@@ -669,7 +676,15 @@ export function createGatewayRuntime<
             );
             const supergraph = await unifiedGraphFetcher(ctx);
             configContext
-              .cache!.set(supergraphCacheKey, supergraph, { ttl })
+              .cache!.set(
+                supergraphCacheKey,
+                isDocumentNode(supergraph)
+                  ? print(supergraph)
+                  : supergraph instanceof GraphQLSchema
+                    ? printSchemaWithDirectives(supergraph)
+                    : supergraph,
+                { ttl },
+              )
               .catch(() => {
                 ctx.logger?.error(
                   `Unable to store supergraph in cache under key "${supergraphCacheKey}" with TTL ${ttl}s`,
