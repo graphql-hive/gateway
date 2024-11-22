@@ -115,7 +115,7 @@ describe('Gateway', async () => {
   const { url: apolloGwUrl } = await startStandaloneServer(apolloGw, {
     listen: { port: 0 },
   });
-  
+
   leftoverStack.defer(() => apolloGw.stop());
 
   bench(
