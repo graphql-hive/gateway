@@ -1,5 +1,29 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.11
+
+### Patch Changes
+
+- [#116](https://github.com/graphql-hive/gateway/pull/116) [`4e1d246`](https://github.com/graphql-hive/gateway/commit/4e1d246b3650e653bfe0c415ae1f21967543b27d) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.55.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.55.0) (from `^0.52.1`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.55.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.55.0) (from `^0.52.1`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.55.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.55.0) (from `^0.52.1`, in `dependencies`)
+
+- [#138](https://github.com/graphql-hive/gateway/pull/138) [`094ca85`](https://github.com/graphql-hive/gateway/commit/094ca858182aa9253b03655c64d24f3e897c02e8) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/gateway-runtime@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway-runtime/v/workspace:^) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-trace-web@^1.27.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-web/v/1.27.0) (to `dependencies`)
+  - Added dependency [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5) (to `dependencies`)
+  - Removed dependency [`@graphql-hive/gateway@^1.5.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway/v/1.5.1) (from `dependencies`)
+  - Removed dependency [`@opentelemetry/auto-instrumentations-node@^0.53.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.53.0) (from `dependencies`)
+  - Removed dependency [`@opentelemetry/context-async-hooks@^1.25.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/1.25.1) (from `dependencies`)
+  - Removed dependency [`@opentelemetry/sdk-node@^0.52.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.52.1) (from `dependencies`)
+  - Removed dependency [`@opentelemetry/sdk-trace-node@^1.25.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-node/v/1.25.1) (from `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@1.2.1
+
 ## 1.3.10
 
 ### Patch Changes

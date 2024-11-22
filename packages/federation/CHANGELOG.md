@@ -1,5 +1,14 @@
 # @graphql-tools/federation
 
+## 2.2.30
+
+### Patch Changes
+
+- [`725d5b7`](https://github.com/graphql-hive/gateway/commit/725d5b7952be3a2fb2caeb40d26c194fb03b35d5) Thanks [@ardatan](https://github.com/ardatan)! - Fix regression on override type interface
+
+- Updated dependencies [[`725d5b7`](https://github.com/graphql-hive/gateway/commit/725d5b7952be3a2fb2caeb40d26c194fb03b35d5)]:
+  - @graphql-tools/stitch@9.4.1
+
 ## 2.2.29
 
 ### Patch Changes
