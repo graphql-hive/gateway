@@ -28,7 +28,6 @@ jobs:
         run: yarn test
 
   unit-bun:
-    needs: [unit]
     name: Unit / Bun
     runs-on: ubuntu-latest
     steps:
@@ -117,10 +116,6 @@ jobs:
             os: ubuntu-latest
             gateway-runner: bun
             node-version: 22
-          # - workflow-name: Bun Binary on Ubuntu
-          #   os: ubuntu-latest
-          #   gateway-runner: bun-bin
-          #   node-version: 22
           - workflow-name: Bun Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun-docker
@@ -154,10 +149,10 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin' || matrix.setup.gateway-runner == 'bun-bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
         run: yarn build
-      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin' || matrix.setup.gateway-runner == 'bun-bin'
+      - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
@@ -176,11 +171,6 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-
-      - if: matrix.setup.gateway-runner == 'bun-bin'
-        name: Package binary
-        run: yarn workspace @graphql-hive/gateway build-bun-bin
-
       - name: Test
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}

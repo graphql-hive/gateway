@@ -40,7 +40,6 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version",
-    "build-bun-bin": "bun build ./bundle/hive-gateway.cjs ./bundle/node_modules.zip --bytecode --minify --compile  --asset-naming=\"[name].[ext]\" --outfile hive-gateway",
     "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts"

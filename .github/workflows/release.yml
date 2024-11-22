@@ -120,6 +120,7 @@ jobs:
             ```
 
   bin:
+    name: Binary built on ${{ matrix.os }}
     needs: [stable, snapshot]
     if: always() && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
@@ -130,10 +131,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-13, macos-14, windows-latest]
-        runtime:
-          - Node
-          # - Bun
-    name: ${{matrix.runtime}} Binary built on ${{ matrix.os }}
     steps:
       - name: Version
         uses: actions/github-script@v7
@@ -151,7 +148,7 @@ jobs:
             return version;
       - name: Checkout
         uses: actions/checkout@v4
-      - if: runner.os == 'Windows' && matrix.runtime == 'Node'
+      - if: runner.os == 'Windows'
         name: Install Windows SDK
         uses: fbactions/setup-winsdk@v2
         with:
@@ -169,14 +166,10 @@ jobs:
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version "${{ steps.ver-gateway.outputs.result }}"
       - name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-        if: matrix.runtime == 'Node'
-      - name: Package binary
-        run: yarn workspace @graphql-hive/gateway build-bun-bin
-        if: matrix.runtime == 'Bun'
       - name: Set binary info
         id: binary
         run: |
-          echo "name=hive-gateway-${{matrix.runtime == 'Bun' && 'bun-'}}${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
+          echo "name=hive-gateway-${{ runner.os }}-${{ runner.arch }}${{ runner.os == 'Windows' && '.exe' || ''}}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
           echo "path=packages/gateway/hive-gateway${{ runner.os == 'Windows' && '.exe' || '' }}" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Compress binary
@@ -209,9 +202,9 @@ jobs:
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          header: snapshot-release-${{matrix.runtime == 'Bun' && 'bun-' || ''}}binary-${{ runner.os }}-${{ runner.arch }}
+          header: snapshot-release-binary-${{ runner.os }}-${{ runner.arch }}
           message: |
-            ### 🚀 Snapshot Release (${{matrix.runtime}} Binary for `${{ runner.os }}-${{ runner.arch }}`)
+            ### 🚀 Snapshot Release (Binary for `${{ runner.os }}-${{ runner.arch }}`)
 
             The latest changes of this PR are available for download (based on the declared `changesets`).
 

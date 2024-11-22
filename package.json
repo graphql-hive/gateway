@@ -14,7 +14,6 @@
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
-    "build-bun-bin": "yarn workspaces foreach -A -p run build-bun-bin",
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",

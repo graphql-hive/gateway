@@ -35,7 +35,6 @@ const E2E_GATEWAY_RUNNERS = [
   'node',
   'docker',
   'bin',
-  'bun-bin',
   'bun',
   'bun-docker',
 ] as const;
@@ -65,13 +64,6 @@ E2E_GATEWAY_RUNNER=docker yarn build && yarn workspace @graphql-hive/gateway bun
     process.stderr.write(`
 ⚠️ Using bin gateway runner! Make sure you have built the binary with:
 yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-
-`);
-  }
-  if (runner === 'bun-bin' && !boolEnv('CI')) {
-    process.stderr.write(`
-⚠️ Using bun bin gateway runner! Make sure you have built the bun binary with:
-yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway build-bun-bin
 
 `);
   }
@@ -431,15 +423,6 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs,
         });
         proc = cont;
-      } else if (gatewayRunner === 'bin' || gatewayRunner === 'bun-bin') {
-        [proc, waitForExit] = await spawn(
-          { env, cwd, pipeLogs },
-          path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
-          'supergraph',
-          supergraph,
-          createPortOpt(port),
-          ...args,
-        );
       } else if (gatewayRunner === 'bun') {
         [proc, waitForExit] = await spawn(
           { env, cwd, pipeLogs },

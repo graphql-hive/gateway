@@ -23,25 +23,12 @@
     }
   }
 
+  const ADMZip = require('adm-zip'); // THIS IS BUNDLED AND INJECTED
+
   const fs = require('node:fs');
   const Module = require('node:module');
   const path = require('node:path');
-  /**
-   * @param {string} assetName
-   */
-  function getAsset(assetName) {
-    if (globalThis.Bun) {
-      const file = globalThis.Bun.embeddedFiles.find((f) =>
-        f.name.includes(assetName),
-      );
-      if (!file) {
-        throw new Error(`Asset "${assetName}" not found`);
-      }
-      return file.arrayBuffer();
-    }
-    const sea = require('node:sea');
-    return sea.getAsset(assetName);
-  }
+  const sea = require('node:sea');
   const os = require('node:os');
 
   // NOTE that the path is stable for modules hash and system,
@@ -64,27 +51,16 @@
   }
   if (!packedDepsInstalled) {
     debug(`Extracting packed dependencies to "${modulesPath}"`);
-    /**
-     * @param {ArrayBuffer} arrayBuffer
-     */
-    function handleAsset(arrayBuffer) {
-      const ADMZip = require('adm-zip'); // THIS IS BUNDLED AND INJECTED
-      const zip = new ADMZip(Buffer.from(arrayBuffer));
-      zip.extractAllTo(modulesPath);
-    }
-    const arrayBuffer$ = getAsset('node_modules.zip');
-    if ('then' in arrayBuffer$) {
-      arrayBuffer$.then(handleAsset);
-    } else {
-      handleAsset(arrayBuffer$);
-    }
+    const zip = new ADMZip(Buffer.from(sea.getAsset('node_modules.zip')));
+    zip.extractAllTo(modulesPath);
   }
 
   debug('Registering packed dependencies');
   // @ts-expect-error
   const originalResolveFilename = Module._resolveFilename;
   // @ts-expect-error
-  Module._resolveFilename = (id, ...rest) => {
+  Module._resolveFilename = (...args) => {
+    let [id, ...rest] = args;
     if (id.startsWith('node_modules/') || id.startsWith('node_modules\\')) {
       id = id
         .replace('node_modules/', '')
