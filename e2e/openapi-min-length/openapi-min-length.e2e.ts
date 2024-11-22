@@ -4,10 +4,7 @@ import { expect, it } from 'vitest';
 const { gateway } = createTenv(__dirname);
 
 it('should execute Metrics with banana', async () => {
-  const { execute } = await gateway({
-    supergraph: { with: 'mesh' },
-    pipeLogs: 'logs2.txt',
-  });
+  const { execute } = await gateway({ supergraph: { with: 'mesh' } });
   await expect(
     execute({
       query: /* GraphQL */ `
