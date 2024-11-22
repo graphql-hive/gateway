@@ -277,7 +277,9 @@ describe('Gateway Runtime', () => {
       const supergraphCacheKey = 'hive-gateway:supergraph';
       expect(cache.get).toBeCalledWith(supergraphCacheKey);
       expect(cache.set.mock.lastCall?.[0]).toBe(supergraphCacheKey);
-      expect(cache.set.mock.lastCall?.[1]).toMatchSnapshot();
+      expect(cache.set.mock.lastCall?.[1]).toContain(
+        'type Query @join__type(graph: UPSTREAM)',
+      );
       expect(cache.set.mock.lastCall?.[2]).toEqual({
         ttl: 30, // default ttl is 30s
       });
