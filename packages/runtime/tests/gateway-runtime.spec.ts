@@ -9,16 +9,12 @@ import {
   printSchema,
 } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 import type { GatewayPlugin } from '../src/types';
 
 describe('Gateway Runtime', () => {
-  beforeEach(() => {
-    vi.useFakeTimers?.();
-  });
-
   let upstreamIsDownForNextRequest = false;
 
   function createSupergraphRuntime() {
@@ -37,7 +33,6 @@ describe('Gateway Runtime', () => {
           },
         ]);
       },
-      pollingInterval: 10000,
       plugins: () => [
         useCustomFetch(
           // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
@@ -203,7 +198,6 @@ describe('Gateway Runtime', () => {
     await new Promise<void>((done) => {
       const serve = createGatewayRuntime({
         logging: isDebug(),
-        pollingInterval: 500,
         supergraph() {
           if (onSchemaChangeCalls > 0) {
             // change schema after onSchemaChange was invoked
