@@ -648,34 +648,35 @@ export function createGatewayRuntime<
 
     const supergraphCacheKey = 'hive-gateway:supergraph';
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
-      async getUnifiedGraph(ctx) {
-        const { cache } = configContext;
-        if (!cache) {
-          return unifiedGraphFetcher(ctx);
-        }
-        const maybeSchema = await cache.get(supergraphCacheKey);
-        if (maybeSchema) {
-          ctx.logger?.debug(
-            `Found supergraph in cache under key "${supergraphCacheKey}"`,
-          );
-          return maybeSchema;
-        }
-        const ttl = config.pollingInterval
-          ? config.pollingInterval * 0.001
-          : // if no polling interval (cache TTL) is configured, default to
-            // 30 seconds making sure the unifiedgraph is not kept forever
-            30;
-        ctx.logger?.debug(
-          `No supergraph in cache, getting and caching with TTL ${ttl}s`,
-        );
-        const supergraph = await unifiedGraphFetcher(ctx);
-        cache.set(supergraphCacheKey, supergraph, { ttl }).catch(() => {
-          ctx.logger?.error(
-            `Unable to store supergraph in cache under key "${supergraphCacheKey}" with TTL ${ttl}s`,
-          );
-        });
-        return supergraph;
-      },
+      getUnifiedGraph: !configContext.cache
+        ? unifiedGraphFetcher
+        : async function getCachedUnifiedGraph(ctx) {
+            const maybeSchema =
+              await configContext.cache!.get(supergraphCacheKey);
+            if (maybeSchema) {
+              ctx.logger?.debug(
+                `Found supergraph in cache under key "${supergraphCacheKey}"`,
+              );
+              return maybeSchema;
+            }
+            const ttl = config.pollingInterval
+              ? config.pollingInterval * 0.001
+              : // if no polling interval (cache TTL) is configured, default to
+                // 30 seconds making sure the unifiedgraph is not kept forever
+                30;
+            ctx.logger?.debug(
+              `No supergraph in cache, getting and caching with TTL ${ttl}s`,
+            );
+            const supergraph = await unifiedGraphFetcher(ctx);
+            configContext
+              .cache!.set(supergraphCacheKey, supergraph, { ttl })
+              .catch(() => {
+                ctx.logger?.error(
+                  `Unable to store supergraph in cache under key "${supergraphCacheKey}" with TTL ${ttl}s`,
+                );
+              });
+            return supergraph;
+          },
       onSchemaChange(unifiedGraph) {
         setSchema(unifiedGraph);
       },
