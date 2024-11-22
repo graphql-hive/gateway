@@ -71,15 +71,38 @@ describe('Gateway', async () => {
 
   const { fs, service, composeWithApollo, gateway } = createTenv(__dirname);
 
+  const PRODUCTS_SIZE = process.env['PRODUCTS_SIZE'] || 3;
+
   const supergraphFile = await composeWithApollo([
-    await service('accounts'),
-    await service('inventory'),
-    await service('products'),
-    await service('reviews'),
+    await service('accounts', {
+      env: {
+        PRODUCTS_SIZE,
+      },
+    }),
+    await service('inventory', {
+      env: {
+        PRODUCTS_SIZE,
+      },
+    }),
+    await service('products', {
+      env: {
+        PRODUCTS_SIZE,
+      },
+    }),
+    await service('reviews', {
+      env: {
+        PRODUCTS_SIZE,
+      },
+    }),
   ]);
   const supergraph = await fs.read(supergraphFile);
   const hiveGw = await gateway({
     supergraph,
+    args: ['--jit'],
+    env: {
+      NODE_ENV: 'production',
+      JIT: 'true',
+    },
   });
   const apolloGw = new ApolloServer({
     gateway: new ApolloGateway({
