@@ -1,5 +1,10 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import {
+  createGatewayRuntime,
+  GatewayRuntime,
+  useCustomFetch,
+} from '@graphql-hive/gateway-runtime';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   ExecutionResult,
@@ -22,7 +27,6 @@ import {
 import { createRouter } from 'graphql-federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
-import { createGatewayRuntime, GatewayRuntime, useCustomFetch } from '@graphql-hive/gateway-runtime';
 
 describe('Federation Compatibility', () => {
   const auditRouter = createRouter();
@@ -92,10 +96,8 @@ describe('Federation Compatibility', () => {
         });
         gatewayRuntime = createGatewayRuntime({
           supergraph: supergraphSdl,
-          plugins: () => [
-            useCustomFetch(auditRouter.fetch),
-          ]
-        })
+          plugins: () => [useCustomFetch(auditRouter.fetch)],
+        });
       });
       it('generates the expected schema', () => {
         const inputSchema = buildSchema(supergraphSdl, {
@@ -197,16 +199,19 @@ describe('Federation Compatibility', () => {
             if (!test) {
               throw new Error(`Test ${i} not found`);
             }
-            const response = await gatewayRuntime.fetch('http://localhost/graphql', {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
+            const response = await gatewayRuntime.fetch(
+              'http://localhost/graphql',
+              {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: test.query,
+                }),
               },
-              body: JSON.stringify({
-                query: test.query,
-              }),
-            })
-            const result = await response.json();
+            );
+            const result: ExecutionResult = await response.json();
             const received = {
               data: result.data ?? null,
               errors: !!result.errors?.length,
@@ -225,7 +230,7 @@ describe('Federation Compatibility', () => {
               });
               throw e;
             }
-          })
+          });
         });
       });
     });

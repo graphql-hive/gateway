@@ -196,8 +196,10 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
             for (const typeName in subschema.merge) {
               const mergedTypeConfig = subschema.merge[typeName];
               if (mergedTypeConfig) {
-                const originalResolver =
-                  createMergedTypeResolver(mergedTypeConfig, typeName);
+                const originalResolver = createMergedTypeResolver(
+                  mergedTypeConfig,
+                  typeName,
+                );
                 if (originalResolver) {
                   mergedTypeConfig.resolve = wrapMergedTypeResolver(
                     originalResolver,
