@@ -4,7 +4,7 @@
 //        modules with node:sea is not supported
 
 /** Intentionally IIFE, should run immediately on CLI boot. */
-(async function installSeaPackedDeps() {
+(function installSeaPackedDeps() {
   const shouldCleanPackedDeps = ['1', 'y', 'yes', 't', 'true'].includes(
     String(process.env['SEA_CLEAN_PACKED_DEPS']),
   );
@@ -22,8 +22,6 @@
       console.debug(`[${new Date().toISOString()}] SEA ${msg}`, ...args);
     }
   }
-
-  const ADMZip = require('adm-zip'); // THIS IS BUNDLED AND INJECTED
 
   const fs = require('node:fs');
   const Module = require('node:module');
@@ -66,16 +64,34 @@
   }
   if (!packedDepsInstalled) {
     debug(`Extracting packed dependencies to "${modulesPath}"`);
-    const zip = new ADMZip(Buffer.from(await getAsset('node_modules.zip')));
-    zip.extractAllTo(modulesPath);
+    /**
+     * @param {ArrayBuffer} arrayBuffer
+     */
+    function handleAsset(arrayBuffer) {
+      const ADMZip = require('adm-zip'); // THIS IS BUNDLED AND INJECTED
+      const zip = new ADMZip(Buffer.from(arrayBuffer));
+      zip.extractAllTo(modulesPath);
+    }
+    const arrayBuffer$ = getAsset('node_modules.zip');
+    if ('then' in arrayBuffer$) {
+      arrayBuffer$.then(handleAsset);
+    } else {
+      handleAsset(arrayBuffer$);
+    }
   }
 
   debug('Registering packed dependencies');
   // @ts-expect-error
   const originalResolveFilename = Module._resolveFilename;
   // @ts-expect-error
-  Module._resolveFilename = (...args) => {
-    let [id, ...rest] = args;
+  Module._resolveFilename = (id, ...rest) => {
+    if (globalThis.Bun && id === 'graphql') {
+      try {
+        return originalResolveFilename(id, ...rest);
+      } catch (e) {
+        // Try loading "graphql" locally then use bundled
+      }
+    }
     if (id.startsWith('node_modules/') || id.startsWith('node_modules\\')) {
       id = id
         .replace('node_modules/', '')
