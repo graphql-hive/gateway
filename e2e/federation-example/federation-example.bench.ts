@@ -4,6 +4,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
+import { leftoverStack } from '../../internal/e2e/src/leftoverStack';
 
 const duration = 10_000;
 const warmupTime = 1_000;
@@ -115,6 +116,8 @@ describe('Gateway', async () => {
     listen: { port: 0 },
   });
 
+  leftoverStack.defer(() => apolloGw.stop());
+
   bench(
     'Apollo Gateway',
     async () => {
@@ -135,10 +138,7 @@ describe('Gateway', async () => {
     {
       time: duration,
       warmupTime,
-      warmupIterations,
-      teardown() {
-        return apolloGw.stop();
-      }
+      warmupIterations
     },
   );
 

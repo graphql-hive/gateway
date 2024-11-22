@@ -116,9 +116,6 @@ describe('Federation', async () => {
     },
     {
       time: duration,
-      teardown() {
-        return apolloGateway.stop();
-      },
     },
   );
 
