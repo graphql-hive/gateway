@@ -7,8 +7,8 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
   isAsyncIterable,
-  isPromise,
   mapAsyncIterator,
+  mapMaybePromise,
   Maybe,
   MaybeAsyncIterable,
   memoize1,
@@ -106,84 +106,80 @@ export function delegateRequest<
 
   const executor = getExecutor(delegationContext);
 
-  const result$ = executor(processedRequest);
-
-  function handleExecutorResult(
-    executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
-  ) {
-    if (isAsyncIterable(executorResult)) {
-      // This might be a stream
-      if (
-        delegationContext.operation === 'query' &&
-        isListType(delegationContext.returnType)
-      ) {
-        return new Repeater<ExecutionResult<any>>(async (push, stop) => {
-          const pushed = new WeakSet();
-          let stopped = false;
-          stop.finally(() => {
-            stopped = true;
-          });
-          try {
-            for await (const result of executorResult) {
-              if (stopped) {
-                break;
-              }
-              if (result.incremental) {
-                const data = {};
-                for (const incrementalRes of result.incremental) {
-                  if (incrementalRes.items?.length) {
-                    for (const item of incrementalRes.items) {
-                      dset(
-                        data,
-                        (incrementalRes.path || []).slice(0, -1),
-                        item,
-                      );
-                    }
-                    await push(await transformer.transformResult({ data }));
-                  }
-                }
-                if (result.hasNext === false) {
+  return mapMaybePromise(
+    executor(processedRequest),
+    function handleExecutorResult(
+      executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
+    ) {
+      if (isAsyncIterable(executorResult)) {
+        // This might be a stream
+        if (
+          delegationContext.operation === 'query' &&
+          isListType(delegationContext.returnType)
+        ) {
+          return new Repeater<ExecutionResult<any>>(async (push, stop) => {
+            const pushed = new WeakSet();
+            let stopped = false;
+            stop.finally(() => {
+              stopped = true;
+            });
+            try {
+              for await (const result of executorResult) {
+                if (stopped) {
                   break;
-                } else {
-                  continue;
                 }
-              }
-              const transformedResult =
-                await transformer.transformResult(result);
-              // @stream needs to get the results one by one
-              if (Array.isArray(transformedResult)) {
-                for (const individualResult$ of transformedResult) {
-                  if (stopped) {
+                if (result.incremental) {
+                  const data = {};
+                  for (const incrementalRes of result.incremental) {
+                    if (incrementalRes.items?.length) {
+                      for (const item of incrementalRes.items) {
+                        dset(
+                          data,
+                          (incrementalRes.path || []).slice(0, -1),
+                          item,
+                        );
+                      }
+                      await push(await transformer.transformResult({ data }));
+                    }
+                  }
+                  if (result.hasNext === false) {
                     break;
-                  }
-                  const individualResult = await individualResult$;
-                  // Avoid pushing the same result multiple times
-                  if (!pushed.has(individualResult)) {
-                    pushed.add(individualResult);
-                    await push(individualResult);
+                  } else {
+                    continue;
                   }
                 }
-              } else {
-                await push(await transformedResult);
+                const transformedResult =
+                  await transformer.transformResult(result);
+                // @stream needs to get the results one by one
+                if (Array.isArray(transformedResult)) {
+                  for (const individualResult$ of transformedResult) {
+                    if (stopped) {
+                      break;
+                    }
+                    const individualResult = await individualResult$;
+                    // Avoid pushing the same result multiple times
+                    if (!pushed.has(individualResult)) {
+                      pushed.add(individualResult);
+                      await push(individualResult);
+                    }
+                  }
+                } else {
+                  await push(await transformedResult);
+                }
               }
+              stop();
+            } catch (error) {
+              stop(error);
             }
-            stop();
-          } catch (error) {
-            stop(error);
-          }
-        });
+          });
+        }
+        return mapAsyncIterator(executorResult, (result) =>
+          transformer.transformResult(result),
+        );
       }
-      return mapAsyncIterator(executorResult, (result) =>
-        transformer.transformResult(result),
-      );
-    }
-    return transformer.transformResult(executorResult);
-  }
-
-  if (isPromise(result$)) {
-    return result$.then(handleExecutorResult);
-  }
-  return handleExecutorResult(result$);
+      return transformer.transformResult(executorResult);
+    },
+  );
 }
 
 function getDelegationContext<TContext extends Record<string, any>>({

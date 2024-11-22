@@ -1,4 +1,4 @@
-import { isAsyncIterable, isPromise } from '@graphql-tools/utils';
+import { fakePromise, isAsyncIterable, isPromise } from '@graphql-tools/utils';
 import {
   File as DefaultFile,
   FormData as DefaultFormData,
@@ -84,7 +84,7 @@ export function createFormDataFromVariables<TVariables>(
       } else if (isGraphQLUpload(upload)) {
         const stream = upload.createReadStream();
         const chunks: number[] = [];
-        return Promise.resolve().then(async () => {
+        return fakePromise<void>(undefined).then(async () => {
           for await (const chunk of stream) {
             if (chunk) {
               chunks.push(...chunk);

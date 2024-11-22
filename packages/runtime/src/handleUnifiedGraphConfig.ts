@@ -1,14 +1,10 @@
-import {
-  defaultImportFn,
-  isUrl,
-  mapMaybePromise,
-  readFileOrUrl,
-} from '@graphql-mesh/utils';
+import { defaultImportFn, isUrl, readFileOrUrl } from '@graphql-mesh/utils';
 import type { MaybePromise } from '@graphql-tools/utils';
 import {
   getDocumentNodeFromSchema,
   isDocumentNode,
   isValidPath,
+  mapMaybePromise,
 } from '@graphql-tools/utils';
 import type { DocumentNode, GraphQLSchema } from 'graphql';
 import { buildASTSchema, isSchema, parse, print } from 'graphql';

@@ -9,6 +9,7 @@ import {
   makeDisposable,
 } from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
+import { fakePromise } from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import { beforeEach, describe, expect, it, vitest } from 'vitest';
 import wsTransport, { type WSTransportOptions } from '../src';
@@ -158,7 +159,9 @@ describe('HTTP Transport', () => {
     );
     await executor({ document, context: { test: '1' } });
 
-    const asyncDisposeMock = vitest.fn().mockReturnValue(Promise.resolve());
+    const asyncDisposeMock = vitest
+      .fn()
+      .mockReturnValue(fakePromise(undefined));
     buildExecutorMock.mockImplementationOnce(() =>
       makeAsyncDisposable(vitest.fn(), asyncDisposeMock),
     );

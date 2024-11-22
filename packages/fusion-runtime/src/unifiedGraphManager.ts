@@ -4,7 +4,7 @@ import type {
   TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
-import { mapMaybePromise, requestIdByRequest } from '@graphql-mesh/utils';
+import { requestIdByRequest } from '@graphql-mesh/utils';
 import type {
   DelegationPlanBuilder,
   StitchingInfo,
@@ -15,7 +15,7 @@ import type {
   MaybePromise,
   TypeSource,
 } from '@graphql-tools/utils';
-import { isDocumentNode } from '@graphql-tools/utils';
+import { isDocumentNode, mapMaybePromise } from '@graphql-tools/utils';
 import {
   AsyncDisposableStack,
   DisposableSymbols,

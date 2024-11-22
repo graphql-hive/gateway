@@ -1,8 +1,8 @@
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
-import { mapMaybePromise } from '@graphql-mesh/utils';
 import {
   isAsyncIterable,
   mapAsyncIterator,
+  mapMaybePromise,
   type DisposableExecutor,
   type ExecutionRequest,
   type ExecutionResult,

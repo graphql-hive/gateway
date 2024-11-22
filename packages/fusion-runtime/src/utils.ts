@@ -10,7 +10,6 @@ import {
   isDisposable,
   iterateAsync,
   loggerForExecutionRequest,
-  mapMaybePromise,
   requestIdByRequest,
 } from '@graphql-mesh/utils';
 import {
@@ -22,6 +21,7 @@ import {
   isAsyncIterable,
   isDocumentNode,
   mapAsyncIterator,
+  mapMaybePromise,
   printSchemaWithDirectives,
   type ExecutionRequest,
   type Executor,

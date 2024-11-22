@@ -29,7 +29,6 @@ import {
   isUrl,
   LogLevel,
   makeAsyncDisposable,
-  mapMaybePromise,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
@@ -43,6 +42,7 @@ import {
   IResolvers,
   isDocumentNode,
   isValidPath,
+  mapMaybePromise,
   mergeDeep,
   parseSelectionSet,
   type Executor,

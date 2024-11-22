@@ -1,6 +1,7 @@
 import {
   collectFields,
   isPromise,
+  mapMaybePromise,
   MaybePromise,
   memoize1,
   mergeDeep,
@@ -101,34 +102,22 @@ export function mergeFields<TContext>(
     object[PLAN_LEFT_OVER] = leftOver;
   }
 
-  const res$ = delegationMaps.reduce<MaybePromise<void>>(
-    (prev, delegationMap) => {
-      function executeFn() {
-        return executeDelegationStage(
-          mergedTypeInfo,
-          delegationMap,
-          object,
-          context,
-          info,
-        );
-      }
-      if (isPromise(prev)) {
-        return prev.then(executeFn);
-      }
-      return executeFn();
-    },
-    undefined,
+  return mapMaybePromise(
+    delegationMaps.reduce<MaybePromise<void>>(
+      (prev, delegationMap) =>
+        mapMaybePromise(prev, () =>
+          executeDelegationStage(
+            mergedTypeInfo,
+            delegationMap,
+            object,
+            context,
+            info,
+          ),
+        ),
+      undefined,
+    ),
+    () => object,
   );
-
-  function handleDelegationPlanResult() {
-    return object;
-  }
-
-  if (isPromise(res$)) {
-    return res$.then(handleDelegationPlanResult);
-  }
-
-  return handleDelegationPlanResult();
 }
 
 export function handleResolverResult(

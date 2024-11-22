@@ -1,7 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { ExecutionRequest, Executor } from '@graphql-tools/utils';
+import { ExecutionRequest, Executor, fakePromise } from '@graphql-tools/utils';
 import { GraphQLSchema, parse, print, versionInfo } from 'graphql';
 import { kebabCase } from 'lodash';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -174,7 +174,7 @@ describe('awareness-of-other-fields', () => {
     })
       .initialize({
         healthCheck() {
-          return Promise.resolve();
+          return fakePromise(undefined);
         },
         update(updatedSupergraphSdl) {
           supergraphSdl = updatedSupergraphSdl;
@@ -444,7 +444,7 @@ it('prevents recursively depending fields in case of multiple keys', async () =>
     ],
   }).initialize({
     healthCheck() {
-      return Promise.resolve();
+      return fakePromise(undefined);
     },
     update() {},
     getDataSource({ name }) {

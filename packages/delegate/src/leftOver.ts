@@ -1,3 +1,4 @@
+import { createDeferred, PromiseWithResolvers } from '@graphql-tools/utils';
 import { FieldNode } from 'graphql';
 import { Subschema } from './Subschema.js';
 import { DelegationPlanBuilder, ExternalObject } from './types.js';
@@ -5,18 +6,7 @@ import { DelegationPlanBuilder, ExternalObject } from './types.js';
 export type Deferred<T = unknown> = PromiseWithResolvers<T>;
 
 // TODO: Remove this after Node 22
-export function createDeferred<T>(): Deferred<T> {
-  if (Promise.withResolvers) {
-    return Promise.withResolvers();
-  }
-  let resolve: (value: T | PromiseLike<T>) => void;
-  let reject: (error: unknown) => void;
-  const promise = new Promise<T>((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-  return { promise, resolve: resolve!, reject: reject! };
-}
+export { createDeferred };
 
 export interface DelegationPlanLeftOver {
   unproxiableFieldNodes: Array<FieldNode>;

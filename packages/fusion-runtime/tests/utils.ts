@@ -2,10 +2,9 @@ import {
   getUnifiedGraphGracefully,
   type SubgraphConfig,
 } from '@graphql-mesh/fusion-composition';
-import { mapMaybePromise } from '@graphql-mesh/utils';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { isAsyncIterable } from '@graphql-tools/utils';
+import { isAsyncIterable, mapMaybePromise } from '@graphql-tools/utils';
 import {
   buildSchema,
   GraphQLSchema,

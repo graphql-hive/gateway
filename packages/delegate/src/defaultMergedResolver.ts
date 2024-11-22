@@ -1,4 +1,9 @@
-import { getResponseKeyFromInfo, isPromise } from '@graphql-tools/utils';
+import {
+  createDeferred,
+  getResponseKeyFromInfo,
+  isPromise,
+  mapMaybePromise,
+} from '@graphql-tools/utils';
 import {
   defaultFieldResolver,
   FieldNode,
@@ -8,7 +13,6 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import {
-  createDeferred,
   DelegationPlanLeftOver,
   getPlanLeftOverFromParent,
 } from './leftOver.js';
@@ -123,15 +127,11 @@ function handleResult<TContext extends Record<string, any>>(
   const leftOver = getPlanLeftOverFromParent(parent);
   // Handle possible deferred fields if any left over from the previous delegation plan is found
   if (leftOver) {
-    if (isPromise(resolvedData$)) {
-      return resolvedData$.then((resolvedData) => {
-        parent[responseKey] = resolvedData;
-        handleLeftOver(parent, context, info, leftOver);
-        return resolvedData;
-      });
-    }
-    parent[responseKey] = resolvedData$;
-    handleLeftOver(parent, context, info, leftOver);
+    return mapMaybePromise(resolvedData$, (resolvedData) => {
+      parent[responseKey] = resolvedData;
+      handleLeftOver(parent, context, info, leftOver);
+      return resolvedData;
+    });
   }
   return resolvedData$;
 }
@@ -175,24 +175,9 @@ function handleLeftOver<TContext extends Record<string, any>>(
             (selectionSet) => selectionSet.selections,
           ),
         };
-        const flattenedParent$ = flattenPromise(parent);
-        if (isPromise(flattenedParent$)) {
-          flattenedParent$.then((flattenedParent) => {
-            handleFlattenedParent(
-              flattenedParent,
-              parent,
-              possibleSubschema,
-              selectionSet,
-              leftOver,
-              stitchingInfo,
-              parentTypeName,
-              context,
-              info,
-            );
-          });
-        } else {
+        mapMaybePromise(flattenPromise(parent), (flattenedParent) => {
           handleFlattenedParent(
-            flattenedParent$,
+            flattenedParent,
             parent,
             possibleSubschema,
             selectionSet,
@@ -202,7 +187,7 @@ function handleLeftOver<TContext extends Record<string, any>>(
             context,
             info,
           );
-        }
+        });
       }
     }
   }
@@ -229,14 +214,14 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
           possibleSubschema,
         );
       if (resolver) {
-        try {
-          // Extend the left over parent with missing fields
-          Object.assign(leftOverParent, flattenedParent);
-          const selectionSet: SelectionSetNode = {
-            kind: Kind.SELECTION_SET,
-            selections: missingFieldNodes,
-          };
-          const resolverResult$ = resolver(
+        // Extend the left over parent with missing fields
+        Object.assign(leftOverParent, flattenedParent);
+        const selectionSet: SelectionSetNode = {
+          kind: Kind.SELECTION_SET,
+          selections: missingFieldNodes,
+        };
+        mapMaybePromise(
+          resolver(
             leftOverParent,
             context,
             info,
@@ -244,27 +229,10 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
             selectionSet,
             info.parentType,
             info.parentType,
-          );
-          // Resolve the deferred fields if they are resolved
-          if (isPromise(resolverResult$)) {
-            (
-              resolverResult$.then((resolverResult) =>
-                handleDeferredResolverResult(
-                  resolverResult,
-                  possibleSubschema,
-                  selectionSet,
-                  leftOverParent,
-                  leftOver,
-                  context,
-                  info,
-                ),
-              ) as Promise<unknown>
-            ).catch((error) =>
-              handleDeferredResolverFailure(leftOver, leftOverParent, error),
-            );
-          } else {
+          ),
+          (resolverResult) => {
             handleDeferredResolverResult(
-              resolverResult$,
+              resolverResult,
               possibleSubschema,
               selectionSet,
               leftOverParent,
@@ -272,10 +240,10 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
               context,
               info,
             );
-          }
-        } catch (error) {
-          handleDeferredResolverFailure(leftOver, leftOverParent, error);
-        }
+          },
+          (error) =>
+            handleDeferredResolverFailure(leftOver, leftOverParent, error),
+        );
       }
     }
   } else {
