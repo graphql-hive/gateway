@@ -138,7 +138,7 @@ describe('Gateway', async () => {
     {
       time: duration,
       warmupTime,
-      warmupIterations
+      warmupIterations,
     },
   );
 
