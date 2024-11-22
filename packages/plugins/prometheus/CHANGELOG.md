@@ -1,5 +1,18 @@
 # @graphql-mesh/plugin-prometheus
 
+## 1.2.10
+
+### Patch Changes
+
+- [#138](https://github.com/graphql-hive/gateway/pull/138) [`094ca85`](https://github.com/graphql-hive/gateway/commit/094ca858182aa9253b03655c64d24f3e897c02e8) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/gateway-runtime@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway-runtime/v/workspace:^) (to `dependencies`)
+  - Added dependency [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5) (to `dependencies`)
+  - Removed dependency [`@graphql-hive/gateway@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway/v/workspace:^) (from `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@1.2.1
+
 ## 1.2.9
 
 ### Patch Changes
