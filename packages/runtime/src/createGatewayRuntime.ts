@@ -252,7 +252,6 @@ export function createGatewayRuntime<
       typeof config.schema === 'object' &&
       'type' in config.schema
     ) {
-      // ya ai
       // hive cdn
       const { endpoint, key } = config.schema;
       const fetcher = createSchemaFetcher({

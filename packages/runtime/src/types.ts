@@ -102,7 +102,7 @@ export interface GatewayConfigSupergraph<
   /**
    * GraphQL schema polling interval in milliseconds when the {@link supergraph} is an URL.
    *
-   * If {@link cache} is provided, the GraphQL schema will be cached setting the TTL to this interval in seconds.
+   * If {@link cache} is provided, the fetched {@link supergraph} will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
 }
@@ -370,7 +370,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Cache storage interface for various operations that can get cached.
    *
-   * For example, the GraphQL schema will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
+   * For example, the fetched {@link supergraph} will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
    */
   cache?: KeyValueCache;
   pubsub?: MeshPubSub;

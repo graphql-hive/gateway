@@ -39,7 +39,7 @@ export type GatewayCLIConfig = (
     /**
      * GraphQL schema polling interval in milliseconds.
      *
-     * If cache is provided, the GraphQL schema will be cached setting the TTL to this interval in seconds.
+     * If cache is provided in the config, the {@link supergraph} will be cached setting the TTL to this interval in seconds.
      *
      * @default 10_000
      */
