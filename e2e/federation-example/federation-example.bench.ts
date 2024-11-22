@@ -3,9 +3,12 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
-import { afterAll, bench, describe, expect } from 'vitest';
+import { bench, describe, expect } from 'vitest';
+import { leftoverStack } from '../../internal/e2e/src/leftoverStack';
 
 const duration = 10_000;
+const warmupTime = 1_000;
+const warmupIterations = 10;
 
 describe('Gateway', async () => {
   const query = /* GraphQL */ `
@@ -112,8 +115,8 @@ describe('Gateway', async () => {
   const { url: apolloGwUrl } = await startStandaloneServer(apolloGw, {
     listen: { port: 0 },
   });
-
-  afterAll(() => apolloGw.stop());
+  
+  leftoverStack.defer(() => apolloGw.stop());
 
   bench(
     'Apollo Gateway',
@@ -134,6 +137,8 @@ describe('Gateway', async () => {
     },
     {
       time: duration,
+      warmupTime,
+      warmupIterations,
     },
   );
 
@@ -149,6 +154,8 @@ describe('Gateway', async () => {
     },
     {
       time: duration,
+      warmupTime,
+      warmupIterations,
     },
   );
 });
