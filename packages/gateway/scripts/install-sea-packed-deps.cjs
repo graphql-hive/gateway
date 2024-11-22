@@ -33,7 +33,9 @@
    */
   function getAsset(assetName) {
     if (globalThis.Bun) {
-      const file = globalThis.Bun.embeddedFiles.find((f) => f.name.includes(assetName));
+      const file = globalThis.Bun.embeddedFiles.find((f) =>
+        f.name.includes(assetName),
+      );
       if (!file) {
         throw new Error(`Asset "${assetName}" not found`);
       }

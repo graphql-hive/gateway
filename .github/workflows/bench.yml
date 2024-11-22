@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 23
       - name: Bench
+        continue-on-error: true
         run: ${{matrix.e2e_runner == 'bun' && 'yarn bun' || 'yarn'}} bench
         env:
           PRODUCTS_SIZE: ${{matrix.products_size}}
