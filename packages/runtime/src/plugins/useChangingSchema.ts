@@ -1,4 +1,4 @@
-import { mapMaybePromise } from '@graphql-mesh/utils';
+import { mapMaybePromise } from '@graphql-tools/utils';
 import type { MaybePromise } from '@graphql-tools/utils';
 import type { GraphQLSchema } from 'graphql';
 import type { GatewayPlugin } from '../types';

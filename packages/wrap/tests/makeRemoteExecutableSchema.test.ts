@@ -1,5 +1,5 @@
 import { subscribe } from '@graphql-tools/executor';
-import { ExecutionResult } from '@graphql-tools/utils';
+import { ExecutionResult, fakePromise } from '@graphql-tools/utils';
 import {
   makeSchemaRemote,
   propertySchema,
@@ -127,7 +127,7 @@ describe('remote subscriptions', () => {
     `);
 
     let notificationCnt = 0;
-    const sub1 = Promise.resolve(subscribe({ schema, document: subscription }));
+    const sub1 = fakePromise(subscribe({ schema, document: subscription }));
     sub1.then(async (results) => {
       for await (const result of results as AsyncIterable<ExecutionResult>) {
         expect(result).toHaveProperty('data');
@@ -136,7 +136,7 @@ describe('remote subscriptions', () => {
       }
     });
 
-    const sub2 = Promise.resolve(subscribe({ schema, document: subscription }));
+    const sub2 = fakePromise(subscribe({ schema, document: subscription }));
     sub2.then(async (results) => {
       for await (const result of results as AsyncIterable<ExecutionResult>) {
         expect(result).toHaveProperty('data');
@@ -175,7 +175,7 @@ describe('when query for multiple fields', () => {
   let calls: Array<any> = [];
   const executor = (args: any): any => {
     calls.push(args);
-    return Promise.resolve({
+    return fakePromise({
       data: {
         fieldA: 1,
         fieldB: 2,

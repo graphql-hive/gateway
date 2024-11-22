@@ -5,9 +5,10 @@ import {
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
-import { makeDisposable, mapMaybePromise } from '@graphql-mesh/utils';
+import { makeDisposable } from '@graphql-mesh/utils';
 import {
   createGraphQLError,
+  mapMaybePromise,
   type ExecutionRequest,
 } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';

@@ -1,7 +1,7 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
-import { mapMaybePromise } from '@graphql-mesh/utils';
+import { mapMaybePromise } from '@graphql-tools/utils';
 import type { ExecutionRequest, MaybePromise } from '@graphql-tools/utils';
 import type {
   FetchAPI,

@@ -2,7 +2,8 @@ import { createDefaultExecutor } from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
-  isPromise,
+  fakePromise,
+  mapMaybePromise,
 } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
@@ -31,7 +32,7 @@ export async function getStitchedSchemaFromLocalSchemas(
     })),
   }).initialize({
     healthCheck() {
-      return Promise.resolve();
+      return fakePromise(undefined);
     },
     update() {},
     getDataSource({ name }) {
@@ -50,13 +51,10 @@ export async function getStitchedSchemaFromLocalSchemas(
     return function tracedExecutor(request: ExecutionRequest) {
       const result = executor(request);
       if (onSubgraphExecute) {
-        if (isPromise(result)) {
-          return result.then((result) => {
-            onSubgraphExecute(name, request, result);
-            return result;
-          });
-        }
-        onSubgraphExecute(name, request, result);
+        return mapMaybePromise(result, (result) => {
+          onSubgraphExecute(name, request, result);
+          return result;
+        });
       }
       return result;
     };

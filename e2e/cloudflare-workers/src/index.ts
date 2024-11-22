@@ -9,6 +9,7 @@ import {
   useOpenTelemetry,
 } from '@graphql-mesh/plugin-opentelemetry';
 import http from '@graphql-mesh/transport-http';
+import { fakePromise } from '@graphql-tools/utils';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
@@ -65,7 +66,7 @@ export default {
       ],
     });
     const res = await runtime(req, env, ctx);
-    ctx.waitUntil(Promise.resolve(runtime[DisposableSymbols.asyncDispose]()));
+    ctx.waitUntil(fakePromise(runtime[DisposableSymbols.asyncDispose]()));
     return res as unknown as Response;
   },
 } satisfies ExportedHandler<Env>;

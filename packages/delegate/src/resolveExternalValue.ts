@@ -1,4 +1,4 @@
-import { isPromise, Maybe } from '@graphql-tools/utils';
+import { mapMaybePromise, Maybe } from '@graphql-tools/utils';
 import {
   getNullableType,
   GraphQLCompositeType,
@@ -59,19 +59,18 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
       skipTypeMerging,
     );
     if (info && isAbstractType(type)) {
-      function checkAbstractResolvedCorrectly(result: any) {
-        if (result.__typename != null) {
-          const resolvedType = info!.schema.getType(result.__typename);
-          if (!resolvedType) {
-            return null;
+      return mapMaybePromise(
+        result$,
+        function checkAbstractResolvedCorrectly(result) {
+          if (result.__typename != null) {
+            const resolvedType = info!.schema.getType(result.__typename);
+            if (!resolvedType) {
+              return null;
+            }
           }
-        }
-        return result;
-      }
-      if (isPromise(result$)) {
-        return result$.then(checkAbstractResolvedCorrectly);
-      }
-      return checkAbstractResolvedCorrectly(result$);
+          return result;
+        },
+      );
     }
     return result$;
   } else if (isListType(type)) {

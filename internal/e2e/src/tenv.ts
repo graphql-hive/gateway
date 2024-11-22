@@ -471,13 +471,11 @@ export function createTenv(cwd: string): Tenv {
       const ctrl = new AbortController();
       await Promise.race([
         waitForExit
-          ?.then(() =>
-            Promise.reject(
-              new Error(
-                `Serve exited successfully, but shouldn't have\n${proc.getStd('both')}`,
-              ),
-            ),
-          )
+          ?.then(() => {
+            throw new Error(
+              `Serve exited successfully, but shouldn't have\n${proc.getStd('both')}`,
+            );
+          })
           // stop reachability wait after exit
           .finally(() => ctrl.abort()),
         waitForReachable(gw, ctrl.signal),
@@ -576,13 +574,11 @@ export function createTenv(cwd: string): Tenv {
       const service: Service = { ...proc, name, port };
       await Promise.race([
         waitForExit
-          .then(() =>
-            Promise.reject(
-              new Error(
-                `Service "${name}" exited successfully, but shouldn't have\n${proc.getStd('both')}`,
-              ),
-            ),
-          )
+          .then(() => {
+            throw new Error(
+              `Service "${name}" exited successfully, but shouldn't have\n${proc.getStd('both')}`,
+            );
+          })
           // stop reachability wait after exit
           .finally(() => ctrl.abort()),
         waitForReachable(service, ctrl.signal),

@@ -1,6 +1,7 @@
 import { defineConfig } from '@graphql-hive/gateway';
+import { fakePromise } from '@graphql-tools/utils';
 
 // top level await
-await Promise.resolve();
+await fakePromise(undefined);
 
 export const gatewayConfig = defineConfig({});

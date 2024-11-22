@@ -1,6 +1,6 @@
-import { mapMaybePromise } from '@envelop/core';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import type { OnFetchHookDone } from '@graphql-mesh/types';
+import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
 import type { GatewayPlugin } from '../types';
 
 interface FromClientToSubgraphsPayload {
@@ -38,7 +38,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
       if (request) {
         const subgraphName = (executionRequest &&
           subgraphNameByExecutionRequest.get(executionRequest))!;
-        let job!: Promise<void> | void;
+        let job!: MaybePromise<void>;
         if (opts.fromClientToSubgraphs) {
           job = mapMaybePromise(
             opts.fromClientToSubgraphs({
