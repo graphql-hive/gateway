@@ -245,6 +245,7 @@ export function createGatewayRuntime<
       typeof config.schema === 'object' &&
       'type' in config.schema
     ) {
+      // ya ai
       // hive cdn
       const { endpoint, key } = config.schema;
       const fetcher = createSchemaFetcher({
@@ -321,6 +322,7 @@ export function createGatewayRuntime<
       }
       return mapMaybePromise(schemaFetcher(), () => unifiedGraph);
     };
+    // pullup homies
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
     const executorPlugin: GatewayPlugin = {
@@ -659,7 +661,7 @@ export function createGatewayRuntime<
           return maybeSchema;
         }
         const ttl = config.pollingInterval
-          ? config.pollingInterval / 1000
+          ? config.pollingInterval * 0.001
           : // if no polling interval (cache TTL) is configured, default to
             // 30 seconds making sure the unifiedgraph is not kept forever
             30;
