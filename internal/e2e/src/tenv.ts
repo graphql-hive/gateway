@@ -64,7 +64,21 @@ E2E_GATEWAY_RUNNER=docker yarn build && yarn workspace @graphql-hive/gateway bun
   if (runner === 'bin' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using bin gateway runner! Make sure you have built the binary with:
-yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+
+`);
+  }
+  if (runner === 'bun-bin' && !boolEnv('CI')) {
+    process.stderr.write(`
+⚠️ Using bun bin gateway runner! Make sure you have built the bun binary with:
+yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway build-bun-bin
+
+`);
+  }
+  if (runner === 'docker' && !boolEnv('CI')) {
+    process.stderr.write(`
+⚠️ Using docker gateway runner! Make sure you have built the containers with:
+E2E_GATEWAY_RUNNER=bun-docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
 
 `);
   }
