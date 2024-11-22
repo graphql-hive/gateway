@@ -101,6 +101,8 @@ export interface GatewayConfigSupergraph<
     | GatewayGraphOSManagedFederationOptions;
   /**
    * GraphQL schema polling interval in milliseconds when the {@link supergraph} is an URL.
+   *
+   * If {@link cache} is provided, the GraphQL schema will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
 }

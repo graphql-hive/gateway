@@ -644,8 +644,36 @@ export function createGatewayRuntime<
       }
     }
 
+    const supergraphCacheKey = 'hive-gateway:supergraph';
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
-      getUnifiedGraph: unifiedGraphFetcher,
+      async getUnifiedGraph(ctx) {
+        const { cache } = configContext;
+        if (!cache) {
+          return unifiedGraphFetcher(ctx);
+        }
+        const maybeSchema = await cache.get(supergraphCacheKey);
+        if (maybeSchema) {
+          ctx.logger?.debug(
+            `Found supergraph in cache under key "${supergraphCacheKey}"`,
+          );
+          return maybeSchema;
+        }
+        const ttl = config.pollingInterval
+          ? config.pollingInterval / 1000
+          : // if no polling interval (cache TTL) is configured, default to
+            // 30 seconds making sure the unifiedgraph is not kept forever
+            30;
+        ctx.logger?.debug(
+          `No supergraph in cache, getting and caching with TTL ${ttl}s`,
+        );
+        const supergraph = await unifiedGraphFetcher(ctx);
+        cache.set(supergraphCacheKey, supergraph, { ttl }).catch(() => {
+          ctx.logger?.error(
+            `Unable to store supergraph in cache under key "${supergraphCacheKey}" with TTL ${ttl}s`,
+          );
+        });
+        return supergraph;
+      },
       onSchemaChange(unifiedGraph) {
         setSchema(unifiedGraph);
       },
