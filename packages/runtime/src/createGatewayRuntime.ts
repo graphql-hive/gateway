@@ -237,7 +237,7 @@ export function createGatewayRuntime<
         clearTimeout(currentTimeout);
       }
     }
-    let lastFetchedSdl: string;
+    let lastFetchedSdl: string | undefined;
     let initialFetch$: MaybePromise<true>;
     let schemaFetcher: () => MaybePromise<true>;
 
@@ -383,7 +383,7 @@ export function createGatewayRuntime<
     };
   } else if ('subgraph' in config) {
     const subgraphInConfig = config.subgraph;
-    let getSubschemaConfig$: MaybePromise<boolean>;
+    let getSubschemaConfig$: MaybePromise<boolean> | undefined;
     let subschemaConfig: SubschemaConfig;
     function getSubschemaConfig() {
       if (getSubschemaConfig$) {
