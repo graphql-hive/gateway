@@ -12,13 +12,13 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
   configContext,
   getSchema,
   onSubgraphExecuteHooks,
-  disposableStack,
+  transportExecutorStack,
 }: {
   config: GatewayConfigProxy<TContext>;
   configContext: GatewayConfigContext;
   getSchema: () => GraphQLSchema;
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
-  disposableStack: AsyncDisposableStack;
+  transportExecutorStack: AsyncDisposableStack;
 }): Executor {
   const fakeTransportEntryMap: Record<string, TransportEntry> = {};
   let subgraphName: string = 'upstream';
@@ -41,7 +41,7 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
     }),
     transportContext: configContext,
     getSubgraphSchema: getSchema,
-    transportExecutorStack: disposableStack,
+    transportExecutorStack,
     transports: config.transports,
   });
   return function proxyExecutor(executionRequest) {

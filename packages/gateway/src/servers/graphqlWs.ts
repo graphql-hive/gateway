@@ -1,8 +1,9 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { MaybePromise } from '@graphql-tools/utils';
 import { execute, subscribe, type ExecutionArgs } from 'graphql';
-import type { ServerOptions } from 'graphql-ws';
+import type { ConnectionInitMessage, Context, ServerOptions } from 'graphql-ws';
 
 // so we need to make sure we always use the freshest instance
 type EnvelopedExecutionArgs = ExecutionArgs & {
@@ -12,9 +13,12 @@ type EnvelopedExecutionArgs = ExecutionArgs & {
   };
 };
 
-export function getGraphQLWSOptions<TContext extends Record<string, any>>(
+export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
   gwRuntime: GatewayRuntime<TContext>,
-): ServerOptions<any, any> {
+  onContext: (
+    ctx: Context<ConnectionInitMessage['payload'], E>,
+  ) => MaybePromise<Record<string, unknown>>,
+): ServerOptions<ConnectionInitMessage['payload'], E> {
   return {
     execute: (args) => (args as EnvelopedExecutionArgs).rootValue.execute(args),
     subscribe: (args) =>
@@ -23,7 +27,7 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>>(
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         gwRuntime.getEnveloped({
           connectionParams: ctx.connectionParams,
-          req: ctx.extra?.request,
+          ...(await onContext(ctx)),
         });
       const args: EnvelopedExecutionArgs = {
         schema: schema || (await gwRuntime.getSchema()),

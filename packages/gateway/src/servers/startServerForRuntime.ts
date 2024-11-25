@@ -1,5 +1,4 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { getTerminateStack, mapMaybePromise } from '@graphql-mesh/utils';
 import { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
@@ -18,9 +17,7 @@ export function startServerForRuntime<
     maxHeaderSize = 16_384,
     disableWebsockets = false,
   }: ServerForRuntimeOptions,
-): MaybePromise<AsyncDisposable> {
-  const terminateStack = getTerminateStack();
-  terminateStack.use(runtime);
+): MaybePromise<void> {
   process.on('message', (message) => {
     if (message === 'invalidateUnifiedGraph') {
       log.info(`Invalidating Supergraph`);
@@ -39,8 +36,5 @@ export function startServerForRuntime<
 
   const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
 
-  return mapMaybePromise(startServer(runtime, serverOpts), (server) => {
-    terminateStack.use(server);
-    return server;
-  });
+  return startServer(runtime, serverOpts);
 }
