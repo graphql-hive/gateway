@@ -3149,8 +3149,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/fusion-composition@npm:^0.7.0, @graphql-mesh/fusion-composition@npm:^0.7.2":
-  version: 0.7.2
-  resolution: "@graphql-mesh/fusion-composition@npm:0.7.2"
+  version: 0.7.3
+  resolution: "@graphql-mesh/fusion-composition@npm:0.7.3"
   dependencies:
     "@graphql-mesh/utils": "npm:^0.103.1"
     "@graphql-tools/schema": "npm:^10.0.5"
@@ -3165,7 +3165,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/185c031b99d4071733facf9844aebdfdaaf56a587730e442b019342de7547bf72acbbe5cd98d248ccc1b39938fff89e2d49f91f26643230a18702a0c949929ac
+  checksum: 10c0/854cf1011709387a8ae723ac83aed37e89466fb73a335781f9b20608222092abd47913901933acc0648830ae1bfd163e3ad1e81e284213fe5c3071eab5ec1fa3
   languageName: node
   linkType: hard
 
