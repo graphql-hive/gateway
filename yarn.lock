@@ -6515,13 +6515,13 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.56":
-  version: 0.9.59
-  resolution: "@whatwg-node/server@npm:0.9.59"
+  version: 0.9.60
+  resolution: "@whatwg-node/server@npm:0.9.60"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/66e2dbe9cfcf5817352c76d325375ac80b211950716a546b52d06da48e975786c8186ecd6f639d22571dabbba7df96baa57733d49782bf5be68ee20b5f90c784
+  checksum: 10c0/455bded356d3d442ec74881d1d5470653fb0b3c0207b6c4fddb9ca2d912587be1c5e790412b4084de7d83347bd771a3f72f274542346b1c537e874abd4162fab
   languageName: node
   linkType: hard
 
