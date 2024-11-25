@@ -6526,12 +6526,13 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.56":
-  version: 0.9.56
-  resolution: "@whatwg-node/server@npm:0.9.56"
+  version: 0.9.59
+  resolution: "@whatwg-node/server@npm:0.9.59"
   dependencies:
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/3de6bea3ef5821a3543f23ea487cedd2c919c84187c9737f3f69bb239db80c8e98553f02d744834242fb1f88dde47a527889d6f37ccba5e8d01297593afa9cd6
+  checksum: 10c0/66e2dbe9cfcf5817352c76d325375ac80b211950716a546b52d06da48e975786c8186ecd6f639d22571dabbba7df96baa57733d49782bf5be68ee20b5f90c784
   languageName: node
   linkType: hard
 

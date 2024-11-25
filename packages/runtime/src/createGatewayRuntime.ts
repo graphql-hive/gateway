@@ -1006,6 +1006,8 @@ export function createGatewayRuntime<
     },
   });
 
+  yoga.disposableStack.use(disposableStack);
+
   return makeAsyncDisposable(yoga, () =>
     disposableStack.disposeAsync(),
   ) as any as GatewayRuntime<TContext>;
