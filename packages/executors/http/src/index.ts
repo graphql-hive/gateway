@@ -10,7 +10,7 @@ import {
   mapMaybePromise,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { fetch as defaultFetch, Request } from '@whatwg-node/fetch';
+import { fetch as defaultFetch } from '@whatwg-node/fetch';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
@@ -105,30 +105,17 @@ export type HeadersConfig = Record<string, string>;
 // To prevent event listener warnings
 function createSignalWrapper(signal: AbortSignal): AbortSignal {
   const listeners = new Set<EventListener>();
-  signal.addEventListener('abort', (event) => {
+  signal.onabort = (event) => {
     for (const listener of listeners) {
       listener(event);
     }
-  });
-  return new Proxy(signal, {
-    get(target, prop) {
-      if (prop === 'addEventListener') {
-        return function addEventListener(
-          _type: 'abort',
-          listener: EventListener,
-        ) {
-          listeners.add(listener);
-        };
-      }
-      if (prop === 'removeEventListener') {
-        return function removeEventListener(
-          _type: 'abort',
-          listener: EventListener,
-        ) {
-          listeners.delete(listener);
-        };
-      }
-      return Reflect.get(target, prop);
+  };
+  return Object.assign(signal, {
+    addEventListener(_type: 'abort', listener: EventListener) {
+      listeners.add(listener);
+    },
+    removeEventListener(_type: 'abort', listener: EventListener) {
+      listeners.delete(listener);
     },
   });
 }
@@ -160,10 +147,7 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   const disposeCtrl = new AbortController();
-  const sharedSignal =
-    Request !== globalThis.Request
-      ? createSignalWrapper(disposeCtrl.signal)
-      : disposeCtrl.signal;
+  const sharedSignal = createSignalWrapper(disposeCtrl.signal);
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
   ) => {
