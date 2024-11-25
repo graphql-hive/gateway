@@ -3113,11 +3113,11 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.2.0":
-  version: 1.2.2
-  resolution: "@graphql-mesh/compose-cli@npm:1.2.2"
+  version: 1.2.3
+  resolution: "@graphql-mesh/compose-cli@npm:1.2.3"
   dependencies:
     "@commander-js/extra-typings": "npm:^12.1.0"
-    "@graphql-mesh/fusion-composition": "npm:^0.7.2"
+    "@graphql-mesh/fusion-composition": "npm:^0.7.3"
     "@graphql-mesh/include": "npm:^0.2.3"
     "@graphql-mesh/utils": "npm:^0.103.1"
     "@graphql-tools/graphql-file-loader": "npm:8.0.4"
@@ -3132,7 +3132,7 @@ __metadata:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/e5c07cd9732d0c2586605299d0847614ef59c14af2488201e3215577432842946566c16a794e24ee1ac693b64816c8df407b7fbbe789b7fad3fe95ae07ebb3bc
+  checksum: 10c0/5bf8d4662a0686fff3dc8d58ceebe868ea0ea560d19d842f54a12f22fea125950cc8f39ae4713f48a5089190ff68cb88a93d78156504fb2ac7de93369b2dc3b4
   languageName: node
   linkType: hard
 
@@ -3148,7 +3148,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-composition@npm:^0.7.0, @graphql-mesh/fusion-composition@npm:^0.7.2":
+"@graphql-mesh/fusion-composition@npm:^0.7.0, @graphql-mesh/fusion-composition@npm:^0.7.3":
   version: 0.7.3
   resolution: "@graphql-mesh/fusion-composition@npm:0.7.3"
   dependencies:
