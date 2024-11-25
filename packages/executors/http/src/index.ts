@@ -102,6 +102,52 @@ export interface HTTPExecutorOptions {
 
 export type HeadersConfig = Record<string, string>;
 
+
+
+// To prevent event listener warnings
+function createSignalWrapper(signal: AbortSignal): AbortSignal {
+  const listeners = new Set<EventListener>();
+  signal.addEventListener('abort', (event) => {
+    for (const listener of listeners) {
+      listener(event);
+    }
+  });
+  let onabort: EventListener | null = null;
+  return {
+    any: AbortSignal.any,
+    get aborted() {
+      return signal.aborted;
+    },
+    addEventListener(_type: 'abort', listener: EventListener) {
+      listeners.add(listener);
+    },
+    removeEventListener(_type: 'abort', listener: EventListener) {
+      listeners.delete(listener);
+    },
+    dispatchEvent(event) {
+      return signal.dispatchEvent(event);
+    },
+    get reason() {
+      return signal.reason;
+    },
+    throwIfAborted() {
+      return signal.throwIfAborted();
+    },
+    get onabort() {
+      return onabort;
+    },
+    set onabort(value) {
+      if (onabort) {
+        signal.removeEventListener('abort', onabort);
+      }
+      onabort = value;
+      if (onabort) {
+        signal.addEventListener('abort', onabort);
+      }
+    },
+  }
+}
+
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
@@ -129,11 +175,12 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   const disposeCtrl = new AbortController();
+  const sharedSignal = createSignalWrapper(disposeCtrl.signal);
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
   ) => {
-    if (disposeCtrl.signal.aborted) {
-      return createResultForAbort(disposeCtrl.signal);
+    if (sharedSignal.aborted) {
+      return createResultForAbort(sharedSignal.reason);
     }
     const fetchFn = request.extensions?.fetch ?? options?.fetch ?? defaultFetch;
     let method = request.extensions?.method || options?.method;
@@ -182,9 +229,9 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
-    let signal = disposeCtrl.signal;
+    let signal = sharedSignal;
     if (options?.timeout) {
-      signal = AbortSignal.any([signal, AbortSignal.timeout(options.timeout)]);
+      signal = AbortSignal.any([sharedSignal, AbortSignal.timeout(options.timeout)]);
     }
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
@@ -380,8 +427,8 @@ export function buildHTTPExecutor(
       function retryAttempt():
         | PromiseLike<ExecutionResult<any>>
         | ExecutionResult<any> {
-        if (disposeCtrl?.signal.aborted) {
-          return createResultForAbort(disposeCtrl.signal);
+        if (sharedSignal.aborted) {
+          return createResultForAbort(sharedSignal.reason);
         }
         attempt++;
         if (attempt > options!.retry!) {
@@ -448,7 +495,7 @@ function coerceFetchError(
       originalError: e,
     });
   } else if (e.name === 'AbortError' && signal.reason) {
-    return createGraphQLErrorForAbort(signal, {
+    return createGraphQLErrorForAbort(signal.reason, {
       extensions: upstreamErrorExtensions,
     });
   } else if (e.message) {

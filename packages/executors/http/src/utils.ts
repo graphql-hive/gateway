@@ -5,11 +5,11 @@ export function createAbortErrorReason() {
 }
 
 export function createGraphQLErrorForAbort(
-  signal: AbortSignal,
+  reason: any,
   extensions?: Record<string, any>,
 ) {
   return createGraphQLError(
-    'The operation was aborted. reason: ' + signal.reason,
+    'The operation was aborted. reason: ' + reason,
     {
       extensions,
     },
@@ -17,10 +17,10 @@ export function createGraphQLErrorForAbort(
 }
 
 export function createResultForAbort(
-  signal: AbortSignal,
+  reason: any,
   extensions?: Record<string, any>,
 ) {
   return {
-    errors: [createGraphQLErrorForAbort(signal, extensions)],
+    errors: [createGraphQLErrorForAbort(reason, extensions)],
   };
 }

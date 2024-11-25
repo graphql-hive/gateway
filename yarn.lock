@@ -625,7 +625,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.23.9, @babel/parser@npm:^7.26.2":
+"@babel/parser@npm:^7.1.0, @babel/parser@npm:^7.14.7, @babel/parser@npm:^7.20.7, @babel/parser@npm:^7.23.9, @babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.0, @babel/parser@npm:^7.26.2":
   version: 7.26.2
   resolution: "@babel/parser@npm:7.26.2"
   dependencies:
@@ -633,17 +633,6 @@ __metadata:
   bin:
     parser: ./bin/babel-parser.js
   checksum: 10c0/751a743087b3a9172a7599f1421830d44c38f065ef781588d2bfb1c98f9b461719a226feb13c868d7a284783eee120c88ea522593118f2668f46ebfb1105c4d7
-  languageName: node
-  linkType: hard
-
-"@babel/parser@npm:^7.25.9, @babel/parser@npm:^7.26.0":
-  version: 7.26.1
-  resolution: "@babel/parser@npm:7.26.1"
-  dependencies:
-    "@babel/types": "npm:^7.26.0"
-  bin:
-    parser: ./bin/babel-parser.js
-  checksum: 10c0/dc7d4e6b7eb667fa0784e7e2c3f6f92ca12ad72242f6d4311995310dae55093f02acdb595b69b0dbbf04cb61ad87156ac03186ff32eacfa35149c655bc22c14b
   languageName: node
   linkType: hard
 
@@ -6520,18 +6509,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.55":
-  version: 0.9.57
-  resolution: "@whatwg-node/server@npm:0.9.57"
-  dependencies:
-    "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.10.0"
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/7eb7c6f89eda9c0f3dfdf884486b56e111c4fecefb929123ac5a15c6df1c082ae665e60395d075946c8df7d3b0b8550214d9f6fbc5f7a946390d073a985d6f5a
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/server@npm:^0.9.58":
+"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.58":
   version: 0.9.58
   resolution: "@whatwg-node/server@npm:0.9.58"
   dependencies:

@@ -4,9 +4,18 @@ export function useUpstreamCancel(): GatewayPlugin {
   return {
     onFetch({ context, options }) {
       if (context?.request) {
-        options.signal = options.signal
-          ? AbortSignal.any([options.signal, context.request.signal])
-          : context.request.signal;
+        if (options.signal) {
+          const ctrl = new AbortController();
+          context.request.signal.addEventListener('abort', () => {
+            ctrl.abort();
+          });
+          options.signal.addEventListener('abort', () => {
+            ctrl.abort();
+          });
+          options.signal = ctrl.signal;
+        } else {
+          options.signal = context.request.signal;
+        }
       }
     },
   };

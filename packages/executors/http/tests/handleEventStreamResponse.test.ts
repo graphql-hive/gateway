@@ -107,7 +107,7 @@ describe('handleEventStreamResponse', () => {
 
     const response = new Response(readableStream);
     const asyncIterable = handleEventStreamResponse(
-      new AbortController().signal,
+      fakeSignal,
       response,
     );
     const iterator = asyncIterable[Symbol.asyncIterator]();
