@@ -1,10 +1,10 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { getTerminateStack } from '@graphql-mesh/utils';
 import { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
 import { startNodeHttpServer } from './nodeHttp';
 import { ServerForRuntimeOptions } from './types';
-import { getTerminateStack } from '@graphql-mesh/utils';
 
 export function startServerForRuntime<
   TContext extends Record<string, any> = Record<string, any>,
