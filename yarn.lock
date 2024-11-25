@@ -6491,14 +6491,15 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/node-fetch@npm:^0.7.1":
-  version: 0.7.3
-  resolution: "@whatwg-node/node-fetch@npm:0.7.3"
+  version: 0.7.4
+  resolution: "@whatwg-node/node-fetch@npm:0.7.4"
   dependencies:
     "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
     busboy: "npm:^1.6.0"
     fast-querystring: "npm:^1.1.1"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/ab28315e5f1397cc53f1812f0b37a6e9f26f38c198a2edb1fbf4e4d3fda07c6447bef401c1e06a6b62f6d0255d2793b8b9ad3b2aba056480dcb1b14895538c42
+  checksum: 10c0/2ac3fa2bf2534eab6bf33fa511f67e760eb3d190e04970fe7a92bf2f1dfee0ad4ee337ec87d73b51e7b7bdaed8a29b7a19e445e964493693c5bfa06c91ed6479
   languageName: node
   linkType: hard
 
@@ -8200,9 +8201,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.41":
-  version: 1.5.64
-  resolution: "electron-to-chromium@npm:1.5.64"
-  checksum: 10c0/331c2160cc37ef85317b44f2078af8ff16f068fc95d4af2210fe943b567f20b1445a7faa40c05d290bc229102ef1b662371464ba2725d10ff6c8543af6d40adf
+  version: 1.5.65
+  resolution: "electron-to-chromium@npm:1.5.65"
+  checksum: 10c0/4d2db76ca63d34aad9d5392d850a89fecb4d740a3f0e3ab945f23850ed99789df4e09dd36a28cedcf3b4757dd7c82d5d159bfdf1d29f815d172a9132b4ba3bb9
   languageName: node
   linkType: hard
 
