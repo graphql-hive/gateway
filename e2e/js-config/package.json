@@ -5,9 +5,9 @@
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.2.0",
     "@graphql-mesh/cross-helpers": "^0.4.8",
-    "@graphql-mesh/store": "^0.103.2",
-    "@graphql-mesh/types": "^0.103.2",
-    "@graphql-mesh/utils": "^0.103.2",
+    "@graphql-mesh/store": "^0.103.4",
+    "@graphql-mesh/types": "^0.103.4",
+    "@graphql-mesh/utils": "^0.103.4",
     "@graphql-tools/utils": "^10.6.0",
     "graphql": "^16.9.0",
     "tslib": "^2.8.0"
