@@ -102,8 +102,6 @@ export interface HTTPExecutorOptions {
 
 export type HeadersConfig = Record<string, string>;
 
-
-
 // To prevent event listener warnings
 function createSignalWrapper(signal: AbortSignal): AbortSignal {
   const listeners = new Set<EventListener>();
@@ -145,7 +143,7 @@ function createSignalWrapper(signal: AbortSignal): AbortSignal {
         signal.addEventListener('abort', onabort);
       }
     },
-  }
+  };
 }
 
 export function buildHTTPExecutor(
@@ -231,7 +229,10 @@ export function buildHTTPExecutor(
 
     let signal = sharedSignal;
     if (options?.timeout) {
-      signal = AbortSignal.any([sharedSignal, AbortSignal.timeout(options.timeout)]);
+      signal = AbortSignal.any([
+        sharedSignal,
+        AbortSignal.timeout(options.timeout),
+      ]);
     }
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {

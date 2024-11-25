@@ -106,10 +106,7 @@ describe('handleEventStreamResponse', () => {
     });
 
     const response = new Response(readableStream);
-    const asyncIterable = handleEventStreamResponse(
-      fakeSignal,
-      response,
-    );
+    const asyncIterable = handleEventStreamResponse(fakeSignal, response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
     expect(await iterator.next()).toEqual({
