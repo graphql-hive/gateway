@@ -2954,7 +2954,7 @@ __metadata:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
-    "@whatwg-node/server": "npm:^0.9.57"
+    "@whatwg-node/server": "npm:^0.9.58"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
     graphql-yoga: "npm:^5.7.0"
@@ -6520,7 +6520,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.57":
+"@whatwg-node/server@npm:^0.9.55":
   version: 0.9.57
   resolution: "@whatwg-node/server@npm:0.9.57"
   dependencies:
@@ -6528,6 +6528,17 @@ __metadata:
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
   checksum: 10c0/7eb7c6f89eda9c0f3dfdf884486b56e111c4fecefb929123ac5a15c6df1c082ae665e60395d075946c8df7d3b0b8550214d9f6fbc5f7a946390d073a985d6f5a
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/server@npm:^0.9.58":
+  version: 0.9.58
+  resolution: "@whatwg-node/server@npm:0.9.58"
+  dependencies:
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
+    "@whatwg-node/fetch": "npm:^0.10.0"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/4d5c7d1e5e7ce8a4dab91afebcfe1d5396fb62557290542e31d2301af937f8b1bef78a1d11c2e772508000e94d6841376540de1f7ca7bab07fb68bbd236cb013
   languageName: node
   linkType: hard
 
