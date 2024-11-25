@@ -1,5 +1,4 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { getTerminateStack } from '@graphql-mesh/utils';
 import { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
@@ -36,8 +35,6 @@ export function startServerForRuntime<
   };
 
   const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
-
-  getTerminateStack().use(runtime);
 
   return startServer(runtime, serverOpts);
 }
