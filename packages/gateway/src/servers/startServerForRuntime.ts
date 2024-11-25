@@ -4,6 +4,7 @@ import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
 import { startNodeHttpServer } from './nodeHttp';
 import { ServerForRuntimeOptions } from './types';
+import { getTerminateStack } from '@graphql-mesh/utils';
 
 export function startServerForRuntime<
   TContext extends Record<string, any> = Record<string, any>,
@@ -35,6 +36,8 @@ export function startServerForRuntime<
   };
 
   const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
+
+  getTerminateStack().use(runtime);
 
   return startServer(runtime, serverOpts);
 }
