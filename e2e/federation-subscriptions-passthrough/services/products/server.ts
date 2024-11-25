@@ -108,6 +108,7 @@ const server = new ApolloServer({
 
 export async function start(port: number): Promise<Server> {
   await server.start();
+  // @ts-expect-error - ApolloServer's types are incorrect
   app.use('/graphql', express.json(), expressMiddleware(server));
   return new Promise((resolve) => {
     httpServer.listen(port, () => {
