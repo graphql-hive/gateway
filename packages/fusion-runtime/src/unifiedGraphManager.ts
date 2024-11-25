@@ -1,10 +1,9 @@
-import { getInContextSDK } from '@graphql-mesh/runtime';
 import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
-import { requestIdByRequest } from '@graphql-mesh/utils';
+import { getInContextSDK, requestIdByRequest } from '@graphql-mesh/utils';
 import type {
   DelegationPlanBuilder,
   StitchingInfo,
