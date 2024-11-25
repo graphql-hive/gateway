@@ -10,7 +10,7 @@ import {
   mapMaybePromise,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { fetch as defaultFetch } from '@whatwg-node/fetch';
+import { fetch as defaultFetch, Request } from '@whatwg-node/fetch';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
@@ -110,40 +110,27 @@ function createSignalWrapper(signal: AbortSignal): AbortSignal {
       listener(event);
     }
   });
-  let onabort: EventListener | null = null;
-  return {
-    any: AbortSignal.any,
-    get aborted() {
-      return signal.aborted;
-    },
-    addEventListener(_type: 'abort', listener: EventListener) {
-      listeners.add(listener);
-    },
-    removeEventListener(_type: 'abort', listener: EventListener) {
-      listeners.delete(listener);
-    },
-    dispatchEvent(event) {
-      return signal.dispatchEvent(event);
-    },
-    get reason() {
-      return signal.reason;
-    },
-    throwIfAborted() {
-      return signal.throwIfAborted();
-    },
-    get onabort() {
-      return onabort;
-    },
-    set onabort(value) {
-      if (onabort) {
-        signal.removeEventListener('abort', onabort);
+  return new Proxy(signal, {
+    get(target, prop) {
+      if (prop === 'addEventListener') {
+        return function addEventListener(
+          _type: 'abort',
+          listener: EventListener,
+        ) {
+          listeners.add(listener);
+        };
       }
-      onabort = value;
-      if (onabort) {
-        signal.addEventListener('abort', onabort);
+      if (prop === 'removeEventListener') {
+        return function removeEventListener(
+          _type: 'abort',
+          listener: EventListener,
+        ) {
+          listeners.delete(listener);
+        };
       }
+      return Reflect.get(target, prop);
     },
-  };
+  });
 }
 
 export function buildHTTPExecutor(
@@ -173,7 +160,10 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   const disposeCtrl = new AbortController();
-  const sharedSignal = createSignalWrapper(disposeCtrl.signal);
+  const sharedSignal =
+    Request !== globalThis.Request
+      ? createSignalWrapper(disposeCtrl.signal)
+      : disposeCtrl.signal;
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
   ) => {
