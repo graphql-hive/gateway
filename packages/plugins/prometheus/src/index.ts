@@ -96,7 +96,7 @@ type MeshMetricsConfig = {
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
     graphql_gateway_subgraph_execute_duration: HistogramMetricOption<
-      'todo',
+      'subgraphExecute',
       'subgraphName' | 'operationType',
       SubgraphMetricsLabelParams
     >;
@@ -114,7 +114,7 @@ type MeshMetricsConfig = {
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
     graphql_gateway_subgraph_execute_errors: CounterMetricOption<
-      'todo',
+      'subgraphExecute',
       'subgraphName' | 'operationType',
       SubgraphMetricsLabelParams
     >;
@@ -251,13 +251,13 @@ export default function useMeshPrometheus(
   );
 
   const subgraphExecuteHistogram = getHistogramFromConfig<
-    'todo',
+    'subgraphExecute',
     NonNullable<PrometheusPluginOptions['metrics']>,
     SubgraphMetricsLabelParams
   >(
     config,
     'graphql_gateway_subgraph_execute_duration',
-    ['todo'],
+    ['subgraphExecute'],
     {
       labelNames: ['subgraphName', 'operationName', 'operationType'],
       help: 'Time spent on subgraph execution',
@@ -270,13 +270,13 @@ export default function useMeshPrometheus(
   );
 
   const subgraphExecuteErrorCounter = getCounterFromConfig<
-    'todo',
+    'subgraphExecute',
     NonNullable<PrometheusPluginOptions['metrics']>,
     SubgraphMetricsLabelParams
   >(
     config,
     'graphql_gateway_subgraph_execute_errors',
-    ['todo'],
+    ['subgraphExecute'],
     {
       labelNames: ['subgraphName', 'operationName', 'operationType'],
       help: 'Number of errors on subgraph execution',
