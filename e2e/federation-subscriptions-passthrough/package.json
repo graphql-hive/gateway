@@ -13,7 +13,7 @@
     "@repeaterjs/repeater": "^3.0.6",
     "@types/express": "^5.0.0",
     "@types/ws": "^8",
-    "express": "^4.19.2",
+    "express": "^4.21.1",
     "graphql-sse": "^2.5.3",
     "graphql-ws": "^5.16.0",
     "ws": "^8.17.1"

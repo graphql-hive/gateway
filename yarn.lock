@@ -2161,7 +2161,7 @@ __metadata:
     "@types/express": "npm:^5.0.0"
     "@types/ws": "npm:^8"
     "@whatwg-node/fetch": "npm:^0.10.0"
-    express: "npm:^4.19.2"
+    express: "npm:^4.21.1"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
     graphql-ws: "npm:^5.16.0"
@@ -8877,7 +8877,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.19.2, express@npm:^4.21.1":
+"express@npm:^4.21.1":
   version: 4.21.1
   resolution: "express@npm:4.21.1"
   dependencies:
