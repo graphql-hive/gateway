@@ -1,4 +1,4 @@
-import { afterEach } from 'node:test';
+import { beforeEach } from 'node:test';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
@@ -65,7 +65,7 @@ describe('Prometheus', () => {
     });
   }
 
-  afterEach(() => registry.clear());
+  beforeEach(() => registry.clear());
 
   it('should track subgraph requests', async () => {
     await using gateway = newTestRuntime();
