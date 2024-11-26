@@ -250,19 +250,18 @@ function executeDelegationStage(
         );
         if (isPromise(resolverResult$)) {
           jobs.push(
-            (
-              resolverResult$.then(
-                (resolverResult) =>
-                  handleResolverResult(
-                    resolverResult,
-                    subschema,
-                    selectionSet,
-                    object,
-                    combinedFieldSubschemaMap,
-                    info,
-                    path,
-                    combinedErrors,
-                  ),
+            resolverResult$.then(
+              (resolverResult) =>
+                handleResolverResult(
+                  resolverResult,
+                  subschema,
+                  selectionSet,
+                  object,
+                  combinedFieldSubschemaMap,
+                  info,
+                  path,
+                  combinedErrors,
+                ),
               (error) =>
                 handleResolverResult(
                   error,
@@ -274,8 +273,7 @@ function executeDelegationStage(
                   path,
                   combinedErrors,
                 ),
-              )
-            )
+            ),
           );
         } else {
           handleResolverResult(
