@@ -439,7 +439,7 @@ export function buildHTTPExecutor(
       let result: ExecutionResult<any> | undefined;
       let attempt = 0;
       function retryAttempt():
-        | Promise<ExecutionResult<any>>
+        | PromiseLike<ExecutionResult<any>>
         | ExecutionResult<any> {
         if (disposeCtrl?.signal.aborted) {
           return createResultForAbort(disposeCtrl.signal);
@@ -459,7 +459,7 @@ export function buildHTTPExecutor(
             return retryAttempt();
           }
           return result;
-        }) as Promise<ExecutionResult>;
+        });
       }
       return retryAttempt();
     };
