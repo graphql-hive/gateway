@@ -97,7 +97,7 @@ type MeshMetricsConfig = {
      */
     graphql_gateway_subgraph_execute_duration: HistogramMetricOption<
       'subgraphExecute',
-      'subgraphName' | 'operationType',
+      string,
       SubgraphMetricsLabelParams
     >;
 
@@ -115,7 +115,7 @@ type MeshMetricsConfig = {
      */
     graphql_gateway_subgraph_execute_errors: CounterMetricOption<
       'subgraphExecute',
-      'subgraphName' | 'operationType',
+      string,
       SubgraphMetricsLabelParams
     >;
   };
