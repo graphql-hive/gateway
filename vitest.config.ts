@@ -6,7 +6,11 @@ import { defineConfig } from 'vitest/config';
 // packages as per the Node resolution spec.
 //
 // Vite will process inlined modules.
-const inline = [/@graphql-mesh\/utils/, /@graphql-mesh\/runtime/, /@graphql-mesh\/fusion-composition/];
+const inline = [
+  /@graphql-mesh\/utils/,
+  /@graphql-mesh\/runtime/,
+  /@graphql-mesh\/fusion-composition/,
+];
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
