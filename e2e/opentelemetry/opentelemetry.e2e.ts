@@ -146,7 +146,7 @@ describe('OpenTelemetry', () => {
               }
               return res;
             }
-          } catch { }
+          } catch {}
         }
         return res;
       }

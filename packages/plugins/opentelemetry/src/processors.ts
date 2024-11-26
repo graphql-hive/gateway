@@ -60,13 +60,17 @@ export function createOtlpGrpcExporter(
   return mapMaybePromise(
     import(`${exporterModulePrefix}grpc`),
     (mod) => {
-      const OTLPTraceExporter = mod?.default?.OTLPTraceExporter || mod?.OTLPTraceExporter;
+      const OTLPTraceExporter =
+        mod?.default?.OTLPTraceExporter || mod?.OTLPTraceExporter;
       if (!OTLPTraceExporter) {
         throw new Error(
           'OTLP gRPC exporter is not available in the current environment',
         );
       }
-      return resolveBatchingConfig(new OTLPTraceExporter(config), batchingConfig);
+      return resolveBatchingConfig(
+        new OTLPTraceExporter(config),
+        batchingConfig,
+      );
     },
     (err) => {
       console.error(err);
