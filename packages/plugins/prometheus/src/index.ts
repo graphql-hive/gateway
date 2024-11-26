@@ -33,8 +33,7 @@ import {
 } from '@graphql-yoga/plugin-prometheus';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isAsyncIterable, type Plugin as YogaPlugin } from 'graphql-yoga';
-import type { Registry } from 'prom-client';
-import { register as defaultRegistry } from 'prom-client';
+import { register as defaultRegistry, Registry } from 'prom-client';
 
 export { createCounter, createHistogram, createSummary };
 export type {
