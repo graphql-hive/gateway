@@ -13,31 +13,21 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
     onFetch({ url, options, logger = opts.logger }) {
       logger = logger.child('fetch');
       const fetchId = fetchAPI.crypto.randomUUID();
-      logger.debug('request', () =>
-        JSON.stringify(
-          {
-            fetchId,
-            url,
-            ...(options || {}),
-            body: options?.body,
-            headers: options?.headers,
-          },
-          null,
-          '  ',
-        ),
-      );
+      logger.debug('request', () => ({
+        fetchId,
+        url,
+        ...(options || {}),
+        body: options?.body && JSON.stringify(options.body),
+        headers: options?.headers && JSON.stringify(options.headers, null, 2),
+      }));
       return function onFetchDone({ response }) {
-        logger.debug('response', () =>
-          JSON.stringify(
-            {
-              fetchId,
-              status: response.status,
-              headers: Object.fromEntries(response.headers.entries()),
-            },
-            null,
-            '  ',
+        logger.debug('response', () => ({
+          fetchId,
+          status: response.status,
+          headers: JSON.stringify(
+            Object.fromEntries(response.headers.entries()),
           ),
-        );
+        }));
       };
     },
   };
