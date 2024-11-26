@@ -12859,7 +12859,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.43, postcss@npm:^8.4.49":
+"postcss@npm:^8.4.49":
   version: 8.4.49
   resolution: "postcss@npm:8.4.49"
   dependencies:
@@ -13474,7 +13474,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"rollup@npm:^4.18.1, rollup@npm:^4.20.0, rollup@npm:^4.23.0":
+"rollup@npm:^4.18.1, rollup@npm:^4.23.0":
   version: 4.27.4
   resolution: "rollup@npm:4.27.4"
   dependencies:
@@ -15075,49 +15075,6 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
     vite:
       optional: true
   checksum: 10c0/d48ce9cf33abdfda35e16dc77811394e39a6c44580bcac97f6dcbb806e9e84f9876a4e6b73c42d759476498e17f6adbed2423c1ca2ec951a6843d65fd3f4e45f
-  languageName: node
-  linkType: hard
-
-"vite@npm:^5.0.0":
-  version: 5.4.11
-  resolution: "vite@npm:5.4.11"
-  dependencies:
-    esbuild: "npm:^0.21.3"
-    fsevents: "npm:~2.3.3"
-    postcss: "npm:^8.4.43"
-    rollup: "npm:^4.20.0"
-  peerDependencies:
-    "@types/node": ^18.0.0 || >=20.0.0
-    less: "*"
-    lightningcss: ^1.21.0
-    sass: "*"
-    sass-embedded: "*"
-    stylus: "*"
-    sugarss: "*"
-    terser: ^5.4.0
-  dependenciesMeta:
-    fsevents:
-      optional: true
-  peerDependenciesMeta:
-    "@types/node":
-      optional: true
-    less:
-      optional: true
-    lightningcss:
-      optional: true
-    sass:
-      optional: true
-    sass-embedded:
-      optional: true
-    stylus:
-      optional: true
-    sugarss:
-      optional: true
-    terser:
-      optional: true
-  bin:
-    vite: bin/vite.js
-  checksum: 10c0/d536bb7af57dd0eca2a808f95f5ff1d7b7ffb8d86e17c6893087680a0448bd0d15e07475270c8a6de65cb5115592d037130a1dd979dc76bcef8c1dda202a1874
   languageName: node
   linkType: hard
 
