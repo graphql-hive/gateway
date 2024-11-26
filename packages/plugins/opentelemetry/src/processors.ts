@@ -1,3 +1,4 @@
+import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
 import { OTLPTraceExporter as OtlpHttpExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   ZipkinExporter,
@@ -54,18 +55,28 @@ export function createOtlpHttpExporter(
 export function createOtlpGrpcExporter(
   config: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
-): SpanProcessor {
-  const requireFn = globalThis.require;
-  if (!requireFn) {
-    throw new Error(
-      'OTLP gRPC exporter is not available in the current environment',
-    );
-  }
+): MaybePromise<SpanProcessor> {
   const exporterModulePrefix = `@opentelemetry/exporter-trace-otlp-`;
-  const {
-    OTLPTraceExporter: OtlpGrpcExporter,
-  }: typeof import('@opentelemetry/exporter-trace-otlp-grpc') = requireFn(
-    `${exporterModulePrefix}grpc`,
+  return mapMaybePromise(
+    import(`${exporterModulePrefix}grpc`),
+    (mod) => {
+      const OTLPTraceExporter =
+        mod?.default?.OTLPTraceExporter || mod?.OTLPTraceExporter;
+      if (!OTLPTraceExporter) {
+        throw new Error(
+          'OTLP gRPC exporter is not available in the current environment',
+        );
+      }
+      return resolveBatchingConfig(
+        new OTLPTraceExporter(config),
+        batchingConfig,
+      );
+    },
+    (err) => {
+      console.error(err);
+      throw new Error(
+        'OTLP gRPC exporter is not available in the current environment',
+      );
+    },
   );
-  return resolveBatchingConfig(new OtlpGrpcExporter(config), batchingConfig);
 }

@@ -60,6 +60,8 @@ const deps = {
     '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
   'node_modules/@graphql-mesh/hmac-upstream-signature/index':
     '../plugins/hmac-upstream-signature/src/index.ts',
+  'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
+    '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
 };
 
 if (
