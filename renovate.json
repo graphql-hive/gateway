@@ -25,6 +25,10 @@
         "!/graphql-mesh/",
         "*"
       ]
+    },
+    {
+      "groupName": "all graphql-mesh dependencies",
+      "matchPackageNames": ["/graphql-mesh/", "/omnigraph/"]
     }
   ]
 }
