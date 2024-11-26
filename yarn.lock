@@ -5044,58 +5044,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-darwin-aarch64@npm:1.1.36"
+"@oven/bun-darwin-aarch64@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-darwin-aarch64@npm:1.1.37"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64-baseline@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.36"
+"@oven/bun-darwin-x64-baseline@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.37"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-darwin-x64@npm:1.1.36"
+"@oven/bun-darwin-x64@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-darwin-x64@npm:1.1.37"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-linux-aarch64@npm:1.1.36"
+"@oven/bun-linux-aarch64@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-linux-aarch64@npm:1.1.37"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-baseline@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.36"
+"@oven/bun-linux-x64-baseline@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.37"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-linux-x64@npm:1.1.36"
+"@oven/bun-linux-x64@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-linux-x64@npm:1.1.37"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64-baseline@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.36"
+"@oven/bun-windows-x64-baseline@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.37"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64@npm:1.1.36":
-  version: 1.1.36
-  resolution: "@oven/bun-windows-x64@npm:1.1.36"
+"@oven/bun-windows-x64@npm:1.1.37":
+  version: 1.1.37
+  resolution: "@oven/bun-windows-x64@npm:1.1.37"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -5788,11 +5788,11 @@ __metadata:
   linkType: hard
 
 "@types/bun@npm:^1.1.13":
-  version: 1.1.13
-  resolution: "@types/bun@npm:1.1.13"
+  version: 1.1.14
+  resolution: "@types/bun@npm:1.1.14"
   dependencies:
-    bun-types: "npm:1.1.34"
-  checksum: 10c0/46cae932a64074b3e3596858d38099589f7c394e0b27b42e49ad5bd884974784e2929ac72336515ce20579da2c90033f8b01578f9e1f8f7558a58e78f721e832
+    bun-types: "npm:1.1.37"
+  checksum: 10c0/37f5dacd501939096e15f3d3ba3cb4cb1fd05619e14240ed90a9dfe594803ffa6c5fd9579618ed3ad77e8d37c322a5732145ea1d72e238f4b15f23ba41251ab9
   languageName: node
   linkType: hard
 
@@ -6016,11 +6016,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.7.5, @types/node@npm:^22.7.6, @types/node@npm:^22.9.0":
-  version: 22.9.3
-  resolution: "@types/node@npm:22.9.3"
+  version: 22.10.0
+  resolution: "@types/node@npm:22.10.0"
   dependencies:
-    undici-types: "npm:~6.19.8"
-  checksum: 10c0/954ec72bf29436ea62425a9563914a9c1e93f97b18194acd51d74d13998a701977547ed2985ed3a0e97211b785436d28377116e5f613bfcf3182d9bd81d784dc
+    undici-types: "npm:~6.20.0"
+  checksum: 10c0/efb3783b6fe74b4300c5bdd4f245f1025887d9b1d0950edae584af58a30d95cc058c10b4b3428f8300e4318468b605240c2ede8fcfb6ead2e0f05bca31e54c1b
   languageName: node
   linkType: hard
 
@@ -6032,11 +6032,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^18.11.18":
-  version: 18.19.65
-  resolution: "@types/node@npm:18.19.65"
+  version: 18.19.66
+  resolution: "@types/node@npm:18.19.66"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10c0/9c093f13749dccd16a3e9cd17080db057d1e94cb5205a871d2818ad51ec19d7d392a7c12a11661c6a6f4404cbd85b19d09ab6c564a4763cab2ff5bb0e198617d
+  checksum: 10c0/d6a31a3f03c4e2c62cdd319ab7f6ff66038d7408158304cfe0a852c9b0247893f5173bafffa0a090bcc279a6015a7c8399a51bf8e44f781edd4d41c43f274edb
   languageName: node
   linkType: hard
 
@@ -7210,28 +7210,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.1.34":
-  version: 1.1.34
-  resolution: "bun-types@npm:1.1.34"
+"bun-types@npm:1.1.37":
+  version: 1.1.37
+  resolution: "bun-types@npm:1.1.37"
   dependencies:
     "@types/node": "npm:~20.12.8"
     "@types/ws": "npm:~8.5.10"
-  checksum: 10c0/922552b70f1d43c9990cd440b732793bcd7a4e277a645885532a0e1b605c857aba23ba993df484e053a4699ef1949b5056d9ef7971c9ba409d3c67917216734f
+  checksum: 10c0/130cfb11ac66ec52264158ba043fb38d693fa71796ecf082ca75a02733ee70dd5958340fa4c30374a9052e4d6eb2bd305470cbb76aaa4ad4da3fda61011aa62b
   languageName: node
   linkType: hard
 
 "bun@npm:^1.1.34":
-  version: 1.1.36
-  resolution: "bun@npm:1.1.36"
+  version: 1.1.37
+  resolution: "bun@npm:1.1.37"
   dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.1.36"
-    "@oven/bun-darwin-x64": "npm:1.1.36"
-    "@oven/bun-darwin-x64-baseline": "npm:1.1.36"
-    "@oven/bun-linux-aarch64": "npm:1.1.36"
-    "@oven/bun-linux-x64": "npm:1.1.36"
-    "@oven/bun-linux-x64-baseline": "npm:1.1.36"
-    "@oven/bun-windows-x64": "npm:1.1.36"
-    "@oven/bun-windows-x64-baseline": "npm:1.1.36"
+    "@oven/bun-darwin-aarch64": "npm:1.1.37"
+    "@oven/bun-darwin-x64": "npm:1.1.37"
+    "@oven/bun-darwin-x64-baseline": "npm:1.1.37"
+    "@oven/bun-linux-aarch64": "npm:1.1.37"
+    "@oven/bun-linux-x64": "npm:1.1.37"
+    "@oven/bun-linux-x64-baseline": "npm:1.1.37"
+    "@oven/bun-windows-x64": "npm:1.1.37"
+    "@oven/bun-windows-x64-baseline": "npm:1.1.37"
   dependenciesMeta:
     "@oven/bun-darwin-aarch64":
       optional: true
@@ -7252,7 +7252,7 @@ __metadata:
   bin:
     bun: bin/bun.exe
     bunx: bin/bun.exe
-  checksum: 10c0/68d632d45741590b758e3593c4c2ec9d06fecb6a2b1c8968885dda3931e06d0d8d20484e363a7bc9498d535afa6016ba2db305364d8acaba6115a4bfa418f364
+  checksum: 10c0/57095b1cffd7eeb0c0b818c9b7fbc7659740f6c2fed4d9bd5b21b61d5ac8fe3d876705ba997d46fadd749b21d463075597af7a13f2e8746b1d522905fee2c96a
   conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
   languageName: node
   linkType: hard
@@ -12881,11 +12881,11 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   linkType: hard
 
 "prettier@npm:^3.3.3":
-  version: 3.3.3
-  resolution: "prettier@npm:3.3.3"
+  version: 3.4.0
+  resolution: "prettier@npm:3.4.0"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/b85828b08e7505716324e4245549b9205c0cacb25342a030ba8885aba2039a115dbcf75a0b7ca3b37bc9d101ee61fab8113fc69ca3359f2a226f1ecc07ad2e26
+  checksum: 10c0/00974e5053dcf04cefe8d6bdef16d6a311d834ff074e927dcb85a425c8a300113fe60dc269373c892edb58e0e57749541f2a7a91ee51cdd40ab3092587772cae
   languageName: node
   linkType: hard
 
@@ -14769,10 +14769,10 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~6.19.8":
-  version: 6.19.8
-  resolution: "undici-types@npm:6.19.8"
-  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
+"undici-types@npm:~6.20.0":
+  version: 6.20.0
+  resolution: "undici-types@npm:6.20.0"
+  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
   languageName: node
   linkType: hard
 
