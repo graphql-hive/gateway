@@ -9,7 +9,6 @@ const { service, gateway, container, composeWithApollo, gatewayRunner } =
   createTenv(__dirname);
 
 let supergraph!: string;
-let jaeger: Container;
 
 const JAEGER_HOSTNAME =
   gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
@@ -100,41 +99,10 @@ type JaegerTracesApiResponse = {
   }>;
 };
 
-async function getJaegerTraces(
-  service: string,
-  expectedDataLength: number,
-  expectedData?: (data: JaegerTracesApiResponse) => boolean,
-): Promise<JaegerTracesApiResponse> {
-  const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
-
-  let res!: JaegerTracesApiResponse;
-  const signal = AbortSignal.timeout(2000);
-  while (!signal.aborted) {
-    try {
-      res = await fetch(url).then((r) => r.json());
-      if (res.data.length >= expectedDataLength) {
-        if (expectedData && !expectedData(res)) {
-          continue;
-        }
-        return res;
-      }
-    } catch {}
-  }
-  return res;
-}
-
-const urls = {
-  get http() {
-    return `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`;
-  },
-  get grpc() {
-    return `http://${JAEGER_HOSTNAME}:${jaeger.additionalPorts[4317]}`;
-  },
-};
-
-describe.sequential('OpenTelemetry', () => {
+describe('OpenTelemetry', () => {
   (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
-    describe.sequential(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
+    describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
+      let jaeger: Container;
       beforeAll(async () => {
         jaeger = await container({
           name: `jaeger-${OTLP_EXPORTER_TYPE}`,
@@ -150,6 +118,38 @@ describe.sequential('OpenTelemetry', () => {
           healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
         });
       });
+
+      const urls = {
+        get http() {
+          return `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`;
+        },
+        get grpc() {
+          return `http://${JAEGER_HOSTNAME}:${jaeger.additionalPorts[4317]}`;
+        },
+      };
+
+      async function getJaegerTraces(
+        service: string,
+        expectedDataLength: number,
+        expectedData?: (data: JaegerTracesApiResponse) => boolean,
+      ): Promise<JaegerTracesApiResponse> {
+        const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
+
+        let res!: JaegerTracesApiResponse;
+        const signal = AbortSignal.timeout(2000);
+        while (!signal.aborted) {
+          try {
+            res = await fetch(url).then((r) => r.json());
+            if (res.data.length >= expectedDataLength) {
+              if (expectedData && !expectedData(res)) {
+                continue;
+              }
+              return res;
+            }
+          } catch { }
+        }
+        return res;
+      }
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({

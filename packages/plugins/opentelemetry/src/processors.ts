@@ -59,10 +59,15 @@ export function createOtlpGrpcExporter(
   const exporterModulePrefix = `@opentelemetry/exporter-trace-otlp-`;
   return mapMaybePromise(
     import(`${exporterModulePrefix}grpc`),
-    ({
-      OTLPTraceExporter,
-    }: typeof import('@opentelemetry/exporter-trace-otlp-grpc')) =>
-      resolveBatchingConfig(new OTLPTraceExporter(config), batchingConfig),
+    (mod) => {
+      const OTLPTraceExporter = mod?.default?.OTLPTraceExporter || mod?.OTLPTraceExporter;
+      if (!OTLPTraceExporter) {
+        throw new Error(
+          'OTLP gRPC exporter is not available in the current environment',
+        );
+      }
+      return resolveBatchingConfig(new OTLPTraceExporter(config), batchingConfig);
+    },
     (err) => {
       console.error(err);
       throw new Error(
