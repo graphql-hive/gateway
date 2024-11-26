@@ -10,6 +10,7 @@ const inline = [
   /@graphql-mesh\/utils/,
   /@graphql-mesh\/runtime/,
   /@graphql-mesh\/fusion-composition/,
+  /@graphql-mesh\/plugin-hive/,
 ];
 
 export default defineConfig({
