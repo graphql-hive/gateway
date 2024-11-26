@@ -1,11 +1,10 @@
-import { beforeEach } from 'node:test';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { isDebug } from '@internal/testing';
 import { createSchema } from 'graphql-yoga';
 import { Registry, register as registry } from 'prom-client';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import usePrometheus, {
   createCounter,
   createHistogram,
