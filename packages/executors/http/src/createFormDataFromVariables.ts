@@ -4,7 +4,6 @@ import {
   FormData as DefaultFormData,
 } from '@whatwg-node/fetch';
 import { extractFiles, isExtractableFile } from 'extract-files';
-import { ValueOrPromise } from 'value-or-promise';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
 
 export function createFormDataFromVariables<TVariables>(
@@ -102,13 +101,18 @@ export function createFormDataFromVariables<TVariables>(
       }
     }
   }
-  return ValueOrPromise.all(
-    uploads.map(
-      (upload, i) => new ValueOrPromise(() => handleUpload(upload, i)),
-    ),
-  )
-    .then(() => form)
-    .resolve();
+  const jobs: PromiseLike<void>[] = [];
+  for (const i in uploads) {
+    const upload = uploads[i];
+    const job = handleUpload(upload, Number(i));
+    if (isPromise(job)) {
+      jobs.push(job);
+    }
+  }
+  if (jobs.length > 0) {
+    return Promise.all(jobs).then(() => form);
+  }
+  return form;
 }
 
 function isBlob(obj: any): obj is Blob {

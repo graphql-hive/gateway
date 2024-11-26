@@ -4,7 +4,11 @@ import {
   IExecutableSchemaDefinition,
   makeExecutableSchema,
 } from '@graphql-tools/schema';
-import { printSchemaWithDirectives, TypeSource } from '@graphql-tools/utils';
+import {
+  mapMaybePromise,
+  printSchemaWithDirectives,
+  TypeSource,
+} from '@graphql-tools/utils';
 import {
   GraphQLResolveInfo,
   Kind,
@@ -12,7 +16,6 @@ import {
   ObjectTypeExtensionNode,
   visit,
 } from 'graphql';
-import { ValueOrPromise } from 'value-or-promise';
 
 export const SubgraphBaseSDL = /* GraphQL */ `
   scalar _Any
@@ -119,15 +122,14 @@ export function buildSubgraphSchema<TContext = any>(
           context: TContext,
           info: any,
         ) =>
-          ValueOrPromise.all(
-            args.representations.map((representation) =>
-              new ValueOrPromise(() =>
-                givenResolvers[representation.__typename]?.__resolveReference?.(
-                  representation,
-                  context,
-                  info,
-                ),
-              ).then((resolvedEntity) => {
+          args.representations.map((representation) =>
+            mapMaybePromise(
+              givenResolvers[representation.__typename]?.__resolveReference?.(
+                representation,
+                context,
+                info,
+              ),
+              (resolvedEntity) => {
                 if (!resolvedEntity) {
                   return representation;
                 }
@@ -135,9 +137,9 @@ export function buildSubgraphSchema<TContext = any>(
                   resolvedEntity.__typename = representation.__typename;
                 }
                 return resolvedEntity;
-              }),
+              },
             ),
-          ).resolve(),
+          ),
       },
     });
   }
