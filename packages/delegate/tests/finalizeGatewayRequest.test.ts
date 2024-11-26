@@ -2,7 +2,7 @@ import { DelegationContext } from '@graphql-tools/delegate';
 import {
   bookingSchema,
   propertySchema,
-} from '@internal/testing/fixtures/schemas.js';
+} from '@internal/testing/fixtures/schemas';
 import { parse, print } from 'graphql';
 import { describe, expect, test } from 'vitest';
 import { finalizeGatewayRequest } from '../src/finalizeGatewayRequest.js';

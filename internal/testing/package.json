@@ -1,6 +1,10 @@
 {
   "name": "@internal/testing",
   "private": true,
+  "main": "./src/index.ts",
+  "exports": {
+    "./fixtures/schemas": "./fixtures/schemas.ts"
+  },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@whatwg-node/disposablestack": "^0.0.5",

@@ -1,6 +1,6 @@
 import { execute } from '@graphql-tools/executor';
 import { RenameTypes, wrapSchema } from '@graphql-tools/wrap';
-import { propertySchema } from '@internal/testing/fixtures/schemas.js';
+import { propertySchema } from '@internal/testing/fixtures/schemas';
 import { GraphQLSchema, parse } from 'graphql';
 import { beforeAll, describe, expect, test } from 'vitest';
 

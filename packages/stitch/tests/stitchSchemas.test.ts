@@ -26,7 +26,7 @@ import {
   remotePropertySchema,
   subscriptionPubSub,
   subscriptionPubSubTrigger,
-} from '@internal/testing/fixtures/schemas.js';
+} from '@internal/testing/fixtures/schemas';
 import {
   buildSchema,
   graphql,

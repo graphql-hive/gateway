@@ -7,7 +7,7 @@ import {
   Property,
   propertySchema,
   sampleData,
-} from '@internal/testing/fixtures/schemas.js';
+} from '@internal/testing/fixtures/schemas';
 import { graphql, OperationTypeNode } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';
