@@ -2929,7 +2929,7 @@ __metadata:
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
-    "@whatwg-node/server": "npm:^0.9.56"
+    "@whatwg-node/server": "npm:^0.9.60"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
     graphql-yoga: "npm:^5.7.0"
@@ -6471,7 +6471,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.56":
+"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.60":
   version: 0.9.60
   resolution: "@whatwg-node/server@npm:0.9.60"
   dependencies:

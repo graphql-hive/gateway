@@ -112,7 +112,7 @@ export default {
         },
         () =>
           Promise.all([
-            isDisposable(httpExecutor) && dispose(httpExecutor),
+            dispose(httpExecutor),
             isDisposable(subscriptionsExecutor) &&
               dispose(subscriptionsExecutor),
           ]).then(() => {}),

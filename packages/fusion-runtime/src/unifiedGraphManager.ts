@@ -105,7 +105,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
   batch?: boolean;
 }
 
-export class UnifiedGraphManager<TContext> {
+export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private batch: boolean;
   private handleUnifiedGraph: UnifiedGraphHandler;
   private unifiedGraph?: GraphQLSchema;
@@ -116,7 +116,6 @@ export class UnifiedGraphManager<TContext> {
   private currentTimeout: ReturnType<typeof setTimeout> | undefined;
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<true>;
-  private disposableStack = new AsyncDisposableStack();
   private _transportEntryMap?: Record<string, TransportEntry>;
   private _transportExecutorStack?: AsyncDisposableStack;
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
@@ -127,14 +126,14 @@ export class UnifiedGraphManager<TContext> {
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
       opts?.onDelegationStageExecuteHooks || [];
-    this.disposableStack.defer(() => {
-      this.unifiedGraph = undefined;
-      this.lastLoadedUnifiedGraph = undefined;
-      this.inContextSDK = undefined;
-      this.initialUnifiedGraph$ = undefined;
-      this.pausePolling();
-      return this._transportExecutorStack?.disposeAsync();
-    });
+  }
+
+  private cleanup() {
+    this.unifiedGraph = undefined;
+    this.lastLoadedUnifiedGraph = undefined;
+    this.inContextSDK = undefined;
+    this.initialUnifiedGraph$ = undefined;
+    this.pausePolling();
   }
 
   private pausePolling() {
@@ -185,143 +184,147 @@ export class UnifiedGraphManager<TContext> {
               'Unified Graph changed, updating...',
             );
           }
-          let cleanupJob$: MaybePromise<void> | undefined;
-          if (this._transportExecutorStack) {
-            cleanupJob$ = this._transportExecutorStack.disposeAsync();
-          }
-          return mapMaybePromise(cleanupJob$, () => {
-            this._transportExecutorStack = new AsyncDisposableStack();
-            this.lastLoadedUnifiedGraph ||= loadedUnifiedGraph;
-            this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
-            this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
-            const {
-              unifiedGraph: newUnifiedGraph,
-              transportEntryMap,
-              subschemas,
-              additionalResolvers,
-            } = this.handleUnifiedGraph({
-              unifiedGraph: this.unifiedGraph,
-              additionalTypeDefs: this.opts.additionalTypeDefs,
-              additionalResolvers: this.opts.additionalResolvers,
-              onSubgraphExecute(subgraphName, execReq) {
-                return onSubgraphExecute(subgraphName, execReq);
-              },
-              onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
-              transportEntryAdditions: this.opts.transportEntryAdditions,
-              batch: this.batch,
-              logger: this.opts.transportContext?.logger,
-            });
-            this.unifiedGraph = newUnifiedGraph;
-            const onSubgraphExecute = getOnSubgraphExecute({
-              onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
-              transports: this.opts.transports,
-              transportContext: this.opts.transportContext,
-              transportEntryMap,
-              getSubgraphSchema(subgraphName) {
-                const subgraph = subschemas.find(
-                  (s) => s.name && compareSubgraphNames(s.name, subgraphName),
-                );
-                if (!subgraph) {
-                  throw new Error(`Subgraph ${subgraphName} not found`);
-                }
-                return subgraph.schema;
-              },
-              transportExecutorStack: this._transportExecutorStack,
-            });
-            if (this.opts.additionalResolvers || additionalResolvers.length) {
-              this.inContextSDK = getInContextSDK(
-                this.unifiedGraph,
-                // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
+          return mapMaybePromise(
+            this._transportExecutorStack?.disposeAsync?.(),
+            () => {
+              this._transportExecutorStack = new AsyncDisposableStack();
+              this._transportExecutorStack.defer(() => {
+                this.cleanup();
+              });
+              this.lastLoadedUnifiedGraph ||= loadedUnifiedGraph;
+              this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
+              this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
+              const {
+                unifiedGraph: newUnifiedGraph,
+                transportEntryMap,
                 subschemas,
-                this.opts.transportContext?.logger,
-                this.opts.onDelegateHooks || [],
-              );
-            }
-            this.continuePolling();
-            this._transportEntryMap = transportEntryMap;
-            this.opts.onSchemaChange?.(this.unifiedGraph);
-            const stitchingInfo = this.unifiedGraph?.extensions?.[
-              'stitchingInfo'
-            ] as StitchingInfo;
-            if (stitchingInfo && this.onDelegationPlanHooks?.length) {
-              for (const typeName in stitchingInfo.mergedTypes) {
-                const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
-                if (mergedTypeInfo) {
-                  const originalDelegationPlanBuilder =
-                    mergedTypeInfo.nonMemoizedDelegationPlanBuilder;
-                  mergedTypeInfo.nonMemoizedDelegationPlanBuilder = (
-                    supergraph,
-                    sourceSubschema,
-                    variables,
-                    fragments,
-                    fieldNodes,
-                    context,
-                    info,
-                  ) => {
-                    let delegationPlanBuilder = originalDelegationPlanBuilder;
-                    function setDelegationPlanBuilder(
-                      newDelegationPlanBuilder: DelegationPlanBuilder,
-                    ) {
-                      delegationPlanBuilder = newDelegationPlanBuilder;
-                    }
-                    const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] =
-                      [];
-                    let logger = this.opts.transportContext?.logger;
-                    let requestId: string | undefined;
-                    if (context?.request) {
-                      requestId = requestIdByRequest.get(context.request);
-                      if (requestId) {
-                        logger = logger?.child(requestId);
-                      }
-                    }
-                    if (sourceSubschema.name) {
-                      logger = logger?.child(sourceSubschema.name);
-                    }
-                    for (const onDelegationPlan of this.onDelegationPlanHooks) {
-                      const onDelegationPlanDone = onDelegationPlan({
-                        supergraph,
-                        subgraph: sourceSubschema.name!,
-                        sourceSubschema,
-                        typeName: mergedTypeInfo.typeName,
-                        variables,
-                        fragments,
-                        fieldNodes,
-                        logger,
-                        context,
-                        info,
-                        delegationPlanBuilder,
-                        setDelegationPlanBuilder,
-                      });
-                      if (onDelegationPlanDone) {
-                        onDelegationPlanDoneHooks.push(onDelegationPlanDone);
-                      }
-                    }
-                    let delegationPlan = delegationPlanBuilder(
+                additionalResolvers,
+              } = this.handleUnifiedGraph({
+                unifiedGraph: this.unifiedGraph,
+                additionalTypeDefs: this.opts.additionalTypeDefs,
+                additionalResolvers: this.opts.additionalResolvers,
+                onSubgraphExecute(subgraphName, execReq) {
+                  return onSubgraphExecute(subgraphName, execReq);
+                },
+                onDelegationStageExecuteHooks:
+                  this.onDelegationStageExecuteHooks,
+                transportEntryAdditions: this.opts.transportEntryAdditions,
+                batch: this.batch,
+                logger: this.opts.transportContext?.logger,
+              });
+              this.unifiedGraph = newUnifiedGraph;
+              const onSubgraphExecute = getOnSubgraphExecute({
+                onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
+                transports: this.opts.transports,
+                transportContext: this.opts.transportContext,
+                transportEntryMap,
+                getSubgraphSchema(subgraphName) {
+                  const subgraph = subschemas.find(
+                    (s) => s.name && compareSubgraphNames(s.name, subgraphName),
+                  );
+                  if (!subgraph) {
+                    throw new Error(`Subgraph ${subgraphName} not found`);
+                  }
+                  return subgraph.schema;
+                },
+                transportExecutorStack: this._transportExecutorStack,
+              });
+              if (this.opts.additionalResolvers || additionalResolvers.length) {
+                this.inContextSDK = getInContextSDK(
+                  this.unifiedGraph,
+                  // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
+                  subschemas,
+                  this.opts.transportContext?.logger,
+                  this.opts.onDelegateHooks || [],
+                );
+              }
+              this.continuePolling();
+              this._transportEntryMap = transportEntryMap;
+              this.opts.onSchemaChange?.(this.unifiedGraph);
+              const stitchingInfo = this.unifiedGraph?.extensions?.[
+                'stitchingInfo'
+              ] as StitchingInfo;
+              if (stitchingInfo && this.onDelegationPlanHooks?.length) {
+                for (const typeName in stitchingInfo.mergedTypes) {
+                  const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
+                  if (mergedTypeInfo) {
+                    const originalDelegationPlanBuilder =
+                      mergedTypeInfo.nonMemoizedDelegationPlanBuilder;
+                    mergedTypeInfo.nonMemoizedDelegationPlanBuilder = (
                       supergraph,
                       sourceSubschema,
                       variables,
                       fragments,
                       fieldNodes,
                       context,
-                    );
-                    function setDelegationPlan(
-                      newDelegationPlan: ReturnType<DelegationPlanBuilder>,
-                    ) {
-                      delegationPlan = newDelegationPlan;
-                    }
-                    for (const onDelegationPlanDone of onDelegationPlanDoneHooks) {
-                      onDelegationPlanDone({
-                        delegationPlan,
-                        setDelegationPlan,
-                      });
-                    }
-                    return delegationPlan;
-                  };
+                      info,
+                    ) => {
+                      let delegationPlanBuilder = originalDelegationPlanBuilder;
+                      function setDelegationPlanBuilder(
+                        newDelegationPlanBuilder: DelegationPlanBuilder,
+                      ) {
+                        delegationPlanBuilder = newDelegationPlanBuilder;
+                      }
+                      const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] =
+                        [];
+                      let logger = this.opts.transportContext?.logger;
+                      let requestId: string | undefined;
+                      if (context?.request) {
+                        requestId = requestIdByRequest.get(context.request);
+                        if (requestId) {
+                          logger = logger?.child(requestId);
+                        }
+                      }
+                      if (sourceSubschema.name) {
+                        logger = logger?.child(sourceSubschema.name);
+                      }
+                      for (const onDelegationPlan of this
+                        .onDelegationPlanHooks) {
+                        const onDelegationPlanDone = onDelegationPlan({
+                          supergraph,
+                          subgraph: sourceSubschema.name!,
+                          sourceSubschema,
+                          typeName: mergedTypeInfo.typeName,
+                          variables,
+                          fragments,
+                          fieldNodes,
+                          logger,
+                          context,
+                          info,
+                          delegationPlanBuilder,
+                          setDelegationPlanBuilder,
+                        });
+                        if (onDelegationPlanDone) {
+                          onDelegationPlanDoneHooks.push(onDelegationPlanDone);
+                        }
+                      }
+                      let delegationPlan = delegationPlanBuilder(
+                        supergraph,
+                        sourceSubschema,
+                        variables,
+                        fragments,
+                        fieldNodes,
+                        context,
+                      );
+                      function setDelegationPlan(
+                        newDelegationPlan: ReturnType<DelegationPlanBuilder>,
+                      ) {
+                        delegationPlan = newDelegationPlan;
+                      }
+                      for (const onDelegationPlanDone of onDelegationPlanDoneHooks) {
+                        onDelegationPlanDone({
+                          delegationPlan,
+                          setDelegationPlan,
+                        });
+                      }
+                      return delegationPlan;
+                    };
+                  }
                 }
               }
-            }
-            return true;
-          });
+              return true;
+            },
+          );
         },
         (err) => {
           this.opts.transportContext?.logger?.error(
@@ -375,6 +378,7 @@ export class UnifiedGraphManager<TContext> {
   }
 
   [DisposableSymbols.asyncDispose]() {
-    return this.disposableStack.disposeAsync();
+    this.cleanup();
+    return this._transportExecutorStack?.disposeAsync() as PromiseLike<void>;
   }
 }

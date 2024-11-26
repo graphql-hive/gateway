@@ -25,10 +25,8 @@ import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
 import {
   DefaultLogger,
   getHeadersObj,
-  isDisposable,
   isUrl,
   LogLevel,
-  makeAsyncDisposable,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
@@ -53,7 +51,10 @@ import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
-import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
 import type { ExecutionArgs, GraphQLSchema } from 'graphql';
 import { buildSchema, isSchema, parse } from 'graphql';
 import {
@@ -63,7 +64,6 @@ import {
   useExecutionCancellation,
   useReadinessCheck,
   type LandingPageRenderer,
-  type Plugin,
   type YogaServerInstance,
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
@@ -114,25 +114,25 @@ export type GatewayRuntime<
 > = YogaServerInstance<any, TContext> & {
   invalidateUnifiedGraph(): void;
   getSchema(): MaybePromise<GraphQLSchema>;
-} & AsyncDisposable;
+};
 
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   let fetchAPI = config.fetchAPI;
-  let logger!: Logger;
+  let logger: Logger;
   if (config.logging == null) {
     logger = new DefaultLogger();
   } else if (typeof config.logging === 'boolean') {
     logger = config.logging
       ? new DefaultLogger()
       : new DefaultLogger('', LogLevel.silent);
-  }
-  if (typeof config.logging === 'number') {
+  } else if (typeof config.logging === 'number') {
     logger = new DefaultLogger(undefined, config.logging);
-  } else if (typeof config.logging === 'object') {
+  } /*  if (typeof config.logging === 'object') */ else {
     logger = config.logging;
   }
+
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks);
 
@@ -144,7 +144,7 @@ export function createGatewayRuntime<
     ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
   };
 
-  let unifiedGraphPlugin!: Plugin;
+  let unifiedGraphPlugin: GatewayPlugin;
 
   const readinessCheckEndpoint = config.readinessCheckEndpoint || '/readiness';
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
@@ -156,7 +156,7 @@ export function createGatewayRuntime<
     [];
 
   let unifiedGraph: GraphQLSchema;
-  let schemaInvalidator!: () => void;
+  let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
   let setSchema: (schema: GraphQLSchema) => void = (schema) => {
     unifiedGraph = schema;
@@ -197,9 +197,8 @@ export function createGatewayRuntime<
   }
   let subgraphInformationHTMLRenderer: () => MaybePromise<string> = () => '';
 
-  const disposableStack = new AsyncDisposableStack();
-
   if ('proxy' in config) {
+    const transportExecutorStack = new AsyncDisposableStack();
     const proxyExecutor = getProxyExecutor({
       config,
       configContext,
@@ -207,7 +206,7 @@ export function createGatewayRuntime<
         return unifiedGraph;
       },
       onSubgraphExecuteHooks,
-      disposableStack,
+      transportExecutorStack,
     });
     function createExecuteFnFromExecutor(executor: Executor) {
       return function executeFn(args: ExecutionArgs) {
@@ -322,10 +321,9 @@ export function createGatewayRuntime<
       }
       return mapMaybePromise(schemaFetcher(), () => unifiedGraph);
     };
-    disposableStack.defer(pausePolling);
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
-    const executorPlugin: Plugin = {
+    const executorPlugin: GatewayPlugin = {
       onExecute({ setExecuteFn }) {
         setExecuteFn(executeFn);
       },
@@ -336,6 +334,10 @@ export function createGatewayRuntime<
         if (shouldSkipValidation || !params.schema) {
           setResult([]);
         }
+      },
+      [DisposableSymbols.asyncDispose]() {
+        pausePolling();
+        return transportExecutorStack.disposeAsync();
       },
     };
     unifiedGraphPlugin = executorPlugin;
@@ -385,6 +387,7 @@ export function createGatewayRuntime<
     const subgraphInConfig = config.subgraph;
     let getSubschemaConfig$: MaybePromise<boolean> | undefined;
     let subschemaConfig: SubschemaConfig;
+    const transportExecutorStack = new AsyncDisposableStack();
     function getSubschemaConfig() {
       if (getSubschemaConfig$) {
         return getSubschemaConfig$;
@@ -413,7 +416,7 @@ export function createGatewayRuntime<
             getSubgraphSchema() {
               return unifiedGraph;
             },
-            transportExecutorStack: disposableStack,
+            transportExecutorStack,
           });
           subschemaConfig = handleFederationSubschema({
             subschemaConfig,
@@ -531,8 +534,16 @@ export function createGatewayRuntime<
       );
     }
     getSchema = () => mapMaybePromise(getSubschemaConfig(), () => unifiedGraph);
+    schemaInvalidator = () => {
+      getSubschemaConfig$ = undefined;
+    };
+    unifiedGraphPlugin = {
+      [DisposableSymbols.asyncDispose]() {
+        return transportExecutorStack.disposeAsync();
+      },
+    };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher!: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
+    let unifiedGraphFetcher: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
@@ -605,10 +616,11 @@ export function createGatewayRuntime<
             },
           );
       } else {
-        configContext.logger.error(
-          `Unknown supergraph configuration: `,
-          config.supergraph,
-        );
+        unifiedGraphFetcher = () => {
+          throw new Error(
+            `Unknown supergraph configuration: ${config.supergraph}`,
+          );
+        };
       }
     } else {
       // local or remote
@@ -675,7 +687,11 @@ export function createGatewayRuntime<
       );
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
-    disposableStack.use(unifiedGraphManager);
+    unifiedGraphPlugin = {
+      [DisposableSymbols.asyncDispose]() {
+        return unifiedGraphManager[DisposableSymbols.asyncDispose]();
+      },
+    };
     subgraphInformationHTMLRenderer = async () => {
       const htmlParts: string[] = [];
       let loaded = false;
@@ -772,9 +788,6 @@ export function createGatewayRuntime<
         if (plugin.onDelegationStageExecute) {
           onDelegationStageExecuteHooks.push(plugin.onDelegationStageExecute);
         }
-        if (isDisposable(plugin)) {
-          disposableStack.use(plugin);
-        }
       }
     },
   };
@@ -866,7 +879,7 @@ export function createGatewayRuntime<
     useChangingSchema(getSchema, (_setSchema) => {
       setSchema = _setSchema;
     }),
-    useCompleteSubscriptionsOnDispose(disposableStack),
+    useCompleteSubscriptionsOnDispose(),
     useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
     useSubgraphExecuteDebug(configContext),
@@ -1006,11 +1019,7 @@ export function createGatewayRuntime<
     },
   });
 
-  yoga.disposableStack.use(disposableStack);
-
-  return makeAsyncDisposable(yoga, () =>
-    disposableStack.disposeAsync(),
-  ) as any as GatewayRuntime<TContext>;
+  return yoga as GatewayRuntime<TContext>;
 }
 
 function isDynamicUnifiedGraphSchema(

@@ -1,13 +1,13 @@
-import { createAsyncDisposable } from '@graphql-mesh/utils';
 import type { Server, TLSServeOptions, WebSocketServeOptions } from 'bun';
+import type { Extra } from 'graphql-ws/lib/use/bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import { getGraphQLWSOptions } from './graphqlWs';
-import { ServerForRuntimeOptions } from './types';
+import type { ServerForRuntimeOptions } from './types';
 
 export async function startBunServer<TContext extends Record<string, any>>(
   gwRuntime: GatewayRuntime<TContext>,
   opts: ServerForRuntimeOptions,
-): Promise<AsyncDisposable> {
+): Promise<void> {
   const serverOptions: TLSServeOptions & Partial<WebSocketServeOptions> = {
     fetch: gwRuntime,
     port: opts.port || defaultOptions.port,
@@ -40,28 +40,29 @@ export async function startBunServer<TContext extends Record<string, any>>(
   }
   if (!opts.disableWebsockets) {
     const { makeHandler } = await import('graphql-ws/lib/use/bun');
-    const wsOptions = getGraphQLWSOptions(gwRuntime);
-    serverOptions.websocket = makeHandler(wsOptions);
-    serverOptions.fetch = function (req: Request, server: Server) {
+    serverOptions.websocket = makeHandler(
+      getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
+        socket: ctx.extra.socket,
+        ...(ctx.extra.socket.data || {}),
+      })),
+    );
+    serverOptions.fetch = function (request: Request, server: Server) {
       // header to check if websocket
-      if (req.headers.has('Sec-WebSocket-Key') && server.upgrade(req)) {
-        return;
+      if (
+        request.headers.has('Sec-WebSocket-Key') &&
+        server.upgrade(request, {
+          data: {
+            request,
+          },
+        })
+      ) {
+        // This is how Bun docs say to handle websockets but types are not correct
+        return undefined as unknown as Response;
       }
-      return gwRuntime.handleRequest(req, server);
-    } as any;
+      return gwRuntime.handleRequest(request, server);
+    };
   }
   const server = Bun.serve(serverOptions);
   opts.log.info(`Listening on ${server.url}`);
-  return createAsyncDisposable(() => {
-    process.stderr.write('\n');
-    opts.log.info(`Stopping the server`);
-    return server.stop(true).then(
-      () => {
-        opts.log.info(`Stopped the server successfully`);
-      },
-      (err) => {
-        opts.log.error('Error while stopping the server: ', err);
-      },
-    );
-  });
+  gwRuntime.disposableStack.use(server);
 }

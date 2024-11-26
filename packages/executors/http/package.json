@@ -41,6 +41,7 @@
   "dependencies": {
     "@graphql-tools/utils": "^10.6.0",
     "@repeaterjs/repeater": "^3.0.4",
+    "@whatwg-node/disposablestack": "^0.0.5",
     "@whatwg-node/fetch": "^0.10.0",
     "extract-files": "^11.0.0",
     "meros": "^1.2.1",
