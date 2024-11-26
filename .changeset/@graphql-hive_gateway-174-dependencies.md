@@ -1,5 +1,5 @@
 ---
-'@graphql-mesh/plugin-prometheus': patch
+'@graphql-hive/gateway': patch
 ---
 
 dependencies updates: 
@@ -7,4 +7,3 @@ dependencies updates:
 - Updated dependency [`@graphql-mesh/store@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.4) (from `^0.103.0`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/types@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.4) (from `^0.103.0`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/utils@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.4) (from `^0.103.1`, in `dependencies`)
-- Updated dependency [`@graphql-yoga/plugin-prometheus@6.5.0-alpha-20241125133210-e0eecf6964629681ff7936b72c0c6b446ee28d08` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-prometheus/v/6.5.0) (from `^6.1.0`, in `dependencies`)
