@@ -22,6 +22,7 @@
         "!/@whatwg-node/*/",
         "!/graphql-jit/",
         "!/opentelemetry/",
+        "!/graphql-mesh/",
         "*"
       ]
     }
