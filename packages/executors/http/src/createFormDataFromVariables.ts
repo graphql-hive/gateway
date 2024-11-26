@@ -67,7 +67,7 @@ export function createFormDataFromVariables<TVariables>(
       extensions,
     }),
   );
-  form.append('map', JSON.stringify(map, null, 2));
+  form.append('map', JSON.stringify(map));
   function handleUpload(upload: any, i: number): void | PromiseLike<void> {
     const indexStr = i.toString();
     if (upload != null) {

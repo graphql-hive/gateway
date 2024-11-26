@@ -1052,13 +1052,10 @@ export function getStitchingOptionsFromSupergraphSdl(
       executor = async function debugExecutor(execReq) {
         console.log(`Executing ${subgraphName} with args:`, {
           document: print(execReq.document),
-          variables: JSON.stringify(execReq.variables, null, 2),
+          variables: JSON.stringify(execReq.variables),
         });
         const res = await origExecutor(execReq);
-        console.log(
-          `Response from ${subgraphName}:`,
-          JSON.stringify(res, null, 2),
-        );
+        console.log(`Response from ${subgraphName}:`, JSON.stringify(res));
         return res;
       };
     }
