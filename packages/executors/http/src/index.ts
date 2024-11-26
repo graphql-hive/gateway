@@ -8,6 +8,7 @@ import {
   ExecutionResult,
   Executor,
   getOperationASTFromRequest,
+  mapMaybePromise,
   SyncExecutor,
 } from '@graphql-tools/utils';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
@@ -281,13 +282,12 @@ export function buildHTTPExecutor(
             extensions: request.extensions,
           };
           upstreamErrorExtensions.request.body = body;
-          return new ValueOrPromise(() =>
+          return mapMaybePromise(
             createFormDataFromVariables(body, {
               File: options?.File,
               FormData: options?.FormData,
             }),
-          )
-            .then((body) => {
+            (body) => {
               if (typeof body === 'string' && !headers['content-type']) {
                 upstreamErrorExtensions.request.body = body;
                 headers['content-type'] = 'application/json';
@@ -307,8 +307,8 @@ export function buildHTTPExecutor(
                 request.context,
                 request.info,
               ) as any;
-            })
-            .resolve();
+            },
+          );
         }
       }
     })
@@ -439,7 +439,7 @@ export function buildHTTPExecutor(
       let result: ExecutionResult<any> | undefined;
       let attempt = 0;
       function retryAttempt():
-        | Promise<ExecutionResult<any>>
+        | PromiseLike<ExecutionResult<any>>
         | ExecutionResult<any> {
         if (disposeCtrl?.signal.aborted) {
           return createResultForAbort(disposeCtrl.signal);
@@ -453,15 +453,13 @@ export function buildHTTPExecutor(
             errors: [createGraphQLError('No response returned from fetch')],
           };
         }
-        return new ValueOrPromise(() => baseExecutor(request))
-          .then((res) => {
-            result = res;
-            if (result?.errors?.length) {
-              return retryAttempt();
-            }
-            return result;
-          })
-          .resolve();
+        return mapMaybePromise(baseExecutor(request), (res) => {
+          result = res;
+          if (result?.errors?.length) {
+            return retryAttempt();
+          }
+          return result;
+        });
       }
       return retryAttempt();
     };

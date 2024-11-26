@@ -2,11 +2,12 @@ import {
   ExecutionRequest,
   ExecutionResult,
   Executor,
+  fakePromise,
   getOperationASTFromRequest,
   isAsyncIterable,
+  mapMaybePromise,
 } from '@graphql-tools/utils';
 import DataLoader from 'dataloader';
-import { ValueOrPromise } from 'value-or-promise';
 import { mergeRequests } from './mergeRequests.js';
 import { splitResult } from './splitResult.js';
 
@@ -46,23 +47,27 @@ function createLoadFn(
 ) {
   return function batchExecuteLoadFn(
     requests: ReadonlyArray<ExecutionRequest>,
-  ): ValueOrPromise<Array<ExecutionResult>> {
+  ): PromiseLike<Array<ExecutionResult>> {
     if (requests.length === 1 && requests[0]) {
       const request = requests[0];
-      return new ValueOrPromise(() => executor(request) as any)
-        .then((result: ExecutionResult) => [result])
-        .catch((err: any) => [err]);
+      return fakePromise<any>(
+        mapMaybePromise(
+          executor(request),
+          (result) => [result],
+          (err) => [err],
+        ),
+      );
     }
     const mergedRequests = mergeRequests(requests, extensionsReducer);
-    return new ValueOrPromise(() => executor(mergedRequests)).then(
-      (resultBatches) => {
+    return fakePromise<any>(
+      mapMaybePromise(executor(mergedRequests), (resultBatches) => {
         if (isAsyncIterable(resultBatches)) {
           throw new Error(
             'Executor must not return incremental results for batching',
           );
         }
         return splitResult(resultBatches, requests.length);
-      },
+      }),
     );
   };
 }
