@@ -111,7 +111,7 @@ describe('Retry & Timeout', () => {
     expect(result).toMatchObject({
       errors: [
         {
-          message: expect.stringMatching(/out/),
+          message: expect.stringMatching(/timeout|(timed out)|(time out)/),
         },
       ],
     });

@@ -95,7 +95,8 @@ export interface HTTPExecutorOptions {
    */
   print?: (doc: DocumentNode) => string;
   /**
-   * @deprecated Not used anymore
+   * Enable [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management)
+   * @deprecated The executors are always disposable, and this option will be removed in the next major version, there is no need to have a flag for this.
    */
   disposable?: boolean;
 }
