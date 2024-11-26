@@ -1,4 +1,5 @@
 import {
+  createOtlpGrpcExporter,
   createOtlpHttpExporter,
   defineConfig,
   GatewayPlugin,
@@ -28,15 +29,25 @@ const useOnFetchTracer = (): GatewayPlugin => {
 export const gatewayConfig = defineConfig({
   openTelemetry: {
     exporters: [
-      createOtlpHttpExporter(
-        {
-          url: process.env['OTLP_EXPORTER_URL'],
-        },
-        // Batching config is set in order to make it easier to test.
-        {
-          scheduledDelayMillis: 1,
-        },
-      ),
+      process.env['OTLP_EXPORTER_TYPE'] === 'grpc'
+        ? createOtlpGrpcExporter(
+            {
+              url: process.env['OTLP_EXPORTER_URL'],
+            },
+            // Batching config is set in order to make it easier to test.
+            {
+              scheduledDelayMillis: 1,
+            },
+          )
+        : createOtlpHttpExporter(
+            {
+              url: process.env['OTLP_EXPORTER_URL'],
+            },
+            // Batching config is set in order to make it easier to test.
+            {
+              scheduledDelayMillis: 1,
+            },
+          ),
     ],
     serviceName: process.env['OTLP_SERVICE_NAME'],
   },
