@@ -7,6 +7,7 @@ import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
+
 console.log('Bundling...');
 
 /**
@@ -61,7 +62,7 @@ const deps = {
   'node_modules/@graphql-mesh/hmac-upstream-signature/index':
     '../plugins/hmac-upstream-signature/src/index.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
-    'node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
+    '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
 };
 
 if (

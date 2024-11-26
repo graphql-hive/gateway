@@ -103,18 +103,23 @@ type JaegerTracesApiResponse = {
 async function getJaegerTraces(
   service: string,
   expectedDataLength: number,
+  expectedData?: (data: JaegerTracesApiResponse) => boolean,
 ): Promise<JaegerTracesApiResponse> {
   const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
   let res!: JaegerTracesApiResponse;
-  for (let i = 0; i < 50; i++) {
-    res = await fetch(url).then((r) => r.json());
-    if (res.data.length >= expectedDataLength) {
-      break;
-    }
-    await setTimeout(300);
+  const signal = AbortSignal.timeout(2000);
+  while (!signal.aborted) {
+    try {
+      res = await fetch(url).then((r) => r.json());
+      if (res.data.length >= expectedDataLength) {
+        if (expectedData && !expectedData(res)) {
+          continue;
+        }
+        return res;
+      }
+    } catch {}
   }
-
   return res;
 }
 
@@ -127,9 +132,9 @@ const urls = {
   },
 };
 
-describe('OpenTelemetry', () => {
+describe.sequential('OpenTelemetry', () => {
   (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
-    describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
+    describe.sequential(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
       beforeAll(async () => {
         jaeger = await container({
           name: `jaeger-${OTLP_EXPORTER_TYPE}`,
@@ -614,7 +619,9 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        const traces = await getJaegerTraces(serviceName, 2);
+        const traces = await getJaegerTraces(serviceName, 2, res => res.data.some((trace) =>
+          trace.spans.some((span) => span.operationName === 'POST /graphql'),
+        ));
         expect(traces.data.length).toBe(2);
         const relevantTraces = traces.data.filter((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
