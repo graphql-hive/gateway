@@ -3,6 +3,7 @@
   "private": true,
   "main": "./src/index.ts",
   "exports": {
+    ".": "./src/index.ts",
     "./fixtures/schemas": "./fixtures/schemas.ts"
   },
   "devDependencies": {
