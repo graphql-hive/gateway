@@ -619,9 +619,11 @@ describe.sequential('OpenTelemetry', () => {
             ],
           },
         });
-        const traces = await getJaegerTraces(serviceName, 2, res => res.data.some((trace) =>
-          trace.spans.some((span) => span.operationName === 'POST /graphql'),
-        ));
+        const traces = await getJaegerTraces(serviceName, 2, (res) =>
+          res.data.some((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          ),
+        );
         expect(traces.data.length).toBe(2);
         const relevantTraces = traces.data.filter((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
