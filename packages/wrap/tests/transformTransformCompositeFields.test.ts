@@ -123,8 +123,6 @@ describe('TransformCompositeFields', () => {
       document: parse('{ product { _id __typename } }'),
     });
 
-    console.log();
-
     expect(transformSelectionSetSpy.mock.results[1]).toMatchObject({
       type: 'return',
       value: expect.objectContaining({
