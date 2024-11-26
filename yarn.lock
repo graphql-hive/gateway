@@ -3359,7 +3359,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.103.4"
     "@graphql-mesh/utils": "npm:^0.103.4"
     "@graphql-tools/utils": "npm:^10.6.0"
-    "@graphql-yoga/plugin-prometheus": "npm:7.0.0-alpha-20241122101931-e97d38fb145a52741b6e517829eac25e7b4c2d44"
+    "@graphql-yoga/plugin-prometheus": "npm:6.5.0-alpha-20241125133210-e0eecf6964629681ff7936b72c0c6b446ee28d08"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.7.0"
@@ -4122,16 +4122,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-prometheus@npm:7.0.0-alpha-20241122101931-e97d38fb145a52741b6e517829eac25e7b4c2d44":
-  version: 7.0.0-alpha-20241122101931-e97d38fb145a52741b6e517829eac25e7b4c2d44
-  resolution: "@graphql-yoga/plugin-prometheus@npm:7.0.0-alpha-20241122101931-e97d38fb145a52741b6e517829eac25e7b4c2d44"
+"@graphql-yoga/plugin-prometheus@npm:6.5.0-alpha-20241125133210-e0eecf6964629681ff7936b72c0c6b446ee28d08":
+  version: 6.5.0-alpha-20241125133210-e0eecf6964629681ff7936b72c0c6b446ee28d08
+  resolution: "@graphql-yoga/plugin-prometheus@npm:6.5.0-alpha-20241125133210-e0eecf6964629681ff7936b72c0c6b446ee28d08"
   dependencies:
     "@envelop/prometheus": "npm:11.1.0-alpha-20241122091727-adade563355e3d213f27427a9a1d86adf9431d41"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.10.2-alpha-20241122101931-e97d38fb145a52741b6e517829eac25e7b4c2d44
+    graphql-yoga: ^5.10.3
     prom-client: ^15.0.0
-  checksum: 10c0/62cadb1a4dd18cf917b220a1ac38fdc1f03439e3e985d10063e6093166a8409d024ccbf990d772a22099168990885db1d876ed1a44c7de0baef7e435ff30f29b
+  checksum: 10c0/3c5dace45ffb72ed7845c65fe2ae817995dc357614451329355c6baa794c1a9946611faf1dbebad3af7a7d833b12ca122593bc6b191798f856580e3b25ede976
   languageName: node
   linkType: hard
 
