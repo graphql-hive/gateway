@@ -572,6 +572,7 @@ it('should consistently explain the query plan', async () => {
       _1__entities: _entities(representations: $_1__v0_representations) {
         __typename
         ... on Product {
+          upc
           shippingEstimate
         }
       }
