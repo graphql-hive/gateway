@@ -666,6 +666,9 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
       onDelegationStageExecuteHooks,
+      ...(config.additionalTypeDefs
+        ? { additionalTypeDefs: config.additionalTypeDefs }
+        : {}),
       ...((config.additionalResolvers
         ? { additionalResolvers: config.additionalResolvers }
         : {}) as IResolvers),
