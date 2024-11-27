@@ -251,18 +251,17 @@ describe('Gateway Runtime', () => {
 
     it('should lookup cache, set supergraph and use default ttl', async () => {
       const cache = createCache();
-      const gw = createGatewayRuntime({
+      await using gw = createGatewayRuntime({
         logging: isDebug(),
         cache,
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
+        supergraph: () =>
+          getUnifiedGraphGracefully([
             {
               name: 'upstream',
               schema: createUpstreamSchema(),
               url: 'http://localhost:4000/graphql',
             },
-          ]);
-        },
+          ]),
         plugins: () => [
           useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
@@ -287,19 +286,18 @@ describe('Gateway Runtime', () => {
 
     it('should set supergraph with polling interval as ttl converted to seconds', async () => {
       const cache = createCache();
-      const gw = createGatewayRuntime({
+      await using gw = createGatewayRuntime({
         logging: isDebug(),
         cache,
         pollingInterval: 10_000,
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
+        supergraph: () =>
+          getUnifiedGraphGracefully([
             {
               name: 'upstream',
               schema: createUpstreamSchema(),
               url: 'http://localhost:4000/graphql',
             },
-          ]);
-        },
+          ]),
         plugins: () => [
           useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
@@ -327,7 +325,7 @@ describe('Gateway Runtime', () => {
         ]),
       );
 
-      const gw = createGatewayRuntime({
+      await using gw = createGatewayRuntime({
         logging: isDebug(),
         cache,
         supergraph: () => {
