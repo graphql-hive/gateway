@@ -1,5 +1,4 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
-import type { DisableIntrospectionOptions } from '@envelop/disable-introspection';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
   TransportEntryAdditions,
@@ -18,10 +17,10 @@ import type {
 } from '@graphql-mesh/types';
 import type { LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
-import type { IResolvers } from '@graphql-tools/utils';
+import type { IResolvers, ValidationRule } from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
-import type { DocumentNode, GraphQLSchema } from 'graphql';
+import type { DocumentNode, GraphQLSchema, TypeInfo } from 'graphql';
 import type {
   BatchingOptions,
   FetchAPI,
@@ -497,4 +496,34 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Header Propagation
    */
   propagateHeaders?: PropagateHeadersOpts;
+}
+
+interface DisableIntrospectionOptions {
+  disableIf?: (args: {
+    context: GatewayContext;
+    params: ValidateFunctionParameters;
+  }) => boolean;
+}
+
+interface ValidateFunctionParameters {
+  /**
+   * GraphQL schema instance.
+   */
+  schema: GraphQLSchema;
+  /**
+   * Parsed document node.
+   */
+  documentAST: DocumentNode;
+  /**
+   * The rules used for validation.
+   * validate uses specifiedRules as exported by the GraphQL module if this parameter is undefined.
+   */
+  rules?: ValidationRule[];
+  /**
+   * TypeInfo instance which is used for getting schema information during validation
+   */
+  typeInfo?: TypeInfo;
+  options?: {
+    maxErrors?: number;
+  };
 }
