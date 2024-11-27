@@ -928,6 +928,7 @@ export function createGatewayRuntime<
   if (config.disableIntrospection) {
     extraPlugins.push(
       useDisableIntrospection(
+        // @ts-expect-error - Should be fixed in the envelop plugin
         typeof config.disableIntrospection === 'object'
           ? config.disableIntrospection
           : {},
