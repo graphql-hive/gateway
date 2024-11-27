@@ -2932,7 +2932,7 @@ __metadata:
     "@whatwg-node/server": "npm:^0.9.60"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
-    graphql-yoga: "npm:^5.7.0"
+    graphql-yoga: "npm:^5.10.3"
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.8.0"
@@ -3165,7 +3165,6 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     constant-case: "npm:^3"
     graphql: "npm:^16.9.0"
-    graphql-yoga: "npm:^5.7.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
@@ -9752,7 +9751,7 @@ graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:5.10.3, graphql-yoga@npm:^5.7.0, graphql-yoga@npm:^5.8.0":
+"graphql-yoga@npm:5.10.3, graphql-yoga@npm:^5.10.3, graphql-yoga@npm:^5.7.0, graphql-yoga@npm:^5.8.0":
   version: 5.10.3
   resolution: "graphql-yoga@npm:5.10.3"
   dependencies:
