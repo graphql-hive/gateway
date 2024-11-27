@@ -1,21 +1,25 @@
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
+import type { OnSubgraphExecuteHook } from '@graphql-mesh/fusion-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
   ImportFn,
   Logger,
   MeshFetchRequestInit,
   MeshPlugin,
+  OnFetchHook,
 } from '@graphql-mesh/types';
 import {
   defaultImportFn,
   getHeadersObj,
   loadFromModuleExportExpression,
 } from '@graphql-mesh/utils';
-import type { ExecutionRequest } from '@graphql-tools/utils';
+import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
 import type {
   CounterAndLabels,
+  CounterMetricOption,
   FillLabelsFnParams,
   HistogramAndLabels,
+  HistogramMetricOption,
   PrometheusTracingPluginConfig,
   SummaryAndLabels,
 } from '@graphql-yoga/plugin-prometheus';
@@ -25,12 +29,11 @@ import {
   createSummary,
   getCounterFromConfig,
   getHistogramFromConfig,
-  usePrometheus,
+  usePrometheus as useYogaPrometheus,
 } from '@graphql-yoga/plugin-prometheus';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isAsyncIterable, type Plugin as YogaPlugin } from 'graphql-yoga';
-import type { Registry } from 'prom-client';
-import { register as defaultRegistry } from 'prom-client';
+import { register as defaultRegistry, Registry } from 'prom-client';
 
 export { createCounter, createHistogram, createSummary };
 export type {
@@ -70,16 +73,14 @@ type MeshMetricsConfig = {
      *  - boolean: Disable or Enable the metric with default configuration
      *  - string: Enable the metric with custom name
      *  - number[]: Enable the metric with custom buckets
+     *  - string[]: Enable the metric on a list of phases
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_fetch_duration:
-      | boolean
-      | string
-      | number[]
-      | HistogramAndLabels<
-          string,
-          { url: string; options: MeshFetchRequestInit; response: Response }
-        >;
+    graphql_gateway_fetch_duration: HistogramMetricOption<
+      'fetch',
+      string,
+      FetchMetricsLabelParams
+    >;
 
     /**
      * Tracks the duration of subgraph execution.
@@ -90,29 +91,32 @@ type MeshMetricsConfig = {
      *  - boolean: Disable or Enable the metric with default configuration
      *  - string: Enable the metric with custom name
      *  - number[]: Enable the metric with custom buckets
+     *  - string[]: Enable the metric on a list of phases
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_subgraph_execute_duration:
-      | boolean
-      | string
-      | number[]
-      | HistogramAndLabels<
-          'subgraphName' | 'operationType',
-          SubgraphMetricsLabelParams
-        >;
+    graphql_gateway_subgraph_execute_duration: HistogramMetricOption<
+      'subgraphExecute',
+      string,
+      SubgraphMetricsLabelParams
+    >;
 
     /**
      * This metric tracks the number of errors that occurred during the subgraph execution.
      * It counts all errors found in the response returned by the subgraph execution.
      * It is exposed as a counter
+     *
+     * You can pass multiple type of values:
+     *  - boolean: Disable or Enable the metric with default configuration
+     *  - string: Enable the metric with custom name
+     *  - number[]: Enable the metric with custom buckets
+     *  - string[]: Enable the metric on a list of phases
+     *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_subgraph_execute_errors:
-      | boolean
-      | string
-      | CounterAndLabels<
-          'subgraphName' | 'operationType',
-          SubgraphMetricsLabelParams
-        >;
+    graphql_gateway_subgraph_execute_errors: CounterMetricOption<
+      'subgraphExecute',
+      string,
+      SubgraphMetricsLabelParams
+    >;
   };
 
   labels?: {
@@ -154,6 +158,12 @@ type SubgraphMetricsLabelParams = {
   subgraphName: string;
   transportEntry?: TransportEntry;
   executionRequest: ExecutionRequest;
+};
+
+type FetchMetricsLabelParams = {
+  url: string;
+  options: MeshFetchRequestInit;
+  response: Response;
 };
 
 export default function useMeshPrometheus(
@@ -202,14 +212,14 @@ export default function useMeshPrometheus(
     fetchLabelNames.push('responseHeaders');
   }
 
-  const fetchHistogram:
-    | HistogramAndLabels<
-        string,
-        { url: string; options: MeshFetchRequestInit; response: Response }
-      >
-    | undefined = getHistogramFromConfig(
+  const fetchHistogram = getHistogramFromConfig<
+    'fetch',
+    NonNullable<PrometheusPluginOptions['metrics']>,
+    FetchMetricsLabelParams
+  >(
     config,
     'graphql_gateway_fetch_duration',
+    ['fetch'],
     {
       labelNames: fetchLabelNames,
       help: 'Time spent on outgoing HTTP calls',
@@ -239,11 +249,14 @@ export default function useMeshPrometheus(
     },
   );
 
-  const subgraphExecuteHistogram:
-    | HistogramAndLabels<string, SubgraphMetricsLabelParams>
-    | undefined = getHistogramFromConfig(
+  const subgraphExecuteHistogram = getHistogramFromConfig<
+    'subgraphExecute',
+    NonNullable<PrometheusPluginOptions['metrics']>,
+    SubgraphMetricsLabelParams
+  >(
     config,
     'graphql_gateway_subgraph_execute_duration',
+    ['subgraphExecute'],
     {
       labelNames: ['subgraphName', 'operationName', 'operationType'],
       help: 'Time spent on subgraph execution',
@@ -255,11 +268,14 @@ export default function useMeshPrometheus(
     }),
   );
 
-  const subgraphExecuteErrorCounter:
-    | CounterAndLabels<string, SubgraphMetricsLabelParams>
-    | undefined = getCounterFromConfig(
+  const subgraphExecuteErrorCounter = getCounterFromConfig<
+    'subgraphExecute',
+    NonNullable<PrometheusPluginOptions['metrics']>,
+    SubgraphMetricsLabelParams
+  >(
     config,
     'graphql_gateway_subgraph_execute_errors',
+    ['subgraphExecute'],
     {
       labelNames: ['subgraphName', 'operationName', 'operationType'],
       help: 'Number of errors on subgraph execution',
@@ -271,83 +287,78 @@ export default function useMeshPrometheus(
     }),
   );
 
-  return {
-    onPluginInit({ addPlugin }) {
-      addPlugin(
-        // @ts-expect-error TODO: plugin context generic is missing in yoga's prometheus plugin
-        usePrometheus(config),
-      );
-    },
-    onSubgraphExecute(payload) {
-      if (subgraphExecuteHistogram) {
-        const start = Date.now();
-        return ({ result }) => {
-          if (isAsyncIterable(result)) {
-            return {
-              onNext({ result }) {
-                if (result.errors) {
-                  result.errors.forEach(() => {
-                    subgraphExecuteErrorCounter?.counter.inc(
-                      subgraphExecuteErrorCounter.fillLabelsFn(
-                        payload,
-                        payload.executionRequest.context,
-                      ),
-                    );
-                  });
-                }
-              },
-              onEnd: () => {
-                const end = Date.now();
-                const duration = (end - start) / 1000;
-                subgraphExecuteHistogram.histogram.observe(
-                  subgraphExecuteHistogram.fillLabelsFn(
-                    payload,
-                    payload.executionRequest.context,
-                  ),
-                  duration,
-                );
-              },
-            };
-          }
+  const onSubgraphExecute: OnSubgraphExecuteHook | undefined =
+    (subgraphExecuteHistogram || subgraphExecuteErrorCounter) &&
+    ((payload) => {
+      const start = Date.now();
+      const { context } = payload.executionRequest.context;
+      const onResult =
+        subgraphExecuteErrorCounter &&
+        (({ result }: { result: ExecutionResult }) => {
           if (result.errors) {
             result.errors.forEach(() => {
-              subgraphExecuteErrorCounter?.counter.inc(
-                subgraphExecuteErrorCounter.fillLabelsFn(
-                  payload,
-                  payload.executionRequest.context,
-                ),
-              );
+              if (subgraphExecuteErrorCounter.shouldObserve(payload, context)) {
+                subgraphExecuteErrorCounter.counter.inc(
+                  subgraphExecuteErrorCounter.fillLabelsFn(payload, context),
+                );
+              }
             });
           }
-          const end = Date.now();
-          const duration = (end - start) / 1000;
-          subgraphExecuteHistogram.histogram.observe(
-            subgraphExecuteHistogram.fillLabelsFn(
-              payload,
-              payload.executionRequest.context,
-            ),
-            duration,
-          );
-          return undefined;
-        };
-      }
-      return undefined;
-    },
-    onFetch({ url, options, context }) {
-      if (fetchHistogram) {
-        const start = Date.now();
-        return ({ response }) => {
-          const end = Date.now();
-          const duration = (end - start) / 1000;
+        });
 
+      const onEnd =
+        subgraphExecuteHistogram &&
+        (() => {
+          if (subgraphExecuteHistogram.shouldObserve(payload, context)) {
+            const end = Date.now();
+            const duration = (end - start) / 1000;
+            subgraphExecuteHistogram.histogram.observe(
+              subgraphExecuteHistogram.fillLabelsFn(payload, context),
+              duration,
+            );
+          }
+        });
+
+      return ({ result }) => {
+        if (isAsyncIterable(result)) {
+          return {
+            onNext: onResult,
+            onEnd,
+          };
+        }
+
+        onResult?.({ result });
+        onEnd?.();
+        return undefined;
+      };
+    });
+
+  const onFetch: OnFetchHook<any> | undefined =
+    fetchHistogram &&
+    (({ url, options, context }) => {
+      const start = Date.now();
+      return ({ response }) => {
+        const params = { url, options, response };
+        if (fetchHistogram.shouldObserve(params, context)) {
+          const end = Date.now();
+          const duration = (end - start) / 1000;
           fetchHistogram.histogram.observe(
             fetchHistogram.fillLabelsFn({ url, options, response }, context),
             duration,
           );
-        };
-      }
-      return undefined;
+        }
+      };
+    });
+
+  return {
+    onPluginInit({ addPlugin }) {
+      addPlugin(
+        // @ts-expect-error TODO: plugin context generic is missing in yoga's prometheus plugin
+        useYogaPrometheus(config),
+      );
     },
+    onSubgraphExecute,
+    onFetch,
     [DisposableSymbols.dispose]() {
       return registry.clear();
     },
