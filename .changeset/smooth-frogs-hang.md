@@ -10,43 +10,34 @@ phases, or depending on the request context.
 ## Example: trace only execution and subscription errors
 
 ```ts
-import { execute, parse, specifiedRules, subscribe, validate } from 'graphql'
-import { envelop, useEngine } from '@envelop/core'
-import { usePrometheus } from '@envelop/prometheus'
+import { defineConfig } from '@graphql-hive/gateway';
 
 const TRACKED_OPERATION_NAMES = [
   // make a list of operation that you want to monitor
 ]
 
-const getEnveloped = envelop({
-  plugins: [
-    useEngine({ parse, validate, specifiedRules, execute, subscribe }),
-    usePrometheus({
-      metrics: {
-        // Here, an array of phases can be provided to enable the metric only on certain phases.
-        // In this example, only error happening during the execute and subscribe phases will tracked
-        graphql_envelop_phase_error: ['execute', 'subscribe']
-      }
-    }),
-  ],
+export const gatewayConfig = defineConfig({
+  prometheus: {
+    metrics: {
+      // Here, an array of phases can be provided to enable the metric only on certain phases.
+      // In this example, only error happening during the execute and subscribe phases will tracked
+      graphql_envelop_phase_error: ['execute', 'subscribe']
+    }
+  }
 })
 ```
 
 ## Example: Monitor timing only of a set of operations by name
 
 ```ts
-import { execute, parse, specifiedRules, subscribe, validate } from 'graphql'
-import { envelop, useEngine } from '@envelop/core'
-import { usePrometheus } from '@envelop/prometheus'
+import { defineConfig } from '@graphql-hive/gateway';
 
 const TRACKED_OPERATION_NAMES = [
   // make a list of operation that you want to monitor
 ]
 
-const getEnveloped = envelop({
-  plugins: [
-    useEngine({ parse, validate, specifiedRules, execute, subscribe }),
-    usePrometheus({
+export const gatewayConfig = defineConfig({
+  prometheus: {
       metrics: {
         graphql_yoga_http_duration: createHistogram({
           registry,
@@ -62,8 +53,7 @@ const getEnveloped = envelop({
           shouldObserve: ({ operationName }) => TRACKED_OPERATIONS.includes(operationName),
         })
       },
-    })
-  ]
+  }
 })
 ```
 
@@ -76,23 +66,23 @@ Previously, which phase was observe was depending on which other metric were ena
 this config would only trace validation error:
 
 ```ts
-usePrometheus({
+prometheus: {
   metrics: {
     graphql_envelop_phase_error: true,
     graphql_envelop_phase_validate: true,
   },
-})
+}
 ```
 
 This is no longer the case. If you were relying on this behavior, please use an array of string to
 restrict observed phases.
 
 ```ts
-usePrometheus({
+prometheus: {
   metrics: {
     graphql_envelop_phase_error: ['validate'],
   },
-})
+}
 ```
 
 ## Deprecation
