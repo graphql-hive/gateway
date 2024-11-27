@@ -58,11 +58,11 @@ import {
 } from '@whatwg-node/disposablestack';
 import {
   buildSchema,
-  ExecutionArgs,
   GraphQLSchema,
   isSchema,
   parse,
   print,
+  type ExecutionArgs,
 } from 'graphql';
 import {
   createYoga,

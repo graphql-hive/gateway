@@ -344,8 +344,8 @@ describe('Gateway Runtime', () => {
       const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
       expect(res.ok).toBeTruthy();
       expect(await res.json()).toEqual({
-        "data": {
-          "foo": "bar",
+        data: {
+          foo: 'bar',
         },
       });
     });
