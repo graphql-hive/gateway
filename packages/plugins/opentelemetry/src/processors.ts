@@ -14,6 +14,7 @@ import {
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
+import { AzureMonitorTraceExporter } from '@azure/monitor-opentelemetry-exporter';
 
 export type BatchingConfig = boolean | BufferConfig;
 
@@ -80,3 +81,13 @@ export function createOtlpGrpcExporter(
     },
   );
 }
+
+
+export function createAzureMonitorExporter(
+  connectionString: string,
+  batchingConfig?: BatchingConfig,
+): SpanProcessor {
+  const exporter = new AzureMonitorTraceExporter({ connectionString });
+  return resolveBatchingConfig(exporter, batchingConfig);
+}
+
