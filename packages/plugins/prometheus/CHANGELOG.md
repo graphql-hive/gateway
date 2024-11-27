@@ -1,5 +1,130 @@
 # @graphql-mesh/plugin-prometheus
 
+## 1.3.0
+
+### Minor Changes
+
+- [#174](https://github.com/graphql-hive/gateway/pull/174) [`92d977e`](https://github.com/graphql-hive/gateway/commit/92d977eaa784b1e78f091f6f155dd347052cc6b3) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Allow to explicitly control which events and timing should be observe.
+
+  Each metric can now be configured to observe events and timings only for certain GraphQL pipeline
+  phases, or depending on the request context.
+
+  ## Example: trace only execution and subscription errors
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  const TRACKED_OPERATION_NAMES = [
+    // make a list of operation that you want to monitor
+  ];
+
+  export const gatewayConfig = defineConfig({
+    prometheus: {
+      metrics: {
+        // Here, an array of phases can be provided to enable the metric only on certain phases.
+        // In this example, only error happening during the execute and subscribe phases will tracked
+        graphql_envelop_phase_error: ['execute', 'subscribe'],
+      },
+    },
+  });
+  ```
+
+  ## Example: Monitor timing only of a set of operations by name
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  const TRACKED_OPERATION_NAMES = [
+    // make a list of operation that you want to monitor
+  ];
+
+  export const gatewayConfig = defineConfig({
+    prometheus: {
+      metrics: {
+        graphql_yoga_http_duration: createHistogram({
+          registry,
+          histogram: {
+            name: 'graphql_envelop_request_duration',
+            help: 'Time spent on HTTP connection',
+            labelNames: ['operationName'],
+          },
+          fillLabelsFn: ({ operationName }, _rawContext) => ({ operationName }),
+          phases: ['execute', 'subscribe'],
+
+          // Here `shouldObserve` control if the request timing should be observed, based on context
+          shouldObserve: ({ operationName }) =>
+            TRACKED_OPERATIONS.includes(operationName),
+        }),
+      },
+    },
+  });
+  ```
+
+  ## Default Behavior Change
+
+  A metric is enabled using `true` value in metrics options will observe in every
+  phases available.
+
+  Previously, which phase was observe was depending on which other metric were enabled. For example,
+  this config would only trace validation error:
+
+  ```ts
+  prometheus: {
+    metrics: {
+      graphql_envelop_phase_error: true,
+      graphql_envelop_phase_validate: true,
+    },
+  }
+  ```
+
+  This is no longer the case. If you were relying on this behavior, please use an array of string to
+  restrict observed phases.
+
+  ```ts
+  prometheus: {
+    metrics: {
+      graphql_envelop_phase_error: ['validate'],
+    },
+  }
+  ```
+
+  ## Deprecation
+
+  The `fillLabelFn` function was provided the `response` and `request` through the `context` argument.
+
+  This is now deprecated, `request` and `response` are now available in the first `params` argument.
+  This change allows to provide better typing, since `context` is not typed.
+
+### Patch Changes
+
+- [#164](https://github.com/graphql-hive/gateway/pull/164) [`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.6.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.0) (from `^10.5.6`, in `dependencies`)
+
+- [#174](https://github.com/graphql-hive/gateway/pull/174) [`92d977e`](https://github.com/graphql-hive/gateway/commit/92d977eaa784b1e78f091f6f155dd347052cc6b3) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-prometheus@^6.5.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-prometheus/v/6.5.0) (from `^6.1.0`, in `dependencies`)
+
+- [#180](https://github.com/graphql-hive/gateway/pull/180) [`9438e21`](https://github.com/graphql-hive/gateway/commit/9438e21982ed5c6fb18cb678b275046595ae00f5) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/store@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.4) (from `^0.103.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.4) (from `^0.103.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.4) (from `^0.103.1`, in `dependencies`)
+
+- [#185](https://github.com/graphql-hive/gateway/pull/185) [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/store@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.4) (from `^0.103.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.4) (from `^0.103.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.4) (from `^0.103.1`, in `dependencies`)
+
+- [#98](https://github.com/graphql-hive/gateway/pull/98) [`697308d`](https://github.com/graphql-hive/gateway/commit/697308df3b2dd96f28dc65a5f5361a911077e022) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.8) (from `^0.4.7`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.1) (from `^0.103.0`, in `dependencies`)
+
+- Updated dependencies [[`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf), [`9438e21`](https://github.com/graphql-hive/gateway/commit/9438e21982ed5c6fb18cb678b275046595ae00f5), [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b), [`a9daf33`](https://github.com/graphql-hive/gateway/commit/a9daf33e630c85b4162fbe252f6e8726c35bf314), [`697308d`](https://github.com/graphql-hive/gateway/commit/697308df3b2dd96f28dc65a5f5361a911077e022), [`9438e21`](https://github.com/graphql-hive/gateway/commit/9438e21982ed5c6fb18cb678b275046595ae00f5), [`9d0d417`](https://github.com/graphql-hive/gateway/commit/9d0d417d8b5060c3867668e5b350b709b2a3327a), [`b534288`](https://github.com/graphql-hive/gateway/commit/b5342885f8ac1197d70cbf45266c83b720b4f85a), [`5538e31`](https://github.com/graphql-hive/gateway/commit/5538e31a4242a31dbabef898d067f81cdaba5201), [`2463109`](https://github.com/graphql-hive/gateway/commit/246310992a38e1d42eef0f6324f47b68e011eab4)]:
+  - @graphql-hive/gateway-runtime@1.3.0
+
 ## 1.2.10
 
 ### Patch Changes
