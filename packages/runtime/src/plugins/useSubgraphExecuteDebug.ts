@@ -25,6 +25,7 @@ export function useSubgraphExecuteDebug<
             JSON.stringify(executionRequest.variables),
         }));
       }
+      const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
         if (isAsyncIterable(result)) {
           return {
@@ -37,6 +38,7 @@ export function useSubgraphExecuteDebug<
             onEnd() {
               logger.debug('end', () => ({
                 subgraphExecuteId,
+                duration: performance.now() - start,
               }));
             },
           };

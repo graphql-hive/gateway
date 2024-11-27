@@ -20,6 +20,7 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
         body: options?.body && JSON.stringify(options.body),
         headers: options?.headers && JSON.stringify(options.headers, null, 2),
       }));
+      const start = performance.now();
       return function onFetchDone({ response }) {
         logger.debug('response', () => ({
           fetchId,
@@ -27,6 +28,7 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
           headers: JSON.stringify(
             Object.fromEntries(response.headers.entries()),
           ),
+          duration: performance.now() - start,
         }));
       };
     },
