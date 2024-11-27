@@ -1,3 +1,4 @@
+import type { AzureMonitorExporterOptions } from '@azure/monitor-opentelemetry-exporter';
 import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
 import { OTLPTraceExporter as OtlpHttpExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
@@ -14,7 +15,6 @@ import {
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import type { AzureMonitorExporterOptions } from '@azure/monitor-opentelemetry-exporter';
 
 export type BatchingConfig = boolean | BufferConfig;
 
@@ -54,24 +54,32 @@ export function createOtlpHttpExporter(
 }
 
 interface SpanExporterCtor<TConfig = unknown> {
-  new(config: TConfig): SpanExporter;
+  new (config: TConfig): SpanExporter;
 }
 
-function loadExporterLazily<TConfig, TSpanExporterCtor extends SpanExporterCtor<TConfig>>(
+function loadExporterLazily<
+  TConfig,
+  TSpanExporterCtor extends SpanExporterCtor<TConfig>,
+>(
   exporterName: string,
   exporterModuleName: string,
   exportNameInModule: string,
 ): MaybePromise<TSpanExporterCtor> {
   try {
     return mapMaybePromise(import(exporterModuleName), (mod) => {
-      const ExportCtor = mod?.default?.[exportNameInModule] || mod?.[exportNameInModule];
+      const ExportCtor =
+        mod?.default?.[exportNameInModule] || mod?.[exportNameInModule];
       if (!ExportCtor) {
-        throw new Error(`${exporterName} exporter is not available in the current environment`);
+        throw new Error(
+          `${exporterName} exporter is not available in the current environment`,
+        );
       }
       return ExportCtor;
     });
   } catch (err) {
-    throw new Error(`${exporterName} exporter is not available in the current environment`);
+    throw new Error(
+      `${exporterName} exporter is not available in the current environment`,
+    );
   }
 }
 
@@ -80,23 +88,35 @@ export function createOtlpGrpcExporter(
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
   return mapMaybePromise(
-    loadExporterLazily('OTLP gRPC', '@opentelemetry/exporter-trace-otlp-grpc', 'OTLPTraceExporter'),
+    loadExporterLazily(
+      'OTLP gRPC',
+      '@opentelemetry/exporter-trace-otlp-grpc',
+      'OTLPTraceExporter',
+    ),
     (OTLPTraceExporter) => {
-      return resolveBatchingConfig(new OTLPTraceExporter(config), batchingConfig);
+      return resolveBatchingConfig(
+        new OTLPTraceExporter(config),
+        batchingConfig,
+      );
     },
-  )
+  );
 }
-
 
 export function createAzureMonitorExporter(
   config: AzureMonitorExporterOptions,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
   return mapMaybePromise(
-    loadExporterLazily('Azure Monitor', '@azure/monitor-opentelemetry-exporter', 'AzureMonitorTraceExporter'),
+    loadExporterLazily(
+      'Azure Monitor',
+      '@azure/monitor-opentelemetry-exporter',
+      'AzureMonitorTraceExporter',
+    ),
     (AzureMonitorTraceExporter) => {
-      return resolveBatchingConfig(new AzureMonitorTraceExporter(config), batchingConfig);
+      return resolveBatchingConfig(
+        new AzureMonitorTraceExporter(config),
+        batchingConfig,
+      );
     },
   );
 }
-
