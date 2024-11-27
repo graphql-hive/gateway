@@ -112,7 +112,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
             stageId,
             ...log,
             path: pathToArray(info.path).join(' | '),
-          }
+          };
         });
         if (isDebug == null) {
           isDebug = false;
@@ -126,7 +126,7 @@ export function useDelegationPlan<TContext extends Record<string, any>>(opts: {
               duration: performance.now() - start,
             }));
           };
-        } 
+        }
       }
       return undefined;
     },
