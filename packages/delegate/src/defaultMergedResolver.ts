@@ -286,6 +286,8 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                     ? info.fragments
                     : EMPTY_OBJECT,
                   memoizedAsArray(fieldNode),
+                  context,
+                  info,
                 );
                 if (delegationPlan?.length) {
                   // Later optimize
