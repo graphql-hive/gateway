@@ -326,7 +326,6 @@ export function createGatewayRuntime<
       }
       return mapMaybePromise(schemaFetcher(), () => unifiedGraph);
     };
-    // pullup homies
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
     const executorPlugin: GatewayPlugin = {
