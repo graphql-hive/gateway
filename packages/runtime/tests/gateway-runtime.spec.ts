@@ -1,4 +1,5 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import { KeyValueCache } from '@graphql-mesh/types';
 import { isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { Response } from '@whatwg-node/server';
@@ -44,13 +45,10 @@ describe('Gateway Runtime', () => {
   function createUpstreamSchema() {
     return createSchema({
       typeDefs: /* GraphQL */ `
-          """
-          Fetched on ${new Date().toISOString()}
-          """
-          type Query {
-            foo: String
-          }
-        `,
+        type Query {
+          foo: String
+        }
+      `,
       resolvers: {
         Query: {
           foo: () => 'bar',
@@ -230,6 +228,124 @@ describe('Gateway Runtime', () => {
 
       // trigger mesh
       serve.fetch('http://mesh/graphql?query={__typename}');
+    });
+  });
+
+  describe('Cache', () => {
+    function createCache(cachedSupergraph?: string) {
+      return {
+        get: vi.fn((_key) => {
+          return Promise.resolve(cachedSupergraph);
+        }),
+        set: vi.fn((_key, _value, _options) => {
+          return Promise.resolve();
+        }),
+        delete() {
+          return Promise.reject('noop');
+        },
+        getKeysByPrefix() {
+          return Promise.reject('noop');
+        },
+      } satisfies KeyValueCache;
+    }
+
+    it('should lookup cache, set supergraph and use default ttl', async () => {
+      const cache = createCache();
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        cache,
+        supergraph: () =>
+          getUnifiedGraphGracefully([
+            {
+              name: 'upstream',
+              schema: createUpstreamSchema(),
+              url: 'http://localhost:4000/graphql',
+            },
+          ]),
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstreamFetch,
+          ),
+        ],
+      });
+
+      const res = await gw.fetch('http://localhost:4000/readiness');
+      expect(res.ok).toBeTruthy();
+
+      const supergraphCacheKey = 'hive-gateway:supergraph';
+      expect(cache.get).toBeCalledWith(supergraphCacheKey);
+      expect(cache.set.mock.lastCall?.[0]).toBe(supergraphCacheKey);
+      expect(cache.set.mock.lastCall?.[1]).toContain(
+        'type Query @join__type(graph: UPSTREAM)',
+      );
+      expect(cache.set.mock.lastCall?.[2]).toEqual({
+        ttl: 30, // default ttl is 30s
+      });
+    });
+
+    it('should set supergraph with polling interval as ttl converted to seconds', async () => {
+      const cache = createCache();
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        cache,
+        pollingInterval: 10_000,
+        supergraph: () =>
+          getUnifiedGraphGracefully([
+            {
+              name: 'upstream',
+              schema: createUpstreamSchema(),
+              url: 'http://localhost:4000/graphql',
+            },
+          ]),
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstreamFetch,
+          ),
+        ],
+      });
+
+      const res = await gw.fetch('http://localhost:4000/readiness');
+      expect(res.ok).toBeTruthy();
+
+      expect(cache.set.mock.lastCall?.[2]).toEqual({
+        ttl: 10, // 10_000ms is 10s
+      });
+    });
+
+    it('should use supergraph from cache', async () => {
+      const cache = createCache(
+        getUnifiedGraphGracefully([
+          {
+            name: 'upstream',
+            schema: createUpstreamSchema(),
+            url: 'http://localhost:4000/graphql',
+          },
+        ]),
+      );
+
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        cache,
+        supergraph: () => {
+          throw new Error('Not using cache!');
+        },
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstreamFetch,
+          ),
+        ],
+      });
+
+      const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
+      expect(res.ok).toBeTruthy();
+      expect(await res.json()).toEqual({
+        data: {
+          foo: 'bar',
+        },
+      });
     });
   });
 });

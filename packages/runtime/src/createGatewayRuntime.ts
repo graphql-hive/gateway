@@ -55,8 +55,13 @@ import {
   AsyncDisposableStack,
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
-import type { ExecutionArgs, GraphQLSchema } from 'graphql';
-import { buildSchema, isSchema, parse } from 'graphql';
+import {
+  buildSchema,
+  GraphQLSchema,
+  isSchema,
+  parse,
+  type ExecutionArgs,
+} from 'graphql';
 import {
   createYoga,
   isAsyncIterable,
