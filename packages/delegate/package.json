@@ -5,7 +5,7 @@
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/delegate"
   },
   "license": "MIT",
