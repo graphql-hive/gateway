@@ -17,7 +17,11 @@ import type {
 } from '@graphql-mesh/types';
 import type { LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
-import type { IResolvers, ValidationRule } from '@graphql-tools/utils';
+import type {
+  IResolvers,
+  TypeSource,
+  ValidationRule,
+} from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
 import type { DocumentNode, GraphQLSchema, TypeInfo } from 'graphql';
@@ -116,6 +120,10 @@ export interface GatewayConfigSubgraph<
 
 interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
   extends GatewayConfigBase<TContext> {
+  /**
+   * Additional GraphQL schema type definitions.
+   */
+  additionalTypeDefs?: TypeSource;
   /**
    * Additional GraphQL schema resolvers.
    */
