@@ -1473,10 +1473,16 @@ const entitiesFieldDefinitionNode: FieldDefinitionNode = {
     value: '_entities',
   },
   type: {
-    kind: Kind.NAMED_TYPE,
-    name: {
-      kind: Kind.NAME,
-      value: '_Entity',
+    kind: Kind.NON_NULL_TYPE,
+    type: {
+      kind: Kind.LIST_TYPE,
+      type: {
+        kind: Kind.NAMED_TYPE,
+        name: {
+          kind: Kind.NAME,
+          value: '_Entity',
+        },
+      },
     },
   },
   arguments: [

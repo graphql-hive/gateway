@@ -76,10 +76,47 @@ export function isolateComputedFieldsTransformer(
           ...mergedTypeConfig,
           fields: baseFields,
         };
+        const keyFieldNames =
+          isolatedSchemaTypes[typeName]?.keyFieldNames ?? [];
+        if (keyFieldNames.length === 0) {
+          if (mergedTypeConfig.selectionSet) {
+            const parsedSelectionSet = parseSelectionSet(
+              mergedTypeConfig.selectionSet,
+            );
+            const keyFields = collectFields(
+              subschemaConfig.schema,
+              {},
+              {},
+              objectType,
+              parsedSelectionSet,
+            );
+            if (typeName === 'Car') {
+              console.log({
+                keyFields,
+              });
+            }
+            keyFieldNames.push(...Array.from(keyFields.fields.keys()));
+          }
+          for (const entryPoint of mergedTypeConfig.entryPoints ?? []) {
+            if (entryPoint.selectionSet) {
+              const parsedSelectionSet = parseSelectionSet(
+                entryPoint.selectionSet,
+              );
+              const keyFields = collectFields(
+                subschemaConfig.schema,
+                {},
+                {},
+                objectType,
+                parsedSelectionSet,
+              );
+              keyFieldNames.push(...Array.from(keyFields.fields.keys()));
+            }
+          }
+        }
         isolatedSchemaTypes[typeName] = {
           ...mergedTypeConfig,
           // there might already be key fields
-          keyFieldNames: isolatedSchemaTypes[typeName]?.keyFieldNames || [],
+          keyFieldNames,
           fields: {
             ...(isolatedSchemaTypes[typeName]?.fields ?? {}),
             ...isolatedFields,
@@ -161,7 +198,6 @@ export function isolateComputedFieldsTransformer(
                     keyFieldNames.push(...Array.from(keyFields.fields.keys()));
                   }
                 }
-
                 isolatedSchemaTypes[type.name] = {
                   ...returnTypeMergeConfig,
                   keyFieldNames,

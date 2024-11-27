@@ -1,8 +1,10 @@
 import {
+  asArray,
   createDeferred,
   getResponseKeyFromInfo,
   isPromise,
   mapMaybePromise,
+  memoize1,
 } from '@graphql-tools/utils';
 import {
   defaultFieldResolver,
@@ -17,6 +19,7 @@ import {
   getPlanLeftOverFromParent,
 } from './leftOver.js';
 import {
+  EMPTY_OBJECT,
   getSubschema,
   getUnpathedErrors,
   handleResolverResult,
@@ -274,11 +277,17 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                 ]?.delegationPlanBuilder(
                   info.schema,
                   sourceSubschema,
-                  info.variableValues,
-                  info.fragments,
-                  [fieldNode],
+                  info.variableValues != null &&
+                    Object.keys(info.variableValues).length > 0
+                    ? info.variableValues
+                    : EMPTY_OBJECT,
+                  info.fragments != null &&
+                    Object.keys(info.fragments).length > 0
+                    ? info.fragments
+                    : EMPTY_OBJECT,
+                  memoizedAsArray(fieldNode),
                 );
-                if (delegationPlan) {
+                if (delegationPlan?.length) {
                   // Later optimize
                   for (const delegationMap of delegationPlan) {
                     for (const [subschema, selectionSet] of delegationMap) {
@@ -498,3 +507,5 @@ function flattenPromise<T>(data: T): Promise<T> | T {
   }
   return data;
 }
+
+const memoizedAsArray = memoize1(asArray);
