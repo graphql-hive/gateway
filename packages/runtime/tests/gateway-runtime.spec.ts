@@ -343,13 +343,11 @@ describe('Gateway Runtime', () => {
 
       const res = await gw.fetch('http://localhost:4000/graphql?query={foo}');
       expect(res.ok).toBeTruthy();
-      await expect(res.json()).resolves.toMatchInlineSnapshot(`
-        {
-          "data": {
-            "foo": "bar",
-          },
-        }
-      `);
+      expect(await res.json()).toEqual({
+        "data": {
+          "foo": "bar",
+        },
+      });
     });
   });
 });
