@@ -14,7 +14,7 @@ import {
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import { AzureMonitorTraceExporter } from '@azure/monitor-opentelemetry-exporter';
+import type { AzureMonitorExporterOptions } from '@azure/monitor-opentelemetry-exporter';
 
 export type BatchingConfig = boolean | BufferConfig;
 
@@ -53,41 +53,50 @@ export function createOtlpHttpExporter(
   return resolveBatchingConfig(new OtlpHttpExporter(config), batchingConfig);
 }
 
+interface SpanExporterCtor<TConfig = unknown> {
+  new(config: TConfig): SpanExporter;
+}
+
+function loadExporterLazily<TConfig, TSpanExporterCtor extends SpanExporterCtor<TConfig>>(
+  exporterName: string,
+  exporterModuleName: string,
+  exportNameInModule: string,
+): MaybePromise<TSpanExporterCtor> {
+  try {
+    return mapMaybePromise(import(exporterModuleName), (mod) => {
+      const ExportCtor = mod?.default?.[exportNameInModule] || mod?.[exportNameInModule];
+      if (!ExportCtor) {
+        throw new Error(`${exporterName} exporter is not available in the current environment`);
+      }
+      return ExportCtor;
+    });
+  } catch (err) {
+    throw new Error(`${exporterName} exporter is not available in the current environment`);
+  }
+}
+
 export function createOtlpGrpcExporter(
   config: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
-  const exporterModulePrefix = `@opentelemetry/exporter-trace-otlp-`;
   return mapMaybePromise(
-    import(`${exporterModulePrefix}grpc`),
-    (mod) => {
-      const OTLPTraceExporter =
-        mod?.default?.OTLPTraceExporter || mod?.OTLPTraceExporter;
-      if (!OTLPTraceExporter) {
-        throw new Error(
-          'OTLP gRPC exporter is not available in the current environment',
-        );
-      }
-      return resolveBatchingConfig(
-        new OTLPTraceExporter(config),
-        batchingConfig,
-      );
+    loadExporterLazily('OTLP gRPC', '@opentelemetry/exporter-trace-otlp-grpc', 'OTLPTraceExporter'),
+    (OTLPTraceExporter) => {
+      return resolveBatchingConfig(new OTLPTraceExporter(config), batchingConfig);
     },
-    (err) => {
-      console.error(err);
-      throw new Error(
-        'OTLP gRPC exporter is not available in the current environment',
-      );
-    },
-  );
+  )
 }
 
 
 export function createAzureMonitorExporter(
-  connectionString: string,
+  config: AzureMonitorExporterOptions,
   batchingConfig?: BatchingConfig,
-): SpanProcessor {
-  const exporter = new AzureMonitorTraceExporter({ connectionString });
-  return resolveBatchingConfig(exporter, batchingConfig);
+): MaybePromise<SpanProcessor> {
+  return mapMaybePromise(
+    loadExporterLazily('Azure Monitor', '@azure/monitor-opentelemetry-exporter', 'AzureMonitorTraceExporter'),
+    (AzureMonitorTraceExporter) => {
+      return resolveBatchingConfig(new AzureMonitorTraceExporter(config), batchingConfig);
+    },
+  );
 }
 
