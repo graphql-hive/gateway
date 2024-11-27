@@ -5,7 +5,7 @@
   "description": "Useful tools to create and manipulate GraphQL schemas.",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/graphql-tools"
   },
   "license": "MIT",
