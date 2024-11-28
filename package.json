@@ -14,18 +14,18 @@
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
+    "build:alpha": "yarn build && yarn pin-workspace-deps",
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
     "check:missing-peer-deps": "yarn install | grep YN0002 && exit 1 || exit 0",
     "check:types": "yarn tsc",
     "format": "yarn check:format --write",
+    "pin-workspace-deps": "node ./scripts/pin-workspace-deps.mjs",
     "test": "vitest --project unit",
     "test:bun": "bun test --bail",
     "test:e2e": "vitest --project e2e",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --no-watchman --runInBand --detectOpenHandles --detectLeaks --logHeapUsage",
-    "build:alpha": "yarn build && yarn pin-workspace-deps",
-    "pin-workspace-deps": "node ./scripts/pin-workspace-deps.mjs"
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --no-watchman --runInBand --detectOpenHandles --detectLeaks --logHeapUsage"
   },
   "devDependencies": {
     "@babel/core": "7.26.0",
