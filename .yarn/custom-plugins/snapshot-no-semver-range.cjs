@@ -11,9 +11,7 @@ module.exports = {
         /** @param {Record<string, any>} packageJson  */
         beforeWorkspacePacking(workspace, packageJson) {
           console.group('snapshot-no-semver-range');
-          console.log(
-            'Setting exact snapshot versions to workspace dependencies...',
-          );
+          console.log('Finding snapshot workspace dependencies...');
           for (const category of [
             'dependencies',
             'devDependencies',
