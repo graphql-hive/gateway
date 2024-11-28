@@ -17,6 +17,7 @@
     "bundle": "yarn workspaces foreach -A -p run bundle",
     "check:format": "prettier --check .",
     "check:lint": "eslint 'packages/**/src/**/*.ts'",
+    "check:missing-peer-deps": "yarn install | grep YN0002 && exit 1 || exit 0",
     "check:types": "yarn tsc",
     "format": "yarn check:format --write",
     "test": "vitest --project unit",

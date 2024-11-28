@@ -23,7 +23,6 @@ jobs:
         run: yarn check:format
 
   lint:
-    needs: [format]
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +36,6 @@ jobs:
         run: yarn check:lint
 
   types:
-    needs: [lint]
     name: Types
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +47,19 @@ jobs:
           node-version-file: .node-version
       - name: Check
         run: yarn check:types
+
+  missing-peer-deps:
+    name: Missing peer deps
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Check
+        run: yarn check:missing-peer-deps
 
   build: # making sure build works so it doesn't fail on us during release
     needs: [types]
