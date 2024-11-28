@@ -217,8 +217,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           const ttl = this.opts.pollingInterval
             ? this.opts.pollingInterval * 0.001
             : // if no polling interval (cache TTL) is configured, default to
-            // 30 seconds making sure the unifiedgraph is not kept forever
-            30;
+              // 30 seconds making sure the unifiedgraph is not kept forever
+              30;
           const cacheSet$ = this.opts.transportContext.cache.set(
             UNIFIEDGRAPH_CACHE_KEY,
             serializedUnifiedGraph,
@@ -259,8 +259,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           onSubgraphExecute(subgraphName, execReq) {
             return onSubgraphExecute(subgraphName, execReq);
           },
-          onDelegationStageExecuteHooks:
-            this.onDelegationStageExecuteHooks,
+          onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
           transportEntryAdditions: this.opts.transportEntryAdditions,
           batch: this.batch,
           logger: this.opts.transportContext?.logger,
