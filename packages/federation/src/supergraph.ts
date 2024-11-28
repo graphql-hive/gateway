@@ -1186,10 +1186,10 @@ export function getStitchingOptionsFromSupergraphSdl(
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
           };
-          for (const candidate of candidates.toReversed ? candidates.toReversed() : [...candidates].reverse()) {
-            if (
-              candidate.transformedSubschema?.name
-            ) {
+          for (const candidate of candidates.toReversed
+            ? candidates.toReversed()
+            : [...candidates].reverse()) {
+            if (candidate.transformedSubschema?.name) {
               const unavailableFields =
                 extractUnavailableFieldsFromSelectionSet(
                   candidate.transformedSubschema.transformedSchema,
@@ -1204,11 +1204,20 @@ export function getStitchingOptionsFromSupergraphSdl(
               );
               if (currentScore == null) {
                 currentScore = Infinity;
-                candidateScoreMap.set(candidate.transformedSubschema.name, currentScore);
+                candidateScoreMap.set(
+                  candidate.transformedSubschema.name,
+                  currentScore,
+                );
               }
               if (score < currentScore) {
-                candidateScoreMap.set(candidate.transformedSubschema.name, score);
-                candidateMap.set(candidate.transformedSubschema.name, candidate);
+                candidateScoreMap.set(
+                  candidate.transformedSubschema.name,
+                  score,
+                );
+                candidateMap.set(
+                  candidate.transformedSubschema.name,
+                  candidate,
+                );
               }
             }
           }
@@ -1246,7 +1255,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                 // Make parallel requests if there are other subschemas
                 // that can resolve the remaining fields for this selection directly from the root field
                 // instead of applying a type merging in advance
-                for (const [_friendCandidateName, friendCandidate] of candidateMap) {
+                for (const [
+                  _friendCandidateName,
+                  friendCandidate,
+                ] of candidateMap) {
                   if (
                     friendCandidate === candidate ||
                     !friendCandidate.transformedSubschema ||

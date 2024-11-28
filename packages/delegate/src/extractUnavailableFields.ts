@@ -19,124 +19,122 @@ import {
 } from 'graphql';
 
 export function extractUnavailableFieldsFromSelectionSet(
-    schema: GraphQLSchema,
-    fieldType: GraphQLNamedOutputType,
-    fieldSelectionSet: SelectionSetNode,
-    shouldAdd: (
-      fieldType: GraphQLObjectType | GraphQLInterfaceType,
-      selection: FieldNode,
-    ) => boolean,
-    fragments: Record<string, FragmentDefinitionNode> = {},
-  ) {
-    if (isLeafType(fieldType)) {
-      return [];
-    }
-    if (isUnionType(fieldType)) {
-      const unavailableSelections: SelectionNode[] = [];
-      for (const type of fieldType.getTypes()) {
-        // Exclude other inline fragments
-        const fieldSelectionExcluded: SelectionSetNode = {
-          ...fieldSelectionSet,
-          selections: fieldSelectionSet.selections.filter((selection) =>
-            selection.kind === Kind.INLINE_FRAGMENT
-              ? selection.typeCondition
-                ? selection.typeCondition.name.value === type.name
-                : false
-              : true,
-          ),
-        };
-        unavailableSelections.push(
-          ...extractUnavailableFieldsFromSelectionSet(
-            schema,
-            type,
-            fieldSelectionExcluded,
-            shouldAdd,
-            fragments,
-          ),
-        );
-      }
-      return unavailableSelections;
-    }
-    const subFields = fieldType.getFields();
+  schema: GraphQLSchema,
+  fieldType: GraphQLNamedOutputType,
+  fieldSelectionSet: SelectionSetNode,
+  shouldAdd: (
+    fieldType: GraphQLObjectType | GraphQLInterfaceType,
+    selection: FieldNode,
+  ) => boolean,
+  fragments: Record<string, FragmentDefinitionNode> = {},
+) {
+  if (isLeafType(fieldType)) {
+    return [];
+  }
+  if (isUnionType(fieldType)) {
     const unavailableSelections: SelectionNode[] = [];
-    for (const selection of fieldSelectionSet.selections) {
-      if (selection.kind === Kind.FIELD) {
-        if (selection.name.value === '__typename') {
-          continue;
+    for (const type of fieldType.getTypes()) {
+      // Exclude other inline fragments
+      const fieldSelectionExcluded: SelectionSetNode = {
+        ...fieldSelectionSet,
+        selections: fieldSelectionSet.selections.filter((selection) =>
+          selection.kind === Kind.INLINE_FRAGMENT
+            ? selection.typeCondition
+              ? selection.typeCondition.name.value === type.name
+              : false
+            : true,
+        ),
+      };
+      unavailableSelections.push(
+        ...extractUnavailableFieldsFromSelectionSet(
+          schema,
+          type,
+          fieldSelectionExcluded,
+          shouldAdd,
+          fragments,
+        ),
+      );
+    }
+    return unavailableSelections;
+  }
+  const subFields = fieldType.getFields();
+  const unavailableSelections: SelectionNode[] = [];
+  for (const selection of fieldSelectionSet.selections) {
+    if (selection.kind === Kind.FIELD) {
+      if (selection.name.value === '__typename') {
+        continue;
+      }
+      const fieldName = selection.name.value;
+      const selectionField = subFields[fieldName];
+      if (!selectionField) {
+        if (shouldAdd(fieldType, selection)) {
+          unavailableSelections.push(selection);
         }
-        const fieldName = selection.name.value;
-        const selectionField = subFields[fieldName];
-        if (!selectionField) {
-          if (shouldAdd(fieldType, selection)) {
-            unavailableSelections.push(selection);
+      } else {
+        const unavailableSubFields = extractUnavailableFields(
+          schema,
+          selectionField,
+          selection,
+          shouldAdd,
+          fragments,
+        );
+        if (unavailableSubFields.length) {
+          unavailableSelections.push({
+            ...selection,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: unavailableSubFields,
+            },
+          });
+        }
+      }
+    } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+      const subFieldName =
+        selection.typeCondition?.name.value || fieldType.name;
+      const subFieldType =
+        (selection.typeCondition &&
+          (schema.getType(subFieldName) as GraphQLObjectType)) ||
+        fieldType;
+      if (
+        subFieldName === fieldType.name ||
+        ((isObjectType(subFieldType) || isInterfaceType(subFieldType)) &&
+          isAbstractType(fieldType) &&
+          schema.isSubType(fieldType, subFieldType))
+      ) {
+        const unavailableFields = extractUnavailableFieldsFromSelectionSet(
+          schema,
+          subFieldType,
+          selection.selectionSet,
+          shouldAdd,
+          fragments,
+        );
+        if (unavailableFields.length) {
+          unavailableSelections.push({
+            ...selection,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: unavailableFields,
+            },
+          });
+        }
+      } else if (isObjectType(subFieldType) || isInterfaceType(subFieldType)) {
+        for (const subSelection of selection.selectionSet.selections) {
+          if (
+            subSelection.kind === Kind.FIELD &&
+            subSelection.name.value === '__typename'
+          ) {
+            continue;
           }
-        } else {
-          const unavailableSubFields = extractUnavailableFields(
-            schema,
-            selectionField,
-            selection,
-            shouldAdd,
-            fragments,
-          );
-          if (unavailableSubFields.length) {
-            unavailableSelections.push({
-              ...selection,
-              selectionSet: {
-                kind: Kind.SELECTION_SET,
-                selections: unavailableSubFields,
-              },
-            });
+          if (shouldAdd(subFieldType, subSelection as FieldNode)) {
+            unavailableSelections.push(subSelection);
           }
         }
-      } else if (selection.kind === Kind.INLINE_FRAGMENT) {
-        const subFieldName =
-          selection.typeCondition?.name.value || fieldType.name;
-        const subFieldType =
-          (selection.typeCondition &&
-            (schema.getType(subFieldName) as GraphQLObjectType)) ||
-          fieldType;
-        if (
-          subFieldName === fieldType.name ||
-          ((isObjectType(subFieldType) || isInterfaceType(subFieldType)) &&
-            isAbstractType(fieldType) &&
-            schema.isSubType(fieldType, subFieldType))
-        ) {
-          const unavailableFields = extractUnavailableFieldsFromSelectionSet(
-            schema,
-            subFieldType,
-            selection.selectionSet,
-            shouldAdd,
-            fragments,
-          );
-          if (unavailableFields.length) {
-            unavailableSelections.push({
-              ...selection,
-              selectionSet: {
-                kind: Kind.SELECTION_SET,
-                selections: unavailableFields,
-              },
-            });
-          }
-        } else if (
-          isObjectType(subFieldType) ||
-          isInterfaceType(subFieldType)
-        ) {
-          for (const subSelection of selection.selectionSet.selections) {
-            if (
-              subSelection.kind === Kind.FIELD &&
-              subSelection.name.value === '__typename'
-            ) {
-              continue;
-            }
-            if (shouldAdd(subFieldType, subSelection as FieldNode)) {
-              unavailableSelections.push(subSelection);
-            }
-          }
-        }
-      } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
-        const fragment = fragments[selection.name.value];
-        if (fragment) {
-          const fragmentUnavailableFields = extractUnavailableFieldsFromSelectionSet(
+      }
+    } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragment = fragments[selection.name.value];
+      if (fragment) {
+        const fragmentUnavailableFields =
+          extractUnavailableFieldsFromSelectionSet(
             schema,
             fieldType,
             {
@@ -152,31 +150,31 @@ export function extractUnavailableFieldsFromSelectionSet(
                     },
                   },
                   selectionSet: fragment.selectionSet,
-                }
-              ]
+                },
+              ],
             },
             shouldAdd,
             fragments,
           );
-          if (fragmentUnavailableFields.length) {
-            unavailableSelections.push(...fragmentUnavailableFields);
-          }
+        if (fragmentUnavailableFields.length) {
+          unavailableSelections.push(...fragmentUnavailableFields);
         }
       }
     }
-    return unavailableSelections;
   }
+  return unavailableSelections;
+}
 
 export function extractUnavailableFields(
-    schema: GraphQLSchema,
-    field: GraphQLField<any, any>,
-    fieldNode: FieldNode,
-    shouldAdd: (
-      fieldType: GraphQLObjectType | GraphQLInterfaceType,
-      selection: FieldNode,
-    ) => boolean,
-    fragments: Record<string, FragmentDefinitionNode> = {},
-  ) {
+  schema: GraphQLSchema,
+  field: GraphQLField<any, any>,
+  fieldNode: FieldNode,
+  shouldAdd: (
+    fieldType: GraphQLObjectType | GraphQLInterfaceType,
+    selection: FieldNode,
+  ) => boolean,
+  fragments: Record<string, FragmentDefinitionNode> = {},
+) {
   if (fieldNode.selectionSet) {
     const fieldType = getNamedType(field.type);
     return extractUnavailableFieldsFromSelectionSet(
@@ -188,7 +186,7 @@ export function extractUnavailableFields(
     );
   }
   return [];
-};;
+}
 
 function fieldExistsInSelectionSet(
   node: SelectionSetNode,
