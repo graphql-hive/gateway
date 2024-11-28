@@ -184,6 +184,7 @@ export function handleResolverResult(
       if (
         existingPropValue != null &&
         typeof existingPropValue === 'object' &&
+        !(existingPropValue instanceof Error) &&
         Object.keys(existingPropValue).length > 0
       ) {
         if (

@@ -1,6 +1,6 @@
-import { memoize4 } from '@graphql-tools/utils';
 import {
   FieldNode,
+  FragmentDefinitionNode,
   getNamedType,
   GraphQLField,
   GraphQLInterfaceType,
@@ -18,8 +18,7 @@ import {
   visit,
 } from 'graphql';
 
-export const extractUnavailableFieldsFromSelectionSet = memoize4(
-  function extractUnavailableFieldsFromSelectionSet(
+export function extractUnavailableFieldsFromSelectionSet(
     schema: GraphQLSchema,
     fieldType: GraphQLNamedOutputType,
     fieldSelectionSet: SelectionSetNode,
@@ -27,6 +26,7 @@ export const extractUnavailableFieldsFromSelectionSet = memoize4(
       fieldType: GraphQLObjectType | GraphQLInterfaceType,
       selection: FieldNode,
     ) => boolean,
+    fragments: Record<string, FragmentDefinitionNode> = {},
   ) {
     if (isLeafType(fieldType)) {
       return [];
@@ -51,6 +51,7 @@ export const extractUnavailableFieldsFromSelectionSet = memoize4(
             type,
             fieldSelectionExcluded,
             shouldAdd,
+            fragments,
           ),
         );
       }
@@ -75,6 +76,7 @@ export const extractUnavailableFieldsFromSelectionSet = memoize4(
             selectionField,
             selection,
             shouldAdd,
+            fragments,
           );
           if (unavailableSubFields.length) {
             unavailableSelections.push({
@@ -104,6 +106,7 @@ export const extractUnavailableFieldsFromSelectionSet = memoize4(
             subFieldType,
             selection.selectionSet,
             shouldAdd,
+            fragments,
           );
           if (unavailableFields.length) {
             unavailableSelections.push({
@@ -130,14 +133,41 @@ export const extractUnavailableFieldsFromSelectionSet = memoize4(
             }
           }
         }
+      } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
+        const fragment = fragments[selection.name.value];
+        if (fragment) {
+          const fragmentUnavailableFields = extractUnavailableFieldsFromSelectionSet(
+            schema,
+            fieldType,
+            {
+              kind: Kind.SELECTION_SET,
+              selections: [
+                {
+                  kind: Kind.INLINE_FRAGMENT,
+                  typeCondition: {
+                    kind: Kind.NAMED_TYPE,
+                    name: {
+                      kind: Kind.NAME,
+                      value: fragment.typeCondition.name.value,
+                    },
+                  },
+                  selectionSet: fragment.selectionSet,
+                }
+              ]
+            },
+            shouldAdd,
+            fragments,
+          );
+          if (fragmentUnavailableFields.length) {
+            unavailableSelections.push(...fragmentUnavailableFields);
+          }
+        }
       }
     }
     return unavailableSelections;
-  },
-);
+  }
 
-export const extractUnavailableFields = memoize4(
-  function extractUnavailableFields(
+export function extractUnavailableFields(
     schema: GraphQLSchema,
     field: GraphQLField<any, any>,
     fieldNode: FieldNode,
@@ -145,19 +175,20 @@ export const extractUnavailableFields = memoize4(
       fieldType: GraphQLObjectType | GraphQLInterfaceType,
       selection: FieldNode,
     ) => boolean,
+    fragments: Record<string, FragmentDefinitionNode> = {},
   ) {
-    if (fieldNode.selectionSet) {
-      const fieldType = getNamedType(field.type);
-      return extractUnavailableFieldsFromSelectionSet(
-        schema,
-        fieldType,
-        fieldNode.selectionSet,
-        shouldAdd,
-      );
-    }
-    return [];
-  },
-);
+  if (fieldNode.selectionSet) {
+    const fieldType = getNamedType(field.type);
+    return extractUnavailableFieldsFromSelectionSet(
+      schema,
+      fieldType,
+      fieldNode.selectionSet,
+      shouldAdd,
+      fragments,
+    );
+  }
+  return [];
+};;
 
 function fieldExistsInSelectionSet(
   node: SelectionSetNode,

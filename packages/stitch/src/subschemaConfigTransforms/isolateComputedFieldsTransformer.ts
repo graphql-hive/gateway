@@ -9,7 +9,6 @@ import {
   getImplementingTypes,
   getRootTypeNames,
   parseSelectionSet,
-  pruneSchema,
 } from '@graphql-tools/utils';
 import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
 import {
@@ -264,18 +263,22 @@ function _createCompositeFieldFilter(schema: GraphQLSchema) {
   for (const typeName in schema.getTypeMap()) {
     const type = schema.getType(typeName);
     if (isObjectType(type) || isInterfaceType(type)) {
-      filteredFields[typeName] = { __typename: true };
+      const filteredFieldsOfType: Record<string, boolean> = { __typename: true };
+      let hasField = false;
       const fieldMap = type.getFields();
       for (const fieldName in fieldMap) {
-        filteredFields[typeName][fieldName] = true;
+        filteredFieldsOfType[fieldName] = true;
+        hasField = true;
+      }
+      if (hasField) {
+        filteredFields[typeName] = filteredFieldsOfType;
       }
     }
   }
   return new TransformCompositeFields(
     (typeName, fieldName) =>
       filteredFields[typeName]?.[fieldName] ? undefined : null,
-    (typeName, fieldName) =>
-      filteredFields[typeName]?.[fieldName] ? undefined : null,
+    (typeName, fieldName) =>filteredFields[typeName]?.[fieldName] ? undefined : null,
   );
 }
 
@@ -298,68 +301,87 @@ function filterBaseSubschema(
   const schema = subschemaConfig.schema;
   const typesForInterface: Record<string, string[]> = {};
   const iFacesForTypes: Record<string, string[]> = {};
-  const filteredSchema = pruneSchema(
-    filterSchema({
-      schema,
-      objectFieldFilter: (typeName, fieldName) => {
-        const iFacesForType = (iFacesForTypes[typeName] ||= []);
-        if (!iFacesForType) {
-          function addIface(iFace: GraphQLInterfaceType) {
-            if (!iFacesForType.includes(iFace.name)) {
-              iFacesForType.push(iFace.name);
-              iFace.getInterfaces().forEach(addIface);
-            }
-          }
-          const type = schema.getType(typeName);
-          if (isObjectType(type)) {
-            let iFaces = type.getInterfaces();
-            for (const iface of iFaces) {
-              addIface(iface);
-            }
+  const filteredSchema = filterSchema({
+    schema,
+    objectFieldFilter: (typeName, fieldName) => {
+      const iFacesForType = (iFacesForTypes[typeName] ||= []);
+      if (!iFacesForType) {
+        function addIface(iFace: GraphQLInterfaceType) {
+          if (!iFacesForType.includes(iFace.name)) {
+            iFacesForType.push(iFace.name);
+            iFace.getInterfaces().forEach(addIface);
           }
         }
-        const allTypes = [typeName, ...iFacesForType];
-        const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
-          isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
-        );
-        const isKeyFieldName = allTypes.some((implementingTypeName) =>
-          (
-            isolatedSchemaTypes[implementingTypeName]?.keyFieldNames ?? []
-          ).includes(fieldName),
-        );
-        return !isIsolatedFieldName || isKeyFieldName;
-      },
-      interfaceFieldFilter: (typeName, fieldName) => {
-        if (!typesForInterface[typeName]) {
-          typesForInterface[typeName] = getImplementingTypes(typeName, schema);
+        const type = schema.getType(typeName) as GraphQLObjectType;
+        let iFaces = type.getInterfaces();
+        for (const iface of iFaces) {
+          addIface(iface);
         }
-        const allTypes = [typeName, ...typesForInterface[typeName]];
+      }
+      const allTypes = [typeName, ...iFacesForType];
+      const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
+        isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
+      );
+      const isKeyFieldName = allTypes.some((implementingTypeName) =>
+        (
+          isolatedSchemaTypes[implementingTypeName]?.keyFieldNames ?? []
+        ).includes(fieldName),
+      );
+      return !isIsolatedFieldName || isKeyFieldName;
+    },
+    interfaceFieldFilter: (typeName, fieldName) => {
+      if (!typesForInterface[typeName]) {
+        typesForInterface[typeName] = getImplementingTypes(typeName, schema);
+      }
+      const iFacesForType = (iFacesForTypes[typeName] ||= []);
+      if (!iFacesForType) {
+        function addIface(iFace: GraphQLInterfaceType) {
+          if (!iFacesForType.includes(iFace.name)) {
+            iFacesForType.push(iFace.name);
+            iFace.getInterfaces().forEach(addIface);
+          }
+        }
+        const type = schema.getType(typeName) as GraphQLObjectType;
+
+        let iFaces = type.getInterfaces();
+        for (const iface of iFaces) {
+          addIface(iface);
+        }
+      }
+      const allTypes = [typeName, ...iFacesForType, ...typesForInterface[typeName]];
         const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
-          isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
-        );
-        const isKeyFieldName = allTypes.some((implementingTypeName) =>
-          (
-            isolatedSchemaTypes[implementingTypeName]?.keyFieldNames ?? []
-          ).includes(fieldName),
-        );
-        return !isIsolatedFieldName || isKeyFieldName;
-      },
-    }),
-  );
+        isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
+      );
+      const isKeyFieldName = allTypes.some((implementingTypeName) =>
+        (
+          isolatedSchemaTypes[implementingTypeName]?.keyFieldNames ?? []
+        ).includes(fieldName),
+      );
+      return !isIsolatedFieldName || isKeyFieldName;
+    },
+  });
 
   const filteredSubschema = {
     ...subschemaConfig,
     merge: subschemaConfig.merge
       ? {
-          ...subschemaConfig.merge,
-        }
+        ...subschemaConfig.merge,
+      }
       : undefined,
     transforms: (subschemaConfig.transforms ?? []).concat([
       _createCompositeFieldFilter(filteredSchema),
       new FilterTypes( // filter out empty types
-        (type) =>
-          (!isObjectType(type) && !isInterfaceType(type)) ||
-          Object.keys(type.getFields()).length > 0,
+        (type) => {
+          const typeName = type.name;
+          const typeInFiltered = filteredSchema.getType(typeName);
+          if (!typeInFiltered) {
+            return false;
+          }
+          if (isObjectType(type) || isInterfaceType(type)) {
+            return Object.keys(type.getFields()).length > 0;
+          }
+          return true;
+        },
       ),
     ]),
   };
@@ -387,9 +409,9 @@ type IsolatedSubschemaInput = Exclude<SubschemaConfig, 'merge'> & {
 
 function filterIsolatedSubschema(
   subschemaConfig: IsolatedSubschemaInput,
+  computedFieldTypes: Record<string, boolean> = {}, // contains types of computed fields that have no root field
 ): SubschemaConfig {
   const queryRootFields: Record<string, boolean> = {};
-  const computedFieldTypes: Record<string, boolean> = {}; // contains types of computed fields that have no root field
   function listReachableTypesToIsolate(
     subschemaConfig: SubschemaConfig,
     type: GraphQLNamedOutputType,
@@ -489,98 +511,111 @@ function filterIsolatedSubschema(
   }
 
   const rootTypeNames = getRootTypeNames(subschemaConfig.schema);
-
   const typesForInterface: Record<string, string[]> = {};
-  const filteredSchema = pruneSchema(
-    filterSchema({
-      schema: subschemaConfig.schema,
-      rootFieldFilter: (typeName, fieldName, config) => {
-        // if the field is a root field, it should be included
-        if (rootTypeNames.has(typeName)) {
-          // if this is a query field, we should check if it is a computed field
-          if (queryType?.name === typeName) {
-            if (queryRootFields[fieldName]) {
-              return true;
-            }
-          } else {
+  const iFaceForTypes: Record<string, string[]> = {};
+  const filteredSchema = filterSchema({
+    schema: subschemaConfig.schema,
+    rootFieldFilter: (typeName, fieldName, config) => {
+      // if the field is a root field, it should be included
+      if (rootTypeNames.has(typeName)) {
+        // if this is a query field, we should check if it is a computed field
+        if (queryType?.name === typeName) {
+          if (queryRootFields[fieldName]) {
             return true;
           }
-        }
-        const returnType = getNamedType(config.type);
-        if (isAbstractType(returnType)) {
-          const typesForInterface = [
-            returnType.name,
-            ...getImplementingTypes(returnType.name, subschemaConfig.schema),
-          ];
-          return typesForInterface.some((t) => computedFieldTypes[t] != null);
-        }
-        return computedFieldTypes[returnType.name] != null;
-      },
-      objectFieldFilter: (typeName, fieldName, config) => {
-        if (computedFieldTypes[typeName]) {
+        } else {
           return true;
         }
-        const fieldType = getNamedType(config.type);
-        if (computedFieldTypes[fieldType.name]) {
-          return true;
-        }
-        return (
-          subschemaConfig.merge[typeName] == null ||
-          subschemaConfig.merge[typeName]?.fields?.[fieldName] != null ||
-          (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
+      }
+      const returnType = getNamedType(config.type);
+      if (isAbstractType(returnType)) {
+        const typesForInterface = [
+          returnType.name,
+          ...getImplementingTypes(returnType.name, subschemaConfig.schema),
+        ];
+        return typesForInterface.some((t) => computedFieldTypes[t] != null);
+      }
+      return computedFieldTypes[returnType.name] != null;
+    },
+    objectFieldFilter: (typeName, fieldName, config) => {
+      if (computedFieldTypes[typeName]) {
+        return true;
+      }
+      if (!iFaceForTypes[typeName]) {
+        iFaceForTypes[typeName] = (subschemaConfig.schema.getType(
+          typeName,
+        ) as GraphQLObjectType).getInterfaces().map((iFace) => iFace.name);
+      }
+      if (iFaceForTypes[typeName].some((iFace) => computedFieldTypes[iFace])) {
+        return true;
+      }
+      const fieldType = getNamedType(config.type);
+      if (computedFieldTypes[fieldType.name]) {
+        return true;
+      }
+      return (
+        subschemaConfig.merge[typeName] == null ||
+        subschemaConfig.merge[typeName]?.fields?.[fieldName] != null ||
+        (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
+          fieldName,
+        )
+      );
+    },
+    interfaceFieldFilter: (typeName, fieldName, config) => {
+      if (computedFieldTypes[typeName]) {
+        return true;
+      }
+      const fieldType = getNamedType(config.type);
+      if (computedFieldTypes[fieldType.name]) {
+        return true;
+      }
+      if (!typesForInterface[typeName]) {
+        typesForInterface[typeName] = getImplementingTypes(
+          typeName,
+          subschemaConfig.schema,
+        );
+      }
+      if (typesForInterface[typeName].some((t) => computedFieldTypes[t])) {
+        return true;
+      }
+      const isIsolatedFieldName =
+        typesForInterface[typeName].some((implementingTypeName) =>
+          isIsolatedField(
+            implementingTypeName,
             fieldName,
-          )
-        );
-      },
-      interfaceFieldFilter: (typeName, fieldName, config) => {
-        if (computedFieldTypes[typeName]) {
-          return true;
-        }
-        const fieldType = getNamedType(config.type);
-        if (computedFieldTypes[fieldType.name]) {
-          return true;
-        }
-        if (!typesForInterface[typeName]) {
-          typesForInterface[typeName] = getImplementingTypes(
-            typeName,
-            subschemaConfig.schema,
-          );
-        }
-        const isIsolatedFieldName =
-          typesForInterface[typeName].some((implementingTypeName) =>
-            isIsolatedField(
-              implementingTypeName,
-              fieldName,
-              subschemaConfig.merge,
-            ),
-          ) || subschemaConfig.merge[typeName]?.fields?.[fieldName] != null;
-        const isComputedFieldType = typesForInterface[typeName].some(
-          (implementingTypeName) => {
-            if (computedFieldTypes[implementingTypeName]) {
-              return true;
-            }
-            const type = subschemaConfig.schema.getType(
-              implementingTypeName,
-            ) as GraphQLObjectType;
-            const field = type.getFields()[fieldName];
-            if (field == null) {
-              return false;
-            }
-            const fieldType = getNamedType(field.type);
-            return computedFieldTypes[fieldType.name] != null;
-          },
-        );
-        return (
-          isIsolatedFieldName ||
-          isComputedFieldType ||
-          (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
+            subschemaConfig.merge,
+          ),
+        ) || subschemaConfig.merge[typeName]?.fields?.[fieldName] != null;
+      const isComputedFieldType = typesForInterface[typeName].some(
+        (implementingTypeName) => {
+          if (computedFieldTypes[implementingTypeName]) {
+            return true;
+          }
+          const type = subschemaConfig.schema.getType(
+            implementingTypeName,
+          ) as GraphQLObjectType;
+          const field = type.getFields()[fieldName];
+          if (field == null) {
+            return false;
+          }
+          const fieldType = getNamedType(field.type);
+          return computedFieldTypes[fieldType.name] != null;
+        },
+      );
+      return (
+        isIsolatedFieldName ||
+        isComputedFieldType ||
+        typesForInterface[typeName].some(
+          (implementingTypeName) => (subschemaConfig.merge[implementingTypeName]?.keyFieldNames ?? []).includes(
             fieldName,
-          )
-        );
-      },
-    }),
-    { skipPruning: (typ) => computedFieldTypes[typ.name] != null },
-  );
+          ),
+        ) ||
+        (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
+          fieldName,
+        )
+      );
+    },
+  });
 
   const merge = Object.fromEntries(
     // get rid of keyFieldNames again
@@ -594,11 +629,6 @@ function filterIsolatedSubschema(
     merge,
     transforms: (subschemaConfig.transforms ?? []).concat([
       _createCompositeFieldFilter(filteredSchema),
-      new FilterTypes( // filter out empty types
-        (type) =>
-          (!isObjectType(type) && !isInterfaceType(type)) ||
-          Object.keys(type.getFields()).length > 0,
-      ),
     ]),
   };
 
