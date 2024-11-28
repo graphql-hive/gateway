@@ -5,6 +5,7 @@ module.exports = {
     return {
       hooks: {
         beforeWorkspacePacking(_workspace, packageJson) {
+          console.group('snapshot-no-semver-range');
           for (const category of [
             'dependencies',
             'devDependencies',
@@ -20,10 +21,15 @@ module.exports = {
                 (version.startsWith('^') || version.startsWith('~')) // and is a ranged version
               ) {
                 // remove the range
-                deps[name] = version.slice(1);
+                const exactVersion = version.slice(1);
+                console.debug(
+                  `Setting "${name}" to exact version "${exactVersion}" (from ranged "${version}")`,
+                );
+                deps[name] = exactVersion;
               }
             }
           }
+          console.groupEnd();
         },
       },
     };
