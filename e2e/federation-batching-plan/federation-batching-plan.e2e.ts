@@ -691,6 +691,7 @@ it('should consistently explain the query plan', async () => {
             ...Review
             id
             author {
+              username
               __typename
               ...User
               id
@@ -718,7 +719,6 @@ it('should consistently explain the query plan', async () => {
       __typename
       id
       id
-      username
     }
 
     fragment Review on Review {
@@ -752,31 +752,6 @@ it('should consistently explain the query plan', async () => {
         __typename
         ... on User {
           id
-          name
-        }
-      }
-    }",
-            "subgraphName": "accounts",
-            "variables": {
-              "_v0_representations": [
-                {
-                  "__typename": "User",
-                  "id": "1",
-                },
-                {
-                  "__typename": "User",
-                  "id": "2",
-                },
-              ],
-            },
-          },
-          {
-            "query": "query TestQuery($_v0_representations: [_Any!]!) {
-      __typename
-      _entities(representations: $_v0_representations) {
-        __typename
-        ... on User {
-          id
           reviews {
             __typename
             ...Review
@@ -790,6 +765,7 @@ it('should consistently explain the query plan', async () => {
                 ...Review
                 id
                 author {
+                  username
                   __typename
                   ...User
                   id
@@ -813,7 +789,6 @@ it('should consistently explain the query plan', async () => {
       __typename
       id
       id
-      username
     }
 
     fragment Product on Product {
@@ -829,6 +804,32 @@ it('should consistently explain the query plan', async () => {
       body
     }",
             "subgraphName": "reviews",
+            "variables": {
+              "_v0_representations": [
+                {
+                  "__typename": "User",
+                  "id": "1",
+                },
+                {
+                  "__typename": "User",
+                  "id": "2",
+                },
+              ],
+            },
+          },
+          {
+            "query": "query TestQuery($_v0_representations: [_Any!]!) {
+      __typename
+      _entities(representations: $_v0_representations) {
+        __typename
+        ... on User {
+          id
+          username
+          name
+        }
+      }
+    }",
+            "subgraphName": "accounts",
             "variables": {
               "_v0_representations": [
                 {
