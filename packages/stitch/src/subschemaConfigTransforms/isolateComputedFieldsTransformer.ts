@@ -301,9 +301,8 @@ function filterBaseSubschema(
   const filteredSchema = pruneSchema(
     filterSchema({
       schema,
-      objectFieldFilter: (typeName, fieldName) =>
-      {
-        const iFacesForType = iFacesForTypes[typeName] ||= [];
+      objectFieldFilter: (typeName, fieldName) => {
+        const iFacesForType = (iFacesForTypes[typeName] ||= []);
         if (!iFacesForType) {
           function addIface(iFace: GraphQLInterfaceType) {
             if (!iFacesForType.includes(iFace.name)) {
@@ -329,7 +328,7 @@ function filterBaseSubschema(
           ).includes(fieldName),
         );
         return !isIsolatedFieldName || isKeyFieldName;
-        },
+      },
       interfaceFieldFilter: (typeName, fieldName) => {
         if (!typesForInterface[typeName]) {
           typesForInterface[typeName] = getImplementingTypes(typeName, schema);

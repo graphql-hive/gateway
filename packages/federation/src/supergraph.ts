@@ -144,10 +144,10 @@ export function getStitchingOptionsFromSupergraphSdl(
   const subgraphTypeNameProvidedMap = new Map<
     string,
     Map<string, Set<string>>
-  >(); 
+  >();
   const subgraphTypeNameFieldProvidedSelectionMap = new Map<
-  string,
-  Map<string, Map<string, SelectionSetNode>>
+    string,
+    Map<string, Map<string, SelectionSetNode>>
   >();
   const orphanTypeMap = new Map<string, TypeDefinitionNode>();
   const typeFieldASTMap = new Map<
@@ -1046,10 +1046,9 @@ export function getStitchingOptionsFromSupergraphSdl(
         return res;
       };
     }
-    const schemaExtensions: any = schema.extensions = schema.extensions || {};
-    schemaExtensions['typeNameFieldProvidedSelectionMap'] = subgraphTypeNameFieldProvidedSelectionMap.get(
-      subgraphName,
-    );
+    const schemaExtensions: any = (schema.extensions = schema.extensions || {});
+    schemaExtensions['typeNameFieldProvidedSelectionMap'] =
+      subgraphTypeNameFieldProvidedSelectionMap.get(subgraphName);
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);
     const externalFieldMap = subgraphExternalFieldMap.get(subgraphName);
     const transforms: Transform<any>[] = [];
