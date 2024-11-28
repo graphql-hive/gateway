@@ -62,7 +62,6 @@ jobs:
         run: yarn check:missing-peer-deps
 
   build: # making sure build works so it doesn't fail on us during release
-    needs: [types]
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +75,6 @@ jobs:
         run: yarn build
 
   bundle: # making sure bundle works so it doesn't fail on us during release
-    needs: [build]
     name: Bundle
     runs-on: ubuntu-latest
     steps:
