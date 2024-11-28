@@ -1,8 +1,6 @@
 import { globSync, readFileSync, writeFileSync } from 'fs';
 
-const foundPackageJsonFiles = globSync('packages/*/package.json');
-
-foundPackageJsonFiles.forEach((packageJsonFile) => {
+for (const packageJsonFile of globSync('packages/*/package.json')) {
   const packageJsonContent = readFileSync(packageJsonFile, 'utf8');
   const packageJson = JSON.parse(packageJsonContent);
   const dependencyProps = [
@@ -17,9 +15,10 @@ foundPackageJsonFiles.forEach((packageJsonFile) => {
         const depVersion = dependencies[depName];
         if (depVersion === 'workspace:^') {
           dependencies[depName] = `workspace:*`;
+          console.log(`Pinned ${depName} in ${packageJsonFile} to workspace:*`);
         }
       }
     }
   }
   writeFileSync(packageJsonFile, JSON.stringify(packageJson, null, 2));
-});
+}
