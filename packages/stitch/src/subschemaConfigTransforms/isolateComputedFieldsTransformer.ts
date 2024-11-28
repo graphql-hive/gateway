@@ -377,7 +377,8 @@ function filterBaseSubschema(
       : undefined,
     transforms: (subschemaConfig.transforms ?? []).concat([
       _createCompositeFieldFilter(filteredSchema),
-      new FilterTypes((type) => { // filter out empty types
+      new FilterTypes((type) => {
+        // filter out empty types
         const typeName = type.name;
         const typeInFiltered = filteredSchema.getType(typeName);
         if (!typeInFiltered) {

@@ -1180,47 +1180,13 @@ export function getStitchingOptionsFromSupergraphSdl(
       return {
         ...defaultMergedField,
         resolve(_root, _args, context, info) {
-          const candidateMap = new Map<string, MergeFieldConfigCandidate>();
-          const candidateScoreMap = new Map<string, number>();
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
           };
-          for (const candidate of candidates.toReversed
+          const candidatesReversed = candidates.toReversed
             ? candidates.toReversed()
-            : [...candidates].reverse()) {
-            if (candidate.transformedSubschema?.name) {
-              const unavailableFields =
-                extractUnavailableFieldsFromSelectionSet(
-                  candidate.transformedSubschema.transformedSchema,
-                  candidate.type,
-                  originalSelectionSet,
-                  () => true,
-                  info.fragments,
-                );
-              const score = calculateSelectionScore(unavailableFields);
-              let currentScore = candidateScoreMap.get(
-                candidate.transformedSubschema.name,
-              );
-              if (currentScore == null) {
-                currentScore = Infinity;
-                candidateScoreMap.set(
-                  candidate.transformedSubschema.name,
-                  currentScore,
-                );
-              }
-              if (score < currentScore) {
-                candidateScoreMap.set(
-                  candidate.transformedSubschema.name,
-                  score,
-                );
-                candidateMap.set(
-                  candidate.transformedSubschema.name,
-                  candidate,
-                );
-              }
-            }
-          }
+            : [...candidates].reverse();
           let currentSubschema: SubschemaConfig | undefined;
           let currentScore = Infinity;
           let currentUnavailableSelectionSet: SelectionSetNode | undefined;
@@ -1229,7 +1195,7 @@ export function getStitchingOptionsFromSupergraphSdl(
             | undefined;
           let currentAvailableSelectionSet: SelectionSetNode | undefined;
           // Find the best subschema to delegate this selection
-          for (const [_candidateName, candidate] of candidateMap) {
+          for (const candidate of candidatesReversed) {
             if (candidate.transformedSubschema) {
               const unavailableFields =
                 extractUnavailableFieldsFromSelectionSet(
@@ -1255,10 +1221,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 // Make parallel requests if there are other subschemas
                 // that can resolve the remaining fields for this selection directly from the root field
                 // instead of applying a type merging in advance
-                for (const [
-                  _friendCandidateName,
-                  friendCandidate,
-                ] of candidateMap) {
+                for (const friendCandidate of candidates) {
                   if (
                     friendCandidate === candidate ||
                     !friendCandidate.transformedSubschema ||
