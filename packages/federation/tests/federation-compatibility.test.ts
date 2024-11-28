@@ -155,7 +155,7 @@ describe('Federation Compatibility', () => {
       });
       tests.forEach((_, i) => {
         describe(`test-query-${i}`, () => {
-          it.only('gives the correct result w/ core', async () => {
+          it('gives the correct result w/ core', async () => {
             const test = tests[i];
             if (!test) {
               throw new Error(`Test ${i} not found`);
