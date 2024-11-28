@@ -1,34 +1,65 @@
 module.exports = {
   name: 'snapshot-no-semver-range',
-  /** @returns {import('@yarnpkg/core').Plugin<import('@yarnpkg/plugin-pack').Hooks>} */
-  factory() {
+  /**
+   * @param {typeof require} require
+   * @returns {import('@yarnpkg/core').Plugin<import('@yarnpkg/plugin-pack').Hooks>} */
+  factory(require) {
+    /** @type {import('@yarnpkg/core')} */
+    const { structUtils } = require('@yarnpkg/core');
     return {
       hooks: {
-        beforeWorkspacePacking(_workspace, packageJson) {
+        /** @param {Record<string, any>} packageJson  */
+        beforeWorkspacePacking(workspace, packageJson) {
           console.group('snapshot-no-semver-range');
+          console.log(
+            'Setting exact snapshot versions to workspace dependencies...',
+          );
           for (const category of [
             'dependencies',
             'devDependencies',
             'peerDependencies',
           ]) {
-            /** @type {Record<string, string>} */
-            const deps =
-              // @ts-expect-error packageJson is package.json
-              packageJson[category];
-            for (const [name, version] of Object.entries(deps)) {
-              if (
-                version.includes('-') && // a dash in version means snapshot release
-                (version.startsWith('^') || version.startsWith('~')) // and is a ranged version
-              ) {
-                // remove the range
-                const exactVersion = version.slice(1);
-                console.debug(
-                  `Setting "${name}" to exact version "${exactVersion}" (from ranged "${version}")`,
-                );
-                deps[name] = exactVersion;
+            for (const desc of workspace.manifest
+              .getForScope(category)
+              .values()) {
+              const range = structUtils.parseRange(desc.range);
+              if (range.protocol !== 'workspace:') {
+                // we dont care about deps outside our workspaces
+                continue;
               }
+
+              // find the matching workspace for the dependency
+              const matchingWorkspace =
+                workspace.project.tryWorkspaceByDescriptor(desc);
+              if (!matchingWorkspace) {
+                throw new Error(
+                  `Dependency workspace "${desc.name}" not found`,
+                );
+              }
+
+              if (!['^', '~'].includes(range.selector)) {
+                // keep as is if the version is not ranged
+                continue;
+              }
+
+              const version = matchingWorkspace.manifest.version;
+              if (!version) {
+                throw new Error(
+                  `Dependency workspace "${desc.name}" does not have a version set`,
+                );
+              }
+              if (!version.includes('-')) {
+                // if the version does not include a dash, it's probably not a snapshot - we want to range it (keep as is)
+                continue;
+              }
+
+              console.log(
+                `Setting "${desc.name}" to exact snapshot version "${version}" (from ranged "workspace:${range.selector}")`,
+              );
+              packageJson[category][desc.name] = version;
             }
           }
+          console.log('Done!');
           console.groupEnd();
         },
       },
