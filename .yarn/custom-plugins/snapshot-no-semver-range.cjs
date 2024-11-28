@@ -53,10 +53,11 @@ module.exports = {
                 continue;
               }
 
+              const name = structUtils.stringifyIdent(desc);
               console.log(
-                `Setting "${desc.name}" to exact snapshot version "${version}" (from ranged "workspace:${range.selector}")`,
+                `Setting "${name}" to exact snapshot version "${version}" (from ranged "workspace:${range.selector}")`,
               );
-              packageJson[category][desc.name] = version;
+              packageJson[category][name] = version;
             }
           }
           console.log('Done!');
