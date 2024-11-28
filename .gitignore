@@ -5,6 +5,7 @@ bundle/
 .yarn/*
 !.yarn/patches
 !.yarn/releases
+!.yarn/custom-plugins
 tsconfig.tsbuildinfo
 sea-prep.blob
 hive-gateway

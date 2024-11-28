@@ -50,6 +50,7 @@
     }
   },
   "include": [
+    "./.yarn/custom-plugins",
     "./eslint.config.js",
     "./vitest.config.ts",
     "./vitest.projects.ts",
