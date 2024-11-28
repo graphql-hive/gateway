@@ -23,7 +23,9 @@
     "test": "vitest --project unit",
     "test:bun": "bun test --bail",
     "test:e2e": "vitest --project e2e",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --no-watchman --runInBand --detectOpenHandles --detectLeaks --logHeapUsage"
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --no-watchman --runInBand --detectOpenHandles --detectLeaks --logHeapUsage",
+    "build:alpha": "yarn build && yarn pin-workspace-deps",
+    "pin-workspace-deps": "node ./scripts/pin-workspace-deps.mjs"
   },
   "devDependencies": {
     "@babel/core": "7.26.0",
