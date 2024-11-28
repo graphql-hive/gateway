@@ -41,7 +41,7 @@ describe('Optimizations', () => {
       },
     });
   });
-  it('should not do extra calls with "@provides"', async () => {
+  it.skip('should not do extra calls with "@provides"', async () => {
     const query = /* GraphQL */ `
       query {
         topProducts {

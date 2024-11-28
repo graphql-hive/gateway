@@ -141,13 +141,13 @@ export function getStitchingOptionsFromSupergraphSdl(
     Map<string, Map<string, string>>
   >();
   const typeNameCanonicalMap = new Map<string, string>();
-  const subgraphTypeNameExtraFieldsMap = new Map<
-    string,
-    Map<string, FieldDefinitionNode[]>
-  >();
   const subgraphTypeNameProvidedMap = new Map<
     string,
     Map<string, Set<string>>
+  >(); 
+  const subgraphTypeNameFieldProvidedSelectionMap = new Map<
+  string,
+  Map<string, Map<string, SelectionSetNode>>
   >();
   const orphanTypeMap = new Map<string, TypeDefinitionNode>();
   const typeFieldASTMap = new Map<
@@ -350,19 +350,32 @@ export function getStitchingOptionsFromSupergraphSdl(
                   const providesSelectionSet = parseSelectionSet(
                     /* GraphQL */ `{ ${providedExtraField.value.value} }`,
                   );
+                  let typeNameFieldProvidedSelectionMap =
+                    subgraphTypeNameFieldProvidedSelectionMap.get(graphName);
+                  if (!typeNameFieldProvidedSelectionMap) {
+                    typeNameFieldProvidedSelectionMap = new Map();
+                    subgraphTypeNameFieldProvidedSelectionMap.set(
+                      graphName,
+                      typeNameFieldProvidedSelectionMap,
+                    );
+                  }
+                  let fieldProvidedSelectionMap =
+                    typeNameFieldProvidedSelectionMap.get(typeNode.name.value);
+                  if (!fieldProvidedSelectionMap) {
+                    fieldProvidedSelectionMap = new Map();
+                    typeNameFieldProvidedSelectionMap.set(
+                      typeNode.name.value,
+                      fieldProvidedSelectionMap,
+                    );
+                  }
+                  fieldProvidedSelectionMap.set(
+                    fieldNode.name.value,
+                    providesSelectionSet,
+                  );
                   function handleSelection(
                     fieldNodeTypeName: string,
                     selection: SelectionNode,
                   ) {
-                    let typeNameExtraFieldsMap =
-                      subgraphTypeNameExtraFieldsMap.get(graphName);
-                    if (!typeNameExtraFieldsMap) {
-                      typeNameExtraFieldsMap = new Map();
-                      subgraphTypeNameExtraFieldsMap.set(
-                        graphName,
-                        typeNameExtraFieldsMap,
-                      );
-                    }
                     switch (selection.kind) {
                       case Kind.FIELD:
                         {
@@ -378,24 +391,6 @@ export function getStitchingOptionsFromSupergraphSdl(
                                 fieldNode.name.value === selection.name.value,
                             );
                           if (extraFieldNodeInType) {
-                            let extraFields =
-                              typeNameExtraFieldsMap.get(fieldNodeTypeName);
-                            if (!extraFields) {
-                              extraFields = [];
-                              typeNameExtraFieldsMap.set(
-                                fieldNodeTypeName,
-                                extraFields,
-                              );
-                            }
-                            extraFields.push({
-                              ...extraFieldNodeInType,
-                              directives:
-                                extraFieldNodeInType.directives?.filter(
-                                  (directiveNode) =>
-                                    directiveNode.name.value !== 'join__field',
-                                ),
-                            });
-
                             let typeNameProvidedMap =
                               subgraphTypeNameProvidedMap.get(graphName);
                             if (!typeNameProvidedMap) {
@@ -976,15 +971,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       });
     }
     const subgraphTypes = subgraphTypesMap.get(subgraphName) || [];
-    const typeNameExtraFieldsMap =
-      subgraphTypeNameExtraFieldsMap.get(subgraphName);
     subgraphTypes.forEach((typeNode) => {
-      if (typeNameExtraFieldsMap && 'fields' in typeNode) {
-        const extraFields = typeNameExtraFieldsMap.get(typeNode.name.value);
-        if (extraFields) {
-          (typeNode.fields as FieldDefinitionNode[]).push(...extraFields);
-        }
-      }
       visitTypeDefinitionsForOrphanTypes(typeNode);
     });
     const extendedSubgraphTypes = [
@@ -1059,6 +1046,10 @@ export function getStitchingOptionsFromSupergraphSdl(
         return res;
       };
     }
+    const schemaExtensions: any = schema.extensions = schema.extensions || {};
+    schemaExtensions['typeNameFieldProvidedSelectionMap'] = subgraphTypeNameFieldProvidedSelectionMap.get(
+      subgraphName,
+    );
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);
     const externalFieldMap = subgraphExternalFieldMap.get(subgraphName);
     const transforms: Transform<any>[] = [];

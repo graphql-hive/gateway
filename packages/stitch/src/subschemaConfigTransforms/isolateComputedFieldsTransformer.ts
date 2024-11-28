@@ -14,6 +14,7 @@ import {
 import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
 import {
   getNamedType,
+  GraphQLInterfaceType,
   GraphQLNamedOutputType,
   GraphQLObjectType,
   GraphQLSchema,
@@ -90,11 +91,6 @@ export function isolateComputedFieldsTransformer(
               objectType,
               parsedSelectionSet,
             );
-            if (typeName === 'Car') {
-              console.log({
-                keyFields,
-              });
-            }
             keyFieldNames.push(...Array.from(keyFields.fields.keys()));
           }
           for (const entryPoint of mergedTypeConfig.entryPoints ?? []) {
@@ -301,14 +297,39 @@ function filterBaseSubschema(
 ): SubschemaConfig {
   const schema = subschemaConfig.schema;
   const typesForInterface: Record<string, string[]> = {};
+  const iFacesForTypes: Record<string, string[]> = {};
   const filteredSchema = pruneSchema(
     filterSchema({
       schema,
       objectFieldFilter: (typeName, fieldName) =>
-        !isIsolatedField(typeName, fieldName, isolatedSchemaTypes) ||
-        (isolatedSchemaTypes[typeName]?.keyFieldNames ?? []).includes(
-          fieldName,
-        ),
+      {
+        const iFacesForType = iFacesForTypes[typeName] ||= [];
+        if (!iFacesForType) {
+          function addIface(iFace: GraphQLInterfaceType) {
+            if (!iFacesForType.includes(iFace.name)) {
+              iFacesForType.push(iFace.name);
+              iFace.getInterfaces().forEach(addIface);
+            }
+          }
+          const type = schema.getType(typeName);
+          if (isObjectType(type)) {
+            let iFaces = type.getInterfaces();
+            for (const iface of iFaces) {
+              addIface(iface);
+            }
+          }
+        }
+        const allTypes = [typeName, ...iFacesForType];
+        const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
+          isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
+        );
+        const isKeyFieldName = allTypes.some((implementingTypeName) =>
+          (
+            isolatedSchemaTypes[implementingTypeName]?.keyFieldNames ?? []
+          ).includes(fieldName),
+        );
+        return !isIsolatedFieldName || isKeyFieldName;
+        },
       interfaceFieldFilter: (typeName, fieldName) => {
         if (!typesForInterface[typeName]) {
           typesForInterface[typeName] = getImplementingTypes(typeName, schema);
