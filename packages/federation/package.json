@@ -45,7 +45,7 @@
     "@graphql-tools/stitch": "workspace:^",
     "@graphql-tools/utils": "^10.6.0",
     "@graphql-tools/wrap": "workspace:^",
-    "@whatwg-node/fetch": "^0.10.0",
+    "@whatwg-node/fetch": "^0.10.1",
     "tslib": "^2.4.0"
   },
   "optionalDependencies": {

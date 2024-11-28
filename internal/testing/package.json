@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@whatwg-node/disposablestack": "^0.0.5",
-    "@whatwg-node/fetch": "^0.10.0",
+    "@whatwg-node/fetch": "^0.10.1",
     "jest-leak-detector": "29.7.0"
   }
 }
