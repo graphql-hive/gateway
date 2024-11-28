@@ -5752,11 +5752,11 @@ __metadata:
   linkType: hard
 
 "@types/adm-zip@npm:^0.5.5":
-  version: 0.5.6
-  resolution: "@types/adm-zip@npm:0.5.6"
+  version: 0.5.7
+  resolution: "@types/adm-zip@npm:0.5.7"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/b38160de2b821693fda78195819efc8961d957c3cd203473aa98209b1adbafceb458c9a48c199e8ce0d3085a9dbce55ffe649cf774f928ea600c03cc97afcad3
+  checksum: 10c0/6ba62bd8f4a6e7ffdad08d951c65c4f69161c2b96cc34249dcf3c448dca85749409407b297472d5c66b711325de89012e8607b74c87d99ec23e9b7a44b6c71c6
   languageName: node
   linkType: hard
 
