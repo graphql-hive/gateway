@@ -111,7 +111,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   it('should report http failures', async () => {
     const { env, getTraces } = await jaeger.start();
     const { url, proc } = await wrangler(env);
-    await fetch(`${url}/non-existing`).catch(() => {});
+    await fetch(`${url}/non-existing`);
     await proc[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
     const traces = await getTraces();
