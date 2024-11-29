@@ -126,18 +126,18 @@ export interface ServeOptions extends ProcOptions {
     | {
         with: 'apollo';
         services: Service[];
-  };
+      };
   /**
    * Path to the subgraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
   subgraph?:
-  | string
-  | {
-    with: 'mesh';
-    subgraphName: string;
-    services?: Service[];
-  };
+    | string
+    | {
+        with: 'mesh';
+        subgraphName: string;
+        services?: Service[];
+      };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -275,15 +275,16 @@ export interface Tenv {
   composeWithApollo(services: Service[]): Promise<string>;
 }
 
-async function handleDockerHostName(supergraph: string, volumes: {
-  host: string;
-  container: string;
-}[]) {
+async function handleDockerHostName(
+  supergraph: string,
+  volumes: {
+    host: string;
+    container: string;
+  }[],
+) {
   // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
   // and locally the host.docker.internal (or just on macos?) should just work
-  const dockerLocalHost = boolEnv('CI')
-    ? '172.17.0.1'
-    : 'host.docker.internal';
+  const dockerLocalHost = boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal';
   // we need to replace all local servers in the supergraph to use docker's local hostname.
   // without this, the services running on the host wont be accessible by the docker container
   if (/^http(s?):\/\//.test(supergraph)) {
@@ -379,10 +380,7 @@ export function createTenv(cwd: string): Tenv {
           const { output } = await tenv.composeWithMesh({
             output: 'graphql',
             services: subgraphOpt.services,
-            args: [
-              '--subgraph',
-              subgraphOpt.subgraphName,
-            ]
+            args: ['--subgraph', subgraphOpt.subgraphName],
           });
           subgraph = output;
         }
