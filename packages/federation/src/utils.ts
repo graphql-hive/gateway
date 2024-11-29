@@ -1,6 +1,7 @@
 import {
   MapperKind,
   mapSchema,
+  memoize1,
   mergeDeep,
   parseSelectionSet,
 } from '@graphql-tools/utils';
@@ -122,7 +123,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
     };
   }
   const keyProp = allKeyProps[0]!;
-  return function keyFn(root: any) {
+  return memoize1(function keyFn(root: any) {
     if (root == null) {
       return null;
     }
@@ -134,7 +135,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
       __typename: typeName,
       [keyProp]: keyPropVal,
     };
-  };
+  });
 }
 
 export function getCacheKeyFnFromKey(key: string) {
@@ -164,7 +165,7 @@ export function getCacheKeyFnFromKey(key: string) {
         .join(' ');
     };
   }
-  return function cacheKeyFn(root: any) {
+  return memoize1(function cacheKeyFn(root: any) {
     const keyVal = root[keyTrimmed];
     if (keyVal == null) {
       return '';
@@ -173,7 +174,7 @@ export function getCacheKeyFnFromKey(key: string) {
       return JSON.stringify(keyVal);
     }
     return keyVal;
-  };
+  });
 }
 
 const internalTypeNames = [
