@@ -27,6 +27,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   }) {
     const port = await getAvailablePort();
     const [proc] = await spawn('yarn wrangler', {
+      pipeLogs: true, // TODO: remove
       args: [
         'dev',
         '--port',
