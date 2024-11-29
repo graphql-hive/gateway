@@ -21,7 +21,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     OTLP_SERVICE_NAME: string;
   }) {
     const port = await getAvailablePort();
-    await spawn('yarn wrangler', {
+    const [proc] = await spawn('yarn wrangler', {
       args: [
         'dev',
         '--port',
@@ -35,6 +35,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     });
     const hostname = await getLocalhost(port);
     return {
+      proc,
       url: `${hostname}:${port}`,
       async execute({
         query,
@@ -58,8 +59,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
 
   it('should report telemetry metrics correctly to jaeger', async () => {
     const { env, getTraces } = await jaeger.start();
-    const { execute } = await wrangler(env);
-
+    const { execute, proc } = await wrangler(env);
     await expect(execute({ query: TEST_QUERY })).resolves
       .toMatchInlineSnapshot(`
       {
@@ -70,6 +70,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         },
       }
     `);
+    await proc[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
     const traces = await getTraces();
     expect(traces.data.length).toBe(2);
@@ -102,9 +103,10 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
 
   it('should report http failures', async () => {
     const { env, getTraces } = await jaeger.start();
-    const { url } = await wrangler(env);
-
+    const { url, proc } = await wrangler(env);
     await fetch(`${url}/non-existing`).catch(() => {});
+    await proc[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
+
     const traces = await getTraces();
     expect(traces.data.length).toBe(2);
     const relevantTrace = traces.data.find((trace) =>
@@ -136,8 +138,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
 
   it('context propagation should work correctly', async () => {
     const { env, getTraces } = await jaeger.start();
-    const { url, execute } = await wrangler(env);
-
+    const { url, execute, proc } = await wrangler(env);
     const traceId = '0af7651916cd43dd8448eb211c80319c';
     await expect(
       execute({
@@ -155,7 +156,6 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
             },
           }
         `);
-
     const upstreamHttpCalls = await fetch(`${url}/upstream-fetch`).then(
       (r) =>
         r.json() as unknown as Array<{
@@ -163,6 +163,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
           headers?: Record<string, string>;
         }>,
     );
+    await proc[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
     const traces = await getTraces();
     expect(traces.data.length).toBe(3);
