@@ -26,9 +26,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     OTLP_SERVICE_NAME: string;
   }) {
     const port = await getAvailablePort();
-    const signal = AbortSignal.timeout(3_000);
     const [proc] = await spawn('yarn wrangler', {
-      signal,
       args: [
         'dev',
         '--port',
@@ -40,6 +38,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
       ],
     });
+    const signal = AbortSignal.timeout(3_000);
     await waitForPort(port, signal);
     return {
       proc,
