@@ -137,6 +137,7 @@ export interface ServeOptions extends ProcOptions {
         with: 'mesh';
         subgraphName: string;
         services?: Service[];
+        pipeLogs?: boolean | string;
       };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
@@ -377,10 +378,11 @@ export function createTenv(cwd: string): Tenv {
       if (typeof subgraphOpt === 'string') {
         subgraph = subgraphOpt;
       } else if (subgraphOpt?.with === 'mesh') {
-        const { output } = await tenv.composeWithMesh({
+        const { output, result } = await tenv.composeWithMesh({
           output: 'graphql',
           services: subgraphOpt?.services,
           args: ['--subgraph', subgraphOpt?.subgraphName],
+          pipeLogs: subgraphOpt?.pipeLogs,
         });
         subgraph = output;
       }

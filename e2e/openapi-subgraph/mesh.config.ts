@@ -52,7 +52,6 @@ export const composeConfig = defineConfig({
         }),
         createPrefixTransform({
           value: 'GQL_',
-          // TODO: Query will be fixed later
           ignore: ['gqlQuery', 'Query'],
           includeRootOperations: false,
           includeTypes: true,
