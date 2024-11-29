@@ -1,17 +1,13 @@
-import os from 'os';
-import { setTimeout } from 'timers/promises';
-import { createTenv, getAvailablePort, type Container } from '@internal/e2e';
+import { createTenv, createTjaeger, getAvailablePort } from '@internal/e2e';
 import { getLocalhost, isDebug } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-const { spawn, container, gatewayRunner } = createTenv(__dirname);
+const { spawn, gatewayRunner } = createTenv(__dirname);
+const jaeger = createTjaeger(__dirname);
 
 describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
-  let jaeger: Container;
-  let jaegerHostname: string;
-
   const TEST_QUERY = /* GraphQL */ `
     query TestQuery {
       language(code: "en") {
@@ -19,55 +15,6 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
       }
     }
   `;
-
-  beforeAll(async () => {
-    jaeger = await container({
-      name: 'jaeger',
-      image:
-        os.platform().toLowerCase() === 'win32'
-          ? 'johnnyhuy/jaeger-windows:1809'
-          : 'jaegertracing/all-in-one:1.56',
-      env: {
-        COLLECTOR_OTLP_ENABLED: 'true',
-      },
-      containerPort: 4318,
-      additionalContainerPorts: [16686],
-      healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
-    });
-    jaegerHostname = await getLocalhost(jaeger.port);
-  });
-
-  type JaegerTracesApiResponse = {
-    data: Array<{
-      traceID: string;
-      spans: Array<{
-        traceID: string;
-        spanID: string;
-        operationName: string;
-        tags: Array<{ key: string; value: string; type: string }>;
-      }>;
-    }>;
-  };
-
-  async function getJaegerTraces(
-    service: string,
-    expectedDataLength: number,
-  ): Promise<JaegerTracesApiResponse> {
-    const port = jaeger.additionalPorts[16686]!;
-    const hostname = await getLocalhost(port);
-    const url = `${hostname}:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
-
-    let res!: JaegerTracesApiResponse;
-    for (let i = 0; i < 25; i++) {
-      res = await fetch(url).then((r) => r.json());
-      if (res.data.length >= expectedDataLength) {
-        break;
-      }
-      await setTimeout(300);
-    }
-
-    return res;
-  }
 
   async function wrangler(env: {
     OTLP_EXPORTER_URL: string;
@@ -110,11 +57,8 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   }
 
   it('should report telemetry metrics correctly to jaeger', async () => {
-    const serviceName = 'mesh-e2e-test-1';
-    const { execute } = await wrangler({
-      OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-      OTLP_SERVICE_NAME: serviceName,
-    });
+    const { env, getTraces } = await jaeger.start();
+    const { execute } = await wrangler(env);
 
     await expect(execute({ query: TEST_QUERY })).resolves
       .toMatchInlineSnapshot(`
@@ -127,7 +71,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
       }
     `);
 
-    const traces = await getJaegerTraces(serviceName, 2);
+    const traces = await getTraces();
     expect(traces.data.length).toBe(2);
     const relevantTraces = traces.data.filter((trace) =>
       trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -157,14 +101,11 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   });
 
   it('should report http failures', async () => {
-    const serviceName = 'mesh-e2e-test-4';
-    const { url } = await wrangler({
-      OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-      OTLP_SERVICE_NAME: serviceName,
-    });
+    const { env, getTraces } = await jaeger.start();
+    const { url } = await wrangler(env);
 
     await fetch(`${url}/non-existing`).catch(() => {});
-    const traces = await getJaegerTraces(serviceName, 2);
+    const traces = await getTraces();
     expect(traces.data.length).toBe(2);
     const relevantTrace = traces.data.find((trace) =>
       trace.spans.some((span) => span.operationName === 'GET /non-existing'),
@@ -194,13 +135,10 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   });
 
   it('context propagation should work correctly', async () => {
-    const traceId = '0af7651916cd43dd8448eb211c80319c';
-    const serviceName = 'mesh-e2e-test-5';
-    const { url, execute } = await wrangler({
-      OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-      OTLP_SERVICE_NAME: serviceName,
-    });
+    const { env, getTraces } = await jaeger.start();
+    const { url, execute } = await wrangler(env);
 
+    const traceId = '0af7651916cd43dd8448eb211c80319c';
     await expect(
       execute({
         query: TEST_QUERY,
@@ -226,7 +164,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         }>,
     );
 
-    const traces = await getJaegerTraces(serviceName, 3);
+    const traces = await getTraces();
     expect(traces.data.length).toBe(3);
 
     const relevantTraces = traces.data.filter((trace) =>

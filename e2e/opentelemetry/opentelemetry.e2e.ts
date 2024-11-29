@@ -1,11 +1,9 @@
-import os from 'os';
-import { createTenv } from '@internal/e2e';
-import { boolEnv } from '@internal/testing';
+import { createTenv, createTjaeger, OTLPExporterType } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, it } from 'vitest';
 
-const { service, gateway, container, composeWithApollo, gatewayRunner } =
-  createTenv(__dirname);
+const { service, gateway, composeWithApollo } = createTenv(__dirname);
+const jaeger = createTjaeger(__dirname);
 
 let supergraph!: string;
 
@@ -79,77 +77,21 @@ const query = /* GraphQL */ `
   }
 `;
 
-type OTLPExporterType = 'http' | 'grpc';
-
-type JaegerTracesApiResponse = {
-  data: Array<{
-    traceID: string;
-    spans: Array<{
-      traceID: string;
-      spanID: string;
-      operationName: string;
-      tags: Array<{ key: string; value: string; type: string }>;
-    }>;
-  }>;
-};
-
-async function createJaeger(exporterType: OTLPExporterType) {
-  const hostname =
-    gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
-      ? boolEnv('CI')
-        ? '172.17.0.1'
-        : 'host.docker.internal'
-      : '0.0.0.0';
-
-  const serviceName = `${exporterType}-${Math.random().toString(32).slice(2)}`;
-
-  const jaeger = await container({
-    name: `jaeger-${serviceName}`, // unique name
-    image:
-      os.platform().toLowerCase() === 'win32'
-        ? 'johnnyhuy/jaeger-windows:1809'
-        : 'jaegertracing/all-in-one:1.56',
-    env: {
-      COLLECTOR_OTLP_ENABLED: 'true',
-    },
-    containerPort: 4318,
-    additionalContainerPorts: [16686, 4317],
-    healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
-  });
-
-  return {
-    env: {
-      OTLP_EXPORTER_TYPE: exporterType,
-      OTLP_EXPORTER_URL:
-        exporterType === 'http'
-          ? `http://${hostname}:${jaeger.port}/v1/traces`
-          : `http://${hostname}:${jaeger.additionalPorts[4317]}`,
-      OTLP_SERVICE_NAME: serviceName,
-    },
-    async traces() {
-      const res = await fetch(
-        `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${serviceName}`,
-      );
-      return res.json() as unknown as JaegerTracesApiResponse;
-    },
-  };
-}
-
 describe('OpenTelemetry', () => {
   (['grpc', 'http'] satisfies OTLPExporterType[]).forEach((exporterType) => {
     describe.concurrent(`exporter > ${exporterType}`, () => {
       it('should report telemetry metrics correctly to jaeger', async ({
         expect,
       }) => {
-        const jaeger = await createJaeger(exporterType);
+        const { env, getTraces } = await jaeger.start(exporterType);
         const gw = await gateway({
           supergraph,
-          env: jaeger.env,
+          env,
         });
         await expect(gw.execute({ query: query })).resolves.toMatchSnapshot();
         await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await jaeger.traces();
+        const traces = await getTraces();
         expect(traces.data.length).toBe(2);
         const relevantTraces = traces.data.filter((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -194,17 +136,17 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report parse failures correctly', async ({ expect }) => {
-        const jaeger = await createJaeger(exporterType);
+        const { env, getTraces } = await jaeger.start(exporterType);
         const gw = await gateway({
           supergraph,
-          env: jaeger.env,
+          env,
         });
         await expect(gw.execute({ query: 'query { test' })).rejects.toThrow(
           'Syntax Error: Expected Name, found <EOF>.',
         );
         await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await jaeger.traces();
+        const traces = await getTraces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -249,10 +191,10 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report validate failures correctly', async ({ expect }) => {
-        const jaeger = await createJaeger(exporterType);
+        const { env, getTraces } = await jaeger.start(exporterType);
         const gw = await gateway({
           supergraph,
-          env: jaeger.env,
+          env,
         });
         await expect(
           gw.execute({ query: 'query { nonExistentField }' }),
@@ -261,7 +203,7 @@ describe('OpenTelemetry', () => {
         );
         await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await jaeger.traces();
+        const traces = await getTraces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -309,15 +251,15 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report http failures', async ({ expect }) => {
-        const jaeger = await createJaeger(exporterType);
+        const { env, getTraces } = await jaeger.start(exporterType);
         const gw = await gateway({
           supergraph,
-          env: jaeger.env,
+          env,
         });
         await fetch(`http://0.0.0.0:${gw.port}/non-existing`).catch(() => {});
         await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await jaeger.traces();
+        const traces = await getTraces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some(
@@ -349,10 +291,10 @@ describe('OpenTelemetry', () => {
       });
 
       it('context propagation should work correctly', async ({ expect }) => {
-        const jaeger = await createJaeger(exporterType);
+        const { env, getTraces } = await jaeger.start(exporterType);
         const gw = await gateway({
           supergraph,
-          env: jaeger.env,
+          env,
         });
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         await expect(
@@ -374,7 +316,7 @@ describe('OpenTelemetry', () => {
         );
         await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await jaeger.traces();
+        const traces = await getTraces();
         expect(traces.data.length).toBe(3);
 
         const relevantTraces = traces.data.filter((trace) =>
