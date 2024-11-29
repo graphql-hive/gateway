@@ -1,5 +1,26 @@
 # @graphql-hive/gateway-runtime
 
+## 1.3.1
+
+### Patch Changes
+
+- [#208](https://github.com/graphql-hive/gateway/pull/208) [`baf896d`](https://github.com/graphql-hive/gateway/commit/baf896d961bf122f7598355b0e9a09d93be1d822) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.10.3` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.10.3) (from `^5.7.0`, in `dependencies`)
+
+- [#216](https://github.com/graphql-hive/gateway/pull/216) [`d7d3e85`](https://github.com/graphql-hive/gateway/commit/d7d3e856d30f64922d540ad4228f589524001f93) Thanks [@ardatan](https://github.com/ardatan)! - Serve subgraph SDLs correctly via \`\_Service.sdl\`
+
+- Updated dependencies [[`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a), [`baf896d`](https://github.com/graphql-hive/gateway/commit/baf896d961bf122f7598355b0e9a09d93be1d822), [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a), [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a), [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a)]:
+  - @graphql-mesh/fusion-runtime@0.10.7
+  - @graphql-tools/executor-http@1.1.11
+  - @graphql-tools/federation@2.2.32
+  - @graphql-tools/delegate@10.2.2
+  - @graphql-tools/stitch@9.4.3
+  - @graphql-mesh/hmac-upstream-signature@1.2.10
+  - @graphql-tools/batch-delegate@9.0.18
+  - @graphql-mesh/transport-common@0.7.17
+  - @graphql-tools/wrap@10.0.20
+
 ## 1.3.0
 
 ### Minor Changes

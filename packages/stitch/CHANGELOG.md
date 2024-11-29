@@ -1,5 +1,16 @@
 # @graphql-tools/stitch
 
+## 9.4.3
+
+### Patch Changes
+
+- [#205](https://github.com/graphql-hive/gateway/pull/205) [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a) Thanks [@ardatan](https://github.com/ardatan)! - Fix missing key fields in the nested queries
+
+- Updated dependencies [[`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a)]:
+  - @graphql-tools/delegate@10.2.2
+  - @graphql-tools/batch-delegate@9.0.18
+  - @graphql-tools/wrap@10.0.20
+
 ## 9.4.2
 
 ### Patch Changes
