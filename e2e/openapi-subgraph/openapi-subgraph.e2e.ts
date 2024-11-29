@@ -7,6 +7,9 @@ describe('openapi-subgraph', () => {
   beforeAll(async () => {
     TestService = await service('Test');
   });
+  function replaceDockerHostNamesBack(sdl?: string) {
+    return sdl?.replaceAll('172.17.0.1', 'localhost');
+  }
   it('exposes the SDL correctly', async () => {
     const { result, output } = await composeWithMesh({
       services: [TestService],
@@ -28,7 +31,9 @@ describe('openapi-subgraph', () => {
       query: sdlQuery,
     });
     expect(queryResult?.errors).toBeFalsy();
-    expect(queryResult?.data?._service?.sdl).toBe(result);
+    expect(replaceDockerHostNamesBack(queryResult?.data?._service?.sdl)).toBe(
+      replaceDockerHostNamesBack(result),
+    );
   });
   it('resolves entitites correctly', async () => {
     const { execute } = await gateway({
