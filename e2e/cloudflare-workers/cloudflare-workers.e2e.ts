@@ -4,7 +4,7 @@ import {
   getAvailablePort,
   waitForPort,
 } from '@internal/e2e';
-import { getLocalhost, isDebug } from '@internal/testing';
+import { isDebug } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
 import { describe, expect, it } from 'vitest';
@@ -40,10 +40,9 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     });
     const signal = AbortSignal.timeout(3_000);
     await waitForPort(port, signal);
-    const localhost = await getLocalhost(port);
     return {
       proc,
-      url: `${localhost}:${port}`,
+      url: `http://0.0.0.0:${port}`,
       async execute({
         query,
         headers,
@@ -51,7 +50,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         query: string;
         headers?: HeadersInit;
       }): Promise<ExecutionResult> {
-        const r = await fetch(`${localhost}:${port}/graphql`, {
+        const r = await fetch(`http://0.0.0.0:${port}/graphql`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
