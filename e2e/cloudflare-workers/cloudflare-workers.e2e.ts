@@ -1,5 +1,10 @@
-import { createTenv, createTjaeger, getAvailablePort } from '@internal/e2e';
-import { getLocalhost, isDebug } from '@internal/testing';
+import {
+  createTenv,
+  createTjaeger,
+  getAvailablePort,
+  waitForPort,
+} from '@internal/e2e';
+import { isDebug } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
 import { describe, expect, it } from 'vitest';
@@ -21,7 +26,9 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     OTLP_SERVICE_NAME: string;
   }) {
     const port = await getAvailablePort();
+    const signal = AbortSignal.timeout(3_000);
     const [proc] = await spawn('yarn wrangler', {
+      signal,
       args: [
         'dev',
         '--port',
@@ -33,10 +40,10 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
       ],
     });
-    const hostname = await getLocalhost(port);
+    await waitForPort(port, signal);
     return {
       proc,
-      url: `${hostname}:${port}`,
+      url: `http://0.0.0.0:${port}`,
       async execute({
         query,
         headers,
@@ -44,7 +51,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
         query: string;
         headers?: HeadersInit;
       }): Promise<ExecutionResult> {
-        const r = await fetch(`${hostname}:${port}/graphql`, {
+        const r = await fetch(`http://0.0.0.0:${port}/graphql`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',

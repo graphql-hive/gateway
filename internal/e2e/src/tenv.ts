@@ -95,6 +95,8 @@ export interface ProcOptions {
   env?: Record<string, string | number>;
   /** Extra args to pass to the process. */
   args?: (string | number | boolean)[];
+  /** Signal to abort the process on demand. */
+  signal?: AbortSignal;
 }
 
 export interface Proc extends AsyncDisposable {
@@ -881,7 +883,6 @@ export function createTenv(cwd: string): Tenv {
 interface SpawnOptions extends ProcOptions {
   cwd: string;
   shell?: boolean;
-  signal?: AbortSignal;
 }
 
 function spawn(
@@ -1002,7 +1003,7 @@ export function getAvailablePort(): Promise<number> {
   });
 }
 
-async function waitForPort(port: number, signal: AbortSignal) {
+export async function waitForPort(port: number, signal: AbortSignal) {
   outer: while (!signal.aborted) {
     for (const localHostname of hostnames) {
       try {
