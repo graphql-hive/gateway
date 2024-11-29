@@ -10,10 +10,12 @@ import {
   asArray,
   getDirectiveExtensions,
   getDocumentNodeFromSchema,
+  IResolvers,
   MapperKind,
   mapSchema,
   memoize1,
   mergeDeep,
+  TypeSource,
 } from '@graphql-tools/utils';
 import {
   isEnumType,
@@ -103,6 +105,38 @@ interface EnumDirectives {
   };
 }
 
+export function handleResolveToDirectives(
+  typeDefsOpt: TypeSource,
+  additionalTypeDefs: TypeSource,
+  additionalResolvers: IResolvers[],
+) {
+  const mergedTypeDefs = mergeTypeDefs([typeDefsOpt, additionalTypeDefs]);
+  visit(mergedTypeDefs, {
+    [Kind.FIELD_DEFINITION](field, _key, _parent, _path, ancestors) {
+      const fieldDirectives = getDirectiveExtensions<{
+        resolveTo: YamlConfig.AdditionalStitchingResolverObject;
+      }>({ astNode: field });
+      const resolveToDirectives = fieldDirectives?.resolveTo;
+      if (resolveToDirectives?.length) {
+        const targetTypeName = (
+          ancestors[ancestors.length - 1] as ObjectTypeDefinitionNode
+        ).name.value;
+        const targetFieldName = field.name.value;
+        for (const resolveToDirective of resolveToDirectives) {
+          additionalResolvers.push(
+            resolveAdditionalResolversWithoutImport({
+              ...resolveToDirective,
+              targetTypeName,
+              targetFieldName,
+            }),
+          );
+        }
+      }
+    },
+  });
+  return mergedTypeDefs;
+}
+
 export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   unifiedGraph,
   onSubgraphExecute,
@@ -162,31 +196,11 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     batch,
     onStitchingOptions(opts) {
       subschemas = opts.subschemas;
-      const mergedTypeDefs = mergeTypeDefs([opts.typeDefs, additionalTypeDefs]);
-      visit(mergedTypeDefs, {
-        [Kind.FIELD_DEFINITION](field, _key, _parent, _path, ancestors) {
-          const fieldDirectives = getDirectiveExtensions<{
-            resolveTo: YamlConfig.AdditionalStitchingResolverObject;
-          }>({ astNode: field });
-          const resolveToDirectives = fieldDirectives?.resolveTo;
-          if (resolveToDirectives?.length) {
-            const targetTypeName = (
-              ancestors[ancestors.length - 1] as ObjectTypeDefinitionNode
-            ).name.value;
-            const targetFieldName = field.name.value;
-            for (const resolveToDirective of resolveToDirectives) {
-              additionalResolvers.push(
-                resolveAdditionalResolversWithoutImport({
-                  ...resolveToDirective,
-                  targetTypeName,
-                  targetFieldName,
-                }),
-              );
-            }
-          }
-        },
-      });
-      opts.typeDefs = mergedTypeDefs;
+      opts.typeDefs = handleResolveToDirectives(
+        opts.typeDefs,
+        additionalTypeDefs,
+        additionalResolvers,
+      );
       // @ts-expect-error - Typings are wrong
       opts.resolvers = additionalResolvers;
 

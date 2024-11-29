@@ -71,4 +71,46 @@ describe('openapi-subgraph', () => {
       ],
     });
   });
+  it('encapsulates the queries correctly', async () => {
+    const { output } = await composeWithMesh({
+      services: [TestService],
+      args: ['--subgraph', 'TestEncapsulated'],
+      output: 'graphql',
+    });
+    const { execute } = await gateway({
+      args: ['subgraph', output],
+    });
+    const encapsulatedQuery = /* GraphQL */ `
+      {
+        test {
+          users {
+            id
+            name
+          }
+        }
+      }
+    `;
+    const queryResult = await execute({
+      query: encapsulatedQuery,
+    });
+    expect(queryResult?.errors).toBeFalsy();
+    expect(queryResult?.data).toEqual({
+      test: {
+        users: [
+          {
+            id: '1',
+            name: 'Alice',
+          },
+          {
+            id: '2',
+            name: 'Bob',
+          },
+          {
+            id: '3',
+            name: 'Charlie',
+          },
+        ],
+      },
+    });
+  });
 });

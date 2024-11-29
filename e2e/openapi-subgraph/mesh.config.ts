@@ -1,4 +1,5 @@
 import {
+  createEncapsulateTransform,
   createFederationTransform,
   defineConfig,
 } from '@graphql-mesh/compose-cli';
@@ -29,6 +30,22 @@ export const composeConfig = defineConfig({
                 },
               },
             ],
+          },
+        }),
+      ],
+    },
+    {
+      sourceHandler: loadOpenAPISubgraph('TestEncapsulated', {
+        source: `${endpoint}/openapi.json`,
+        endpoint,
+      }),
+      transforms: [
+        createEncapsulateTransform({
+          name: 'test',
+          applyTo: {
+            query: true,
+            mutation: false,
+            subscription: false,
           },
         }),
       ],
