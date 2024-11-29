@@ -1,6 +1,7 @@
 import {
   MapperKind,
   mapSchema,
+  memoize1,
   mergeDeep,
   parseSelectionSet,
 } from '@graphql-tools/utils';
@@ -18,7 +19,11 @@ export function projectDataSelectionSet(
   data: any,
   selectionSet?: SelectionSetNode,
 ): any {
-  if (data == null || selectionSet == null) {
+  if (
+    data == null ||
+    selectionSet == null ||
+    !selectionSet?.selections?.length
+  ) {
     return data;
   }
   if (data instanceof Error) {
@@ -118,7 +123,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
     };
   }
   const keyProp = allKeyProps[0]!;
-  return function keyFn(root: any) {
+  return memoize1(function keyFn(root: any) {
     if (root == null) {
       return null;
     }
@@ -130,7 +135,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
       __typename: typeName,
       [keyProp]: keyPropVal,
     };
-  };
+  });
 }
 
 export function getCacheKeyFnFromKey(key: string) {
@@ -146,12 +151,30 @@ export function getCacheKeyFnFromKey(key: string) {
   const keys = keyTrimmed.split(' ').map((key) => key.trim());
   if (keys.length > 1) {
     return function cacheKeyFn(root: any) {
-      return keys.map((key) => root[key]).join(' ');
+      return keys
+        .map((key) => {
+          const keyVal = root[key];
+          if (keyVal == null) {
+            return '';
+          }
+          if (typeof keyVal === 'object') {
+            return JSON.stringify(keyVal);
+          }
+          return keyVal;
+        })
+        .join(' ');
     };
   }
-  return function cacheKeyFn(root: any) {
-    return root[keyTrimmed];
-  };
+  return memoize1(function cacheKeyFn(root: any) {
+    const keyVal = root[keyTrimmed];
+    if (keyVal == null) {
+      return '';
+    }
+    if (typeof keyVal === 'object') {
+      return JSON.stringify(keyVal);
+    }
+    return keyVal;
+  });
 }
 
 const internalTypeNames = [

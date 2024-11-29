@@ -356,6 +356,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
                   fragments,
                   fieldNodes,
                   context,
+                  info,
                 );
                 function setDelegationPlan(
                   newDelegationPlan: ReturnType<DelegationPlanBuilder>,

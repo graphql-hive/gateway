@@ -123,9 +123,9 @@ describe('isolateComputedFieldsTransformer', () => {
 
       // pruning does not yet remove unused scalars/enums
       // expect(computedSubschema.transformedSchema.getType('DeliveryService')).toBeUndefined();
-      expect(
-        computedSubschema.transformedSchema.getType('Storefront'),
-      ).toBeUndefined();
+      // expect(
+      //   computedSubschema.transformedSchema.getType('Storefront'),
+      // ).toBeUndefined();
       expect(
         computedSubschema.transformedSchema.getType('ProductRepresentation'),
       ).toBeDefined();

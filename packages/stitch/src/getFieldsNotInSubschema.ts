@@ -24,6 +24,7 @@ export function getFieldsNotInSubschema(
   variableValues: Record<string, any>,
   subschema: Subschema,
 ): Array<FieldNode> {
+  const sourceSchema = subschema.transformedSchema;
   let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
     schema,
     fragments,
@@ -114,16 +115,16 @@ export function getFieldsNotInSubschema(
   for (const [, subFieldNodes] of subFieldNodesByResponseKey) {
     let fieldNotInSchema = false;
     const fieldName = subFieldNodes[0]?.name.value!;
-    if (!fields[fieldName]) {
+    const field = fields[fieldName];
+    if (!field) {
       fieldNotInSchema = true;
       for (const subFieldNode of subFieldNodes) {
         fieldsNotInSchema.add(subFieldNode);
       }
     } else {
-      const field = fields[fieldName];
       for (const subFieldNode of subFieldNodes) {
         const unavailableFields = extractUnavailableFields(
-          schema,
+          sourceSchema,
           field,
           subFieldNode,
           (fieldType) => {

@@ -141,13 +141,13 @@ export function getStitchingOptionsFromSupergraphSdl(
     Map<string, Map<string, string>>
   >();
   const typeNameCanonicalMap = new Map<string, string>();
-  const subgraphTypeNameExtraFieldsMap = new Map<
-    string,
-    Map<string, FieldDefinitionNode[]>
-  >();
   const subgraphTypeNameProvidedMap = new Map<
     string,
     Map<string, Set<string>>
+  >();
+  const subgraphTypeNameFieldProvidedSelectionMap = new Map<
+    string,
+    Map<string, Map<string, SelectionSetNode>>
   >();
   const orphanTypeMap = new Map<string, TypeDefinitionNode>();
   const typeFieldASTMap = new Map<
@@ -350,19 +350,32 @@ export function getStitchingOptionsFromSupergraphSdl(
                   const providesSelectionSet = parseSelectionSet(
                     /* GraphQL */ `{ ${providedExtraField.value.value} }`,
                   );
+                  let typeNameFieldProvidedSelectionMap =
+                    subgraphTypeNameFieldProvidedSelectionMap.get(graphName);
+                  if (!typeNameFieldProvidedSelectionMap) {
+                    typeNameFieldProvidedSelectionMap = new Map();
+                    subgraphTypeNameFieldProvidedSelectionMap.set(
+                      graphName,
+                      typeNameFieldProvidedSelectionMap,
+                    );
+                  }
+                  let fieldProvidedSelectionMap =
+                    typeNameFieldProvidedSelectionMap.get(typeNode.name.value);
+                  if (!fieldProvidedSelectionMap) {
+                    fieldProvidedSelectionMap = new Map();
+                    typeNameFieldProvidedSelectionMap.set(
+                      typeNode.name.value,
+                      fieldProvidedSelectionMap,
+                    );
+                  }
+                  fieldProvidedSelectionMap.set(
+                    fieldNode.name.value,
+                    providesSelectionSet,
+                  );
                   function handleSelection(
                     fieldNodeTypeName: string,
                     selection: SelectionNode,
                   ) {
-                    let typeNameExtraFieldsMap =
-                      subgraphTypeNameExtraFieldsMap.get(graphName);
-                    if (!typeNameExtraFieldsMap) {
-                      typeNameExtraFieldsMap = new Map();
-                      subgraphTypeNameExtraFieldsMap.set(
-                        graphName,
-                        typeNameExtraFieldsMap,
-                      );
-                    }
                     switch (selection.kind) {
                       case Kind.FIELD:
                         {
@@ -378,24 +391,6 @@ export function getStitchingOptionsFromSupergraphSdl(
                                 fieldNode.name.value === selection.name.value,
                             );
                           if (extraFieldNodeInType) {
-                            let extraFields =
-                              typeNameExtraFieldsMap.get(fieldNodeTypeName);
-                            if (!extraFields) {
-                              extraFields = [];
-                              typeNameExtraFieldsMap.set(
-                                fieldNodeTypeName,
-                                extraFields,
-                              );
-                            }
-                            extraFields.push({
-                              ...extraFieldNodeInType,
-                              directives:
-                                extraFieldNodeInType.directives?.filter(
-                                  (directiveNode) =>
-                                    directiveNode.name.value !== 'join__field',
-                                ),
-                            });
-
                             let typeNameProvidedMap =
                               subgraphTypeNameProvidedMap.get(graphName);
                             if (!typeNameProvidedMap) {
@@ -976,15 +971,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       });
     }
     const subgraphTypes = subgraphTypesMap.get(subgraphName) || [];
-    const typeNameExtraFieldsMap =
-      subgraphTypeNameExtraFieldsMap.get(subgraphName);
     subgraphTypes.forEach((typeNode) => {
-      if (typeNameExtraFieldsMap && 'fields' in typeNode) {
-        const extraFields = typeNameExtraFieldsMap.get(typeNode.name.value);
-        if (extraFields) {
-          (typeNode.fields as FieldDefinitionNode[]).push(...extraFields);
-        }
-      }
       visitTypeDefinitionsForOrphanTypes(typeNode);
     });
     const extendedSubgraphTypes = [
@@ -1059,6 +1046,9 @@ export function getStitchingOptionsFromSupergraphSdl(
         return res;
       };
     }
+    const schemaExtensions: any = (schema.extensions = schema.extensions || {});
+    schemaExtensions['typeNameFieldProvidedSelectionMap'] =
+      subgraphTypeNameFieldProvidedSelectionMap.get(subgraphName);
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);
     const externalFieldMap = subgraphExternalFieldMap.get(subgraphName);
     const transforms: Transform<any>[] = [];
@@ -1186,23 +1176,17 @@ export function getStitchingOptionsFromSupergraphSdl(
       }
     }
     if (candidates.some((candidate) => rootTypeMap.has(candidate.type.name))) {
-      const candidateNames = new Set<string>();
-      const realCandidates: MergeFieldConfigCandidate[] = [];
-      for (const candidate of candidates.toReversed
-        ? candidates.toReversed()
-        : [...candidates].reverse()) {
-        if (
-          candidate.transformedSubschema?.name &&
-          !candidateNames.has(candidate.transformedSubschema.name)
-        ) {
-          candidateNames.add(candidate.transformedSubschema.name);
-          realCandidates.push(candidate);
-        }
-      }
       const defaultMergedField = defaultMerger(candidates);
       return {
         ...defaultMergedField,
         resolve(_root, _args, context, info) {
+          const originalSelectionSet: SelectionSetNode = {
+            kind: Kind.SELECTION_SET,
+            selections: info.fieldNodes,
+          };
+          const candidatesReversed = candidates.toReversed
+            ? candidates.toReversed()
+            : [...candidates].reverse();
           let currentSubschema: SubschemaConfig | undefined;
           let currentScore = Infinity;
           let currentUnavailableSelectionSet: SelectionSetNode | undefined;
@@ -1210,12 +1194,8 @@ export function getStitchingOptionsFromSupergraphSdl(
             | Map<SubschemaConfig, SelectionSetNode>
             | undefined;
           let currentAvailableSelectionSet: SelectionSetNode | undefined;
-          const originalSelectionSet: SelectionSetNode = {
-            kind: Kind.SELECTION_SET,
-            selections: info.fieldNodes,
-          };
           // Find the best subschema to delegate this selection
-          for (const candidate of realCandidates) {
+          for (const candidate of candidatesReversed) {
             if (candidate.transformedSubschema) {
               const unavailableFields =
                 extractUnavailableFieldsFromSelectionSet(
@@ -1223,6 +1203,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                   candidate.type,
                   originalSelectionSet,
                   () => true,
+                  info.fragments,
                 );
               const score = calculateSelectionScore(unavailableFields);
               if (score < currentScore) {
@@ -1240,7 +1221,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 // Make parallel requests if there are other subschemas
                 // that can resolve the remaining fields for this selection directly from the root field
                 // instead of applying a type merging in advance
-                for (const friendCandidate of realCandidates) {
+                for (const friendCandidate of candidates) {
                   if (
                     friendCandidate === candidate ||
                     !friendCandidate.transformedSubschema ||
@@ -1254,6 +1235,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                       friendCandidate.type,
                       currentUnavailableSelectionSet,
                       () => true,
+                      info.fragments,
                     );
                   const friendScore = calculateSelectionScore(
                     unavailableFieldsInFriend,
@@ -1473,10 +1455,16 @@ const entitiesFieldDefinitionNode: FieldDefinitionNode = {
     value: '_entities',
   },
   type: {
-    kind: Kind.NAMED_TYPE,
-    name: {
-      kind: Kind.NAME,
-      value: '_Entity',
+    kind: Kind.NON_NULL_TYPE,
+    type: {
+      kind: Kind.LIST_TYPE,
+      type: {
+        kind: Kind.NAMED_TYPE,
+        name: {
+          kind: Kind.NAME,
+          value: '_Entity',
+        },
+      },
     },
   },
   arguments: [
