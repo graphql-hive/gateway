@@ -1,23 +1,24 @@
 import os from 'os';
-import { setTimeout } from 'timers/promises';
-import { createTenv, type Container } from '@internal/e2e';
+import { createTenv } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, it } from 'vitest';
 
 const { service, gateway, container, composeWithApollo, gatewayRunner } =
   createTenv(__dirname);
 
 let supergraph!: string;
 
-const JAEGER_HOSTNAME =
-  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
-    ? boolEnv('CI')
-      ? '172.17.0.1'
-      : 'host.docker.internal'
-    : '0.0.0.0';
+beforeAll(async () => {
+  supergraph = await composeWithApollo([
+    await service('accounts'),
+    await service('inventory'),
+    await service('products'),
+    await service('reviews'),
+  ]);
+});
 
-const TEST_QUERY = /* GraphQL */ `
+const query = /* GraphQL */ `
   fragment User on User {
     id
     username
@@ -78,14 +79,7 @@ const TEST_QUERY = /* GraphQL */ `
   }
 `;
 
-beforeAll(async () => {
-  supergraph = await composeWithApollo([
-    await service('accounts'),
-    await service('inventory'),
-    await service('products'),
-    await service('reviews'),
-  ]);
-});
+type OTLPExporterType = 'http' | 'grpc';
 
 type JaegerTracesApiResponse = {
   data: Array<{
@@ -99,531 +93,63 @@ type JaegerTracesApiResponse = {
   }>;
 };
 
+async function createJaeger(exporterType: OTLPExporterType) {
+  const hostname =
+    gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
+      ? boolEnv('CI')
+        ? '172.17.0.1'
+        : 'host.docker.internal'
+      : '0.0.0.0';
+
+  const serviceName = `${exporterType}-${Math.random().toString(32).slice(2)}`;
+
+  const jaeger = await container({
+    name: `jaeger-${serviceName}`, // unique name
+    image:
+      os.platform().toLowerCase() === 'win32'
+        ? 'johnnyhuy/jaeger-windows:1809'
+        : 'jaegertracing/all-in-one:1.56',
+    env: {
+      COLLECTOR_OTLP_ENABLED: 'true',
+    },
+    containerPort: 4318,
+    additionalContainerPorts: [16686, 4317],
+    healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
+  });
+
+  return {
+    env: {
+      OTLP_EXPORTER_TYPE: exporterType,
+      OTLP_EXPORTER_URL:
+        exporterType === 'http'
+          ? `http://${hostname}:${jaeger.port}/v1/traces`
+          : `http://${hostname}:${jaeger.additionalPorts[4317]}`,
+      OTLP_SERVICE_NAME: serviceName,
+    },
+    async traces() {
+      const res = await fetch(
+        `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${serviceName}`,
+      );
+      return res.json() as unknown as JaegerTracesApiResponse;
+    },
+  };
+}
+
 describe('OpenTelemetry', () => {
-  (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
-    describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
-      let jaeger: Container;
-      beforeAll(async () => {
-        jaeger = await container({
-          name: `jaeger-${OTLP_EXPORTER_TYPE}`,
-          image:
-            os.platform().toLowerCase() === 'win32'
-              ? 'johnnyhuy/jaeger-windows:1809'
-              : 'jaegertracing/all-in-one:1.56',
-          env: {
-            COLLECTOR_OTLP_ENABLED: 'true',
-          },
-          containerPort: 4318,
-          additionalContainerPorts: [16686, 4317],
-          healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
-        });
-      });
-
-      const urls = {
-        get http() {
-          return `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`;
-        },
-        get grpc() {
-          return `http://${JAEGER_HOSTNAME}:${jaeger.additionalPorts[4317]}`;
-        },
-      };
-
-      async function getJaegerTraces(
-        service: string,
-        expectedDataLength: number,
-        expectedData?: (data: JaegerTracesApiResponse) => boolean,
-      ): Promise<JaegerTracesApiResponse> {
-        const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
-
-        let res!: JaegerTracesApiResponse;
-        const signal = AbortSignal.timeout(2000);
-        while (!signal.aborted) {
-          try {
-            res = await fetch(url).then((r) => r.json());
-            if (res.data.length >= expectedDataLength) {
-              if (expectedData && !expectedData(res)) {
-                continue;
-              }
-              return res;
-            }
-          } catch {}
-        }
-        return res;
-      }
-      it('should report telemetry metrics correctly to jaeger', async () => {
-        const serviceName = 'mesh-e2e-test-1';
-        const { execute } = await gateway({
+  (['grpc', 'http'] satisfies OTLPExporterType[]).forEach((exporterType) => {
+    describe.concurrent(`exporter > ${exporterType}`, () => {
+      it('should report telemetry metrics correctly to jaeger', async ({
+        expect,
+      }) => {
+        const jaeger = await createJaeger(exporterType);
+        const gw = await gateway({
           supergraph,
-          env: {
-            OTLP_EXPORTER_TYPE,
-            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
-          },
+          env: jaeger.env,
         });
+        await expect(gw.execute({ query: query })).resolves.toMatchSnapshot();
+        await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        await expect(execute({ query: TEST_QUERY })).resolves.toEqual({
-          data: {
-            topProducts: [
-              {
-                inStock: true,
-                name: 'Table',
-                price: 899,
-                reviews: [
-                  {
-                    author: {
-                      id: '1',
-                      name: 'Ada Lovelace',
-                      reviews: [
-                        {
-                          body: 'Love it!',
-                          id: '1',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                        {
-                          body: 'Too expensive.',
-                          id: '2',
-                          product: {
-                            inStock: false,
-                            name: 'Couch',
-                            price: 1299,
-                            shippingEstimate: 0,
-                            upc: '2',
-                            weight: 1000,
-                          },
-                        },
-                      ],
-                      username: '@ada',
-                    },
-                    body: 'Love it!',
-                    id: '1',
-                  },
-                  {
-                    author: {
-                      id: '2',
-                      name: 'Alan Turing',
-                      reviews: [
-                        {
-                          body: 'Could be better.',
-                          id: '3',
-                          product: {
-                            inStock: true,
-                            name: 'Chair',
-                            price: 54,
-                            shippingEstimate: 25,
-                            upc: '3',
-                            weight: 50,
-                          },
-                        },
-                        {
-                          body: 'Prefer something else.',
-                          id: '4',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                      ],
-                      username: '@complete',
-                    },
-                    body: 'Prefer something else.',
-                    id: '4',
-                  },
-                ],
-                shippingEstimate: 50,
-                upc: '1',
-                weight: 100,
-              },
-              {
-                inStock: false,
-                name: 'Couch',
-                price: 1299,
-                reviews: [
-                  {
-                    author: {
-                      id: '1',
-                      name: 'Ada Lovelace',
-                      reviews: [
-                        {
-                          body: 'Love it!',
-                          id: '1',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                        {
-                          body: 'Too expensive.',
-                          id: '2',
-                          product: {
-                            inStock: false,
-                            name: 'Couch',
-                            price: 1299,
-                            shippingEstimate: 0,
-                            upc: '2',
-                            weight: 1000,
-                          },
-                        },
-                      ],
-                      username: '@ada',
-                    },
-                    body: 'Too expensive.',
-                    id: '2',
-                  },
-                ],
-                shippingEstimate: 0,
-                upc: '2',
-                weight: 1000,
-              },
-              {
-                inStock: true,
-                name: 'Chair',
-                price: 54,
-                reviews: [
-                  {
-                    author: {
-                      id: '2',
-                      name: 'Alan Turing',
-                      reviews: [
-                        {
-                          body: 'Could be better.',
-                          id: '3',
-                          product: {
-                            inStock: true,
-                            name: 'Chair',
-                            price: 54,
-                            shippingEstimate: 25,
-                            upc: '3',
-                            weight: 50,
-                          },
-                        },
-                        {
-                          body: 'Prefer something else.',
-                          id: '4',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                      ],
-                      username: '@complete',
-                    },
-                    body: 'Could be better.',
-                    id: '3',
-                  },
-                ],
-                shippingEstimate: 25,
-                upc: '3',
-                weight: 50,
-              },
-            ],
-            users: [
-              {
-                id: '1',
-                name: 'Ada Lovelace',
-                reviews: [
-                  {
-                    body: 'Love it!',
-                    id: '1',
-                    product: {
-                      inStock: true,
-                      name: 'Table',
-                      price: 899,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Love it!',
-                          id: '1',
-                        },
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Prefer something else.',
-                          id: '4',
-                        },
-                      ],
-                      shippingEstimate: 50,
-                      upc: '1',
-                      weight: 100,
-                    },
-                  },
-                  {
-                    body: 'Too expensive.',
-                    id: '2',
-                    product: {
-                      inStock: false,
-                      name: 'Couch',
-                      price: 1299,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Too expensive.',
-                          id: '2',
-                        },
-                      ],
-                      shippingEstimate: 0,
-                      upc: '2',
-                      weight: 1000,
-                    },
-                  },
-                ],
-                username: '@ada',
-              },
-              {
-                id: '2',
-                name: 'Alan Turing',
-                reviews: [
-                  {
-                    body: 'Could be better.',
-                    id: '3',
-                    product: {
-                      inStock: true,
-                      name: 'Chair',
-                      price: 54,
-                      reviews: [
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Could be better.',
-                          id: '3',
-                        },
-                      ],
-                      shippingEstimate: 25,
-                      upc: '3',
-                      weight: 50,
-                    },
-                  },
-                  {
-                    body: 'Prefer something else.',
-                    id: '4',
-                    product: {
-                      inStock: true,
-                      name: 'Table',
-                      price: 899,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Love it!',
-                          id: '1',
-                        },
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Prefer something else.',
-                          id: '4',
-                        },
-                      ],
-                      shippingEstimate: 50,
-                      upc: '1',
-                      weight: 100,
-                    },
-                  },
-                ],
-                username: '@complete',
-              },
-            ],
-          },
-        });
-        const traces = await getJaegerTraces(serviceName, 2, (res) =>
-          res.data.some((trace) =>
-            trace.spans.some((span) => span.operationName === 'POST /graphql'),
-          ),
-        );
+        const traces = await jaeger.traces();
         expect(traces.data.length).toBe(2);
         const relevantTraces = traces.data.filter((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -667,21 +193,18 @@ describe('OpenTelemetry', () => {
         ).toBe(2);
       });
 
-      it('should report parse failures correctly', async () => {
-        const serviceName = 'mesh-e2e-test-2';
-        const { execute } = await gateway({
+      it('should report parse failures correctly', async ({ expect }) => {
+        const jaeger = await createJaeger(exporterType);
+        const gw = await gateway({
           supergraph,
-          env: {
-            OTLP_EXPORTER_TYPE,
-            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
-          },
+          env: jaeger.env,
         });
-
-        await expect(execute({ query: 'query { test' })).rejects.toThrow(
+        await expect(gw.execute({ query: 'query { test' })).rejects.toThrow(
           'Syntax Error: Expected Name, found <EOF>.',
         );
-        const traces = await getJaegerTraces(serviceName, 2);
+        await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
+
+        const traces = await jaeger.traces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -725,24 +248,20 @@ describe('OpenTelemetry', () => {
         ).toBe(0);
       });
 
-      it('should report validate failures correctly', async () => {
-        const serviceName = 'mesh-e2e-test-3';
-        const { execute } = await gateway({
+      it('should report validate failures correctly', async ({ expect }) => {
+        const jaeger = await createJaeger(exporterType);
+        const gw = await gateway({
           supergraph,
-          env: {
-            OTLP_EXPORTER_TYPE,
-            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
-          },
+          env: jaeger.env,
         });
-
         await expect(
-          execute({ query: 'query { nonExistentField }' }),
+          gw.execute({ query: 'query { nonExistentField }' }),
         ).rejects.toThrow(
           '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}',
         );
-        await setTimeout(300);
-        const traces = await getJaegerTraces(serviceName, 2);
+        await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
+
+        const traces = await jaeger.traces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -789,18 +308,16 @@ describe('OpenTelemetry', () => {
         ).toBe(0);
       });
 
-      it('should report http failures', async () => {
-        const serviceName = 'mesh-e2e-test-4';
-        const { port } = await gateway({
+      it('should report http failures', async ({ expect }) => {
+        const jaeger = await createJaeger(exporterType);
+        const gw = await gateway({
           supergraph,
-          env: {
-            OTLP_EXPORTER_TYPE,
-            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
-          },
+          env: jaeger.env,
         });
-        await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
-        const traces = await getJaegerTraces(serviceName, 2);
+        await fetch(`http://0.0.0.0:${gw.port}/non-existing`).catch(() => {});
+        await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
+
+        const traces = await jaeger.traces();
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some(
@@ -831,486 +348,23 @@ describe('OpenTelemetry', () => {
         );
       });
 
-      it('context propagation should work correctly', async () => {
-        const traceId = '0af7651916cd43dd8448eb211c80319c';
-        const serviceName = 'mesh-e2e-test-5';
-        const { execute, port } = await gateway({
+      it('context propagation should work correctly', async ({ expect }) => {
+        const jaeger = await createJaeger(exporterType);
+        const gw = await gateway({
           supergraph,
-          env: {
-            OTLP_EXPORTER_TYPE,
-            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
-          },
+          env: jaeger.env,
         });
-
+        const traceId = '0af7651916cd43dd8448eb211c80319c';
         await expect(
-          execute({
-            query: TEST_QUERY,
+          gw.execute({
+            query: query,
             headers: {
               traceparent: `00-${traceId}-b7ad6b7169203331-01`,
             },
           }),
-        ).resolves.toEqual({
-          data: {
-            topProducts: [
-              {
-                inStock: true,
-                name: 'Table',
-                price: 899,
-                reviews: [
-                  {
-                    author: {
-                      id: '1',
-                      name: 'Ada Lovelace',
-                      reviews: [
-                        {
-                          body: 'Love it!',
-                          id: '1',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                        {
-                          body: 'Too expensive.',
-                          id: '2',
-                          product: {
-                            inStock: false,
-                            name: 'Couch',
-                            price: 1299,
-                            shippingEstimate: 0,
-                            upc: '2',
-                            weight: 1000,
-                          },
-                        },
-                      ],
-                      username: '@ada',
-                    },
-                    body: 'Love it!',
-                    id: '1',
-                  },
-                  {
-                    author: {
-                      id: '2',
-                      name: 'Alan Turing',
-                      reviews: [
-                        {
-                          body: 'Could be better.',
-                          id: '3',
-                          product: {
-                            inStock: true,
-                            name: 'Chair',
-                            price: 54,
-                            shippingEstimate: 25,
-                            upc: '3',
-                            weight: 50,
-                          },
-                        },
-                        {
-                          body: 'Prefer something else.',
-                          id: '4',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                      ],
-                      username: '@complete',
-                    },
-                    body: 'Prefer something else.',
-                    id: '4',
-                  },
-                ],
-                shippingEstimate: 50,
-                upc: '1',
-                weight: 100,
-              },
-              {
-                inStock: false,
-                name: 'Couch',
-                price: 1299,
-                reviews: [
-                  {
-                    author: {
-                      id: '1',
-                      name: 'Ada Lovelace',
-                      reviews: [
-                        {
-                          body: 'Love it!',
-                          id: '1',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                        {
-                          body: 'Too expensive.',
-                          id: '2',
-                          product: {
-                            inStock: false,
-                            name: 'Couch',
-                            price: 1299,
-                            shippingEstimate: 0,
-                            upc: '2',
-                            weight: 1000,
-                          },
-                        },
-                      ],
-                      username: '@ada',
-                    },
-                    body: 'Too expensive.',
-                    id: '2',
-                  },
-                ],
-                shippingEstimate: 0,
-                upc: '2',
-                weight: 1000,
-              },
-              {
-                inStock: true,
-                name: 'Chair',
-                price: 54,
-                reviews: [
-                  {
-                    author: {
-                      id: '2',
-                      name: 'Alan Turing',
-                      reviews: [
-                        {
-                          body: 'Could be better.',
-                          id: '3',
-                          product: {
-                            inStock: true,
-                            name: 'Chair',
-                            price: 54,
-                            shippingEstimate: 25,
-                            upc: '3',
-                            weight: 50,
-                          },
-                        },
-                        {
-                          body: 'Prefer something else.',
-                          id: '4',
-                          product: {
-                            inStock: true,
-                            name: 'Table',
-                            price: 899,
-                            shippingEstimate: 50,
-                            upc: '1',
-                            weight: 100,
-                          },
-                        },
-                      ],
-                      username: '@complete',
-                    },
-                    body: 'Could be better.',
-                    id: '3',
-                  },
-                ],
-                shippingEstimate: 25,
-                upc: '3',
-                weight: 50,
-              },
-            ],
-            users: [
-              {
-                id: '1',
-                name: 'Ada Lovelace',
-                reviews: [
-                  {
-                    body: 'Love it!',
-                    id: '1',
-                    product: {
-                      inStock: true,
-                      name: 'Table',
-                      price: 899,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Love it!',
-                          id: '1',
-                        },
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Prefer something else.',
-                          id: '4',
-                        },
-                      ],
-                      shippingEstimate: 50,
-                      upc: '1',
-                      weight: 100,
-                    },
-                  },
-                  {
-                    body: 'Too expensive.',
-                    id: '2',
-                    product: {
-                      inStock: false,
-                      name: 'Couch',
-                      price: 1299,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Too expensive.',
-                          id: '2',
-                        },
-                      ],
-                      shippingEstimate: 0,
-                      upc: '2',
-                      weight: 1000,
-                    },
-                  },
-                ],
-                username: '@ada',
-              },
-              {
-                id: '2',
-                name: 'Alan Turing',
-                reviews: [
-                  {
-                    body: 'Could be better.',
-                    id: '3',
-                    product: {
-                      inStock: true,
-                      name: 'Chair',
-                      price: 54,
-                      reviews: [
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Could be better.',
-                          id: '3',
-                        },
-                      ],
-                      shippingEstimate: 25,
-                      upc: '3',
-                      weight: 50,
-                    },
-                  },
-                  {
-                    body: 'Prefer something else.',
-                    id: '4',
-                    product: {
-                      inStock: true,
-                      name: 'Table',
-                      price: 899,
-                      reviews: [
-                        {
-                          author: {
-                            id: '1',
-                            name: 'Ada Lovelace',
-                            reviews: [
-                              {
-                                body: 'Love it!',
-                                id: '1',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                              {
-                                body: 'Too expensive.',
-                                id: '2',
-                                product: {
-                                  inStock: false,
-                                  name: 'Couch',
-                                  price: 1299,
-                                  shippingEstimate: 0,
-                                  upc: '2',
-                                  weight: 1000,
-                                },
-                              },
-                            ],
-                            username: '@ada',
-                          },
-                          body: 'Love it!',
-                          id: '1',
-                        },
-                        {
-                          author: {
-                            id: '2',
-                            name: 'Alan Turing',
-                            reviews: [
-                              {
-                                body: 'Could be better.',
-                                id: '3',
-                                product: {
-                                  inStock: true,
-                                  name: 'Chair',
-                                  price: 54,
-                                  shippingEstimate: 25,
-                                  upc: '3',
-                                  weight: 50,
-                                },
-                              },
-                              {
-                                body: 'Prefer something else.',
-                                id: '4',
-                                product: {
-                                  inStock: true,
-                                  name: 'Table',
-                                  price: 899,
-                                  shippingEstimate: 50,
-                                  upc: '1',
-                                  weight: 100,
-                                },
-                              },
-                            ],
-                            username: '@complete',
-                          },
-                          body: 'Prefer something else.',
-                          id: '4',
-                        },
-                      ],
-                      shippingEstimate: 50,
-                      upc: '1',
-                      weight: 100,
-                    },
-                  },
-                ],
-                username: '@complete',
-              },
-            ],
-          },
-        });
-
+        ).resolves.toMatchSnapshot();
         const upstreamHttpCalls = await fetch(
-          `http://0.0.0.0:${port}/upstream-fetch`,
+          `http://0.0.0.0:${gw.port}/upstream-fetch`,
         ).then(
           (r) =>
             r.json() as unknown as Array<{
@@ -1318,8 +372,9 @@ describe('OpenTelemetry', () => {
               headers?: Record<string, string>;
             }>,
         );
+        await gw[Symbol.asyncDispose](); // disposing the gateway will/should flush the traces
 
-        const traces = await getJaegerTraces(serviceName, 3);
+        const traces = await jaeger.traces();
         expect(traces.data.length).toBe(3);
 
         const relevantTraces = traces.data.filter((trace) =>
