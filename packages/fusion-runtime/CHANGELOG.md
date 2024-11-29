@@ -1,5 +1,25 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.7
+
+### Patch Changes
+
+- [#205](https://github.com/graphql-hive/gateway/pull/205) [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`graphql-yoga@^5.10.3` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.10.3) (to `dependencies`)
+
+- [#208](https://github.com/graphql-hive/gateway/pull/208) [`baf896d`](https://github.com/graphql-hive/gateway/commit/baf896d961bf122f7598355b0e9a09d93be1d822) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`graphql-yoga@^5.7.0` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.7.0) (from `dependencies`)
+
+- Updated dependencies [[`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a), [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a)]:
+  - @graphql-tools/federation@2.2.32
+  - @graphql-tools/delegate@10.2.2
+  - @graphql-tools/stitch@9.4.3
+  - @graphql-tools/stitching-directives@3.1.17
+  - @graphql-mesh/transport-common@0.7.17
+  - @graphql-tools/wrap@10.0.20
+
 ## 0.10.6
 
 ### Patch Changes

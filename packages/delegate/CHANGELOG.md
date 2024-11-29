@@ -1,5 +1,11 @@
 # @graphql-tools/delegate
 
+## 10.2.2
+
+### Patch Changes
+
+- [#205](https://github.com/graphql-hive/gateway/pull/205) [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a) Thanks [@ardatan](https://github.com/ardatan)! - Fix missing key fields in the nested queries
+
 ## 10.2.1
 
 ### Patch Changes
