@@ -378,7 +378,7 @@ export function createTenv(cwd: string): Tenv {
       if (typeof subgraphOpt === 'string') {
         subgraph = subgraphOpt;
       } else if (subgraphOpt?.with === 'mesh') {
-        const { output, result } = await tenv.composeWithMesh({
+        const { output } = await tenv.composeWithMesh({
           output: 'graphql',
           services: subgraphOpt?.services,
           args: ['--subgraph', subgraphOpt?.subgraphName],
