@@ -59,7 +59,5 @@ export const router = createRouter()
 const opts = Opts(process.argv);
 const PORT = opts.getServicePort('OAS');
 createServer(router).listen(PORT, () =>
-  console.log(
-      `Server running at http://localhost:${PORT}`,
-  ),
+  console.log(`Server running at http://localhost:${PORT}`),
 );
