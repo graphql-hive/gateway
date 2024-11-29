@@ -308,6 +308,7 @@ async function handleDockerHostName(
     });
     supergraph = path.basename(supergraph);
   }
+  return supergraph;
 }
 
 export function createTenv(cwd: string): Tenv {
@@ -373,17 +374,15 @@ export function createTenv(cwd: string): Tenv {
       }
 
       let subgraph: string | null = null;
-      if (subgraphOpt) {
-        if (typeof subgraphOpt === 'string') {
-          subgraph = subgraphOpt;
-        } else if (subgraphOpt.with === 'mesh') {
-          const { output } = await tenv.composeWithMesh({
-            output: 'graphql',
-            services: subgraphOpt.services,
-            args: ['--subgraph', subgraphOpt.subgraphName],
-          });
-          subgraph = output;
-        }
+      if (typeof subgraphOpt === 'string') {
+        subgraph = subgraphOpt;
+      } else if (subgraphOpt?.with === 'mesh') {
+        const { output } = await tenv.composeWithMesh({
+          output: 'graphql',
+          services: subgraphOpt?.services,
+          args: ['--subgraph', subgraphOpt?.subgraphName],
+        });
+        subgraph = output;
       }
 
       if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
@@ -391,10 +390,10 @@ export function createTenv(cwd: string): Tenv {
           runner?.docker?.volumes || [];
 
         if (supergraph) {
-          await handleDockerHostName(supergraph, volumes);
+          supergraph = await handleDockerHostName(supergraph, volumes);
         }
         if (subgraph) {
-          await handleDockerHostName(subgraph, volumes);
+          subgraph = await handleDockerHostName(subgraph, volumes);
         }
         for (const configfile of await glob('gateway.config.*', { cwd })) {
           volumes.push({
