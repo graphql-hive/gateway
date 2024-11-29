@@ -2,48 +2,50 @@ import { createTenv, Service } from '@internal/e2e';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('openapi-subgraph', () => {
-  let TestService: Service;
-  const { service, composeWithMesh, gateway } = createTenv(__dirname);
-  beforeAll(async () => {
-    TestService = await service('Test');
-  });
-  function replaceDockerHostNamesBack(sdl?: string) {
-    return sdl?.replaceAll('172.17.0.1', 'localhost');
-  }
-  it('exposes the SDL correctly', async () => {
-    const { result, output } = await composeWithMesh({
-      services: [TestService],
-      maskServicePorts: true,
-      args: ['--subgraph', 'Test'],
-      output: 'graphql',
+    let OASService: Service;
+    let GQLService: Service;
+    const { service, composeWithMesh, gateway } = createTenv(__dirname);
+    beforeAll(async () => {
+        OASService = await service('OAS');
+        GQLService = await service('GQL');
     });
-    const { execute } = await gateway({
-      subgraph: output,
-    });
-    const sdlQuery = /* GraphQL */ `
+    function replaceDockerHostNamesBack(sdl?: string) {
+        return sdl?.replaceAll('172.17.0.1', 'localhost');
+    }
+    it('exposes the SDL correctly', async () => {
+        const { result, output } = await composeWithMesh({
+            services: [OASService, GQLService],
+            maskServicePorts: true,
+            args: ['--subgraph', 'OAS'],
+            output: 'graphql',
+        });
+        const { execute } = await gateway({
+            subgraph: output,
+        });
+        const sdlQuery = /* GraphQL */ `
       query {
         _service {
           sdl
         }
       }
     `;
-    const queryResult = await execute({
-      query: sdlQuery,
+        const queryResult = await execute({
+            query: sdlQuery,
+        });
+        expect(queryResult?.errors).toBeFalsy();
+        expect(replaceDockerHostNamesBack(queryResult?.data?._service?.sdl)).toBe(
+            replaceDockerHostNamesBack(result),
+        );
     });
-    expect(queryResult?.errors).toBeFalsy();
-    expect(replaceDockerHostNamesBack(queryResult?.data?._service?.sdl)).toBe(
-      replaceDockerHostNamesBack(result),
-    );
-  });
-  it('resolves entitites correctly', async () => {
-    const { execute } = await gateway({
-      subgraph: {
-        with: 'mesh',
-        services: [TestService],
-        subgraphName: 'Test',
-      },
-    });
-    const entitiesQuery = /* GraphQL */ `
+    it('resolves entitites correctly', async () => {
+        const { execute } = await gateway({
+            subgraph: {
+                with: 'mesh',
+                services: [OASService, GQLService],
+                subgraphName: 'OAS',
+            },
+        });
+        const entitiesQuery = /* GraphQL */ `
       query {
         _entities(representations: [{ __typename: "User", id: 1 }]) {
           __typename
@@ -54,59 +56,59 @@ describe('openapi-subgraph', () => {
         }
       }
     `;
-    const queryResult = await execute({
-      query: entitiesQuery,
+        const queryResult = await execute({
+            query: entitiesQuery,
+        });
+        expect(queryResult?.errors).toBeFalsy();
+        expect(queryResult?.data).toEqual({
+            _entities: [
+                {
+                    __typename: 'User',
+                    id: '1',
+                    name: 'Alice',
+                },
+            ],
+        });
     });
-    expect(queryResult?.errors).toBeFalsy();
-    expect(queryResult?.data).toEqual({
-      _entities: [
-        {
-          __typename: 'User',
-          id: '1',
-          name: 'Alice',
-        },
-      ],
-    });
-  });
-  it('encapsulates the queries correctly', async () => {
-    const { execute } = await gateway({
-      subgraph: {
-        with: 'mesh',
-        services: [TestService],
-        subgraphName: 'TestEncapsulated',
-      },
-    });
-    const encapsulatedQuery = /* GraphQL */ `
+    it('encapsulates the queries correctly', async () => {
+        const { execute } = await gateway({
+            subgraph: {
+                with: 'mesh',
+                services: [OASService, GQLService],
+                subgraphName: 'GQL',
+            },
+        });
+        const encapsulatedQuery = /* GraphQL */ `
       {
-        test {
-          users {
+        gql {
+          books {
             id
-            name
+            title
           }
         }
       }
     `;
-    const queryResult = await execute({
-      query: encapsulatedQuery,
+        const queryResult = await execute({
+            query: encapsulatedQuery,
+        });
+        expect(queryResult?.errors).toBeFalsy();
+        expect(queryResult?.data).toEqual({
+            gql: {
+                books: [
+                    {
+                        id: '1',
+                        title: 'Book 1',
+                    },
+                    {
+                        id: '2',
+                        title: 'Book 2',
+                    },
+                    {
+                        id: '3',
+                        title: 'Book 3',
+                    },
+                ],
+            },
+        });
     });
-    expect(queryResult?.errors).toBeFalsy();
-    expect(queryResult?.data).toEqual({
-      test: {
-        users: [
-          {
-            id: '1',
-            name: 'Alice',
-          },
-          {
-            id: '2',
-            name: 'Bob',
-          },
-          {
-            id: '3',
-            name: 'Charlie',
-          },
-        ],
-      },
-    });
-  });
 });
