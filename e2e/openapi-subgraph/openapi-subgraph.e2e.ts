@@ -10,6 +10,7 @@ describe('openapi-subgraph', () => {
   it('exposes the SDL correctly', async () => {
     const { result, output } = await composeWithMesh({
       services: [TestService],
+      maskServicePorts: true,
       args: ['--subgraph', 'Test'],
       output: 'graphql',
     });
