@@ -432,22 +432,27 @@ export function createGatewayRuntime<
           });
           // TODO: Find better alternative later
           unifiedGraph = wrapSchema(subschemaConfig);
+          const entities = Object.keys(subschemaConfig.merge || {});
+          let entitiesDef = 'union _Entity';
+          if (entities.length) {
+            entitiesDef += ` = ${entities.join(' | ')}`;
+          }
           unifiedGraph = mergeSchemas({
             assumeValid: true,
             assumeValidSDL: true,
             schemas: [unifiedGraph],
             typeDefs: [
               parse(/* GraphQL */ `
-                  type Query {
-                    _entities(representations: [_Any!]!): [_Entity]!
-                    _service: _Service!
-                  }
+                type Query {
+                  _entities(representations: [_Any!]!): [_Entity]!
+                  _service: _Service!
+                }
 
-                  scalar _Any
-                  union _Entity = ${Object.keys(subschemaConfig.merge || {}).join(' | ')}
-                  type _Service {
-                    sdl: String
-                  }
+                scalar _Any
+                ${entitiesDef}
+                type _Service {
+                  sdl: String
+                }
               `),
             ],
             resolvers: {
