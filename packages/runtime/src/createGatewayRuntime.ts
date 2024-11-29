@@ -552,9 +552,11 @@ export function createGatewayRuntime<
           contextBuilder = (base) =>
             // @ts-expect-error - Typings are wrong in legacy Mesh
             Object.assign(
+              // @ts-expect-error - Typings are wrong in legacy Mesh
               base,
               getInContextSDK(
                 unifiedGraph,
+                // @ts-expect-error - Typings are wrong in legacy Mesh
                 [subschemaConfig],
                 configContext.logger,
                 onDelegateHooks,
