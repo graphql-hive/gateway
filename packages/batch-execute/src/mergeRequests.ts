@@ -174,14 +174,18 @@ function prefixRequest(
   if (executionVariables) {
     prefixedVariables = Object.create(null);
     for (const variableName in executionVariables) {
-      prefixedVariables[prefix + variableName] = executionVariables[variableName];
+      prefixedVariables[prefix + variableName] =
+        executionVariables[variableName];
     }
   }
 
   if (hasFragments) {
     prefixedDocument = {
       ...prefixedDocument,
-      definitions: prefixedDocument.definitions.filter((def) => !isFragmentDefinition(def) || fragmentSpreadImpl[def.name.value]),
+      definitions: prefixedDocument.definitions.filter(
+        (def) =>
+          !isFragmentDefinition(def) || fragmentSpreadImpl[def.name.value],
+      ),
     };
   }
 
