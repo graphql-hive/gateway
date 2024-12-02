@@ -1,9 +1,9 @@
-import { ClientRequest } from 'node:http';
-
 declare module 'appdynamics' {
+  import type { ClientRequest } from 'node:http';
+
   export function startTransaction(
-    correlationInfo?: string | HTTPRequest | CorrelationHeader,
-    cb: (...args: any[]) => void,
+    correlationInfo?: string | HTTPRequest | CorrelationHeader | null,
+    cb?: (tx: TimePromise) => void,
   ): TimePromise;
 
   export function getTransaction(req: ClientRequest): TimePromise;
@@ -63,5 +63,9 @@ declare module 'appdynamics' {
       HOST: string;
       PORT: string;
     };
+  };
+
+  export const correlation: {
+    HEADER_NAME: string;
   };
 }

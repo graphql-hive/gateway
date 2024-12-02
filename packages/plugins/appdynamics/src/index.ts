@@ -1,6 +1,6 @@
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-mesh/types';
-import appd from 'appdynamics';
+import appd, { TimePromise } from 'appdynamics';
 
 type AppDynamicsPluginOptions = {
   logger: Logger;
@@ -10,13 +10,17 @@ export default function useAppDynamics(
   options: AppDynamicsPluginOptions,
 ): GatewayPlugin {
   const logger = options.logger.child('AppDynamics');
-  const txByRequest = new WeakMap<Request, TimePromies>();
+  const txByRequest = new WeakMap<Request, TimePromise>();
 
   return {
     //@ts-expect-error TODO: how to declare this actually exists if we are running on Node ?
     onRequest({ request, serverContext: { req } }) {
       try {
-        const tx = appd.startTransaction(request);
+        const tx =
+          appd.getTransaction(req) ??
+          appd.startTransaction(
+            request.headers.get(appd.correlation.HEADER_NAME),
+          );
         txByRequest.set(request, tx);
       } catch (err) {
         logger.error('failed to get or start transaction:', err);
