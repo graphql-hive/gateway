@@ -71,15 +71,20 @@ function createMergedTypes<
     if (typeCandidates[typeName]) {
       for (const { type } of typeCandidates[typeName]) {
         if ('getInterfaces' in type) {
-          const interfaces = type.getInterfaces();
-          for (const iface of interfaces) {
-            const interfaceName = iface.name;
-            let implementingTypes = typeInterfacesMap[typeName];
-            if (implementingTypes == null) {
-              implementingTypes = new Set();
-              typeInterfacesMap[typeName] = implementingTypes;
+          try {
+            // This sometimes throws, bug in graphql-js
+            const interfaces = type.getInterfaces();
+            for (const iface of interfaces) {
+              const interfaceName = iface.name;
+              let implementingTypes = typeInterfacesMap[typeName];
+              if (implementingTypes == null) {
+                implementingTypes = new Set();
+                typeInterfacesMap[typeName] = implementingTypes;
+              }
+              implementingTypes.add(interfaceName);
             }
-            implementingTypes.add(interfaceName);
+          } catch {
+            // ignore
           }
         }
       }
