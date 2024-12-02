@@ -1,5 +1,11 @@
 # @graphql-tools/delegate
 
+## 10.2.3
+
+### Patch Changes
+
+- [#231](https://github.com/graphql-hive/gateway/pull/231) [`7ca0ff3`](https://github.com/graphql-hive/gateway/commit/7ca0ff331e42c133c4218a8086bbf0a7607f45d0) Thanks [@ardatan](https://github.com/ardatan)! - Avoid extensions and use \`stitchingInfo\` for provided fields
+
 ## 10.2.2
 
 ### Patch Changes
