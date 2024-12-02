@@ -19,7 +19,7 @@ async function wrangler() {
       ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
     ],
   });
-  const signal = AbortSignal.timeout(3_000);
+  const signal = AbortSignal.timeout(15_000);
   await waitForPort(port, signal);
   return {
     proc,
