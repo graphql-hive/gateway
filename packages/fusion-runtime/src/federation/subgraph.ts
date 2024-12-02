@@ -32,6 +32,7 @@ import {
   GraphQLDirective,
   GraphQLSchema,
   GraphQLString,
+  isInterfaceType,
   isObjectType,
   isOutputType,
   Kind,
@@ -327,9 +328,37 @@ export function handleFederationSubschema({
       }
       return undefined;
     },
-    [MapperKind.INTERFACE_FIELD]: (fieldConfig, fieldName, typeName) => {
+    [MapperKind.INTERFACE_FIELD]: (fieldConfig, fieldName, typeName, schema) => {
       const fieldDirectives =
         getDirectiveExtensions<FieldDirectives>(fieldConfig);
+      const resolveToDirectives = fieldDirectives.resolveTo;
+      if (resolveToDirectives?.length) {
+        const type = schema.getType(typeName);
+        if (!isInterfaceType(type)) {
+          throw new Error(
+            `Type ${typeName} for field ${fieldName} is not an object type`,
+          );
+        }
+        const fieldMap = type.getFields();
+        const field = fieldMap[fieldName];
+        if (!field) {
+          throw new Error(`Field ${typeName}.${fieldName} not found`);
+        }
+        additionalTypeDefs.push({
+          kind: Kind.DOCUMENT,
+          definitions: [
+            {
+              kind: Kind.OBJECT_TYPE_DEFINITION,
+              name: { kind: Kind.NAME, value: typeName },
+              fields: [astFromField(field, schema)],
+            },
+          ],
+        });
+      }
+      const additionalFieldDirectives = fieldDirectives.additionalField;
+      if (additionalFieldDirectives?.length) {
+        return null;
+      }
       const sourceDirectives = fieldDirectives.source;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
@@ -344,10 +373,6 @@ export function handleFederationSubschema({
           renameFieldByInterfaceTypeNames[realTypeName][realName] = fieldName;
         }
         return [realName, fieldConfig];
-      }
-      const additionalFieldDirectives = fieldDirectives.additionalField;
-      if (additionalFieldDirectives?.length) {
-        return null;
       }
       return undefined;
     },

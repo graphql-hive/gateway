@@ -202,6 +202,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       );
       // @ts-expect-error - Typings are wrong
       opts.resolvers = additionalResolvers;
+      // @ts-expect-error - Typings are wrong
+      opts.inheritResolversFromInterfaces = true;
 
       if (onDelegationStageExecuteHooks?.length) {
         for (const subschema of subschemas) {
