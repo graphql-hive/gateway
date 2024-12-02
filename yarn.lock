@@ -4037,7 +4037,7 @@ __metadata:
     "@types/lodash.pick": "npm:4.4.9"
     "@whatwg-node/fetch": "npm:^0.10.1"
     graphql: "npm:^16.9.0"
-    graphql-federation-gateway-audit: "the-guild-org/graphql-federation-gateway-audit#kamil-update-and-new-test"
+    graphql-federation-gateway-audit: "the-guild-org/graphql-federation-gateway-audit#main"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
@@ -10819,9 +10819,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit#kamil-update-and-new-test":
+"graphql-federation-gateway-audit@the-guild-org/graphql-federation-gateway-audit#main":
   version: 1.0.0
-  resolution: "graphql-federation-gateway-audit@https://github.com/the-guild-org/graphql-federation-gateway-audit.git#commit=bff56f64831ff682cafa46aa9ce518415aa4ef5d"
+  resolution: "graphql-federation-gateway-audit@https://github.com/the-guild-org/graphql-federation-gateway-audit.git#commit=5e0cd997597ceefb89eb2b868806446621d54617"
   dependencies:
     "@apollo/composition": "npm:2.9.3"
     "@apollo/subgraph": "npm:2.9.3"
@@ -10838,7 +10838,7 @@ __metadata:
     yargs: "npm:17.7.2"
   bin:
     graphql-federation-audit: ./dist/cli.js
-  checksum: 10c0/afc344bbbb6386218453e66aaf747e69890bd698be3dc9dc7912d98347e304a37c0625f4c2a51d82b1d292a6b3e377dcdb8750d285d473c2861402c9f0c4ec5d
+  checksum: 10c0/141dc6fae96470c614fcea294e7453776119bb7dfd49ff4cbd400f967e6f19162f5ffade3ac1a50894a5ac4f8561a3b8a213ff58de48d3f3364984e7f8e47a84
   languageName: node
   linkType: hard
 
