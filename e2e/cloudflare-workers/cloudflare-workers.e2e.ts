@@ -12,7 +12,6 @@ const { spawn, gatewayRunner, service, composeWithMesh } =
 async function wrangler() {
   const port = await getAvailablePort();
   const [proc] = await spawn('yarn wrangler', {
-    pipeLogs: true, // TODO: remove
     args: [
       'dev',
       '--port',
