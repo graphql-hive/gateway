@@ -99,7 +99,11 @@ type JaegerTracesApiResponse = {
   }>;
 };
 
-describe('OpenTelemetry', () => {
+describe.skipIf(
+  // the disposal of other runners is on the process, not the gateway directly.
+  // so we only test on node because disposing will properly flush the traces
+  gatewayRunner !== 'node',
+)('OpenTelemetry', () => {
   (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
     describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
       let jaeger: Container;
