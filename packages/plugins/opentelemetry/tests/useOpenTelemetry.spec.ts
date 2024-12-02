@@ -11,9 +11,9 @@ describe('useOpenTelemetry', () => {
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
   }));
 
-  let gw: typeof import('@graphql-hive/gateway');
+  let gw: typeof import('../../../runtime/src');
   beforeAll(async () => {
-    gw = await import('@graphql-hive/gateway');
+    gw = await import('../../../runtime/src');
   });
   beforeEach(() => {
     vi.clearAllMocks();

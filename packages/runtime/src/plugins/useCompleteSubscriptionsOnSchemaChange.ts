@@ -2,11 +2,11 @@ import { createGraphQLError, isAsyncIterable, Repeater } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
 export function useCompleteSubscriptionsOnSchemaChange(): GatewayPlugin {
-  const activeSubs: (() => void)[] = [];
+  const activeSubs = new Set<() => void>();
   return {
     onSchemaChange() {
-      while (activeSubs.length) {
-        activeSubs.pop()?.();
+      for (const activeSub of activeSubs) {
+        activeSub();
       }
     },
     onSubscribe() {
@@ -29,11 +29,11 @@ export function useCompleteSubscriptionsOnSchemaChange(): GatewayPlugin {
                       ),
                     );
                   }
-                  activeSubs.push(complete);
+                  activeSubs.add(complete);
 
                   stop.then(() => {
                     result.return?.();
-                    activeSubs.splice(activeSubs.indexOf(complete), 1);
+                    activeSubs.delete(complete);
                   });
                 }),
               ]),

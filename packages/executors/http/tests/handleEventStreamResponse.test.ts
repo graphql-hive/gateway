@@ -3,6 +3,20 @@ import { describe, expect, it } from 'vitest';
 import { handleEventStreamResponse } from '../src/handleEventStreamResponse.js';
 
 describe('handleEventStreamResponse', () => {
+  const fakeSignal: AbortSignal = {
+    aborted: false,
+    addEventListener() {},
+    removeEventListener() {},
+    onabort: null,
+    dispatchEvent() {
+      return false;
+    },
+    reason: null,
+    throwIfAborted() {},
+    any() {
+      return fakeSignal;
+    },
+  };
   const encoder = new TextEncoder();
   it('should handle an event with data', async () => {
     const readableStream = new ReadableStream<Uint8Array>({
@@ -14,7 +28,7 @@ describe('handleEventStreamResponse', () => {
     });
 
     const response = new Response(readableStream);
-    const asyncIterable = handleEventStreamResponse(response);
+    const asyncIterable = handleEventStreamResponse(fakeSignal, response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
     const { value } = await iterator.next();
 
@@ -32,7 +46,7 @@ describe('handleEventStreamResponse', () => {
       },
     });
     const response = new Response(readableStream);
-    const asyncIterable = handleEventStreamResponse(response);
+    const asyncIterable = handleEventStreamResponse(fakeSignal, response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
     const iteratorResult = await iterator.next();
 
@@ -54,7 +68,7 @@ describe('handleEventStreamResponse', () => {
     });
 
     const response = new Response(readableStream);
-    const asyncIterable = handleEventStreamResponse(response);
+    const asyncIterable = handleEventStreamResponse(fakeSignal, response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
     expect(await iterator.next()).toEqual({
@@ -92,7 +106,7 @@ describe('handleEventStreamResponse', () => {
     });
 
     const response = new Response(readableStream);
-    const asyncIterable = handleEventStreamResponse(response);
+    const asyncIterable = handleEventStreamResponse(fakeSignal, response);
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
     expect(await iterator.next()).toEqual({

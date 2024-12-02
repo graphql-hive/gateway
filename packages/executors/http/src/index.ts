@@ -1,5 +1,4 @@
 import {
-  AsyncExecutor,
   createGraphQLError,
   DisposableAsyncExecutor,
   DisposableExecutor,
@@ -8,8 +7,9 @@ import {
   ExecutionResult,
   Executor,
   getOperationASTFromRequest,
-  SyncExecutor,
+  mapMaybePromise,
 } from '@graphql-tools/utils';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
@@ -19,6 +19,11 @@ import { handleEventStreamResponse } from './handleEventStreamResponse.js';
 import { handleMultipartMixedResponse } from './handleMultipartMixedResponse.js';
 import { isLiveQueryOperationDefinitionNode } from './isLiveQueryOperationDefinitionNode.js';
 import { prepareGETUrl } from './prepareGETUrl.js';
+import {
+  createAbortErrorReason,
+  createGraphQLErrorForAbort,
+  createResultForAbort,
+} from './utils.js';
 
 export type SyncFetchFn = (
   url: string,
@@ -91,95 +96,64 @@ export interface HTTPExecutorOptions {
   print?: (doc: DocumentNode) => string;
   /**
    * Enable [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management)
-   * @default false
+   * @deprecated The executors are always disposable, and this option will be removed in the next major version, there is no need to have a flag for this.
    */
   disposable?: boolean;
 }
 
 export type HeadersConfig = Record<string, string>;
 
+// To prevent event listener warnings
+function createSignalWrapper(signal: AbortSignal): AbortSignal {
+  const listeners = new Set<EventListener>();
+  signal.onabort = (event) => {
+    for (const listener of listeners) {
+      listener(event);
+    }
+  };
+  return Object.assign(signal, {
+    addEventListener(_type: 'abort', listener: EventListener) {
+      listeners.add(listener);
+    },
+    removeEventListener(_type: 'abort', listener: EventListener) {
+      listeners.delete(listener);
+    },
+  });
+}
+
 export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
+  options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
-    disposable: true;
   },
 ): DisposableSyncExecutor<any, HTTPExecutorOptions>;
 
 export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
-    fetch: SyncFetchFn;
-    disposable: false;
-  },
-): SyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch'> & { fetch: SyncFetchFn },
-): SyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
+  options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: AsyncFetchFn;
-    disposable: true;
   },
 ): DisposableAsyncExecutor<any, HTTPExecutorOptions>;
 
 export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
-    fetch: AsyncFetchFn;
-    disposable: false;
-  },
-): AsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch'> & { fetch: AsyncFetchFn },
-): AsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
+  options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: RegularFetchFn;
-    disposable: true;
   },
 ): DisposableAsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
-    fetch: RegularFetchFn;
-    disposable: false;
-  },
-): AsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch'> & { fetch: RegularFetchFn },
-): AsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
-    disposable: true;
-  },
-): DisposableAsyncExecutor<any, HTTPExecutorOptions>;
-
-export function buildHTTPExecutor(
-  options?: Omit<HTTPExecutorOptions, 'fetch' | 'disposable'> & {
-    disposable: false;
-  },
-): AsyncExecutor<any, HTTPExecutorOptions>;
 
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'>,
-): AsyncExecutor<any, HTTPExecutorOptions>;
+): DisposableAsyncExecutor<any, HTTPExecutorOptions>;
 
 export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
-):
-  | Executor<any, HTTPExecutorOptions>
-  | DisposableExecutor<any, HTTPExecutorOptions> {
+): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
-  let disposeCtrl: AbortController | undefined;
+  const disposeCtrl = new AbortController();
+  const sharedSignal = createSignalWrapper(disposeCtrl.signal);
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
   ) => {
-    if (disposeCtrl?.signal.aborted) {
-      return createResultForAbort(disposeCtrl.signal);
+    if (sharedSignal.aborted) {
+      return createResultForAbort(sharedSignal.reason);
     }
     const fetchFn = request.extensions?.fetch ?? options?.fetch ?? defaultFetch;
     let method = request.extensions?.method || options?.method;
@@ -228,21 +202,12 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
-    let signal = disposeCtrl?.signal;
-    let clearTimeoutFn: VoidFunction = () => {};
+    let signal = sharedSignal;
     if (options?.timeout) {
-      const timeoutCtrl = new AbortController();
-      signal = timeoutCtrl.signal;
-      disposeCtrl?.signal.addEventListener('abort', clearTimeoutFn);
-      const timeoutId = setTimeout(() => {
-        if (!timeoutCtrl.signal.aborted) {
-          timeoutCtrl.abort('timeout');
-        }
-        disposeCtrl?.signal.removeEventListener('abort', clearTimeoutFn);
-      }, options.timeout);
-      clearTimeoutFn = () => {
-        clearTimeout(timeoutId);
-      };
+      signal = AbortSignal.any([
+        sharedSignal,
+        AbortSignal.timeout(options.timeout),
+      ]);
     }
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
@@ -281,13 +246,12 @@ export function buildHTTPExecutor(
             extensions: request.extensions,
           };
           upstreamErrorExtensions.request.body = body;
-          return new ValueOrPromise(() =>
+          return mapMaybePromise(
             createFormDataFromVariables(body, {
               File: options?.File,
               FormData: options?.FormData,
             }),
-          )
-            .then((body) => {
+            (body) => {
               if (typeof body === 'string' && !headers['content-type']) {
                 upstreamErrorExtensions.request.body = body;
                 headers['content-type'] = 'application/json';
@@ -307,8 +271,8 @@ export function buildHTTPExecutor(
                 request.context,
                 request.info,
               ) as any;
-            })
-            .resolve();
+            },
+          );
         }
       }
     })
@@ -320,8 +284,6 @@ export function buildHTTPExecutor(
             return Object.fromEntries(fetchResult.headers.entries());
           },
         });
-
-        clearTimeoutFn();
 
         // Retry should respect HTTP Errors
         if (
@@ -336,7 +298,7 @@ export function buildHTTPExecutor(
 
         const contentType = fetchResult.headers.get('content-type');
         if (contentType?.includes('text/event-stream')) {
-          return handleEventStreamResponse(fetchResult);
+          return handleEventStreamResponse(signal, fetchResult);
         } else if (contentType?.includes('multipart/mixed')) {
           return handleMultipartMixedResponse(fetchResult);
         }
@@ -439,10 +401,10 @@ export function buildHTTPExecutor(
       let result: ExecutionResult<any> | undefined;
       let attempt = 0;
       function retryAttempt():
-        | Promise<ExecutionResult<any>>
+        | PromiseLike<ExecutionResult<any>>
         | ExecutionResult<any> {
-        if (disposeCtrl?.signal.aborted) {
-          return createResultForAbort(disposeCtrl.signal);
+        if (sharedSignal.aborted) {
+          return createResultForAbort(sharedSignal.reason);
         }
         attempt++;
         if (attempt > options!.retry!) {
@@ -453,45 +415,36 @@ export function buildHTTPExecutor(
             errors: [createGraphQLError('No response returned from fetch')],
           };
         }
-        return new ValueOrPromise(() => baseExecutor(request))
-          .then((res) => {
-            result = res;
-            if (result?.errors?.length) {
-              return retryAttempt();
-            }
-            return result;
-          })
-          .resolve();
+        return mapMaybePromise(baseExecutor(request), (res) => {
+          result = res;
+          if (result?.errors?.length) {
+            return retryAttempt();
+          }
+          return result;
+        });
       }
       return retryAttempt();
     };
   }
 
-  if (!options?.disposable) {
-    disposeCtrl = undefined;
-    return executor;
-  }
-
-  disposeCtrl = new AbortController();
-
   Object.defineProperties(executor, {
-    [Symbol.dispose]: {
+    [DisposableSymbols.dispose]: {
       get() {
         return function dispose() {
-          return disposeCtrl!.abort(createAbortErrorReason());
+          return disposeCtrl.abort(createAbortErrorReason());
         };
       },
     },
-    [Symbol.asyncDispose]: {
+    [DisposableSymbols.asyncDispose]: {
       get() {
         return function asyncDispose() {
-          return disposeCtrl!.abort(createAbortErrorReason());
+          return disposeCtrl.abort(createAbortErrorReason());
         };
       },
     },
   });
 
-  return executor;
+  return executor as DisposableExecutor<any, HTTPExecutorOptions>;
 }
 
 function coerceFetchError(
@@ -501,7 +454,7 @@ function coerceFetchError(
     endpoint,
     upstreamErrorExtensions,
   }: {
-    signal: AbortSignal | undefined;
+    signal: AbortSignal;
     endpoint: string;
     upstreamErrorExtensions: UpstreamErrorExtensions;
   },
@@ -517,8 +470,8 @@ function coerceFetchError(
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
-  } else if (e.name === 'AbortError' && signal?.reason) {
-    return createGraphQLErrorForAbort(signal, {
+  } else if (e.name === 'AbortError' && signal.reason) {
+    return createGraphQLErrorForAbort(signal.reason, {
       extensions: upstreamErrorExtensions,
     });
   } else if (e.message) {
@@ -532,31 +485,6 @@ function coerceFetchError(
       originalError: e,
     });
   }
-}
-
-function createAbortErrorReason() {
-  return new Error('Executor was disposed.');
-}
-
-function createGraphQLErrorForAbort(
-  signal: AbortSignal,
-  extensions?: Record<string, any>,
-) {
-  return createGraphQLError(
-    'The operation was aborted. reason: ' + signal.reason,
-    {
-      extensions,
-    },
-  );
-}
-
-function createResultForAbort(
-  signal: AbortSignal,
-  extensions?: Record<string, any>,
-) {
-  return {
-    errors: [createGraphQLErrorForAbort(signal, extensions)],
-  };
 }
 
 export { isLiveQueryOperationDefinitionNode };

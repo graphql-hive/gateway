@@ -31,7 +31,7 @@ import {
   subscriptionPubSub,
   subscriptionPubSubTrigger,
   subscriptionSchema,
-} from '@internal/testing/fixtures/schemas.js';
+} from '@internal/testing/fixtures/schemas';
 import { Repeater } from '@repeaterjs/repeater';
 import {
   assertValidSchema,

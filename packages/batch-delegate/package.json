@@ -1,11 +1,11 @@
 {
   "name": "@graphql-tools/batch-delegate",
-  "version": "9.0.16",
+  "version": "9.0.18",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/batch-delegate"
   },
   "license": "MIT",
@@ -41,8 +41,7 @@
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/utils": "^10.6.0",
     "dataloader": "2.2.2",
-    "tslib": "^2.4.0",
-    "value-or-promise": "^1.0.12"
+    "tslib": "^2.4.0"
   },
   "devDependencies": {
     "@graphql-tools/schema": "^10.0.7",

@@ -15,52 +15,38 @@ export function useSubgraphExecuteDebug<
       const subgraphExecuteId = fetchAPI.crypto.randomUUID();
       logger = logger.child('subgraph-execute');
       if (executionRequest) {
-        logger.debug('start', () =>
-          JSON.stringify(
-            {
-              subgraphExecuteId,
-              query:
-                executionRequest.document &&
-                defaultPrintFn(executionRequest.document),
-              variables: executionRequest.variables,
-            },
-            null,
-            '  ',
-          ),
-        );
+        logger.debug('start', () => ({
+          subgraphExecuteId,
+          query:
+            executionRequest.document &&
+            defaultPrintFn(executionRequest.document),
+          variables:
+            executionRequest.variables &&
+            JSON.stringify(executionRequest.variables),
+        }));
       }
+      const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              logger.debug('next', () =>
-                JSON.stringify(
-                  {
-                    subgraphExecuteId,
-                    result,
-                  },
-                  null,
-                  '  ',
-                ),
-              );
+              logger.debug('next', () => ({
+                subgraphExecuteId,
+                result: JSON.stringify(result),
+              }));
             },
             onEnd() {
               logger.debug('end', () => ({
                 subgraphExecuteId,
+                duration: performance.now() - start,
               }));
             },
           };
         }
-        logger.debug('result', () =>
-          JSON.stringify(
-            {
-              subgraphExecuteId,
-              result,
-            },
-            null,
-            '  ',
-          ),
-        );
+        logger.debug('result', () => ({
+          subgraphExecuteId,
+          result: JSON.stringify(result),
+        }));
         return void 0;
       };
     },

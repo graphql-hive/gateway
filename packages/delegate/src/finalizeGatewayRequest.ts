@@ -30,7 +30,6 @@ import {
   SelectionNode,
   SelectionSetNode,
   TypeInfo,
-  TypeNameMetaFieldDef,
   VariableDefinitionNode,
   visit,
   visitWithTypeInfo,
@@ -146,10 +145,48 @@ function finalizeGatewayDocument(
     );
   }
 
-  const newDocument: DocumentNode = {
+  let newDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
     definitions: [...newOperations, ...newFragments],
   };
+
+  const typeNameFieldProvidedSelectionMap = targetSchema.extensions[
+    'typeNameFieldProvidedSelectionMap'
+  ] as Map<string, Map<string, SelectionSetNode>>;
+  if (typeNameFieldProvidedSelectionMap) {
+    const typeInfo = new TypeInfo(targetSchema);
+    newDocument = visit(
+      newDocument,
+      visitWithTypeInfo(typeInfo, {
+        [Kind.FIELD](fieldNode) {
+          const parentType = typeInfo.getParentType();
+          if (parentType) {
+            const parentTypeName = parentType.name;
+            const providedSelections =
+              typeNameFieldProvidedSelectionMap.get(parentTypeName);
+            if (providedSelections) {
+              const providedSelection = providedSelections.get(
+                fieldNode.name.value,
+              );
+              if (providedSelection) {
+                return {
+                  ...fieldNode,
+                  selectionSet: {
+                    kind: Kind.SELECTION_SET,
+                    selections: [
+                      ...providedSelection.selections,
+                      ...(fieldNode.selectionSet?.selections ?? []),
+                    ],
+                  },
+                };
+              }
+            }
+          }
+          return fieldNode;
+        },
+      }),
+    );
+  }
 
   return {
     usedVariables,
@@ -446,11 +483,7 @@ function finalizeSelectionSet(
         enter: (node) => {
           const parentType = typeInfo.getParentType();
           if (isObjectType(parentType) || isInterfaceType(parentType)) {
-            const fields = parentType.getFields();
-            const field =
-              node.name.value === '__typename'
-                ? TypeNameMetaFieldDef
-                : fields[node.name.value];
+            const field = typeInfo.getFieldDef();
             if (!field) {
               return null;
             }

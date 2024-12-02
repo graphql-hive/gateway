@@ -127,6 +127,18 @@ export interface ServeOptions extends ProcOptions {
         with: 'apollo';
         services: Service[];
       };
+  /**
+   * Path to the subgraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
+   * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
+   */
+  subgraph?:
+    | string
+    | {
+        with: 'mesh';
+        subgraphName: string;
+        services?: Service[];
+        pipeLogs?: boolean | string;
+      };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -264,6 +276,42 @@ export interface Tenv {
   composeWithApollo(services: Service[]): Promise<string>;
 }
 
+async function handleDockerHostName(
+  supergraph: string,
+  volumes: {
+    host: string;
+    container: string;
+  }[],
+) {
+  // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
+  // and locally the host.docker.internal (or just on macos?) should just work
+  const dockerLocalHost = boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal';
+  // we need to replace all local servers in the supergraph to use docker's local hostname.
+  // without this, the services running on the host wont be accessible by the docker container
+  if (/^http(s?):\/\//.test(supergraph)) {
+    // supergraph is a url
+    supergraph = supergraph
+      .replaceAll('0.0.0.0', dockerLocalHost)
+      .replaceAll('localhost', dockerLocalHost)
+      .replaceAll('127.0.0.1', dockerLocalHost);
+  } else {
+    // supergraph is a path
+    await fs.writeFile(
+      supergraph,
+      (await fs.readFile(supergraph, 'utf8'))
+        .replaceAll('0.0.0.0', dockerLocalHost)
+        .replaceAll('localhost', dockerLocalHost)
+        .replaceAll('127.0.0.1', dockerLocalHost),
+    );
+    volumes.push({
+      host: supergraph,
+      container: `/gateway/${path.basename(supergraph)}`,
+    });
+    supergraph = path.basename(supergraph);
+  }
+  return supergraph;
+}
+
 export function createTenv(cwd: string): Tenv {
   const tenv: Tenv = {
     fs: {
@@ -302,6 +350,7 @@ export function createTenv(cwd: string): Tenv {
       let {
         port = await getAvailablePort(),
         supergraph: supergraphOpt,
+        subgraph: subgraphOpt,
         pipeLogs = isDebug(),
         env,
         runner,
@@ -325,40 +374,30 @@ export function createTenv(cwd: string): Tenv {
         supergraph = output;
       }
 
+      let subgraph: string | null = null;
+      if (typeof subgraphOpt === 'string') {
+        subgraph = subgraphOpt;
+      } else if (subgraphOpt?.with === 'mesh') {
+        const { output } = await tenv.composeWithMesh({
+          output: 'graphql',
+          services: subgraphOpt?.services,
+          args: ['--subgraph', subgraphOpt?.subgraphName],
+          pipeLogs: subgraphOpt?.pipeLogs,
+        });
+        subgraph = output;
+      }
+
       if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
 
-        // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-        // and locally the host.docker.internal (or just on macos?) should just work
-        const dockerLocalHost = boolEnv('CI')
-          ? '172.17.0.1'
-          : 'host.docker.internal';
         if (supergraph) {
-          // we need to replace all local servers in the supergraph to use docker's local hostname.
-          // without this, the services running on the host wont be accessible by the docker container
-          if (/^http(s?):\/\//.test(supergraph)) {
-            // supergraph is a url
-            supergraph = supergraph
-              .replaceAll('0.0.0.0', dockerLocalHost)
-              .replaceAll('localhost', dockerLocalHost)
-              .replaceAll('127.0.0.1', dockerLocalHost);
-          } else {
-            // supergraph is a path
-            await fs.writeFile(
-              supergraph,
-              (await fs.readFile(supergraph, 'utf8'))
-                .replaceAll('0.0.0.0', dockerLocalHost)
-                .replaceAll('localhost', dockerLocalHost)
-                .replaceAll('127.0.0.1', dockerLocalHost),
-            );
-            volumes.push({
-              host: supergraph,
-              container: `/gateway/${path.basename(supergraph)}`,
-            });
-            supergraph = path.basename(supergraph);
-          }
+          supergraph = await handleDockerHostName(supergraph, volumes);
         }
+        if (subgraph) {
+          subgraph = await handleDockerHostName(subgraph, volumes);
+        }
+
         for (const configfile of await glob('gateway.config.*', { cwd })) {
           volumes.push({
             host: configfile,
@@ -417,6 +456,7 @@ export function createTenv(cwd: string): Tenv {
           cmd: [
             createPortOpt(port),
             ...(supergraph ? ['supergraph', supergraph] : []),
+            ...(subgraph ? ['subgraph', subgraph] : []),
             ...args,
           ],
           volumes,
@@ -430,6 +470,7 @@ export function createTenv(cwd: string): Tenv {
           'bun',
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
           ...(supergraph ? ['supergraph', supergraph] : []),
+          ...(subgraph ? ['subgraph', subgraph] : []),
           ...args,
           createPortOpt(port),
         );
@@ -441,6 +482,7 @@ export function createTenv(cwd: string): Tenv {
           'tsx',
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
           ...(supergraph ? ['supergraph', supergraph] : []),
+          ...(subgraph ? ['subgraph', subgraph] : []),
           ...args,
           createPortOpt(port),
         );

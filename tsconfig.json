@@ -13,6 +13,12 @@
     "paths": {
       "@internal/testing": ["./internal/testing/src/index.ts"],
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
+      "@internal/testing/to-be-similar-string": [
+        "./internal/testing/src/to-be-similar-string.ts"
+      ],
+      "@internal/testing/to-be-similar-gql-doc": [
+        "./internal/testing/src/to-be-similar-gql-doc.ts"
+      ],
       "@internal/testing/fixtures/*": ["./internal/testing/fixtures/*"],
       "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
@@ -44,6 +50,7 @@
     }
   },
   "include": [
+    "./.yarn/custom-plugins",
     "./eslint.config.js",
     "./vitest.config.ts",
     "./vitest.projects.ts",

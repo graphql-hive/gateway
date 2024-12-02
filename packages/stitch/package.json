@@ -1,11 +1,11 @@
 {
   "name": "@graphql-tools/stitch",
-  "version": "9.4.1",
+  "version": "9.4.3",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/stitch"
   },
   "license": "MIT",
@@ -45,8 +45,7 @@
     "@graphql-tools/schema": "^10.0.8",
     "@graphql-tools/utils": "^10.6.0",
     "@graphql-tools/wrap": "workspace:^",
-    "tslib": "^2.4.0",
-    "value-or-promise": "^1.0.11"
+    "tslib": "^2.4.0"
   },
   "devDependencies": {
     "dataloader": "2.2.2",

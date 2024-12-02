@@ -1,11 +1,11 @@
 {
   "name": "@graphql-tools/federation",
-  "version": "2.2.30",
+  "version": "2.2.32",
   "type": "module",
   "description": "Useful tools to create and manipulate GraphQL schemas.",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/graphql-tools"
   },
   "license": "MIT",
@@ -45,9 +45,8 @@
     "@graphql-tools/stitch": "workspace:^",
     "@graphql-tools/utils": "^10.6.0",
     "@graphql-tools/wrap": "workspace:^",
-    "@whatwg-node/fetch": "^0.10.0",
-    "tslib": "^2.4.0",
-    "value-or-promise": "^1.0.12"
+    "@whatwg-node/fetch": "^0.10.1",
+    "tslib": "^2.4.0"
   },
   "optionalDependencies": {
     "@apollo/client": "~3.2.5 || ~3.3.0 || ~3.4.0 || ~3.5.0 || ~3.6.0 || ~3.7.0 || ~3.8.0 || ~3.9.0 || ~3.10.0 || ~3.11.0"
@@ -57,7 +56,7 @@
     "@apollo/subgraph": "^2.5.4",
     "@types/lodash.pick": "4.4.9",
     "graphql": "^16.9.0",
-    "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit",
+    "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#kamil-update-and-new-test",
     "pkgroll": "2.5.1"
   },
   "sideEffects": false,

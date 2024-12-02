@@ -1,6 +1,7 @@
 import { ExecutionResult, inspect } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { TextDecoder } from '@whatwg-node/fetch';
+import { createResultForAbort } from './utils';
 
 const DELIM = '\n\n';
 
@@ -8,7 +9,10 @@ export function isReadableStream(value: any): value is ReadableStream {
   return value && typeof value.getReader === 'function';
 }
 
-export function handleEventStreamResponse(response: Response) {
+export function handleEventStreamResponse(
+  signal: AbortSignal,
+  response: Response,
+) {
   // node-fetch returns body as a promise so we need to resolve it
   const body = response.body;
   if (!isReadableStream(body)) {
@@ -31,6 +35,10 @@ export function handleEventStreamResponse(response: Response) {
 
     let currChunk = '';
     async function pump() {
+      if (signal.aborted) {
+        await push(createResultForAbort(signal));
+        return stop();
+      }
       if (!body?.locked) {
         return stop();
       }

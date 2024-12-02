@@ -242,7 +242,6 @@ describe('buildHTTPExecutor', () => {
     );
     const executor = buildHTTPExecutor({
       endpoint: server.url,
-      disposable: true,
     });
     const result = executor({
       document: parse(/* GraphQL */ `
@@ -265,7 +264,6 @@ describe('buildHTTPExecutor', () => {
   it('does not allow new requests when the executor is disposed', async () => {
     const executor = buildHTTPExecutor({
       fetch: () => Response.json({ data: { hello: 'world' } }),
-      disposable: true,
     });
     (executor as any)[DisposableSymbols.dispose]?.();
     const result = await executor({

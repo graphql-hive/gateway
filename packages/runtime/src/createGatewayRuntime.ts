@@ -15,6 +15,7 @@ import {
   getOnSubgraphExecute,
   getStitchingDirectivesTransformerForSubschema,
   handleFederationSubschema,
+  handleResolveToDirectives,
   restoreExtraDirectives,
   UnifiedGraphManager,
 } from '@graphql-mesh/fusion-runtime';
@@ -25,10 +26,9 @@ import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
 import {
   DefaultLogger,
   getHeadersObj,
-  isDisposable,
+  getInContextSDK,
   isUrl,
   LogLevel,
-  makeAsyncDisposable,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
@@ -38,6 +38,7 @@ import {
 } from '@graphql-tools/delegate';
 import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
 import {
+  asArray,
   getDirectiveExtensions,
   IResolvers,
   isDocumentNode,
@@ -53,9 +54,17 @@ import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
-import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import type { ExecutionArgs, GraphQLSchema } from 'graphql';
-import { buildSchema, isSchema, parse } from 'graphql';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
+import {
+  buildSchema,
+  GraphQLSchema,
+  isSchema,
+  parse,
+  type ExecutionArgs,
+} from 'graphql';
 import {
   createYoga,
   isAsyncIterable,
@@ -63,7 +72,6 @@ import {
   useExecutionCancellation,
   useReadinessCheck,
   type LandingPageRenderer,
-  type Plugin,
   type YogaServerInstance,
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
@@ -114,25 +122,25 @@ export type GatewayRuntime<
 > = YogaServerInstance<any, TContext> & {
   invalidateUnifiedGraph(): void;
   getSchema(): MaybePromise<GraphQLSchema>;
-} & AsyncDisposable;
+};
 
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   let fetchAPI = config.fetchAPI;
-  let logger!: Logger;
+  let logger: Logger;
   if (config.logging == null) {
     logger = new DefaultLogger();
   } else if (typeof config.logging === 'boolean') {
     logger = config.logging
       ? new DefaultLogger()
       : new DefaultLogger('', LogLevel.silent);
-  }
-  if (typeof config.logging === 'number') {
+  } else if (typeof config.logging === 'number') {
     logger = new DefaultLogger(undefined, config.logging);
-  } else if (typeof config.logging === 'object') {
+  } /*  if (typeof config.logging === 'object') */ else {
     logger = config.logging;
   }
+
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks);
 
@@ -144,7 +152,7 @@ export function createGatewayRuntime<
     ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
   };
 
-  let unifiedGraphPlugin!: Plugin;
+  let unifiedGraphPlugin: GatewayPlugin;
 
   const readinessCheckEndpoint = config.readinessCheckEndpoint || '/readiness';
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
@@ -156,7 +164,7 @@ export function createGatewayRuntime<
     [];
 
   let unifiedGraph: GraphQLSchema;
-  let schemaInvalidator!: () => void;
+  let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
   let setSchema: (schema: GraphQLSchema) => void = (schema) => {
     unifiedGraph = schema;
@@ -197,9 +205,8 @@ export function createGatewayRuntime<
   }
   let subgraphInformationHTMLRenderer: () => MaybePromise<string> = () => '';
 
-  const disposableStack = new AsyncDisposableStack();
-
   if ('proxy' in config) {
+    const transportExecutorStack = new AsyncDisposableStack();
     const proxyExecutor = getProxyExecutor({
       config,
       configContext,
@@ -207,7 +214,7 @@ export function createGatewayRuntime<
         return unifiedGraph;
       },
       onSubgraphExecuteHooks,
-      disposableStack,
+      transportExecutorStack,
     });
     function createExecuteFnFromExecutor(executor: Executor) {
       return function executeFn(args: ExecutionArgs) {
@@ -322,10 +329,9 @@ export function createGatewayRuntime<
       }
       return mapMaybePromise(schemaFetcher(), () => unifiedGraph);
     };
-    disposableStack.defer(pausePolling);
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
-    const executorPlugin: Plugin = {
+    const executorPlugin: GatewayPlugin = {
       onExecute({ setExecuteFn }) {
         setExecuteFn(executeFn);
       },
@@ -336,6 +342,10 @@ export function createGatewayRuntime<
         if (shouldSkipValidation || !params.schema) {
           setResult([]);
         }
+      },
+      [DisposableSymbols.asyncDispose]() {
+        pausePolling();
+        return transportExecutorStack.disposeAsync();
       },
     };
     unifiedGraphPlugin = executorPlugin;
@@ -385,6 +395,7 @@ export function createGatewayRuntime<
     const subgraphInConfig = config.subgraph;
     let getSubschemaConfig$: MaybePromise<boolean> | undefined;
     let subschemaConfig: SubschemaConfig;
+    const transportExecutorStack = new AsyncDisposableStack();
     function getSubschemaConfig() {
       if (getSubschemaConfig$) {
         return getSubschemaConfig$;
@@ -413,7 +424,7 @@ export function createGatewayRuntime<
             getSubgraphSchema() {
               return unifiedGraph;
             },
-            transportExecutorStack: disposableStack,
+            transportExecutorStack,
           });
           subschemaConfig = handleFederationSubschema({
             subschemaConfig,
@@ -424,115 +435,148 @@ export function createGatewayRuntime<
           });
           // TODO: Find better alternative later
           unifiedGraph = wrapSchema(subschemaConfig);
+          const entities = Object.keys(subschemaConfig.merge || {});
+          let entitiesDef = 'union _Entity';
+          if (entities.length) {
+            entitiesDef += ` = ${entities.join(' | ')}`;
+          }
+          const additionalResolvers: IResolvers[] = asArray(
+            'additionalResolvers' in config ? config.additionalResolvers : [],
+          ).filter((r) => r != null);
+          const finalTypeDefs = handleResolveToDirectives(
+            parse(/* GraphQL */ `
+              type Query {
+                _entities(representations: [_Any!]!): [_Entity]!
+                _service: _Service!
+              }
+
+              scalar _Any
+              ${entitiesDef}
+              type _Service {
+                sdl: String
+              }
+            `),
+            additionalTypeDefs,
+            additionalResolvers,
+          );
+          additionalResolvers.push({
+            Query: {
+              _entities(_root, args, context, info) {
+                if (Array.isArray(args.representations)) {
+                  return args.representations.map((representation: any) => {
+                    const typeName = representation.__typename;
+                    const mergeConfig = subschemaConfig.merge?.[typeName];
+                    const entryPoints = mergeConfig?.entryPoints || [
+                      mergeConfig,
+                    ];
+                    const satisfiedEntryPoint = entryPoints.find(
+                      (entryPoint) => {
+                        if (entryPoint?.selectionSet) {
+                          const selectionSet = parseSelectionSet(
+                            entryPoint.selectionSet,
+                            {
+                              noLocation: true,
+                            },
+                          );
+                          return checkIfDataSatisfiesSelectionSet(
+                            selectionSet,
+                            representation,
+                          );
+                        }
+                        return true;
+                      },
+                    );
+                    if (satisfiedEntryPoint) {
+                      if (satisfiedEntryPoint.key) {
+                        return mapMaybePromise(
+                          batchDelegateToSchema({
+                            schema: subschemaConfig,
+                            ...(satisfiedEntryPoint.fieldName
+                              ? { fieldName: satisfiedEntryPoint.fieldName }
+                              : {}),
+                            key: satisfiedEntryPoint.key(representation),
+                            ...(satisfiedEntryPoint.argsFromKeys
+                              ? {
+                                  argsFromKeys:
+                                    satisfiedEntryPoint.argsFromKeys,
+                                }
+                              : {}),
+                            ...(satisfiedEntryPoint.valuesFromResults
+                              ? {
+                                  valuesFromResults:
+                                    satisfiedEntryPoint.valuesFromResults,
+                                }
+                              : {}),
+                            context,
+                            info,
+                          }),
+                          (res) => mergeDeep([representation, res]),
+                        );
+                      }
+                      if (satisfiedEntryPoint.args) {
+                        return mapMaybePromise(
+                          delegateToSchema({
+                            schema: subschemaConfig,
+                            ...(satisfiedEntryPoint.fieldName
+                              ? { fieldName: satisfiedEntryPoint.fieldName }
+                              : {}),
+                            args: satisfiedEntryPoint.args(representation),
+                            context,
+                            info,
+                          }),
+                          (res) => mergeDeep([representation, res]),
+                        );
+                      }
+                    }
+                    return representation;
+                  });
+                }
+                return [];
+              },
+              _service() {
+                return {
+                  sdl() {
+                    return getUnifiedGraphSDL(newUnifiedGraph);
+                  },
+                };
+              },
+            },
+          });
           unifiedGraph = mergeSchemas({
             assumeValid: true,
             assumeValidSDL: true,
             schemas: [unifiedGraph],
-            typeDefs: [
-              parse(/* GraphQL */ `
-                  type Query {
-                    _entities(representations: [_Any!]!): [_Entity]!
-                    _service: _Service!
-                  }
-
-                  scalar _Any
-                  union _Entity = ${Object.keys(subschemaConfig.merge || {}).join(' | ')}
-                  type _Service {
-                    sdl: String
-                  }
-              `),
-            ],
-            resolvers: {
-              Query: {
-                _entities(_root, args, context, info) {
-                  if (Array.isArray(args.representations)) {
-                    return args.representations.map((representation: any) => {
-                      const typeName = representation.__typename;
-                      const mergeConfig = subschemaConfig.merge?.[typeName];
-                      const entryPoints = mergeConfig?.entryPoints || [
-                        mergeConfig,
-                      ];
-                      const satisfiedEntryPoint = entryPoints.find(
-                        (entryPoint) => {
-                          if (entryPoint?.selectionSet) {
-                            const selectionSet = parseSelectionSet(
-                              entryPoint.selectionSet,
-                              {
-                                noLocation: true,
-                              },
-                            );
-                            return checkIfDataSatisfiesSelectionSet(
-                              selectionSet,
-                              representation,
-                            );
-                          }
-                          return true;
-                        },
-                      );
-                      if (satisfiedEntryPoint) {
-                        if (satisfiedEntryPoint.key) {
-                          return mapMaybePromise(
-                            batchDelegateToSchema({
-                              schema: subschemaConfig,
-                              ...(satisfiedEntryPoint.fieldName
-                                ? { fieldName: satisfiedEntryPoint.fieldName }
-                                : {}),
-                              key: satisfiedEntryPoint.key(representation),
-                              ...(satisfiedEntryPoint.argsFromKeys
-                                ? {
-                                    argsFromKeys:
-                                      satisfiedEntryPoint.argsFromKeys,
-                                  }
-                                : {}),
-                              ...(satisfiedEntryPoint.valuesFromResults
-                                ? {
-                                    valuesFromResults:
-                                      satisfiedEntryPoint.valuesFromResults,
-                                  }
-                                : {}),
-                              context,
-                              info,
-                            }),
-                            (res) => mergeDeep([representation, res]),
-                          );
-                        }
-                        if (satisfiedEntryPoint.args) {
-                          return mapMaybePromise(
-                            delegateToSchema({
-                              schema: subschemaConfig,
-                              ...(satisfiedEntryPoint.fieldName
-                                ? { fieldName: satisfiedEntryPoint.fieldName }
-                                : {}),
-                              args: satisfiedEntryPoint.args(representation),
-                              context,
-                              info,
-                            }),
-                            (res) => mergeDeep([representation, res]),
-                          );
-                        }
-                      }
-                      return representation;
-                    });
-                  }
-                  return [];
-                },
-                _service() {
-                  return {
-                    sdl() {
-                      return getUnifiedGraphSDL(newUnifiedGraph);
-                    },
-                  };
-                },
-              },
-            },
+            typeDefs: finalTypeDefs,
+            resolvers: additionalResolvers,
           });
+          contextBuilder = (base) =>
+            // @ts-expect-error - Typings are wrong in legacy Mesh
+            Object.assign(
+              // @ts-expect-error - Typings are wrong in legacy Mesh
+              base,
+              getInContextSDK(
+                unifiedGraph,
+                // @ts-expect-error - Typings are wrong in legacy Mesh
+                [subschemaConfig],
+                configContext.logger,
+                onDelegateHooks,
+              ),
+            );
           return true;
         },
       );
     }
     getSchema = () => mapMaybePromise(getSubschemaConfig(), () => unifiedGraph);
+    schemaInvalidator = () => {
+      getSubschemaConfig$ = undefined;
+    };
+    unifiedGraphPlugin = {
+      [DisposableSymbols.asyncDispose]() {
+        return transportExecutorStack.disposeAsync();
+      },
+    };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher!: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
+    let unifiedGraphFetcher: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
@@ -605,10 +649,11 @@ export function createGatewayRuntime<
             },
           );
       } else {
-        configContext.logger.error(
-          `Unknown supergraph configuration: `,
-          config.supergraph,
-        );
+        unifiedGraphFetcher = () => {
+          throw new Error(
+            `Unknown supergraph configuration: ${config.supergraph}`,
+          );
+        };
       }
     } else {
       // local or remote
@@ -649,6 +694,9 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
       onDelegationStageExecuteHooks,
+      ...(config.additionalTypeDefs
+        ? { additionalTypeDefs: config.additionalTypeDefs }
+        : {}),
       ...((config.additionalResolvers
         ? { additionalResolvers: config.additionalResolvers }
         : {}) as IResolvers),
@@ -675,7 +723,11 @@ export function createGatewayRuntime<
       );
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
-    disposableStack.use(unifiedGraphManager);
+    unifiedGraphPlugin = {
+      [DisposableSymbols.asyncDispose]() {
+        return unifiedGraphManager[DisposableSymbols.asyncDispose]();
+      },
+    };
     subgraphInformationHTMLRenderer = async () => {
       const htmlParts: string[] = [];
       let loaded = false;
@@ -772,9 +824,6 @@ export function createGatewayRuntime<
         if (plugin.onDelegationStageExecute) {
           onDelegationStageExecuteHooks.push(plugin.onDelegationStageExecute);
         }
-        if (isDisposable(plugin)) {
-          disposableStack.use(plugin);
-        }
       }
     },
   };
@@ -866,7 +915,7 @@ export function createGatewayRuntime<
     useChangingSchema(getSchema, (_setSchema) => {
       setSchema = _setSchema;
     }),
-    useCompleteSubscriptionsOnDispose(disposableStack),
+    useCompleteSubscriptionsOnDispose(),
     useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
     useSubgraphExecuteDebug(configContext),
@@ -915,6 +964,7 @@ export function createGatewayRuntime<
   if (config.disableIntrospection) {
     extraPlugins.push(
       useDisableIntrospection(
+        // @ts-expect-error - Should be fixed in the envelop plugin
         typeof config.disableIntrospection === 'object'
           ? config.disableIntrospection
           : {},
@@ -1006,11 +1056,7 @@ export function createGatewayRuntime<
     },
   });
 
-  yoga.disposableStack.use(disposableStack);
-
-  return makeAsyncDisposable(yoga, () =>
-    disposableStack.disposeAsync(),
-  ) as any as GatewayRuntime<TContext>;
+  return yoga as GatewayRuntime<TContext>;
 }
 
 function isDynamicUnifiedGraphSchema(

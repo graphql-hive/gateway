@@ -7,7 +7,11 @@ import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import { isAsyncIterable } from '@graphql-tools/utils';
+import {
+  fakePromise,
+  isAsyncIterable,
+  MaybePromise,
+} from '@graphql-tools/utils';
 import {
   context,
   diag,
@@ -22,7 +26,7 @@ import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type { OnRequestEventPayload } from '@whatwg-node/server';
+import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
   completeHttpSpan,
@@ -56,7 +60,7 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    *
    * Does not apply when `initializeNodeSDK` is `false`.
    */
-  exporters: SpanProcessor[];
+  exporters: MaybePromise<SpanProcessor>[];
   /**
    * Service name to use for OpenTelemetry NodeSDK resource option (default: 'Gateway').
    *
@@ -163,39 +167,47 @@ export function useOpenTelemetry(
   let serviceName: string = 'Gateway';
   let provider: WebTracerProvider;
 
+  let preparation$: Promise<void> | undefined;
+
   return {
     onYogaInit({ yoga }) {
-      if (
-        !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
-      ) {
-        if (options.serviceName) {
-          serviceName = options.serviceName;
+      preparation$ = fakePromise(undefined).then(async () => {
+        if (
+          !(
+            'initializeNodeSDK' in options &&
+            options.initializeNodeSDK === false
+          )
+        ) {
+          if (options.serviceName) {
+            serviceName = options.serviceName;
+          }
+          if (options.exporters) {
+            spanProcessors = await Promise.all(options.exporters);
+          }
+          const webProvider = new WebTracerProvider({
+            resource: new Resource({
+              [SEMRESATTRS_SERVICE_NAME]: serviceName,
+              [ATTR_SERVICE_VERSION]: yoga.version,
+            }),
+            spanProcessors,
+          });
+          webProvider.register();
+          provider = webProvider;
         }
-        if (options.exporters) {
-          spanProcessors = options.exporters;
-        }
-        const webProvider = new WebTracerProvider({
-          resource: new Resource({
-            [SEMRESATTRS_SERVICE_NAME]: serviceName,
-            [ATTR_SERVICE_VERSION]: yoga.version,
-          }),
-          spanProcessors,
-        });
-        webProvider.register();
-        provider = webProvider;
-      }
-      const pluginLogger = options.logger.child('OpenTelemetry');
-      diag.setLogger(
-        {
-          error: (message, ...args) => pluginLogger.error(message, ...args),
-          warn: (message, ...args) => pluginLogger.warn(message, ...args),
-          info: (message, ...args) => pluginLogger.info(message, ...args),
-          debug: (message, ...args) => pluginLogger.debug(message, ...args),
-          verbose: (message, ...args) => pluginLogger.debug(message, ...args),
-        },
-        DiagLogLevel.VERBOSE,
-      );
-      tracer = options.tracer || trace.getTracer('gateway');
+        const pluginLogger = options.logger.child('OpenTelemetry');
+        diag.setLogger(
+          {
+            error: (message, ...args) => pluginLogger.error(message, ...args),
+            warn: (message, ...args) => pluginLogger.warn(message, ...args),
+            info: (message, ...args) => pluginLogger.info(message, ...args),
+            debug: (message, ...args) => pluginLogger.debug(message, ...args),
+            verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+          },
+          DiagLogLevel.VERBOSE,
+        );
+        tracer = options.tracer || trace.getTracer('gateway');
+        preparation$ = undefined;
+      });
     },
     onContextBuilding({ extendContext, context }) {
       extendContext({
@@ -213,7 +225,7 @@ export function useOpenTelemetry(
           : (options.spans?.http ?? true);
 
       if (!shouldTraceHttp) {
-        return;
+        return preparation$;
       }
 
       const { request, url } = onRequestPayload;
@@ -233,6 +245,8 @@ export function useOpenTelemetry(
       });
 
       requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
+
+      return preparation$;
     },
     onValidate(onValidatePayload) {
       const shouldTraceValidate =

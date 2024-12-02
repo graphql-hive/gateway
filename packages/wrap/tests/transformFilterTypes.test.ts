@@ -1,6 +1,6 @@
 import { assertSome } from '@graphql-tools/utils';
 import { FilterTypes, wrapSchema } from '@graphql-tools/wrap';
-import { bookingSchema } from '@internal/testing/fixtures/schemas.js';
+import { bookingSchema } from '@internal/testing/fixtures/schemas';
 import { graphql, GraphQLNamedType, GraphQLSchema } from 'graphql';
 import { beforeAll, describe, expect, test } from 'vitest';
 

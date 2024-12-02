@@ -1,4 +1,9 @@
-import type { Logger, MeshFetch, MeshPubSub } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  MeshFetch,
+  MeshPubSub,
+} from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
 import type { GraphQLSchema } from 'graphql';
 
@@ -23,6 +28,7 @@ export interface TransportContext {
   pubsub?: MeshPubSub;
   logger?: Logger;
   cwd?: string;
+  cache?: KeyValueCache;
 }
 
 export interface TransportGetSubgraphExecutorOptions<

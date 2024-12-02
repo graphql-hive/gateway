@@ -5,7 +5,7 @@ import {
   RenameRootTypes,
   wrapSchema,
 } from '@graphql-tools/wrap';
-import { propertySchema } from '@internal/testing/fixtures/schemas.js';
+import { propertySchema } from '@internal/testing/fixtures/schemas';
 import { assertValidSchema, graphql } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 import { stitchSchemas } from '../src/stitchSchemas.js';

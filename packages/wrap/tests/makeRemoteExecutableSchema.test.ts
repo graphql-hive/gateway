@@ -6,7 +6,7 @@ import {
   subscriptionPubSub,
   subscriptionPubSubTrigger,
   subscriptionSchema,
-} from '@internal/testing/fixtures/schemas.js';
+} from '@internal/testing/fixtures/schemas';
 import { buildSchema, graphql, GraphQLSchema, parse, print } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it, test } from 'vitest';
 import { wrapSchema } from '../src/index.js';

@@ -5,6 +5,7 @@ import {
   Executor,
   inspect,
   isAsyncIterable,
+  mapMaybePromise,
   MaybePromise,
   SyncExecutor,
 } from '@graphql-tools/utils';
@@ -17,7 +18,6 @@ import {
   parse,
   ParseOptions,
 } from 'graphql';
-import { ValueOrPromise } from 'value-or-promise';
 
 function getSchemaFromIntrospection(
   introspectionResult: ExecutionResult<IntrospectionQuery>,
@@ -74,19 +74,20 @@ export function schemaFromExecutor(
     getIntrospectionQuery(options as any),
     options,
   );
-  return new ValueOrPromise(() =>
-    executor({
-      document: parsedIntrospectionQuery,
-      context,
-    }),
-  )
-    .then((introspection) => {
-      if (isAsyncIterable(introspection)) {
-        const iterator = introspection[Symbol.asyncIterator]();
-        return iterator.next().then(({ value }) => value);
-      }
-      return introspection;
-    })
-    .then((introspection) => getSchemaFromIntrospection(introspection, options))
-    .resolve();
+  return mapMaybePromise(
+    mapMaybePromise(
+      executor({
+        document: parsedIntrospectionQuery,
+        context,
+      }),
+      (introspection) => {
+        if (isAsyncIterable(introspection)) {
+          const iterator = introspection[Symbol.asyncIterator]();
+          return iterator.next().then(({ value }) => value);
+        }
+        return introspection;
+      },
+    ),
+    (introspection) => getSchemaFromIntrospection(introspection, options),
+  );
 }

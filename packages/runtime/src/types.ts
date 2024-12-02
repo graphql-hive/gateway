@@ -1,5 +1,4 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
-import type { DisableIntrospectionOptions } from '@envelop/disable-introspection';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
   TransportEntryAdditions,
@@ -18,10 +17,14 @@ import type {
 } from '@graphql-mesh/types';
 import type { LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
-import type { IResolvers } from '@graphql-tools/utils';
+import type {
+  IResolvers,
+  TypeSource,
+  ValidationRule,
+} from '@graphql-tools/utils';
 import type { CSRFPreventionPluginOptions } from '@graphql-yoga/plugin-csrf-prevention';
 import type { UsePersistedOperationsOptions } from '@graphql-yoga/plugin-persisted-operations';
-import type { DocumentNode, GraphQLSchema } from 'graphql';
+import type { DocumentNode, GraphQLSchema, TypeInfo } from 'graphql';
 import type {
   BatchingOptions,
   FetchAPI,
@@ -102,6 +105,8 @@ export interface GatewayConfigSupergraph<
     | GatewayGraphOSManagedFederationOptions;
   /**
    * GraphQL schema polling interval in milliseconds when the {@link supergraph} is an URL.
+   *
+   * If {@link cache} is provided, the fetched {@link supergraph} will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
 }
@@ -117,6 +122,10 @@ export interface GatewayConfigSubgraph<
 
 interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
   extends GatewayConfigBase<TContext> {
+  /**
+   * Additional GraphQL schema type definitions.
+   */
+  additionalTypeDefs?: TypeSource;
   /**
    * Additional GraphQL schema resolvers.
    */
@@ -366,6 +375,11 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default true
    */
   maskedErrors?: boolean | Partial<YogaMaskedErrorOpts>;
+  /**
+   * Cache storage interface for various operations that can get cached.
+   *
+   * For example, the fetched {@link supergraph} will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
+   */
   cache?: KeyValueCache;
   pubsub?: MeshPubSub;
   /**
@@ -497,4 +511,34 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Header Propagation
    */
   propagateHeaders?: PropagateHeadersOpts;
+}
+
+interface DisableIntrospectionOptions {
+  disableIf?: (args: {
+    context: GatewayContext;
+    params: ValidateFunctionParameters;
+  }) => boolean;
+}
+
+interface ValidateFunctionParameters {
+  /**
+   * GraphQL schema instance.
+   */
+  schema: GraphQLSchema;
+  /**
+   * Parsed document node.
+   */
+  documentAST: DocumentNode;
+  /**
+   * The rules used for validation.
+   * validate uses specifiedRules as exported by the GraphQL module if this parameter is undefined.
+   */
+  rules?: ValidationRule[];
+  /**
+   * TypeInfo instance which is used for getting schema information during validation
+   */
+  typeInfo?: TypeInfo;
+  options?: {
+    maxErrors?: number;
+  };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/transport-common",
-  "version": "0.7.15",
+  "version": "0.7.17",
   "type": "module",
   "repository": {
     "type": "git",
@@ -43,15 +43,15 @@
   },
   "dependencies": {
     "@envelop/core": "^5.0.1",
-    "@graphql-mesh/types": "^0.103.0",
+    "@graphql-mesh/types": "^0.103.4",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/utils": "^10.6.0",
     "tslib": "^2.4.0"
   },
   "devDependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.8",
-    "@graphql-mesh/store": "^0.103.0",
-    "@graphql-mesh/utils": "^0.103.1",
+    "@graphql-mesh/store": "^0.103.4",
+    "@graphql-mesh/utils": "^0.103.4",
     "graphql": "^16.9.0",
     "pkgroll": "2.5.1"
   },

@@ -1,10 +1,17 @@
 {
   "name": "@internal/testing",
   "private": true,
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures/schemas": "./fixtures/schemas.ts",
+    "./to-be-similar-string": "./src/to-be-similar-string.ts",
+    "./to-be-similar-gql-doc": "./src/to-be-similar-gql-doc.ts"
+  },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@whatwg-node/disposablestack": "^0.0.5",
-    "@whatwg-node/fetch": "^0.10.0",
+    "@whatwg-node/fetch": "^0.10.1",
     "jest-leak-detector": "29.7.0"
   }
 }

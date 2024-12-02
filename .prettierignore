@@ -1,4 +1,5 @@
-.yarn/
+.yarn/*
+!.yarn/custom-plugins
 Dockerfile
 packages/runtime/src/landing-page-html.ts
 __generated__

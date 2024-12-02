@@ -22,8 +22,13 @@
         "!/@whatwg-node/*/",
         "!/graphql-jit/",
         "!/opentelemetry/",
+        "!/graphql-mesh/",
         "*"
       ]
+    },
+    {
+      "groupName": "all graphql-mesh dependencies",
+      "matchPackageNames": ["/graphql-mesh/", "/omnigraph/"]
     }
   ]
 }

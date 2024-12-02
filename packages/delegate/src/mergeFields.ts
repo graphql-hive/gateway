@@ -65,8 +65,8 @@ export function getUnpathedErrors(object: ExternalObject): Array<GraphQLError> {
   return object[UNPATHED_ERRORS_SYMBOL];
 }
 
-const EMPTY_ARRAY: any[] = [];
-const EMPTY_OBJECT = Object.create(null);
+export const EMPTY_ARRAY: any[] = [];
+export const EMPTY_OBJECT = Object.create(null);
 
 export const getActualFieldNodes = memoize1(function (fieldNode: FieldNode) {
   return [fieldNode];
@@ -184,6 +184,7 @@ export function handleResolverResult(
       if (
         existingPropValue != null &&
         typeof existingPropValue === 'object' &&
+        !(existingPropValue instanceof Error) &&
         Object.keys(existingPropValue).length > 0
       ) {
         if (
@@ -250,8 +251,8 @@ function executeDelegationStage(
         );
         if (isPromise(resolverResult$)) {
           jobs.push(
-            (
-              resolverResult$.then((resolverResult) =>
+            resolverResult$.then(
+              (resolverResult) =>
                 handleResolverResult(
                   resolverResult,
                   subschema,
@@ -262,19 +263,18 @@ function executeDelegationStage(
                   path,
                   combinedErrors,
                 ),
-              ) as Promise<any>
-            ).catch((error) =>
-              handleResolverResult(
-                error,
-                subschema,
-                selectionSet,
-                object,
-                combinedFieldSubschemaMap,
-                info,
-                path,
-                combinedErrors,
-              ),
-            ) as any,
+              (error) =>
+                handleResolverResult(
+                  error,
+                  subschema,
+                  selectionSet,
+                  object,
+                  combinedFieldSubschemaMap,
+                  info,
+                  path,
+                  combinedErrors,
+                ),
+            ),
           );
         } else {
           handleResolverResult(

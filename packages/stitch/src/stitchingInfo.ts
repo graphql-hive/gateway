@@ -10,6 +10,7 @@ import {
   IFieldResolverOptions,
   IResolvers,
   isSome,
+  mapMaybePromise,
   parseSelectionSet,
 } from '@graphql-tools/utils';
 import {
@@ -29,7 +30,6 @@ import {
   print,
   SelectionSetNode,
 } from 'graphql';
-import { ValueOrPromise } from 'value-or-promise';
 import { createDelegationPlanBuilder } from './createDelegationPlanBuilder.js';
 import { createMergedTypeResolver } from './createMergedTypeResolver.js';
 import { MergeTypeCandidate, MergeTypeFilter } from './types.js';
@@ -209,19 +209,17 @@ function createMergedTypes<
                   selectionSet,
                   type,
                 ) {
-                  return new ValueOrPromise(() => keyFn(originalResult))
-                    .then((key) =>
-                      resolver(
-                        originalResult,
-                        context,
-                        info,
-                        subschema,
-                        selectionSet,
-                        key,
-                        type,
-                      ),
-                    )
-                    .resolve();
+                  return mapMaybePromise(keyFn(originalResult), (key) =>
+                    resolver(
+                      originalResult,
+                      context,
+                      info,
+                      subschema,
+                      selectionSet,
+                      key,
+                      type,
+                    ),
+                  );
                 }
               : resolver,
           );

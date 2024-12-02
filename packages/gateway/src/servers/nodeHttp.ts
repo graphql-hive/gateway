@@ -3,7 +3,7 @@ import { createServer as createHTTPServer, type Server } from 'node:http';
 import { createServer as createHTTPSServer } from 'node:https';
 import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { createAsyncDisposable } from '@graphql-mesh/utils';
+import type { Extra } from 'graphql-ws/lib/use/ws';
 import { defaultOptions } from '../cli';
 import { getGraphQLWSOptions } from './graphqlWs';
 import type { ServerForRuntimeOptions } from './types';
@@ -11,7 +11,7 @@ import type { ServerForRuntimeOptions } from './types';
 export async function startNodeHttpServer<TContext extends Record<string, any>>(
   gwRuntime: GatewayRuntime<TContext>,
   opts: ServerForRuntimeOptions,
-): Promise<AsyncDisposable> {
+): Promise<void> {
   const {
     log,
     host = defaultOptions.host,
@@ -84,26 +84,45 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     });
     const { useServer } = await import('graphql-ws/lib/use/ws');
 
-    useServer(getGraphQLWSOptions(gwRuntime), wsServer);
+    useServer(
+      getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
+        req: ctx.extra?.request,
+        socket: ctx.extra?.socket,
+      })),
+      wsServer,
+    );
+
+    gwRuntime.disposableStack.defer(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          log.info(`Stopping the WebSocket server`);
+          wsServer.close((err) => {
+            if (err) {
+              return reject(err);
+            }
+            log.info(`Stopped the WebSocket server successfully`);
+            return resolve();
+          });
+        }),
+    );
   }
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => {
       log.info(`Listening on ${url}`);
-      resolve(
-        createAsyncDisposable(
-          () =>
-            new Promise<void>((resolve) => {
-              process.stderr.write('\n');
-              log.info(`Stopping the server`);
-              server.closeAllConnections();
-              server.close(() => {
-                log.info(`Stopped the server successfully`);
-                resolve();
-              });
-            }),
-        ),
+      gwRuntime.disposableStack.defer(
+        () =>
+          new Promise<void>((resolve) => {
+            process.stderr.write('\n');
+            log.info(`Stopping the server`);
+            server.closeAllConnections();
+            server.close(() => {
+              log.info(`Stopped the server successfully`);
+              return resolve();
+            });
+          }),
       );
+      return resolve();
     });
   });
 }

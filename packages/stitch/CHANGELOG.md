@@ -1,5 +1,37 @@
 # @graphql-tools/stitch
 
+## 9.4.3
+
+### Patch Changes
+
+- [#205](https://github.com/graphql-hive/gateway/pull/205) [`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a) Thanks [@ardatan](https://github.com/ardatan)! - Fix missing key fields in the nested queries
+
+- Updated dependencies [[`2e0add3`](https://github.com/graphql-hive/gateway/commit/2e0add3ea9b237ad385d5b5cd4c12eeeb847805a)]:
+  - @graphql-tools/delegate@10.2.2
+  - @graphql-tools/batch-delegate@9.0.18
+  - @graphql-tools/wrap@10.0.20
+
+## 9.4.2
+
+### Patch Changes
+
+- [#164](https://github.com/graphql-hive/gateway/pull/164) [`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.6.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.0) (from `^10.5.6`, in `dependencies`)
+
+- [#185](https://github.com/graphql-hive/gateway/pull/185) [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`value-or-promise@^1.0.11` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.11) (from `dependencies`)
+
+- [#188](https://github.com/graphql-hive/gateway/pull/188) [`f71366d`](https://github.com/graphql-hive/gateway/commit/f71366d234fe8f30a419814fe1460f1e22663241) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`value-or-promise@^1.0.11` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.11) (from `dependencies`)
+
+- Updated dependencies [[`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf), [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b), [`f71366d`](https://github.com/graphql-hive/gateway/commit/f71366d234fe8f30a419814fe1460f1e22663241), [`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf), [`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf), [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b), [`f71366d`](https://github.com/graphql-hive/gateway/commit/f71366d234fe8f30a419814fe1460f1e22663241)]:
+  - @graphql-tools/batch-delegate@9.0.17
+  - @graphql-tools/delegate@10.2.1
+  - @graphql-tools/wrap@10.0.19
+
 ## 9.4.1
 
 ### Patch Changes

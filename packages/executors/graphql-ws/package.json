@@ -1,11 +1,11 @@
 {
   "name": "@graphql-tools/executor-graphql-ws",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
     "type": "git",
-    "url": "graphql-hive/gateway",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
     "directory": "packages/executors/graphql-ws"
   },
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
