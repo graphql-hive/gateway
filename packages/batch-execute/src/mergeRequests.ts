@@ -142,12 +142,19 @@ function prefixRequest(
   let prefixedDocument = aliasTopLevelFields(prefix, request.document);
 
   const executionVariableNames = Object.keys(executionVariables);
-  const hasFragmentDefinitions = request.document.definitions.some((def) =>
-    isFragmentDefinition(def),
-  );
+  let hasFragmentDefinitions = false;
+  let hasVariables = false;
+
+  for (const def of prefixedDocument.definitions) {
+    if (isFragmentDefinition(def)) {
+      hasFragmentDefinitions = true;
+    } else if (isOperationDefinition(def)) {
+      hasVariables = !!def.variableDefinitions?.length;
+    }
+  }
   const fragmentSpreadImpl: Record<string, boolean> = {};
 
-  if (executionVariableNames.length > 0 || hasFragmentDefinitions) {
+  if (hasVariables || hasFragmentDefinitions) {
     prefixedDocument = visit(prefixedDocument, {
       [Kind.VARIABLE]: prefixNode,
       [Kind.FRAGMENT_DEFINITION]: prefixNode,
