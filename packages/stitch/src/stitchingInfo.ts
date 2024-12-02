@@ -133,6 +133,10 @@ function createMergedTypes<
           Subschema<any, any, any, TContext>,
           MergedTypeResolver<TContext>
         > = new Map();
+        const providedSelectionsByField = new Map<
+          Subschema<any, any, any, TContext>,
+          Record<string, SelectionSetNode>
+        >();
 
         for (const typeCandidate of typeCandidatesOfTypeName) {
           const subschema = typeCandidate.transformedSubschema;
@@ -179,6 +183,22 @@ function createMergedTypes<
                       noLocation: true,
                     })
                   : undefined;
+              }
+              if (mergedTypeConfig.fields[fieldName]?.provides) {
+                let providedSelectionsForSubschema =
+                  providedSelectionsByField.get(subschema);
+                if (providedSelectionsForSubschema == null) {
+                  providedSelectionsForSubschema = Object.create({}) as Record<
+                    string,
+                    SelectionSetNode
+                  >;
+                  providedSelectionsByField.set(
+                    subschema,
+                    providedSelectionsForSubschema,
+                  );
+                }
+                providedSelectionsForSubschema[fieldName] =
+                  mergedTypeConfig.fields[fieldName].provides;
               }
             }
             fieldSelectionSets.set(subschema, parsedFieldSelectionSets);
@@ -272,6 +292,7 @@ function createMergedTypes<
           uniqueFields: Object.create({}),
           nonUniqueFields: Object.create({}),
           resolvers,
+          providedSelectionsByField,
         } as MergedTypeInfo<TContext>;
 
         mergedTypes[typeName] = mergedTypeConfig;

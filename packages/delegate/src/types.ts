@@ -147,6 +147,10 @@ export interface MergedTypeInfo<TContext = Record<string, any>> {
     Subschema<any, any, any, TContext>,
     MergedTypeResolver<TContext>
   >;
+  providedSelectionsByField: Map<
+    Subschema<any, any, any, TContext>,
+    Record<string, SelectionSetNode>
+  >;
   delegationPlanBuilder: DelegationPlanBuilder;
   nonMemoizedDelegationPlanBuilder: DelegationPlanBuilder;
 }
@@ -220,6 +224,7 @@ export interface MergedFieldConfig {
   selectionSet?: string;
   computed?: boolean;
   canonical?: boolean;
+  provides?: SelectionSetNode;
 }
 
 export type MergedTypeResolver<TContext = Record<string, any>> = (
