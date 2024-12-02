@@ -1,5 +1,16 @@
 # @graphql-tools/federation
 
+## 2.2.33
+
+### Patch Changes
+
+- [#231](https://github.com/graphql-hive/gateway/pull/231) [`7ca0ff3`](https://github.com/graphql-hive/gateway/commit/7ca0ff331e42c133c4218a8086bbf0a7607f45d0) Thanks [@ardatan](https://github.com/ardatan)! - Avoid extensions and use \`stitchingInfo\` for provided fields
+
+- Updated dependencies [[`7ca0ff3`](https://github.com/graphql-hive/gateway/commit/7ca0ff331e42c133c4218a8086bbf0a7607f45d0)]:
+  - @graphql-tools/delegate@10.2.3
+  - @graphql-tools/stitch@9.4.4
+  - @graphql-tools/wrap@10.0.21
+
 ## 2.2.32
 
 ### Patch Changes

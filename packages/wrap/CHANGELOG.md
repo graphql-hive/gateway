@@ -1,5 +1,12 @@
 # @graphql-tools/wrap
 
+## 10.0.21
+
+### Patch Changes
+
+- Updated dependencies [[`7ca0ff3`](https://github.com/graphql-hive/gateway/commit/7ca0ff331e42c133c4218a8086bbf0a7607f45d0)]:
+  - @graphql-tools/delegate@10.2.3
+
 ## 10.0.20
 
 ### Patch Changes
