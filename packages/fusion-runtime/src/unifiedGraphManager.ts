@@ -223,8 +223,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           const ttl = this.opts.pollingInterval
             ? this.opts.pollingInterval * 0.001
             : // if no polling interval (cache TTL) is configured, default to
-              // 30 seconds making sure the unifiedgraph is not kept forever
-              30;
+              // 60 seconds making sure the unifiedgraph is not kept forever
+              // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
+              60;
           this.opts.transportContext.logger?.debug(
             `Caching Unified Graph with TTL ${ttl}s`,
           );
@@ -251,8 +252,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           );
         }
       }
-    } else {
-      this.opts.transportContext?.logger?.debug('No Unified Graph to cache');
     }
     return mapMaybePromise(
       this._transportExecutorStack?.disposeAsync?.(),
