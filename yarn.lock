@@ -3503,6 +3503,7 @@ __metadata:
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
+    appdynamics: ^24.10.0
     graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
   linkType: soft
