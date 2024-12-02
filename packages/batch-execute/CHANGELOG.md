@@ -1,5 +1,48 @@
 # @graphql-tools/batch-execute
 
+## 9.0.8
+
+### Patch Changes
+
+- [#243](https://github.com/graphql-hive/gateway/pull/243) [`e53d4af`](https://github.com/graphql-hive/gateway/commit/e53d4af783f9d703dea4d5e703be0dddaa337534) Thanks [@ardatan](https://github.com/ardatan)! - Fix the issue that batched query generation when optional variables are not prefixed and sent correctly.
+
+  See the use case below;
+
+  When two batched queries are sent like below;
+
+  ```graphql
+  query TestOne($someOptionalVar: String) {
+    foo(someOptionalArg: $someOptionalVar) {
+      id
+      name
+    }
+  }
+  ```
+
+  ```graphql
+  query TestTwo($someOptionalVar: String) {
+    foo(someOptionalArg: $someOptionalVar) {
+      id
+      name
+    }
+  }
+  ```
+
+  And then `someOptionalVar` is not prefixed if the value is not sent by the user. The batched queries will be sent as below, then it will cause issues.
+
+  ```graphql
+  query TestOneTwo($someOptionalVar: String, $someOptionalVar: String) {
+    _0_foo: foo(someOptionalArg: $someOptionalVar) {
+      id
+      name
+    }
+    _1_foo: foo(someOptionalArg: $someOptionalVar) {
+      id
+      name
+    }
+  }
+  ```
+
 ## 9.0.7
 
 ### Patch Changes

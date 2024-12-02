@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-common
 
+## 0.7.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@10.2.4
+
 ## 0.7.18
 
 ### Patch Changes
