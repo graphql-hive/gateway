@@ -131,8 +131,6 @@ function prefixRequest(
   prefix: string,
   request: ExecutionRequest,
 ): ExecutionRequest {
-  const executionVariables = request.variables ?? {};
-
   function prefixNode(
     node: VariableNode | FragmentDefinitionNode | FragmentSpreadNode,
   ) {
@@ -141,43 +139,49 @@ function prefixRequest(
 
   let prefixedDocument = aliasTopLevelFields(prefix, request.document);
 
-  const executionVariableNames = Object.keys(executionVariables);
-  let hasFragmentDefinitions = false;
-  let hasVariables = false;
+  let hasFragmentDefinitionsOrVariables = false;
 
   for (const def of prefixedDocument.definitions) {
-    if (isFragmentDefinition(def)) {
-      hasFragmentDefinitions = true;
-    } else if (isOperationDefinition(def)) {
-      hasVariables = !!def.variableDefinitions?.length;
+    if (
+      isFragmentDefinition(def) ||
+      (isOperationDefinition(def) && !!def.variableDefinitions?.length)
+    ) {
+      hasFragmentDefinitionsOrVariables = true;
+      break;
     }
   }
   const fragmentSpreadImpl: Record<string, boolean> = {};
 
-  if (hasVariables || hasFragmentDefinitions) {
+  let hasFragments = false;
+  if (hasFragmentDefinitionsOrVariables) {
     prefixedDocument = visit(prefixedDocument, {
       [Kind.VARIABLE]: prefixNode,
-      [Kind.FRAGMENT_DEFINITION]: prefixNode,
+      [Kind.FRAGMENT_DEFINITION](node) {
+        hasFragments = true;
+        return prefixNode(node);
+      },
       [Kind.FRAGMENT_SPREAD]: (node) => {
         node = prefixNodeName(node, prefix);
         fragmentSpreadImpl[node.name.value] = true;
         return node;
       },
-    }) as DocumentNode;
+    });
   }
 
-  const prefixedVariables: Record<string, any> = {};
+  let prefixedVariables: typeof executionVariables;
+  const executionVariables = request.variables;
 
-  for (const variableName of executionVariableNames) {
-    prefixedVariables[prefix + variableName] = executionVariables[variableName];
+  if (executionVariables) {
+    prefixedVariables = Object.create(null);
+    for (const variableName in executionVariables) {
+      prefixedVariables[prefix + variableName] = executionVariables[variableName];
+    }
   }
 
-  if (hasFragmentDefinitions) {
+  if (hasFragments) {
     prefixedDocument = {
       ...prefixedDocument,
-      definitions: prefixedDocument.definitions.filter((def) => {
-        return !isFragmentDefinition(def) || fragmentSpreadImpl[def.name.value];
-      }),
+      definitions: prefixedDocument.definitions.filter((def) => !isFragmentDefinition(def) || fragmentSpreadImpl[def.name.value]),
     };
   }
 
@@ -210,7 +214,7 @@ function aliasTopLevelFields(
   };
   return visit(document, transformer, {
     [Kind.DOCUMENT]: [`definitions`],
-  } as any);
+  });
 }
 
 /**
