@@ -1,5 +1,12 @@
 # @graphql-mesh/hmac-upstream-signature
 
+## 1.2.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@0.7.19
+
 ## 1.2.11
 
 ### Patch Changes
