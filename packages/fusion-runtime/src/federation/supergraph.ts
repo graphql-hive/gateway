@@ -24,7 +24,6 @@ import {
   type GraphQLSchema,
   type ObjectTypeDefinitionNode,
 } from 'graphql';
-import { filterHiddenPartsInSchema } from '../filterHiddenPartsInSchema';
 import type { UnifiedGraphHandler } from '../unifiedGraphManager';
 import { wrapMergedTypeResolver } from '../utils';
 import { handleFederationSubschema } from './subgraph';
@@ -263,9 +262,6 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       });
     },
   });
-
-  // Filter hidden elements with @hidden directive
-  executableUnifiedGraph = filterHiddenPartsInSchema(executableUnifiedGraph);
 
   if (transportEntryAdditions) {
     const wildcardTransportOptions = transportEntryAdditions['*'];

@@ -177,34 +177,19 @@ export function getCacheKeyFnFromKey(key: string) {
   });
 }
 
-const internalTypeNames = [
-  '_Entity',
-  '_Any',
-  '_FieldSet',
-  '_Service',
-  'link',
-  'inaccessible',
-];
-
 export function filterInternalFieldsAndTypes(finalSchema: GraphQLSchema) {
+  const internalTypeNameRegexp =
+    /^(?:_Entity|_Any|_FieldSet|_Service|link|inaccessible|(?:link__|join__|core__)[\w]*)$/;
   return mapSchema(finalSchema, {
     [MapperKind.DIRECTIVE]: (directive) => {
-      if (
-        internalTypeNames.includes(directive.name) ||
-        directive.name.startsWith('link__') ||
-        directive.name.startsWith('join__') ||
-        directive.name.startsWith('core__')
-      ) {
+      if (internalTypeNameRegexp.test(directive.name)) {
         return null;
       }
       return directive;
     },
     [MapperKind.TYPE]: (type) => {
       if (
-        internalTypeNames.includes(type.name) ||
-        type.name.startsWith('link__') ||
-        type.name.startsWith('join__') ||
-        type.name.startsWith('core__') ||
+        internalTypeNameRegexp.test(type.name) ||
         type.astNode?.directives?.some((d) => d.name.value === 'inaccessible')
       ) {
         return null;
