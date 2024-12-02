@@ -10,3 +10,4 @@ tsconfig.tsbuildinfo
 sea-prep.blob
 hive-gateway
 .cache/
+e2e/cloudflare-workers/src/supergraph.ts
