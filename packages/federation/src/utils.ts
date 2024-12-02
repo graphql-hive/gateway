@@ -1,4 +1,6 @@
 import {
+  DirectableObject,
+  getDirectiveExtensions,
   MapperKind,
   mapSchema,
   memoize1,
@@ -177,72 +179,48 @@ export function getCacheKeyFnFromKey(key: string) {
   });
 }
 
-const internalTypeNames = [
-  '_Entity',
-  '_Any',
-  '_FieldSet',
-  '_Service',
-  'link',
-  'inaccessible',
-];
+function hasInaccessible(obj: DirectableObject) {
+  return getDirectiveExtensions<{
+    inaccessible: {};
+  }>(obj)?.inaccessible?.length;
+}
 
 export function filterInternalFieldsAndTypes(finalSchema: GraphQLSchema) {
+  const internalTypeNameRegexp =
+    /^(?:_Entity|_Any|_FieldSet|_Service|link|inaccessible|(?:link__|join__|core__)[\w]*)$/;
   return mapSchema(finalSchema, {
     [MapperKind.DIRECTIVE]: (directive) => {
-      if (
-        internalTypeNames.includes(directive.name) ||
-        directive.name.startsWith('link__') ||
-        directive.name.startsWith('join__') ||
-        directive.name.startsWith('core__')
-      ) {
+      if (internalTypeNameRegexp.test(directive.name)) {
         return null;
       }
       return directive;
     },
     [MapperKind.TYPE]: (type) => {
-      if (
-        internalTypeNames.includes(type.name) ||
-        type.name.startsWith('link__') ||
-        type.name.startsWith('join__') ||
-        type.name.startsWith('core__') ||
-        type.astNode?.directives?.some((d) => d.name.value === 'inaccessible')
-      ) {
+      if (internalTypeNameRegexp.test(type.name) || hasInaccessible(type)) {
         return null;
       }
       return type;
     },
-    [MapperKind.COMPOSITE_FIELD]: (fieldConfig) => {
-      if (
-        fieldConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+    [MapperKind.FIELD]: (fieldConfig) => {
+      if (hasInaccessible(fieldConfig)) {
         return null;
       }
       return fieldConfig;
     },
     [MapperKind.QUERY_ROOT_FIELD]: (fieldConfig, fieldName) => {
-      if (fieldName === '_entities') {
+      if (fieldName === '_entities' || hasInaccessible(fieldConfig)) {
         return null;
       }
       return fieldConfig;
     },
     [MapperKind.ENUM_VALUE]: (valueConfig) => {
-      if (
-        valueConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+      if (hasInaccessible(valueConfig)) {
         return null;
       }
       return valueConfig;
     },
     [MapperKind.ARGUMENT]: (argConfig) => {
-      if (
-        argConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+      if (hasInaccessible(argConfig)) {
         return null;
       }
       return argConfig;
