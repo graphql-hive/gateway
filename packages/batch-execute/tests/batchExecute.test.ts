@@ -132,6 +132,22 @@ describe('batch execution', () => {
     expect(executorCalls).toEqual(1);
   });
 
+  it('renames input variable definitions even if no variables passed', async () => {
+    const [first, second] = (await Promise.all([
+      batchExec({
+        document: parse('query($a: String = \"1\"){ field3(input: $a) }'),
+      }),
+      batchExec({
+        document: parse('query($a: String = \"2\"){ field3(input: $a) }'),
+      }),
+    ])) as ExecutionResult[];
+
+    expect(first?.data).toEqual({ field3: '1' });
+    expect(second?.data).toEqual({ field3: '2' });
+    expect(executorVariables).toEqual({});
+    expect(executorCalls).toEqual(1);
+  });
+
   it('renames fields within inline spreads', async () => {
     const [first, second] = (await Promise.all([
       batchExec({ document: parse('{ ...on Query { field1 } }') }),
