@@ -280,7 +280,7 @@ describe('Gateway Runtime', () => {
         'type Query @join__type(graph: UPSTREAM)',
       );
       expect(cache.set.mock.lastCall?.[2]).toEqual({
-        ttl: 30, // default ttl is 30s
+        ttl: 60, // default ttl is 60s
       });
     });
 
