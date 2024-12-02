@@ -196,10 +196,7 @@ export function filterInternalFieldsAndTypes(finalSchema: GraphQLSchema) {
       return directive;
     },
     [MapperKind.TYPE]: (type) => {
-      if (
-        internalTypeNameRegexp.test(type.name) ||
-        hasInaccessible(type)
-      ) {
+      if (internalTypeNameRegexp.test(type.name) || hasInaccessible(type)) {
         return null;
       }
       return type;
