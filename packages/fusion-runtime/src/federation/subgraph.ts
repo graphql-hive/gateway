@@ -353,7 +353,7 @@ export function handleFederationSubschema({
           kind: Kind.DOCUMENT,
           definitions: [
             {
-              kind: Kind.OBJECT_TYPE_DEFINITION,
+              kind: Kind.INTERFACE_TYPE_DEFINITION,
               name: { kind: Kind.NAME, value: typeName },
               fields: [astFromField(field, schema)],
             },
