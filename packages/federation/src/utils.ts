@@ -1,4 +1,6 @@
 import {
+  DirectableObject,
+  getDirectiveExtensions,
   MapperKind,
   mapSchema,
   memoize1,
@@ -177,6 +179,12 @@ export function getCacheKeyFnFromKey(key: string) {
   });
 }
 
+function hasInaccessible(obj: DirectableObject) {
+  return getDirectiveExtensions<{
+    inaccessible: {};
+  }>(obj)?.inaccessible?.length;
+}
+
 export function filterInternalFieldsAndTypes(finalSchema: GraphQLSchema) {
   const internalTypeNameRegexp =
     /^(?:_Entity|_Any|_FieldSet|_Service|link|inaccessible|(?:link__|join__|core__)[\w]*)$/;
@@ -190,44 +198,32 @@ export function filterInternalFieldsAndTypes(finalSchema: GraphQLSchema) {
     [MapperKind.TYPE]: (type) => {
       if (
         internalTypeNameRegexp.test(type.name) ||
-        type.astNode?.directives?.some((d) => d.name.value === 'inaccessible')
+        hasInaccessible(type)
       ) {
         return null;
       }
       return type;
     },
-    [MapperKind.COMPOSITE_FIELD]: (fieldConfig) => {
-      if (
-        fieldConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+    [MapperKind.FIELD]: (fieldConfig) => {
+      if (hasInaccessible(fieldConfig)) {
         return null;
       }
       return fieldConfig;
     },
     [MapperKind.QUERY_ROOT_FIELD]: (fieldConfig, fieldName) => {
-      if (fieldName === '_entities') {
+      if (fieldName === '_entities' || hasInaccessible(fieldConfig)) {
         return null;
       }
       return fieldConfig;
     },
     [MapperKind.ENUM_VALUE]: (valueConfig) => {
-      if (
-        valueConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+      if (hasInaccessible(valueConfig)) {
         return null;
       }
       return valueConfig;
     },
     [MapperKind.ARGUMENT]: (argConfig) => {
-      if (
-        argConfig.astNode?.directives?.some(
-          (d) => d.name.value === 'inaccessible',
-        )
-      ) {
+      if (hasInaccessible(argConfig)) {
         return null;
       }
       return argConfig;
