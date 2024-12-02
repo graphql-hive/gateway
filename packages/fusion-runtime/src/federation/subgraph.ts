@@ -328,7 +328,12 @@ export function handleFederationSubschema({
       }
       return undefined;
     },
-    [MapperKind.INTERFACE_FIELD]: (fieldConfig, fieldName, typeName, schema) => {
+    [MapperKind.INTERFACE_FIELD]: (
+      fieldConfig,
+      fieldName,
+      typeName,
+      schema,
+    ) => {
       const fieldDirectives =
         getDirectiveExtensions<FieldDirectives>(fieldConfig);
       const resolveToDirectives = fieldDirectives.resolveTo;
