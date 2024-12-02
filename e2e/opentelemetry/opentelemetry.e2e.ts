@@ -2,7 +2,8 @@ import { createTenv, createTjaeger, OTLPExporterType } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, it } from 'vitest';
 
-const { service, gateway, composeWithApollo } = createTenv(__dirname);
+const { service, gatewayRunner, gateway, composeWithApollo } =
+  createTenv(__dirname);
 const jaeger = createTjaeger(__dirname);
 
 let supergraph!: string;
@@ -77,7 +78,11 @@ const query = /* GraphQL */ `
   }
 `;
 
-describe('OpenTelemetry', () => {
+describe.skipIf(
+  // the disposal of other runners is on the process, not the gateway directly.
+  // so we only test on node because disposing will properly flush the traces
+  gatewayRunner !== 'node',
+)('OpenTelemetry', () => {
   (['grpc', 'http'] satisfies OTLPExporterType[]).forEach((exporterType) => {
     describe.concurrent(`exporter > ${exporterType}`, () => {
       it('should report telemetry metrics correctly to jaeger', async ({
