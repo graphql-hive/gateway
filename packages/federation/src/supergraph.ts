@@ -843,6 +843,25 @@ export function getStitchingOptionsFromSupergraphSdl(
         opts.onMergedTypeConfig?.(typeName, mergedTypeConfig);
       }
     }
+
+    const typeNameProvidedSelectionMap =
+      subgraphTypeNameFieldProvidedSelectionMap.get(subgraphName);
+    if (typeNameProvidedSelectionMap) {
+      for (const [
+        typeName,
+        fieldSelectionMap,
+      ] of typeNameProvidedSelectionMap) {
+        const mergedTypeConfig: MergedTypeConfig = (mergeConfig[typeName] ||=
+          {});
+        const fieldsConfig: Record<string, MergedFieldConfig> =
+          (mergedTypeConfig.fields ||= {});
+        for (const [fieldName, selectionSet] of fieldSelectionMap) {
+          fieldsConfig[fieldName] = {
+            provides: selectionSet,
+          };
+        }
+      }
+    }
     const entitiesUnionTypeDefinitionNode: UnionTypeDefinitionNode = {
       name: {
         kind: Kind.NAME,
@@ -1046,9 +1065,6 @@ export function getStitchingOptionsFromSupergraphSdl(
         return res;
       };
     }
-    const schemaExtensions: any = (schema.extensions = schema.extensions || {});
-    schemaExtensions['typeNameFieldProvidedSelectionMap'] =
-      subgraphTypeNameFieldProvidedSelectionMap.get(subgraphName);
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);
     const externalFieldMap = subgraphExternalFieldMap.get(subgraphName);
     const transforms: Transform<any>[] = [];

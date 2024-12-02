@@ -35,13 +35,15 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
-import { DelegationContext } from './types.js';
+import { Subschema } from './Subschema.js';
+import { DelegationContext, StitchingInfo } from './types.js';
 
-function finalizeGatewayDocument(
+function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
   fragments: FragmentDefinitionNode[],
   operations: OperationDefinitionNode[],
   onOverlappingAliases: () => void,
+  delegationContext: DelegationContext<TContext>,
 ) {
   let usedVariables: Array<string> = [];
   let usedFragments: Array<string> = [];
@@ -150,10 +152,10 @@ function finalizeGatewayDocument(
     definitions: [...newOperations, ...newFragments],
   };
 
-  const typeNameFieldProvidedSelectionMap = targetSchema.extensions[
-    'typeNameFieldProvidedSelectionMap'
-  ] as Map<string, Map<string, SelectionSetNode>>;
-  if (typeNameFieldProvidedSelectionMap) {
+  const stitchingInfo = delegationContext.info?.schema?.extensions?.[
+    'stitchingInfo'
+  ] as StitchingInfo;
+  if (stitchingInfo != null) {
     const typeInfo = new TypeInfo(targetSchema);
     newDocument = visit(
       newDocument,
@@ -162,23 +164,27 @@ function finalizeGatewayDocument(
           const parentType = typeInfo.getParentType();
           if (parentType) {
             const parentTypeName = parentType.name;
-            const providedSelections =
-              typeNameFieldProvidedSelectionMap.get(parentTypeName);
-            if (providedSelections) {
-              const providedSelection = providedSelections.get(
-                fieldNode.name.value,
-              );
-              if (providedSelection) {
-                return {
-                  ...fieldNode,
-                  selectionSet: {
-                    kind: Kind.SELECTION_SET,
-                    selections: [
-                      ...providedSelection.selections,
-                      ...(fieldNode.selectionSet?.selections ?? []),
-                    ],
-                  },
-                };
+            const typeConfig = stitchingInfo?.mergedTypes?.[parentTypeName];
+            if (typeConfig) {
+              const providedSelectionsByField =
+                typeConfig?.providedSelectionsByField?.get(
+                  delegationContext.subschema as Subschema,
+                );
+              if (providedSelectionsByField) {
+                const providedSelection =
+                  providedSelectionsByField[fieldNode.name.value];
+                if (providedSelection) {
+                  return {
+                    ...fieldNode,
+                    selectionSet: {
+                      kind: Kind.SELECTION_SET,
+                      selections: [
+                        ...providedSelection.selections,
+                        ...(fieldNode.selectionSet?.selections ?? []),
+                      ],
+                    },
+                  };
+                }
               }
             }
           }
@@ -223,6 +229,7 @@ export function finalizeGatewayRequest<TContext>(
     fragments,
     operations,
     onOverlappingAliases,
+    delegationContext,
   );
 
   const newVariables: Record<string, any> = {};
