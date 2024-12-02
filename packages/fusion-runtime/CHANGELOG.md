@@ -1,5 +1,14 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.9
+
+### Patch Changes
+
+- [#234](https://github.com/graphql-hive/gateway/pull/234) [`ba7e585`](https://github.com/graphql-hive/gateway/commit/ba7e585bcabbcec2ccd35f0903f25fdce9eeb214) Thanks [@ardatan](https://github.com/ardatan)! - Drop \`@hidden\` support in favor of \`@inaccessible\`
+
+- Updated dependencies [[`ba7e585`](https://github.com/graphql-hive/gateway/commit/ba7e585bcabbcec2ccd35f0903f25fdce9eeb214)]:
+  - @graphql-tools/federation@2.2.34
+
 ## 0.10.8
 
 ### Patch Changes
