@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0 <23.0.0"
   },
   "main": "./dist/index.js",
   "exports": {
@@ -39,7 +39,6 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "appdynamics": "^24.10.0",
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
@@ -54,7 +53,6 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
-    "appdynamics": "^24.10.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.7.0",
     "pkgroll": "2.5.1"

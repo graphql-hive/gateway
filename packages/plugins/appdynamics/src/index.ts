@@ -1,9 +1,10 @@
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-mesh/types';
-import appd, { TimePromise } from 'appdynamics';
+import { Agent, TimePromise } from './appdynamics';
 
 type AppDynamicsPluginOptions = {
   logger: Logger;
+  appd: Agent;
 };
 
 export default function useAppDynamics(
@@ -11,6 +12,7 @@ export default function useAppDynamics(
 ): GatewayPlugin {
   const logger = options.logger.child('AppDynamics');
   const txByRequest = new WeakMap<Request, TimePromise>();
+  const appd = options.appd;
 
   return {
     //@ts-expect-error TODO: how to declare this actually exists if we are running on Node ?
@@ -19,7 +21,7 @@ export default function useAppDynamics(
         const tx =
           appd.getTransaction(req) ??
           appd.startTransaction(
-            request.headers.get(appd.correlation.HEADER_NAME),
+            request.headers.get(appd.__agent.correlation.HEADER_NAME),
           );
         txByRequest.set(request, tx);
       } catch (err) {
