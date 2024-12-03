@@ -1,5 +1,4 @@
 import os from 'os';
-import { setTimeout } from 'timers/promises';
 import { createTenv, getAvailablePort, type Container } from '@internal/e2e';
 import { getLocalhost, isDebug } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
@@ -52,20 +51,25 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
   async function getJaegerTraces(
     service: string,
     expectedDataLength: number,
+    path = '/graphql',
   ): Promise<JaegerTracesApiResponse> {
-    const port = jaeger.additionalPorts[16686]!;
-    const hostname = await getLocalhost(port);
-    const url = `${hostname}:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
+    const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
     let res!: JaegerTracesApiResponse;
-    for (let i = 0; i < 25; i++) {
-      res = await fetch(url).then((r) => r.json());
-      if (res.data.length >= expectedDataLength) {
-        break;
-      }
-      await setTimeout(300);
+    const signal = AbortSignal.timeout(2000);
+    while (!signal.aborted) {
+      try {
+        res = await fetch(url).then((r) => r.json());
+        if (
+          res.data.length >= expectedDataLength &&
+          res.data.some((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST ' + path),
+          )
+        ) {
+          return res;
+        }
+      } catch {}
     }
-
     return res;
   }
 
@@ -164,7 +168,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     });
 
     await fetch(`${url}/non-existing`).catch(() => {});
-    const traces = await getJaegerTraces(serviceName, 2);
+    const traces = await getJaegerTraces(serviceName, 2, '/non-existing');
     expect(traces.data.length).toBe(2);
     const relevantTrace = traces.data.find((trace) =>
       trace.spans.some((span) => span.operationName === 'GET /non-existing'),
