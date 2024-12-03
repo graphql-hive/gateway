@@ -1,5 +1,11 @@
 # @graphql-tools/stitch
 
+## 9.4.6
+
+### Patch Changes
+
+- [#247](https://github.com/graphql-hive/gateway/pull/247) [`76642d8`](https://github.com/graphql-hive/gateway/commit/76642d84b722bae28115310f25a6ac4865b41598) Thanks [@ardatan](https://github.com/ardatan)! - Fixes the bug when interfaces extended by \`additionalTypeDefs\`
+
 ## 9.4.5
 
 ### Patch Changes

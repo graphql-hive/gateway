@@ -1,5 +1,21 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.11
+
+### Patch Changes
+
+- [#248](https://github.com/graphql-hive/gateway/pull/248) [`248c8a6`](https://github.com/graphql-hive/gateway/commit/248c8a65483b1dc7237f223ce1a707d6754192f6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Log Unified Graph caching errors
+
+- [#247](https://github.com/graphql-hive/gateway/pull/247) [`76642d8`](https://github.com/graphql-hive/gateway/commit/76642d84b722bae28115310f25a6ac4865b41598) Thanks [@ardatan](https://github.com/ardatan)! - Handle \`@resolveTo\` for interfaces correctly
+
+- [#248](https://github.com/graphql-hive/gateway/pull/248) [`248c8a6`](https://github.com/graphql-hive/gateway/commit/248c8a65483b1dc7237f223ce1a707d6754192f6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Log caching of unified graph
+
+- [#248](https://github.com/graphql-hive/gateway/pull/248) [`248c8a6`](https://github.com/graphql-hive/gateway/commit/248c8a65483b1dc7237f223ce1a707d6754192f6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Increase default TTL for caching Unified Graph to 60s
+
+- Updated dependencies [[`76642d8`](https://github.com/graphql-hive/gateway/commit/76642d84b722bae28115310f25a6ac4865b41598)]:
+  - @graphql-tools/stitch@9.4.6
+  - @graphql-tools/federation@2.2.36
+
 ## 0.10.10
 
 ### Patch Changes
