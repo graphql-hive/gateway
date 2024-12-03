@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/transport-http",
-  "version": "0.6.21",
+  "version": "0.6.22",
   "type": "module",
   "repository": {
     "type": "git",

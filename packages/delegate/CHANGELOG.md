@@ -1,5 +1,11 @@
 # @graphql-tools/delegate
 
+## 10.2.5
+
+### Patch Changes
+
+- [#257](https://github.com/graphql-hive/gateway/pull/257) [`9ce705c`](https://github.com/graphql-hive/gateway/commit/9ce705c5ccc5e6f4ac26af6e6471a6d2f4e995db) Thanks [@ardatan](https://github.com/ardatan)! - Do not show internal non-nullability errors in the gateway
+
 ## 10.2.4
 
 ### Patch Changes
