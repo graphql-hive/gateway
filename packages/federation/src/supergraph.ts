@@ -2,6 +2,7 @@ import {
   BatchingOptions,
   delegateToSchema,
   extractUnavailableFieldsFromSelectionSet,
+  getTypeInfo,
   isExternalObject,
   MergedFieldConfig,
   MergedTypeConfig,
@@ -60,7 +61,6 @@ import {
   SelectionNode,
   SelectionSetNode,
   TypeDefinitionNode,
-  TypeInfo,
   UnionTypeDefinitionNode,
   visit,
   visitWithTypeInfo,
@@ -1074,7 +1074,7 @@ export function getStitchingOptionsFromSupergraphSdl(
         (t) => t.kind === Kind.INTERFACE_TYPE_DEFINITION,
       )
     ) {
-      const typeInfo = new TypeInfo(schema);
+      const typeInfo = getTypeInfo(schema);
       const visitorKeys: ASTVisitorKeyMap = {
         Document: ['definitions'],
         OperationDefinition: ['selectionSet'],

@@ -1,5 +1,6 @@
 import {
   DelegationContext,
+  getTypeInfo,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -92,7 +93,7 @@ export default class TransformCompositeFields<TContext = Record<string, any>>
         return transformedField;
       },
     });
-    this.typeInfo = new TypeInfo(this.transformedSchema);
+    this.typeInfo = getTypeInfo(this.transformedSchema);
     this.subscriptionTypeName =
       originalWrappingSchema.getSubscriptionType()?.name;
 

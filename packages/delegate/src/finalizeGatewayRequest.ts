@@ -19,7 +19,6 @@ import {
   GraphQLNamedType,
   GraphQLSchema,
   GraphQLType,
-  versionInfo as graphqlVersionInfo,
   isAbstractType,
   isInterfaceType,
   isNullableType,
@@ -29,12 +28,12 @@ import {
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
-  TypeInfo,
   VariableDefinitionNode,
   visit,
   visitWithTypeInfo,
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
+import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { Subschema } from './Subschema.js';
 import { DelegationContext, StitchingInfo } from './types.js';
 
@@ -156,7 +155,7 @@ function finalizeGatewayDocument<TContext>(
     'stitchingInfo'
   ] as StitchingInfo;
   if (stitchingInfo != null) {
-    const typeInfo = new TypeInfo(targetSchema);
+    const typeInfo = getTypeInfo(targetSchema);
     newDocument = visit(
       newDocument,
       visitWithTypeInfo(typeInfo, {
@@ -476,10 +475,7 @@ function finalizeSelectionSet(
   const usedFragments: Array<string> = [];
   const usedVariables: Array<string> = [];
 
-  const typeInfo =
-    graphqlVersionInfo.major < 16
-      ? new TypeInfo(schema, undefined, type as any)
-      : new TypeInfo(schema, type as any);
+  const typeInfo = getTypeInfoWithType(schema, type);
   const seenNonNullableMap = new WeakMap<readonly ASTNode[], Set<string>>();
   const seenNullableMap = new WeakMap<readonly ASTNode[], Set<string>>();
 

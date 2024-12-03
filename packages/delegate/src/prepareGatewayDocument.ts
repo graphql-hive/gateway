@@ -26,6 +26,7 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
+import { getTypeInfo } from './getTypeInfo.js';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(
@@ -65,7 +66,7 @@ export function prepareGatewayDocument(
     possibleTypesMap,
   );
 
-  const typeInfo = new TypeInfo(transformedSchema);
+  const typeInfo = getTypeInfo(transformedSchema);
 
   const expandedDocument: DocumentNode = {
     kind: Kind.DOCUMENT,
@@ -597,7 +598,7 @@ function wrapConcreteTypes(
 
   const rootTypeNames = getRootTypeNames(targetSchema);
 
-  const typeInfo = new TypeInfo(targetSchema);
+  const typeInfo = getTypeInfo(targetSchema);
 
   const visitorKeys: ASTVisitorKeyMap = {
     Document: ['definitions'],
