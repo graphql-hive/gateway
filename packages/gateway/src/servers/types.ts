@@ -31,6 +31,12 @@ export interface ServerConfig {
    * @default false
    */
   disableWebsockets?: boolean;
+  /**
+   * Request timeout, 0 to disable.
+   *
+   * @default 300000 (5 minutes)
+   */
+  requestTimeout?: number;
 }
 
 export interface ServerConfigSSLCredentials {
