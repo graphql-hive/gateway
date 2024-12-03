@@ -12,7 +12,6 @@ concurrency:
 jobs:
   bench:
     strategy:
-      fail-fast: false
       matrix:
         e2e_runner: [node, bun]
         products_size:
