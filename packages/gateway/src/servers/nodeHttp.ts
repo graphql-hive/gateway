@@ -19,6 +19,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     sslCredentials,
     maxHeaderSize,
     disableWebsockets,
+    requestTimeout,
   } = opts;
   let server: Server;
   let protocol: string;
@@ -59,6 +60,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       {
         ...sslOptionsForNodeHttp,
         maxHeaderSize,
+        requestTimeout,
       },
       gwRuntime,
     );
@@ -67,6 +69,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     server = createHTTPServer(
       {
         maxHeaderSize,
+        requestTimeout,
       },
       gwRuntime,
     );

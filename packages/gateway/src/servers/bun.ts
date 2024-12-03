@@ -13,6 +13,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
     port: opts.port || defaultOptions.port,
     hostname: opts.host || defaultOptions.host,
     reusePort: true,
+    idleTimeout: opts.requestTimeout,
   };
   if (opts.sslCredentials) {
     if (opts.sslCredentials.ca_file_name) {
