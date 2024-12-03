@@ -135,7 +135,7 @@ describe('OpenTelemetry', () => {
         const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
         let res!: JaegerTracesApiResponse;
-        const signal = AbortSignal.timeout(10_000);
+        const signal = AbortSignal.timeout(15_000);
         while (!signal.aborted) {
           try {
             res = await fetch(url).then((r) => r.json());
