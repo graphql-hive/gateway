@@ -147,7 +147,18 @@ export function handleResolverResult(
     for (const [responseKey, fieldNodes] of fields) {
       const combinedPath = [...path, responseKey];
       if (resolverResult instanceof GraphQLError) {
-        nullResult[responseKey] = relocatedError(resolverResult, combinedPath);
+        if (
+          resolverResult.message.includes(
+            'Cannot return null for non-nullable field',
+          )
+        ) {
+          nullResult[responseKey] = null;
+        } else {
+          nullResult[responseKey] = relocatedError(
+            resolverResult,
+            combinedPath,
+          );
+        }
       } else if (resolverResult instanceof Error) {
         nullResult[responseKey] = locatedError(
           resolverResult,

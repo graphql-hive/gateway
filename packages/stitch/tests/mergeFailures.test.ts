@@ -240,7 +240,7 @@ describe('merge failures', () => {
       data: { thing: null },
       errors: [
         createGraphQLError(
-          'Cannot return null for non-nullable field Thing.id.',
+          'Cannot return null for non-nullable field Thing.description.',
         ),
       ],
     };
