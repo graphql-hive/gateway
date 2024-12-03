@@ -1,5 +1,4 @@
 import os from 'os';
-import { setTimeout } from 'timers/promises';
 import { createTenv, type Container } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
