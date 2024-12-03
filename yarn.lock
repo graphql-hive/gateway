@@ -9280,9 +9280,9 @@ __metadata:
   linkType: hard
 
 "dotenv@npm:^16.3.1":
-  version: 16.4.6
-  resolution: "dotenv@npm:16.4.6"
-  checksum: 10c0/6c0c0c82eaa0ca6cc7193b2550920ec6d2eabfe32498bf454c0a1187c0680c79daa199ba873d33692f055755e5068f862689aca03bc8ff57e7d70302f3152012
+  version: 16.4.7
+  resolution: "dotenv@npm:16.4.7"
+  checksum: 10c0/be9f597e36a8daf834452daa1f4cc30e5375a5968f98f46d89b16b983c567398a330580c88395069a77473943c06b877d1ca25b4afafcdd6d4adb549e8293462
   languageName: node
   linkType: hard
 
