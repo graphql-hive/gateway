@@ -166,7 +166,7 @@ export function buildTypeCandidates<
           } catch {
             Object.defineProperty(type, '_interfaces', {
               value: [],
-            })
+            });
           }
         }
         addTypeCandidate(typeCandidates, type.name, { type });
