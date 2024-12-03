@@ -15,12 +15,13 @@ import {
 import { wrapSchema } from '@graphql-tools/wrap';
 import {
   DocumentNode,
-  getNamedType,
   GraphQLDirective,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
   isDirective,
+  isInterfaceType,
+  isIntrospectionType,
   isNamedType,
   isSpecifiedScalarType,
   OperationTypeNode,
@@ -137,7 +138,7 @@ export function buildTypeCandidates<
       const type = originalTypeMap[typeName] as GraphQLNamedType;
       if (
         isNamedType(type) &&
-        getNamedType(type).name.slice(0, 2) !== '__' &&
+        !isIntrospectionType(type) &&
         !rootTypes.has(type as GraphQLObjectType)
       ) {
         addTypeCandidate(typeCandidates, type.name, {
@@ -156,6 +157,17 @@ export function buildTypeCandidates<
         throw new Error(`Expected to get named typed but got ${inspect(def)}`);
       }
       if (type != null) {
+        // There is a bug in interface types that causes them to not have _interfaces
+        // if they are not used in a schema. This is a workaround for that.
+        if (isInterfaceType(type)) {
+          try {
+            type.getInterfaces();
+          } catch {
+            Object.defineProperty(type, '_interfaces', {
+              value: [],
+            });
+          }
+        }
         addTypeCandidate(typeCandidates, type.name, { type });
       }
     }
