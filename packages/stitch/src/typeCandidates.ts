@@ -15,7 +15,6 @@ import {
 import { wrapSchema } from '@graphql-tools/wrap';
 import {
   DocumentNode,
-  getNamedType,
   GraphQLDirective,
   GraphQLNamedType,
   GraphQLObjectType,
