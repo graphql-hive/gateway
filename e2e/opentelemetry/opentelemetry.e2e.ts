@@ -135,7 +135,7 @@ describe('OpenTelemetry', () => {
         const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
         let res!: JaegerTracesApiResponse;
-        const signal = AbortSignal.timeout(2000);
+        const signal = AbortSignal.timeout(10_000);
         while (!signal.aborted) {
           try {
             res = await fetch(url).then((r) => r.json());
@@ -789,7 +789,7 @@ describe('OpenTelemetry', () => {
 
       it('should report http failures', async () => {
         const serviceName = 'mesh-e2e-test-4';
-        const { port }= await gateway({
+        const { port } = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
