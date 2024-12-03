@@ -1,11 +1,12 @@
 import { normalizedExecutor } from '@graphql-tools/executor';
+import { mapMaybePromise } from '@graphql-tools/utils';
+import { createExampleSetup } from '@internal/e2e';
+import { benchConfig } from '@internal/testing';
 import { getOperationAST, parse, printSchema } from 'graphql';
-import { bench, describe } from 'vitest';
+import { bench, describe, expect } from 'vitest';
 import apolloGateway from './apollo';
 import monolith from './monolith';
 import stitching from './stitching';
-
-const duration = 10_000;
 
 function memoize1<T extends (...args: any) => any>(fn: T): T {
   const memoize1cache = new Map();
@@ -22,51 +23,7 @@ function memoize1<T extends (...args: any) => any>(fn: T): T {
 }
 
 describe('Federation', async () => {
-  const query = /* GraphQL */ `
-    fragment User on User {
-      id
-      username
-      name
-    }
-
-    fragment Review on Review {
-      id
-      body
-    }
-
-    fragment Product on Product {
-      inStock
-      name
-      price
-      shippingEstimate
-      upc
-      weight
-    }
-
-    query TestQuery {
-      users {
-        ...User
-        reviews {
-          ...Review
-          product {
-            ...Product
-          }
-        }
-      }
-      topProducts {
-        ...Product
-        reviews {
-          ...Review
-          author {
-            ...User
-          }
-        }
-      }
-    }
-  `;
-
-  const operationName = 'TestQuery';
-
+  const { query, operationName, result } = createExampleSetup(__dirname);
   const monolithParse = memoize1(parse);
 
   // Only if you want to see the latency that the gateway adds
@@ -76,7 +33,7 @@ describe('Federation', async () => {
       normalizedExecutor({
         schema: monolith,
         document: monolithParse(query),
-        operationName,
+        operationName: operationName,
         contextValue: {},
       }) as Promise<void>,
   );
@@ -92,31 +49,34 @@ describe('Federation', async () => {
     'Apollo Gateway',
     () => {
       const document = apolloParse(query);
-      return apolloGWResult.executor({
-        document,
-        operationName: 'TestQuery',
-        request: {
-          query,
+      return mapMaybePromise(
+        apolloGWResult.executor({
+          document,
+          operationName: 'TestQuery',
+          request: {
+            query: query,
+          },
+          operation: getOperationASTMemoized(document, operationName)!,
+          metrics: {} as any,
+          overallCachePolicy: undefined as any,
+          schemaHash: printSchemaMemoized(apolloGWResult.schema) as any,
+          queryHash: query,
+          source: query,
+          cache: {
+            get: async () => undefined,
+            set: async () => {},
+            delete: async () => true,
+          },
+          schema: apolloGWResult.schema,
+          logger: console,
+          context: {},
+        }),
+        (response) => {
+          expect(response).toEqual(result);
         },
-        operation: getOperationASTMemoized(document, operationName)!,
-        metrics: {} as any,
-        overallCachePolicy: undefined as any,
-        schemaHash: printSchemaMemoized(apolloGWResult.schema) as any,
-        queryHash: query,
-        source: query,
-        cache: {
-          get: async () => undefined,
-          set: async () => {},
-          delete: async () => true,
-        },
-        schema: apolloGWResult.schema,
-        logger: console,
-        context: {},
-      }) as unknown as Promise<void>;
+      ) as Promise<void>;
     },
-    {
-      time: duration,
-    },
+    benchConfig,
   );
 
   const stitchingSchema = await stitching;
@@ -125,13 +85,17 @@ describe('Federation', async () => {
   bench(
     'Stitching',
     () =>
-      normalizedExecutor({
-        schema: stitchingSchema,
-        document: stitchingParse(query),
-        contextValue: {},
-      }) as Promise<void>,
-    {
-      time: duration,
-    },
+      mapMaybePromise(
+        normalizedExecutor({
+          schema: stitchingSchema,
+          document: stitchingParse(query),
+          operationName: operationName,
+          contextValue: {},
+        }),
+        (response) => {
+          expect(response).toEqual(result);
+        },
+      ) as Promise<void>,
+    benchConfig,
   );
 });

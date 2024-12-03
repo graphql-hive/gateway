@@ -1,103 +1,17 @@
 import { ApolloGateway } from '@apollo/gateway';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { createTenv, Gateway } from '@internal/e2e';
+import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
+import { benchConfig } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
 
-const duration = 10_000;
-const warmupTime = 1_000;
-const warmupIterations = 10;
-
 describe('Gateway', async () => {
-  const query = /* GraphQL */ `
-    fragment User on User {
-      id
-      username
-      name
-    }
+  const { gateway, fs } = createTenv(__dirname);
+  const example = createExampleSetup(__dirname);
 
-    fragment Review on Review {
-      id
-      body
-    }
-
-    fragment Product on Product {
-      inStock
-      name
-      price
-      shippingEstimate
-      upc
-      weight
-    }
-
-    query TestQuery {
-      users {
-        ...User
-        reviews {
-          ...Review
-          product {
-            ...Product
-            reviews {
-              ...Review
-              author {
-                ...User
-                reviews {
-                  ...Review
-                  product {
-                    ...Product
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      topProducts {
-        ...Product
-        reviews {
-          ...Review
-          author {
-            ...User
-            reviews {
-              ...Review
-              product {
-                ...Product
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const { fs, service, composeWithApollo, gateway } = createTenv(__dirname);
-
-  const PRODUCTS_SIZE = process.env['PRODUCTS_SIZE'] || 3;
-
-  const supergraphFile = await composeWithApollo([
-    await service('accounts', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('inventory', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('products', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('reviews', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-  ]);
-  const supergraph = await fs.read(supergraphFile);
+  const supergraph = await example.supergraph();
+  const supergraphSdl = await fs.read(supergraph);
 
   let apolloGw: ApolloServer;
   let apolloGwUrl: string;
@@ -111,7 +25,7 @@ describe('Gateway', async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query,
+          query: example.query,
         }),
         signal: ctrl.signal,
       });
@@ -125,7 +39,7 @@ describe('Gateway', async () => {
         ctrl = new AbortController();
         apolloGw = new ApolloServer({
           gateway: new ApolloGateway({
-            supergraphSdl: supergraph,
+            supergraphSdl,
           }),
         });
         const { url } = await startStandaloneServer(apolloGw, {
@@ -137,10 +51,7 @@ describe('Gateway', async () => {
         ctrl.abort();
         return apolloGw.stop();
       },
-      time: duration,
-      warmupTime,
-      warmupIterations,
-      throws: true,
+      ...benchConfig,
     },
   );
 
@@ -149,11 +60,9 @@ describe('Gateway', async () => {
     'Hive Gateway',
     async () => {
       const res = await hiveGw.execute({
-        query,
+        query: example.query,
       });
-      expect(res).toEqual({
-        data: expect.any(Object),
-      });
+      expect(res).toEqual(example.result);
     },
     {
       async setup() {
@@ -169,10 +78,7 @@ describe('Gateway', async () => {
       async teardown() {
         return hiveGw[Symbol.asyncDispose]();
       },
-      time: duration,
-      warmupTime,
-      warmupIterations,
-      throws: true,
+      ...benchConfig,
     },
   );
 });

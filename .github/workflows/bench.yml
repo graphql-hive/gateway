@@ -32,3 +32,4 @@ jobs:
         env:
           PRODUCTS_SIZE: ${{matrix.products_size}}
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
+          CI: true

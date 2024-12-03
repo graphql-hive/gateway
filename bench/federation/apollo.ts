@@ -1,8 +1,5 @@
 import { ApolloGateway, LocalGraphQLDataSource } from '@apollo/gateway';
-import * as accounts from './services/accounts';
-import * as inventory from './services/inventory';
-import * as products from './services/products';
-import * as reviews from './services/reviews';
+import { accounts, inventory, products, reviews } from '@internal/e2e';
 
 const serviceMap = {
   accounts,

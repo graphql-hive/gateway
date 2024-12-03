@@ -1,67 +1,67 @@
-import { createExampleSetup, createTenv } from '@internal/e2e';
-import { expect, it } from 'vitest';
+import { createTenv } from '@internal/e2e';
 
-const { service, gateway } = createTenv(__dirname);
-const exampleSetup = createExampleSetup(__dirname);
+type ServiceName = 'accounts' | 'inventory' | 'products' | 'reviews';
+const SERVICES: ServiceName[] = [
+  'accounts',
+  'inventory',
+  'products',
+  'reviews',
+];
 
-it('should execute', async () => {
-  const { execute } = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [
-        await service('accounts'),
-        await exampleSetup.service('inventory'),
-        await exampleSetup.service('products'),
-        await exampleSetup.service('reviews'),
-      ],
-    },
-  });
-  await expect(
-    execute({
-      query: /* GraphQL */ `
-        fragment User on User {
-          id
-          username
-          name
-        }
+export function createExampleSetup(
+  testDirName: string,
+  PRODUCTS_SIZE = process.env['PRODUCTS_SIZE'] || 3,
+) {
+  const { service } = createTenv(__dirname);
+  const { composeWithApollo } = createTenv(testDirName);
+  function exampleService(name: ServiceName) {
+    return service(name, {
+      env: {
+        PRODUCTS_SIZE,
+      },
+    });
+  }
+  async function supergraph() {
+    const services = await Promise.all(SERVICES.map(exampleService));
+    return composeWithApollo(services);
+  }
+  return {
+    service: exampleService,
+    supergraph,
+    query: exampleOperation.query,
+    result: exampleOperation.result,
+    operationName: exampleOperation.operationName,
+  };
+}
 
-        fragment Review on Review {
-          id
-          body
-        }
+const exampleOperation = {
+  query: /* GraphQL */ `
+    fragment User on User {
+      id
+      username
+      name
+    }
 
-        fragment Product on Product {
-          inStock
-          name
-          price
-          shippingEstimate
-          upc
-          weight
-        }
+    fragment Review on Review {
+      id
+      body
+    }
 
-        query TestQuery {
-          users {
-            ...User
-            reviews {
-              ...Review
-              product {
-                ...Product
-                reviews {
-                  ...Review
-                  author {
-                    ...User
-                    reviews {
-                      ...Review
-                      product {
-                        ...Product
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          topProducts {
+    fragment Product on Product {
+      inStock
+      name
+      price
+      shippingEstimate
+      upc
+      weight
+    }
+
+    query TestQuery {
+      users {
+        ...User
+        reviews {
+          ...Review
+          product {
             ...Product
             reviews {
               ...Review
@@ -77,9 +77,25 @@ it('should execute', async () => {
             }
           }
         }
-      `,
-    }),
-  ).resolves.toEqual({
+      }
+      topProducts {
+        ...Product
+        reviews {
+          ...Review
+          author {
+            ...User
+            reviews {
+              ...Review
+              product {
+                ...Product
+              }
+            }
+          }
+        }
+      }
+    }
+  `,
+  result: {
     data: {
       topProducts: [
         {
@@ -536,5 +552,6 @@ it('should execute', async () => {
         },
       ],
     },
-  });
-});
+  },
+  operationName: 'TestQuery',
+};

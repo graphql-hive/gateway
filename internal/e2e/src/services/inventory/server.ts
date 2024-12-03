@@ -5,11 +5,11 @@ import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { parse } from 'graphql';
 
-const typeDefs = parse(
+export const typeDefs = parse(
   readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf8'),
 );
 
-const resolvers = {
+export const resolvers = {
   Product: {
     __resolveReference(object: any) {
       return {
@@ -31,13 +31,15 @@ const resolvers = {
   },
 };
 
+export const schema = buildSubgraphSchema([
+  {
+    typeDefs,
+    resolvers,
+  },
+]);
+
 export const server = new ApolloServer({
-  schema: buildSubgraphSchema([
-    {
-      typeDefs,
-      resolvers,
-    },
-  ]),
+  schema,
 });
 
 const inventory = [
