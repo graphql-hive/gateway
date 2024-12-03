@@ -9,7 +9,6 @@ it('works', async () => {
       with: 'mesh',
       services: [await service('Test')],
     },
-    pipeLogs: true,
   });
 
   const result = await execute({
