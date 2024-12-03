@@ -127,35 +127,29 @@ describe('OpenTelemetry', () => {
         },
       };
 
-      async function getJaegerTraces(
+      async function expectJaegerTraces(
         service: string,
-        expectedDataLength: number,
-        path = '/graphql',
-      ): Promise<JaegerTracesApiResponse> {
+        checkFn: (res: JaegerTracesApiResponse) => void | PromiseLike<void>,
+      ): Promise<void> {
         const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
         let res!: JaegerTracesApiResponse;
+        let err: any;
         const signal = AbortSignal.timeout(15_000);
         while (!signal.aborted) {
           try {
-            res = await fetch(url).then((r) => r.json());
-            if (
-              res.data.length >= expectedDataLength &&
-              res.data.some((trace) =>
-                trace.spans.some(
-                  (span) => span.operationName === 'POST ' + path,
-                ),
-              )
-            ) {
-              return res;
-            }
-          } catch {}
+            res = await fetch(url, { signal }).then((r) => r.json());
+            await checkFn(res);
+            return;
+          } catch (e) {
+            err = e;
+          }
         }
-        return res;
+        throw err;
       }
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
-        await using gw = await gateway({
+        const { execute } = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -164,7 +158,7 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(gw.execute({ query: TEST_QUERY })).resolves.toEqual({
+        await expect(execute({ query: TEST_QUERY })).resolves.toEqual({
           data: {
             topProducts: [
               {
@@ -622,48 +616,49 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        const traces = await getJaegerTraces(serviceName, 2);
-        expect(traces.data.length).toBe(2);
-        const relevantTraces = traces.data.filter((trace) =>
-          trace.spans.some((span) => span.operationName === 'POST /graphql'),
-        );
-        expect(relevantTraces.length).toBe(1);
-        const relevantTrace = relevantTraces[0];
-        expect(relevantTrace).toBeDefined();
-        expect(relevantTrace?.spans.length).toBe(11);
+        await expectJaegerTraces(serviceName, traces => {
+          expect(traces.data.length).toBe(2);
+          const relevantTraces = traces.data.filter((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          );
+          expect(relevantTraces.length).toBe(1);
+          const relevantTrace = relevantTraces[0];
+          expect(relevantTrace).toBeDefined();
+          expect(relevantTrace?.spans.length).toBe(11);
 
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'POST /graphql' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.parse' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.validate' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.execute' }),
-        );
-        expect(
-          relevantTrace?.spans.filter(
-            (r) => r.operationName === 'subgraph.execute (accounts)',
-          ).length,
-        ).toBe(2);
-        expect(
-          relevantTrace?.spans.filter(
-            (r) => r.operationName === 'subgraph.execute (products)',
-          ).length,
-        ).toBe(2);
-        expect(
-          relevantTrace?.spans.filter(
-            (r) => r.operationName === 'subgraph.execute (inventory)',
-          ).length,
-        ).toBe(1);
-        expect(
-          relevantTrace?.spans.filter(
-            (r) => r.operationName === 'subgraph.execute (reviews)',
-          ).length,
-        ).toBe(2);
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'POST /graphql' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.parse' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.validate' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.execute' }),
+          );
+          expect(
+            relevantTrace?.spans.filter(
+              (r) => r.operationName === 'subgraph.execute (accounts)',
+            ).length,
+          ).toBe(2);
+          expect(
+            relevantTrace?.spans.filter(
+              (r) => r.operationName === 'subgraph.execute (products)',
+            ).length,
+          ).toBe(2);
+          expect(
+            relevantTrace?.spans.filter(
+              (r) => r.operationName === 'subgraph.execute (inventory)',
+            ).length,
+          ).toBe(1);
+          expect(
+            relevantTrace?.spans.filter(
+              (r) => r.operationName === 'subgraph.execute (reviews)',
+            ).length,
+          ).toBe(2);
+        });
       });
 
       it('should report parse failures correctly', async () => {
@@ -680,48 +675,49 @@ describe('OpenTelemetry', () => {
         await expect(execute({ query: 'query { test' })).rejects.toThrow(
           'Syntax Error: Expected Name, found <EOF>.',
         );
-        const traces = await getJaegerTraces(serviceName, 2);
-        expect(traces.data.length).toBe(2);
-        const relevantTrace = traces.data.find((trace) =>
-          trace.spans.some((span) => span.operationName === 'POST /graphql'),
-        );
-        expect(relevantTrace).toBeDefined();
-        expect(relevantTrace?.spans.length).toBe(2);
+        await expectJaegerTraces(serviceName, traces => {
+          expect(traces.data.length).toBe(2);
+          const relevantTrace = traces.data.find((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          );
+          expect(relevantTrace).toBeDefined();
+          expect(relevantTrace?.spans.length).toBe(2);
 
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'POST /graphql' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({
-            operationName: 'graphql.parse',
-            tags: expect.arrayContaining([
-              expect.objectContaining({
-                key: 'otel.status_code',
-                value: 'ERROR',
-              }),
-              expect.objectContaining({
-                key: 'error',
-                value: true,
-              }),
-              expect.objectContaining({
-                key: 'otel.status_description',
-                value: 'Syntax Error: Expected Name, found <EOF>.',
-              }),
-              expect.objectContaining({
-                key: 'graphql.error.count',
-                value: 1,
-              }),
-            ]),
-          }),
-        );
-        expect(relevantTrace?.spans).not.toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.execute' }),
-        );
-        expect(
-          relevantTrace?.spans.filter((r) =>
-            r.operationName.includes('subgraph.execute'),
-          ).length,
-        ).toBe(0);
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'POST /graphql' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({
+              operationName: 'graphql.parse',
+              tags: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'otel.status_code',
+                  value: 'ERROR',
+                }),
+                expect.objectContaining({
+                  key: 'error',
+                  value: true,
+                }),
+                expect.objectContaining({
+                  key: 'otel.status_description',
+                  value: 'Syntax Error: Expected Name, found <EOF>.',
+                }),
+                expect.objectContaining({
+                  key: 'graphql.error.count',
+                  value: 1,
+                }),
+              ]),
+            }),
+          );
+          expect(relevantTrace?.spans).not.toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.execute' }),
+          );
+          expect(
+            relevantTrace?.spans.filter((r) =>
+              r.operationName.includes('subgraph.execute'),
+            ).length,
+          ).toBe(0);
+        });
       });
 
       it('should report validate failures correctly', async () => {
@@ -740,51 +736,53 @@ describe('OpenTelemetry', () => {
         ).rejects.toThrow(
           '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}',
         );
-        const traces = await getJaegerTraces(serviceName, 2);
-        expect(traces.data.length).toBe(2);
-        const relevantTrace = traces.data.find((trace) =>
-          trace.spans.some((span) => span.operationName === 'POST /graphql'),
-        );
-        expect(relevantTrace).toBeDefined();
-        expect(relevantTrace?.spans.length).toBe(3);
+        await expectJaegerTraces(serviceName, traces => {
+          expect(traces.data.length).toBe(2);
+          const relevantTrace = traces.data.find((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          );
+          expect(relevantTrace).toBeDefined();
+          expect(relevantTrace?.spans.length).toBe(3);
 
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'POST /graphql' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.parse' }),
-        );
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({
-            operationName: 'graphql.validate',
-            tags: expect.arrayContaining([
-              expect.objectContaining({
-                key: 'otel.status_code',
-                value: 'ERROR',
-              }),
-              expect.objectContaining({
-                key: 'error',
-                value: true,
-              }),
-              expect.objectContaining({
-                key: 'otel.status_description',
-                value: 'Cannot query field "nonExistentField" on type "Query".',
-              }),
-              expect.objectContaining({
-                key: 'graphql.error.count',
-                value: 1,
-              }),
-            ]),
-          }),
-        );
-        expect(relevantTrace?.spans).not.toContainEqual(
-          expect.objectContaining({ operationName: 'graphql.execute' }),
-        );
-        expect(
-          relevantTrace?.spans.filter((r) =>
-            r.operationName.includes('subgraph.execute'),
-          ).length,
-        ).toBe(0);
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'POST /graphql' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.parse' }),
+          );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({
+              operationName: 'graphql.validate',
+              tags: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'otel.status_code',
+                  value: 'ERROR',
+                }),
+                expect.objectContaining({
+                  key: 'error',
+                  value: true,
+                }),
+                expect.objectContaining({
+                  key: 'otel.status_description',
+                  value: 'Cannot query field "nonExistentField" on type "Query".',
+                }),
+                expect.objectContaining({
+                  key: 'graphql.error.count',
+                  value: 1,
+                }),
+              ]),
+            }),
+          );
+          expect(relevantTrace?.spans).not.toContainEqual(
+            expect.objectContaining({ operationName: 'graphql.execute' }),
+          );
+          expect(
+            relevantTrace?.spans.filter((r) =>
+              r.operationName.includes('subgraph.execute'),
+            ).length,
+          ).toBe(0);
+        });
+        
       });
 
       it('should report http failures', async () => {
@@ -799,33 +797,34 @@ describe('OpenTelemetry', () => {
         });
         const path = '/non-existing';
         await fetch(`http://0.0.0.0:${port}${path}`).catch(() => {});
-        const traces = await getJaegerTraces(serviceName, 2, path);
-        expect(traces.data.length).toBe(2);
-        const relevantTrace = traces.data.find((trace) =>
-          trace.spans.some((span) => span.operationName === 'GET ' + path),
-        );
-        expect(relevantTrace).toBeDefined();
-        expect(relevantTrace?.spans.length).toBe(1);
+        await expectJaegerTraces(serviceName, traces => {
+          expect(traces.data.length).toBe(2);
+          const relevantTrace = traces.data.find((trace) =>
+            trace.spans.some((span) => span.operationName === 'GET ' + path),
+          );
+          expect(relevantTrace).toBeDefined();
+          expect(relevantTrace?.spans.length).toBe(1);
 
-        expect(relevantTrace?.spans).toContainEqual(
-          expect.objectContaining({
-            operationName: 'GET ' + path,
-            tags: expect.arrayContaining([
-              expect.objectContaining({
-                key: 'otel.status_code',
-                value: 'ERROR',
-              }),
-              expect.objectContaining({
-                key: 'error',
-                value: true,
-              }),
-              expect.objectContaining({
-                key: 'http.status_code',
-                value: 404,
-              }),
-            ]),
-          }),
-        );
+          expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({
+              operationName: 'GET ' + path,
+              tags: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'otel.status_code',
+                  value: 'ERROR',
+                }),
+                expect.objectContaining({
+                  key: 'error',
+                  value: true,
+                }),
+                expect.objectContaining({
+                  key: 'http.status_code',
+                  value: 404,
+                }),
+              ]),
+            }),
+          );
+        });
       });
 
       it('context propagation should work correctly', async () => {
@@ -1316,30 +1315,31 @@ describe('OpenTelemetry', () => {
             }>,
         );
 
-        const traces = await getJaegerTraces(serviceName, 3);
-        expect(traces.data.length).toBe(3);
+        await expectJaegerTraces(serviceName, traces => {
+          expect(traces.data.length).toBe(3);
 
-        const relevantTraces = traces.data.filter((trace) =>
-          trace.spans.some((span) => span.operationName === 'POST /graphql'),
-        );
-        expect(relevantTraces.length).toBe(1);
-        const relevantTrace = relevantTraces[0]!;
-        expect(relevantTrace).toBeDefined();
+          const relevantTraces = traces.data.filter((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          );
+          expect(relevantTraces.length).toBe(1);
+          const relevantTrace = relevantTraces[0]!;
+          expect(relevantTrace).toBeDefined();
 
-        // Check for extraction of the otel context
-        expect(relevantTrace.traceID).toBe(traceId);
-        for (const span of relevantTrace.spans) {
-          expect(span.traceID).toBe(traceId);
-        }
+          // Check for extraction of the otel context
+          expect(relevantTrace.traceID).toBe(traceId);
+          for (const span of relevantTrace.spans) {
+            expect(span.traceID).toBe(traceId);
+          }
 
-        expect(upstreamHttpCalls.length).toBe(7);
+          expect(upstreamHttpCalls.length).toBe(7);
 
-        for (const call of upstreamHttpCalls) {
-          const transparentHeader = (call.headers || {})['traceparent'];
-          expect(transparentHeader).toBeDefined();
-          expect(transparentHeader?.length).toBeGreaterThan(1);
-          expect(transparentHeader).toContain(traceId);
-        }
+          for (const call of upstreamHttpCalls) {
+            const transparentHeader = (call.headers || {})['traceparent'];
+            expect(transparentHeader).toBeDefined();
+            expect(transparentHeader?.length).toBeGreaterThan(1);
+            expect(transparentHeader).toContain(traceId);
+          }
+        });
       });
     });
   });
