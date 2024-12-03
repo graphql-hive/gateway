@@ -112,5 +112,9 @@
     "rollup-plugin-tsconfig-paths": "^1.5.2",
     "tsx": "4.19.2"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }
