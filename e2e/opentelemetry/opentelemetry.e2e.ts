@@ -1,7 +1,6 @@
 import os from 'os';
 import { createTenv, type Container } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -131,6 +130,7 @@ describe('OpenTelemetry', () => {
       async function getJaegerTraces(
         service: string,
         expectedDataLength: number,
+        path = '/graphql',
       ): Promise<JaegerTracesApiResponse> {
         const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
@@ -143,7 +143,7 @@ describe('OpenTelemetry', () => {
               res.data.length >= expectedDataLength &&
               res.data.some((trace) =>
                 trace.spans.some(
-                  (span) => span.operationName === 'POST /graphql',
+                  (span) => span.operationName === 'POST ' + path,
                 ),
               )
             ) {
@@ -797,20 +797,19 @@ describe('OpenTelemetry', () => {
             OTLP_SERVICE_NAME: serviceName,
           },
         });
-        await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
-        const traces = await getJaegerTraces(serviceName, 2);
+        const path = '/non-existing';
+        await fetch(`http://0.0.0.0:${port}${path}`).catch(() => {});
+        const traces = await getJaegerTraces(serviceName, 2, path);
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
-          trace.spans.some(
-            (span) => span.operationName === 'GET /non-existing',
-          ),
+          trace.spans.some((span) => span.operationName === 'GET ' + path),
         );
         expect(relevantTrace).toBeDefined();
         expect(relevantTrace?.spans.length).toBe(1);
 
         expect(relevantTrace?.spans).toContainEqual(
           expect.objectContaining({
-            operationName: 'GET /non-existing',
+            operationName: 'GET ' + path,
             tags: expect.arrayContaining([
               expect.objectContaining({
                 key: 'otel.status_code',
