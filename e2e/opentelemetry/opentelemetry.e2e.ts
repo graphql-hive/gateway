@@ -616,7 +616,7 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        await expectJaegerTraces(serviceName, traces => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTraces = traces.data.filter((trace) =>
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -675,7 +675,7 @@ describe('OpenTelemetry', () => {
         await expect(execute({ query: 'query { test' })).rejects.toThrow(
           'Syntax Error: Expected Name, found <EOF>.',
         );
-        await expectJaegerTraces(serviceName, traces => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTrace = traces.data.find((trace) =>
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -736,7 +736,7 @@ describe('OpenTelemetry', () => {
         ).rejects.toThrow(
           '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}',
         );
-        await expectJaegerTraces(serviceName, traces => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTrace = traces.data.find((trace) =>
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -764,7 +764,8 @@ describe('OpenTelemetry', () => {
                 }),
                 expect.objectContaining({
                   key: 'otel.status_description',
-                  value: 'Cannot query field "nonExistentField" on type "Query".',
+                  value:
+                    'Cannot query field "nonExistentField" on type "Query".',
                 }),
                 expect.objectContaining({
                   key: 'graphql.error.count',
@@ -782,7 +783,6 @@ describe('OpenTelemetry', () => {
             ).length,
           ).toBe(0);
         });
-        
       });
 
       it('should report http failures', async () => {
@@ -797,7 +797,7 @@ describe('OpenTelemetry', () => {
         });
         const path = '/non-existing';
         await fetch(`http://0.0.0.0:${port}${path}`).catch(() => {});
-        await expectJaegerTraces(serviceName, traces => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTrace = traces.data.find((trace) =>
             trace.spans.some((span) => span.operationName === 'GET ' + path),
@@ -1315,7 +1315,7 @@ describe('OpenTelemetry', () => {
             }>,
         );
 
-        await expectJaegerTraces(serviceName, traces => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(3);
 
           const relevantTraces = traces.data.filter((trace) =>
