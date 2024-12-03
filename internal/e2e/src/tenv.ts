@@ -794,7 +794,7 @@ export function createTenv(cwd: string): Tenv {
             return undefined as unknown as Promise<void>;
           }
           ctrl.abort();
-          return ctr.stop({ t: 0 });
+          return ctr.stop({ t: 0, signal: 'SIGTERM' });
         },
       };
       leftoverStack.use(container);

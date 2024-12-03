@@ -4,6 +4,7 @@ import { createTenv, type Container } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 
 const { service, gateway, container, composeWithApollo, gatewayRunner } =
   createTenv(__dirname);
@@ -150,9 +151,13 @@ describe('OpenTelemetry', () => {
         }
         return res;
       }
+      const relevantTracesMatcher = (res: JaegerTracesApiResponse) =>
+        res.data.some((trace) =>
+          trace.spans.some((span) => span.operationName === 'POST /graphql'),
+        );
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
-        const { execute } = await gateway({
+        const gw = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -161,7 +166,7 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(execute({ query: TEST_QUERY })).resolves.toEqual({
+        await expect(gw.execute({ query: TEST_QUERY })).resolves.toEqual({
           data: {
             topProducts: [
               {
@@ -619,11 +624,8 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        const traces = await getJaegerTraces(serviceName, 2, (res) =>
-          res.data.some((trace) =>
-            trace.spans.some((span) => span.operationName === 'POST /graphql'),
-          ),
-        );
+        await gw[DisposableSymbols.asyncDispose]();
+        const traces = await getJaegerTraces(serviceName, 2, relevantTracesMatcher);
         expect(traces.data.length).toBe(2);
         const relevantTraces = traces.data.filter((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -669,7 +671,7 @@ describe('OpenTelemetry', () => {
 
       it('should report parse failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-2';
-        const { execute } = await gateway({
+        const gw = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -678,10 +680,11 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(execute({ query: 'query { test' })).rejects.toThrow(
+        await expect(gw.execute({ query: 'query { test' })).rejects.toThrow(
           'Syntax Error: Expected Name, found <EOF>.',
         );
-        const traces = await getJaegerTraces(serviceName, 2);
+        await gw[DisposableSymbols.asyncDispose]();
+        const traces = await getJaegerTraces(serviceName, 2, relevantTracesMatcher);
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -727,7 +730,7 @@ describe('OpenTelemetry', () => {
 
       it('should report validate failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-3';
-        const { execute } = await gateway({
+        const gw = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -737,12 +740,12 @@ describe('OpenTelemetry', () => {
         });
 
         await expect(
-          execute({ query: 'query { nonExistentField }' }),
+          gw.execute({ query: 'query { nonExistentField }' }),
         ).rejects.toThrow(
           '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}',
         );
-        await setTimeout(300);
-        const traces = await getJaegerTraces(serviceName, 2);
+        await gw[DisposableSymbols.asyncDispose]();
+        const traces = await getJaegerTraces(serviceName, 2, relevantTracesMatcher);
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -791,7 +794,7 @@ describe('OpenTelemetry', () => {
 
       it('should report http failures', async () => {
         const serviceName = 'mesh-e2e-test-4';
-        const { port } = await gateway({
+        const gw = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -799,8 +802,9 @@ describe('OpenTelemetry', () => {
             OTLP_SERVICE_NAME: serviceName,
           },
         });
-        await fetch(`http://0.0.0.0:${port}/non-existing`).catch(() => {});
-        const traces = await getJaegerTraces(serviceName, 2);
+        await fetch(`http://0.0.0.0:${gw.port}/non-existing`).catch(() => { });
+        await gw[DisposableSymbols.asyncDispose]();
+        const traces = await getJaegerTraces(serviceName, 2, relevantTracesMatcher);
         expect(traces.data.length).toBe(2);
         const relevantTrace = traces.data.find((trace) =>
           trace.spans.some(
@@ -834,7 +838,7 @@ describe('OpenTelemetry', () => {
       it('context propagation should work correctly', async () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         const serviceName = 'mesh-e2e-test-5';
-        const { execute, port } = await gateway({
+        const gw = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -844,7 +848,7 @@ describe('OpenTelemetry', () => {
         });
 
         await expect(
-          execute({
+          gw.execute({
             query: TEST_QUERY,
             headers: {
               traceparent: `00-${traceId}-b7ad6b7169203331-01`,
@@ -1310,7 +1314,7 @@ describe('OpenTelemetry', () => {
         });
 
         const upstreamHttpCalls = await fetch(
-          `http://0.0.0.0:${port}/upstream-fetch`,
+          `http://0.0.0.0:${gw.port}/upstream-fetch`,
         ).then(
           (r) =>
             r.json() as unknown as Array<{
@@ -1319,7 +1323,8 @@ describe('OpenTelemetry', () => {
             }>,
         );
 
-        const traces = await getJaegerTraces(serviceName, 3);
+        await gw[DisposableSymbols.asyncDispose]();
+        const traces = await getJaegerTraces(serviceName, 3, relevantTracesMatcher);
         expect(traces.data.length).toBe(3);
 
         const relevantTraces = traces.data.filter((trace) =>
