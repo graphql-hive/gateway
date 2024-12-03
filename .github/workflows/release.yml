@@ -33,7 +33,7 @@ jobs:
       npmTag: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && 'rc' || 'alpha' }}
       restoreDeletedChangesets: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && true || false }}
     secrets:
-      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   stable:
     if: github.ref == 'refs/heads/main'
@@ -44,7 +44,7 @@ jobs:
       releaseScript: changeset publish
       versionScript: changeset version
     secrets:
-      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   ghcr:
     runs-on: ubuntu-latest
