@@ -1,8 +1,8 @@
 import { createTenv } from '@internal/e2e';
 import { getLocalhost } from '@internal/testing';
-import { expect, it } from 'vitest';
-import { fetch} from '@whatwg-node/fetch';
+import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
+import { expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
@@ -10,9 +10,7 @@ it('reproduction-136', async () => {
   const { port } = await gateway({
     supergraph: {
       with: 'mesh',
-      services: [
-        await service('my-subgraph')
-      ]
+      services: [await service('my-subgraph')],
     },
   });
   const hostname = await getLocalhost(port);
@@ -28,7 +26,7 @@ it('reproduction-136', async () => {
         }
       `,
     }),
-  })
+  });
   const results: string[] = [];
   for await (const result of res.body) {
     results.push(Buffer.from(result).toString('utf-8').trim());
