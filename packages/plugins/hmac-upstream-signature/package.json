@@ -47,7 +47,7 @@
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.4",
     "@graphql-mesh/utils": "^0.103.4",
-    "@graphql-tools/utils": "^10.6.0",
+    "@graphql-tools/utils": "^10.6.2",
     "json-stable-stringify": "^1.1.1",
     "tslib": "^2.4.0"
   },

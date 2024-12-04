@@ -49,7 +49,7 @@
     "@graphql-mesh/store": "^0.103.4",
     "@graphql-mesh/types": "^0.103.4",
     "@graphql-mesh/utils": "^0.103.4",
-    "@graphql-tools/utils": "^10.6.0",
+    "@graphql-tools/utils": "^10.6.2",
     "@graphql-yoga/plugin-prometheus": "^6.5.0",
     "@whatwg-node/disposablestack": "^0.0.5",
     "prom-client": "^15.0.0",
