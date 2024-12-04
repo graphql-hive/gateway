@@ -48,7 +48,7 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
-    "dataloader": "2.2.3",
+    "dataloader": "^2.2.3",
     "graphql": "^16.9.0",
     "pkgroll": "2.5.1"
   },

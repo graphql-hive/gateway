@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@graphql-tools/utils": "^10.6.0",
-    "dataloader": "^2.2.2",
+    "dataloader": "^2.2.3",
     "tslib": "^2.4.0"
   },
   "devDependencies": {
