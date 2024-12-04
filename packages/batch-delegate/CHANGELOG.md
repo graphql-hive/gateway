@@ -1,5 +1,24 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.22
+
+### Patch Changes
+
+- [#264](https://github.com/graphql-hive/gateway/pull/264) [`6f56083`](https://github.com/graphql-hive/gateway/commit/6f56083028402780f505db1492b9e84ab4227a4f) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`dataloader@2.2.3` ↗︎](https://www.npmjs.com/package/dataloader/v/2.2.3) (from `2.2.2`, in `dependencies`)
+
+- [#268](https://github.com/graphql-hive/gateway/pull/268) [`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`dataloader@^2.2.3` ↗︎](https://www.npmjs.com/package/dataloader/v/2.2.3) (from `2.2.3`, in `dependencies`)
+
+- [#269](https://github.com/graphql-hive/gateway/pull/269) [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.6.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.2) (from `^10.6.0`, in `dependencies`)
+
+- Updated dependencies [[`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4)]:
+  - @graphql-tools/delegate@10.2.6
+
 ## 9.0.21
 
 ### Patch Changes
