@@ -1,4 +1,4 @@
-extend type Query {
+type Query @extends {
   topProducts(first: Int = 5): [Product]
 }
 

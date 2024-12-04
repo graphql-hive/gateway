@@ -1,4 +1,4 @@
-extend type Query {
+type Query @extends {
   me: User
   user(id: ID!): User
   users: [User]

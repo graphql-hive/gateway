@@ -1,4 +1,4 @@
-extend type Product @key(fields: "upc") {
+type Product @key(fields: "upc") @extends {
   upc: String! @external
   weight: Int @external
   price: Int @external
