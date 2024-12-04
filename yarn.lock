@@ -3925,7 +3925,7 @@ __metadata:
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/schema": "npm:^10.0.7"
     "@graphql-tools/utils": "npm:^10.6.0"
-    dataloader: "npm:2.2.3"
+    dataloader: "npm:^2.2.3"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
@@ -3939,7 +3939,7 @@ __metadata:
   resolution: "@graphql-tools/batch-execute@workspace:packages/batch-execute"
   dependencies:
     "@graphql-tools/utils": "npm:^10.6.0"
-    dataloader: "npm:^2.2.2"
+    dataloader: "npm:^2.2.3"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
@@ -3972,7 +3972,7 @@ __metadata:
     "@graphql-tools/schema": "npm:^10.0.8"
     "@graphql-tools/utils": "npm:^10.6.0"
     "@repeaterjs/repeater": "npm:^3.0.6"
-    dataloader: "npm:^2.2.2"
+    dataloader: "npm:^2.2.3"
     dset: "npm:^3.1.2"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
@@ -4226,7 +4226,7 @@ __metadata:
     "@graphql-tools/schema": "npm:^10.0.8"
     "@graphql-tools/utils": "npm:^10.6.0"
     "@graphql-tools/wrap": "workspace:^"
-    dataloader: "npm:2.2.3"
+    dataloader: "npm:^2.2.3"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.4.0"
@@ -8956,17 +8956,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dataloader@npm:2.2.3, dataloader@npm:^2.2.2":
-  version: 2.2.3
-  resolution: "dataloader@npm:2.2.3"
-  checksum: 10c0/9b9a056fbc863ca86da87d59e053e871e263b4966aa4d55e40d61a65e96815fae5530ca220629064ca5f8e3000c0c4ec93292e170c38ff393fb34256b4d7c1aa
-  languageName: node
-  linkType: hard
-
 "dataloader@npm:^1.4.0":
   version: 1.4.0
   resolution: "dataloader@npm:1.4.0"
   checksum: 10c0/5fa4c843b9e60195092f1fc7e2acaff318ed46886dc670ddff683bc560f12d4079e6d1e77749501b7e111a8582d26a2aa2a2fbe6d7d5e1520cef64f4e1fd242d
+  languageName: node
+  linkType: hard
+
+"dataloader@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "dataloader@npm:2.2.3"
+  checksum: 10c0/9b9a056fbc863ca86da87d59e053e871e263b4966aa4d55e40d61a65e96815fae5530ca220629064ca5f8e3000c0c4ec93292e170c38ff393fb34256b4d7c1aa
   languageName: node
   linkType: hard
 
