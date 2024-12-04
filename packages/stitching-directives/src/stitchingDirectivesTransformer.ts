@@ -659,13 +659,13 @@ function generateArgsFromKeysFn(
   return function generateArgsFromKeys(
     keys: ReadonlyArray<any>,
   ): Record<string, any> {
-    const newArgs = mergeDeep([{}, args]);
+    const newArgs = { ...args };
     if (expansions) {
       for (const expansion of expansions) {
         const mappingInstructions = expansion.mappingInstructions;
         const expanded: Array<any> = [];
         for (const key of keys) {
-          let newValue = mergeDeep([{}, expansion.valuePath]);
+          let newValue = {};
           for (const { destinationPath, sourcePath } of mappingInstructions) {
             if (destinationPath.length) {
               addProperty(
@@ -692,7 +692,7 @@ function generateArgsFn(
   const { mappingInstructions, args, usedProperties } = mergedTypeResolverInfo;
 
   return function generateArgs(originalResult: any): Record<string, any> {
-    const newArgs = mergeDeep([{}, args]);
+    const newArgs = { ...args };
     const filteredResult = getProperties(originalResult, usedProperties);
     if (mappingInstructions) {
       for (const mappingInstruction of mappingInstructions) {
