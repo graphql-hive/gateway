@@ -10,7 +10,7 @@
     "@graphql-mesh/transport-rest": "^0.8.0",
     "@graphql-mesh/types": "^0.103.4",
     "@graphql-mesh/utils": "^0.103.4",
-    "@graphql-tools/utils": "^10.6.0",
+    "@graphql-tools/utils": "^10.6.2",
     "@omnigraph/openapi": "^0.108.0",
     "@whatwg-node/fetch": "^0.10.1",
     "fets": "^0.8.4",
