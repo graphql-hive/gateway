@@ -1,5 +1,6 @@
 import {
   DelegationContext,
+  getTypeInfo,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -22,7 +23,6 @@ import {
   ObjectValueNode,
   OperationDefinitionNode,
   typeFromAST,
-  TypeInfo,
   visit,
   visitWithTypeInfo,
 } from 'graphql';
@@ -229,7 +229,7 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
     request: ExecutionRequest,
     delegationContext?: DelegationContext<TContext>,
   ): DocumentNode {
-    const typeInfo = new TypeInfo(this._getTransformedSchema());
+    const typeInfo = getTypeInfo(this._getTransformedSchema());
     const newDocument: DocumentNode = visit(
       document,
       visitWithTypeInfo(typeInfo, {

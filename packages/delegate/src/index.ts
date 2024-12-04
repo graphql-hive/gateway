@@ -11,3 +11,4 @@ export * from './types.js';
 export * from './extractUnavailableFields.js';
 export * from './leftOver.js';
 export * from './symbols.js';
+export * from './getTypeInfo.js';

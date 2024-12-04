@@ -1,11 +1,20 @@
+import { ApolloGateway, LocalGraphQLDataSource } from '@apollo/gateway';
+import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { getOperationAST, parse, printSchema } from 'graphql';
-import { bench, describe } from 'vitest';
-import apolloGateway from './apollo';
+import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
+import { mapMaybePromise } from '@graphql-tools/utils';
+import {
+  accounts,
+  createExampleSetup,
+  createTenv,
+  inventory,
+  products,
+  reviews,
+} from '@internal/e2e';
+import { benchConfig } from '@internal/testing';
+import { getOperationAST, GraphQLSchema, parse } from 'graphql';
+import { bench, describe, expect } from 'vitest';
 import monolith from './monolith';
-import stitching from './stitching';
-
-const duration = 10_000;
 
 function memoize1<T extends (...args: any) => any>(fn: T): T {
   const memoize1cache = new Map();
@@ -22,52 +31,16 @@ function memoize1<T extends (...args: any) => any>(fn: T): T {
 }
 
 describe('Federation', async () => {
-  const query = /* GraphQL */ `
-    fragment User on User {
-      id
-      username
-      name
-    }
-
-    fragment Review on Review {
-      id
-      body
-    }
-
-    fragment Product on Product {
-      inStock
-      name
-      price
-      shippingEstimate
-      upc
-      weight
-    }
-
-    query TestQuery {
-      users {
-        ...User
-        reviews {
-          ...Review
-          product {
-            ...Product
-          }
-        }
-      }
-      topProducts {
-        ...Product
-        reviews {
-          ...Review
-          author {
-            ...User
-          }
-        }
-      }
-    }
-  `;
-
-  const operationName = 'TestQuery';
-
-  const monolithParse = memoize1(parse);
+  const { fs } = createTenv(__dirname);
+  const { query, operationName, result, supergraph } =
+    createExampleSetup(__dirname);
+  const services: Record<string, { schema: GraphQLSchema }> = {
+    accounts,
+    inventory,
+    products,
+    reviews,
+  };
+  const memoizedParse = memoize1(parse);
 
   // Only if you want to see the latency that the gateway adds
   bench.skip(
@@ -75,63 +48,123 @@ describe('Federation', async () => {
     () =>
       normalizedExecutor({
         schema: monolith,
-        document: monolithParse(query),
-        operationName,
+        document: memoizedParse(query),
+        operationName: operationName,
         contextValue: {},
       }) as Promise<void>,
   );
 
-  const apolloParse = memoize1(parse);
+  const supergraphPath = await supergraph();
+  const supergraphSdl = await fs.read(supergraphPath);
+  const dummyLogger = {
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+  };
+  const dummyCache = {
+    get: async () => undefined,
+    set: async () => {},
+    delete: async () => true,
+  };
+  const parsedQuery = parse(query, { noLocation: true });
+  const operationAST = getOperationAST(parsedQuery, operationName);
 
-  const getOperationASTMemoized = memoize1(getOperationAST);
-  const printSchemaMemoized = memoize1(printSchema);
+  if (!operationAST) {
+    throw new Error(`Operation ${operationName} not found`);
+  }
 
-  const apolloGWResult = await apolloGateway.load();
+  let apolloGW: ApolloGateway;
+  let apolloGWSchema: GraphQLSchema;
+  let apolloGWExecutor: ApolloGateway['executor'];
+
+  const schemaHash: string & { __fauxpaque: 'SchemaHash' } = Object.assign(
+    new String(supergraphSdl) as string,
+    { __fauxpaque: 'SchemaHash' } as const,
+  );
 
   bench(
     'Apollo Gateway',
     () => {
-      const document = apolloParse(query);
-      return apolloGWResult.executor({
-        document,
-        operationName: 'TestQuery',
-        request: {
-          query,
+      return mapMaybePromise(
+        apolloGWExecutor({
+          document: parsedQuery,
+          operationName,
+          request: {
+            query: query,
+          },
+          operation: operationAST,
+          metrics: {},
+          overallCachePolicy: {},
+          schemaHash,
+          queryHash: query,
+          source: query,
+          cache: dummyCache,
+          schema: apolloGWSchema,
+          logger: dummyLogger,
+          context: {},
+        }),
+        (response) => {
+          expect(response).toEqual(result);
         },
-        operation: getOperationASTMemoized(document, operationName)!,
-        metrics: {} as any,
-        overallCachePolicy: undefined as any,
-        schemaHash: printSchemaMemoized(apolloGWResult.schema) as any,
-        queryHash: query,
-        source: query,
-        cache: {
-          get: async () => undefined,
-          set: async () => {},
-          delete: async () => true,
-        },
-        schema: apolloGWResult.schema,
-        logger: console,
-        context: {},
-      }) as unknown as Promise<void>;
+      ) as Promise<void>;
     },
     {
-      time: duration,
+      async setup() {
+        apolloGW = new ApolloGateway({
+          logger: dummyLogger,
+          supergraphSdl,
+          buildService({ name }) {
+            const lowercasedName = name.toLowerCase();
+            const service = services[lowercasedName];
+            if (!service) {
+              throw new Error(`Service ${name} not found`);
+            }
+            return new LocalGraphQLDataSource(service.schema);
+          },
+        });
+        const { schema, executor } = await apolloGW.load();
+        apolloGWSchema = schema;
+        apolloGWExecutor = executor;
+      },
+      teardown() {
+        return apolloGW.stop();
+      },
+      ...benchConfig,
     },
   );
 
-  const stitchingSchema = await stitching;
-  const stitchingParse = memoize1(parse);
+  let stitchedSchema: GraphQLSchema;
 
   bench(
     'Stitching',
     () =>
-      normalizedExecutor({
-        schema: stitchingSchema,
-        document: stitchingParse(query),
-        contextValue: {},
-      }) as Promise<void>,
+      mapMaybePromise(
+        normalizedExecutor({
+          schema: stitchedSchema,
+          document: parsedQuery,
+          operationName: operationName,
+          contextValue: {},
+        }),
+        (response) => {
+          expect(response).toEqual(result);
+        },
+      ) as Promise<void>,
     {
-      time: duration,
+      setup() {
+        stitchedSchema = getStitchedSchemaFromSupergraphSdl({
+          supergraphSdl,
+          onSubschemaConfig(subschemaConfig) {
+            const lowercasedName = subschemaConfig.name.toLowerCase();
+            const service = services[lowercasedName];
+            if (!service) {
+              throw new Error(`Service ${subschemaConfig.name} not found`);
+            }
+            subschemaConfig.executor = createDefaultExecutor(service.schema);
+          },
+        });
+      },
+      ...benchConfig,
     },
   );
 });

@@ -1,82 +1,15 @@
-import { createTenv } from '@internal/e2e';
+import { createExampleSetup, createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
-const { service, gateway } = createTenv(__dirname);
-
+const { gateway } = createTenv(__dirname);
+const { supergraph, query } = createExampleSetup(__dirname);
 it('should consistently explain the query plan', async () => {
   const { execute } = await gateway({
-    supergraph: {
-      with: 'apollo',
-      services: [
-        await service('accounts'),
-        await service('inventory'),
-        await service('products'),
-        await service('reviews'),
-      ],
-    },
+    supergraph: await supergraph(),
   });
   await expect(
     execute({
-      query: /* GraphQL */ `
-        fragment User on User {
-          id
-          username
-          name
-        }
-
-        fragment Review on Review {
-          id
-          body
-        }
-
-        fragment Product on Product {
-          inStock
-          name
-          price
-          shippingEstimate
-          upc
-          weight
-        }
-
-        query TestQuery {
-          users {
-            ...User
-            reviews {
-              ...Review
-              product {
-                ...Product
-                reviews {
-                  ...Review
-                  author {
-                    ...User
-                    reviews {
-                      ...Review
-                      product {
-                        ...Product
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          topProducts {
-            ...Product
-            reviews {
-              ...Review
-              author {
-                ...User
-                reviews {
-                  ...Review
-                  product {
-                    ...Product
-                  }
-                }
-              }
-            }
-          }
-        }
-      `,
+      query,
     }),
   ).resolves.toMatchInlineSnapshot(`
     {

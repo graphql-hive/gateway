@@ -1,123 +1,21 @@
 import { ApolloGateway } from '@apollo/gateway';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { createTenv } from '@internal/e2e';
+import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
+import { benchConfig } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
-import { leftoverStack } from '../../internal/e2e/src/leftoverStack';
-
-const duration = 10_000;
-const warmupTime = 1_000;
-const warmupIterations = 10;
 
 describe('Gateway', async () => {
-  const query = /* GraphQL */ `
-    fragment User on User {
-      id
-      username
-      name
-    }
+  const { gateway, fs } = createTenv(__dirname);
+  const example = createExampleSetup(__dirname);
 
-    fragment Review on Review {
-      id
-      body
-    }
+  const supergraph = await example.supergraph();
+  const supergraphSdl = await fs.read(supergraph);
 
-    fragment Product on Product {
-      inStock
-      name
-      price
-      shippingEstimate
-      upc
-      weight
-    }
-
-    query TestQuery {
-      users {
-        ...User
-        reviews {
-          ...Review
-          product {
-            ...Product
-            reviews {
-              ...Review
-              author {
-                ...User
-                reviews {
-                  ...Review
-                  product {
-                    ...Product
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      topProducts {
-        ...Product
-        reviews {
-          ...Review
-          author {
-            ...User
-            reviews {
-              ...Review
-              product {
-                ...Product
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const { fs, service, composeWithApollo, gateway } = createTenv(__dirname);
-
-  const PRODUCTS_SIZE = process.env['PRODUCTS_SIZE'] || 3;
-
-  const supergraphFile = await composeWithApollo([
-    await service('accounts', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('inventory', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('products', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-    await service('reviews', {
-      env: {
-        PRODUCTS_SIZE,
-      },
-    }),
-  ]);
-  const supergraph = await fs.read(supergraphFile);
-  const hiveGw = await gateway({
-    supergraph,
-    args: ['--jit'],
-    env: {
-      NODE_ENV: 'production',
-      JIT: 'true',
-    },
-  });
-  const apolloGw = new ApolloServer({
-    gateway: new ApolloGateway({
-      supergraphSdl: supergraph,
-    }),
-  });
-  const { url: apolloGwUrl } = await startStandaloneServer(apolloGw, {
-    listen: { port: 0 },
-  });
-
-  leftoverStack.defer(() => apolloGw.stop());
-
+  let apolloGw: ApolloServer;
+  let apolloGwUrl: string;
+  let ctrl: AbortController;
   bench(
     'Apollo Gateway',
     async () => {
@@ -127,8 +25,9 @@ describe('Gateway', async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query,
+          query: example.query,
         }),
+        signal: ctrl.signal,
       });
       const data = await res.json();
       expect(data).toEqual({
@@ -136,26 +35,50 @@ describe('Gateway', async () => {
       });
     },
     {
-      time: duration,
-      warmupTime,
-      warmupIterations,
+      async setup() {
+        ctrl = new AbortController();
+        apolloGw = new ApolloServer({
+          gateway: new ApolloGateway({
+            supergraphSdl,
+          }),
+        });
+        const { url } = await startStandaloneServer(apolloGw, {
+          listen: { port: 0 },
+        });
+        apolloGwUrl = url;
+      },
+      teardown() {
+        ctrl.abort();
+        return apolloGw.stop();
+      },
+      ...benchConfig,
     },
   );
 
+  let hiveGw: Gateway;
   bench(
     'Hive Gateway',
     async () => {
       const res = await hiveGw.execute({
-        query,
+        query: example.query,
       });
-      expect(res).toEqual({
-        data: expect.any(Object),
-      });
+      expect(res).toEqual(example.result);
     },
     {
-      time: duration,
-      warmupTime,
-      warmupIterations,
+      async setup() {
+        hiveGw = await gateway({
+          supergraph,
+          args: ['--jit'],
+          env: {
+            NODE_ENV: 'production',
+            JIT: 'true',
+          },
+        });
+      },
+      async teardown() {
+        return hiveGw[Symbol.asyncDispose]();
+      },
+      ...benchConfig,
     },
   );
 });

@@ -26,6 +26,7 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
+import { getTypeInfo } from '../../../delegate/src/getTypeInfo.js';
 import { LeafValueTransformer } from '../types.js';
 
 export interface MapLeafValuesTransformationContext {
@@ -66,7 +67,7 @@ export default class MapLeafValues<TContext = Record<string, any>>
         }
       }
     }
-    this.typeInfo = new TypeInfo(originalWrappingSchema);
+    this.typeInfo = getTypeInfo(originalWrappingSchema);
     return originalWrappingSchema;
   }
 

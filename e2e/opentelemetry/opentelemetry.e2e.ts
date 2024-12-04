@@ -1,11 +1,10 @@
 import os from 'os';
-import { createTenv, type Container } from '@internal/e2e';
+import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const { service, gateway, container, composeWithApollo, gatewayRunner } =
-  createTenv(__dirname);
+const { gateway, container, gatewayRunner } = createTenv(__dirname);
 
 let supergraph!: string;
 
@@ -16,74 +15,10 @@ const JAEGER_HOSTNAME =
       : 'host.docker.internal'
     : '0.0.0.0';
 
-const TEST_QUERY = /* GraphQL */ `
-  fragment User on User {
-    id
-    username
-    name
-  }
-
-  fragment Review on Review {
-    id
-    body
-  }
-
-  fragment Product on Product {
-    inStock
-    name
-    price
-    shippingEstimate
-    upc
-    weight
-  }
-
-  query TestQuery {
-    users {
-      ...User
-      reviews {
-        ...Review
-        product {
-          ...Product
-          reviews {
-            ...Review
-            author {
-              ...User
-              reviews {
-                ...Review
-                product {
-                  ...Product
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    topProducts {
-      ...Product
-      reviews {
-        ...Review
-        author {
-          ...User
-          reviews {
-            ...Review
-            product {
-              ...Product
-            }
-          }
-        }
-      }
-    }
-  }
-`;
+const exampleSetup = createExampleSetup(__dirname);
 
 beforeAll(async () => {
-  supergraph = await composeWithApollo([
-    await service('accounts'),
-    await service('inventory'),
-    await service('products'),
-    await service('reviews'),
-  ]);
+  supergraph = await exampleSetup.supergraph();
 });
 
 type JaegerTracesApiResponse = {
@@ -158,7 +93,7 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(execute({ query: TEST_QUERY })).resolves.toEqual({
+        await expect(execute({ query: exampleSetup.query })).resolves.toEqual({
           data: {
             topProducts: [
               {
@@ -841,7 +776,7 @@ describe('OpenTelemetry', () => {
 
         await expect(
           execute({
-            query: TEST_QUERY,
+            query: exampleSetup.query,
             headers: {
               traceparent: `00-${traceId}-b7ad6b7169203331-01`,
             },

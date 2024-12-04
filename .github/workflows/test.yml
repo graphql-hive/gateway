@@ -13,7 +13,6 @@ concurrency:
 jobs:
   unit:
     strategy:
-      fail-fast: false
       matrix:
         node-version:
           - 18
@@ -47,7 +46,6 @@ jobs:
   leaks:
     needs: [unit]
     strategy:
-      fail-fast: false
       matrix:
         node-version:
           - 18
@@ -72,7 +70,6 @@ jobs:
   e2e:
     runs-on: ${{ matrix.setup.os }}
     strategy:
-      fail-fast: false
       matrix:
         setup:
           # Node

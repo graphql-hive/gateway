@@ -1,10 +1,8 @@
 import {
-  asArray,
   createDeferred,
   getResponseKeyFromInfo,
   isPromise,
   mapMaybePromise,
-  memoize1,
 } from '@graphql-tools/utils';
 import {
   defaultFieldResolver,
@@ -20,6 +18,7 @@ import {
 } from './leftOver.js';
 import {
   EMPTY_OBJECT,
+  getActualFieldNodes,
   getSubschema,
   getUnpathedErrors,
   handleResolverResult,
@@ -285,7 +284,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                     Object.keys(info.fragments).length > 0
                     ? info.fragments
                     : EMPTY_OBJECT,
-                  memoizedAsArray(fieldNode),
+                  getActualFieldNodes(fieldNode),
                   context,
                   info,
                 );
@@ -509,5 +508,3 @@ function flattenPromise<T>(data: T): Promise<T> | T {
   }
   return data;
 }
-
-const memoizedAsArray = memoize1(asArray);

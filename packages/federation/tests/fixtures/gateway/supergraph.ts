@@ -1,16 +1,11 @@
 import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema as apolloBuildSubgraphSchema } from '@apollo/subgraph';
 import { IResolvers } from '@graphql-tools/utils';
-import { GraphQLSchema, parse } from 'graphql';
-import * as accounts from './accounts';
-import * as discount from './discount';
-import * as inventory from './inventory';
-import * as products from './products';
-import * as reviews from './reviews';
+import { accounts, inventory, products, reviews } from '@internal/e2e';
+import { DocumentNode, GraphQLSchema } from 'graphql';
 
 const services = {
   accounts,
-  discount,
   inventory,
   products,
   reviews,
@@ -18,12 +13,12 @@ const services = {
 
 export interface ServiceInput {
   name: string;
-  typeDefs: string;
+  typeDefs: DocumentNode;
   schema: GraphQLSchema;
 }
 
 export type BuildSubgraphSchemaFn = (options: {
-  typeDefs: string;
+  typeDefs: DocumentNode;
   resolvers: IResolvers;
 }) => GraphQLSchema;
 
@@ -32,7 +27,7 @@ const defaultBuildSubgraphSchema: BuildSubgraphSchemaFn = ({
   resolvers,
 }) =>
   apolloBuildSubgraphSchema({
-    typeDefs: parse(typeDefs, { noLocation: true }),
+    typeDefs: typeDefs,
     resolvers: resolvers as any,
   });
 

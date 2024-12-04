@@ -12,7 +12,6 @@ concurrency:
 jobs:
   bench:
     strategy:
-      fail-fast: false
       matrix:
         e2e_runner: [node, bun]
         products_size:
@@ -29,8 +28,8 @@ jobs:
         with:
           node-version: 23
       - name: Bench
-        continue-on-error: true
         run: ${{matrix.e2e_runner == 'bun' && 'yarn bun' || 'yarn'}} bench
         env:
           PRODUCTS_SIZE: ${{matrix.products_size}}
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
+          CI: true
