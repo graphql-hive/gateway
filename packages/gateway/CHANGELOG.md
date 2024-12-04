@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 1.6.0
+
+### Minor Changes
+
+- [#254](https://github.com/graphql-hive/gateway/pull/254) [`18c86e7`](https://github.com/graphql-hive/gateway/commit/18c86e797bbd1f741ca5d629108a93441ef1210d) Thanks [@ardatan](https://github.com/ardatan)! - Configure request timeout with `requestTimeout` option.
+
+### Patch Changes
+
+- [#269](https://github.com/graphql-hive/gateway/pull/269) [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.6.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.2) (from `^10.6.0`, in `dependencies`)
+
+- Updated dependencies [[`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4)]:
+  - @graphql-hive/gateway-runtime@1.3.7
+  - @graphql-mesh/hmac-upstream-signature@1.2.14
+  - @graphql-mesh/plugin-opentelemetry@1.3.19
+  - @graphql-mesh/plugin-prometheus@1.3.7
+  - @graphql-mesh/transport-http@0.6.23
+  - @graphql-mesh/transport-http-callback@0.5.12
+  - @graphql-mesh/transport-ws@0.4.10
+
 ## 1.5.9
 
 ### Patch Changes

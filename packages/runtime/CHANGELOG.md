@@ -1,5 +1,24 @@
 # @graphql-hive/gateway-runtime
 
+## 1.3.7
+
+### Patch Changes
+
+- [#269](https://github.com/graphql-hive/gateway/pull/269) [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.6.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.2) (from `^10.6.0`, in `dependencies`)
+
+- Updated dependencies [[`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`6f56083`](https://github.com/graphql-hive/gateway/commit/6f56083028402780f505db1492b9e84ab4227a4f), [`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4)]:
+  - @graphql-mesh/fusion-runtime@0.10.13
+  - @graphql-mesh/hmac-upstream-signature@1.2.14
+  - @graphql-mesh/transport-common@0.7.21
+  - @graphql-tools/batch-delegate@9.0.22
+  - @graphql-tools/delegate@10.2.6
+  - @graphql-tools/executor-http@1.1.12
+  - @graphql-tools/federation@2.2.38
+  - @graphql-tools/stitch@9.4.8
+  - @graphql-tools/wrap@10.0.24
+
 ## 1.3.6
 
 ### Patch Changes
