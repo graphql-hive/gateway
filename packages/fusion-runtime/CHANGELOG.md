@@ -1,5 +1,14 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.14
+
+### Patch Changes
+
+- [#274](https://github.com/graphql-hive/gateway/pull/274) [`3f1a0fa`](https://github.com/graphql-hive/gateway/commit/3f1a0fa9f1f3b91542d00a0211d7def8ef30827e) Thanks [@ardatan](https://github.com/ardatan)! - Improve \`import\` and \`require\` interop
+
+- Updated dependencies []:
+  - @graphql-tools/federation@2.2.39
+
 ## 0.10.13
 
 ### Patch Changes

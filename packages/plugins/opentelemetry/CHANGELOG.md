@@ -1,5 +1,23 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.20
+
+### Patch Changes
+
+- [#273](https://github.com/graphql-hive/gateway/pull/273) [`c77884b`](https://github.com/graphql-hive/gateway/commit/c77884bec188bb8bff9fe83d2ce8ff3ff61aa3f7) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.56.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.56.0) (from `^0.55.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.56.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.56.0) (from `^0.55.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-zipkin@^1.29.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/1.29.0) (from `^1.25.1`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.56.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.56.0) (from `^0.55.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/resources@^1.29.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/resources/v/1.29.0) (from `^1.25.1`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^1.29.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/1.29.0) (from `^1.25.1`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-web@^1.29.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-web/v/1.29.0) (from `^1.27.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/semantic-conventions@^1.28.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/semantic-conventions/v/1.28.0) (from `^1.25.1`, in `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@1.3.8
+
 ## 1.3.19
 
 ### Patch Changes

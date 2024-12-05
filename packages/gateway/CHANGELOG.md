@@ -1,5 +1,24 @@
 # @graphql-hive/gateway
 
+## 1.6.1
+
+### Patch Changes
+
+- [#276](https://github.com/graphql-hive/gateway/pull/276) [`7e444f9`](https://github.com/graphql-hive/gateway/commit/7e444f9669b0169799630a3f3dfd10f89896d3a0) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-tools/code-file-loader@^8.1.8` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.8) (to `dependencies`)
+  - Added dependency [`@graphql-tools/graphql-file-loader@^8.0.6` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.0.6) (to `dependencies`)
+  - Added dependency [`@graphql-tools/load@^8.0.7` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.0.7) (to `dependencies`)
+
+- [#276](https://github.com/graphql-hive/gateway/pull/276) [`7e444f9`](https://github.com/graphql-hive/gateway/commit/7e444f9669b0169799630a3f3dfd10f89896d3a0) Thanks [@ardatan](https://github.com/ardatan)! - Support loading files based on paths and globs
+
+- Updated dependencies [[`c77884b`](https://github.com/graphql-hive/gateway/commit/c77884bec188bb8bff9fe83d2ce8ff3ff61aa3f7)]:
+  - @graphql-mesh/plugin-opentelemetry@1.3.20
+  - @graphql-mesh/hmac-upstream-signature@1.2.14
+  - @graphql-hive/gateway-runtime@1.3.8
+  - @graphql-mesh/transport-http@0.6.24
+  - @graphql-mesh/plugin-prometheus@1.3.8
+
 ## 1.6.0
 
 ### Minor Changes

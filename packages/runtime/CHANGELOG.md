@@ -1,5 +1,15 @@
 # @graphql-hive/gateway-runtime
 
+## 1.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`3f1a0fa`](https://github.com/graphql-hive/gateway/commit/3f1a0fa9f1f3b91542d00a0211d7def8ef30827e), [`3f1a0fa`](https://github.com/graphql-hive/gateway/commit/3f1a0fa9f1f3b91542d00a0211d7def8ef30827e)]:
+  - @graphql-mesh/fusion-runtime@0.10.14
+  - @graphql-tools/executor-http@1.1.13
+  - @graphql-mesh/hmac-upstream-signature@1.2.14
+  - @graphql-tools/federation@2.2.39
+
 ## 1.3.7
 
 ### Patch Changes
