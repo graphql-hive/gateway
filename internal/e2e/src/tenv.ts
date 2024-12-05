@@ -937,7 +937,7 @@ function spawn(
     },
     [DisposableSymbols.asyncDispose]: () => {
       const childPid = child.pid;
-      if (childPid && !child.killed) {
+      if (childPid && child.exitCode == null) {
         return terminate(childPid);
       }
       return waitForExit;
@@ -967,7 +967,9 @@ function spawn(
   child.once('close', (code) => {
     // process ended _and_ the stdio streams have been closed
     if (code) {
-      exitDeferred.reject(new Error(`Exit code ${code}\n${stdboth}`));
+      exitDeferred.reject(
+        new Error(`Exit code ${code}\n${trimError(stdboth)}`),
+      );
     } else {
       exitDeferred.resolve();
     }
