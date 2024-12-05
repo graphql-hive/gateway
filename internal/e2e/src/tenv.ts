@@ -413,7 +413,10 @@ export function createTenv(cwd: string): Tenv {
             container: `/gateway/${path.basename(dbfile)}`,
           });
         }
-        for (const additionalTypeDefFile of await glob('./additionalTypeDefs/**/*.*', { cwd })) {
+        for (const additionalTypeDefFile of await glob(
+          './additionalTypeDefs/**/*.*',
+          { cwd },
+        )) {
           volumes.push({
             host: additionalTypeDefFile,
             container: `/gateway/${path.basename(additionalTypeDefFile)}`,
