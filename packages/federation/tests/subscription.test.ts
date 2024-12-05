@@ -2,6 +2,7 @@ import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
+import { fakePromise } from '@graphql-tools/utils';
 import { createPubSub } from '@graphql-yoga/subscription';
 import {
   assertAsyncIterable,
@@ -108,7 +109,7 @@ describe('Subscriptions in Federation', () => {
       ],
     }).initialize({
       update() {},
-      async healthCheck() {},
+      healthCheck: () => fakePromise(undefined),
       getDataSource({ name }) {
         if (name === 'posts') {
           return new LocalGraphQLDataSource(postsSchema);

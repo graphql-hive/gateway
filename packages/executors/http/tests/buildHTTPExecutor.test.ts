@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import {
   createGraphQLError,
   ExecutionResult,
@@ -105,7 +106,7 @@ describe('buildHTTPExecutor', () => {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              await setTimeout(100);
               controller.close();
             },
           }),
@@ -145,7 +146,7 @@ describe('buildHTTPExecutor', () => {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              await setTimeout(100);
               controller.close();
             },
           }),

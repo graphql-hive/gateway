@@ -1,10 +1,34 @@
-import { fakePromise, isAsyncIterable, isPromise } from '@graphql-tools/utils';
+import {
+  isAsyncIterable,
+  isPromise,
+  mapMaybePromise,
+  MaybePromise,
+} from '@graphql-tools/utils';
 import {
   File as DefaultFile,
   FormData as DefaultFormData,
 } from '@whatwg-node/fetch';
 import { extractFiles, isExtractableFile } from 'extract-files';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
+
+function collectAsyncIterableValues<T>(
+  asyncIterable: AsyncIterable<T>,
+): MaybePromise<T[]> {
+  const values: T[] = [];
+  const iterator = asyncIterable[Symbol.asyncIterator]();
+  function iterate(): MaybePromise<T[]> {
+    return mapMaybePromise(iterator.next(), ({ value, done }) => {
+      if (value != null) {
+        values.push(value);
+      }
+      if (done) {
+        return values;
+      }
+      return iterate();
+    });
+  }
+  return iterate();
+}
 
 export function createFormDataFromVariables<TVariables>(
   {
@@ -71,34 +95,42 @@ export function createFormDataFromVariables<TVariables>(
   function handleUpload(upload: any, i: number): void | PromiseLike<void> {
     const indexStr = i.toString();
     if (upload != null) {
-      const filename =
-        upload.filename || upload.name || upload.path || `blob-${indexStr}`;
-      if (isPromise(upload)) {
-        return upload.then((resolvedUpload: any) =>
-          handleUpload(resolvedUpload, i),
-        );
-        // If Blob
-      } else if (isBlob(upload)) {
-        form.append(indexStr, upload, filename);
-      } else if (isGraphQLUpload(upload)) {
-        const stream = upload.createReadStream();
-        const chunks: number[] = [];
-        return fakePromise<void>(undefined).then(async () => {
-          for await (const chunk of stream) {
-            if (chunk) {
-              chunks.push(...chunk);
-            }
+      return mapMaybePromise(
+        upload?.promise || upload,
+        (upload): MaybePromise<void> => {
+          const filename =
+            upload.filename || upload.name || upload.path || `blob-${indexStr}`;
+          if (isBlob(upload)) {
+            form.append(indexStr, upload, filename);
+          } else if (isAsyncIterable(upload)) {
+            return mapMaybePromise(
+              collectAsyncIterableValues<any>(upload),
+              (chunks) => {
+                const blobPart = new Uint8Array(chunks);
+                form.append(
+                  indexStr,
+                  new FileCtor([blobPart], filename),
+                  filename,
+                );
+              },
+            );
+          } else if (isGraphQLUpload(upload)) {
+            return mapMaybePromise(
+              collectAsyncIterableValues(upload.createReadStream()),
+              (chunks) => {
+                const blobPart = new Uint8Array(chunks);
+                form.append(
+                  indexStr,
+                  new FileCtor([blobPart], filename, { type: upload.mimetype }),
+                  filename,
+                );
+              },
+            );
+          } else {
+            form.append(indexStr, new FileCtor([upload], filename), filename);
           }
-          const blobPart = new Uint8Array(chunks);
-          form.append(
-            indexStr,
-            new FileCtor([blobPart], filename, { type: upload.mimetype }),
-            filename,
-          );
-        });
-      } else {
-        form.append(indexStr, new FileCtor([upload], filename), filename);
-      }
+        },
+      );
     }
   }
   const jobs: PromiseLike<void>[] = [];

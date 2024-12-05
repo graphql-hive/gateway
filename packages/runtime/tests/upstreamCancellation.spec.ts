@@ -1,6 +1,10 @@
 import { createDisposableServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { createServerAdapter, Response } from '@whatwg-node/server';
+import {
+  createDeferredPromise,
+  createServerAdapter,
+  Response,
+} from '@whatwg-node/server';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
@@ -8,17 +12,15 @@ import { createGatewayRuntime } from '../src/createGatewayRuntime';
 describe('Upstream Cancellation', () => {
   it('cancels upstream requests when the client cancels', async () => {
     const serveRuntimeFetchCallAbortCtrl = new AbortController();
-    let resolveDataSource: (response: Response) => void;
+    const dataSourceDeferred = createDeferredPromise<Response>();
     const abortSpyOnDataSource = vi.fn(() => {
-      resolveDataSource(new Response('Bye!'));
+      dataSourceDeferred.resolve(new Response('Bye!'));
     });
     const dataSourceFetchSpy = vi.fn((res: Response) => res.text());
     const dataSourceAdapter = createServerAdapter((req) => {
       serveRuntimeFetchCallAbortCtrl.abort();
       req.signal.addEventListener('abort', abortSpyOnDataSource);
-      return new Promise((resolve) => {
-        resolveDataSource = resolve;
-      });
+      return dataSourceDeferred.promise;
     });
     await using dataSourceServer =
       await createDisposableServer(dataSourceAdapter);

@@ -1,9 +1,15 @@
+import { setTimeout } from 'timers/promises';
 import { inspect } from 'util';
 import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import { asArray, ExecutionResult, mergeDeep } from '@graphql-tools/utils';
+import {
+  asArray,
+  ExecutionResult,
+  fakePromise,
+  mergeDeep,
+} from '@graphql-tools/utils';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { assertAsyncIterable } from '@internal/testing';
 import { GraphQLSchema, parse, print } from 'graphql';
@@ -73,7 +79,7 @@ describe('Defer/Stream', () => {
     { id: '2', title: 'My Story', authorId: '2' },
   ];
   function resolveWithDelay<T>(value: () => T, delay: number): Promise<T> {
-    return new Promise((resolve) => setTimeout(() => resolve(value()), delay));
+    return setTimeout(delay).then(() => value());
   }
   const usersSubgraph = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
@@ -100,7 +106,7 @@ describe('Defer/Stream', () => {
         usersStream: async function* usersStream() {
           for (const user of users) {
             yield user;
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await setTimeout(500);
           }
         },
       },
@@ -154,7 +160,7 @@ describe('Defer/Stream', () => {
         postsStream: async function* postsStream() {
           for (const post of posts) {
             yield post;
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await setTimeout(500);
           }
         },
       },
@@ -174,7 +180,7 @@ describe('Defer/Stream', () => {
       ],
     }).initialize({
       update() {},
-      async healthCheck() {},
+      healthCheck: () => fakePromise(undefined),
       getDataSource({ name }) {
         if (name === 'users') return new LocalGraphQLDataSource(usersSubgraph);
         if (name === 'posts') return new LocalGraphQLDataSource(postsSubgraph);

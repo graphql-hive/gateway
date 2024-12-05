@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { ReadableStream, Response, TextEncoder } from '@whatwg-node/fetch';
 import { describe, expect, it } from 'vitest';
 import { handleEventStreamResponse } from '../src/handleEventStreamResponse.js';
@@ -97,7 +98,7 @@ describe('handleEventStreamResponse', () => {
       async pull(controller) {
         const chunk = chunks[currChunk++];
         if (chunk) {
-          await new Promise((resolve) => setTimeout(resolve, 0)); // stream chunk after one tick
+          await setTimeout(0); // stream chunk after one tick
           controller.enqueue(encoder.encode(chunk));
         } else {
           controller.close();

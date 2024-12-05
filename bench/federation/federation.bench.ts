@@ -2,7 +2,7 @@ import { ApolloGateway, LocalGraphQLDataSource } from '@apollo/gateway';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-import { mapMaybePromise } from '@graphql-tools/utils';
+import { fakePromise, mapMaybePromise } from '@graphql-tools/utils';
 import {
   accounts,
   createExampleSetup,
@@ -13,7 +13,7 @@ import {
 } from '@internal/e2e';
 import { benchConfig } from '@internal/testing';
 import { getOperationAST, GraphQLSchema, parse } from 'graphql';
-import { bench, describe, expect } from 'vitest';
+import { bench, describe, expect, vi } from 'vitest';
 import monolith from './monolith';
 
 function memoize1<T extends (...args: any) => any>(fn: T): T {
@@ -56,16 +56,17 @@ describe('Federation', async () => {
 
   const supergraphPath = await supergraph();
   const supergraphSdl = await fs.read(supergraphPath);
-  const dummyLogger = {
-    debug: () => {},
-    info: () => {},
-    warn: () => {},
-    error: () => {},
+  type ApolloGWExecutorOpts = Parameters<ApolloGateway['executor']>[0];
+  const dummyLogger: ApolloGWExecutorOpts['logger'] = {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   };
-  const dummyCache = {
-    get: async () => undefined,
-    set: async () => {},
-    delete: async () => true,
+  const dummyCache: ApolloGWExecutorOpts['cache'] = {
+    get: () => fakePromise(undefined),
+    set: () => fakePromise(undefined),
+    delete: () => fakePromise(true),
   };
   const parsedQuery = parse(query, { noLocation: true });
   const operationAST = getOperationAST(parsedQuery, operationName);

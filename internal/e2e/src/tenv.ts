@@ -11,6 +11,7 @@ import {
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
 import { createDeferred } from '@graphql-tools/delegate';
+import { fakePromise } from '@graphql-tools/utils';
 import {
   boolEnv,
   createOpt,
@@ -869,7 +870,7 @@ export function createTenv(cwd: string): Tenv {
           return new RemoteGraphQLDataSource(opts);
         },
         update() {},
-        async healthCheck() {},
+        healthCheck: () => fakePromise(undefined),
       });
 
       const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
@@ -905,6 +906,7 @@ function spawn(
 
   const exitDeferred = createDeferred<void>();
   const waitForExit = exitDeferred.promise;
+  let exited = false;
   let stdout = '';
   let stderr = '';
   let stdboth = '';
@@ -937,7 +939,7 @@ function spawn(
     },
     [DisposableSymbols.asyncDispose]: () => {
       const childPid = child.pid;
-      if (childPid && child.exitCode == null) {
+      if (childPid && !exited) {
         return terminate(childPid);
       }
       return waitForExit;
@@ -965,6 +967,7 @@ function spawn(
     child.stderr.destroy();
   });
   child.once('close', (code) => {
+    exited = true;
     // process ended _and_ the stdio streams have been closed
     if (code) {
       exitDeferred.reject(
@@ -977,6 +980,7 @@ function spawn(
 
   return new Promise((resolve, reject) => {
     child.once('error', (err) => {
+      exited = true;
       exitDeferred.reject(err); // reject waitForExit promise
       reject(err);
     });
@@ -985,22 +989,24 @@ function spawn(
 }
 
 export function getAvailablePort(): Promise<number> {
+  const deferred = createDeferred<number>();
   const server = createServer();
-  return new Promise((resolve, reject) => {
+  server.once('error', (err) => deferred.reject(err));
+  server.listen(0, () => {
     try {
-      server.listen(0, () => {
-        try {
-          const addressInfo = server.address() as AddressInfo;
-          resolve(addressInfo.port);
-          server.close();
-        } catch (err) {
-          reject(err);
+      const addressInfo = server.address() as AddressInfo;
+      server.close((err) => {
+        if (err) {
+          return deferred.reject(err);
         }
+
+        return deferred.resolve(addressInfo.port);
       });
     } catch (err) {
-      reject(err);
+      return deferred.reject(err);
     }
   });
+  return deferred.promise;
 }
 
 async function waitForPort(port: number, signal: AbortSignal) {
