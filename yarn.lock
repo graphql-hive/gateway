@@ -2668,6 +2668,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/reproduction-136@workspace:e2e/reproduction-136":
+  version: 0.0.0-use.local
+  resolution: "@e2e/reproduction-136@workspace:e2e/reproduction-136"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.2.0"
+    graphql: "npm:16.9.0"
+    graphql-sse: "npm:^2.5.3"
+    graphql-yoga: "npm:^5.10.4"
+    tslib: "npm:^2.8.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation"
