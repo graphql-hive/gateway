@@ -95,39 +95,42 @@ export function createFormDataFromVariables<TVariables>(
   function handleUpload(upload: any, i: number): void | PromiseLike<void> {
     const indexStr = i.toString();
     if (upload != null) {
-      return mapMaybePromise(upload?.promise || upload, (upload): MaybePromise<void> => {
-        const filename =
-          upload.filename || upload.name || upload.path || `blob-${indexStr}`;
-        if (isBlob(upload)) {
-          form.append(indexStr, upload, filename);
-        } else if (isAsyncIterable(upload)) {
-          return mapMaybePromise(
-            collectAsyncIterableValues<any>(upload),
-            (chunks) => {
-              const blobPart = new Uint8Array(chunks);
-              form.append(
-                indexStr,
-                new FileCtor([blobPart], filename),
-                filename,
-              );
-            },
-          );
-        } else if (isGraphQLUpload(upload)) {
-          return mapMaybePromise(
-            collectAsyncIterableValues(upload.createReadStream()),
-            (chunks) => {
-              const blobPart = new Uint8Array(chunks);
-              form.append(
-                indexStr,
-                new FileCtor([blobPart], filename, { type: upload.mimetype }),
-                filename,
-              );
-            },
-          );
-        } else {
-          form.append(indexStr, new FileCtor([upload], filename), filename);
-        }
-      });
+      return mapMaybePromise(
+        upload?.promise || upload,
+        (upload): MaybePromise<void> => {
+          const filename =
+            upload.filename || upload.name || upload.path || `blob-${indexStr}`;
+          if (isBlob(upload)) {
+            form.append(indexStr, upload, filename);
+          } else if (isAsyncIterable(upload)) {
+            return mapMaybePromise(
+              collectAsyncIterableValues<any>(upload),
+              (chunks) => {
+                const blobPart = new Uint8Array(chunks);
+                form.append(
+                  indexStr,
+                  new FileCtor([blobPart], filename),
+                  filename,
+                );
+              },
+            );
+          } else if (isGraphQLUpload(upload)) {
+            return mapMaybePromise(
+              collectAsyncIterableValues(upload.createReadStream()),
+              (chunks) => {
+                const blobPart = new Uint8Array(chunks);
+                form.append(
+                  indexStr,
+                  new FileCtor([blobPart], filename, { type: upload.mimetype }),
+                  filename,
+                );
+              },
+            );
+          } else {
+            form.append(indexStr, new FileCtor([upload], filename), filename);
+          }
+        },
+      );
     }
   }
   const jobs: PromiseLike<void>[] = [];

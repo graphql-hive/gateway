@@ -1,7 +1,7 @@
+import { setTimeout } from 'timers/promises';
 import { ReadableStream, Response, TextEncoder } from '@whatwg-node/fetch';
 import { describe, expect, it } from 'vitest';
 import { handleEventStreamResponse } from '../src/handleEventStreamResponse.js';
-import { setTimeout } from 'timers/promises';
 
 describe('handleEventStreamResponse', () => {
   const fakeSignal: AbortSignal = {

@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import {
   createGraphQLError,
   ExecutionResult,
@@ -15,7 +16,6 @@ import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';
-import { setTimeout } from 'timers/promises';
 
 describe('buildHTTPExecutor', () => {
   it('method should be POST for mutations even if useGETForQueries=true', async () => {

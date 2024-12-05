@@ -1,9 +1,15 @@
+import { setTimeout } from 'timers/promises';
 import { inspect } from 'util';
 import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import { asArray, ExecutionResult, mergeDeep } from '@graphql-tools/utils';
+import {
+  asArray,
+  ExecutionResult,
+  fakePromise,
+  mergeDeep,
+} from '@graphql-tools/utils';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { assertAsyncIterable } from '@internal/testing';
 import { GraphQLSchema, parse, print } from 'graphql';
@@ -11,7 +17,6 @@ import { createYoga } from 'graphql-yoga';
 import _ from 'lodash';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
-import { setTimeout } from 'timers/promises';
 
 function mergeIncrementalResults(values: ExecutionResult[]) {
   const result: ExecutionResult = {};
@@ -175,7 +180,7 @@ describe('Defer/Stream', () => {
       ],
     }).initialize({
       update() {},
-      async healthCheck() {},
+      healthCheck: () => fakePromise(undefined),
       getDataSource({ name }) {
         if (name === 'users') return new LocalGraphQLDataSource(usersSubgraph);
         if (name === 'posts') return new LocalGraphQLDataSource(postsSubgraph);

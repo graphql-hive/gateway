@@ -1,6 +1,10 @@
 import { createDisposableServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
+import {
+  createDeferredPromise,
+  createServerAdapter,
+  Response,
+} from '@whatwg-node/server';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';

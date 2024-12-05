@@ -2,7 +2,7 @@ import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { isAsyncIterable } from '@graphql-tools/utils';
+import { fakePromise, isAsyncIterable } from '@graphql-tools/utils';
 import { GraphQLSchema, parse } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -87,7 +87,7 @@ describe('Error handling', () => {
         }
         throw new Error(`Unknown subgraph: ${name}`);
       },
-      async healthCheck() {},
+      healthCheck: () => fakePromise(undefined),
       update() {},
     });
     supergraph = getStitchedSchemaFromSupergraphSdl({

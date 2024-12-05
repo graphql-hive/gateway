@@ -48,11 +48,13 @@ export type {
 
 export type Transports =
   | {
-    [key: string]: MaybePromise<Transport | { default: Transport }>;
-  }
+      [key: string]: MaybePromise<Transport | { default: Transport }>;
+    }
   | ((kind: string) => MaybePromise<Transport | { default: Transport }>);
 
-function tryImportThenRequireTransport(kind: string): MaybePromise<Transport & { default?: Transport }> {
+function tryImportThenRequireTransport(
+  kind: string,
+): MaybePromise<Transport & { default?: Transport }> {
   const moduleName = `@graphql-mesh/transport-${kind}`;
   function handleModuleNotFoundError(e: unknown) {
     if (
@@ -74,12 +76,12 @@ function tryImportThenRequireTransport(kind: string): MaybePromise<Transport & {
         handleModuleNotFoundError(e);
         return mapMaybePromise(
           require(moduleName),
-          transport => transport,
-          e => {
+          (transport) => transport,
+          (e) => {
             handleModuleNotFoundError(e);
             throw e;
-          }
-        )
+          },
+        );
       },
     );
   } catch (e) {
@@ -89,7 +91,7 @@ function tryImportThenRequireTransport(kind: string): MaybePromise<Transport & {
 }
 
 async function defaultTransportsGetter(kind: string): Promise<Transport> {
-  return mapMaybePromise(tryImportThenRequireTransport(kind), transport => {
+  return mapMaybePromise(tryImportThenRequireTransport(kind), (transport) => {
     if (typeof transport !== 'object') {
       throw new Error(
         `@graphql-mesh/transport-${kind} module does not export an object`,

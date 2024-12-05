@@ -1,6 +1,6 @@
 import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema as apolloBuildSubgraphSchema } from '@apollo/subgraph';
-import { IResolvers } from '@graphql-tools/utils';
+import { fakePromise, IResolvers } from '@graphql-tools/utils';
 import { accounts, inventory, products, reviews } from '@internal/e2e';
 import { DocumentNode, GraphQLSchema } from 'graphql';
 
@@ -52,7 +52,7 @@ export async function getSupergraph(
     })),
   }).initialize({
     update() {},
-    async healthCheck() {},
+    healthCheck: () => fakePromise(undefined),
     getDataSource({ name }) {
       const serviceInput = serviceInputs.find((input) => input.name === name);
       if (!serviceInput) {
