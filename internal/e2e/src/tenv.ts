@@ -10,6 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
+import { createDeferred } from '@graphql-tools/delegate';
 import {
   boolEnv,
   createOpt,
@@ -23,6 +24,7 @@ import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
+import terminate from 'terminate/promise';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
@@ -901,17 +903,8 @@ function spawn(
     signal,
   });
 
-  let exit: (err: Error | null) => void;
-  const waitForExit = new Promise<void>(
-    (resolve, reject) =>
-      (exit = (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }),
-  );
+  const exitDeferred = createDeferred<void>();
+  const waitForExit = exitDeferred.promise;
   let stdout = '';
   let stderr = '';
   let stdboth = '';
@@ -942,7 +935,13 @@ function spawn(
         mem: parseFloat(mem!) * 0.001, // KB to MB
       };
     },
-    [DisposableSymbols.asyncDispose]: () => (child.kill(), waitForExit),
+    [DisposableSymbols.asyncDispose]: () => {
+      const childPid = child.pid;
+      if (childPid && child.exitCode == null) {
+        return terminate(childPid);
+      }
+      return waitForExit;
+    },
   };
   leftoverStack.use(proc);
 
@@ -967,16 +966,18 @@ function spawn(
   });
   child.once('close', (code) => {
     // process ended _and_ the stdio streams have been closed
-    exit(
-      code
-        ? new Error(`Exit code ${code}\n${trimError(proc.getStd('both'))}`)
-        : null,
-    );
+    if (code) {
+      exitDeferred.reject(
+        new Error(`Exit code ${code}\n${trimError(stdboth)}`),
+      );
+    } else {
+      exitDeferred.resolve();
+    }
   });
 
   return new Promise((resolve, reject) => {
     child.once('error', (err) => {
-      exit(err); // reject waitForExit promise
+      exitDeferred.reject(err); // reject waitForExit promise
       reject(err);
     });
     child.once('spawn', () => resolve([proc, waitForExit]));
