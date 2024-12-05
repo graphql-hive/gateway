@@ -11,10 +11,5 @@ export const composeConfig = defineConfig({
       }),
     },
   ],
-  additionalTypeDefs: /* GraphQL */ `
-    extend type pageview_project {
-      banana: String
-      apple: String!
-    }
-  `,
+  additionalTypeDefs: './additionalTypeDefs/*.graphql',
 });

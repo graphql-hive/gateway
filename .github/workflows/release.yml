@@ -8,6 +8,10 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+env:
+  NODE_NO_WARNINGS: 1
+  CI: true
+
 jobs:
   dependencies:
     if: github.event_name == 'pull_request' && github.event.pull_request.title != 'Upcoming Release Changes'

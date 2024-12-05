@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_NO_WARNINGS: 1
+  CI: true
+
 jobs:
   format:
     name: Format

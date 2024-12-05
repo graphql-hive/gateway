@@ -1,0 +1,10 @@
+extend interface Node {
+  self: Node!
+    @resolveTo(
+      sourceName: "Test"
+      sourceTypeName: "Query"
+      sourceFieldName: "node"
+      sourceArgs: { id: "{root.id}" }
+      requiredSelectionSet: "{ id }"
+    )
+}

@@ -413,6 +413,15 @@ export function createTenv(cwd: string): Tenv {
             container: `/gateway/${path.basename(dbfile)}`,
           });
         }
+        for (const additionalTypeDefFile of await glob(
+          ['./additionalTypeDefs/*.graphql', './additionalTypeDefs/*.ts'],
+          { cwd },
+        )) {
+          volumes.push({
+            host: additionalTypeDefFile,
+            container: `/gateway/additionalTypeDefs/${path.basename(additionalTypeDefFile)}`,
+          });
+        }
         const packageJsonExists = await fs
           .stat(path.join(cwd, 'package.json'))
           .then(() => true)
@@ -505,10 +514,14 @@ export function createTenv(cwd: string): Tenv {
             body: JSON.stringify(args),
           });
           if (!res.ok) {
+            const resText = await res.text();
             const err = new Error(
-              `${res.status} ${res.statusText}\n${await res.text()}`,
+              `${res.status} ${res.statusText}\n${resText}`,
             );
             err.name = 'ResponseError';
+            if (resText.includes('Unexpected')) {
+              process.stderr.write(proc.getStd('both'));
+            }
             throw err;
           }
           const resBody: ExecutionResult = await res.json();

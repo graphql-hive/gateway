@@ -10,7 +10,10 @@ import {
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
 import { isUrl, PubSub, registerTerminateHandler } from '@graphql-mesh/utils';
-import { isValidPath } from '@graphql-tools/utils';
+import { CodeFileLoader } from '@graphql-tools/code-file-loader';
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
+import { loadTypedefs } from '@graphql-tools/load';
+import { asArray, isValidPath } from '@graphql-tools/utils';
 import {
   defaultOptions,
   type AddCommand,
@@ -331,6 +334,29 @@ export async function runSupergraph(
 
   if (handleFork(log, config)) {
     return;
+  }
+
+  if (config.additionalTypeDefs) {
+    const loaders = [new GraphQLFileLoader(), new CodeFileLoader()];
+    const additionalTypeDefsArr = asArray(config.additionalTypeDefs);
+    config.additionalTypeDefs = await Promise.all(
+      additionalTypeDefsArr.flatMap(async (ptr) => {
+        if (typeof ptr === 'string' && ptr.length <= 255 && isValidPath(ptr)) {
+          const sources = await loadTypedefs(ptr, {
+            loaders,
+          });
+          return sources.map((source) => {
+            const typeSource =
+              source.document || source.rawSDL || source.schema;
+            if (!typeSource) {
+              throw new Error(`Invalid source ${source.location || ptr}`);
+            }
+            return typeSource;
+          });
+        }
+        return ptr;
+      }),
+    );
   }
 
   const runtime = createGatewayRuntime(config);
