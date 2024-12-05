@@ -23,6 +23,7 @@ import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
+import terminate from 'terminate/promise';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
 import { trimError } from './trimError';
@@ -942,7 +943,13 @@ function spawn(
         mem: parseFloat(mem!) * 0.001, // KB to MB
       };
     },
-    [DisposableSymbols.asyncDispose]: () => (child.kill(), waitForExit),
+    [DisposableSymbols.asyncDispose]: () => {
+      const childPid = child.pid;
+      if (childPid) {
+        return terminate(childPid);
+      }
+      return waitForExit;
+    },
   };
   leftoverStack.use(proc);
 

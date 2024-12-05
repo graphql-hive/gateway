@@ -108,7 +108,10 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
           },
           body: JSON.stringify({ query }),
         });
-        return r.json();
+        if (r.headers.get('content-type')?.includes('json')) {
+          return r.json();
+        }
+        throw new Error(await r.text());
       },
     };
   }

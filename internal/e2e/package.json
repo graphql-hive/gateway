@@ -10,6 +10,7 @@
     "@whatwg-node/fetch": "^0.10.1",
     "dockerode": "^4.0.2",
     "glob": "^11.0.0",
-    "graphql": "^16.9.0"
+    "graphql": "^16.9.0",
+    "terminate": "^2.8.0"
   }
 }
