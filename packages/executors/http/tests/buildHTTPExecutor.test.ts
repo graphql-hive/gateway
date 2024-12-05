@@ -15,6 +15,7 @@ import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';
+import { setTimeout } from 'timers/promises';
 
 describe('buildHTTPExecutor', () => {
   it('method should be POST for mutations even if useGETForQueries=true', async () => {
@@ -105,7 +106,7 @@ describe('buildHTTPExecutor', () => {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              await setTimeout(100);
               controller.close();
             },
           }),
@@ -145,7 +146,7 @@ describe('buildHTTPExecutor', () => {
               controller.enqueue(
                 `data: ${JSON.stringify({ data: { hello: 'world' } })}\n\n`,
               );
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              await setTimeout(100);
               controller.close();
             },
           }),

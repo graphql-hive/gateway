@@ -11,6 +11,7 @@ import { createYoga } from 'graphql-yoga';
 import _ from 'lodash';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
+import { setTimeout } from 'timers/promises';
 
 function mergeIncrementalResults(values: ExecutionResult[]) {
   const result: ExecutionResult = {};
@@ -73,7 +74,7 @@ describe('Defer/Stream', () => {
     { id: '2', title: 'My Story', authorId: '2' },
   ];
   function resolveWithDelay<T>(value: () => T, delay: number): Promise<T> {
-    return new Promise((resolve) => setTimeout(() => resolve(value()), delay));
+    return setTimeout(delay).then(() => value());
   }
   const usersSubgraph = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
@@ -100,7 +101,7 @@ describe('Defer/Stream', () => {
         usersStream: async function* usersStream() {
           for (const user of users) {
             yield user;
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await setTimeout(500);
           }
         },
       },
@@ -154,7 +155,7 @@ describe('Defer/Stream', () => {
         postsStream: async function* postsStream() {
           for (const post of posts) {
             yield post;
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await setTimeout(500);
           }
         },
       },

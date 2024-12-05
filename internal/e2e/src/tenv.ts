@@ -120,27 +120,27 @@ export interface ServeOptions extends ProcOptions {
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
   supergraph?:
-    | string
-    | {
-        with: 'mesh';
-        services?: Service[];
-      }
-    | {
-        with: 'apollo';
-        services: Service[];
-      };
+  | string
+  | {
+    with: 'mesh';
+    services?: Service[];
+  }
+  | {
+    with: 'apollo';
+    services: Service[];
+  };
   /**
    * Path to the subgraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
   subgraph?:
-    | string
-    | {
-        with: 'mesh';
-        subgraphName: string;
-        services?: Service[];
-        pipeLogs?: boolean | string;
-      };
+  | string
+  | {
+    with: 'mesh';
+    subgraphName: string;
+    services?: Service[];
+    pipeLogs?: boolean | string;
+  };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -445,7 +445,7 @@ export function createTenv(cwd: string): Tenv {
             'ghcr.io/graphql-hive/gateway:' +
             (dockerfileExists
               ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
-                `e2e.${path.basename(cwd)}`
+              `e2e.${path.basename(cwd)}`
               : 'e2e') +
             (gatewayRunner === 'bun-docker' ? '-bun' : ''),
           // TODO: changing port from within gateway.config.ts wont work in docker runner
@@ -711,8 +711,8 @@ export function createTenv(cwd: string): Tenv {
               (err, res) => (err ? reject(err) : resolve(res)),
               pipeLogs
                 ? (e) => {
-                    process.stderr.write(JSON.stringify(e));
-                  }
+                  process.stderr.write(JSON.stringify(e));
+                }
                 : undefined,
             );
           });
@@ -755,11 +755,11 @@ export function createTenv(cwd: string): Tenv {
         Healthcheck:
           healthcheck.length > 0
             ? {
-                Test: healthcheck,
-                Interval: msToNs(interval),
-                Timeout: 0, // dont wait between tests
-                Retries: retries,
-              }
+              Test: healthcheck,
+              Interval: msToNs(interval),
+              Timeout: 0, // dont wait between tests
+              Retries: retries,
+            }
             : undefined,
         abortSignal: ctrl.signal,
       });
@@ -868,8 +868,8 @@ export function createTenv(cwd: string): Tenv {
         getDataSource(opts) {
           return new RemoteGraphQLDataSource(opts);
         },
-        update() {},
-        async healthCheck() {},
+        update() { },
+        async healthCheck() { },
       });
 
       const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
@@ -985,22 +985,24 @@ function spawn(
 }
 
 export function getAvailablePort(): Promise<number> {
+  const deferred = createDeferred<number>();
   const server = createServer();
-  return new Promise((resolve, reject) => {
+  server.once('error', err => deferred.reject(err));
+  server.listen(0, () => {
     try {
-      server.listen(0, () => {
-        try {
-          const addressInfo = server.address() as AddressInfo;
-          resolve(addressInfo.port);
-          server.close();
-        } catch (err) {
-          reject(err);
+      const addressInfo = server.address() as AddressInfo;
+      server.close(err => {
+        if (err) {
+          return deferred.reject(err);
         }
-      });
+
+        return deferred.resolve(addressInfo.port);
+      })
     } catch (err) {
-      reject(err);
+      return deferred.reject(err);
     }
   });
+  return deferred.promise;
 }
 
 async function waitForPort(port: number, signal: AbortSignal) {
@@ -1009,7 +1011,7 @@ async function waitForPort(port: number, signal: AbortSignal) {
       try {
         await fetch(`http://${localHostname}:${port}`, { signal });
         break outer;
-      } catch (err) {}
+      } catch (err) { }
     }
     // no need to track retries, jest will time out aborting the signal
     signal.throwIfAborted();
