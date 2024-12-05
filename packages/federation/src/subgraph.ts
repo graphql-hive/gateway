@@ -1,10 +1,10 @@
-import { Resolvers } from '@apollo/client';
 import { mergeResolvers, mergeTypeDefs } from '@graphql-tools/merge';
 import {
   IExecutableSchemaDefinition,
   makeExecutableSchema,
 } from '@graphql-tools/schema';
 import {
+  IResolvers,
   mapMaybePromise,
   printSchemaWithDirectives,
   TypeSource,
@@ -104,7 +104,7 @@ export function buildSubgraphSchema<TContext = any>(
   const givenResolvers: any = mergeResolvers(opts.resolvers);
 
   const allTypeDefs: TypeSource[] = [typeDefs];
-  const allResolvers: Resolvers[] = [sdlResolvers, givenResolvers];
+  const allResolvers: IResolvers[] = [sdlResolvers, givenResolvers];
 
   if (entityTypeNames.length > 0) {
     allTypeDefs.push(`union _Entity = ${entityTypeNames.join(' | ')}`);
