@@ -1,4 +1,5 @@
 import {
+  getTypeInfoWithType,
   MergedTypeInfo,
   MergedTypeResolver,
   StitchingInfo,
@@ -29,6 +30,8 @@ import {
   Kind,
   print,
   SelectionSetNode,
+  visit,
+  visitWithTypeInfo,
 } from 'graphql';
 import { createDelegationPlanBuilder } from './createDelegationPlanBuilder.js';
 import { createMergedTypeResolver } from './createMergedTypeResolver.js';
@@ -42,9 +45,10 @@ export function createStitchingInfo<
     Subschema<any, any, any, TContext>
   >,
   typeCandidates: Record<string, Array<MergeTypeCandidate<TContext>>>,
+  errors: Error[],
   mergeTypes?: boolean | Array<string> | MergeTypeFilter<TContext>,
 ): StitchingInfo<TContext> {
-  const mergedTypes = createMergedTypes(typeCandidates, mergeTypes);
+  const mergedTypes = createMergedTypes(typeCandidates, errors, mergeTypes);
 
   return {
     subschemaMap,
@@ -59,6 +63,7 @@ function createMergedTypes<
   TContext extends Record<string, any> = Record<string, any>,
 >(
   typeCandidates: Record<string, Array<MergeTypeCandidate<TContext>>>,
+  errors: Error[],
   mergeTypes?: boolean | Array<string> | MergeTypeFilter<TContext>,
 ): Record<string, MergedTypeInfo<TContext>> {
   const mergedTypes: Record<string, MergedTypeInfo<TContext>> = Object.create(
@@ -169,6 +174,26 @@ function createMergedTypes<
                 noLocation: true,
               },
             );
+            const typeInfo = getTypeInfoWithType(
+              subschema.transformedSchema,
+              subschema.transformedSchema.getType(typeName),
+            );
+            visit(
+              selectionSet,
+              visitWithTypeInfo(typeInfo, {
+                [Kind.FIELD](node: FieldNode) {
+                  if (!typeInfo.getFieldDef()) {
+                    errors.push(
+                      new Error(
+                        `In the type merging configuration "${typeName}", the required selection set ${mergedTypeConfig.selectionSet} does not conform to the schema.\n` +
+                          `The field "${node.name.value}" doesn't exist on the type "${typeName}".\n` +
+                          `Make sure the fields inside the "selectionSet" are valid fields of the type "${typeName}".`,
+                      ),
+                    );
+                  }
+                },
+              }),
+            );
             selectionSets.set(subschema, selectionSet);
           }
 
@@ -178,11 +203,35 @@ function createMergedTypes<
               if (mergedTypeConfig.fields[fieldName]?.selectionSet) {
                 const rawFieldSelectionSet =
                   mergedTypeConfig.fields[fieldName].selectionSet;
-                parsedFieldSelectionSets[fieldName] = rawFieldSelectionSet
-                  ? parseSelectionSet(rawFieldSelectionSet, {
+                if (rawFieldSelectionSet) {
+                  const parsedSelectionSet = parseSelectionSet(
+                    rawFieldSelectionSet,
+                    {
                       noLocation: true,
-                    })
-                  : undefined;
+                    },
+                  );
+                  const typeInfo = getTypeInfoWithType(
+                    subschema.transformedSchema,
+                    subschema.transformedSchema.getType(typeName),
+                  );
+                  visit(
+                    parsedSelectionSet,
+                    visitWithTypeInfo(typeInfo, {
+                      [Kind.FIELD](node: FieldNode) {
+                        if (!typeInfo.getFieldDef()) {
+                          errors.push(
+                            new Error(
+                              `In the type merging configuration for "${typeName}.${fieldName}", the required selection set ${rawFieldSelectionSet} does not conform to the schema.\n` +
+                                `The field "${node.name.value}" doesn't exist on the type "${typeName}".\n` +
+                                `Make sure the fields inside the "selectionSet" are valid fields of the type "${typeName}".`,
+                            ),
+                          );
+                        }
+                      },
+                    }),
+                  );
+                  parsedFieldSelectionSets[fieldName] = parsedSelectionSet;
+                }
               }
               if (mergedTypeConfig.fields[fieldName]?.provides) {
                 let providedSelectionsForSubschema =
@@ -324,6 +373,7 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
   stitchingInfo: StitchingInfo<TContext>,
   resolvers: IResolvers,
   schema: GraphQLSchema,
+  errors: Error[],
 ): StitchingInfo<TContext> {
   const {
     fieldNodesByType,
@@ -437,6 +487,23 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
         const selectionSet = parseSelectionSet(field.selectionSet, {
           noLocation: true,
         });
+        const typeInfo = getTypeInfoWithType(schema, type);
+        visit(
+          selectionSet,
+          visitWithTypeInfo(typeInfo, {
+            [Kind.FIELD](node: FieldNode) {
+              if (!typeInfo.getFieldDef()) {
+                errors.push(
+                  new Error(
+                    `In the additional resolver "${typeName}.${fieldName}", the required selection set "${field.selectionSet}" does not conform to the schema.\n` +
+                      `The field "${node.name.value}" doesn't exist on the type "${typeName}".\n` +
+                      `Make sure the fields inside the "selectionSet" are valid fields of the type "${typeName}".`,
+                  ),
+                );
+              }
+            },
+          }),
+        );
         updateSelectionSetMap(
           selectionSetsByField,
           typeName,

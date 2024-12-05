@@ -90,9 +90,12 @@ export function stitchSchemas<
     mergeDirectives,
   });
 
+  const errors: Error[] = [];
+
   let stitchingInfo = createStitchingInfo(
     subschemaMap,
     typeCandidates,
+    errors,
     mergeTypes,
   );
 
@@ -131,7 +134,22 @@ export function stitchSchemas<
     ? extendResolversFromInterfaces(schema, resolverMap)
     : resolverMap;
 
-  stitchingInfo = completeStitchingInfo(stitchingInfo, finalResolvers, schema);
+  stitchingInfo = completeStitchingInfo(
+    stitchingInfo,
+    finalResolvers,
+    schema,
+    errors,
+  );
+
+  if (errors.length > 0) {
+    if (errors.length === 1) {
+      throw errors[0];
+    }
+    throw new AggregateError(
+      errors,
+      `Encountered ${errors.length} errors while validating stitching configuration;\n${errors.map((err) => err.message)}`,
+    );
+  }
 
   schema = addResolversToSchema({
     schema,
