@@ -9,12 +9,7 @@ import {
   type GatewayHiveCDNOptions,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
-import {
-  isUrl,
-  PubSub,
-  registerTerminateHandler,
-  resolveAdditionalResolvers,
-} from '@graphql-mesh/utils';
+import { isUrl, PubSub, registerTerminateHandler } from '@graphql-mesh/utils';
 import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadTypedefs } from '@graphql-tools/load';
