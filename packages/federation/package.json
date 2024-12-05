@@ -6,7 +6,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/graphql-hive/gateway.git",
-    "directory": "packages/graphql-tools"
+    "directory": "packages/federation"
   },
   "license": "MIT",
   "engines": {
@@ -55,8 +55,5 @@
     "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#main",
     "pkgroll": "2.5.1"
   },
-  "sideEffects": false,
-  "typescript": {
-    "definition": "dist/typings/index.d.ts"
-  }
+  "sideEffects": false
 }
