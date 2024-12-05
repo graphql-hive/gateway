@@ -414,12 +414,12 @@ export function createTenv(cwd: string): Tenv {
           });
         }
         for (const additionalTypeDefFile of await glob(
-          './additionalTypeDefs/**/*.*',
+          ['./additionalTypeDefs/*.graphql', './additionalTypeDefs/*.ts'],
           { cwd },
         )) {
           volumes.push({
             host: additionalTypeDefFile,
-            container: `/gateway/${path.basename(additionalTypeDefFile)}`,
+            container: `/gateway/additionalTypeDefs/${path.basename(additionalTypeDefFile)}`,
           });
         }
         const packageJsonExists = await fs
