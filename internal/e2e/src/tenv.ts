@@ -505,10 +505,14 @@ export function createTenv(cwd: string): Tenv {
             body: JSON.stringify(args),
           });
           if (!res.ok) {
+            const resText = await res.text();
             const err = new Error(
-              `${res.status} ${res.statusText}\n${await res.text()}`,
+              `${res.status} ${res.statusText}\n${resText}`,
             );
             err.name = 'ResponseError';
+            if (resText.includes('Unexpected')) {
+              process.stderr.write(proc.getStd('both'));
+            }
             throw err;
           }
           const resBody: ExecutionResult = await res.json();
