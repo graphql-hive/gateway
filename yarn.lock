@@ -5258,6 +5258,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch":
+  version: 0.56.0
+  resolution: "@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch::version=0.56.0&hash=5c9582"
+  dependencies:
+    "@opentelemetry/core": "npm:1.29.0"
+    "@opentelemetry/otlp-transformer": "npm:0.56.0"
+  peerDependencies:
+    "@opentelemetry/api": ^1.3.0
+  checksum: 10c0/2c388896ad67fab82944ffd42f4349fb488e6065a2168270a06efd469359bcc775e87e2c2448e45fa4ecfd45d8bd7bc15ee272684308d76c63483dd5c90a945f
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/otlp-grpc-exporter-base@npm:0.56.0":
   version: 0.56.0
   resolution: "@opentelemetry/otlp-grpc-exporter-base@npm:0.56.0"
@@ -5289,19 +5301,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/resources@npm:1.26.0":
-  version: 1.26.0
-  resolution: "@opentelemetry/resources@npm:1.26.0"
-  dependencies:
-    "@opentelemetry/core": "npm:1.26.0"
-    "@opentelemetry/semantic-conventions": "npm:1.27.0"
-  peerDependencies:
-    "@opentelemetry/api": ">=1.0.0 <1.10.0"
-  checksum: 10c0/62ffbf7edee8676055661cf608b32a52bfa46fedb1a88830b4d4d0faf6664edbcbf7922034d3690d11fe9ebef9d9f5ffcb05645e8c7b27c707bf57d5289617e9
-  languageName: node
-  linkType: hard
-
-"@opentelemetry/resources@npm:1.29.0, @opentelemetry/resources@npm:^1.26.0, @opentelemetry/resources@npm:^1.29.0":
+"@opentelemetry/resources@npm:1.29.0":
   version: 1.29.0
   resolution: "@opentelemetry/resources@npm:1.29.0"
   dependencies:
@@ -5310,6 +5310,18 @@ __metadata:
   peerDependencies:
     "@opentelemetry/api": ">=1.0.0 <1.10.0"
   checksum: 10c0/10a91597b2ae92eeeeee9645c8147056b930739023bde4f18190317f7e8a05acd9e440b29d04be3580f7af4ffe5ff629d970264278f86574c429685f4804a006
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/resources@patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch":
+  version: 1.29.0
+  resolution: "@opentelemetry/resources@patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch::version=1.29.0&hash=7be975"
+  dependencies:
+    "@opentelemetry/core": "npm:1.29.0"
+    "@opentelemetry/semantic-conventions": "npm:1.28.0"
+  peerDependencies:
+    "@opentelemetry/api": ">=1.0.0 <1.10.0"
+  checksum: 10c0/d691090002ca32813eb99ba0748ea1d5ef1957283326a874ee298ad634eee2bb8bb4ec26fa72605d70a4aa972e35389d5ca6b12851d8bef492574fa08c6ce147
   languageName: node
   linkType: hard
 

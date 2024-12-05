@@ -10,6 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
+import { createDeferred } from '@graphql-tools/delegate';
 import {
   boolEnv,
   createOpt,
@@ -902,17 +903,8 @@ function spawn(
     signal,
   });
 
-  let exit: (err: Error | null) => void;
-  const waitForExit = new Promise<void>(
-    (resolve, reject) =>
-      (exit = (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }),
-  );
+  const exitDeferred = createDeferred<void>();
+  const waitForExit = exitDeferred.promise;
   let stdout = '';
   let stderr = '';
   let stdboth = '';
@@ -945,7 +937,7 @@ function spawn(
     },
     [DisposableSymbols.asyncDispose]: () => {
       const childPid = child.pid;
-      if (childPid) {
+      if (childPid && !child.killed) {
         return terminate(childPid);
       }
       return waitForExit;
@@ -974,16 +966,16 @@ function spawn(
   });
   child.once('close', (code) => {
     // process ended _and_ the stdio streams have been closed
-    exit(
-      code
-        ? new Error(`Exit code ${code}\n${trimError(proc.getStd('both'))}`)
-        : null,
-    );
+    if (code) {
+      exitDeferred.reject(new Error(`Exit code ${code}\n${stdboth}`));
+    } else {
+      exitDeferred.resolve();
+    }
   });
 
   return new Promise((resolve, reject) => {
     child.once('error', (err) => {
-      exit(err); // reject waitForExit promise
+      exitDeferred.reject(err); // reject waitForExit promise
       reject(err);
     });
     child.once('spawn', () => resolve([proc, waitForExit]));
