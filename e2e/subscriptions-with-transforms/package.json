@@ -1,5 +1,5 @@
 {
-  "name": "@e2e/reproduction-136",
+  "name": "@e2e/subscriptions-with-transforms",
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.2.0",
