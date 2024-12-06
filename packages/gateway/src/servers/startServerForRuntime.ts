@@ -33,7 +33,11 @@ export function startServerForRuntime<
   };
 
   if (globalThis.Bun) {
-    return import('./bun').then(({ startBunServer }) => startBunServer(runtime, serverOpts));
+    return import('./bun').then(({ startBunServer }) =>
+      startBunServer(runtime, serverOpts),
+    );
   }
-  return import('./nodeHttp').then(({ startNodeHttpServer }) => startNodeHttpServer(runtime, serverOpts));
+  return import('./nodeHttp').then(({ startNodeHttpServer }) =>
+    startNodeHttpServer(runtime, serverOpts),
+  );
 }
