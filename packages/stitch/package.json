@@ -45,7 +45,7 @@
     "@graphql-tools/schema": "^10.0.11",
     "@graphql-tools/utils": "^10.6.2",
     "@graphql-tools/wrap": "workspace:^",
-    "tslib": "^2.4.0"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "dataloader": "^2.2.3",
