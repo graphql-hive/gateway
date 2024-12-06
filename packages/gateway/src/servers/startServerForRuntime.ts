@@ -1,8 +1,6 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { MaybePromise } from '@graphql-tools/utils';
+import type { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
-import { startBunServer } from './bun';
-import { startNodeHttpServer } from './nodeHttp';
 import { ServerForRuntimeOptions } from './types';
 
 export function startServerForRuntime<
@@ -34,7 +32,8 @@ export function startServerForRuntime<
     ...(sslCredentials ? { sslCredentials } : {}),
   };
 
-  const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
-
-  return startServer(runtime, serverOpts);
+  if (globalThis.Bun) {
+    return import('./bun').then(({ startBunServer }) => startBunServer(runtime, serverOpts));
+  }
+  return import('./nodeHttp').then(({ startNodeHttpServer }) => startNodeHttpServer(runtime, serverOpts));
 }
