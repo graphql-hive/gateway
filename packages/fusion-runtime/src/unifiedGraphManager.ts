@@ -16,6 +16,7 @@ import type {
 } from '@graphql-tools/utils';
 import {
   isDocumentNode,
+  isPromise,
   mapMaybePromise,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
@@ -229,21 +230,24 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           this.opts.transportContext.logger?.debug(
             `Caching Unified Graph with TTL ${ttl}s`,
           );
-          const cacheSet$ = this.opts.transportContext.cache.set(
-            UNIFIEDGRAPH_CACHE_KEY,
-            serializedUnifiedGraph,
-            { ttl },
-          );
-          if (cacheSet$) {
-            cacheSet$.catch((e) => {
-              this.opts.transportContext?.logger?.debug(
-                `Unable to store Unified Graph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
-                e,
-              );
-            });
-            this._transportExecutorStack?.defer(() => {
-              cacheSet$;
-            });
+          const logCacheSetError = (e: unknown) => {
+            this.opts.transportContext?.logger?.debug(
+              `Unable to store Unified Graph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
+              e,
+            );
+          };
+          try {
+            const cacheSet$ = this.opts.transportContext.cache.set(
+              UNIFIEDGRAPH_CACHE_KEY,
+              serializedUnifiedGraph,
+              { ttl },
+            );
+            if (isPromise(cacheSet$)) {
+              cacheSet$.then(() => {}, logCacheSetError);
+              this._transportExecutorStack?.defer(() => cacheSet$);
+            }
+          } catch (e) {
+            logCacheSetError(e);
           }
         } catch (e) {
           this.opts.transportContext.logger?.error(

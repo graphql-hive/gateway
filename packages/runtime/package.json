@@ -59,7 +59,6 @@
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-hive": "^0.103.0",
     "@graphql-mesh/plugin-response-cache": "^0.103.0",
-    "@graphql-mesh/store": "^0.103.4",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.4",
     "@graphql-mesh/utils": "^0.103.4",
