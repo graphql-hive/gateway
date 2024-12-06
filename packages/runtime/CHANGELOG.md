@@ -1,5 +1,14 @@
 # @graphql-hive/gateway-runtime
 
+## 1.3.13
+
+### Patch Changes
+
+- [#293](https://github.com/graphql-hive/gateway/pull/293) [`21ac43e`](https://github.com/graphql-hive/gateway/commit/21ac43eaa46a704a8ffc91398d01240fb2f4b33a) Thanks [@ardatan](https://github.com/ardatan)! - Fixes the bug when the fetcher given in subgraph called multiple times, so in the CLI when you point to a file for subgraph file, it fetches the subgraph on each request.
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.16
+
 ## 1.3.12
 
 ### Patch Changes
