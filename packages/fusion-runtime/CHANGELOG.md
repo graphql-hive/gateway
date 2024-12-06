@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.17
+
+### Patch Changes
+
+- [#289](https://github.com/graphql-hive/gateway/pull/289) [`3b901c6`](https://github.com/graphql-hive/gateway/commit/3b901c66eabd076add8ed90709d34a1cc39c58f3) Thanks [@ardatan](https://github.com/ardatan)! - Use \`require\` directly on CommonJS
+
 ## 0.10.16
 
 ### Patch Changes
