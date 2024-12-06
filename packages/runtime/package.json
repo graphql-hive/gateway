@@ -82,8 +82,10 @@
   "devDependencies": {
     "@envelop/disable-introspection": "^6.0.0",
     "@graphql-mesh/fusion-composition": "^0.7.0",
+    "@omnigraph/openapi": "^0.108.6",
     "@types/html-minifier-terser": "^7.0.2",
     "@whatwg-node/fetch": "^0.10.1",
+    "fets": "^0.8.4",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
