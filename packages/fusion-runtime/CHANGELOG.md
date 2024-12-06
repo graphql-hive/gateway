@@ -1,5 +1,13 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.15
+
+### Patch Changes
+
+- [#284](https://github.com/graphql-hive/gateway/pull/284) [`f2e0ae2`](https://github.com/graphql-hive/gateway/commit/f2e0ae2162f3fd3f1b2d3eefb6a21410c840db1b) Thanks [@ardatan](https://github.com/ardatan)! - Do not use require explicitly
+
+- [#284](https://github.com/graphql-hive/gateway/pull/284) [`f2e0ae2`](https://github.com/graphql-hive/gateway/commit/f2e0ae2162f3fd3f1b2d3eefb6a21410c840db1b) Thanks [@ardatan](https://github.com/ardatan)! - Avoid \`require\` but use \`globalThis.require\` instead
+
 ## 0.10.14
 
 ### Patch Changes
