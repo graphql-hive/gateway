@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 
-
 const cjsFile = './dist/index.cjs';
 const fileContent = fs.readFileSync(cjsFile, 'utf8');
 const newContent = fileContent.replace(
