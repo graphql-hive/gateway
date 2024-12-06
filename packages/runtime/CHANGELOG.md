@@ -1,5 +1,17 @@
 # @graphql-hive/gateway-runtime
 
+## 1.3.10
+
+### Patch Changes
+
+- [#286](https://github.com/graphql-hive/gateway/pull/286) [`ed9e205`](https://github.com/graphql-hive/gateway/commit/ed9e205adf705f31b6ae85ce4ad7a8eb0b30fe32) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Removed dependency [`@graphql-mesh/store@^0.103.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/store/v/0.103.4) (from `dependencies`)
+
+- Updated dependencies [[`ed9e205`](https://github.com/graphql-hive/gateway/commit/ed9e205adf705f31b6ae85ce4ad7a8eb0b30fe32), [`ed9e205`](https://github.com/graphql-hive/gateway/commit/ed9e205adf705f31b6ae85ce4ad7a8eb0b30fe32)]:
+  - @graphql-mesh/fusion-runtime@0.10.16
+  - @graphql-mesh/hmac-upstream-signature@1.2.15
+
 ## 1.3.9
 
 ### Patch Changes
