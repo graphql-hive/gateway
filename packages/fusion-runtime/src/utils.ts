@@ -53,23 +53,22 @@ export type Transports =
   | ((kind: string) => MaybePromise<Transport | { default: Transport }>);
 
 function defaultTransportsGetter(kind: string): Promise<Transport> {
-  return mapMaybePromise(import(kind), (transport) => {
+  const moduleName = `@graphql-mesh/transport-${kind}`;
+  return mapMaybePromise(import(moduleName), (transport) => {
     if (typeof transport !== 'object') {
-      throw new Error(
-        `@graphql-mesh/transport-${kind} module does not export an object`,
-      );
+      throw new Error(`${moduleName} module does not export an object`);
     }
     if (transport?.default?.getSubgraphExecutor) {
       transport = transport.default;
     }
     if (!transport?.getSubgraphExecutor) {
       throw new Error(
-        `@graphql-mesh/transport-${kind} module does not export "getSubgraphExecutor"`,
+        `${moduleName} module does not export "getSubgraphExecutor"`,
       );
     }
     if (typeof transport?.getSubgraphExecutor !== 'function') {
       throw new Error(
-        `@graphql-mesh/transport-${kind} module's export "getSubgraphExecutor" is not a function`,
+        `${moduleName} module's export "getSubgraphExecutor" is not a function`,
       );
     }
     return transport;
