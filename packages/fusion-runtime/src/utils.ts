@@ -68,20 +68,24 @@ function tryImportThenRequireTransport(
       );
     }
   }
+  function tryRequire(moduleName: string, e: unknown) {
+    if (!globalThis.require) {
+      throw e;
+    }
+    try {
+      return globalThis.require(moduleName);
+    } catch (e) {
+      handleModuleNotFoundError(e);
+      throw e;
+    }
+  }
   try {
     return mapMaybePromise(
       import(moduleName),
       (transport) => transport,
       (e) => {
         handleModuleNotFoundError(e);
-        return mapMaybePromise(
-          require(moduleName),
-          (transport) => transport,
-          (e) => {
-            handleModuleNotFoundError(e);
-            throw e;
-          },
-        );
+        return tryRequire(moduleName, e);
       },
     );
   } catch (e) {
