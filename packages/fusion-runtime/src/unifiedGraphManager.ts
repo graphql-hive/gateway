@@ -235,7 +235,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               `Unable to store Unified Graph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
               e,
             );
-          }
+          };
           try {
             const cacheSet$ = this.opts.transportContext.cache.set(
               UNIFIEDGRAPH_CACHE_KEY,
@@ -243,7 +243,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               { ttl },
             );
             if (isPromise(cacheSet$)) {
-              cacheSet$.then(() => { }, logCacheSetError);
+              cacheSet$.then(() => {}, logCacheSetError);
               this._transportExecutorStack?.defer(() => cacheSet$);
             }
           } catch (e) {
