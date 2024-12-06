@@ -52,7 +52,7 @@ export type Transports =
     }
   | ((kind: string) => MaybePromise<Transport | { default: Transport }>);
 
-async function defaultTransportsGetter(kind: string): Promise<Transport> {
+function defaultTransportsGetter(kind: string): Promise<Transport> {
   return mapMaybePromise(import(kind), (transport) => {
     if (typeof transport !== 'object') {
       throw new Error(
