@@ -374,9 +374,6 @@ describe('Gateway Runtime', () => {
         subgraphCallCnt++;
         return subgraphDeferred.promise;
       },
-      transports: {
-        rest: import('@graphql-mesh/transport-rest'),
-      },
       plugins() {
         return [useCustomFetch(openapiRouter.fetch)];
       },
