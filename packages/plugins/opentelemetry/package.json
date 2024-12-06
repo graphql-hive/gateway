@@ -45,7 +45,6 @@
     "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.27",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.8",
-    "@graphql-mesh/store": "^0.103.4",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.4",
     "@graphql-mesh/utils": "^0.103.4",
