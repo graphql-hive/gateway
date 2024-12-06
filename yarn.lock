@@ -3062,6 +3062,7 @@ __metadata:
     "@graphql-mesh/plugin-hive": "npm:^0.103.0"
     "@graphql-mesh/plugin-response-cache": "npm:^0.103.0"
     "@graphql-mesh/transport-common": "workspace:^"
+    "@graphql-mesh/transport-rest": "npm:^0.8.6"
     "@graphql-mesh/types": "npm:^0.103.6"
     "@graphql-mesh/utils": "npm:^0.103.6"
     "@graphql-tools/batch-delegate": "workspace:^"

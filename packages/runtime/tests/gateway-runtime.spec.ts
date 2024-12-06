@@ -1,4 +1,5 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
 import {
   createDeferred,
@@ -373,6 +374,9 @@ describe('Gateway Runtime', () => {
       subgraph() {
         subgraphCallCnt++;
         return subgraphDeferred.promise;
+      },
+      transports: {
+        rest: restTransport,
       },
       plugins() {
         return [useCustomFetch(openapiRouter.fetch)];
