@@ -1,8 +1,14 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { KeyValueCache } from '@graphql-mesh/types';
+import restTransport from '@graphql-mesh/transport-rest';
+import { KeyValueCache, Logger } from '@graphql-mesh/types';
+import {
+  createDeferred,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import { isDebug } from '@internal/testing';
+import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { Response } from '@whatwg-node/server';
+import { createRouter, Response, Type } from 'fets';
 import {
   buildSchema,
   GraphQLSchema,
@@ -347,5 +353,98 @@ describe('Gateway Runtime', () => {
         },
       });
     });
+  });
+
+  it('calls subgraph fetcher correctly', async () => {
+    const openapiRouter = createRouter().route({
+      path: '/greetings',
+      method: 'GET',
+      schemas: {
+        responses: {
+          200: Type.Object({
+            message: Type.String(),
+          }),
+        },
+      },
+      handler: () => Response.json({ message: 'Hello, world!' }),
+    });
+    let subgraphCallCnt = 0;
+    const subgraphDeferred = createDeferred<GraphQLSchema>();
+    await using subgraphRuntime = createGatewayRuntime({
+      subgraph() {
+        subgraphCallCnt++;
+        return subgraphDeferred.promise;
+      },
+      transports: {
+        rest: restTransport,
+      },
+      plugins() {
+        return [useCustomFetch(openapiRouter.fetch)];
+      },
+    });
+    const dummyLogger: Logger = {
+      log: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+      child: vi.fn(() => dummyLogger),
+    };
+    const { schema$ } = loadOpenAPISubgraph('my-subgraph', {
+      source: 'http://localhost:4001/openapi.json',
+      endpoint: 'http://localhost:4001',
+      fetch: openapiRouter.fetch,
+    })({ fetch: openapiRouter.fetch, cwd: process.cwd(), logger: dummyLogger });
+    const subgraphSchema = await schema$;
+
+    const resp1$ = subgraphRuntime.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            _service {
+              sdl
+            }
+          }
+        `,
+      }),
+    });
+    const resp2$ = subgraphRuntime.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            greetings {
+              message
+            }
+          }
+        `,
+      }),
+    });
+    subgraphDeferred.resolve(subgraphSchema);
+    const [resp1, resp2] = await Promise.all([resp1$, resp2$]);
+    expect(resp1.ok).toBeTruthy();
+    expect(resp2.ok).toBeTruthy();
+    expect(await resp1.json()).toEqual({
+      data: {
+        _service: {
+          sdl: printSchemaWithDirectives(subgraphSchema),
+        },
+      },
+    });
+    expect(await resp2.json()).toEqual({
+      data: {
+        greetings: {
+          message: 'Hello, world!',
+        },
+      },
+    });
+    expect(subgraphCallCnt).toBe(1);
   });
 });

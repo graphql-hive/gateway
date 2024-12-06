@@ -11,6 +11,8 @@ const inline = [
   /@graphql-mesh\/runtime/,
   /@graphql-mesh\/fusion-composition/,
   /@graphql-mesh\/plugin-hive/,
+  /@graphql-mesh\/transport-rest/,
+  /@omnigraph\/.*/,
 ];
 
 export default defineConfig({

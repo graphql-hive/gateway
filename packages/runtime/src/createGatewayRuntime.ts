@@ -397,174 +397,174 @@ export function createGatewayRuntime<
     let subschemaConfig: SubschemaConfig;
     const transportExecutorStack = new AsyncDisposableStack();
     function getSubschemaConfig() {
-      if (getSubschemaConfig$) {
-        return getSubschemaConfig$;
-      }
-      return mapMaybePromise(
-        handleUnifiedGraphConfig(subgraphInConfig, configContext),
-        (newUnifiedGraph) => {
-          unifiedGraph = newUnifiedGraph;
-          unifiedGraph = restoreExtraDirectives(unifiedGraph);
-          subschemaConfig = {
-            name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
-              'subgraph'
-            ],
-            schema: unifiedGraph,
-          };
-          const transportEntryMap: Record<string, TransportEntry> = {};
-          const additionalTypeDefs: TypeSource[] = [];
+      if (getSubschemaConfig$ == null) {
+        getSubschemaConfig$ = mapMaybePromise(
+          handleUnifiedGraphConfig(subgraphInConfig, configContext),
+          (newUnifiedGraph) => {
+            unifiedGraph = newUnifiedGraph;
+            unifiedGraph = restoreExtraDirectives(unifiedGraph);
+            subschemaConfig = {
+              name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
+                'subgraph'
+              ],
+              schema: unifiedGraph,
+            };
+            const transportEntryMap: Record<string, TransportEntry> = {};
+            const additionalTypeDefs: TypeSource[] = [];
 
-          const stitchingDirectivesTransformer =
-            getStitchingDirectivesTransformerForSubschema();
-          const onSubgraphExecute = getOnSubgraphExecute({
-            onSubgraphExecuteHooks,
-            ...(config.transports ? { transports: config.transports } : {}),
-            transportContext: configContext,
-            transportEntryMap,
-            getSubgraphSchema() {
-              return unifiedGraph;
-            },
-            transportExecutorStack,
-          });
-          subschemaConfig = handleFederationSubschema({
-            subschemaConfig,
-            transportEntryMap,
-            additionalTypeDefs,
-            stitchingDirectivesTransformer,
-            onSubgraphExecute,
-          });
-          // TODO: Find better alternative later
-          unifiedGraph = wrapSchema(subschemaConfig);
-          const entities = Object.keys(subschemaConfig.merge || {});
-          let entitiesDef = 'union _Entity';
-          if (entities.length) {
-            entitiesDef += ` = ${entities.join(' | ')}`;
-          }
-          const additionalResolvers: IResolvers[] = asArray(
-            'additionalResolvers' in config ? config.additionalResolvers : [],
-          ).filter((r) => r != null);
-          const finalTypeDefs = handleResolveToDirectives(
-            parse(/* GraphQL */ `
-              type Query {
-                _entities(representations: [_Any!]!): [_Entity]!
-                _service: _Service!
-              }
+            const stitchingDirectivesTransformer =
+              getStitchingDirectivesTransformerForSubschema();
+            const onSubgraphExecute = getOnSubgraphExecute({
+              onSubgraphExecuteHooks,
+              ...(config.transports ? { transports: config.transports } : {}),
+              transportContext: configContext,
+              transportEntryMap,
+              getSubgraphSchema() {
+                return unifiedGraph;
+              },
+              transportExecutorStack,
+            });
+            subschemaConfig = handleFederationSubschema({
+              subschemaConfig,
+              transportEntryMap,
+              additionalTypeDefs,
+              stitchingDirectivesTransformer,
+              onSubgraphExecute,
+            });
+            // TODO: Find better alternative later
+            unifiedGraph = wrapSchema(subschemaConfig);
+            const entities = Object.keys(subschemaConfig.merge || {});
+            let entitiesDef = 'union _Entity';
+            if (entities.length) {
+              entitiesDef += ` = ${entities.join(' | ')}`;
+            }
+            const additionalResolvers: IResolvers[] = asArray(
+              'additionalResolvers' in config ? config.additionalResolvers : [],
+            ).filter((r) => r != null);
+            const finalTypeDefs = handleResolveToDirectives(
+              parse(/* GraphQL */ `
+                type Query {
+                  _entities(representations: [_Any!]!): [_Entity]!
+                  _service: _Service!
+                }
 
-              scalar _Any
-              ${entitiesDef}
-              type _Service {
-                sdl: String
-              }
-            `),
-            additionalTypeDefs,
-            additionalResolvers,
-          );
-          additionalResolvers.push({
-            Query: {
-              _entities(_root, args, context, info) {
-                if (Array.isArray(args.representations)) {
-                  return args.representations.map((representation: any) => {
-                    const typeName = representation.__typename;
-                    const mergeConfig = subschemaConfig.merge?.[typeName];
-                    const entryPoints = mergeConfig?.entryPoints || [
-                      mergeConfig,
-                    ];
-                    const satisfiedEntryPoint = entryPoints.find(
-                      (entryPoint) => {
-                        if (entryPoint?.selectionSet) {
-                          const selectionSet = parseSelectionSet(
-                            entryPoint.selectionSet,
-                            {
-                              noLocation: true,
-                            },
-                          );
-                          return checkIfDataSatisfiesSelectionSet(
-                            selectionSet,
-                            representation,
+                scalar _Any
+                ${entitiesDef}
+                type _Service {
+                  sdl: String
+                }
+              `),
+              additionalTypeDefs,
+              additionalResolvers,
+            );
+            additionalResolvers.push({
+              Query: {
+                _entities(_root, args, context, info) {
+                  if (Array.isArray(args.representations)) {
+                    return args.representations.map((representation: any) => {
+                      const typeName = representation.__typename;
+                      const mergeConfig = subschemaConfig.merge?.[typeName];
+                      const entryPoints = mergeConfig?.entryPoints || [
+                        mergeConfig,
+                      ];
+                      const satisfiedEntryPoint = entryPoints.find(
+                        (entryPoint) => {
+                          if (entryPoint?.selectionSet) {
+                            const selectionSet = parseSelectionSet(
+                              entryPoint.selectionSet,
+                              {
+                                noLocation: true,
+                              },
+                            );
+                            return checkIfDataSatisfiesSelectionSet(
+                              selectionSet,
+                              representation,
+                            );
+                          }
+                          return true;
+                        },
+                      );
+                      if (satisfiedEntryPoint) {
+                        if (satisfiedEntryPoint.key) {
+                          return mapMaybePromise(
+                            batchDelegateToSchema({
+                              schema: subschemaConfig,
+                              ...(satisfiedEntryPoint.fieldName
+                                ? { fieldName: satisfiedEntryPoint.fieldName }
+                                : {}),
+                              key: satisfiedEntryPoint.key(representation),
+                              ...(satisfiedEntryPoint.argsFromKeys
+                                ? {
+                                    argsFromKeys:
+                                      satisfiedEntryPoint.argsFromKeys,
+                                  }
+                                : {}),
+                              ...(satisfiedEntryPoint.valuesFromResults
+                                ? {
+                                    valuesFromResults:
+                                      satisfiedEntryPoint.valuesFromResults,
+                                  }
+                                : {}),
+                              context,
+                              info,
+                            }),
+                            (res) => mergeDeep([representation, res]),
                           );
                         }
-                        return true;
-                      },
-                    );
-                    if (satisfiedEntryPoint) {
-                      if (satisfiedEntryPoint.key) {
-                        return mapMaybePromise(
-                          batchDelegateToSchema({
-                            schema: subschemaConfig,
-                            ...(satisfiedEntryPoint.fieldName
-                              ? { fieldName: satisfiedEntryPoint.fieldName }
-                              : {}),
-                            key: satisfiedEntryPoint.key(representation),
-                            ...(satisfiedEntryPoint.argsFromKeys
-                              ? {
-                                  argsFromKeys:
-                                    satisfiedEntryPoint.argsFromKeys,
-                                }
-                              : {}),
-                            ...(satisfiedEntryPoint.valuesFromResults
-                              ? {
-                                  valuesFromResults:
-                                    satisfiedEntryPoint.valuesFromResults,
-                                }
-                              : {}),
-                            context,
-                            info,
-                          }),
-                          (res) => mergeDeep([representation, res]),
-                        );
+                        if (satisfiedEntryPoint.args) {
+                          return mapMaybePromise(
+                            delegateToSchema({
+                              schema: subschemaConfig,
+                              ...(satisfiedEntryPoint.fieldName
+                                ? { fieldName: satisfiedEntryPoint.fieldName }
+                                : {}),
+                              args: satisfiedEntryPoint.args(representation),
+                              context,
+                              info,
+                            }),
+                            (res) => mergeDeep([representation, res]),
+                          );
+                        }
                       }
-                      if (satisfiedEntryPoint.args) {
-                        return mapMaybePromise(
-                          delegateToSchema({
-                            schema: subschemaConfig,
-                            ...(satisfiedEntryPoint.fieldName
-                              ? { fieldName: satisfiedEntryPoint.fieldName }
-                              : {}),
-                            args: satisfiedEntryPoint.args(representation),
-                            context,
-                            info,
-                          }),
-                          (res) => mergeDeep([representation, res]),
-                        );
-                      }
-                    }
-                    return representation;
-                  });
-                }
-                return [];
+                      return representation;
+                    });
+                  }
+                  return [];
+                },
+                _service() {
+                  return {
+                    sdl() {
+                      return getUnifiedGraphSDL(newUnifiedGraph);
+                    },
+                  };
+                },
               },
-              _service() {
-                return {
-                  sdl() {
-                    return getUnifiedGraphSDL(newUnifiedGraph);
-                  },
-                };
-              },
-            },
-          });
-          unifiedGraph = mergeSchemas({
-            assumeValid: true,
-            assumeValidSDL: true,
-            schemas: [unifiedGraph],
-            typeDefs: finalTypeDefs,
-            resolvers: additionalResolvers,
-          });
-          contextBuilder = (base) =>
-            // @ts-expect-error - Typings are wrong in legacy Mesh
-            Object.assign(
+            });
+            unifiedGraph = mergeSchemas({
+              assumeValid: true,
+              assumeValidSDL: true,
+              schemas: [unifiedGraph],
+              typeDefs: finalTypeDefs,
+              resolvers: additionalResolvers,
+            });
+            contextBuilder = (base) =>
               // @ts-expect-error - Typings are wrong in legacy Mesh
-              base,
-              getInContextSDK(
-                unifiedGraph,
+              Object.assign(
                 // @ts-expect-error - Typings are wrong in legacy Mesh
-                [subschemaConfig],
-                configContext.logger,
-                onDelegateHooks,
-              ),
-            );
-          return true;
-        },
-      );
+                base,
+                getInContextSDK(
+                  unifiedGraph,
+                  // @ts-expect-error - Typings are wrong in legacy Mesh
+                  [subschemaConfig],
+                  configContext.logger,
+                  onDelegateHooks,
+                ),
+              );
+            return true;
+          },
+        );
+      }
+      return getSubschemaConfig$;
     }
     getSchema = () => mapMaybePromise(getSubschemaConfig(), () => unifiedGraph);
     schemaInvalidator = () => {
