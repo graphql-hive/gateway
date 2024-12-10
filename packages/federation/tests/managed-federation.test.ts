@@ -238,16 +238,16 @@ describe('Managed Federation', () => {
       using manager = new SupergraphSchemaManager({
         fetch: () =>
           Response.json({
-              data: {
-                routerConfig: {
-                  __typename: 'RouterConfigResult',
-                  supergraphSdl,
-                  id: 'test-id',
-                  minDelaySeconds: 10,
-                  messages: [{ level: 'INFO', body: 'test-message' }],
-                },
+            data: {
+              routerConfig: {
+                __typename: 'RouterConfigResult',
+                supergraphSdl,
+                id: 'test-id',
+                minDelaySeconds: 10,
+                messages: [{ level: 'INFO', body: 'test-message' }],
               },
-            }),
+            },
+          }),
       });
 
       const onMessage = vi.fn();

@@ -9,9 +9,11 @@ import {
 } from '@graphql-tools/utils';
 import { GraphQLSchema, Kind, SelectionSetNode, TypeNode } from 'graphql';
 
-export const getArgsFromKeysForFederation = memoize1(function getArgsFromKeysForFederation(representations: readonly any[]) {
-  return { representations };
-});
+export const getArgsFromKeysForFederation = memoize1(
+  function getArgsFromKeysForFederation(representations: readonly any[]) {
+    return { representations };
+  },
+);
 
 export function projectDataSelectionSet(
   data: any,

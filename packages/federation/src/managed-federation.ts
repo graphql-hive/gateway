@@ -400,21 +400,30 @@ export class SupergraphSchemaManager
         ...this.options,
         loggerByMessageLevel: {
           ERROR: (message) => {
-            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
-              detail: { source: 'uplink', level: 'error', message },
-            });
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent(
+              'log',
+              {
+                detail: { source: 'uplink', level: 'error', message },
+              },
+            );
             this.dispatchEvent(logEvent);
           },
           WARN: (message) => {
-            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
-              detail: { source: 'uplink', level: 'warn', message },
-            });
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent(
+              'log',
+              {
+                detail: { source: 'uplink', level: 'warn', message },
+              },
+            );
             this.dispatchEvent(logEvent);
           },
           INFO: (message) => {
-            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
-              detail: { source: 'uplink', level: 'info', message },
-            });
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent(
+              'log',
+              {
+                detail: { source: 'uplink', level: 'info', message },
+              },
+            );
             this.dispatchEvent(logEvent);
           },
         },
@@ -423,12 +432,15 @@ export class SupergraphSchemaManager
 
       if ('error' in result) {
         this.#lastSeenId = undefined; // When an error is reported, Apollo doesn't provide an id.
-        const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent('error', {
-          detail: {
-            error: result.error,
-            minDelaySeconds: result.minDelaySeconds,
+        const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent(
+          'error',
+          {
+            detail: {
+              error: result.error,
+              minDelaySeconds: result.minDelaySeconds,
+            },
           },
-        });
+        );
         this.dispatchEvent(errorEvent);
         this.#retryOnError(
           result.error,
@@ -440,12 +452,15 @@ export class SupergraphSchemaManager
       if ('schema' in result) {
         this.#lastSeenId = result.id;
         this.schema = result.schema;
-        const schemaEvent: SupergraphSchemaManagerSchemaEvent = new CustomEvent('schema', {
-          detail: {
-            schema: result.schema,
-            supergraphSdl: result.supergraphSdl,
+        const schemaEvent: SupergraphSchemaManagerSchemaEvent = new CustomEvent(
+          'schema',
+          {
+            detail: {
+              schema: result.schema,
+              supergraphSdl: result.supergraphSdl,
+            },
           },
-        });
+        );
         this.dispatchEvent(schemaEvent);
         this.#log('info', 'Supergraph successfully updated');
       } else {
@@ -458,9 +473,12 @@ export class SupergraphSchemaManager
       this.#log('info', `Next pull in ${delay.toFixed(1)} seconds`);
     } catch (e) {
       this.#retryOnError(e as FetchError['error'], retryDelaySeconds ?? 0);
-      const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent('error', {
-        detail: e as Error,
-      });
+      const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent(
+        'error',
+        {
+          detail: e as Error,
+        },
+      );
       this.dispatchEvent(errorEvent);
     }
   };
@@ -476,9 +494,12 @@ export class SupergraphSchemaManager
     if (this.#retries >= maxRetries) {
       this.#timeout = undefined;
       this.#log('error', 'Max retries reached, giving up');
-      const failureEvent: SupergraphSchemaManagerFailureEvent = new CustomEvent('failure', {
-        detail: { error, delayInSeconds },
-      });
+      const failureEvent: SupergraphSchemaManagerFailureEvent = new CustomEvent(
+        'failure',
+        {
+          detail: { error, delayInSeconds },
+        },
+      );
       this.dispatchEvent(failureEvent);
       return;
     }
