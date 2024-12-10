@@ -323,26 +323,26 @@ export type SupergraphSchemaManagerOptions = Omit<
   retryDelaySeconds?: number;
 };
 
-type SchemaEvent = CustomEvent<{
+export type SupergraphSchemaManagerSchemaEvent = CustomEvent<{
   schema: GraphQLSchema;
   supergraphSdl: string;
 }>;
-type ErrorEvent = CustomEvent<FetchError | unknown>;
-type FailureEvent = CustomEvent<{
-  error: FetchError | unknown;
+export type SupergraphSchemaManagerErrorEvent = CustomEvent<FetchError | Error>;
+export type SupergraphSchemaManagerFailureEvent = CustomEvent<{
+  error: FetchError['error'] | Error;
   delayInSeconds: number;
 }>;
-type LogEvent = CustomEvent<{
+export type SupergraphSchemaManagerLogEvent = CustomEvent<{
   source: 'uplink' | 'manager';
   message: string;
   level: 'error' | 'warn' | 'info';
 }>;
 
-type SupergraphSchemaManagerEvent =
-  | SchemaEvent
-  | ErrorEvent
-  | FailureEvent
-  | LogEvent;
+export type SupergraphSchemaManagerEvent =
+  | SupergraphSchemaManagerSchemaEvent
+  | SupergraphSchemaManagerErrorEvent
+  | SupergraphSchemaManagerFailureEvent
+  | SupergraphSchemaManagerLogEvent;
 
 const TypedEventTargetCtor = EventTarget as unknown as new <
   TEvent extends CustomEvent,
@@ -399,32 +399,35 @@ export class SupergraphSchemaManager
       const result = await getStitchedSchemaFromManagedFederation({
         ...this.options,
         loggerByMessageLevel: {
-          ERROR: (message) =>
-            this.dispatchEvent(
-              new CustomEvent('log', {
-                detail: { source: 'uplink', level: 'error', message },
-              }),
-            ),
-          WARN: (message) =>
-            this.dispatchEvent(
-              new CustomEvent('log', {
-                detail: { source: 'uplink', level: 'warn', message },
-              }),
-            ),
-          INFO: (message) =>
-            this.dispatchEvent(
-              new CustomEvent('log', {
-                detail: { source: 'uplink', level: 'info', message },
-              }),
-            ),
+          ERROR: (message) => {
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
+              detail: { source: 'uplink', level: 'error', message },
+            });
+            this.dispatchEvent(logEvent);
+          },
+          WARN: (message) => {
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
+              detail: { source: 'uplink', level: 'warn', message },
+            });
+            this.dispatchEvent(logEvent);
+          },
+          INFO: (message) => {
+            const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
+              detail: { source: 'uplink', level: 'info', message },
+            });
+            this.dispatchEvent(logEvent);
+          },
         },
         lastSeenId: this.#lastSeenId,
       });
 
       if ('error' in result) {
         this.#lastSeenId = undefined; // When an error is reported, Apollo doesn't provide an id.
-        const errorEvent: ErrorEvent = new CustomEvent('error', {
-          detail: result.error,
+        const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent('error', {
+          detail: {
+            error: result.error,
+            minDelaySeconds: result.minDelaySeconds,
+          },
         });
         this.dispatchEvent(errorEvent);
         this.#retryOnError(
@@ -437,7 +440,7 @@ export class SupergraphSchemaManager
       if ('schema' in result) {
         this.#lastSeenId = result.id;
         this.schema = result.schema;
-        const schemaEvent: SchemaEvent = new CustomEvent('schema', {
+        const schemaEvent: SupergraphSchemaManagerSchemaEvent = new CustomEvent('schema', {
           detail: {
             schema: result.schema,
             supergraphSdl: result.supergraphSdl,
@@ -454,17 +457,17 @@ export class SupergraphSchemaManager
       this.#timeout = setTimeout(this.#fetchSchema, delay * 1000);
       this.#log('info', `Next pull in ${delay.toFixed(1)} seconds`);
     } catch (e) {
-      this.#retryOnError(e, retryDelaySeconds ?? 0);
-      const errorEvent: ErrorEvent = new CustomEvent('error', {
-        detail: e,
+      this.#retryOnError(e as FetchError['error'], retryDelaySeconds ?? 0);
+      const errorEvent: SupergraphSchemaManagerErrorEvent = new CustomEvent('error', {
+        detail: e as Error,
       });
       this.dispatchEvent(errorEvent);
     }
   };
 
-  #retryOnError = (error: unknown, delayInSeconds: number) => {
+  #retryOnError = (error: FetchError['error'], delayInSeconds: number) => {
     const { maxRetries = 3 } = this.options;
-    const message = (error as { message: string })?.message;
+    const message = error?.message;
     this.#log(
       'error',
       `Failed to pull schema from managed federation: ${message}`,
@@ -473,7 +476,7 @@ export class SupergraphSchemaManager
     if (this.#retries >= maxRetries) {
       this.#timeout = undefined;
       this.#log('error', 'Max retries reached, giving up');
-      const failureEvent: FailureEvent = new CustomEvent('failure', {
+      const failureEvent: SupergraphSchemaManagerFailureEvent = new CustomEvent('failure', {
         detail: { error, delayInSeconds },
       });
       this.dispatchEvent(failureEvent);
@@ -490,7 +493,7 @@ export class SupergraphSchemaManager
   };
 
   #log = (level: 'error' | 'warn' | 'info', message: string) => {
-    const logEvent: LogEvent = new CustomEvent('log', {
+    const logEvent: SupergraphSchemaManagerLogEvent = new CustomEvent('log', {
       detail: {
         source: 'manager',
         level,
