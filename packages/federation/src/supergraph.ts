@@ -27,6 +27,7 @@ import {
   ASTVisitorKeyMap,
   createGraphQLError,
   isPromise,
+  mapMaybePromise,
   memoize1,
   mergeDeep,
   parseSelectionSet,
@@ -1055,14 +1056,25 @@ export function getStitchingOptionsFromSupergraphSdl(
     });
     if (globalThis.process?.env?.['DEBUG']) {
       const origExecutor = executor;
-      executor = async function debugExecutor(execReq) {
-        console.log(`Executing ${subgraphName} with args:`, {
-          document: print(execReq.document),
+      executor = function debugExecutor(execReq) {
+        const prefix = `[${new Date().toISOString()}] ${subgraphName}`;
+        console.debug(`${prefix} - subgraph-execute-start`, {
+          document: memoizedASTPrint(execReq.document),
           variables: JSON.stringify(execReq.variables),
         });
-        const res = await origExecutor(execReq);
-        console.log(`Response from ${subgraphName}:`, JSON.stringify(res));
-        return res;
+        return mapMaybePromise(origExecutor(execReq), (res) => {
+          console.debug(
+            `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-done`,
+            JSON.stringify(res),
+          );
+          return res;
+        }, err => {
+          console.error(
+            `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-error`,
+            err,
+          );
+          return err;
+        });
       };
     }
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);

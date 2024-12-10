@@ -32,10 +32,12 @@ export const Aschema = buildSubgraphSchema({
       name: String! @shareable
       age: Int!
     }
-    
+
     extend schema
-      @link(url: "https://specs.apollo.dev/federation/v2.0",
-            import: ["@key", "@shareable"])
+      @link(
+        url: "https://specs.apollo.dev/federation/v2.0"
+        import: ["@key", "@shareable"]
+      )
   `),
   resolvers: {
     User: {
@@ -127,8 +129,10 @@ export const Eschema = buildSubgraphSchema({
     }
 
     extend schema
-      @link(url: "https://specs.apollo.dev/federation/v2.0",
-            import: ["@key", "@shareable"])
+      @link(
+        url: "https://specs.apollo.dev/federation/v2.0"
+        import: ["@key", "@shareable"]
+      )
   `),
   resolvers: {
     User: {
