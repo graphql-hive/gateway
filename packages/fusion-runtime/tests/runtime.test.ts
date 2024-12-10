@@ -185,7 +185,7 @@ describe('onDelegationPlanHook', () => {
         }
 
         extend type User @key(fields: "id") {
-          id: ID! @external
+          id: ID!
         }
       `),
       resolvers: {
