@@ -41,15 +41,17 @@ export function useCompleteSubscriptionsOnDispose(): GatewayPlugin {
                 result,
                 new Repeater<never>((_push, stop) => {
                   const stopFn = () => {
+                    stopFns.delete(stopFn);
                     return stop(createShutdownError());
                   };
-                  stop.then(() => {
-                    stopFns.delete(stopFn);
-                    return result.return?.();
-                  });
+                  stop
+                    .then(() => result.return?.())
+                    .finally(() => {
+                      stopFns.delete(stopFn);
+                    });
                   // If shutdown has already been initiated, complete the subscription immediately
                   if (disposed) {
-                    return stop(createShutdownError());
+                    return stopFn();
                   } else {
                     // If shutdown is initiated after this point, attach it to the disposable stack
                     stopFns.add(stopFn);

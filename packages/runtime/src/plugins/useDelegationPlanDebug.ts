@@ -4,9 +4,9 @@ import { print } from 'graphql';
 import { FetchAPI } from 'graphql-yoga';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
-export function useDelegationPlanDebug<TContext extends Record<string, any>>(opts: {
-  logger: Logger;
-}): GatewayPlugin<TContext> {
+export function useDelegationPlanDebug<
+  TContext extends Record<string, any>,
+>(opts: { logger: Logger }): GatewayPlugin<TContext> {
   let fetchAPI: FetchAPI;
   const stageExecuteLogById = new WeakMap<GatewayContext, Set<string>>();
   return {

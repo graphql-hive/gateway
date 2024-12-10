@@ -1062,19 +1062,23 @@ export function getStitchingOptionsFromSupergraphSdl(
           document: memoizedASTPrint(execReq.document),
           variables: JSON.stringify(execReq.variables),
         });
-        return mapMaybePromise(origExecutor(execReq), (res) => {
-          console.debug(
-            `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-done`,
-            JSON.stringify(res),
-          );
-          return res;
-        }, err => {
-          console.error(
-            `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-error`,
-            err,
-          );
-          return err;
-        });
+        return mapMaybePromise(
+          origExecutor(execReq),
+          (res) => {
+            console.debug(
+              `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-done`,
+              JSON.stringify(res),
+            );
+            return res;
+          },
+          (err) => {
+            console.error(
+              `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-error`,
+              err,
+            );
+            return err;
+          },
+        );
       };
     }
     const typeNameProvidedMap = subgraphTypeNameProvidedMap.get(subgraphName);

@@ -919,7 +919,7 @@ export function createGatewayRuntime<
     useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
   ];
-  
+
   logger.debug(() => {
     basePlugins.push(
       useSubgraphExecuteDebug(configContext),
