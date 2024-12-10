@@ -87,7 +87,7 @@ import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscrip
 import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
-import { useDelegationPlan } from './plugins/useDelegationPlanDebug';
+import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
@@ -918,10 +918,16 @@ export function createGatewayRuntime<
     useCompleteSubscriptionsOnDispose(),
     useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
-    useSubgraphExecuteDebug(configContext),
-    useFetchDebug(configContext),
-    useDelegationPlan(configContext),
   ];
+
+  logger.debug(() => {
+    basePlugins.push(
+      useSubgraphExecuteDebug(configContext),
+      useFetchDebug(configContext),
+      useDelegationPlanDebug(configContext),
+    );
+    return 'Debug mode enabled';
+  });
 
   const extraPlugins = [];
 

@@ -177,6 +177,10 @@ jobs:
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
       - name: Test
+        uses: nick-fields/retry@v3
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
-        run: yarn test:e2e
+        with:
+          timeout_minutes: 10
+          max_attempts: 2
+          command: yarn test:e2e

@@ -3903,6 +3903,9 @@ __metadata:
     "@graphql-tools/stitch": "workspace:^"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@graphql-tools/wrap": "workspace:^"
+    "@graphql-yoga/typed-event-target": "npm:^3.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.5"
+    "@whatwg-node/events": "npm:^0.1.2"
     "@whatwg-node/fetch": "npm:^0.10.1"
     graphql: "npm:^16.9.0"
     graphql-federation-gateway-audit: "the-guild-org/graphql-federation-gateway-audit#main"
@@ -6689,7 +6692,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/events@npm:^0.1.0":
+"@whatwg-node/events@npm:^0.1.0, @whatwg-node/events@npm:^0.1.2":
   version: 0.1.2
   resolution: "@whatwg-node/events@npm:0.1.2"
   dependencies:

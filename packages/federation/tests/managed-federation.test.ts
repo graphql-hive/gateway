@@ -1,6 +1,6 @@
 import { setTimeout } from 'timers/promises';
 import { Response } from '@whatwg-node/fetch';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchSupergraphSdlFromManagedFederation,
   SupergraphSchemaManager,
@@ -151,19 +151,16 @@ describe('Managed Federation', () => {
   });
 
   describe('Supergraph Schema Manager', () => {
-    let manager: SupergraphSchemaManager;
-    afterEach(() => {
-      manager?.stop();
-    });
-
     it('should allow to wait for initial schema load', async () => {
-      manager = new SupergraphSchemaManager({
+      using manager = new SupergraphSchemaManager({
         fetch: mockSDL,
       });
 
       manager.start();
 
-      const schema$ = new Promise((resolve) => manager.once('schema', resolve));
+      const schema$ = new Promise((resolve) =>
+        manager.addEventListener('schema', resolve, { once: true }),
+      );
 
       await advanceTimersByTimeAsync(50);
 
@@ -173,15 +170,15 @@ describe('Managed Federation', () => {
     });
 
     it('should call onFailure when failed more than the given max retries', async () => {
-      manager = new SupergraphSchemaManager({
+      using manager = new SupergraphSchemaManager({
         fetch: mockFetchError,
         maxRetries: 3,
       });
 
       const onFailure = vi.fn();
-      manager.on('failure', onFailure);
+      manager.addEventListener('failure', onFailure);
       const onError = vi.fn();
-      manager.on('error', onError);
+      manager.addEventListener('error', onError);
       manager.start();
 
       await advanceTimersByTimeAsync(250);
@@ -191,12 +188,12 @@ describe('Managed Federation', () => {
     });
 
     it('should call onSchemaChange on each new schema', async () => {
-      manager = new SupergraphSchemaManager({
+      using manager = new SupergraphSchemaManager({
         fetch: mockSDL,
       });
 
       const onSchemaChange = vi.fn();
-      manager.on('schema', onSchemaChange);
+      manager.addEventListener('schema', onSchemaChange);
       manager.start();
 
       await advanceTimersByTimeAsync(290);
@@ -204,29 +201,31 @@ describe('Managed Federation', () => {
     });
 
     it('should call onSchemaChange for on and once listeners', async () => {
-      manager = new SupergraphSchemaManager({
+      using manager = new SupergraphSchemaManager({
         fetch: mockSDL,
       });
 
-      const onSchemaChange = vi.fn();
-      manager.once('schema', onSchemaChange);
-      manager.on('schema', onSchemaChange);
+      const onSchemaChangeOn = vi.fn();
+      const onSchemaChangeOnce = vi.fn();
+      manager.addEventListener('schema', onSchemaChangeOn, { once: true });
+      manager.addEventListener('schema', onSchemaChangeOnce);
       manager.start();
 
       await advanceTimersByTimeAsync(50);
-      expect(onSchemaChange).toHaveBeenCalledTimes(2);
+      expect(onSchemaChangeOnce).toHaveBeenCalledTimes(1);
+      expect(onSchemaChangeOn).toHaveBeenCalledTimes(1);
     });
 
     it('should retry on exceptions', async () => {
-      manager = new SupergraphSchemaManager({
+      using manager = new SupergraphSchemaManager({
         fetch: mockError,
         maxRetries: 3,
       });
 
       const onFailure = vi.fn();
-      manager.on('failure', onFailure);
+      manager.addEventListener('failure', onFailure);
       const onError = vi.fn();
-      manager.on('error', onError);
+      manager.addEventListener('error', onError);
       manager.start();
 
       await advanceTimersByTimeAsync(50);
@@ -236,8 +235,8 @@ describe('Managed Federation', () => {
     });
 
     it('should emit uplink messages', async () => {
-      manager = new SupergraphSchemaManager({
-        fetch: async () =>
+      using manager = new SupergraphSchemaManager({
+        fetch: () =>
           Response.json({
             data: {
               routerConfig: {
@@ -252,15 +251,19 @@ describe('Managed Federation', () => {
       });
 
       const onMessage = vi.fn();
-      manager.on('log', onMessage);
+      manager.addEventListener('log', onMessage);
       manager.start();
-
       await advanceTimersByTimeAsync(50);
-      expect(onMessage).toHaveBeenCalledWith({
-        message: 'test-message',
-        level: 'info',
-        source: 'uplink',
-      });
+      manager.schema = undefined;
+      expect(onMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: {
+            message: 'test-message',
+            level: 'info',
+            source: 'uplink',
+          },
+        }),
+      );
     });
   });
 });
