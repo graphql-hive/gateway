@@ -1,9 +1,9 @@
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import {
   OnDelegationPlanDoneHook,
   OnDelegationPlanHook,
 } from '@graphql-mesh/fusion-runtime';
 import { Subschema } from '@graphql-tools/delegate';
-import { buildSubgraphSchema } from '@graphql-tools/federation';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { GraphQLSchema, Kind, parse, print } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
