@@ -1,5 +1,42 @@
 # @graphql-tools/federation
 
+## 3.0.0
+
+### Major Changes
+
+- [#308](https://github.com/graphql-hive/gateway/pull/308) [`d747d4c`](https://github.com/graphql-hive/gateway/commit/d747d4cd37317e8a9b2b95a5270c0fbd47e4cba3) Thanks [@ardatan](https://github.com/ardatan)! - BREAKING CHANGES;
+
+  - Removed `buildSubgraphSchema`, use `@apollo/subgraph` instead.
+  - Removed the following gateway related functions, and prefer using Supergraph approach instead
+    - `getSubschemaForFederationWithURL`
+    - `getSubschemaForFederationWithTypeDefs`
+    - `getSubschemaForFederationWithExecutor`
+    - `getSubschemaForFederationWithSchema`
+    - `federationSubschemaTransformer`
+  - `SupergraphSchemaManager` is no longer an `EventEmitter` but `EventTarget` instead, and it emits a real `Event` object.
+  - `SupergraphSchemaManager` is now `Disposable` and it no longer stops based on Nodejs terminate events, so you should use `using` syntax.
+
+  ```ts
+  using manager = new SupergraphSchemaManager({ ... });
+
+  manager.addEventListener('error', (event: SupergraphSchemaManagerErrorEvent) => {
+    console.error(event.detail.error);
+  });
+
+  let schema: GraphQLSchema | null = null;
+  manager.addEventListener('schema', (event: SupergraphSchemaManagerSchemaEvent) => {
+      schema = event.detail.schema;
+  });
+  ```
+
+### Patch Changes
+
+- [#308](https://github.com/graphql-hive/gateway/pull/308) [`d747d4c`](https://github.com/graphql-hive/gateway/commit/d747d4cd37317e8a9b2b95a5270c0fbd47e4cba3) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-yoga/typed-event-target@^3.0.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/typed-event-target/v/3.0.0) (to `dependencies`)
+  - Added dependency [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5) (to `dependencies`)
+  - Added dependency [`@whatwg-node/events@^0.1.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/events/v/0.1.2) (to `dependencies`)
+
 ## 2.2.40
 
 ### Patch Changes
