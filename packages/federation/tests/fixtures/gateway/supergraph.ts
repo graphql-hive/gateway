@@ -1,6 +1,6 @@
 import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
-import { buildSubgraphSchema as apolloBuildSubgraphSchema } from '@apollo/subgraph';
-import { fakePromise, IResolvers } from '@graphql-tools/utils';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { fakePromise } from '@graphql-tools/utils';
 import { accounts, inventory, products, reviews } from '@internal/e2e';
 import { DocumentNode, GraphQLSchema } from 'graphql';
 
@@ -17,23 +17,7 @@ export interface ServiceInput {
   schema: GraphQLSchema;
 }
 
-export type BuildSubgraphSchemaFn = (options: {
-  typeDefs: DocumentNode;
-  resolvers: IResolvers;
-}) => GraphQLSchema;
-
-const defaultBuildSubgraphSchema: BuildSubgraphSchemaFn = ({
-  typeDefs,
-  resolvers,
-}) =>
-  apolloBuildSubgraphSchema({
-    typeDefs: typeDefs,
-    resolvers: resolvers as any,
-  });
-
-export function getServiceInputs(
-  buildSubgraphSchema: BuildSubgraphSchemaFn = defaultBuildSubgraphSchema,
-) {
+export function getServiceInputs() {
   return Object.entries(services).map(([name, module]) => ({
     name,
     typeDefs: module.typeDefs,
@@ -41,10 +25,8 @@ export function getServiceInputs(
   }));
 }
 
-export async function getSupergraph(
-  buildSubgraphSchema: BuildSubgraphSchemaFn = defaultBuildSubgraphSchema,
-) {
-  const serviceInputs = getServiceInputs(buildSubgraphSchema);
+export async function getSupergraph() {
+  const serviceInputs = getServiceInputs();
   const { supergraphSdl, cleanup } = await new IntrospectAndCompose({
     subgraphs: serviceInputs.map(({ name }) => ({
       name,

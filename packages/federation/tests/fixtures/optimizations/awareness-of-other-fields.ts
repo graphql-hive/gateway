@@ -1,4 +1,5 @@
-import { buildSubgraphSchema } from '../../../src';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { parse } from 'graphql';
 
 const users = [
   {
@@ -25,13 +26,13 @@ function projectData(data: any, fields: string[]) {
 }
 
 export const Aschema = buildSubgraphSchema({
-  typeDefs: /* GraphQL */ `
+  typeDefs: parse(/* GraphQL */ `
     type User @key(fields: "id") {
       id: ID
       name: String! @shareable
       age: Int!
     }
-  `,
+  `),
   resolvers: {
     User: {
       __resolveReference({ id }) {
@@ -45,7 +46,7 @@ export const Aschema = buildSubgraphSchema({
 });
 
 export const Bschema = buildSubgraphSchema({
-  typeDefs: /* GraphQL */ `
+  typeDefs: parse(/* GraphQL */ `
     type Query {
       user(id: ID!): User
     }
@@ -53,7 +54,7 @@ export const Bschema = buildSubgraphSchema({
     type User @key(fields: "id") {
       id: ID!
     }
-  `,
+  `),
   resolvers: {
     Query: {
       user(_, { id }) {
@@ -69,13 +70,13 @@ export const Bschema = buildSubgraphSchema({
 });
 
 export const Cschema = buildSubgraphSchema({
-  typeDefs: /* GraphQL */ `
+  typeDefs: parse(/* GraphQL */ `
     type User @key(fields: "id") {
       id: ID
       name: String! @external
       nickname: String! @requires(fields: "name")
     }
-  `,
+  `),
   resolvers: {
     User: {
       __resolveReference({ id, name }) {
@@ -90,14 +91,14 @@ export const Cschema = buildSubgraphSchema({
 });
 
 export const Dschema = buildSubgraphSchema({
-  typeDefs: /* GraphQL */ `
+  typeDefs: parse(/* GraphQL */ `
     type User @key(fields: "id") {
       id: ID
       bankAccount: String! @external
       currency: String! @external
       money: String! @requires(fields: "bankAccount currency")
     }
-  `,
+  `),
   resolvers: {
     User: {
       __resolveReference({ id, bankAccount, currency }) {
@@ -113,14 +114,14 @@ export const Dschema = buildSubgraphSchema({
 });
 
 export const Eschema = buildSubgraphSchema({
-  typeDefs: /* GraphQL */ `
+  typeDefs: parse(/* GraphQL */ `
     type User @key(fields: "id") {
       id: ID
       bankAccount: String!
       currency: String!
       name: String @shareable
     }
-  `,
+  `),
   resolvers: {
     User: {
       __resolveReference({ id }) {

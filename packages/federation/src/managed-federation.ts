@@ -1,12 +1,14 @@
 import type { FetchFn } from '@graphql-tools/executor-http';
 import { ExecutionResult } from '@graphql-tools/utils';
+import type { TypedEventTarget } from '@graphql-yoga/typed-event-target';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { CustomEvent } from '@whatwg-node/events';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
 import { GraphQLSchema } from 'graphql';
 import {
   getStitchedSchemaFromSupergraphSdl,
   GetStitchedSchemaFromSupergraphSdlOpts,
 } from './supergraph.js';
-import { EventEmitter } from './utils.js';
 
 export type FetchSupergraphSdlFromManagedFederationOpts = {
   /**
@@ -321,18 +323,35 @@ export type SupergraphSchemaManagerOptions = Omit<
   retryDelaySeconds?: number;
 };
 
-export class SupergraphSchemaManager extends EventEmitter<{
-  schema: [GraphQLSchema, string];
-  error: [FetchError | unknown];
-  failure: [FetchError | unknown, number];
-  log: [
-    {
-      source: 'uplink' | 'manager';
-      message: string;
-      level: 'error' | 'warn' | 'info';
-    },
-  ];
-}> {
+type SchemaEvent = CustomEvent<{
+  schema: GraphQLSchema;
+  supergraphSdl: string;
+}>;
+type ErrorEvent = CustomEvent<FetchError | unknown>;
+type FailureEvent = CustomEvent<{
+  error: FetchError | unknown;
+  delayInSeconds: number;
+}>;
+type LogEvent = CustomEvent<{
+  source: 'uplink' | 'manager';
+  message: string;
+  level: 'error' | 'warn' | 'info';
+}>;
+
+type SupergraphSchemaManagerEvent =
+  | SchemaEvent
+  | ErrorEvent
+  | FailureEvent
+  | LogEvent;
+
+const TypedEventTargetCtor = EventTarget as unknown as new <
+  TEvent extends CustomEvent,
+>() => TypedEventTarget<TEvent>;
+
+export class SupergraphSchemaManager
+  extends TypedEventTargetCtor<SupergraphSchemaManagerEvent>
+  implements Disposable
+{
   public schema?: GraphQLSchema = undefined;
 
   #lastSeenId: string | undefined;
@@ -342,9 +361,6 @@ export class SupergraphSchemaManager extends EventEmitter<{
 
   constructor(private options: SupergraphSchemaManagerOptions) {
     super();
-    registerCleanup(() => {
-      this.stop();
-    });
   }
 
   start = (delayInSeconds = 0) => {
@@ -384,18 +400,33 @@ export class SupergraphSchemaManager extends EventEmitter<{
         ...this.options,
         loggerByMessageLevel: {
           ERROR: (message) =>
-            this.emit('log', { source: 'uplink', level: 'error', message }),
+            this.dispatchEvent(
+              new CustomEvent('log', {
+                detail: { source: 'uplink', level: 'error', message },
+              }),
+            ),
           WARN: (message) =>
-            this.emit('log', { source: 'uplink', level: 'warn', message }),
+            this.dispatchEvent(
+              new CustomEvent('log', {
+                detail: { source: 'uplink', level: 'warn', message },
+              }),
+            ),
           INFO: (message) =>
-            this.emit('log', { source: 'uplink', level: 'info', message }),
+            this.dispatchEvent(
+              new CustomEvent('log', {
+                detail: { source: 'uplink', level: 'info', message },
+              }),
+            ),
         },
         lastSeenId: this.#lastSeenId,
       });
 
       if ('error' in result) {
         this.#lastSeenId = undefined; // When an error is reported, Apollo doesn't provide an id.
-        this.emit('error', result.error);
+        const errorEvent: ErrorEvent = new CustomEvent('error', {
+          detail: result.error,
+        });
+        this.dispatchEvent(errorEvent);
         this.#retryOnError(
           result.error,
           Math.max(result.minDelaySeconds, minDelaySeconds),
@@ -406,7 +437,13 @@ export class SupergraphSchemaManager extends EventEmitter<{
       if ('schema' in result) {
         this.#lastSeenId = result.id;
         this.schema = result.schema;
-        this.emit('schema', result.schema, result.supergraphSdl);
+        const schemaEvent: SchemaEvent = new CustomEvent('schema', {
+          detail: {
+            schema: result.schema,
+            supergraphSdl: result.supergraphSdl,
+          },
+        });
+        this.dispatchEvent(schemaEvent);
         this.#log('info', 'Supergraph successfully updated');
       } else {
         this.#log('info', 'Supergraph is up to date');
@@ -418,7 +455,10 @@ export class SupergraphSchemaManager extends EventEmitter<{
       this.#log('info', `Next pull in ${delay.toFixed(1)} seconds`);
     } catch (e) {
       this.#retryOnError(e, retryDelaySeconds ?? 0);
-      this.emit('error', e);
+      const errorEvent: ErrorEvent = new CustomEvent('error', {
+        detail: e,
+      });
+      this.dispatchEvent(errorEvent);
     }
   };
 
@@ -433,7 +473,10 @@ export class SupergraphSchemaManager extends EventEmitter<{
     if (this.#retries >= maxRetries) {
       this.#timeout = undefined;
       this.#log('error', 'Max retries reached, giving up');
-      this.emit('failure', error, delayInSeconds);
+      const failureEvent: FailureEvent = new CustomEvent('failure', {
+        detail: { error, delayInSeconds },
+      });
+      this.dispatchEvent(failureEvent);
       return;
     }
 
@@ -447,15 +490,17 @@ export class SupergraphSchemaManager extends EventEmitter<{
   };
 
   #log = (level: 'error' | 'warn' | 'info', message: string) => {
-    this.emit('log', { source: 'manager', level, message });
+    const logEvent: LogEvent = new CustomEvent('log', {
+      detail: {
+        source: 'manager',
+        level,
+        message,
+      },
+    });
+    this.dispatchEvent(logEvent);
   };
-}
 
-function registerCleanup(cleanupFn: () => void) {
-  if (typeof global.process === 'object') {
-    for (const signal of ['SIGINT', 'SIGTERM', 'SIGQUIT'])
-      process.on(signal, () => {
-        cleanupFn();
-      });
+  [DisposableSymbols.dispose]() {
+    return this.stop();
   }
 }

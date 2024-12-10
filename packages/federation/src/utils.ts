@@ -9,13 +9,9 @@ import {
 } from '@graphql-tools/utils';
 import { GraphQLSchema, Kind, SelectionSetNode, TypeNode } from 'graphql';
 
-export function getArgsFromKeysForFederation(representations: readonly any[]) {
+export const getArgsFromKeysForFederation = memoize1(function getArgsFromKeysForFederation(representations: readonly any[]) {
   return { representations };
-}
-
-export function getKeyForFederation<TRoot>(root: TRoot): TRoot {
-  return root;
-}
+});
 
 export function projectDataSelectionSet(
   data: any,
@@ -233,55 +229,4 @@ export function getNamedTypeNode(typeNode: TypeNode) {
     return getNamedTypeNode(typeNode.type);
   }
   return typeNode;
-}
-
-type EventMap<T> = Record<keyof T, any[]>;
-
-export class EventEmitter<T extends EventMap<T>> {
-  #listeners: Map<keyof T, Array<(...args: any[]) => void>> = new Map();
-
-  on<K extends keyof T>(eventName: K, listener: (...args: T[K]) => void): this {
-    const listeners = this.#listeners.get(eventName);
-    if (!listeners) {
-      this.#listeners.set(eventName, [listener]);
-    } else {
-      listeners.push(listener);
-    }
-    return this;
-  }
-
-  once<K extends keyof T>(
-    eventName: K,
-    listener: (...args: T[K]) => void,
-  ): this {
-    const selfRemovingListener = (...args: T[K]) => {
-      this.off(eventName, selfRemovingListener);
-      listener(...args);
-    };
-    this.on(eventName, selfRemovingListener);
-    return this;
-  }
-
-  off<K extends keyof T>(
-    eventName: K,
-    listener: (...args: T[K]) => void,
-  ): this {
-    const listeners = this.#listeners.get(eventName);
-    if (listeners) {
-      const index = listeners.indexOf(listener);
-      listeners.splice(index, 1);
-    }
-    return this;
-  }
-
-  emit<K extends keyof T>(eventName: K, ...args: T[K]): boolean {
-    const listeners = this.#listeners.get(eventName);
-    if (!listeners) {
-      return false;
-    }
-    for (let i = listeners.length - 1; i >= 0; i--) {
-      listeners[i]?.(...args);
-    }
-    return true;
-  }
 }
