@@ -74,7 +74,9 @@ describe('Upstream Timeout', () => {
             },
             response: {},
           },
-          message: expect.stringMatching(/(The operation was aborted due to timeout|The operation timed out.)/),
+          message: expect.stringMatching(
+            /(The operation was aborted due to timeout|The operation timed out.)/,
+          ),
           path: ['hello'],
         },
       ],

@@ -91,7 +91,7 @@ export function abortSignalAny(signals: AbortSignal[]) {
   }
   const ctrl = new AbortController();
   function onAbort(this: AbortSignal, ev: Event) {
-    const signal = ev.target as AbortSignal || this;
+    const signal = (ev.target as AbortSignal) || this;
     ctrl.abort(signal.reason);
     for (const signal of signals) {
       signal.removeEventListener('abort', onAbort);
