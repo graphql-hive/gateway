@@ -296,7 +296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:^4.10.3":
+"@apollo/server@npm:^4.10.3, @apollo/server@npm:^4.11.2":
   version: 4.11.2
   resolution: "@apollo/server@npm:4.11.2"
   dependencies:
@@ -2267,6 +2267,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@e2e/apq-subgraphs@workspace:e2e/apq-subgraphs":
+  version: 0.0.0-use.local
+  resolution: "@e2e/apq-subgraphs@workspace:e2e/apq-subgraphs"
+  dependencies:
+    "@apollo/server": "npm:^4.11.2"
+    "@graphql-mesh/compose-cli": "npm:^1.2.13"
+    graphql: "npm:^16.9.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/auto-type-merging@workspace:e2e/auto-type-merging":
   version: 0.0.0-use.local
   resolution: "@e2e/auto-type-merging@workspace:e2e/auto-type-merging"
@@ -3859,6 +3870,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-tools/executor-http@workspace:packages/executors/http"
   dependencies:
+    "@apollo/server": "npm:^4.11.2"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@types/extract-files": "npm:8.1.3"

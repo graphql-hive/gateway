@@ -24,7 +24,7 @@ export type HTTPTransportOptions<
   >,
 > = Pick<
   HTTPExecutorOptions,
-  'useGETForQueries' | 'method' | 'timeout' | 'credentials' | 'retry'
+  'useGETForQueries' | 'method' | 'timeout' | 'credentials' | 'retry' | 'apq'
 > & {
   subscriptions?: TransportEntry<TSubscriptionTransportOptions>;
 };

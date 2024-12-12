@@ -9,6 +9,7 @@ import {
   FormData as DefaultFormData,
 } from '@whatwg-node/fetch';
 import { extractFiles, isExtractableFile } from 'extract-files';
+import { SerializedRequest } from './index.js';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
 
 function collectAsyncIterableValues<T>(
@@ -30,18 +31,8 @@ function collectAsyncIterableValues<T>(
   return iterate();
 }
 
-export function createFormDataFromVariables<TVariables>(
-  {
-    query,
-    variables,
-    operationName,
-    extensions,
-  }: {
-    query: string;
-    variables: TVariables;
-    operationName?: string;
-    extensions?: any;
-  },
+export function createFormDataFromVariables(
+  body: SerializedRequest,
   {
     File: FileCtor = DefaultFile,
     FormData: FormDataCtor = DefaultFormData,
@@ -50,7 +41,10 @@ export function createFormDataFromVariables<TVariables>(
     FormData?: typeof DefaultFormData;
   },
 ) {
-  const vars = Object.assign({}, variables);
+  if (!body.variables) {
+    return JSON.stringify(body);
+  }
+  const vars = Object.assign({}, body.variables);
   const { clone, files } = extractFiles(
     vars,
     'variables',
@@ -62,16 +56,7 @@ export function createFormDataFromVariables<TVariables>(
       typeof v?.arrayBuffer === 'function') as any,
   );
   if (files.size === 0) {
-    return JSON.stringify(
-      {
-        query,
-        variables,
-        operationName,
-        extensions,
-      },
-      null,
-      2,
-    );
+    return JSON.stringify(body);
   }
   const map: Record<number, string[]> = {};
   const uploads: any[] = [];
@@ -85,10 +70,8 @@ export function createFormDataFromVariables<TVariables>(
   form.append(
     'operations',
     JSON.stringify({
-      query,
+      ...body,
       variables: clone,
-      operationName,
-      extensions,
     }),
   );
   form.append('map', JSON.stringify(map));
