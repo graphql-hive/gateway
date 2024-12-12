@@ -48,7 +48,6 @@ jobs:
         run: yarn test:bun
 
   leaks:
-    needs: [unit]
     strategy:
       matrix:
         node-version:
