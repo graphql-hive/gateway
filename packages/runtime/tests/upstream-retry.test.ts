@@ -55,6 +55,7 @@ describe('Upstream Retry', () => {
         {
           name: 'upstream',
           schema: upstreamSchema,
+          url: 'http://localhost:4001/graphql',
         },
       ]),
       plugins() {
@@ -135,6 +136,7 @@ describe('Upstream Retry', () => {
         {
           name: 'upstream',
           schema: upstreamSchema,
+          url: 'http://localhost:4001/graphql',
         },
       ]),
       plugins() {

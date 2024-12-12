@@ -1,5 +1,6 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { GatewayContext, GatewayPlugin } from '../types';
+import { abortSignalAny } from '../utils';
 
 export interface TimeoutFactoryPayload {
   subgraphName?: string;
@@ -25,7 +26,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
       if (timeout) {
         const timeoutSignal = AbortSignal.timeout(timeout);
         if (options.signal) {
-          options.signal = AbortSignal.any([options.signal, timeoutSignal]);
+          options.signal = abortSignalAny([options.signal, timeoutSignal]);
         } else {
           options.signal = timeoutSignal;
         }

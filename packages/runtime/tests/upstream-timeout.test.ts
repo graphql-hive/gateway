@@ -31,6 +31,7 @@ describe('Upstream Timeout', () => {
         {
           name: 'upstream',
           schema: upstreamSchema,
+          url: 'http://localhost:4001/graphql',
         },
       ]),
       plugins() {
@@ -75,5 +76,6 @@ describe('Upstream Timeout', () => {
         },
       ],
     });
+    greetingsDeferred.resolve('Hello, World!');
   });
 });

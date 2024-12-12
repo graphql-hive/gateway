@@ -61,3 +61,48 @@ export const defaultQueryText = /* GraphQL */ `
   #     }
   #
 `;
+
+export type AbortSignalFromAny = AbortSignal & {
+  addSignals: (signals: AbortSignal[]) => void;
+};
+
+export function isAbortSignalFromAny(
+  signal: AbortSignal,
+): signal is AbortSignalFromAny {
+  return 'addSignals' in signal;
+}
+
+export function abortSignalAny(signals: AbortSignal[]) {
+  let anySignal: AbortSignalFromAny | undefined;
+  const nonAnySignals: AbortSignal[] = [];
+  for (const signal of signals) {
+    if (isAbortSignalFromAny(signal) && !anySignal) {
+      anySignal = signal;
+    } else {
+      nonAnySignals.push(signal);
+    }
+  }
+  if (anySignal) {
+    anySignal.addSignals(nonAnySignals);
+    return anySignal;
+  }
+  const ctrl = new AbortController();
+  function onAbort(this: AbortSignal) {
+    ctrl.abort(this.reason);
+    for (const signal of signals) {
+      signal.removeEventListener('abort', onAbort);
+    }
+  }
+  for (const signal of signals) {
+    signal.addEventListener('abort', onAbort, { once: true });
+  }
+  Object.defineProperty(ctrl.signal, 'addSignals', {
+    value(signals: AbortSignal[]) {
+      for (const signal of signals) {
+        signal.addEventListener('abort', onAbort, { once: true });
+        signals.push(signal);
+      }
+    },
+  });
+  return ctrl.signal as AbortSignalFromAny;
+}
