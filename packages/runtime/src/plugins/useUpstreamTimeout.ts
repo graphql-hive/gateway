@@ -27,7 +27,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
         if (options.signal) {
           options.signal = AbortSignal.any([options.signal, timeoutSignal]);
         } else {
-          options.signal = timeoutSignal
+          options.signal = timeoutSignal;
         }
       }
     },
