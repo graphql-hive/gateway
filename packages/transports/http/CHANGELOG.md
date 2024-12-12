@@ -1,5 +1,37 @@
 # @graphql-mesh/transport-http
 
+## 0.6.26
+
+### Patch Changes
+
+- [#313](https://github.com/graphql-hive/gateway/pull/313) [`367b359`](https://github.com/graphql-hive/gateway/commit/367b3593cb7fd51c42ef4a13ab4adac202845734) Thanks [@ardatan](https://github.com/ardatan)! - Automatic Persisted Queries support for upstream requests
+
+  For HTTP Executor;
+
+  ```ts
+  buildHTTPExecutor({
+    // ...
+    apq: true,
+  });
+  ```
+
+  For Gateway Configuration;
+
+  ```ts
+  export const gatewayConfig = defineConfig({
+    transportEntries: {
+      '*': {
+        options: {
+          apq: true,
+        },
+      },
+    },
+  });
+  ```
+
+- Updated dependencies [[`367b359`](https://github.com/graphql-hive/gateway/commit/367b3593cb7fd51c42ef4a13ab4adac202845734)]:
+  - @graphql-tools/executor-http@1.2.0
+
 ## 0.6.25
 
 ### Patch Changes
