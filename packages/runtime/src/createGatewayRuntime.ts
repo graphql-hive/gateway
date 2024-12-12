@@ -93,6 +93,8 @@ import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
 import { useUpstreamCancel } from './plugins/useUpstreamCancel';
+import { useUpstreamRetry } from './plugins/useUpstreamRetry';
+import { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 import { useWebhooks } from './plugins/useWebhooks';
 import { defaultProductLogo } from './productLogo';
 import type {
@@ -1000,6 +1002,14 @@ export function createGatewayRuntime<
 
   if (config.propagateHeaders) {
     extraPlugins.push(usePropagateHeaders(config.propagateHeaders));
+  }
+
+  if (config.upstreamRetry) {
+    extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
+  }
+
+  if (config.upstreamTimeout) {
+    extraPlugins.push(useUpstreamTimeout(config.upstreamTimeout));
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({

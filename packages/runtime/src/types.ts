@@ -37,6 +37,8 @@ import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
+import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
+import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
 export type { UnifiedGraphConfig, TransportEntryAdditions };
 
@@ -511,6 +513,20 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Header Propagation
    */
   propagateHeaders?: PropagateHeadersOpts;
+
+  /**
+   * Upstream Timeout
+   *
+   * Configure the timeout for upstream requests.
+   */
+  upstreamTimeout?: UpstreamTimeoutPluginOptions;
+
+  /**
+   * Upstream Request Retry
+   *
+   * Configure the retry for upstream requests.
+   */
+  upstreamRetry?: UpstreamRetryPluginOptions;
 }
 
 interface DisableIntrospectionOptions {
