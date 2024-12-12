@@ -14,7 +14,7 @@ import {
 
 describe('useHmacSignatureValidation', () => {
   test('should throw when header is missing or invalid', async () => {
-    const upstream = createYoga({
+    await using upstream = createYoga({
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           type Query {
@@ -94,7 +94,7 @@ describe('useHmacSignatureValidation', () => {
 
   test('should build a valid hmac and validate it correctly in a Yoga setup', async () => {
     const sharedSecret = 'topSecret';
-    const upstream = createYoga({
+    await using upstream = createYoga({
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           type Query {
@@ -158,28 +158,31 @@ describe('useHmacUpstreamSignature', () => {
   const requestTrackerPlugin = {
     onParams: vi.fn((() => {}) as Plugin['onParams']),
   };
-  const upstream = createYoga({
-    schema: createSchema({
-      typeDefs: /* GraphQL */ `
-        type Query {
-          hello: String
-        }
-      `,
-      resolvers: {
-        Query: {
-          hello: () => 'world',
+  function createUpstream() {
+    return createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            hello: () => 'world',
+          },
         },
-      },
-    }),
-    plugins: [requestTrackerPlugin],
-    logging: false,
-  });
+      }),
+      plugins: [requestTrackerPlugin],
+      logging: false,
+    });
+  }
   beforeEach(() => {
     requestTrackerPlugin.onParams.mockClear();
   });
 
   it('should build valid hmac signature based on the request body even when its modified in other plugins', async () => {
     const secret = 'secret';
+    await using upstream = createUpstream();
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
@@ -189,8 +192,9 @@ describe('useHmacUpstreamSignature', () => {
       },
       plugins: () => [
         useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
+          // We cast instead of using @ts-expect-error because when `upstream` is not defined, it doesn't error
+          // If you want to try, remove `upstream` variable above, then add ts-expect-error here.
+          upstream.fetch as MeshFetch,
         ),
         {
           onSubgraphExecute(payload) {
@@ -232,6 +236,7 @@ describe('useHmacUpstreamSignature', () => {
 
   it('should include hmac signature based on the request body', async () => {
     const secret = 'secret';
+    await using upstream = createUpstream();
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
@@ -239,12 +244,7 @@ describe('useHmacUpstreamSignature', () => {
       hmacSignature: {
         secret,
       },
-      plugins: () => [
-        useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
-        ),
-      ],
+      plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
       logging: false,
     });
 
@@ -279,6 +279,7 @@ describe('useHmacUpstreamSignature', () => {
   it('should allow to customize header name', async () => {
     const secret = 'secret';
     const customExtensionName = 'custom-hmac-signature';
+    await using upstream = createUpstream();
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
@@ -287,12 +288,7 @@ describe('useHmacUpstreamSignature', () => {
         secret,
         extensionName: customExtensionName,
       },
-      plugins: () => [
-        useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
-        ),
-      ],
+      plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
       logging: false,
     });
 
@@ -326,6 +322,7 @@ describe('useHmacUpstreamSignature', () => {
 
   it('should allow to filter upstream calls', async () => {
     const secret = 'secret';
+    await using upstream = createUpstream();
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: 'https://example.com/graphql',
@@ -334,12 +331,7 @@ describe('useHmacUpstreamSignature', () => {
         secret,
         shouldSign: () => false,
       },
-      plugins: () => [
-        useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
-        ),
-      ],
+      plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
       logging: false,
     });
 

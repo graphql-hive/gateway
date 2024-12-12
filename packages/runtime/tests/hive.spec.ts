@@ -97,7 +97,7 @@ describe('Hive CDN', () => {
         }),
       ),
     );
-    const upstreamServer = createYoga({
+    await using upstreamServer = createYoga({
       schema: upstreamSchema,
       // Make sure introspection is not fetched from the service itself
       plugins: [useDisableIntrospection()],

@@ -21,7 +21,7 @@ describe('useOpenTelemetry', () => {
   describe('when not passing a custom provider', () => {
     it('initializes and starts a new provider', async () => {
       const { useOpenTelemetry } = await import('../src');
-      const upstream = createYoga({
+      await using upstream = createYoga({
         schema: createSchema({
           typeDefs: /* GraphQL */ `
             type Query {
@@ -78,7 +78,7 @@ describe('useOpenTelemetry', () => {
   describe('when passing a custom provider', () => {
     it('does not initialize a new provider and does not start the provided provider instance', async () => {
       const { useOpenTelemetry } = await import('../src');
-      const upstream = createYoga({
+      await using upstream = createYoga({
         schema: createSchema({
           typeDefs: /* GraphQL */ `
             type Query {
