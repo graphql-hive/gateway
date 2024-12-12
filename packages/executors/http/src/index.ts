@@ -251,7 +251,7 @@ export function buildHTTPExecutor(
           ? request.operationName
           : undefined,
         extensions:
-          (request.extensions && Object.keys(request.extensions).length > 0)
+          request.extensions && Object.keys(request.extensions).length > 0
             ? request.extensions
             : undefined,
       };
