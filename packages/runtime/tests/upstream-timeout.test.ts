@@ -1,4 +1,7 @@
-import { createGatewayRuntime, useCustomFetch } from '@graphql-hive/gateway';
+import {
+  createGatewayRuntime,
+  useCustomFetch,
+} from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
 import { createDeferred } from '@graphql-tools/utils';
@@ -54,47 +57,23 @@ describe('Upstream Timeout', () => {
       }),
     });
     const resJson = await res.json();
-    expect(resJson).toMatchInlineSnapshot(
-      {
-        data: {
-          hello: null,
-        },
-        errors: [
-          {
-            extensions: {
-              request: {
-                body: `{"query":"{__typename hello}"}`,
-                method: 'POST',
-              },
-              response: {},
-            },
-            message: 'The operation was aborted due to timeout',
-            path: ['hello'],
-          },
-        ],
+    expect(resJson).toEqual({
+      data: {
+        hello: null,
       },
-      `
-      {
-        "data": {
-          "hello": null,
-        },
-        "errors": [
-          {
-            "extensions": {
-              "request": {
-                "body": "{"query":"{__typename hello}"}",
-                "method": "POST",
-              },
-              "response": {},
+      errors: [
+        {
+          extensions: {
+            request: {
+              body: `{"query":"{__typename hello}"}`,
+              method: 'POST',
             },
-            "message": "The operation was aborted due to timeout",
-            "path": [
-              "hello",
-            ],
+            response: {},
           },
-        ],
-      }
-    `,
-    );
+          message: 'The operation was aborted due to timeout',
+          path: ['hello'],
+        },
+      ],
+    });
   });
 });
