@@ -118,16 +118,15 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                     let currentRetryDelay: number | undefined;
                     if (retryAfterSeconds) {
                       currentRetryDelay = retryAfterSeconds * 1000;
-                    } else if (
+                    }
+                    if (
                       shouldRetry({
                         executionRequest,
                         executionResult,
                         response,
                       })
                     ) {
-                      currentRetryDelay = retryDelay;
-                    }
-                    if (currentRetryDelay) {
+                      currentRetryDelay ||= retryDelay;
                       return new Promise((resolve) => {
                         const timeout = setTimeout(() => {
                           timeouts.delete(timeout);
@@ -135,9 +134,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         }, retryDelay);
                         timeouts.add(timeout);
                       });
-                    } else {
-                      return executionResult;
                     }
+                    return currRes;
                   },
                   (e) => {
                     if (retries < 0) {
