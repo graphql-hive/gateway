@@ -1,9 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import {
-  createGraphQLError,
-  ExecutionResult,
-  isAsyncIterable,
-} from '@graphql-tools/utils';
+import { createGraphQLError } from '@graphql-tools/utils';
 import { assertAsyncIterable, createDisposableServer } from '@internal/testing';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -19,12 +15,10 @@ import { buildHTTPExecutor } from '../src/index.js';
 
 describe('buildHTTPExecutor', () => {
   it('method should be POST for mutations even if useGETForQueries=true', async () => {
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       useGETForQueries: true,
       fetch(_url, init) {
-        return new Response(JSON.stringify({ data: init }), {
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return Response.json({ data: init });
       },
     });
 
@@ -34,21 +28,27 @@ describe('buildHTTPExecutor', () => {
       }
     `);
 
-    const res = (await executor({ document: mutation })) as ExecutionResult;
-    expect(res.data.method).toBe('POST');
+    await expect(
+      executor({
+        document: mutation,
+      }),
+    ).resolves.toMatchObject({
+      data: { method: 'POST' },
+    });
   });
   it('handle unexpected json responses', async () => {
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       fetch: () => new Response('NOT JSON'),
     });
-    const result = await executor({
-      document: parse(/* GraphQL */ `
-        query {
-          hello
-        }
-      `),
-    });
-    expect(result).toMatchObject({
+    await expect(
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+    ).resolves.toMatchObject({
       errors: [
         {
           message: 'Unexpected response: "NOT JSON"',
@@ -57,31 +57,26 @@ describe('buildHTTPExecutor', () => {
     });
   });
   it.each([
-    JSON.stringify({ data: null, errors: null }),
-    JSON.stringify({ data: null }),
-    JSON.stringify({ data: null, errors: [] }),
-    JSON.stringify({ errors: null }),
-    JSON.stringify({ errors: [] }),
+    { data: null, errors: null },
+    { data: null },
+    { data: null, errors: [] },
+    { errors: null },
+    { errors: [] },
   ])(
     'should error when both data and errors fields are empty %s',
     async (body) => {
-      const executor = buildHTTPExecutor({
-        fetch: () =>
-          new Response(body, {
-            status: 200,
-            headers: {
-              'content-type': 'application/json',
-            },
-          }),
+      await using executor = buildHTTPExecutor({
+        fetch: () => Response.json(body),
       });
-      const result = await executor({
-        document: parse(/* GraphQL */ `
-          query {
-            hello
-          }
-        `),
-      });
-      expect(result).toMatchObject({
+      await expect(
+        executor({
+          document: parse(/* GraphQL */ `
+            query {
+              hello
+            }
+          `),
+        }),
+      ).resolves.toMatchObject({
         errors: [
           {
             message: expect.stringContaining(
@@ -95,7 +90,7 @@ describe('buildHTTPExecutor', () => {
   it('should use GET for subscriptions by default', async () => {
     expect.assertions(2);
     let method: string = '';
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       endpoint: 'https://my.schema/graphql',
       fetch: (info, init) => {
         const request = new Request(info, init);
@@ -134,7 +129,7 @@ describe('buildHTTPExecutor', () => {
   });
   it('should use POST if method is specified', async () => {
     let method: string = '';
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       method: 'POST',
       endpoint: 'https://my.schema/graphql',
       fetch: (info, init) => {
@@ -174,7 +169,7 @@ describe('buildHTTPExecutor', () => {
   });
 
   it('should not encode headers from extensions', async () => {
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       useGETForQueries: true,
       fetch(url) {
         expect(url).not.toMatch(/(Authorization|headers)/i);
@@ -183,28 +178,28 @@ describe('buildHTTPExecutor', () => {
         });
       },
     });
-    const result = (await executor({
-      document: parse(/* GraphQL */ `
-        query {
-          hello
-        }
-      `),
-      extensions: {
-        headers: {
-          Authorization: 'Token',
+    await expect(
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+        extensions: {
+          headers: {
+            Authorization: 'Token',
+          },
         },
-      },
-    })) as ExecutionResult;
-
-    expect(result.data).toEqual({
-      hello: 'world!',
+      }),
+    ).resolves.toEqual({
+      data: { hello: 'world!' },
     });
   });
 
   it('should allow setting a custom content-type header in introspection', async () => {
     expect.assertions(2);
 
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       endpoint: 'https://my.schema/graphql',
       fetch(_url, options: any) {
         expect(options?.headers?.['content-type']).toBe(
@@ -214,26 +209,27 @@ describe('buildHTTPExecutor', () => {
       },
       headers: { 'content-type': 'application/vnd.api+json' },
     });
-    const result = (await executor({
-      document: parse(/* GraphQL */ `
-        query IntrospectionQuery {
-          __schema {
-            queryType {
-              name
-            }
-            mutationType {
-              name
-            }
-            subscriptionType {
-              name
+    await expect(
+      executor({
+        document: parse(/* GraphQL */ `
+          query IntrospectionQuery {
+            __schema {
+              queryType {
+                name
+              }
+              mutationType {
+                name
+              }
+              subscriptionType {
+                name
+              }
             }
           }
-        }
-      `),
-      context: {},
-    })) as ExecutionResult;
-
-    expect(result.errors).toBeUndefined();
+        `),
+      }),
+    ).resolves.toEqual({
+      data: expect.any(Object),
+    });
   });
   it('stops existing requests when the executor is disposed', async () => {
     // Create a server that never responds
@@ -241,7 +237,7 @@ describe('buildHTTPExecutor', () => {
     await using server = await createDisposableServer(
       createServerAdapter(() => neverResolves.promise),
     );
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       endpoint: server.url,
     });
     const result = executor({
@@ -252,8 +248,7 @@ describe('buildHTTPExecutor', () => {
       `),
     });
     await executor[Symbol.asyncDispose]();
-    const res = await result;
-    expect(res).toMatchObject({
+    await expect(result).resolves.toMatchObject({
       errors: [
         {
           message: expect.stringContaining('Executor was disposed'),
@@ -263,18 +258,19 @@ describe('buildHTTPExecutor', () => {
     neverResolves.resolve(Response.error());
   });
   it('does not allow new requests when the executor is disposed', async () => {
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       fetch: () => Response.json({ data: { hello: 'world' } }),
     });
-    (executor as any)[DisposableSymbols.dispose]?.();
-    const result = await executor({
-      document: parse(/* GraphQL */ `
-        query {
-          hello
-        }
-      `),
-    });
-    expect(result).toMatchObject({
+    executor[DisposableSymbols.asyncDispose]?.();
+    expect(
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+    ).toMatchObject({
       errors: [
         createGraphQLError(
           'The operation was aborted. reason: Error: Executor was disposed.',
@@ -283,34 +279,36 @@ describe('buildHTTPExecutor', () => {
     });
   });
   it('should return return GraphqlError instances', async () => {
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       useGETForQueries: true,
       fetch() {
         return Response.json({ errors: [{ message: 'test error' }] });
       },
     });
 
-    const result = await executor({
-      document: parse(/* GraphQL */ `
-        query {
-          hello
-        }
-      `),
-    });
-
-    if (isAsyncIterable(result)) {
-      throw new Error('Expected result to be an ExecutionResult');
-    }
-
-    expect(result.errors?.[0]).toBeInstanceOf(GraphQLError);
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'DOWNSTREAM_SERVICE_ERROR',
+    await expect(
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+    ).resolves.toMatchObject({
+      errors: expect.arrayContaining([
+        expect.any(GraphQLError),
+        expect.objectContaining({
+          extensions: {
+            code: 'DOWNSTREAM_SERVICE_ERROR',
+          },
+        }),
+      ]),
     });
   });
 
   it('should abort stream when SSE gets cancelled while waiting for next event', async () => {
     // we use yoga intentionally here because simulating the proper response object locally is tricky
-    const yoga = createYoga({
+    await using yoga = createYoga({
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           scalar Upload # intentionally not "File" to test scalar name independence
@@ -341,7 +339,7 @@ describe('buildHTTPExecutor', () => {
     // we start a server to simulate a real-world request
     await using server = await createDisposableServer(yoga);
 
-    const executor = buildHTTPExecutor({
+    await using executor = buildHTTPExecutor({
       endpoint: `${server.url}/graphql`,
     });
 
