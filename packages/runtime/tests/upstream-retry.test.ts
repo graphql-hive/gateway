@@ -192,6 +192,6 @@ describe('Upstream Retry', () => {
         },
       ],
     });
-    expect(diffBetweenRetries).toBeGreaterThan(1000);
+    expect(diffBetweenRetries).toBeGreaterThanOrEqual(1000);
   });
 });
