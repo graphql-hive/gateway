@@ -82,9 +82,11 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
                   ],
                 };
               }
-            });
+              throw e;
+            }) as MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
         });
       }
+      return undefined;
     },
     onFetch({ url, executionRequest, options }) {
       const subgraphName =
@@ -122,6 +124,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           };
         };
       }
+      return undefined;
     },
   };
 }
