@@ -53,10 +53,21 @@ export type AsyncImportFn = (moduleName: string) => PromiseLike<any>;
 export type SyncImportFn = (moduleName: string) => any;
 
 export interface HTTPExecutorOptions {
+  /**
+   * The endpoint to use when querying the upstream API
+   *
+   * @default '/graphql'
+   */
   endpoint?: string;
+  /**
+   * The WHATWG compatible fetch implementation to use
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+   * @default globalThis.fetch
+   */
   fetch?: FetchFn;
   /**
    * Whether to use the GET HTTP method for queries when querying the original schema
+   * @default false
    */
   useGETForQueries?: boolean;
   /**
@@ -66,7 +77,8 @@ export interface HTTPExecutorOptions {
     | HeadersConfig
     | ((executorRequest?: ExecutionRequest) => HeadersConfig);
   /**
-   * HTTP method to use when querying the original schema.
+   * HTTP method to use when querying the original schema.x
+   * @default 'POST'
    */
   method?: 'GET' | 'POST';
   /**
@@ -74,7 +86,8 @@ export interface HTTPExecutorOptions {
    */
   timeout?: number;
   /**
-   * Request Credentials (default: 'same-origin')
+   * Request Credentials
+   * @default 'same-origin'
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials
    */
   credentials?: RequestCredentials;
@@ -83,22 +96,28 @@ export interface HTTPExecutorOptions {
    */
   retry?: number;
   /**
-   * WHATWG compatible File implementation
+   * WHATWG compatible `File` implementation
    * @see https://developer.mozilla.org/en-US/docs/Web/API/File
    */
   File?: typeof File;
   /**
-   * WHATWG compatible FormData implementation
+   * WHATWG compatible `FormData` implementation
    * @see https://developer.mozilla.org/en-US/docs/Web/API/FormData
    */
   FormData?: typeof FormData;
   /**
-   * Print function for DocumentNode
+   * Print function for `DocumentNode`
+   * Useful when you want to memoize the print function or use a different implementation to minify the query etc.
    */
   print?: (doc: DocumentNode) => string;
+  /**
+   * Enable Automatic Persisted Queries
+   * @see https://www.apollographql.com/docs/apollo-server/performance/apq/
+   */
   apq?: boolean;
   /**
-   * Enable [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management)
+   * Enable Explicit Resource Management
+   * @see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management
    * @deprecated The executors are always disposable, and this option will be removed in the next major version, there is no need to have a flag for this.
    */
   disposable?: boolean;

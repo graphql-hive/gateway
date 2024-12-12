@@ -3,7 +3,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 import { fetch } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
-import { afterEach, describe, expect, it, vitest } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defaultPrintFn } from '../src/defaultPrintFn';
 import { hashSHA256 } from '../src/utils';
 
@@ -26,7 +26,7 @@ describe('APQ to the upstream', () => {
     const { url } = await startStandaloneServer(apolloServer, {
       listen: { port: 0 },
     });
-    const tracedFetch = vitest.fn(fetch);
+    const tracedFetch = vi.fn(fetch);
     await using executor = buildHTTPExecutor({
       endpoint: url,
       apq: true,

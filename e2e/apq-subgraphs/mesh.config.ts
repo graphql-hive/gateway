@@ -26,11 +26,11 @@ export const gatewayConfig = defineGatewayConfig({
       },
     },
   },
-  plugins: (ctx) => [
+  plugins: () => [
     {
       onFetch({ options }) {
         fetchCnt++;
-        ctx.logger.info('fetch', fetchCnt, options.body);
+        process.stdout.write(`fetch ${fetchCnt} ${options.body}\n`);
       },
     },
   ],
