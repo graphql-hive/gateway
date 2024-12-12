@@ -1,9 +1,16 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import { GatewayPlugin } from '../types';
-import { abortSignalAny } from '../utils';
-import { createGraphQLError, ExecutionRequest, ExecutionResult, isAsyncIterable, MaybeAsyncIterable, MaybePromise } from '@graphql-tools/utils';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
+import {
+  createGraphQLError,
+  ExecutionRequest,
+  ExecutionResult,
+  isAsyncIterable,
+  MaybeAsyncIterable,
+  MaybePromise,
+} from '@graphql-tools/utils';
+import { GatewayPlugin } from '../types';
+import { abortSignalAny } from '../utils';
 
 export interface TimeoutFactoryPayload {
   subgraphName?: string;
@@ -18,10 +25,21 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
   opts: UpstreamTimeoutPluginOptions,
 ): GatewayPlugin<TContext> {
   const timeoutFactory = typeof opts === 'function' ? opts : () => opts;
-  const timeoutSignalsByExecutionRequest = new WeakMap<ExecutionRequest, AbortSignal>();
-  const errorExtensionsByExecRequest = new WeakMap<ExecutionRequest, UpstreamErrorExtensions>();
+  const timeoutSignalsByExecutionRequest = new WeakMap<
+    ExecutionRequest,
+    AbortSignal
+  >();
+  const errorExtensionsByExecRequest = new WeakMap<
+    ExecutionRequest,
+    UpstreamErrorExtensions
+  >();
   return {
-    onSubgraphExecute({ subgraphName, executionRequest, executor, setExecutor }) {
+    onSubgraphExecute({
+      subgraphName,
+      executionRequest,
+      executor,
+      setExecutor,
+    }) {
       const timeout = timeoutFactory({ subgraphName, executionRequest });
       if (timeout) {
         const timeoutSignal = AbortSignal.timeout(timeout);
@@ -30,36 +48,42 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           if (timeoutSignal.aborted) {
             reject(timeoutSignal.reason);
           }
-          timeoutSignal.addEventListener('abort', () => reject(timeoutSignal.reason))
+          timeoutSignal.addEventListener('abort', () =>
+            reject(timeoutSignal.reason),
+          );
         });
-        setExecutor(function timeoutExecutor(executionRequest: ExecutionRequest) {
-          return Promise.race([
-            timeout$,
-            executor(executionRequest),
-          ]).then(result => {
-            if (isAsyncIterable(result)) {
-              const iterator = result[Symbol.asyncIterator]();
-              timeoutSignal.addEventListener('abort', () => iterator.return?.(timeoutSignal.reason));
-              return {
-                [Symbol.asyncIterator]() {
-                  return iterator;
-                }
+        setExecutor(function timeoutExecutor(
+          executionRequest: ExecutionRequest,
+        ) {
+          return Promise.race([timeout$, executor(executionRequest)])
+            .then((result) => {
+              if (isAsyncIterable(result)) {
+                const iterator = result[Symbol.asyncIterator]();
+                timeoutSignal.addEventListener('abort', () =>
+                  iterator.return?.(timeoutSignal.reason),
+                );
+                return {
+                  [Symbol.asyncIterator]() {
+                    return iterator;
+                  },
+                };
               }
-            }
-            return result;
-          }).catch(e => {
-            if (e === timeoutSignal.reason) {
-              const upstreamErrorExtensions = errorExtensionsByExecRequest.get(executionRequest);
-              return {
-                errors: [
-                  createGraphQLError(e.message, {
-                    extensions: upstreamErrorExtensions
-                  })
-                ]
+              return result;
+            })
+            .catch((e) => {
+              if (e === timeoutSignal.reason) {
+                const upstreamErrorExtensions =
+                  errorExtensionsByExecRequest.get(executionRequest);
+                return {
+                  errors: [
+                    createGraphQLError(e.message, {
+                      extensions: upstreamErrorExtensions,
+                    }),
+                  ],
+                };
               }
-            }
-          });
-        })
+            });
+        });
       }
     },
     onFetch({ url, executionRequest, options }) {
@@ -84,8 +108,11 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             body: options.body,
           },
           response: {},
-        }
-        errorExtensionsByExecRequest.set(executionRequest, upstreamErrorExtensions);
+        };
+        errorExtensionsByExecRequest.set(
+          executionRequest,
+          upstreamErrorExtensions,
+        );
         return function onFetchDone({ response }) {
           upstreamErrorExtensions.response = {
             status: response.status,
@@ -93,7 +120,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             headers: getHeadersObj(response.headers),
             body: response.body,
           };
-        }
+        };
       }
     },
   };
