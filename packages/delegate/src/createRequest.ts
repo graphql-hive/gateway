@@ -175,6 +175,7 @@ export function createRequest({
     context,
     info,
     operationType: targetOperation,
+    extensions: context.params?.extensions,
   };
 }
 
