@@ -1,4 +1,4 @@
-import { SerializedRequest } from '.';
+import { SerializedRequest } from './utils.js';
 
 export function prepareGETUrl({
   baseUrl = '',
