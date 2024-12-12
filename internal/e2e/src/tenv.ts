@@ -401,7 +401,9 @@ export function createTenv(cwd: string): Tenv {
           subgraph = await handleDockerHostName(subgraph, volumes);
         }
 
-        for (const configfile of await glob('gateway.config.*', { cwd })) {
+        for (const configfile of await glob('@(mesh|gateway).config.*', {
+          cwd,
+        })) {
           volumes.push({
             host: configfile,
             container: `/gateway/${path.basename(configfile)}`,
