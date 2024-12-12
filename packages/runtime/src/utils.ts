@@ -76,6 +76,9 @@ export function abortSignalAny(signals: AbortSignal[]) {
   let anySignal: AbortSignalFromAny | undefined;
   const nonAnySignals: AbortSignal[] = [];
   for (const signal of signals) {
+    if (signal.aborted) {
+      return signal;
+    }
     if (isAbortSignalFromAny(signal) && !anySignal) {
       anySignal = signal;
     } else {
@@ -87,8 +90,9 @@ export function abortSignalAny(signals: AbortSignal[]) {
     return anySignal;
   }
   const ctrl = new AbortController();
-  function onAbort(this: AbortSignal) {
-    ctrl.abort(this.reason);
+  function onAbort(this: AbortSignal, ev: Event) {
+    const signal = ev.target as AbortSignal || this;
+    ctrl.abort(signal.reason);
     for (const signal of signals) {
       signal.removeEventListener('abort', onAbort);
     }
