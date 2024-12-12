@@ -37,3 +37,42 @@ export function hashSHA256(str: string) {
     },
   );
 }
+
+export type SerializedRequest = {
+  query?: string;
+  variables?: Record<string, any>;
+  operationName?: string;
+  extensions?: any;
+};
+
+// For faster serialization instead of JSON.stringify overhead
+export function jsonStringifyBody(body: SerializedRequest) {
+  let str = '{';
+  let prev = false;
+  if (body.query) {
+    str += `"query":"${body.query.replaceAll('"', '\\"')}"`;
+    prev = true;
+  }
+  if (body.variables) {
+    if (prev) {
+      str += ',';
+    }
+    str += `"variables":${JSON.stringify(body.variables)}`;
+    prev = true;
+  }
+  if (body.operationName) {
+    if (prev) {
+      str += ',';
+    }
+    str += `"operationName":"${body.operationName}"`;
+    prev = true;
+  }
+  if (body.extensions) {
+    if (prev) {
+      str += ',';
+    }
+    str += `"extensions":${JSON.stringify(body.extensions)}`;
+  }
+  str += '}';
+  return str;
+}

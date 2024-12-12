@@ -25,6 +25,7 @@ import {
   createGraphQLErrorForAbort,
   createResultForAbort,
   hashSHA256,
+  SerializedRequest,
 } from './utils.js';
 
 export type SyncFetchFn = (
@@ -121,13 +122,6 @@ export interface HTTPExecutorOptions {
    */
   disposable?: boolean;
 }
-
-export type SerializedRequest = {
-  query?: string;
-  variables?: Record<string, any>;
-  operationName?: string;
-  extensions?: any;
-};
 
 export type HeadersConfig = Record<string, string>;
 
