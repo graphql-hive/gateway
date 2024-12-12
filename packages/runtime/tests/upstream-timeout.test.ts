@@ -66,19 +66,12 @@ describe('Upstream Timeout', () => {
         hello: null,
       },
       errors: [
-        {
-          extensions: {
-            request: {
-              body: `{"query":"{__typename hello}"}`,
-              method: 'POST',
-            },
-            response: {},
-          },
+        expect.objectContaining({
           message: expect.stringMatching(
             /(The operation was aborted due to timeout|The operation timed out.)/,
           ),
           path: ['hello'],
-        },
+        }),
       ],
     });
   });

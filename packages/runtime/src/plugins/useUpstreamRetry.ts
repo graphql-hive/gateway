@@ -1,7 +1,14 @@
-import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
+import { isOriginalGraphQLError } from '@envelop/core';
+import {
+  ExecutionRequest,
+  ExecutionResult,
+  isAsyncIterable,
+  mapMaybePromise,
+  MaybeAsyncIterable,
+  MaybePromise,
+} from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { GatewayContext, GatewayPlugin } from '../types';
+import { GatewayPlugin } from '../types';
 
 export interface UpstreamRetryOptions {
   /**
@@ -17,17 +24,20 @@ export interface UpstreamRetryOptions {
   /**
    * A function that determines whether a response should be retried.
    * If the upstream returns `Retry-After` header, the response will be retried.
-   *
-   * @default (response) => response.status >= 500 || response.status === 429
+   * By default, it retries on network errors, rate limiting, and non-original GraphQL errors.
    */
-  shouldRetry?: (response: Response) => boolean;
+  shouldRetry?: (payload: ShouldRetryPayload) => boolean;
+}
+
+interface ShouldRetryPayload {
+  executionRequest: ExecutionRequest;
+  executionResult: MaybeAsyncIterable<ExecutionResult>;
+  response?: Response;
 }
 
 export interface UpstreamRetryPayload {
-  url: string;
-  options: RequestInit;
-  context: GatewayContext;
-  subgraphName?: string;
+  subgraphName: string;
+  executionRequest: ExecutionRequest;
 }
 
 export type UpstreamRetryPluginOptions =
@@ -39,83 +49,122 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
 ): GatewayPlugin<TContext> {
   const timeouts = new Set<ReturnType<typeof setTimeout>>();
   const retryOptions = typeof opts === 'function' ? opts : () => opts;
+  const executionRequestResponseMap = new WeakMap<ExecutionRequest, Response>();
   return {
-    onFetch({ url, options, context, fetchFn, setFetchFn, executionRequest }) {
-      const subgraphName =
-        executionRequest &&
-        subgraphNameByExecutionRequest.get(executionRequest);
-      const optsForReq = retryOptions({ url, options, context, subgraphName });
+    onSubgraphExecute({
+      subgraphName,
+      executionRequest,
+      executor,
+      setExecutor,
+    }) {
+      const optsForReq = retryOptions({ subgraphName, executionRequest });
       if (optsForReq) {
         const {
           maxRetries,
           retryDelay = 1000,
-          shouldRetry = (res) => res.status >= 500 || res.status === 429,
+          shouldRetry = ({ response, executionResult }) => {
+            if (response) {
+              // If network error or rate limited, retry
+              if (
+                response.status >= 500 ||
+                response.status === 429 ||
+                response.headers.get('Retry-After')
+              ) {
+                return true;
+              }
+            }
+            // If there are errors that are not original GraphQL errors, retry
+            if (
+              !isAsyncIterable(executionResult) &&
+              executionResult.errors?.length &&
+              !executionResult.errors.some(isOriginalGraphQLError)
+            ) {
+              return true;
+            }
+            return false;
+          },
         } = optsForReq;
         if (maxRetries > 0) {
-          setFetchFn(
-            function (url, options, context, info): MaybePromise<Response> {
-              let retries = maxRetries + 1;
-              let response: Response;
-              function retry(): MaybePromise<Response> {
-                retries--;
-                try {
-                  if (retries < 0) {
-                    return response;
-                  }
-                  const requestTime = Date.now();
-                  return mapMaybePromise(
-                    fetchFn(url, options, context, info),
-                    (currRes) => {
-                      response = currRes;
-                      let retryAfterSeconds: number | undefined;
-                      const retryAfterHeader =
-                        response.headers.get('Retry-After');
-                      if (retryAfterHeader) {
-                        retryAfterSeconds = parseInt(retryAfterHeader);
-                        if (isNaN(retryAfterSeconds)) {
-                          const dateTime = new Date(retryAfterHeader).getTime();
-                          if (!isNaN(dateTime)) {
-                            retryAfterSeconds = dateTime - requestTime;
-                          }
+          setExecutor(function (executionRequest: ExecutionRequest) {
+            let retries = maxRetries + 1;
+            let executionResult: MaybeAsyncIterable<ExecutionResult>;
+            function retry(): MaybePromise<
+              MaybeAsyncIterable<ExecutionResult>
+            > {
+              retries--;
+              try {
+                if (retries < 0) {
+                  return executionResult;
+                }
+                const requestTime = Date.now();
+                return mapMaybePromise(
+                  executor(executionRequest),
+                  (currRes) => {
+                    executionResult = currRes;
+                    let retryAfterSeconds: number | undefined;
+                    const response =
+                      executionRequestResponseMap.get(executionRequest);
+                    const retryAfterHeader =
+                      response?.headers.get('Retry-After');
+                    if (retryAfterHeader) {
+                      retryAfterSeconds = parseInt(retryAfterHeader);
+                      if (isNaN(retryAfterSeconds)) {
+                        const dateTime = new Date(retryAfterHeader).getTime();
+                        if (!isNaN(dateTime)) {
+                          retryAfterSeconds = dateTime - requestTime;
                         }
                       }
-                      let currentRetryDelay: number | undefined;
-                      if (retryAfterSeconds) {
-                        currentRetryDelay = retryAfterSeconds * 1000;
-                      } else if (shouldRetry(response)) {
-                        currentRetryDelay = retryDelay;
-                      }
-                      if (currentRetryDelay) {
-                        return new Promise((resolve) => {
-                          const timeout = setTimeout(() => {
-                            timeouts.delete(timeout);
-                            resolve(retry());
-                          }, retryDelay);
-                          timeouts.add(timeout);
-                        });
-                      } else {
-                        return response;
-                      }
-                    },
-                    (e) => {
-                      if (retries < 0) {
-                        throw e;
-                      }
-                      return retry();
-                    },
-                  );
-                } catch (e) {
-                  if (retries < 0) {
-                    throw e;
-                  }
-                  return retry();
+                    }
+                    let currentRetryDelay: number | undefined;
+                    if (retryAfterSeconds) {
+                      currentRetryDelay = retryAfterSeconds * 1000;
+                    } else if (
+                      shouldRetry({
+                        executionRequest,
+                        executionResult,
+                        response,
+                      })
+                    ) {
+                      currentRetryDelay = retryDelay;
+                    }
+                    if (currentRetryDelay) {
+                      return new Promise((resolve) => {
+                        const timeout = setTimeout(() => {
+                          timeouts.delete(timeout);
+                          resolve(retry());
+                        }, retryDelay);
+                        timeouts.add(timeout);
+                      });
+                    } else {
+                      return executionResult;
+                    }
+                  },
+                  (e) => {
+                    if (retries < 0) {
+                      throw e;
+                    }
+                    return retry();
+                  },
+                );
+              } catch (e) {
+                if (retries < 0) {
+                  throw e;
                 }
+                return retry();
               }
-              return retry();
-            },
-          );
+            }
+            return retry();
+          });
         }
       }
+    },
+    onFetch({ executionRequest }) {
+      if (executionRequest) {
+        return function onFetchDone({ response }) {
+          executionRequestResponseMap.set(executionRequest, response);
+        };
+      }
+      return undefined;
     },
     [DisposableSymbols.dispose]() {
       for (const timeout of timeouts) {
