@@ -55,7 +55,6 @@ export type SyncImportFn = (moduleName: string) => any;
 export interface HTTPExecutorOptions {
   /**
    * The endpoint to use when querying the upstream API
-   *
    * @default '/graphql'
    */
   endpoint?: string;
