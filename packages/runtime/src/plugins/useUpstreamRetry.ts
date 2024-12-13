@@ -126,7 +126,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         response,
                       })
                     ) {
-                      currentRetryDelay ||= minRetryDelay * Math.min(maxRetries - retries - 1, 1);
+                      currentRetryDelay ||=
+                        minRetryDelay * Math.min(maxRetries - retries - 1, 1);
                       return new Promise((resolve) => {
                         const timeout = setTimeout(() => {
                           timeouts.delete(timeout);

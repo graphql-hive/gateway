@@ -195,8 +195,6 @@ describe('Upstream Retry', () => {
       ],
     });
     expect(diffBetweenRetries).toBeDefined();
-    expect(
-      Math.floor(diffBetweenRetries! / 1000),
-    ).toBeGreaterThanOrEqual(1);
+    expect(Math.floor(diffBetweenRetries! / 1000)).toBeGreaterThanOrEqual(1);
   });
 });
