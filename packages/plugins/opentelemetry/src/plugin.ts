@@ -1,12 +1,11 @@
 import { type GatewayPlugin } from '@graphql-hive/gateway';
-import type { Logger } from '@graphql-mesh/types';
 import * as api from '@opentelemetry/api';
-import { SpanStatusCode} from "@opentelemetry/api";
+import {Attributes, SpanStatusCode} from "@opentelemetry/api";
 
 import {isAsyncIterable, YogaInitialContext} from "graphql-yoga";
-import {sanitiseDocument} from "./utils";
-import { print } from "graphql";
-import {ExecutionResult} from "@graphql-tools/utils";
+import {addTraceId, sanitiseDocument} from "./utils";
+import {print} from "graphql";
+import {ATTR_GRAPHQL_DOCUMENT, ATTR_GRAPHQL_ERROR_COUNT, ATTR_GRAPHQL_OPERATION_NAME, ATTR_GRAPHQL_OPERATION_TYPE} from "./attributes";
 
 export type OpenTelemetryGatewayPluginOptions = {
   /**
@@ -42,31 +41,39 @@ export type OpenTelemetryGatewayPluginOptions = {
      */
     subgraphExecute?: boolean | undefined;
   };
+  attributes?: {
+    document: boolean | undefined;
+    operationName: boolean | undefined;
+    operationType: boolean | undefined;
+  }
 };
 //
+
+const commonAttributes = Symbol();
+
 export interface OtelContext{
   otel: {
     context: {
       active: api.Context
     };
   };
+  [commonAttributes]: Attributes;
 }
 
+
+
 export function useOpenTelemetry(
-    options: OpenTelemetryGatewayPluginOptions & { logger: Logger },
+    options: OpenTelemetryGatewayPluginOptions,
 ): GatewayPlugin<OtelContext & YogaInitialContext> {
   const tracer = options.tracer || api.trace.getTracer('graphql-gateway');
 
   options.spans ||= { validate: true, parse: true, execute: true, subscribe: true, subgraphExecute: true}
+  options.attributes ||= { document: true, operationName: true, operationType: true };
 
   return {
     // TODO: on request / on response graphql.request
     onParse: ({ context, extendContext, parseFn, setParseFn }) => {
-      const span = tracer.startSpan("graphql.parse", {
-        attributes: {
-          [ATTR_OPERATION_NAME]: context.params.operationName || "anonymous",
-        }
-      }, api.context.active())
+      const span = tracer.startSpan("graphql.parse", {}, api.context.active())
 
       extendContext({
         otel: {
@@ -80,8 +87,20 @@ export function useOpenTelemetry(
         return api.context.with(api.trace.setSpan(getActiveContext(context), span), () => parseFn(args))
       })
 
-      return ({result}) => {
-        span.setAttribute(ATTR_GRAPHQL_DOCUMENT, print(sanitiseDocument(result)))
+      return ({result, extendContext, context}) => {
+        const sanitisedDocument = print(sanitiseDocument(result));
+        extendContext({
+          ...context,
+          [commonAttributes]: {
+          ...(options.attributes?.document && {[ATTR_GRAPHQL_DOCUMENT]: sanitisedDocument}),
+          ...(options.attributes?.operationName && {[ATTR_GRAPHQL_OPERATION_NAME]: result.definitions?.[0].name.value || "anonymous"}),
+          ...(options.attributes?.operationType && {[ATTR_GRAPHQL_OPERATION_TYPE]: result.definitions?.[0].operation || "unknown"}),
+          }
+        });
+
+
+
+        span.setAttributes(context[commonAttributes] || {});
 
         if (result instanceof Error) {
           span.setAttribute(ATTR_GRAPHQL_ERROR_COUNT, 1);
@@ -92,22 +111,15 @@ export function useOpenTelemetry(
         span.end();
       }
     },
-    onValidate({extendContext, context, setValidationFn, validateFn, params}) {
-      const span = tracer.startSpan("graphql.validate", {
-        attributes: {
-          [ATTR_OPERATION_NAME]: context.params.operationName || "anonymous",
-          [ATTR_GRAPHQL_DOCUMENT]: print(sanitiseDocument(params.documentAST))
-        }
-      }, api.context.active())
-
-
+    onValidate({extendContext, context, setValidationFn, validateFn}) {
+      const span = tracer.startSpan("graphql.validate", {attributes: context[commonAttributes]}, api.context.active())
 
       extendContext({
         otel: {
           context: {
             active: api.trace.setSpan(api.context.active(), span),
           }
-        }
+        },
       });
 
       setValidationFn((schema, documentAST, rules, options, typeInfo) =>{
@@ -130,12 +142,7 @@ export function useOpenTelemetry(
       }
     },
     onContextBuilding({context, extendContext}) {
-      const span = tracer.startSpan("graphql.context-building", {
-        attributes: {
-          [ATTR_OPERATION_NAME]: context.params.operationName || "anonymous",
-          // [ATTR_GRAPHQL_DOCUMENT]: print(sanatiseDocument(context.params.documentAST)) TODO
-        }
-      }, api.context.active())
+      const span = tracer.startSpan("graphql.context-building", {attributes: context[commonAttributes]}, api.context.active())
       extendContext({
         otel: {
           context: {
@@ -149,12 +156,7 @@ export function useOpenTelemetry(
       }
     },
     onExecute: ({ args: {contextValue: context}, extendContext, setExecuteFn, executeFn }) => {
-      const span = tracer.startSpan("graphql.execute", {
-        attributes: {
-          [ATTR_OPERATION_NAME]: context.params.operationName || "anonymous",
-          // [ATTR_GRAPHQL_DOCUMENT]: print(sanatiseDocument(context.params.documentAST)) TODO
-        }
-      }, api.context.active())
+      const span = tracer.startSpan("graphql.execute", {attributes: context[commonAttributes]}, api.context.active())
 
       setExecuteFn((args) =>{
         return api.context.with(api.trace.setSpan(getActiveContext(context), span), () => executeFn(args))
@@ -198,12 +200,7 @@ export function useOpenTelemetry(
       }
     },
     onSubscribe: ({ args: {contextValue: context}, extendContext, subscribeFn, setSubscribeFn }) => {
-      const span = tracer.startSpan("graphql.subscribe", {
-        attributes: {
-          [ATTR_OPERATION_NAME]: context.params.operationName || "anonymous",
-          // [ATTR_GRAPHQL_DOCUMENT]: print(sanitiseDocument(context.params.query)) TODO
-        }
-      }, api.context.active())
+      const span = tracer.startSpan("graphql.subscribe", {attributes: context[commonAttributes]}, api.context.active())
 
       setSubscribeFn((args) =>{
         return api.context.with(api.trace.setSpan(getActiveContext(args.contextValue), span), () => subscribeFn(args))
@@ -236,11 +233,10 @@ export function useOpenTelemetry(
     onSubgraphExecute: ({executionRequest}) => {
       const span = tracer.startSpan("graphql.subgraph.execute", {
         attributes: {
-          [ATTR_OPERATION_NAME]: executionRequest.operationName,
+          [ATTR_GRAPHQL_OPERATION_NAME]: executionRequest.operationName,
           [ATTR_GRAPHQL_DOCUMENT]: print(sanitiseDocument(executionRequest.document))
         }
       }, api.context.active());
-
 
       return ({ result }) => {
         if (isAsyncIterable(result)) {
@@ -258,18 +254,4 @@ export function useOpenTelemetry(
   }
 }
 
-const ATTR_GRAPHQL_ERROR_COUNT = "graphql.errors.count"
-const ATTR_GRAPHQL_DOCUMENT = "graphql.document"
-const ATTR_OPERATION_NAME = "graphql.operation"
-
 const getActiveContext = (context: Partial<OtelContext> & YogaInitialContext | undefined)  => context?.otel?.context.active || api.context.active();
-
-const addTraceId = (context: api.Context, result: ExecutionResult): ExecutionResult => {
-  return {
-    ...result,
-    extensions: {
-      ...result.extensions,
-      trace_id: api.trace.getSpan(context)?.spanContext().traceId,
-    },
-  };
-};
