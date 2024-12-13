@@ -6797,13 +6797,13 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.60":
-  version: 0.9.62
-  resolution: "@whatwg-node/server@npm:0.9.62"
+  version: 0.9.63
+  resolution: "@whatwg-node/server@npm:0.9.63"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/22e6557e00ebca7a587e9c48e801b29208237d3c121c4edc0e48061d78952094b170c81ea2253057908d28486bfd2d7c1164675efd0d57834084997a62bcf327
+  checksum: 10c0/81c78dcf798297ddb70c796225670534bf313cf9a2dba91a857ba676595f2e63732fb8c2daebfe5f836e7a33b3f4c60eabc7e899a015f00dd168a08dfe21ea0c
   languageName: node
   linkType: hard
 
