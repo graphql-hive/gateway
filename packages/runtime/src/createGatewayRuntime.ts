@@ -1007,7 +1007,7 @@ export function createGatewayRuntime<
   if (config.upstreamTimeout) {
     extraPlugins.push(useUpstreamTimeout(config.upstreamTimeout));
   }
-  
+
   if (config.upstreamRetry) {
     extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
   }
