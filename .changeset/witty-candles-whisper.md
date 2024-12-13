@@ -20,7 +20,7 @@ export const gatewayConfig = defineConfig({
          * A function that determines whether a response should be retried.
          * If the upstream returns `Retry-After` header, the response will be retried.
          */
-        shouldRetry: ({ response }) => response.status >= 500 || response.status === 429 // default
+        shouldRetry: ({ response }) => response?.status >= 500 || response?.status === 429
     }
     // or you can configure it by subgraph name
     upstreamRetry({ subgraphName }) {
