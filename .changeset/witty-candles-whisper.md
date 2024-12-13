@@ -29,6 +29,7 @@ export const gatewayConfig = defineConfig({
                 maxRetries: 3,
             }
         }
+        return { maxRetries: 10 }
     }
 })
 ```
