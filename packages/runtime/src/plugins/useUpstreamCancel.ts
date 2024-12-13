@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from '@graphql-tools/utils';
-import { abortSignalAny } from 'abort-signal-any';
+import { abortSignalAny, isAbortSignalFromAny } from 'abort-signal-any';
 import type { GatewayPlugin } from '../types';
 
 export function useUpstreamCancel(): GatewayPlugin {
@@ -18,10 +18,31 @@ export function useUpstreamCancel(): GatewayPlugin {
       if (signalInInfo) {
         signals.push(signalInInfo);
       }
-      if (options.signal) {
-        signals.push(options.signal);
+      if (isAbortSignalFromAny(options.signal)) {
+        options.signal.addSignals(signals);
+      } else {
+        if (options.signal) {
+          signals.push(options.signal);
+        }
+        options.signal = abortSignalAny(signals);
       }
-      options.signal = abortSignalAny(signals);
     },
+    onSubgraphExecute({ executionRequest }) {
+      const signals: AbortSignal[] = [];
+      if (executionRequest.info?.signal) {
+        signals.push(executionRequest.info.signal);
+      }
+      if (executionRequest.context?.request?.signal) {
+        signals.push(executionRequest.context.request.signal);
+      }
+      if (isAbortSignalFromAny(executionRequest.signal)) {
+        executionRequest.signal.addSignals(signals);
+      } else {
+        if (executionRequest.signal) {
+          signals.push(executionRequest.signal);
+        }
+        executionRequest.signal = abortSignalAny(signals);
+      }
+    }
   };
 }
