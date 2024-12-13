@@ -10,7 +10,7 @@ import {
   MaybePromise,
 } from '@graphql-tools/utils';
 import { GatewayPlugin } from '../types';
-import { abortSignalAny } from '../utils';
+import { abortSignalAny } from 'abort-signal-any';
 
 export interface TimeoutFactoryPayload {
   subgraphName?: string;

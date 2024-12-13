@@ -3074,6 +3074,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.1"
     "@whatwg-node/server": "npm:^0.9.60"
+    abort-signal-any: "workspace:^"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3629,8 +3630,9 @@ __metadata:
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/types": "npm:^0.103.6"
     "@graphql-mesh/utils": "npm:^0.103.6"
-    "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/executor": "npm:^1.3.8"
     "@graphql-tools/utils": "npm:^10.6.2"
+    abort-signal-any: "workspace:^"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.8.1"
@@ -3834,7 +3836,7 @@ __metadata:
   resolution: "@graphql-tools/delegate@workspace:packages/delegate"
   dependencies:
     "@graphql-tools/batch-execute": "workspace:^"
-    "@graphql-tools/executor": "npm:^1.3.6"
+    "@graphql-tools/executor": "npm:^1.3.8"
     "@graphql-tools/schema": "npm:^10.0.11"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@repeaterjs/repeater": "npm:^3.0.6"
@@ -3876,6 +3878,7 @@ __metadata:
     "@types/extract-files": "npm:8.1.3"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.1"
+    abort-signal-any: "workspace:^"
     extract-files: "npm:^11.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.10.4"
@@ -3888,7 +3891,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-tools/executor@npm:^1.3.2, @graphql-tools/executor@npm:^1.3.5, @graphql-tools/executor@npm:^1.3.6, @graphql-tools/executor@npm:^1.3.7":
+"@graphql-tools/executor@npm:^1.3.2, @graphql-tools/executor@npm:^1.3.5, @graphql-tools/executor@npm:^1.3.6, @graphql-tools/executor@npm:^1.3.7, @graphql-tools/executor@npm:^1.3.8":
   version: 1.3.8
   resolution: "@graphql-tools/executor@npm:1.3.8"
   dependencies:
@@ -4039,7 +4042,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/schema@npm:^10.0.10, @graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.12, @graphql-tools/schema@npm:^10.0.5":
+"@graphql-tools/schema@npm:^10.0.10, @graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.5":
+  version: 10.0.11
+  resolution: "@graphql-tools/schema@npm:10.0.11"
+  dependencies:
+    "@graphql-tools/merge": "npm:^9.0.12"
+    "@graphql-tools/utils": "npm:^10.6.2"
+    tslib: "npm:^2.4.0"
+    value-or-promise: "npm:^1.0.12"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/3e6e3664efab1f91c3d00d3bdc8ab16d28b6957c60a588c9811fa4cab2125bfa3feba402abf605372c0e346deb19ae8ad8bf4525e36a660862d438fb9c25c699
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/schema@npm:^10.0.12":
   version: 10.0.12
   resolution: "@graphql-tools/schema@npm:10.0.12"
   dependencies:
@@ -7371,6 +7388,15 @@ __metadata:
   checksum: 10c0/f742a5a107473946f426c691c08daba61a1d15942616f300b5d32fd735be88fef5cba24201757b6c407fd564555fb48c751cfa33519b2605c8a7aadd22baf372
   languageName: node
   linkType: hard
+
+"abort-signal-any@workspace:^, abort-signal-any@workspace:packages/abort-signal-any":
+  version: 0.0.0-use.local
+  resolution: "abort-signal-any@workspace:packages/abort-signal-any"
+  dependencies:
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
 
 "accepts@npm:~1.3.8":
   version: 1.3.8

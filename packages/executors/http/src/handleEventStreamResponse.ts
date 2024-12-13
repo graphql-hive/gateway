@@ -10,8 +10,8 @@ export function isReadableStream(value: any): value is ReadableStream {
 }
 
 export function handleEventStreamResponse(
-  signal: AbortSignal,
   response: Response,
+  signal?: AbortSignal,
 ) {
   // node-fetch returns body as a promise so we need to resolve it
   const body = response.body;
@@ -35,7 +35,7 @@ export function handleEventStreamResponse(
 
     let currChunk = '';
     async function pump() {
-      if (signal.aborted) {
+      if (signal?.aborted) {
         await push(createResultForAbort(signal));
         return stop();
       }
