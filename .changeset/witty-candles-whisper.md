@@ -14,8 +14,8 @@ export const gatewayConfig = defineConfig({
     upstreamRetry: {
         // The maximum number of retries to attempt.
         maxRetries: 3, // required
-        // The minimum delay between retries in milliseconds.
-        minRetryDelay: 1000, // default
+        // The delay between retries in milliseconds.
+        retryDelay: 1000, // default
         /**
          * A function that determines whether a response should be retried.
          * If the upstream returns `Retry-After` header, the request will be retried.

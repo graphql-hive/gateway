@@ -20,7 +20,7 @@ export interface UpstreamRetryOptions {
    * If the upstream returns `Retry-After` header, the delay will be the value of the header.
    * @default 1000
    */
-  minRetryDelay?: number;
+  retryDelay?: number;
   /**
    * A function that determines whether a response should be retried.
    * If the upstream returns `Retry-After` header, the response will be retried.
@@ -61,7 +61,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       if (optsForReq) {
         const {
           maxRetries,
-          minRetryDelay = 1000,
+          retryDelay = 1000,
           shouldRetry = ({ response, executionResult }) => {
             if (response) {
               // If network error or rate limited, retry
@@ -87,13 +87,12 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         if (maxRetries > 0) {
           setExecutor(function (executionRequest: ExecutionRequest) {
             let retries = maxRetries + 1;
-            let currentMinRetryDelay = minRetryDelay;
             let executionResult: MaybeAsyncIterable<ExecutionResult>;
+            let currRetryDelay = retryDelay;
             function retry(): MaybePromise<
               MaybeAsyncIterable<ExecutionResult>
             > {
               retries--;
-              currentMinRetryDelay += minRetryDelay;
               try {
                 if (retries < 0) {
                   return executionResult;
@@ -109,7 +108,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
-                      retryAfterSecondsFromHeader = parseInt(retryAfterHeader);
+                      retryAfterSecondsFromHeader =
+                        parseInt(retryAfterHeader) * 1000;
                       if (isNaN(retryAfterSecondsFromHeader)) {
                         const dateTime = new Date(retryAfterHeader).getTime();
                         if (!isNaN(dateTime)) {
@@ -117,10 +117,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         }
                       }
                     }
-                    let currentRetryDelay: number | undefined;
-                    if (retryAfterSecondsFromHeader) {
-                      currentRetryDelay = retryAfterSecondsFromHeader * 1000;
-                    }
+                    currRetryDelay =
+                      retryAfterSecondsFromHeader || currRetryDelay * 1.25;
                     if (
                       shouldRetry({
                         executionRequest,
@@ -128,17 +126,11 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         response,
                       })
                     ) {
-                      if (
-                        currentRetryDelay == null ||
-                        currentRetryDelay < minRetryDelay
-                      ) {
-                        currentRetryDelay = currentMinRetryDelay;
-                      }
                       return new Promise((resolve) => {
                         const timeout = setTimeout(() => {
                           timeouts.delete(timeout);
                           resolve(retry());
-                        }, currentRetryDelay);
+                        }, currRetryDelay);
                         timeouts.add(timeout);
                       });
                     }
