@@ -162,6 +162,8 @@ describe('Upstream Retry', () => {
       },
       upstreamRetry: () => ({
         maxRetries: 1,
+        // To make sure it is more than retry-after
+        retryDelay: 10_000,
       }),
     });
     const res = await gateway.fetch('http://localhost:4000/graphql', {
@@ -192,6 +194,9 @@ describe('Upstream Retry', () => {
         },
       ],
     });
-    expect(diffBetweenRetries).toBeGreaterThanOrEqual(1000);
+    expect(diffBetweenRetries).toBeDefined();
+    expect(
+      Math.floor(diffBetweenRetries! / 1000),
+    ).toBeGreaterThanOrEqual(1);
   });
 });

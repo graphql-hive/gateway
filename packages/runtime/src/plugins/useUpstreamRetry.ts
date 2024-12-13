@@ -16,11 +16,11 @@ export interface UpstreamRetryOptions {
    */
   maxRetries: number;
   /**
-   * The delay between retries in milliseconds.
+   * The delay between retries in milliseconds, but this will be increased on each attempt.
    * If the upstream returns `Retry-After` header, the delay will be the value of the header.
    * @default 1000
    */
-  retryDelay?: number;
+  minRetryDelay?: number;
   /**
    * A function that determines whether a response should be retried.
    * If the upstream returns `Retry-After` header, the response will be retried.
@@ -61,7 +61,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       if (optsForReq) {
         const {
           maxRetries,
-          retryDelay = 1000,
+          minRetryDelay = 1000,
           shouldRetry = ({ response, executionResult }) => {
             if (response) {
               // If network error or rate limited, retry
@@ -101,23 +101,23 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                   executor(executionRequest),
                   (currRes) => {
                     executionResult = currRes;
-                    let retryAfterSeconds: number | undefined;
+                    let retryAfterSecondsFromHeader: number | undefined;
                     const response =
                       executionRequestResponseMap.get(executionRequest);
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
-                      retryAfterSeconds = parseInt(retryAfterHeader);
-                      if (isNaN(retryAfterSeconds)) {
+                      retryAfterSecondsFromHeader = parseInt(retryAfterHeader);
+                      if (isNaN(retryAfterSecondsFromHeader)) {
                         const dateTime = new Date(retryAfterHeader).getTime();
                         if (!isNaN(dateTime)) {
-                          retryAfterSeconds = dateTime - requestTime;
+                          retryAfterSecondsFromHeader = dateTime - requestTime;
                         }
                       }
                     }
                     let currentRetryDelay: number | undefined;
-                    if (retryAfterSeconds) {
-                      currentRetryDelay = retryAfterSeconds * 1000;
+                    if (retryAfterSecondsFromHeader) {
+                      currentRetryDelay = retryAfterSecondsFromHeader * 1000;
                     }
                     if (
                       shouldRetry({
@@ -126,12 +126,12 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         response,
                       })
                     ) {
-                      currentRetryDelay ||= retryDelay;
+                      currentRetryDelay ||= minRetryDelay * Math.min(maxRetries - retries - 1, 1);
                       return new Promise((resolve) => {
                         const timeout = setTimeout(() => {
                           timeouts.delete(timeout);
                           resolve(retry());
-                        }, retryDelay);
+                        }, currentRetryDelay);
                         timeouts.add(timeout);
                       });
                     }
