@@ -4042,21 +4042,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/schema@npm:^10.0.10, @graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.5":
-  version: 10.0.11
-  resolution: "@graphql-tools/schema@npm:10.0.11"
-  dependencies:
-    "@graphql-tools/merge": "npm:^9.0.12"
-    "@graphql-tools/utils": "npm:^10.6.2"
-    tslib: "npm:^2.4.0"
-    value-or-promise: "npm:^1.0.12"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/3e6e3664efab1f91c3d00d3bdc8ab16d28b6957c60a588c9811fa4cab2125bfa3feba402abf605372c0e346deb19ae8ad8bf4525e36a660862d438fb9c25c699
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/schema@npm:^10.0.12":
+"@graphql-tools/schema@npm:^10.0.10, @graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.12, @graphql-tools/schema@npm:^10.0.5":
   version: 10.0.12
   resolution: "@graphql-tools/schema@npm:10.0.12"
   dependencies:
@@ -4329,19 +4315,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@graphql-yoga/subscription@npm:5.0.1"
-  dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.0"
-    "@repeaterjs/repeater": "npm:^3.0.4"
-    "@whatwg-node/events": "npm:^0.1.0"
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/fccbdb1497edc085437d83127dbe6fde399b30e0277d5d6cdfc4aad16d733b00fe8b65e3d0eda3ba50250123545e59a7e684b9de5f9050721933ff1bf9950a58
-  languageName: node
-  linkType: hard
-
-"@graphql-yoga/subscription@npm:^5.0.2":
+"@graphql-yoga/subscription@npm:^5.0.1, @graphql-yoga/subscription@npm:^5.0.2":
   version: 5.0.2
   resolution: "@graphql-yoga/subscription@npm:5.0.2"
   dependencies:
