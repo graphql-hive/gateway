@@ -61,6 +61,6 @@ export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
         }
       },
     },
-  })
+  });
   return ctrl.signal as AbortSignalFromAny;
 }

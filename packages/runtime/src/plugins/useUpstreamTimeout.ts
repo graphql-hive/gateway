@@ -1,7 +1,5 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import {
-  ExecutionRequest,
-} from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import { abortSignalAny, isAbortSignalFromAny } from 'abort-signal-any';
 import { GatewayPlugin } from '../types';
 
@@ -19,10 +17,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
 ): GatewayPlugin<TContext> {
   const timeoutFactory = typeof opts === 'function' ? opts : () => opts;
   return {
-    onSubgraphExecute({
-      subgraphName,
-      executionRequest,
-    }) {
+    onSubgraphExecute({ subgraphName, executionRequest }) {
       const timeout = timeoutFactory({ subgraphName, executionRequest });
       if (timeout) {
         const timeoutSignal = AbortSignal.timeout(timeout);

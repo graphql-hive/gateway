@@ -43,6 +43,6 @@ export function useUpstreamCancel(): GatewayPlugin {
         }
         executionRequest.signal = abortSignalAny(signals);
       }
-    }
+    },
   };
 }
