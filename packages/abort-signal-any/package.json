@@ -39,5 +39,8 @@
   "devDependencies": {
     "pkgroll": "2.5.1"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false
 }
