@@ -1004,12 +1004,12 @@ export function createGatewayRuntime<
     extraPlugins.push(usePropagateHeaders(config.propagateHeaders));
   }
 
-  if (config.upstreamRetry) {
-    extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
-  }
-
   if (config.upstreamTimeout) {
     extraPlugins.push(useUpstreamTimeout(config.upstreamTimeout));
+  }
+  
+  if (config.upstreamRetry) {
+    extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
