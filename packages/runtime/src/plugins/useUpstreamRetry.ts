@@ -16,7 +16,7 @@ export interface UpstreamRetryOptions {
    */
   maxRetries: number;
   /**
-   * The delay between retries in milliseconds, but this will be increased on each attempt.
+   * The minimum delay between retries in milliseconds, but this will be increased on each attempt.
    * If the upstream returns `Retry-After` header, the delay will be the value of the header.
    * @default 1000
    */
@@ -87,11 +87,13 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         if (maxRetries > 0) {
           setExecutor(function (executionRequest: ExecutionRequest) {
             let retries = maxRetries + 1;
+            let currentMinRetryDelay = minRetryDelay;
             let executionResult: MaybeAsyncIterable<ExecutionResult>;
             function retry(): MaybePromise<
               MaybeAsyncIterable<ExecutionResult>
             > {
               retries--;
+              currentMinRetryDelay += minRetryDelay;
               try {
                 if (retries < 0) {
                   return executionResult;
@@ -126,8 +128,12 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         response,
                       })
                     ) {
-                      currentRetryDelay ||=
-                        minRetryDelay * Math.min(maxRetries - retries - 1, 1);
+                      if (
+                        currentRetryDelay == null ||
+                        currentRetryDelay < minRetryDelay
+                      ) {
+                        currentRetryDelay = currentMinRetryDelay;
+                      }
                       return new Promise((resolve) => {
                         const timeout = setTimeout(() => {
                           timeouts.delete(timeout);
