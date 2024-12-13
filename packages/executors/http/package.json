@@ -39,6 +39,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^",
     "@graphql-tools/utils": "^10.6.2",
     "@repeaterjs/repeater": "^3.0.4",
     "@whatwg-node/disposablestack": "^0.0.5",

@@ -12,3 +12,5 @@ export {
   getSdkRequesterForUnifiedGraph,
   getExecutorForUnifiedGraph,
 } from '@graphql-mesh/fusion-runtime';
+export { useUpstreamRetry } from './plugins/useUpstreamRetry';
+export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';

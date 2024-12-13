@@ -1,3 +1,4 @@
+import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import {
   createGraphQLError,
   DisposableAsyncExecutor,
@@ -229,13 +230,19 @@ export function buildHTTPExecutor(
       request.extensions = restExtensions;
     }
 
-    let signal = sharedSignal;
-    if (options?.timeout) {
-      signal = AbortSignal.any([
-        sharedSignal,
-        AbortSignal.timeout(options.timeout),
-      ]);
+    const signals = [sharedSignal];
+    const signalFromRequest = request.signal || request.info?.signal;
+    if (signalFromRequest) {
+      if (signalFromRequest.aborted) {
+        return createResultForAbort(signalFromRequest.reason);
+      }
+      signals.push(signalFromRequest);
     }
+    if (options?.timeout) {
+      signals.push(AbortSignal.timeout(options.timeout));
+    }
+
+    const signal = abortSignalAny(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
       request: {
@@ -365,7 +372,7 @@ export function buildHTTPExecutor(
 
           const contentType = fetchResult.headers.get('content-type');
           if (contentType?.includes('text/event-stream')) {
-            return handleEventStreamResponse(signal, fetchResult);
+            return handleEventStreamResponse(fetchResult, signal);
           } else if (contentType?.includes('multipart/mixed')) {
             return handleMultipartMixedResponse(fetchResult);
           }
@@ -543,7 +550,7 @@ function coerceFetchError(
     endpoint,
     upstreamErrorExtensions,
   }: {
-    signal: AbortSignal;
+    signal?: AbortSignal;
     endpoint: string;
     upstreamErrorExtensions: UpstreamErrorExtensions;
   },
@@ -559,8 +566,8 @@ function coerceFetchError(
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
-  } else if (e.name === 'AbortError' && signal.reason) {
-    return createGraphQLErrorForAbort(signal.reason, {
+  } else if (e.name === 'AbortError' && signal?.reason) {
+    return createGraphQLErrorForAbort(signal?.reason, {
       extensions: upstreamErrorExtensions,
     });
   } else if (e.message) {

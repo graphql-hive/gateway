@@ -3039,6 +3039,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/gateway-abort-signal-any@workspace:^, @graphql-hive/gateway-abort-signal-any@workspace:packages/abort-signal-any":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/gateway-abort-signal-any@workspace:packages/abort-signal-any"
+  dependencies:
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/gateway-runtime@workspace:*, @graphql-hive/gateway-runtime@workspace:^, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
@@ -3047,6 +3056,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^6.0.0"
     "@envelop/generic-auth": "npm:^8.0.0"
     "@graphql-hive/core": "npm:^0.8.1"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/fusion-composition": "npm:^0.7.0"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -3626,10 +3636,11 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.0.1"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/types": "npm:^0.103.6"
     "@graphql-mesh/utils": "npm:^0.103.6"
-    "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/executor": "npm:^1.3.8"
     "@graphql-tools/utils": "npm:^10.6.2"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
@@ -3834,7 +3845,7 @@ __metadata:
   resolution: "@graphql-tools/delegate@workspace:packages/delegate"
   dependencies:
     "@graphql-tools/batch-execute": "workspace:^"
-    "@graphql-tools/executor": "npm:^1.3.6"
+    "@graphql-tools/executor": "npm:^1.3.8"
     "@graphql-tools/schema": "npm:^10.0.11"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@repeaterjs/repeater": "npm:^3.0.6"
@@ -3871,6 +3882,7 @@ __metadata:
   resolution: "@graphql-tools/executor-http@workspace:packages/executors/http"
   dependencies:
     "@apollo/server": "npm:^4.11.2"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@types/extract-files": "npm:8.1.3"
@@ -3888,7 +3900,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-tools/executor@npm:^1.3.2, @graphql-tools/executor@npm:^1.3.5, @graphql-tools/executor@npm:^1.3.6, @graphql-tools/executor@npm:^1.3.7":
+"@graphql-tools/executor@npm:^1.3.2, @graphql-tools/executor@npm:^1.3.5, @graphql-tools/executor@npm:^1.3.6, @graphql-tools/executor@npm:^1.3.7, @graphql-tools/executor@npm:^1.3.8":
   version: 1.3.8
   resolution: "@graphql-tools/executor@npm:1.3.8"
   dependencies:
@@ -4312,19 +4324,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@graphql-yoga/subscription@npm:5.0.1"
-  dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.0"
-    "@repeaterjs/repeater": "npm:^3.0.4"
-    "@whatwg-node/events": "npm:^0.1.0"
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/fccbdb1497edc085437d83127dbe6fde399b30e0277d5d6cdfc4aad16d733b00fe8b65e3d0eda3ba50250123545e59a7e684b9de5f9050721933ff1bf9950a58
-  languageName: node
-  linkType: hard
-
-"@graphql-yoga/subscription@npm:^5.0.2":
+"@graphql-yoga/subscription@npm:^5.0.1, @graphql-yoga/subscription@npm:^5.0.2":
   version: 5.0.2
   resolution: "@graphql-yoga/subscription@npm:5.0.2"
   dependencies:
@@ -6781,15 +6781,15 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/node-fetch@npm:^0.7.1":
-  version: 0.7.4
-  resolution: "@whatwg-node/node-fetch@npm:0.7.4"
+  version: 0.7.5
+  resolution: "@whatwg-node/node-fetch@npm:0.7.5"
   dependencies:
     "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     busboy: "npm:^1.6.0"
     fast-querystring: "npm:^1.1.1"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/2ac3fa2bf2534eab6bf33fa511f67e760eb3d190e04970fe7a92bf2f1dfee0ad4ee337ec87d73b51e7b7bdaed8a29b7a19e445e964493693c5bfa06c91ed6479
+  checksum: 10c0/d0693ff047f0e51e94a36e77d3d39f323f74a4205c2116add44e2fc0991e4d6044bde55a867d1cf78d7c4a406d73d75df5975876a32831c0cc5829811172335e
   languageName: node
   linkType: hard
 

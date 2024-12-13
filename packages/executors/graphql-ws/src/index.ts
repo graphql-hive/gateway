@@ -79,6 +79,8 @@ export function buildGraphQLWSExecutor(
       operationName,
       extensions,
       operationType = getOperationASTFromRequest(executionRequest).operation,
+      info,
+      signal = info?.signal,
     } = executionRequest;
     // additional connection params can be supplied through the "connectionParams" field in extensions.
     // TODO: connection params only from the FIRST operation in lazy mode will be used (detect connectionParams changes and reconnect, too implicit?)
@@ -98,6 +100,13 @@ export function buildGraphQLWSExecutor(
       operationName,
       extensions,
     });
+    signal?.addEventListener(
+      'abort',
+      () => {
+        iterableIterator.return?.();
+      },
+      { once: true },
+    );
     if (operationType === 'subscription') {
       return iterableIterator;
     }

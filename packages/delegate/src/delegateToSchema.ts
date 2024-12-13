@@ -1,7 +1,6 @@
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
-import { normalizedExecutor } from '@graphql-tools/executor';
+import { executorFromSchema } from '@graphql-tools/executor';
 import {
-  ExecutionRequest,
   ExecutionResult,
   Executor,
   getDefinedRootType,
@@ -11,7 +10,6 @@ import {
   mapMaybePromise,
   Maybe,
   MaybeAsyncIterable,
-  memoize1,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { dset } from 'dset/merge';
@@ -295,7 +293,7 @@ function getExecutor<TContext extends Record<string, any>>(
   const { subschemaConfig, targetSchema, context } = delegationContext;
 
   let executor: Executor =
-    subschemaConfig?.executor || createDefaultExecutor(targetSchema);
+    subschemaConfig?.executor || executorFromSchema(targetSchema);
 
   if (subschemaConfig?.batch) {
     const batchingOptions = subschemaConfig?.batchingOptions;
@@ -310,17 +308,4 @@ function getExecutor<TContext extends Record<string, any>>(
   return executor;
 }
 
-export const createDefaultExecutor = memoize1(function createDefaultExecutor(
-  schema: GraphQLSchema,
-): Executor {
-  return function defaultExecutor(request: ExecutionRequest) {
-    return normalizedExecutor({
-      schema,
-      document: request.document,
-      rootValue: request.rootValue,
-      contextValue: request.context,
-      variableValues: request.variables,
-      operationName: request.operationName,
-    });
-  };
-});
+export { executorFromSchema as createDefaultExecutor };
