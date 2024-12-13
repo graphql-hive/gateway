@@ -1,6 +1,7 @@
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
+  abortSignalAny,
   defaultPrintFn,
   type DisposableExecutor,
   type Transport,
@@ -151,6 +152,10 @@ export default {
           `HTTP Callback Transport: \`location\` is missing in the transport entry!`,
         );
       }
+      let signal = execReq.signal || execReq.info?.signal;
+      if (signal) {
+        signal = abortSignalAny([reqAbortCtrl.signal, signal]);
+      }
       const subFetchCall$ = mapMaybePromise(
         fetch(
           transportEntry.location,
@@ -167,7 +172,7 @@ export default {
               Accept: 'application/json;callbackSpec=1.0; charset=utf-8',
             },
             body: fetchBody,
-            signal: reqAbortCtrl.signal,
+            signal,
           },
           execReq.context,
           execReq.info,
@@ -216,6 +221,13 @@ export default {
       );
       execReq.context?.waitUntil?.(subFetchCall$);
       return new Repeater<ExecutionResult>((push, stop) => {
+        signal?.addEventListener(
+          'abort',
+          () => {
+            stop(signal.reason);
+          },
+          { once: true },
+        );
         pushFn = push;
         stopSubscription = stop;
         stopFnSet.add(stop);

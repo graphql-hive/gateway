@@ -22,6 +22,12 @@ export interface UpstreamRetryOptions {
    */
   retryDelay?: number;
   /**
+   * Factor to increase the delay between retries.
+   *
+   * @default 1.25
+   */
+  retryDelayFactor?: number;
+  /**
    * A function that determines whether a response should be retried.
    * If the upstream returns `Retry-After` header, the response will be retried.
    * By default, it retries on network errors, rate limiting, and non-original GraphQL errors.
@@ -62,6 +68,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         const {
           maxRetries,
           retryDelay = 1000,
+          retryDelayFactor = 1.25,
           shouldRetry = ({ response, executionResult }) => {
             if (response) {
               // If network error or rate limited, retry
@@ -118,7 +125,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                       }
                     }
                     currRetryDelay =
-                      retryAfterSecondsFromHeader || currRetryDelay * 1.25;
+                      retryAfterSecondsFromHeader ||
+                      currRetryDelay * retryDelayFactor;
                     if (
                       shouldRetry({
                         executionRequest,
