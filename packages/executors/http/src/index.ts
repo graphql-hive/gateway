@@ -12,6 +12,7 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
+import { abortSignalAny } from 'abort-signal-any';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
@@ -26,7 +27,6 @@ import {
   createResultForAbort,
   hashSHA256,
 } from './utils.js';
-import { abortSignalAny } from 'abort-signal-any';
 
 export type SyncFetchFn = (
   url: string,
@@ -232,7 +232,7 @@ export function buildHTTPExecutor(
 
     const signals = [sharedSignal];
     const signalFromRequest = request.signal || request.info?.signal;
-    if (signalFromRequest) { 
+    if (signalFromRequest) {
       if (signalFromRequest.aborted) {
         return createResultForAbort(signalFromRequest.reason);
       }
@@ -241,7 +241,7 @@ export function buildHTTPExecutor(
     if (options?.timeout) {
       signals.push(AbortSignal.timeout(options.timeout));
     }
-    
+
     const signal = abortSignalAny(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {

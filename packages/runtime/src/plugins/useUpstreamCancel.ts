@@ -1,6 +1,6 @@
 import { GraphQLResolveInfo } from '@graphql-tools/utils';
-import type { GatewayPlugin } from '../types';
 import { abortSignalAny } from 'abort-signal-any';
+import type { GatewayPlugin } from '../types';
 
 export function useUpstreamCancel(): GatewayPlugin {
   return {
@@ -9,7 +9,8 @@ export function useUpstreamCancel(): GatewayPlugin {
       if (context?.request?.signal) {
         signals.push(context.request.signal);
       }
-      const execRequestSignal = executionRequest?.signal || executionRequest?.info?.signal;
+      const execRequestSignal =
+        executionRequest?.signal || executionRequest?.info?.signal;
       if (execRequestSignal) {
         signals.push(execRequestSignal);
       }

@@ -56,7 +56,7 @@
       ],
       "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
       "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
-      "abort-signal-any": ["./packages/abort-signal-any/src/index.ts"],
+      "abort-signal-any": ["./packages/abort-signal-any/src/index.ts"]
     }
   },
   "include": [

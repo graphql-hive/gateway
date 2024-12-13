@@ -9,8 +9,8 @@ import {
   MaybeAsyncIterable,
   MaybePromise,
 } from '@graphql-tools/utils';
-import { GatewayPlugin } from '../types';
 import { abortSignalAny } from 'abort-signal-any';
+import { GatewayPlugin } from '../types';
 
 export interface TimeoutFactoryPayload {
   subgraphName?: string;

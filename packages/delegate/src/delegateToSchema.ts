@@ -1,4 +1,5 @@
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
+import { executorFromSchema } from '@graphql-tools/executor';
 import {
   ExecutionResult,
   Executor,
@@ -33,7 +34,6 @@ import {
   StitchingInfo,
   SubschemaConfig,
 } from './types.js';
-import { executorFromSchema } from '@graphql-tools/executor';
 
 export function delegateToSchema<
   TContext extends Record<string, any> = Record<string, any>,
@@ -308,4 +308,4 @@ function getExecutor<TContext extends Record<string, any>>(
   return executor;
 }
 
-export { executorFromSchema as createDefaultExecutor}
+export { executorFromSchema as createDefaultExecutor };
