@@ -1,5 +1,13 @@
 # @graphql-tools/delegate
 
+## 10.2.8
+
+### Patch Changes
+
+- [#322](https://github.com/graphql-hive/gateway/pull/322) [`23b8987`](https://github.com/graphql-hive/gateway/commit/23b89874fcf10b4cb6b1b941f29fa5f5aecf0ef2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/executor@^1.3.8` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.3.8) (from `^1.3.6`, in `dependencies`)
+
 ## 10.2.7
 
 ### Patch Changes
