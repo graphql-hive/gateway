@@ -71,7 +71,6 @@ export function useOpenTelemetry(
   options.attributes ||= { document: true, operationName: true, operationType: true };
 
   return {
-    // TODO: on request / on response graphql.request
     onParse: ({ context, extendContext, parseFn, setParseFn }) => {
       const span = tracer.startSpan("graphql.parse", {}, api.context.active())
 
