@@ -11,4 +11,4 @@ export const defaultPrintFn = memoize1(function defaultPrintFn(
 ) {
   return stripIgnoredCharacters(getDocumentString(document, print));
 });
-export { abortSignalAny } from 'abort-signal-any';
+export { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';

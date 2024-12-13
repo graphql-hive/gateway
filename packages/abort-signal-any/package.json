@@ -1,5 +1,5 @@
 {
-  "name": "abort-signal-any",
+  "name": "@graphql-hive/gateway-abort-signal-any",
   "version": "0.0.0",
   "type": "module",
   "repository": {

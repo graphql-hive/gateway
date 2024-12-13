@@ -39,11 +39,11 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^",
     "@graphql-tools/utils": "^10.6.2",
     "@repeaterjs/repeater": "^3.0.4",
     "@whatwg-node/disposablestack": "^0.0.5",
     "@whatwg-node/fetch": "^0.10.1",
-    "abort-signal-any": "workspace:^",
     "extract-files": "^11.0.0",
     "meros": "^1.2.1",
     "tslib": "^2.8.1",

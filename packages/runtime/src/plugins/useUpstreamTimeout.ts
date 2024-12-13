@@ -1,3 +1,7 @@
+import {
+  abortSignalAny,
+  isAbortSignalFromAny,
+} from '@graphql-hive/gateway-abort-signal-any';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -9,7 +13,6 @@ import {
   MaybeAsyncIterable,
   MaybePromise,
 } from '@graphql-tools/utils';
-import { abortSignalAny, isAbortSignalFromAny } from 'abort-signal-any';
 import { GatewayPlugin } from '../types';
 
 export interface TimeoutFactoryPayload {

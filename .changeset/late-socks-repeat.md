@@ -1,5 +1,5 @@
 ---
-'abort-signal-any': patch
+'@graphql-hive/gateway-abort-signal-any': patch
 ---
 
 New package

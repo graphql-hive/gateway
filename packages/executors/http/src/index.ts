@@ -1,3 +1,4 @@
+import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import {
   createGraphQLError,
   DisposableAsyncExecutor,
@@ -12,7 +13,6 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
-import { abortSignalAny } from 'abort-signal-any';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';

@@ -3039,6 +3039,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/gateway-abort-signal-any@workspace:^, @graphql-hive/gateway-abort-signal-any@workspace:packages/abort-signal-any":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/gateway-abort-signal-any@workspace:packages/abort-signal-any"
+  dependencies:
+    pkgroll: "npm:2.5.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/gateway-runtime@workspace:*, @graphql-hive/gateway-runtime@workspace:^, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
@@ -3047,6 +3056,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^6.0.0"
     "@envelop/generic-auth": "npm:^8.0.0"
     "@graphql-hive/core": "npm:^0.8.1"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/fusion-composition": "npm:^0.7.0"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -3074,7 +3084,6 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.1"
     "@whatwg-node/server": "npm:^0.9.60"
-    abort-signal-any: "workspace:^"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3627,12 +3636,12 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.0.1"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/types": "npm:^0.103.6"
     "@graphql-mesh/utils": "npm:^0.103.6"
     "@graphql-tools/executor": "npm:^1.3.8"
     "@graphql-tools/utils": "npm:^10.6.2"
-    abort-signal-any: "workspace:^"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.5.1"
     tslib: "npm:^2.8.1"
@@ -3873,12 +3882,12 @@ __metadata:
   resolution: "@graphql-tools/executor-http@workspace:packages/executors/http"
   dependencies:
     "@apollo/server": "npm:^4.11.2"
+    "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@repeaterjs/repeater": "npm:^3.0.4"
     "@types/extract-files": "npm:8.1.3"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.1"
-    abort-signal-any: "workspace:^"
     extract-files: "npm:^11.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.10.4"
@@ -7362,15 +7371,6 @@ __metadata:
   checksum: 10c0/f742a5a107473946f426c691c08daba61a1d15942616f300b5d32fd735be88fef5cba24201757b6c407fd564555fb48c751cfa33519b2605c8a7aadd22baf372
   languageName: node
   linkType: hard
-
-"abort-signal-any@workspace:^, abort-signal-any@workspace:packages/abort-signal-any":
-  version: 0.0.0-use.local
-  resolution: "abort-signal-any@workspace:packages/abort-signal-any"
-  dependencies:
-    pkgroll: "npm:2.5.1"
-    tslib: "npm:^2.8.1"
-  languageName: unknown
-  linkType: soft
 
 "accepts@npm:~1.3.8":
   version: 1.3.8

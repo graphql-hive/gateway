@@ -1,5 +1,8 @@
+import {
+  abortSignalAny,
+  isAbortSignalFromAny,
+} from '@graphql-hive/gateway-abort-signal-any';
 import { GraphQLResolveInfo } from '@graphql-tools/utils';
-import { abortSignalAny, isAbortSignalFromAny } from 'abort-signal-any';
 import type { GatewayPlugin } from '../types';
 
 export function useUpstreamCancel(): GatewayPlugin {
