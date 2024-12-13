@@ -1,5 +1,18 @@
 # @graphql-mesh/transport-common
 
+## 0.7.23
+
+### Patch Changes
+
+- [#322](https://github.com/graphql-hive/gateway/pull/322) [`23b8987`](https://github.com/graphql-hive/gateway/commit/23b89874fcf10b4cb6b1b941f29fa5f5aecf0ef2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/gateway-abort-signal-any@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway-abort-signal-any/v/workspace:^) (to `dependencies`)
+  - Added dependency [`@graphql-tools/executor@^1.3.8` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.3.8) (to `dependencies`)
+  - Removed dependency [`@graphql-tools/delegate@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/delegate/v/workspace:^) (from `dependencies`)
+
+- Updated dependencies [[`23b8987`](https://github.com/graphql-hive/gateway/commit/23b89874fcf10b4cb6b1b941f29fa5f5aecf0ef2)]:
+  - @graphql-hive/gateway-abort-signal-any@0.0.1
+
 ## 0.7.22
 
 ### Patch Changes
