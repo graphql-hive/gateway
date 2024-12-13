@@ -229,13 +229,17 @@ export function useOpenTelemetry(
         },
       }
     },
-    onSubgraphExecute: ({executionRequest}) => {
+    onSubgraphExecute: ({executionRequest, setExecutor, executor}) => {
       const span = tracer.startSpan("graphql.subgraph.execute", {
         attributes: {
           [ATTR_GRAPHQL_OPERATION_NAME]: executionRequest.operationName,
           [ATTR_GRAPHQL_DOCUMENT]: print(sanitiseDocument(executionRequest.document))
         }
       }, api.context.active());
+
+      // setExecutor((args ) => {
+      //   return api.context.with(api.trace.setSpan(getActiveContext(args.context), span), () => executor(args))
+      // })
 
       return ({ result }) => {
         if (isAsyncIterable(result)) {
