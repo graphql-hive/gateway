@@ -4128,20 +4128,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-tools/utils@npm:10.6.3":
-  version: 10.6.3
-  resolution: "@graphql-tools/utils@npm:10.6.3"
-  dependencies:
-    "@graphql-typed-document-node/core": "npm:^3.1.1"
-    cross-inspect: "npm:1.0.1"
-    dset: "npm:^3.1.2"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/243f753f9c32f0058454b510d0db6f23e01263243822d0bd73258b70bf4021c8308d85590b812cbe20a7a8e5232609ae12f043222c54463419a253a73d2c2beb
-  languageName: node
-  linkType: hard
-
 "@graphql-tools/utils@npm:8.9.0":
   version: 8.9.0
   resolution: "@graphql-tools/utils@npm:8.9.0"
@@ -5011,16 +4997,15 @@ __metadata:
   linkType: hard
 
 "@omnigraph/openapi@npm:^0.108.6":
-  version: 0.108.9
-  resolution: "@omnigraph/openapi@npm:0.108.9"
+  version: 0.108.10
+  resolution: "@omnigraph/openapi@npm:0.108.10"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/fusion-composition": "npm:^0.7.14"
     "@graphql-mesh/string-interpolation": "npm:^0.5.7"
     "@graphql-mesh/types": "npm:^0.103.8"
     "@graphql-mesh/utils": "npm:^0.103.8"
-    "@graphql-tools/delegate": "npm:^10.0.28"
-    "@graphql-tools/utils": "npm:10.6.3"
+    "@graphql-tools/utils": "npm:^10.6.4"
     "@omnigraph/json-schema": "npm:^0.108.8"
     change-case: "npm:^4.1.2"
     json-machete: "npm:^0.97.5"
@@ -5028,7 +5013,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/8f946d7f2ba63987b1419919ca3178f6423c71c4d67851363524cdf8b8f8904f346edabc26f01bbd83f292ef7ad3fa0c24e917a1912517d392501e33e996adee
+  checksum: 10c0/d5315d1b8ca97f460914f4ee0bd5629abd843b2a2499145301b4c160ec2f1c37ac8d25db18c516648838f4acf60399c105c61e14e77e8b16c0a1d134486b5109
   languageName: node
   linkType: hard
 
