@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 1.7.1
+
+### Patch Changes
+
+- [#333](https://github.com/graphql-hive/gateway/pull/333) [`0d81307`](https://github.com/graphql-hive/gateway/commit/0d813079753e7c66158499e2db6e301a3c145856) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.10.6` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.10.6) (from `^5.10.4`, in `dependencies`)
+
+- Updated dependencies [[`0d81307`](https://github.com/graphql-hive/gateway/commit/0d813079753e7c66158499e2db6e301a3c145856), [`0d81307`](https://github.com/graphql-hive/gateway/commit/0d813079753e7c66158499e2db6e301a3c145856)]:
+  - @graphql-hive/gateway-runtime@1.4.1
+  - @graphql-mesh/plugin-prometheus@1.3.17
+  - @graphql-mesh/hmac-upstream-signature@1.2.17
+  - @graphql-mesh/plugin-opentelemetry@1.3.29
+
 ## 1.7.0
 
 ### Minor Changes

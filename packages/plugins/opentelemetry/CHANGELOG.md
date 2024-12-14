@@ -1,5 +1,12 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.29
+
+### Patch Changes
+
+- Updated dependencies [[`0d81307`](https://github.com/graphql-hive/gateway/commit/0d813079753e7c66158499e2db6e301a3c145856)]:
+  - @graphql-hive/gateway-runtime@1.4.1
+
 ## 1.3.28
 
 ### Patch Changes
