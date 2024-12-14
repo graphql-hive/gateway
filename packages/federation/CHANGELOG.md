@@ -1,5 +1,13 @@
 # @graphql-tools/federation
 
+## 3.0.3
+
+### Patch Changes
+
+- [#333](https://github.com/graphql-hive/gateway/pull/333) [`0d81307`](https://github.com/graphql-hive/gateway/commit/0d813079753e7c66158499e2db6e301a3c145856) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/typed-event-target@^3.0.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/typed-event-target/v/3.0.1) (from `^3.0.0`, in `dependencies`)
+
 ## 3.0.2
 
 ### Patch Changes
