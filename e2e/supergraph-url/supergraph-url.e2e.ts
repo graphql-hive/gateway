@@ -123,6 +123,7 @@ it('should gateway a schema from a url without pathname', async () => {
           ],
           "mutationType": null,
           "queryType": {
+            "kind": "OBJECT",
             "name": "Query",
           },
           "subscriptionType": null,
@@ -1213,6 +1214,7 @@ it('should gateway a schema from a url with pathname', async () => {
           ],
           "mutationType": null,
           "queryType": {
+            "kind": "OBJECT",
             "name": "Query",
           },
           "subscriptionType": null,
@@ -2303,6 +2305,7 @@ it('should gateway a schema from a url with pathname and extension', async () =>
           ],
           "mutationType": null,
           "queryType": {
+            "kind": "OBJECT",
             "name": "Query",
           },
           "subscriptionType": null,
