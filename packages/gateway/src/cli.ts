@@ -325,8 +325,7 @@ export async function run(userCtx: Partial<CLIContext>) {
   };
 
   const { binName, productDescription, version } = ctx;
-  cli = cli.name(binName).description(productDescription);
-  cli.version(version);
+  cli = cli.name(binName).description(productDescription).version(version);
 
   if (cluster.worker?.id) {
     ctx.log = ctx.log.child(`Worker #${cluster.worker.id}`);

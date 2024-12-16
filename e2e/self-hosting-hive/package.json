@@ -1,0 +1,8 @@
+{
+  "name": "@e2e/self-hosting-hive",
+  "private": true,
+  "dependencies": {
+    "@graphql-hive/gateway": "workspace:*",
+    "graphql": "16.9.0"
+  }
+}

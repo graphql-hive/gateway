@@ -10,8 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { createDeferred } from '@graphql-tools/delegate';
-import { fakePromise } from '@graphql-tools/utils';
+import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import {
   boolEnv,
   createOpt,
@@ -147,6 +146,7 @@ export interface ServeOptions extends ProcOptions {
     /** "docker" specific options. */
     docker?: Partial<Pick<ContainerOptions, 'volumes' | 'healthcheck'>>;
   };
+  services?: Service[];
 }
 
 export interface Gateway extends Server {
@@ -358,6 +358,7 @@ export function createTenv(cwd: string): Tenv {
         env,
         runner,
         args = [],
+        services,
       } = opts || {};
 
       let proc: Proc,
@@ -471,6 +472,9 @@ export function createTenv(cwd: string): Tenv {
             createPortOpt(port),
             ...(supergraph ? ['supergraph', supergraph] : []),
             ...(subgraph ? ['subgraph', subgraph] : []),
+            ...(services?.map(({ name, port }) =>
+              createServicePortOpt(name, port),
+            ) || []),
             ...args,
           ],
           volumes,
@@ -485,6 +489,9 @@ export function createTenv(cwd: string): Tenv {
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
           ...(supergraph ? ['supergraph', supergraph] : []),
           ...(subgraph ? ['subgraph', subgraph] : []),
+          ...(services?.map(({ name, port }) =>
+            createServicePortOpt(name, port),
+          ) || []),
           ...args,
           createPortOpt(port),
         );
@@ -497,6 +504,9 @@ export function createTenv(cwd: string): Tenv {
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
           ...(supergraph ? ['supergraph', supergraph] : []),
           ...(subgraph ? ['subgraph', subgraph] : []),
+          ...(services?.map(({ name, port }) =>
+            createServicePortOpt(name, port),
+          ) || []),
           ...args,
           createPortOpt(port),
         );
@@ -986,7 +996,9 @@ function spawn(
     // process ended _and_ the stdio streams have been closed
     if (code) {
       exitDeferred.reject(
-        new Error(`Exit code ${code}\n${trimError(stdboth)}`),
+        new Error(
+          `Exit code ${code} from ${cmd} ${args.join(' ')}\n${trimError(stdboth)}`,
+        ),
       );
     } else {
       exitDeferred.resolve();
