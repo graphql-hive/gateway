@@ -469,12 +469,12 @@ export function createTenv(cwd: string): Tenv {
             `wget --spider http://0.0.0.0:${port}/healthcheck`,
           ],
           cmd: [
-            createPortOpt(port),
             ...(supergraph ? ['supergraph', supergraph] : []),
             ...(subgraph ? ['subgraph', subgraph] : []),
             ...(services?.map(({ name, port }) =>
               createServicePortOpt(name, port),
             ) || []),
+            createPortOpt(port),
             ...args,
           ],
           volumes,
@@ -492,8 +492,8 @@ export function createTenv(cwd: string): Tenv {
           ...(services?.map(({ name, port }) =>
             createServicePortOpt(name, port),
           ) || []),
-          ...args,
           createPortOpt(port),
+          ...args,
         );
       } /* if (gatewayRunner === 'node') */ else {
         [proc, waitForExit] = await spawn(
@@ -750,7 +750,10 @@ export function createTenv(cwd: string): Tenv {
       const ctr = await docker.createContainer({
         name: containerName,
         Image: image,
-        Env: Object.entries(env).map(([name, value]) => `${name}=${value}`),
+        Env: Object.entries({
+          ...process.env,
+          ...env,
+        }).map(([name, value]) => `${name}=${value}`),
         ExposedPorts: {
           [containerPort + '/tcp']: {},
           ...Object.keys(additionalPorts).reduce(
@@ -923,7 +926,7 @@ function spawn(
     stdio: ['ignore', 'pipe', 'pipe'],
     env: Object.entries(env).reduce(
       (acc, [key, val]) => ({ ...acc, [key]: String(val) }),
-      process.env,
+      { ...process.env },
     ),
     shell,
     signal,

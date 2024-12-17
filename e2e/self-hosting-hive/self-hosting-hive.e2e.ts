@@ -11,10 +11,7 @@ describe('Self Hosting Hive', () => {
     await using gw = await gateway({
       supergraph: await supergraph(),
       services: [selfHostingHive],
-      args: ['--hive-registry-token', TEST_TOKEN],
-      env: {
-        NODE_ENV: 'test',
-      },
+      args: [`--hive-registry-token=${TEST_TOKEN}`],
     });
     await expect(
       gw.execute({
