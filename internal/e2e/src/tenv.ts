@@ -391,6 +391,16 @@ export function createTenv(cwd: string): Tenv {
         subgraph = output;
       }
 
+      const fullArgs = [
+        createPortOpt(port),
+        ...(supergraph ? ['supergraph', supergraph] : []),
+        ...(subgraph ? ['subgraph', subgraph] : []),
+        ...args,
+        ...(services?.map(({ name, port }) =>
+          createServicePortOpt(name, port),
+        ) || []),
+      ];
+
       if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
         const volumes: ContainerOptions['volumes'] =
           runner?.docker?.volumes || [];
@@ -468,15 +478,7 @@ export function createTenv(cwd: string): Tenv {
             'CMD-SHELL',
             `wget --spider http://0.0.0.0:${port}/healthcheck`,
           ],
-          cmd: [
-            createPortOpt(port),
-            ...(supergraph ? ['supergraph', supergraph] : []),
-            ...(subgraph ? ['subgraph', subgraph] : []),
-            ...(services?.map(({ name, port }) =>
-              createServicePortOpt(name, port),
-            ) || []),
-            ...args,
-          ],
+          cmd: [...fullArgs],
           volumes,
           pipeLogs,
         });
@@ -487,13 +489,7 @@ export function createTenv(cwd: string): Tenv {
           'npx',
           'bun',
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
-          ...(supergraph ? ['supergraph', supergraph] : []),
-          ...(subgraph ? ['subgraph', subgraph] : []),
-          ...(services?.map(({ name, port }) =>
-            createServicePortOpt(name, port),
-          ) || []),
-          ...args,
-          createPortOpt(port),
+          ...fullArgs,
         );
       } /* if (gatewayRunner === 'node') */ else {
         [proc, waitForExit] = await spawn(
@@ -502,13 +498,7 @@ export function createTenv(cwd: string): Tenv {
           '--import',
           'tsx',
           path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
-          ...(supergraph ? ['supergraph', supergraph] : []),
-          ...(subgraph ? ['subgraph', subgraph] : []),
-          ...(services?.map(({ name, port }) =>
-            createServicePortOpt(name, port),
-          ) || []),
-          ...args,
-          createPortOpt(port),
+          ...fullArgs,
         );
       }
 
