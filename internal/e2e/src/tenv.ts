@@ -53,7 +53,9 @@ const gatewayRunner = (function getServeRunner() {
       runner,
     )
   ) {
-    throw new Error(`Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`);
+    throw new Error(
+      `Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`,
+    );
   }
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
@@ -120,27 +122,27 @@ export interface ServeOptions extends ProcOptions {
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
   supergraph?:
-  | string
-  | {
-    with: 'mesh';
-    services?: Service[];
-  }
-  | {
-    with: 'apollo';
-    services: Service[];
-  };
+    | string
+    | {
+        with: 'mesh';
+        services?: Service[];
+      }
+    | {
+        with: 'apollo';
+        services: Service[];
+      };
   /**
    * Path to the subgraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
    */
   subgraph?:
-  | string
-  | {
-    with: 'mesh';
-    subgraphName: string;
-    services?: Service[];
-    pipeLogs?: boolean | string;
-  };
+    | string
+    | {
+        with: 'mesh';
+        subgraphName: string;
+        services?: Service[];
+        pipeLogs?: boolean | string;
+      };
   /** {@link gatewayRunner Gateway Runner} specific options. */
   runner?: {
     /** "docker" specific options. */
@@ -391,20 +393,21 @@ export function createTenv(cwd: string): Tenv {
         subgraph = output;
       }
 
-      const fullArgs = [
-        createPortOpt(port),
-        ...(supergraph ? ['supergraph', supergraph] : []),
-        ...(subgraph ? ['subgraph', subgraph] : []),
-        ...args,
-        ...(services?.map(({ name, port }) =>
-          createServicePortOpt(name, port),
-        ) || []),
-      ];
+      function getFullArgs() {
+        return [
+          createPortOpt(port),
+          ...(supergraph ? ['supergraph', supergraph] : []),
+          ...(subgraph ? ['subgraph', subgraph] : []),
+          ...args,
+          ...(services?.map(({ name, port }) =>
+            createServicePortOpt(name, port),
+          ) || []),
+        ];
+      }
 
       switch (gatewayRunner) {
         case 'bun-docker':
         case 'docker': {
-
           const volumes: ContainerOptions['volumes'] =
             runner?.docker?.volumes || [];
 
@@ -471,7 +474,7 @@ export function createTenv(cwd: string): Tenv {
               'ghcr.io/graphql-hive/gateway:' +
               (dockerfileExists
                 ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
-                `e2e.${path.basename(cwd)}`
+                  `e2e.${path.basename(cwd)}`
                 : 'e2e') +
               (gatewayRunner === 'bun-docker' ? '-bun' : ''),
             // TODO: changing port from within gateway.config.ts wont work in docker runner
@@ -481,7 +484,7 @@ export function createTenv(cwd: string): Tenv {
               'CMD-SHELL',
               `wget --spider http://0.0.0.0:${port}/healthcheck`,
             ],
-            cmd: [...fullArgs],
+            cmd: getFullArgs(),
             volumes,
             pipeLogs,
           });
@@ -494,7 +497,7 @@ export function createTenv(cwd: string): Tenv {
             'npx',
             'bun',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
-            ...fullArgs,
+            ...getFullArgs(),
           );
           break;
         }
@@ -505,7 +508,7 @@ export function createTenv(cwd: string): Tenv {
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
-            ...fullArgs,
+            ...getFullArgs(),
           );
           break;
         }
@@ -513,14 +516,15 @@ export function createTenv(cwd: string): Tenv {
           [proc, waitForExit] = await spawn(
             { env, cwd, pipeLogs },
             path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
-            ...fullArgs,
+            ...getFullArgs(),
           );
           break;
         }
         default:
-          throw new Error(`Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`);
+          throw new Error(
+            `Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`,
+          );
       }
-
 
       const gw: Gateway = {
         ...proc,
@@ -747,8 +751,8 @@ export function createTenv(cwd: string): Tenv {
               (err, res) => (err ? reject(err) : resolve(res)),
               pipeLogs
                 ? (e) => {
-                  process.stderr.write(JSON.stringify(e));
-                }
+                    process.stderr.write(JSON.stringify(e));
+                  }
                 : undefined,
             );
           });
@@ -794,11 +798,11 @@ export function createTenv(cwd: string): Tenv {
         Healthcheck:
           healthcheck.length > 0
             ? {
-              Test: healthcheck,
-              Interval: msToNs(interval),
-              Timeout: 0, // dont wait between tests
-              Retries: retries,
-            }
+                Test: healthcheck,
+                Interval: msToNs(interval),
+                Timeout: 0, // dont wait between tests
+                Retries: retries,
+              }
             : undefined,
         abortSignal: ctrl.signal,
       });
@@ -907,7 +911,7 @@ export function createTenv(cwd: string): Tenv {
         getDataSource(opts) {
           return new RemoteGraphQLDataSource(opts);
         },
-        update() { },
+        update() {},
         healthCheck: () => fakePromise(undefined),
       });
 
@@ -1055,7 +1059,7 @@ async function waitForPort(port: number, signal: AbortSignal) {
       try {
         await fetch(`http://${localHostname}:${port}`, { signal });
         break outer;
-      } catch (err) { }
+      } catch (err) {}
     }
     // no need to track retries, jest will time out aborting the signal
     signal.throwIfAborted();
