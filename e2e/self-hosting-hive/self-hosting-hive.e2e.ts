@@ -14,7 +14,7 @@ describe('Self Hosting Hive', () => {
       args: ['--hive-registry-token', TEST_TOKEN],
       env: {
         NODE_ENV: 'test',
-      }
+      },
     });
     await expect(
       gw.execute({
