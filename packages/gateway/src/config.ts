@@ -54,6 +54,8 @@ export async function loadConfig<
         !opts.quiet &&
           opts.log.info(`Found default config file ${absoluteConfigPath}`);
         const importUrl = pathToFileURL(absoluteConfigPath).toString();
+        !opts.quiet &&
+          opts.log.info(`Loading config file at path ${importUrl}`);
         const module = await import(importUrl);
         importedConfig = Object(module).gatewayConfig || null;
         if (!importedConfig) {
