@@ -158,6 +158,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ctx.log.info(`Configuring Hive registry reporting`);
         registryConfig = {
           reporting: {
+            ...loadedConfig.reporting,
             type: 'hive',
             token: hiveRegistryToken,
           },

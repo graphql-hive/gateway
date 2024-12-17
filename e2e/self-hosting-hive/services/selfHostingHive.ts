@@ -7,13 +7,17 @@ const selfHostingPort = opts.getServicePort('selfHostingHive');
 // Echo server
 
 createServer((req, res) => {
-  process.stdout.write(`${req.method} ${req.url}\n`);
+  function echo(msg: string) {
+    process.stdout.write(msg);
+    res.write(msg);
+  }
   res.writeHead(200, req.headers);
+  echo(`${req.method} ${req.url}\n`);
+  echo(`headers: ${JSON.stringify(req.headers)}\n`);
   req.on('data', (chunk) => {
-    process.stdout.write(chunk);
-    res.write(chunk);
+    echo(chunk.toString('utf8'));
   });
-  req.on('end', () => {
+  req.once('end', () => {
     res.end();
   });
 }).listen(selfHostingPort, () => {

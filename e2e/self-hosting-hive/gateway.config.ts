@@ -7,7 +7,6 @@ const selfHostingPort = opts.getServicePort('selfHostingHive');
 export const gatewayConfig = defineConfig({
   reporting: {
     type: 'hive',
-    token: 'secret',
     agent: {
       maxRetries: 1,
       maxSize: 1,
