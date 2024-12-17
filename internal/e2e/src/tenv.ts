@@ -469,12 +469,12 @@ export function createTenv(cwd: string): Tenv {
             `wget --spider http://0.0.0.0:${port}/healthcheck`,
           ],
           cmd: [
+            createPortOpt(port),
             ...(supergraph ? ['supergraph', supergraph] : []),
             ...(subgraph ? ['subgraph', subgraph] : []),
             ...(services?.map(({ name, port }) =>
               createServicePortOpt(name, port),
             ) || []),
-            createPortOpt(port),
             ...args,
           ],
           volumes,
@@ -492,8 +492,8 @@ export function createTenv(cwd: string): Tenv {
           ...(services?.map(({ name, port }) =>
             createServicePortOpt(name, port),
           ) || []),
-          createPortOpt(port),
           ...args,
+          createPortOpt(port),
         );
       } /* if (gatewayRunner === 'node') */ else {
         [proc, waitForExit] = await spawn(
