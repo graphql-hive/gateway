@@ -184,4 +184,5 @@ jobs:
           max_attempts: 2
           command: yarn test:e2e
       - name: cat self-hosting-hive gw.log
+        if: always()
         run: cat e2e/self-hosting-hive/gw.log
