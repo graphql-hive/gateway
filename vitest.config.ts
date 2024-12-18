@@ -7,11 +7,7 @@ import { defineConfig } from 'vitest/config';
 //
 // Vite will process inlined modules.
 const inline = [
-  /@graphql-mesh\/utils/,
-  /@graphql-mesh\/runtime/,
-  /@graphql-mesh\/fusion-composition/,
-  /@graphql-mesh\/plugin-hive/,
-  /@graphql-mesh\/transport-rest/,
+  /@graphql-mesh\/.*/,
   /@omnigraph\/.*/,
 ];
 
