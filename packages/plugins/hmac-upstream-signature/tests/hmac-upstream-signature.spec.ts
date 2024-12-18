@@ -154,6 +154,13 @@ describe('useHmacSignatureValidation', () => {
   });
 });
 
+function hashSHA256(secret: string, body: string | undefined) {
+  if (!body) {
+    throw new Error('Body is required');
+  }
+  return createHmac('sha256', secret).update(body).digest('base64');
+}
+
 describe('useHmacUpstreamSignature', () => {
   const requestTrackerPlugin = {
     onParams: vi.fn((() => {}) as Plugin['onParams']),
@@ -230,7 +237,7 @@ describe('useHmacUpstreamSignature', () => {
     expect(upstreamReqParams.extensions?.['addedToPayload']).toBeTruthy();
     // Signature on the upstream call should match when manually validated
     expect(upstreamExtensions['hmac-signature']).toEqual(
-      createHmac('sha256', secret).update(upstreamReqBody).digest('base64'),
+      hashSHA256(secret, upstreamReqBody),
     );
   });
 
@@ -271,9 +278,7 @@ describe('useHmacUpstreamSignature', () => {
     expect(upstreamHmacExtension).toBeDefined();
     const upstreamReqBody = defaultParamsSerializer(upstreamReqParams);
     // Signature on the upstream call should match when manually validated
-    expect(upstreamHmacExtension).toEqual(
-      createHmac('sha256', secret).update(upstreamReqBody).digest('base64'),
-    );
+    expect(upstreamHmacExtension).toEqual(hashSHA256(secret, upstreamReqBody));
   });
 
   it('should allow to customize header name', async () => {
@@ -315,9 +320,7 @@ describe('useHmacUpstreamSignature', () => {
     expect(upstreamHmacExtension).toBeDefined();
     const upstreamReqBody = defaultParamsSerializer(upstreamReqParams);
     // Signature on the upstream call should match when manually validated
-    expect(upstreamHmacExtension).toEqual(
-      createHmac('sha256', secret).update(upstreamReqBody).digest('base64'),
-    );
+    expect(upstreamHmacExtension).toEqual(hashSHA256(secret, upstreamReqBody));
   });
 
   it('should allow to filter upstream calls', async () => {
