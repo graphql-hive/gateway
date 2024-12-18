@@ -1431,7 +1431,8 @@ export function getStitchingOptionsFromSupergraphSdl(
       }
     } else if (
       definition.kind === Kind.DIRECTIVE_DEFINITION &&
-      !definition.name.value.startsWith('join__')
+      !definition.name.value.startsWith('join__') &&
+      !definition.name.value.startsWith('core')
     ) {
       extraDefinitions.push(definition);
     }
