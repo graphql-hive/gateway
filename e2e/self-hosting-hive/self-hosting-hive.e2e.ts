@@ -12,6 +12,7 @@ describe('Self Hosting Hive', () => {
       supergraph: await supergraph(),
       services: [selfHostingHive],
       args: [`--hive-registry-token=${TEST_TOKEN}`],
+      pipeLogs: 'gw.log',
     });
     await expect(
       gw.execute({
