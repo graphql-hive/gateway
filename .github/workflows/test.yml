@@ -183,5 +183,3 @@ jobs:
           timeout_minutes: 10
           max_attempts: 2
           command: yarn test:e2e
-      - name: cat self-hosting-hive gw.log
-        run: cat e2e/self-hosting-hive/gw.log
