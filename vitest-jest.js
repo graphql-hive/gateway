@@ -19,6 +19,9 @@ module.exports = new Proxy(require('@jest/globals'), {
       describeFn.only = function describeOnly(name, ...args) {
         return jestGlobals.describe.only(name, ...args);
       };
+      describeFn.each = function describeEach(table) {
+        return jestGlobals.describe.each(table);
+      }
       return describeFn;
     }
     if (prop === 'it') {
@@ -34,6 +37,9 @@ module.exports = new Proxy(require('@jest/globals'), {
       itFn.only = function itOnly(name, ...args) {
         return jestGlobals.it.only(name, ...args);
       };
+      itFn.each = function itEach(table) {
+        return jestGlobals.it.each(table);
+      }
       return itFn;
     }
     return Reflect.get(jestGlobals, prop, receiver);
