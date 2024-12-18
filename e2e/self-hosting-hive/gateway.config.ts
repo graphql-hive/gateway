@@ -1,7 +1,13 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import { Opts } from '@internal/testing';
+import { boolEnv, Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
+const selfHostingHost =
+  process.env['E2E_GATEWAY_RUNNER'] === 'docker'
+    ? boolEnv('CI')
+      ? '172.17.0.1'
+      : 'host.docker.internal'
+    : 'localhost';
 const selfHostingPort = opts.getServicePort('selfHostingHive');
 
 export const gatewayConfig = defineConfig({
@@ -13,9 +19,9 @@ export const gatewayConfig = defineConfig({
       timeout: 200,
     },
     selfHosting: {
-      applicationUrl: `http://localhost:${selfHostingPort}`,
-      graphqlEndpoint: `http://localhost:${selfHostingPort}/graphql`,
-      usageEndpoint: `http://localhost:${selfHostingPort}/usage`,
+      applicationUrl: `http://${selfHostingHost}:${selfHostingPort}`,
+      graphqlEndpoint: `http://${selfHostingHost}:${selfHostingPort}/graphql`,
+      usageEndpoint: `http://${selfHostingHost}:${selfHostingPort}/usage`,
     },
   },
 });
