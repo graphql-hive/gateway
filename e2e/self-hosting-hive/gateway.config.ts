@@ -1,13 +1,9 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import { boolEnv, Opts } from '@internal/testing';
+import { Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
 const selfHostingHost =
-  process.env['E2E_GATEWAY_RUNNER'] === 'docker'
-    ? boolEnv('CI')
-      ? '172.17.0.1'
-      : 'host.docker.internal'
-    : 'localhost';
+  process.env['E2E_GATEWAY_RUNNER'] === 'docker' ? '172.17.0.1' : 'localhost';
 const selfHostingPort = opts.getServicePort('selfHostingHive');
 
 export const gatewayConfig = defineConfig({
