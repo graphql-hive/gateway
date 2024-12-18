@@ -29,7 +29,7 @@ describe('Supergraphs', () => {
           fieldFilter: (_, __, fieldConfig) =>
             !getDirective(sortedInputSchema, fieldConfig, 'inaccessible')
               ?.length,
-          directiveFilter: typeName =>
+          directiveFilter: (typeName) =>
             !typeName.startsWith('link__') &&
             !typeName.startsWith('join__') &&
             !typeName.startsWith('core__') &&
