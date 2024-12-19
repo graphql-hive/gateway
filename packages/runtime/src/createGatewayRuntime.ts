@@ -709,10 +709,14 @@ export function createGatewayRuntime<
         unifiedGraphManager.getUnifiedGraph(),
         (schema) => {
           if (!schema) {
-            logger.debug(`Readiness check failed: Supergraph cannot be loaded`);
+            logger.debug(
+              `Readiness check failed because supergraph has not been loaded yet or failed to load`,
+            );
             return false;
           }
-          logger.debug(`Readiness check passed: Supergraph loaded`);
+          logger.debug(
+            `Readiness check passed because supergraph has been loaded already`,
+          );
           return true;
         },
         (err) => {
