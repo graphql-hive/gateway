@@ -2547,6 +2547,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive":
+  version: 0.0.0-use.local
+  resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
+  dependencies:
+    "@graphql-hive/gateway": "workspace:*"
+    graphql: "npm:16.9.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation"

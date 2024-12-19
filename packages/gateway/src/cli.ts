@@ -12,6 +12,8 @@ import type {
   GatewayConfigProxy,
   GatewayConfigSubgraph,
   GatewayConfigSupergraph,
+  GatewayGraphOSReportingOptions,
+  GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -47,7 +49,7 @@ export type GatewayCLIConfig = (
   } & GatewayCLIBuiltinPluginConfig;
 
 export interface GatewayCLISupergraphConfig
-  extends Omit<GatewayConfigSupergraph, 'supergraph' | 'cache'> {
+  extends Omit<GatewayConfigSupergraph, 'supergraph' | 'cache' | 'reporting'> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -57,6 +59,17 @@ export interface GatewayCLISupergraphConfig
    */
   // default matches commands/supergraph.ts
   supergraph?: GatewayConfigSupergraph['supergraph'];
+
+  /** Usage reporting options. */
+  reporting?: GatewayCLIHiveReportingOptions | GatewayGraphOSReportingOptions;
+}
+
+export interface GatewayCLIHiveReportingOptions
+  extends Omit<GatewayHiveReportingOptions, 'token'> {
+  /**
+   * Hive registry token for usage metrics reporting.
+   */
+  token?: GatewayHiveReportingOptions['token'];
 }
 
 export interface GatewayCLISubgraphConfig
@@ -325,8 +338,7 @@ export async function run(userCtx: Partial<CLIContext>) {
   };
 
   const { binName, productDescription, version } = ctx;
-  cli = cli.name(binName).description(productDescription);
-  cli.version(version);
+  cli = cli.name(binName).description(productDescription).version(version);
 
   if (cluster.worker?.id) {
     ctx.log = ctx.log.child(`Worker #${cluster.worker.id}`);

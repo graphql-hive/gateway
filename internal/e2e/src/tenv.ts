@@ -10,8 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import { createDeferred } from '@graphql-tools/delegate';
-import { fakePromise } from '@graphql-tools/utils';
+import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import {
   boolEnv,
   createOpt,
@@ -54,7 +53,9 @@ const gatewayRunner = (function getServeRunner() {
       runner,
     )
   ) {
-    throw new Error(`Unsupported E2E gateway runner "${runner}"`);
+    throw new Error(
+      `Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`,
+    );
   }
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
@@ -147,6 +148,7 @@ export interface ServeOptions extends ProcOptions {
     /** "docker" specific options. */
     docker?: Partial<Pick<ContainerOptions, 'volumes' | 'healthcheck'>>;
   };
+  services?: Service[];
 }
 
 export interface Gateway extends Server {
@@ -358,6 +360,7 @@ export function createTenv(cwd: string): Tenv {
         env,
         runner,
         args = [],
+        services,
       } = opts || {};
 
       let proc: Proc,
@@ -390,116 +393,137 @@ export function createTenv(cwd: string): Tenv {
         subgraph = output;
       }
 
-      if (gatewayRunner === 'docker' || gatewayRunner === 'bun-docker') {
-        const volumes: ContainerOptions['volumes'] =
-          runner?.docker?.volumes || [];
-
-        if (supergraph) {
-          supergraph = await handleDockerHostName(supergraph, volumes);
-        }
-        if (subgraph) {
-          subgraph = await handleDockerHostName(subgraph, volumes);
-        }
-
-        for (const configfile of await glob('gateway.config.*', {
-          cwd,
-        })) {
-          volumes.push({
-            host: configfile,
-            container: `/gateway/${path.basename(configfile)}`,
-          });
-        }
-        for (const dbfile of await glob('*.db', { cwd })) {
-          volumes.push({
-            host: dbfile,
-            container: `/gateway/${path.basename(dbfile)}`,
-          });
-        }
-        for (const additionalTypeDefFile of await glob(
-          ['./additionalTypeDefs/*.graphql', './additionalTypeDefs/*.ts'],
-          { cwd },
-        )) {
-          volumes.push({
-            host: additionalTypeDefFile,
-            container: `/gateway/additionalTypeDefs/${path.basename(additionalTypeDefFile)}`,
-          });
-        }
-        const packageJsonExists = await fs
-          .stat(path.join(cwd, 'package.json'))
-          .then(() => true)
-          .catch(() => false);
-        if (packageJsonExists) {
-          volumes.push({
-            host: 'package.json',
-            container: '/gateway/package.json',
-          });
-        }
-
-        const dockerfileExists = await fs
-          .stat(
-            path.join(
-              cwd,
-              gatewayRunner === 'bun-docker'
-                ? 'gateway_bun.Dockerfile'
-                : 'gateway.Dockerfile',
-            ),
-          )
-          .then(() => true)
-          .catch(() => false);
-
-        const cont = await tenv.container({
-          env,
-          name:
-            'gateway-e2e-' +
-            Math.random().toString(32).slice(6) +
-            (gatewayRunner === 'bun-docker' ? '-bun' : ''),
-          image:
-            'ghcr.io/graphql-hive/gateway:' +
-            (dockerfileExists
-              ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
-                `e2e.${path.basename(cwd)}`
-              : 'e2e') +
-            (gatewayRunner === 'bun-docker' ? '-bun' : ''),
-          // TODO: changing port from within gateway.config.ts wont work in docker runner
-          hostPort: port,
-          containerPort: port,
-          healthcheck: runner?.docker?.healthcheck || [
-            'CMD-SHELL',
-            `wget --spider http://0.0.0.0:${port}/healthcheck`,
-          ],
-          cmd: [
-            createPortOpt(port),
-            ...(supergraph ? ['supergraph', supergraph] : []),
-            ...(subgraph ? ['subgraph', subgraph] : []),
-            ...args,
-          ],
-          volumes,
-          pipeLogs,
-        });
-        proc = cont;
-      } else if (gatewayRunner === 'bun') {
-        [proc, waitForExit] = await spawn(
-          { env, cwd, pipeLogs },
-          'npx',
-          'bun',
-          path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
+      function getFullArgs() {
+        return [
+          createPortOpt(port),
           ...(supergraph ? ['supergraph', supergraph] : []),
           ...(subgraph ? ['subgraph', subgraph] : []),
           ...args,
-          createPortOpt(port),
-        );
-      } /* if (gatewayRunner === 'node') */ else {
-        [proc, waitForExit] = await spawn(
-          { env, cwd, pipeLogs },
-          'node',
-          '--import',
-          'tsx',
-          path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
-          ...(supergraph ? ['supergraph', supergraph] : []),
-          ...(subgraph ? ['subgraph', subgraph] : []),
-          ...args,
-          createPortOpt(port),
-        );
+          ...(services?.map(({ name, port }) =>
+            createServicePortOpt(name, port),
+          ) || []),
+        ];
+      }
+
+      switch (gatewayRunner) {
+        case 'bun-docker':
+        case 'docker': {
+          const volumes: ContainerOptions['volumes'] =
+            runner?.docker?.volumes || [];
+
+          if (supergraph) {
+            supergraph = await handleDockerHostName(supergraph, volumes);
+          }
+          if (subgraph) {
+            subgraph = await handleDockerHostName(subgraph, volumes);
+          }
+
+          for (const configfile of await glob('gateway.config.*', {
+            cwd,
+          })) {
+            volumes.push({
+              host: configfile,
+              container: `/gateway/${path.basename(configfile)}`,
+            });
+          }
+          for (const dbfile of await glob('*.db', { cwd })) {
+            volumes.push({
+              host: dbfile,
+              container: `/gateway/${path.basename(dbfile)}`,
+            });
+          }
+          for (const additionalTypeDefFile of await glob(
+            ['./additionalTypeDefs/*.graphql', './additionalTypeDefs/*.ts'],
+            { cwd },
+          )) {
+            volumes.push({
+              host: additionalTypeDefFile,
+              container: `/gateway/additionalTypeDefs/${path.basename(additionalTypeDefFile)}`,
+            });
+          }
+          const packageJsonExists = await fs
+            .stat(path.join(cwd, 'package.json'))
+            .then(() => true)
+            .catch(() => false);
+          if (packageJsonExists) {
+            volumes.push({
+              host: 'package.json',
+              container: '/gateway/package.json',
+            });
+          }
+
+          const dockerfileExists = await fs
+            .stat(
+              path.join(
+                cwd,
+                gatewayRunner === 'bun-docker'
+                  ? 'gateway_bun.Dockerfile'
+                  : 'gateway.Dockerfile',
+              ),
+            )
+            .then(() => true)
+            .catch(() => false);
+
+          const cont = await tenv.container({
+            env,
+            name:
+              'gateway-e2e-' +
+              Math.random().toString(32).slice(6) +
+              (gatewayRunner === 'bun-docker' ? '-bun' : ''),
+            image:
+              'ghcr.io/graphql-hive/gateway:' +
+              (dockerfileExists
+                ? // if the test contains a gateway dockerfile, use it instead of the default e2e image
+                  `e2e.${path.basename(cwd)}`
+                : 'e2e') +
+              (gatewayRunner === 'bun-docker' ? '-bun' : ''),
+            // TODO: changing port from within gateway.config.ts wont work in docker runner
+            hostPort: port,
+            containerPort: port,
+            healthcheck: runner?.docker?.healthcheck || [
+              'CMD-SHELL',
+              `wget --spider http://0.0.0.0:${port}/healthcheck`,
+            ],
+            cmd: getFullArgs(),
+            volumes,
+            pipeLogs,
+          });
+          proc = cont;
+          break;
+        }
+        case 'bun': {
+          [proc, waitForExit] = await spawn(
+            { env, cwd, pipeLogs },
+            'npx',
+            'bun',
+            path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
+            ...getFullArgs(),
+          );
+          break;
+        }
+        case 'node': {
+          [proc, waitForExit] = await spawn(
+            { env, cwd, pipeLogs },
+            'node',
+            '--import',
+            'tsx',
+            path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
+            ...getFullArgs(),
+          );
+          break;
+        }
+        case 'bin': {
+          [proc, waitForExit] = await spawn(
+            { env, cwd, pipeLogs },
+            path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
+            ...getFullArgs(),
+          );
+          break;
+        }
+        default:
+          throw new Error(
+            `Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`,
+          );
       }
 
       const gw: Gateway = {
@@ -740,7 +764,10 @@ export function createTenv(cwd: string): Tenv {
       const ctr = await docker.createContainer({
         name: containerName,
         Image: image,
-        Env: Object.entries(env).map(([name, value]) => `${name}=${value}`),
+        Env: Object.entries({
+          ...process.env,
+          ...env,
+        }).map(([name, value]) => `${name}=${value}`),
         ExposedPorts: {
           [containerPort + '/tcp']: {},
           ...Object.keys(additionalPorts).reduce(
@@ -913,7 +940,7 @@ function spawn(
     stdio: ['ignore', 'pipe', 'pipe'],
     env: Object.entries(env).reduce(
       (acc, [key, val]) => ({ ...acc, [key]: String(val) }),
-      process.env,
+      { ...process.env },
     ),
     shell,
     signal,
@@ -986,7 +1013,9 @@ function spawn(
     // process ended _and_ the stdio streams have been closed
     if (code) {
       exitDeferred.reject(
-        new Error(`Exit code ${code}\n${trimError(stdboth)}`),
+        new Error(
+          `Exit code ${code} from ${cmd} ${args.join(' ')}\n${trimError(stdboth)}`,
+        ),
       );
     } else {
       exitDeferred.resolve();
