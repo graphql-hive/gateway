@@ -1,5 +1,14 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.23
+
+### Patch Changes
+
+- [#357](https://github.com/graphql-hive/gateway/pull/357) [`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17) Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug on setting the default polling interval to 10 seconds
+  So by default, the gateway will poll the schema every 10 seconds, and update the schema if it has changed.
+
+  This PR also contains improvements on logging about polling
+
 ## 0.10.22
 
 ### Patch Changes
