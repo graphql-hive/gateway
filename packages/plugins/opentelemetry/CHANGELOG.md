@@ -1,5 +1,18 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.30
+
+### Patch Changes
+
+- [#352](https://github.com/graphql-hive/gateway/pull/352) [`7a1877a`](https://github.com/graphql-hive/gateway/commit/7a1877a66de082d5a0e4a17d1a715c10773abd77) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.57.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.57.0) (from `^0.56.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.57.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.57.0) (from `^0.56.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.57.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.57.0) (from `^0.56.0`, in `dependencies`)
+
+- Updated dependencies [[`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17), [`122c013`](https://github.com/graphql-hive/gateway/commit/122c0133bea6137b1760b4af064de9aeba53bcc5), [`2f59fce`](https://github.com/graphql-hive/gateway/commit/2f59fce8aece4a326b20d4a9db2ee53773675e70)]:
+  - @graphql-hive/gateway-runtime@1.4.2
+
 ## 1.3.29
 
 ### Patch Changes
