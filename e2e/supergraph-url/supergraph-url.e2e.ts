@@ -3276,3 +3276,26 @@ it('should gateway a schema from a url with pathname and extension', async () =>
     }
   `);
 });
+
+it('should set the default polling interval to 10 seconds', async () => {
+  const cdn = await service('cdn');
+
+  const { execute, getStd } = await gateway({
+    supergraph: `http://0.0.0.0:${cdn.port}`,
+    env: {
+      DEBUG: 1,
+    },
+  });
+
+  await expect(execute({ query: `{ __typename }` })).resolves.toEqual({
+    data: {
+      __typename: 'Query',
+    },
+  });
+
+  const logs = getStd('both');
+
+  expect(logs).toContain(
+    'Starting polling to Supergraph with interval 10 seconds',
+  );
+});

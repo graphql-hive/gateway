@@ -662,7 +662,12 @@ export function createGatewayRuntime<
 
       if (!isDynamicUnifiedGraphSchema(config.supergraph)) {
         // no polling for static schemas
+        logger.debug(`Disabling polling for static supergraph`);
         delete config.pollingInterval;
+      } else if (!config.pollingInterval) {
+        logger.debug(
+          `Polling interval not set for supergraph, if you want to get updates of supergraph, we recommend setting a polling interval`,
+        );
       }
 
       unifiedGraphFetcher = () =>
@@ -1087,10 +1092,6 @@ function isDynamicUnifiedGraphSchema(
     return false;
   }
   if (typeof schema === 'string') {
-    if (isValidPath(schema) && !isUrl(String(schema))) {
-      // local path
-      return false;
-    }
     try {
       // sdl
       parse(schema);

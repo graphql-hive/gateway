@@ -74,7 +74,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         | GatewayHiveCDNOptions
         | GatewayGraphOSManagedFederationOptions = 'supergraph.graphql';
       if (schemaPathOrUrl) {
-        ctx.log.info(`Found schema path or URL: ${schemaPathOrUrl}`);
+        ctx.log.info(`Supergraph will be loaded from ${schemaPathOrUrl}`);
         if (hiveCdnKey) {
           ctx.log.info(`Using Hive CDN key`);
           if (!isUrl(schemaPathOrUrl)) {
