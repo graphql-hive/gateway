@@ -158,6 +158,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ctx.log.info(`Configuring Hive registry reporting`);
         registryConfig = {
           reporting: {
+            ...loadedConfig.reporting,
             type: 'hive',
             token: hiveRegistryToken,
           },
@@ -249,7 +250,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         process.exit(1);
       }
       return runSupergraph(ctx, config);
-    });
+    })
+    .allowUnknownOption(process.env.NODE_ENV === 'test')
+    .allowExcessArguments(process.env.NODE_ENV === 'test');
 
 export type SupergraphConfig = GatewayConfigSupergraph & GatewayCLIConfig;
 
