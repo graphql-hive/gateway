@@ -1,6 +1,5 @@
 import { promises as fsPromises } from 'node:fs';
-import { createServer as createHTTPServer, type Server } from 'node:http';
-import { createServer as createHTTPSServer } from 'node:https';
+import type { Server } from 'node:http';
 import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import type { Extra } from 'graphql-ws/lib/use/ws';
@@ -56,7 +55,8 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     if (sslCredentials.ssl_prefer_low_memory_usage) {
       sslOptionsForNodeHttp.honorCipherOrder = true;
     }
-    server = createHTTPSServer(
+    const { createServer } = await import('node:https');
+    server = createServer(
       {
         ...sslOptionsForNodeHttp,
         maxHeaderSize,
@@ -66,7 +66,8 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     );
   } else {
     protocol = 'http';
-    server = createHTTPServer(
+    const { createServer } = await import('node:http');
+    server = createServer(
       {
         maxHeaderSize,
         requestTimeout,
