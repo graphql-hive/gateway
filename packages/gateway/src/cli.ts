@@ -61,7 +61,7 @@ export interface GatewayCLISupergraphConfig
   supergraph?: GatewayConfigSupergraph['supergraph'];
 
   /** Usage reporting options. */
-  reporting?: GatewayHiveReportingOptions | GatewayGraphOSReportingOptions;
+  reporting?: GatewayCLIHiveReportingOptions | GatewayGraphOSReportingOptions;
 }
 
 export interface GatewayCLIHiveReportingOptions
