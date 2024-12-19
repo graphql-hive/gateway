@@ -185,6 +185,8 @@ export interface GatewayHiveCDNOptions {
 export interface GatewayHiveReportingOptions
   extends Omit<YamlConfig.HivePlugin, 'experimental__persistedDocuments'> {
   type: 'hive';
+  /** GraphQL Hive registry access token. */
+  token: string;
 }
 
 export interface GatewayGraphOSOptions {
