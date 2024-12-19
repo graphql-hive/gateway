@@ -31,6 +31,7 @@ import {
   compareSchemas,
   compareSubgraphNames,
   getOnSubgraphExecute,
+  millisecondsToStr,
   OnDelegationPlanDoneHook,
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -133,6 +134,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
       opts?.onDelegationStageExecuteHooks || [];
+    if (opts.pollingInterval != null) {
+      opts.transportContext?.logger?.debug(
+        `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
+      );
+    }
   }
 
   private cleanup() {
@@ -166,14 +172,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     if (!this.initialUnifiedGraph$) {
       if (this.opts.transportContext?.cache) {
         this.opts.transportContext?.logger?.debug(
-          `Searching for Unified Graph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
+          `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
         );
         this.initialUnifiedGraph$ = mapMaybePromise(
           this.opts.transportContext.cache.get(UNIFIEDGRAPH_CACHE_KEY),
           (cachedUnifiedGraph) => {
             if (cachedUnifiedGraph) {
               this.opts.transportContext?.logger?.debug(
-                'Found Unified Graph in cache',
+                'Found Supergraph in cache',
               );
               return this.handleLoadedUnifiedGraph(cachedUnifiedGraph, true);
             }
@@ -200,14 +206,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       compareSchemas(loadedUnifiedGraph, this.lastLoadedUnifiedGraph)
     ) {
       this.opts.transportContext?.logger?.debug(
-        'Unified Graph has not changed, skipping...',
+        'Supergraph has not been changed, skipping...',
       );
       this.continuePolling();
       return true;
     }
     if (this.lastLoadedUnifiedGraph != null) {
       this.opts.transportContext?.logger?.debug(
-        'Unified Graph changed, updating...',
+        'Supergraph has been changed, updating...',
       );
     }
     if (!doNotCache && this.opts.transportContext?.cache) {
@@ -228,11 +234,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
               60;
           this.opts.transportContext.logger?.debug(
-            `Caching Unified Graph with TTL ${ttl}s`,
+            `Caching Supergraph with TTL ${ttl}s`,
           );
           const logCacheSetError = (e: unknown) => {
             this.opts.transportContext?.logger?.debug(
-              `Unable to store Unified Graph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
+              `Unable to store Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
               e,
             );
           };
@@ -251,7 +257,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           }
         } catch (e) {
           this.opts.transportContext.logger?.error(
-            'Failed to initiate caching of Unified Graph',
+            'Failed to initiate caching of Supergraph',
             e,
           );
         }

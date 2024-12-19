@@ -246,6 +246,7 @@ let cli = new Command()
       '--polling <duration>',
       `schema polling interval in human readable duration (default: ${JSON.stringify(defaultOptions.polling)})`,
     )
+      .default(parseDuration(defaultOptions.polling))
       .env('POLLING')
       .argParser((v) => {
         const interval = parseDuration(v);
