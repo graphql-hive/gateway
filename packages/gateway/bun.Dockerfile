@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.1.41 AS install
+FROM oven/bun:1.1.42 AS install
 
 WORKDIR /install
 
@@ -8,7 +8,7 @@ RUN bun i graphql@^16.9.0
 
 #
 
-FROM oven/bun:1.1.41
+FROM oven/bun:1.1.42
 
 RUN apt-get update && apt-get install -y \
     # for healthchecks
