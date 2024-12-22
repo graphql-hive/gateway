@@ -12557,15 +12557,15 @@ __metadata:
   linkType: hard
 
 "json-stable-stringify@npm:^1.1.1":
-  version: 1.2.0
-  resolution: "json-stable-stringify@npm:1.2.0"
+  version: 1.2.1
+  resolution: "json-stable-stringify@npm:1.2.1"
   dependencies:
     call-bind: "npm:^1.0.8"
     call-bound: "npm:^1.0.3"
     isarray: "npm:^2.0.5"
     jsonify: "npm:^0.0.1"
     object-keys: "npm:^1.1.1"
-  checksum: 10c0/a0b38a4888cf571be15006d1f26ddc06336865f24ae15ab13a6f927d730a4f206b75d5097732e323a1fa301b9feeb828e1b933b4a6365877d85a0abc7624683e
+  checksum: 10c0/e623e7ce89282f089d56454087edb717357e8572089b552fbc6980fb7814dc3943f7d0e4f1a19429a36ce9f4428b6c8ee6883357974457aaaa98daba5adebeea
   languageName: node
   linkType: hard
 
