@@ -2,10 +2,7 @@ import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Opts } from '@internal/testing';
 import { parse } from 'graphql';
-import {
-  createGraphQLError,
-  createYoga,
-} from 'graphql-yoga';
+import { createGraphQLError, createYoga } from 'graphql-yoga';
 
 const opts = Opts(process.argv);
 
@@ -29,10 +26,7 @@ createServer(
       `),
       resolvers: {
         Query: {
-          product: (
-            _: unknown,
-            { id }: { id: string },
-          ) => {
+          product: (_: unknown, { id }: { id: string }) => {
             i++;
             console.log(`${i} attempt`);
             if (lastAttempt && Date.now() - lastAttempt < 1000) {
