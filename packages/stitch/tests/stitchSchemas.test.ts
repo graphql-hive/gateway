@@ -465,40 +465,37 @@ for (const {
               test: 'test',
             };
           },
-          node: {
-            selectionSet: '{ id }',
-            resolve(_parent, args, context, info) {
-              if (args.id.startsWith('p')) {
-                return delegateToSchema({
-                  schema: propertySchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'propertyById',
-                  args,
-                  context,
-                  info,
-                });
-              } else if (args.id.startsWith('b')) {
-                return delegateToSchema({
-                  schema: bookingSchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'bookingById',
-                  args,
-                  context,
-                  info,
-                });
-              } else if (args.id.startsWith('c')) {
-                return delegateToSchema({
-                  schema: bookingSchema,
-                  operation: 'query' as OperationTypeNode,
-                  fieldName: 'customerById',
-                  args,
-                  context,
-                  info,
-                });
-              }
+          node(_parent, args, context, info) {
+            if (args.id.startsWith('p')) {
+              return delegateToSchema({
+                schema: propertySchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'propertyById',
+                args,
+                context,
+                info,
+              });
+            } else if (args.id.startsWith('b')) {
+              return delegateToSchema({
+                schema: bookingSchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'bookingById',
+                args,
+                context,
+                info,
+              });
+            } else if (args.id.startsWith('c')) {
+              return delegateToSchema({
+                schema: bookingSchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'customerById',
+                args,
+                context,
+                info,
+              });
+            }
 
-              throw new Error('invalid id');
-            },
+            throw new Error('invalid id');
           },
           async nodes(_parent, _args, context, info) {
             const bookings = await delegateToSchema({
@@ -1465,40 +1462,37 @@ bookingById(id: "b1") {
                 test: 'test',
               };
             },
-            node: {
-              selectionSet: '{ id }',
-              resolve(_parent, args, context, info) {
-                if (args.id.startsWith('p')) {
-                  return delegateToSchema({
-                    schema: propertySchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'propertyById',
-                    args,
-                    context,
-                    info,
-                  });
-                } else if (args.id.startsWith('b')) {
-                  return delegateToSchema({
-                    schema: bookingSchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'bookingById',
-                    args,
-                    context,
-                    info,
-                  });
-                } else if (args.id.startsWith('c')) {
-                  return delegateToSchema({
-                    schema: bookingSchema,
-                    operation: 'query' as OperationTypeNode,
-                    fieldName: 'customerById',
-                    args,
-                    context,
-                    info,
-                  });
-                }
+            node(_parent, args, context, info) {
+              if (args.id.startsWith('p')) {
+                return delegateToSchema({
+                  schema: propertySchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'propertyById',
+                  args,
+                  context,
+                  info,
+                });
+              } else if (args.id.startsWith('b')) {
+                return delegateToSchema({
+                  schema: bookingSchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'bookingById',
+                  args,
+                  context,
+                  info,
+                });
+              } else if (args.id.startsWith('c')) {
+                return delegateToSchema({
+                  schema: bookingSchema,
+                  operation: 'query' as OperationTypeNode,
+                  fieldName: 'customerById',
+                  args,
+                  context,
+                  info,
+                });
+              }
 
-                throw new Error('invalid id');
-              },
+              throw new Error('invalid id');
             },
           },
         };
@@ -3634,4 +3628,80 @@ it('should respect selectionSet in the additional resolvers to override a field'
       },
     },
   });
+});
+
+const subSchema = buildSchema(/* GraphQL */ `
+  type Query {
+    foo: Foo
+  }
+
+  type Foo {
+    id: ID!
+  }
+`);
+it('errors when an invalid selection set is given in additional resolvers', () => {
+  expect(() =>
+    stitchSchemas({
+      subschemas: [subSchema],
+      resolvers: {
+        Foo: {
+          bar: {
+            selectionSet: '{ barId }',
+            resolve() {
+              throw new Error('Should not be called');
+            },
+          },
+        },
+      },
+    }),
+  ).toThrowError(
+    `In the additional resolver "Foo.bar", the required selection set "{ barId }" does not conform to the schema.\n` +
+      `The field "barId" doesn't exist on the type "Foo".\n` +
+      `Make sure the fields inside the "selectionSet" are valid fields of the type "Foo".`,
+  );
+});
+
+it('errors when an invalid selection set is given in the type merging configuration', () => {
+  expect(() =>
+    stitchSchemas({
+      subschemas: [
+        {
+          schema: subSchema,
+          merge: {
+            Foo: {
+              selectionSet: '{ barId }',
+            },
+          },
+        },
+      ],
+    }),
+  ).toThrowError(
+    `In the type merging configuration "Foo", the required selection set { barId } does not conform to the schema.\n` +
+      `The field "barId" doesn't exist on the type "Foo".\n` +
+      `Make sure the fields inside the "selectionSet" are valid fields of the type "Foo".`,
+  );
+});
+it('errors when an invalid selection set is given in the field merging configuration', () => {
+  expect(() =>
+    stitchSchemas({
+      subschemas: [
+        {
+          schema: subSchema,
+          merge: {
+            Foo: {
+              fields: {
+                id: {
+                  selectionSet: '{ barId }',
+                },
+              },
+            },
+          },
+        },
+      ],
+    }),
+  ).toThrowError(
+    `In the type merging configuration for "Foo.id", the required selection set { barId } does not conform to the schema.\n` +
+      `The field "barId" doesn't exist on the type "Foo".\n` +
+      `Make sure the fields inside the "selectionSet" are valid fields of the type "Foo".`,
+  );
 });
