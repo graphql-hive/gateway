@@ -1,5 +1,6 @@
 import { createGraphQLError, mapMaybePromise } from '@graphql-tools/utils';
 import { crypto, TextEncoder } from '@whatwg-node/fetch';
+import { GraphQLError } from 'graphql';
 
 export function createAbortErrorReason() {
   return new Error('Executor was disposed.');
@@ -9,8 +10,18 @@ export function createGraphQLErrorForAbort(
   reason: any,
   extensions?: Record<string, any>,
 ) {
+  if (reason instanceof GraphQLError) {
+    return reason;
+  }
+  if (reason?.name === 'TimeoutError') {
+    return createGraphQLError(reason.message, {
+      extensions,
+      originalError: reason,
+    });
+  }
   return createGraphQLError('The operation was aborted. reason: ' + reason, {
     extensions,
+    originalError: reason,
   });
 }
 

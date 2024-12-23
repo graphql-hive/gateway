@@ -248,30 +248,33 @@ declare module 'graphql' {
  * with `onSubgraphExecuteHooks` to hook into the execution phase of subgraphs
  */
 export function wrapExecutorWithHooks({
-  executor,
+  executor: baseExecutor,
   onSubgraphExecuteHooks,
   subgraphName,
   transportEntryMap,
   getSubgraphSchema,
   transportContext,
 }: WrapExecuteWithHooksOptions): Executor {
-  return function executorWithHooks(executionRequest: ExecutionRequest) {
-    executionRequest.info = executionRequest.info || ({} as GraphQLResolveInfo);
-    executionRequest.info.executionRequest = executionRequest;
+  return function executorWithHooks(baseExecutionRequest: ExecutionRequest) {
+    baseExecutionRequest.info =
+      baseExecutionRequest.info || ({} as GraphQLResolveInfo);
+    baseExecutionRequest.info.executionRequest = baseExecutionRequest;
     const requestId =
-      executionRequest.context?.request &&
-      requestIdByRequest.get(executionRequest.context.request);
+      baseExecutionRequest.context?.request &&
+      requestIdByRequest.get(baseExecutionRequest.context.request);
     let execReqLogger = transportContext?.logger;
     if (execReqLogger) {
       if (requestId) {
         execReqLogger = execReqLogger.child(requestId);
       }
-      loggerForExecutionRequest.set(executionRequest, execReqLogger);
+      loggerForExecutionRequest.set(baseExecutionRequest, execReqLogger);
     }
     execReqLogger = execReqLogger?.child?.(subgraphName);
     if (onSubgraphExecuteHooks.length === 0) {
-      return executor(executionRequest);
+      return baseExecutor(baseExecutionRequest);
     }
+    let executor = baseExecutor;
+    let executionRequest = baseExecutionRequest;
     const onSubgraphExecuteDoneHooks: OnSubgraphExecuteDoneHook[] = [];
     return mapMaybePromise(
       iterateAsync(

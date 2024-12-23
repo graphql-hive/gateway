@@ -248,7 +248,6 @@ export function buildHTTPExecutor(
       request: {
         method,
       },
-      response: {},
     };
 
     const query = printFn(request.document);
@@ -351,6 +350,7 @@ export function buildHTTPExecutor(
         }
       })
         .then((fetchResult: Response): any => {
+          upstreamErrorExtensions.response ||= {};
           upstreamErrorExtensions.response.status = fetchResult.status;
           upstreamErrorExtensions.response.statusText = fetchResult.statusText;
           Object.defineProperty(upstreamErrorExtensions.response, 'headers', {
@@ -381,6 +381,7 @@ export function buildHTTPExecutor(
         })
         .then((result) => {
           if (typeof result === 'string') {
+            upstreamErrorExtensions.response ||= {};
             upstreamErrorExtensions.response.body = result;
             if (result) {
               try {
@@ -566,10 +567,11 @@ function coerceFetchError(
       extensions: upstreamErrorExtensions,
       originalError: e,
     });
-  } else if (e.name === 'AbortError' && signal?.reason) {
-    return createGraphQLErrorForAbort(signal?.reason, {
-      extensions: upstreamErrorExtensions,
-    });
+  } else if (e.name === 'AbortError') {
+    return createGraphQLErrorForAbort(
+      signal?.reason || e,
+      upstreamErrorExtensions,
+    );
   } else if (e.message) {
     return createGraphQLError(e.message, {
       extensions: upstreamErrorExtensions,
@@ -591,7 +593,7 @@ interface UpstreamErrorExtensions {
     method: string;
     body?: unknown;
   };
-  response: {
+  response?: {
     status?: number;
     statusText?: string;
     headers?: Record<string, string>;
