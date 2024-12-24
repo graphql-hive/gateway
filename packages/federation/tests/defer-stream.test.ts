@@ -3,11 +3,7 @@ import { inspect } from 'util';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import {
-  asArray,
-  ExecutionResult,
-  mergeDeep,
-} from '@graphql-tools/utils';
+import { asArray, ExecutionResult, mergeDeep } from '@graphql-tools/utils';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import {
   assertAsyncIterable,
