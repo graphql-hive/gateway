@@ -19,6 +19,10 @@ export const convertE2EToExampleConfigSchema = z.object({
         glob(path.join(arg, '*.e2e.ts')).then((paths) => paths.length > 0),
       'Directory does not contain an E2E test (no "*.e2e.ts" file)',
     ),
+  dest: z
+    .string()
+    .refine(exists, 'Directory does not exist')
+    .transform((arg) => path.resolve(arg)),
 });
 
 export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
@@ -35,18 +39,31 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
     portForService = result.portForService;
-    // TODO: write result.source
+    await fs.writeFile(path.join(config.dest, 'mesh.config.ts'), result.source);
   }
 
   for (const serviceFile of await glob(
     path.join(config.e2eDir, 'services/**/*.ts'),
   )) {
+    const relativeServiceFile = path.relative(config.e2eDir, serviceFile);
     console.group(
-      `service file "${path.relative(config.e2eDir, serviceFile)}" found, transforming...`,
+      `service file "${relativeServiceFile}" found, transforming...`,
     );
     using _ = defer(() => console.groupEnd());
 
-    transformService(await fs.readFile(serviceFile, 'utf8'), portForService);
+    const result = transformService(
+      await fs.readFile(serviceFile, 'utf8'),
+      portForService,
+    );
+
+    await fs.mkdir(path.join(config.dest, path.dirname(relativeServiceFile)), {
+      recursive: true,
+    });
+
+    await fs.writeFile(
+      path.join(config.dest, relativeServiceFile),
+      result.source,
+    );
   }
 }
 
