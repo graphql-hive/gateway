@@ -3062,8 +3062,11 @@ __metadata:
   resolution: "@graphql-hive/gateway-abort-signal-any@workspace:packages/abort-signal-any"
   dependencies:
     "@graphql-tools/utils": "npm:^10.7.0"
+    graphql: "npm:^16.9.0"
     pkgroll: "npm:2.6.0"
     tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
