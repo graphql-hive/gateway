@@ -3,7 +3,7 @@ import path from 'node:path';
 import { glob } from 'glob';
 import j from 'jscodeshift';
 import z from 'zod';
-import { exists } from './utils';
+import { defer, exists, loc } from './utils';
 
 export type ConvertE2EToExampleConfig = z.infer<
   typeof convertE2EToExampleConfigSchema
@@ -26,7 +26,9 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
   const meshConfigTsFile = path.join(config.e2eDir, 'mesh.config.ts');
   if (await exists(meshConfigTsFile)) {
-    console.log(`"mesh.config.ts" found, transforming...`);
+    console.group(`"mesh.config.ts" found, transforming...`);
+    using _ = defer(() => console.groupEnd());
+
     transformMeshConfigFile(await fs.readFile(meshConfigTsFile, 'utf8'));
   }
 }
@@ -47,11 +49,21 @@ function transformMeshConfigFile(source: string) {
         value: '@internal/testing',
       },
     })
-    .forEach((p) => {
-      p.node.specifiers
+    .forEach((path) => {
+      console.group(
+        `Processing "@internal/testing" import at ${loc(path)}, will remove`,
+      );
+      using _ = defer(() => console.groupEnd());
+
+      path.node.specifiers
         // import { Opts } from '@internal/testing'
         ?.filter((s) => 'imported' in s && s.imported.name === 'Opts')
-        .forEach((s) => {
+        .forEach((s, i) => {
+          console.group(
+            `Processing imported "Opts" #${i + 1} (as "${s.local!.name}")`,
+          );
+          using _ = defer(() => console.groupEnd());
+
           root
             // const opts = Opts()
             .find(j.VariableDeclarator, {
@@ -61,33 +73,44 @@ function transformMeshConfigFile(source: string) {
                 },
               },
             })
-            .forEach((p) => {
-              if (p.node.id.type !== 'Identifier') return;
+            .forEach((path) => {
+              if (path.node.id.type !== 'Identifier') return;
+
+              const variableName = path.node.id.name;
+              console.group(
+                `Variable "${variableName}" declared with "Opts()" at ${loc(path)}`,
+              );
+              using _ = defer(() => console.groupEnd());
 
               root
                 // opts.getServicePort()
                 .find(j.CallExpression, {
                   callee: {
                     object: {
-                      name: p.node.id.name,
+                      name: variableName,
                     },
                     property: {
                       name: 'getServicePort',
                     },
                   },
                 })
-                .forEach((p, i) => {
-                  const arg0 = p.node.arguments[0];
+                .forEach((path, i) => {
+                  const arg0 = path.node.arguments[0];
                   if (arg0?.type !== 'Literal') {
                     throw new Error(
                       'TODO: get variable value when literal is not used in "opts.getServicePort" argument',
                     );
                   }
 
+                  const serviceName = arg0.value!.toString();
                   const port = startingServicePort + i;
-                  portForService[arg0.value!.toString()] = port;
+                  portForService[serviceName] = port;
 
-                  j(p).replaceWith(j.literal(port)); // replace opts.portForService('foo') with port literal
+                  console.log(
+                    `Replacing "${variableName}.getServicePort('${serviceName}')" with "${port}" at ${loc(path, true)}`,
+                  );
+
+                  j(path).replaceWith(j.literal(port)); // replace opts.portForService('foo') with port literal
                 });
             })
             .remove(); // remove all const opts = Opts()
