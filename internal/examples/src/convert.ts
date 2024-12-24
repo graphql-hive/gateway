@@ -64,6 +64,44 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     await fs.mkdir(path.dirname(dist), { recursive: true });
     await fs.writeFile(dist, result.source);
   }
+
+  {
+    console.group('Transforming package.json...');
+    using _ = defer(() => console.groupEnd());
+
+    const packageJson = JSON.parse(
+      await fs.readFile(path.join(config.e2eDir, 'package.json'), 'utf8'),
+    );
+
+    console.log('Adding name and scripts');
+    packageJson.name = `@gateway/${path.basename(config.dest)}`;
+    packageJson.scripts = {
+      start: 'mesh-compose && hive-gateway supergraph',
+    };
+
+    const gatewayVersion = JSON.parse(
+      await fs.readFile(
+        path.resolve(
+          import.meta.dirname,
+          '..',
+          '..',
+          '..',
+          'packages',
+          'gateway',
+          'package.json',
+        ),
+        'utf8',
+      ),
+    ).version;
+    console.log(
+      `Adding "@graphql-hive/gateway@^${gatewayVersion}" as dependency`,
+    );
+    packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
+
+    const dist = path.join(config.dest, 'package.json');
+    console.log(`Writing "${dist}"`);
+    await fs.writeFile(dist, JSON.stringify(packageJson, null, '  '));
+  }
 }
 
 interface PortForService {
