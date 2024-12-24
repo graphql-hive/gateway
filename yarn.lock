@@ -4558,6 +4558,8 @@ __metadata:
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"
     zod: "npm:^3.24.1"
+  bin:
+    examples: ./src/bin.ts
   languageName: unknown
   linkType: soft
 
