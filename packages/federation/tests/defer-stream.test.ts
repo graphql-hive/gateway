@@ -11,7 +11,7 @@ import {
   mergeDeep,
 } from '@graphql-tools/utils';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
-import { assertAsyncIterable } from '@internal/testing';
+import { assertAsyncIterable, composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema, parse, print } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import _ from 'lodash';
@@ -173,20 +173,10 @@ describe('Defer/Stream', () => {
   let schema: GraphQLSchema;
   let finalResult: ExecutionResult;
   beforeAll(async () => {
-    const { supergraphSdl } = await new IntrospectAndCompose({
-      subgraphs: [
-        { name: 'users', url: 'http://localhost:4001/graphql' },
-        { name: 'posts', url: 'http://localhost:4002/graphql' },
-      ],
-    }).initialize({
-      update() {},
-      healthCheck: () => fakePromise(undefined),
-      getDataSource({ name }) {
-        if (name === 'users') return new LocalGraphQLDataSource(usersSubgraph);
-        if (name === 'posts') return new LocalGraphQLDataSource(postsSubgraph);
-        throw new Error(`Unknown subgraph: ${name}`);
-      },
-    });
+    const supergraphSdl = await composeLocalSchemasWithApollo([
+      { name: 'users', schema: usersSubgraph },
+      { name: 'posts', schema: postsSubgraph },
+    ])
     schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {

@@ -1,12 +1,11 @@
-import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { fakePromise } from '@graphql-tools/utils';
 import { createPubSub } from '@graphql-yoga/subscription';
 import {
   assertAsyncIterable,
   assertSingleExecutionValue,
+  composeLocalSchemasWithApollo,
 } from '@internal/testing';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
@@ -96,31 +95,16 @@ describe('Subscriptions in Federation', () => {
         },
       },
     });
-    const { supergraphSdl, cleanup } = await new IntrospectAndCompose({
-      subgraphs: [
-        {
-          name: 'posts',
-          url: 'http://localhost:4001',
-        },
-        {
-          name: 'comments',
-          url: 'http://localhost:4002',
-        },
-      ],
-    }).initialize({
-      update() {},
-      healthCheck: () => fakePromise(undefined),
-      getDataSource({ name }) {
-        if (name === 'posts') {
-          return new LocalGraphQLDataSource(postsSchema);
-        }
-        if (name === 'comments') {
-          return new LocalGraphQLDataSource(commentsSchema);
-        }
-        throw new Error(`Unknown subgraph: ${name}`);
+    const supergraphSdl = await composeLocalSchemasWithApollo([
+      {
+        name: 'posts',
+        schema: postsSchema,
       },
-    });
-    await cleanup();
+      {
+        name: 'comments',
+        schema: commentsSchema,
+      },
+    ])
     const schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {
