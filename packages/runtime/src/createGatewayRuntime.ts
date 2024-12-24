@@ -1022,6 +1022,7 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
+    // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
     logging: logger,
     plugins: [
@@ -1066,6 +1067,7 @@ export function createGatewayRuntime<
     maskedErrors: config.maskedErrors,
     healthCheckEndpoint: config.healthCheckEndpoint || '/healthcheck',
     landingPage: landingPageRenderer,
+    disposeOnProcessTerminate: true,
   });
 
   fetchAPI ||= yoga.fetchAPI;
