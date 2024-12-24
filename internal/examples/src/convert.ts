@@ -39,7 +39,9 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
     portForService = result.portForService;
-    await fs.writeFile(path.join(config.dest, 'mesh.config.ts'), result.source);
+    const dist = path.join(config.dest, 'mesh.config.ts');
+    console.log(`Writing "${dist}"`);
+    await fs.writeFile(dist, result.source);
   }
 
   for (const serviceFile of await glob(
@@ -56,14 +58,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       portForService,
     );
 
-    await fs.mkdir(path.join(config.dest, path.dirname(relativeServiceFile)), {
-      recursive: true,
-    });
+    const dist = path.join(config.dest, relativeServiceFile);
+    console.log(`Writing "${dist}"`);
 
-    await fs.writeFile(
-      path.join(config.dest, relativeServiceFile),
-      result.source,
-    );
+    await fs.mkdir(path.dirname(dist), { recursive: true });
+    await fs.writeFile(dist, result.source);
   }
 }
 
