@@ -746,7 +746,7 @@ export function createTenv(cwd: string): Tenv {
               'destroy' in imageStream &&
               typeof imageStream.destroy === 'function'
             ) {
-              imageStream.destroy();
+              imageStream.destroy(ctrl.signal.reason);
             }
           });
           await new Promise((resolve, reject) => {
