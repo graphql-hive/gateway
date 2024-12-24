@@ -1,4 +1,4 @@
-import { registerAbortSignalListener } from "@graphql-tools/utils";
+import { registerAbortSignalListener } from '@graphql-tools/utils';
 
 export type AbortSignalFromAny = AbortSignal & {
   signals: Set<AbortSignal>;
@@ -33,7 +33,7 @@ export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
   }
   const ctrl = new AbortController();
   function onAbort(this: AbortSignal, ev?: Event) {
-    const signal = this || ev?.target as AbortSignal;
+    const signal = this || (ev?.target as AbortSignal);
     ctrl.abort(signal?.reason);
   }
   for (const signal of signals) {

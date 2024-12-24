@@ -1,3 +1,4 @@
+import { registerAbortSignalListener } from '@graphql-tools/utils';
 import { createDisposableServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import {
@@ -8,7 +9,6 @@ import {
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
-import { registerAbortSignalListener } from '@graphql-tools/utils';
 
 describe('Upstream Cancellation', () => {
   it('cancels upstream requests when the client cancels', async () => {

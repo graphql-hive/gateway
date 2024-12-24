@@ -74,7 +74,9 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
                   [Symbol.asyncIterator]() {
                     const iterator = result[Symbol.asyncIterator]();
                     if (iterator.return) {
-                      registerAbortSignalListener(timeoutSignal, () => iterator.return?.(timeoutSignal.reason));
+                      registerAbortSignalListener(timeoutSignal, () =>
+                        iterator.return?.(timeoutSignal.reason),
+                      );
                     }
                     return iterator;
                   },

@@ -225,7 +225,7 @@ export default {
         if (signal) {
           registerAbortSignalListener(signal, () => {
             stop(signal?.reason);
-          })
+          });
         }
         pushFn = push;
         stopSubscription = stop;
