@@ -132,24 +132,6 @@ export type SerializedRequest = {
 
 export type HeadersConfig = Record<string, string>;
 
-// To prevent event listener warnings
-function createSignalWrapper(signal: AbortSignal): AbortSignal {
-  const listeners = new Set<EventListener>();
-  signal.onabort = (event) => {
-    for (const listener of listeners) {
-      listener(event);
-    }
-  };
-  return Object.assign(signal, {
-    addEventListener(_type: 'abort', listener: EventListener) {
-      listeners.add(listener);
-    },
-    removeEventListener(_type: 'abort', listener: EventListener) {
-      listeners.delete(listener);
-    },
-  });
-}
-
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
     fetch: SyncFetchFn;
@@ -177,13 +159,12 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   const disposeCtrl = new AbortController();
-  const sharedSignal = createSignalWrapper(disposeCtrl.signal);
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
   ) => {
-    if (sharedSignal.aborted) {
-      return createResultForAbort(sharedSignal.reason);
+    if (disposeCtrl.signal.aborted) {
+      return createResultForAbort(disposeCtrl.signal.reason);
     }
     const fetchFn = request.extensions?.fetch ?? options?.fetch ?? defaultFetch;
     let method = request.extensions?.method || options?.method;
@@ -230,7 +211,7 @@ export function buildHTTPExecutor(
       request.extensions = restExtensions;
     }
 
-    const signals = [sharedSignal];
+    const signals = [disposeCtrl.signal];
     const signalFromRequest = request.signal || request.info?.signal;
     if (signalFromRequest) {
       if (signalFromRequest.aborted) {
@@ -242,7 +223,7 @@ export function buildHTTPExecutor(
       signals.push(AbortSignal.timeout(options.timeout));
     }
 
-    const signal = abortSignalAny(signals);
+    const signal = signals.length > 1 ? abortSignalAny(signals) : signals[0];
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
       request: {
@@ -500,8 +481,8 @@ export function buildHTTPExecutor(
       function retryAttempt():
         | PromiseLike<ExecutionResult<any>>
         | ExecutionResult<any> {
-        if (sharedSignal.aborted) {
-          return createResultForAbort(sharedSignal.reason);
+        if (disposeCtrl.signal.aborted) {
+          return createResultForAbort(disposeCtrl.signal.reason);
         }
         attempt++;
         if (attempt > options!.retry!) {

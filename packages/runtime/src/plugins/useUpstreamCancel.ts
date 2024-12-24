@@ -1,50 +1,72 @@
-import {
-  abortSignalAny,
-  isAbortSignalFromAny,
-} from '@graphql-hive/gateway-abort-signal-any';
+import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import { GraphQLResolveInfo } from '@graphql-tools/utils';
 import type { GatewayPlugin } from '../types';
 
 export function useUpstreamCancel(): GatewayPlugin {
   return {
-    onFetch({ context, options, executionRequest, info }) {
-      const signals: AbortSignal[] = [];
+    onFetch({ context, options, setOptions, executionRequest, info }) {
+      const signals = new Set<AbortSignal>();
+      // Add signal from the downstream connection
       if (context?.request?.signal) {
-        signals.push(context.request.signal);
+        signals.add(context.request.signal);
       }
-      const execRequestSignal =
-        executionRequest?.signal || executionRequest?.info?.signal;
-      if (execRequestSignal) {
-        signals.push(execRequestSignal);
+      // Add upstream execution signal
+      if (executionRequest?.signal) {
+        signals.add(executionRequest.signal);
       }
+      // Add downstream execution signal (might be changed)
+      if (executionRequest?.info?.signal) {
+        signals.add(executionRequest.info.signal);
+      }
+      // Add downstream execution signal from the downstream execution resolve info
       const signalInInfo = (info as GraphQLResolveInfo)?.signal;
       if (signalInInfo) {
-        signals.push(signalInInfo);
+        signals.add(signalInInfo);
       }
-      if (isAbortSignalFromAny(options.signal)) {
-        options.signal.addSignals(signals);
-      } else {
-        if (options.signal) {
-          signals.push(options.signal);
-        }
-        options.signal = abortSignalAny(signals);
+      // Add existing signal
+      if (options.signal) {
+        signals.add(options.signal);
+      }
+      // If nothing has changed, don't set the signal
+      if (options.signal && signals.size === 1 && signals.has(options.signal)) {
+        return;
+      }
+      // If there are multiple signals, create a new signal that listens to all of them
+      if (signals.size > 0) {
+        setOptions({
+          ...options,
+          signal: abortSignalAny(signals),
+        });
       }
     },
-    onSubgraphExecute({ executionRequest }) {
-      const signals: AbortSignal[] = [];
-      if (executionRequest.info?.signal) {
-        signals.push(executionRequest.info.signal);
-      }
+    onSubgraphExecute({ executionRequest, setExecutionRequest }) {
+      const signals = new Set<AbortSignal>();
+      // Add signal from the downstream connection
       if (executionRequest.context?.request?.signal) {
-        signals.push(executionRequest.context.request.signal);
+        signals.add(executionRequest.context.request.signal);
       }
-      if (isAbortSignalFromAny(executionRequest.signal)) {
-        executionRequest.signal.addSignals(signals);
-      } else {
-        if (executionRequest.signal) {
-          signals.push(executionRequest.signal);
-        }
-        executionRequest.signal = abortSignalAny(signals);
+      // Add upstream signal
+      if (executionRequest.info?.signal) {
+        signals.add(executionRequest.info.signal);
+      }
+      // Add existing signal
+      if (executionRequest.signal) {
+        signals.add(executionRequest.signal);
+      }
+      // If nothing has changed, don't set the signal
+      if (
+        executionRequest.signal &&
+        signals.size === 1 &&
+        signals.has(executionRequest.signal)
+      ) {
+        return;
+      }
+      // If there are multiple signals, create a new signal that listens to all of them
+      if (signals.size > 0) {
+        setExecutionRequest({
+          ...executionRequest,
+          signal: abortSignalAny(signals),
+        });
       }
     },
   };
