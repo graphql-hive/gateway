@@ -60,7 +60,7 @@ export interface UpstreamErrorExtensions {
     method?: string;
     body?: unknown;
   };
-  response: {
+  response?: {
     status?: number;
     statusText?: string;
     headers?: Record<string, string>;

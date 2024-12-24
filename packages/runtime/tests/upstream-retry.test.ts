@@ -12,6 +12,7 @@ describe('Upstream Retry', () => {
   it('respects \`maxRetries\`', async () => {
     let attempts = 0;
     let maxRetries = 2;
+    const retryDelay = 100;
     const failUntil = 3;
     const upstreamSchema = createSchema({
       typeDefs: /* GraphQL */ `
@@ -63,7 +64,7 @@ describe('Upstream Retry', () => {
       },
       upstreamRetry: () => ({
         maxRetries,
-        retryDelay: 100,
+        retryDelay,
       }),
     });
     const res = await gateway.fetch('http://localhost:4000/graphql', {

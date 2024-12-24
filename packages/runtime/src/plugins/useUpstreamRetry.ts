@@ -82,9 +82,10 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
             }
             // If there are errors that are not original GraphQL errors, retry
             if (
-              !isAsyncIterable(executionResult) &&
-              executionResult.errors?.length &&
-              !executionResult.errors.some(isOriginalGraphQLError)
+              !executionResult ||
+              (!isAsyncIterable(executionResult) &&
+                executionResult.errors?.length &&
+                executionResult.errors.some((e) => !isOriginalGraphQLError(e)))
             ) {
               return true;
             }
@@ -93,18 +94,18 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         } = optsForReq;
         if (maxRetries > 0) {
           setExecutor(function (executionRequest: ExecutionRequest) {
-            let retries = maxRetries + 1;
+            let attemptsLeft = maxRetries + 1;
             let executionResult: MaybeAsyncIterable<ExecutionResult>;
             let currRetryDelay = retryDelay;
             function retry(): MaybePromise<
               MaybeAsyncIterable<ExecutionResult>
             > {
-              retries--;
               try {
-                if (retries < 0) {
+                if (attemptsLeft <= 0) {
                   return executionResult;
                 }
                 const requestTime = Date.now();
+                attemptsLeft--;
                 return mapMaybePromise(
                   executor(executionRequest),
                   (currRes) => {
@@ -112,6 +113,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                     let retryAfterSecondsFromHeader: number | undefined;
                     const response =
                       executionRequestResponseMap.get(executionRequest);
+                    // Remove the response from the map after used so we don't see it again
+                    executionRequestResponseMap.delete(executionRequest);
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
@@ -142,17 +145,17 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                         timeouts.add(timeout);
                       });
                     }
-                    return currRes;
+                    return executionResult;
                   },
                   (e) => {
-                    if (retries < 0) {
+                    if (attemptsLeft <= 0) {
                       throw e;
                     }
                     return retry();
                   },
                 );
               } catch (e) {
-                if (retries < 0) {
+                if (attemptsLeft <= 0) {
                   throw e;
                 }
                 return retry();
