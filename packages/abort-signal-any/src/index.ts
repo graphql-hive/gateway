@@ -1,3 +1,5 @@
+import { registerAbortSignalListener } from '@graphql-tools/utils';
+
 export type AbortSignalFromAny = AbortSignal & {
   signals: Set<AbortSignal>;
   addSignals(signals: Iterable<AbortSignal>): void;
@@ -30,15 +32,12 @@ export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
     return undefined;
   }
   const ctrl = new AbortController();
-  function onAbort(this: AbortSignal, ev: Event) {
-    const signal = (ev.target as AbortSignal) || this;
-    ctrl.abort(signal.reason);
-    for (const signal of signals) {
-      signal.removeEventListener('abort', onAbort);
-    }
+  function onAbort(this: AbortSignal, ev?: Event) {
+    const signal = this || (ev?.target as AbortSignal);
+    ctrl.abort(signal?.reason);
   }
   for (const signal of signals) {
-    signal.addEventListener('abort', onAbort, { once: true });
+    registerAbortSignalListener(signal, onAbort);
   }
   Object.defineProperties(ctrl.signal, {
     signals: { value: signals },
@@ -49,13 +48,13 @@ export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
             for (const childSignal of signal.signals) {
               if (!signals.has(childSignal)) {
                 signals.add(childSignal);
-                childSignal.addEventListener('abort', onAbort, { once: true });
+                registerAbortSignalListener(childSignal, onAbort);
               }
             }
           } else {
             if (!signals.has(signal)) {
               signals.add(signal);
-              signal.addEventListener('abort', onAbort, { once: true });
+              registerAbortSignalListener(signal, onAbort);
             }
           }
         }

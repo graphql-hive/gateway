@@ -3,6 +3,7 @@ import {
   ExecutionRequest,
   getOperationASTFromRequest,
   memoize1,
+  registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { print } from 'graphql';
@@ -100,13 +101,11 @@ export function buildGraphQLWSExecutor(
       operationName,
       extensions,
     });
-    signal?.addEventListener(
-      'abort',
-      () => {
+    if (iterableIterator.return && signal) {
+      registerAbortSignalListener(signal, () => {
         iterableIterator.return?.();
-      },
-      { once: true },
-    );
+      });
+    }
     if (operationType === 'subscription') {
       return iterableIterator;
     }

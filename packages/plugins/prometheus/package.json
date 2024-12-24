@@ -48,7 +48,7 @@
     "@graphql-mesh/cross-helpers": "^0.4.9",
     "@graphql-mesh/types": "^0.103.6",
     "@graphql-mesh/utils": "^0.103.6",
-    "@graphql-tools/utils": "^10.6.2",
+    "@graphql-tools/utils": "^10.7.0",
     "@graphql-yoga/plugin-prometheus": "^6.5.3",
     "@whatwg-node/disposablestack": "^0.0.5",
     "prom-client": "^15.0.0",
