@@ -1,7 +1,6 @@
-import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { fakePromise } from '@graphql-tools/utils';
 import { accounts, inventory, products, reviews } from '@internal/e2e';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { DocumentNode, GraphQLSchema } from 'graphql';
 
 const services = {
@@ -26,23 +25,5 @@ export function getServiceInputs() {
 }
 
 export async function getSupergraph() {
-  const serviceInputs = getServiceInputs();
-  const { supergraphSdl, cleanup } = await new IntrospectAndCompose({
-    subgraphs: serviceInputs.map(({ name }) => ({
-      name,
-      url: `http://localhost/${name}`,
-    })),
-  }).initialize({
-    update() {},
-    healthCheck: () => fakePromise(undefined),
-    getDataSource({ name }) {
-      const serviceInput = serviceInputs.find((input) => input.name === name);
-      if (!serviceInput) {
-        throw new Error(`Service ${name} not found`);
-      }
-      return new LocalGraphQLDataSource(serviceInput.schema);
-    },
-  });
-  await cleanup();
-  return supergraphSdl;
+  return composeLocalSchemasWithApollo(getServiceInputs());
 }

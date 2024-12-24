@@ -1,7 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { ExecutionRequest, Executor, fakePromise } from '@graphql-tools/utils';
+import { ExecutionRequest, Executor } from '@graphql-tools/utils';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema, parse, print, versionInfo } from 'graphql';
 import { kebabCase } from 'lodash';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -160,86 +161,53 @@ describe('awareness-of-other-fields', () => {
     subgraphCalls = {};
   });
   beforeAll(async () => {
-    const { IntrospectAndCompose, LocalGraphQLDataSource } = await import(
-      '@apollo/gateway'
-    );
-    return new IntrospectAndCompose({
-      subgraphs: [
-        { name: 'A', url: 'A' },
-        { name: 'B', url: 'B' },
-        { name: 'C', url: 'C' },
-        { name: 'D', url: 'D' },
-        { name: 'E', url: 'E' },
-      ],
-    })
-      .initialize({
-        healthCheck() {
-          return fakePromise(undefined);
-        },
-        update(updatedSupergraphSdl) {
-          supergraphSdl = updatedSupergraphSdl;
-        },
-        getDataSource({ name }) {
-          switch (name) {
-            case 'A':
-              return new LocalGraphQLDataSource(Aschema);
-            case 'B':
-              return new LocalGraphQLDataSource(Bschema);
-            case 'C':
-              return new LocalGraphQLDataSource(Cschema);
-            case 'D':
-              return new LocalGraphQLDataSource(Dschema);
-            case 'E':
-              return new LocalGraphQLDataSource(Eschema);
-          }
-          throw new Error(`Unknown subgraph ${name}`);
-        },
-      })
-      .then((result) => {
-        supergraphSdl = result.supergraphSdl;
-      })
-      .then(() => {
-        gwSchema = getStitchedSchemaFromSupergraphSdl({
-          supergraphSdl,
-          onSubschemaConfig(subschemaConfig) {
-            const subgraphName = subschemaConfig.name;
-            switch (subgraphName) {
-              case 'A':
-                subschemaConfig.executor = getTracedExecutor(
-                  subgraphName,
-                  Aschema,
-                );
-                break;
-              case 'B':
-                subschemaConfig.executor = getTracedExecutor(
-                  subgraphName,
-                  Bschema,
-                );
-                break;
-              case 'C':
-                subschemaConfig.executor = getTracedExecutor(
-                  subgraphName,
-                  Cschema,
-                );
-                break;
-              case 'D':
-                subschemaConfig.executor = getTracedExecutor(
-                  subgraphName,
-                  Dschema,
-                );
-                break;
-              case 'E':
-                subschemaConfig.executor = getTracedExecutor(
-                  subgraphName,
-                  Eschema,
-                );
-                break;
-              default:
-                throw new Error(`Unknown subgraph ${subgraphName}`);
-            }
-          },
-        });
-      });
+    supergraphSdl = await composeLocalSchemasWithApollo([
+      {
+        name: 'A',
+        schema: Aschema,
+      },
+      {
+        name: 'B',
+        schema: Bschema,
+      },
+      {
+        name: 'C',
+        schema: Cschema,
+      },
+      {
+        name: 'D',
+        schema: Dschema,
+      },
+      {
+        name: 'E',
+        schema: Eschema,
+      },
+    ]);
+    gwSchema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl,
+      onSubschemaConfig(subschemaConfig) {
+        const subgraphName = subschemaConfig.name;
+        switch (subgraphName) {
+          case 'A':
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Aschema);
+            break;
+          case 'B':
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Bschema);
+            break;
+          case 'C':
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Cschema);
+            break;
+          case 'D':
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Dschema);
+            break;
+          case 'E':
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Eschema);
+            break;
+          default:
+            throw new Error(`Unknown subgraph ${subgraphName}`);
+        }
+      },
+    });
   });
   it('do not call A subgraph as an extra', async () => {
     const result = await normalizedExecutor({
@@ -433,34 +401,20 @@ it('prevents recursively depending fields in case of multiple keys', async () =>
     },
   });
 
-  const { IntrospectAndCompose, LocalGraphQLDataSource } = await import(
-    '@apollo/gateway'
-  );
-  const introspectAndCompose = await new IntrospectAndCompose({
-    subgraphs: [
-      { name: 'books', url: 'books' },
-      { name: 'other-service', url: 'other-service' },
-      { name: 'authors', url: 'authors' },
-    ],
-  }).initialize({
-    healthCheck() {
-      return fakePromise(undefined);
+  const supergraphSdl = await composeLocalSchemasWithApollo([
+    {
+      name: 'books',
+      schema: booksSchema,
     },
-    update() {},
-    getDataSource({ name }) {
-      switch (kebabCase(name)) {
-        case 'books':
-          return new LocalGraphQLDataSource(booksSchema);
-        case 'other-service':
-          return new LocalGraphQLDataSource(multiLocationMgmt);
-        case 'authors':
-          return new LocalGraphQLDataSource(authorsSchema);
-      }
-      throw new Error(`Unknown subgraph ${name}`);
+    {
+      name: 'authors',
+      schema: authorsSchema,
     },
-  });
-  const supergraphSdl = introspectAndCompose.supergraphSdl;
-  await introspectAndCompose.cleanup();
+    {
+      name: 'other-service',
+      schema: multiLocationMgmt,
+    },
+  ]);
   let subgraphCallsMap: Record<
     string,
     {
