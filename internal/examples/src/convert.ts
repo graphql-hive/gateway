@@ -74,7 +74,11 @@ function transformMeshConfigFile(source: string) {
               },
             })
             .forEach((path) => {
-              if (path.node.id.type !== 'Identifier') return;
+              if (path.node.id.type !== 'Identifier') {
+                throw new Error(
+                  `Expected "Opts()" to declare a node of type "Identifier", but got "${path.node.id.type}"`,
+                );
+              }
 
               const variableName = path.node.id.name;
               console.group(
