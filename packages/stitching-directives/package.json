@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@graphql-tools/delegate": "workspace:^",
-    "@graphql-tools/utils": "^10.6.2",
+    "@graphql-tools/utils": "^10.7.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

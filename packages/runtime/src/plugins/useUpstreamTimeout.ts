@@ -6,9 +6,11 @@ import {
   createGraphQLError,
   ExecutionRequest,
   ExecutionResult,
+  getAbortPromise,
   isAsyncIterable,
   MaybeAsyncIterable,
   MaybePromise,
+  registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { GatewayPlugin } from '../types';
 
@@ -51,17 +53,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             timeoutSignal = AbortSignal.timeout(timeout);
           }
           timeoutSignalsByExecutionRequest.set(executionRequest, timeoutSignal);
-          const timeout$ = new Promise((_, reject) => {
-            if (timeoutSignal.aborted) {
-              reject(timeoutSignal.reason);
-              return;
-            }
-            timeoutSignal.addEventListener(
-              'abort',
-              () => reject(timeoutSignal.reason),
-              { once: true },
-            );
-          });
+          const timeout$ = getAbortPromise(timeoutSignal);
           let finalSignal: AbortSignal | undefined = timeoutSignal;
           const signals = new Set<AbortSignal>();
           signals.add(timeoutSignal);
@@ -78,14 +70,12 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           ])
             .then((result) => {
               if (isAsyncIterable(result)) {
-                const iterator = result[Symbol.asyncIterator]();
-                timeoutSignal.addEventListener(
-                  'abort',
-                  () => iterator.return?.(timeoutSignal.reason),
-                  { once: true },
-                );
                 return {
                   [Symbol.asyncIterator]() {
+                    const iterator = result[Symbol.asyncIterator]();
+                    if (iterator.return) {
+                      registerAbortSignalListener(timeoutSignal, () => iterator.return?.(timeoutSignal.reason));
+                    }
                     return iterator;
                   },
                 };

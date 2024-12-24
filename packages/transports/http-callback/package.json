@@ -47,7 +47,7 @@
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.6",
     "@graphql-mesh/utils": "^0.103.6",
-    "@graphql-tools/utils": "^10.6.2",
+    "@graphql-tools/utils": "^10.7.0",
     "@repeaterjs/repeater": "^3.0.6",
     "@whatwg-node/fetch": "^0.10.1",
     "tslib": "^2.8.1"

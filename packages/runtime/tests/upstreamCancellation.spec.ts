@@ -8,6 +8,7 @@ import {
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
+import { registerAbortSignalListener } from '@graphql-tools/utils';
 
 describe('Upstream Cancellation', () => {
   it('cancels upstream requests when the client cancels', async () => {
@@ -19,7 +20,7 @@ describe('Upstream Cancellation', () => {
     const dataSourceFetchSpy = vi.fn((res: Response) => res.text());
     const dataSourceAdapter = createServerAdapter((req) => {
       serveRuntimeFetchCallAbortCtrl.abort();
-      req.signal.addEventListener('abort', abortSpyOnDataSource);
+      registerAbortSignalListener(req.signal, abortSpyOnDataSource);
       return dataSourceDeferred.promise;
     });
     await using dataSourceServer =
