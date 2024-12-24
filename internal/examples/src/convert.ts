@@ -225,7 +225,7 @@ function transformService(source: string, portForService: PortForService) {
                     },
                   },
                 })
-                .forEach((path, i) => {
+                .forEach((path) => {
                   const arg0 = path.node.arguments[0];
                   if (arg0?.type !== 'Literal') {
                     throw new Error(
