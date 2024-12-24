@@ -1,5 +1,31 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.3
+
+### Patch Changes
+
+- [#373](https://github.com/graphql-hive/gateway/pull/373) [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.7.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.7.0) (from `^10.6.2`, in `dependencies`)
+
+- [#367](https://github.com/graphql-hive/gateway/pull/367) [`15975c2`](https://github.com/graphql-hive/gateway/commit/15975c28daddbb4f31d520371f53520aecacaac7) Thanks [@ardatan](https://github.com/ardatan)! - Fix the combination of `upstreamRetry` and `upstreamTimeout` together
+
+  When you use `upstreamRetry` and `upstreamTimeout` together, the `upstreamRetry` wasn't applied properly when the request is timed out with `upstreamTimeout`.
+
+- [#373](https://github.com/graphql-hive/gateway/pull/373) [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2) Thanks [@ardatan](https://github.com/ardatan)! - Use `registerAbortSignalListener` helper function to register event listeners to `AbortSignal` instances to avoid warning on Node.js like
+  `MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 abort listeners added. Use emitter.setMaxListeners() to increase limit`.
+- Updated dependencies [[`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2), [`15975c2`](https://github.com/graphql-hive/gateway/commit/15975c28daddbb4f31d520371f53520aecacaac7), [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2)]:
+  - @graphql-hive/gateway-abort-signal-any@0.0.2
+  - @graphql-mesh/fusion-runtime@0.10.24
+  - @graphql-mesh/hmac-upstream-signature@1.2.18
+  - @graphql-mesh/transport-common@0.7.24
+  - @graphql-tools/batch-delegate@9.0.25
+  - @graphql-tools/delegate@10.2.9
+  - @graphql-tools/executor-http@1.2.2
+  - @graphql-tools/federation@3.0.4
+  - @graphql-tools/stitch@9.4.11
+  - @graphql-tools/wrap@10.0.27
+
 ## 1.4.2
 
 ### Patch Changes
