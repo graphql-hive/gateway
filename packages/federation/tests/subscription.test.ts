@@ -104,7 +104,7 @@ describe('Subscriptions in Federation', () => {
         name: 'comments',
         schema: commentsSchema,
       },
-    ])
+    ]);
     const schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {
