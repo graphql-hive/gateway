@@ -1,5 +1,52 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.2
+
+### Patch Changes
+
+- [#357](https://github.com/graphql-hive/gateway/pull/357) [`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17) Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug on setting the default polling interval to 10 seconds
+  So by default, the gateway will poll the schema every 10 seconds, and update the schema if it has changed.
+
+  This PR also contains improvements on logging about polling
+
+- [#356](https://github.com/graphql-hive/gateway/pull/356) [`122c013`](https://github.com/graphql-hive/gateway/commit/122c0133bea6137b1760b4af064de9aeba53bcc5) Thanks [@ardatan](https://github.com/ardatan)! - Better messages on debug logs of readiness check endpoint;
+
+  Before;
+  On successful readiness check, the gateway was logging the following message:
+
+  ```
+  Readiness check passed: Supergraph loaded
+  ```
+
+  Because this makes the users think it was just loaded.
+  After;
+  On successful readiness check, the gateway will log the following message:
+
+  ```
+  Readiness check passed because supergraph has been loaded already
+  ```
+
+  On failed readiness check, the gateway was logging the following message:
+  Before;
+
+  ```
+  Readiness check failed: Supergraph not loaded
+  ```
+
+  It should make the users think it was not loaded or there is an issue with the supergraph.
+
+  After;
+
+  ```
+  Readiness check failed because supergraph has not been loaded yet or failed to load
+  ```
+
+- [#342](https://github.com/graphql-hive/gateway/pull/342) [`2f59fce`](https://github.com/graphql-hive/gateway/commit/2f59fce8aece4a326b20d4a9db2ee53773675e70) Thanks [@ardatan](https://github.com/ardatan)! - `token` doesn't need to be required for Hive reporting in the configuration because it can be provided by the arguments
+
+- Updated dependencies [[`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17)]:
+  - @graphql-mesh/fusion-runtime@0.10.23
+  - @graphql-mesh/hmac-upstream-signature@1.2.17
+
 ## 1.4.1
 
 ### Patch Changes

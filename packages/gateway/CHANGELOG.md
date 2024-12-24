@@ -1,5 +1,24 @@
 # @graphql-hive/gateway
 
+## 1.7.2
+
+### Patch Changes
+
+- [#357](https://github.com/graphql-hive/gateway/pull/357) [`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17) Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug on setting the default polling interval to 10 seconds
+  So by default, the gateway will poll the schema every 10 seconds, and update the schema if it has changed.
+
+  This PR also contains improvements on logging about polling
+
+- [#342](https://github.com/graphql-hive/gateway/pull/342) [`2f59fce`](https://github.com/graphql-hive/gateway/commit/2f59fce8aece4a326b20d4a9db2ee53773675e70) Thanks [@ardatan](https://github.com/ardatan)! - Respect both registry token from CLI arguments and the configuration in the \`gateway.config\`
+
+  User can provide the token in the CLI arguments, and have some registry configuration in \`gateway.config\`
+
+- Updated dependencies [[`7a1877a`](https://github.com/graphql-hive/gateway/commit/7a1877a66de082d5a0e4a17d1a715c10773abd77), [`8b64103`](https://github.com/graphql-hive/gateway/commit/8b64103324d82c4934ff459ea644276bafbcda17), [`122c013`](https://github.com/graphql-hive/gateway/commit/122c0133bea6137b1760b4af064de9aeba53bcc5), [`2f59fce`](https://github.com/graphql-hive/gateway/commit/2f59fce8aece4a326b20d4a9db2ee53773675e70)]:
+  - @graphql-mesh/plugin-opentelemetry@1.3.30
+  - @graphql-hive/gateway-runtime@1.4.2
+  - @graphql-mesh/hmac-upstream-signature@1.2.17
+  - @graphql-mesh/plugin-prometheus@1.3.18
+
 ## 1.7.1
 
 ### Patch Changes
