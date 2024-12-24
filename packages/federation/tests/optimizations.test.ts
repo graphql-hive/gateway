@@ -2,6 +2,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest, Executor } from '@graphql-tools/utils';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema, parse, print, versionInfo } from 'graphql';
 import { kebabCase } from 'lodash';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -15,7 +16,6 @@ import {
   Eschema,
 } from './fixtures/optimizations/awareness-of-other-fields';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
 
 describe('Optimizations', () => {
   let serviceCallCnt: Record<string, number>;
@@ -189,29 +189,19 @@ describe('awareness-of-other-fields', () => {
         const subgraphName = subschemaConfig.name;
         switch (subgraphName) {
           case 'A':
-            subschemaConfig.executor = getTracedExecutor(
-              subgraphName,
-              Aschema);
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Aschema);
             break;
           case 'B':
-            subschemaConfig.executor = getTracedExecutor(
-              subgraphName,
-              Bschema);
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Bschema);
             break;
           case 'C':
-            subschemaConfig.executor = getTracedExecutor(
-              subgraphName,
-              Cschema);
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Cschema);
             break;
           case 'D':
-            subschemaConfig.executor = getTracedExecutor(
-              subgraphName,
-              Dschema);
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Dschema);
             break;
           case 'E':
-            subschemaConfig.executor = getTracedExecutor(
-              subgraphName,
-              Eschema);
+            subschemaConfig.executor = getTracedExecutor(subgraphName, Eschema);
             break;
           default:
             throw new Error(`Unknown subgraph ${subgraphName}`);
@@ -424,7 +414,7 @@ it('prevents recursively depending fields in case of multiple keys', async () =>
       name: 'other-service',
       schema: multiLocationMgmt,
     },
-  ])
+  ]);
   let subgraphCallsMap: Record<
     string,
     {

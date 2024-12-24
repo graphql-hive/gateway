@@ -4,10 +4,10 @@ import {
   ExecutionResult,
   mapMaybePromise,
 } from '@graphql-tools/utils';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
 
 export interface LocalSchemaItem {
   name: string;
@@ -22,11 +22,13 @@ export async function getStitchedSchemaFromLocalSchemas(
     result: ExecutionResult | AsyncIterable<ExecutionResult>,
   ) => void,
 ): Promise<GraphQLSchema> {
-  const supergraphSdl = await composeLocalSchemasWithApollo(Object.entries(localSchemas).map(([name, schema]) => ({
-    name,
-    schema,
-    url: `http://localhost/${name}`,
-  })));
+  const supergraphSdl = await composeLocalSchemasWithApollo(
+    Object.entries(localSchemas).map(([name, schema]) => ({
+      name,
+      schema,
+      url: `http://localhost/${name}`,
+    })),
+  );
   function createTracedExecutor(name: string, schema: GraphQLSchema) {
     const executor = createDefaultExecutor(schema);
     return function tracedExecutor(request: ExecutionRequest) {

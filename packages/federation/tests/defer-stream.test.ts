@@ -1,17 +1,18 @@
 import { setTimeout } from 'timers/promises';
 import { inspect } from 'util';
-import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 import {
   asArray,
   ExecutionResult,
-  fakePromise,
   mergeDeep,
 } from '@graphql-tools/utils';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
-import { assertAsyncIterable, composeLocalSchemasWithApollo } from '@internal/testing';
+import {
+  assertAsyncIterable,
+  composeLocalSchemasWithApollo,
+} from '@internal/testing';
 import { GraphQLSchema, parse, print } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import _ from 'lodash';
@@ -176,7 +177,7 @@ describe('Defer/Stream', () => {
     const supergraphSdl = await composeLocalSchemasWithApollo([
       { name: 'users', schema: usersSubgraph },
       { name: 'posts', schema: postsSubgraph },
-    ])
+    ]);
     schema = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {
