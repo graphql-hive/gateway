@@ -1,0 +1,27 @@
+{
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Services",
+      "command": "npm run services"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Start Hive Gateway",
+      "command": "npm start",
+      "runAtStart": true,
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}

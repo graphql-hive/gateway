@@ -2,7 +2,9 @@
   "name": "@example/extra-fields",
   "private": true,
   "scripts": {
-    "start": "conc --kill-others-on-fail 'tsx services/foo.ts' 'tsx services/bar.ts' 'sleep 1 && mesh-compose -o supergraph.graphql && hive-gateway supergraph'"
+    "compose": "mesh-compose -o supergraph.graphql",
+    "services": "conc --kill-others-on-fail 'tsx services/foo.ts' 'tsx services/bar.ts'",
+    "start": "hive-gateway supergraph'"
   },
   "dependencies": {
     "@graphql-hive/gateway": "^1.7.3",
