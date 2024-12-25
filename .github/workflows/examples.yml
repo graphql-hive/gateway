@@ -52,6 +52,6 @@ jobs:
       - name: Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          file_pattern: /examples/
+          file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'
           commit_options: '--reset-author' # dont use the actor as an author
