@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Proc, spawn, waitForPort } from '@internal/proc';
 import { glob } from 'glob';
 import j from 'jscodeshift';
 import { defer, exists, loc } from './utils';
 
-const __dirname = path.dirname(import.meta.filename);
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export interface ConvertE2EToExampleConfig {
   /** The name of the E2E test to convert to an example. */
