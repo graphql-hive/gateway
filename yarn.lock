@@ -4557,7 +4557,6 @@ __metadata:
     glob: "npm:^11.0.0"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"
-    zod: "npm:^3.24.1"
   bin:
     examples: ./src/bin.ts
   languageName: unknown
@@ -17639,7 +17638,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.3, zod@npm:^3.24.1":
+"zod@npm:^3.22.3":
   version: 3.24.1
   resolution: "zod@npm:3.24.1"
   checksum: 10c0/0223d21dbaa15d8928fe0da3b54696391d8e3e1e2d0283a1a070b5980a1dbba945ce631c2d1eccc088fdbad0f2dfa40155590bf83732d3ac4fcca2cc9237591b

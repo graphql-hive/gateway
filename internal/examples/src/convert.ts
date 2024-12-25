@@ -3,46 +3,60 @@ import path from 'node:path';
 import { Proc, spawn, waitForPort } from '@internal/proc';
 import { glob } from 'glob';
 import j from 'jscodeshift';
-import z from 'zod';
 import { defer, exists, loc } from './utils';
 
-export type ConvertE2EToExampleConfig = z.infer<
-  typeof convertE2EToExampleConfigSchema
->;
-
-export const convertE2EToExampleConfigSchema = z.object({
-  e2eDir: z
-    .string()
-    .refine(exists, 'Directory does not exist')
-    .transform((arg) => path.resolve(arg))
-    .refine(
-      (arg) =>
-        glob(path.join(arg, '*.e2e.ts')).then((paths) => paths.length > 0),
-      'Directory does not contain an E2E test (no "*.e2e.ts" file)',
-    ),
-  dest: z.string().transform((arg) => path.resolve(arg)),
-  clean: z.boolean().optional(),
-});
+export interface ConvertE2EToExampleConfig {
+  /** The name of the E2E test to convert to an example. */
+  e2e: string;
+  /**
+   * Whether to clean the example directory before converting.
+   * @default false
+   */
+  clean?: boolean;
+}
 
 export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
-  console.log(
-    `Converting E2E test "${config.e2eDir}" to an example "${config.dest}"`,
+  if (!config.e2e) {
+    throw new Error('E2E test name not provided');
+  }
+
+  const e2eDir = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'e2e',
+    config.e2e,
   );
+  if (!(await exists(e2eDir))) {
+    throw new Error(`E2E test at "${e2eDir}" does not exist`);
+  }
+
+  const exampleDir = path.resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'examples',
+    config.e2e,
+  );
+
+  console.log(`Converting E2E test "${e2eDir}" to an example "${exampleDir}"`);
 
   if (config.clean) {
     console.warn('Cleaning example...');
     try {
-      await fs.rm(config.dest, { recursive: true });
+      await fs.rm(exampleDir, { recursive: true });
     } catch {
       // noop
     }
   }
 
-  await fs.mkdir(config.dest, { recursive: true });
+  await fs.mkdir(exampleDir, { recursive: true });
 
   let portForService: PortForService = {};
 
-  const meshConfigTsFile = path.join(config.e2eDir, 'mesh.config.ts');
+  const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
   if (await exists(meshConfigTsFile)) {
     console.group(`"mesh.config.ts" found, transforming...`);
     using _ = defer(() => console.groupEnd());
@@ -51,16 +65,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
     portForService = result.portForService;
-    const dist = path.join(config.dest, 'mesh.config.ts');
-    console.log(`Writing "${dist}"`);
-    await fs.writeFile(dist, result.source);
+    const dest = path.join(exampleDir, 'mesh.config.ts');
+    console.log(`Writing "${dest}"`);
+    await fs.writeFile(dest, result.source);
   }
 
   const relativeServiceFiles = [];
-  for (const serviceFile of await glob(
-    path.join(config.e2eDir, 'services/**/*.ts'),
-  )) {
-    const relativeServiceFile = path.relative(config.e2eDir, serviceFile);
+  for (const serviceFile of await glob(path.join(e2eDir, 'services/**/*.ts'))) {
+    const relativeServiceFile = path.relative(e2eDir, serviceFile);
     relativeServiceFiles.push(relativeServiceFile);
     console.group(
       `service file "${relativeServiceFile}" found, transforming...`,
@@ -72,11 +84,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       portForService,
     );
 
-    const dist = path.join(config.dest, relativeServiceFile);
-    console.log(`Writing "${dist}"`);
+    const dest = path.join(exampleDir, relativeServiceFile);
+    console.log(`Writing "${dest}"`);
 
-    await fs.mkdir(path.dirname(dist), { recursive: true });
-    await fs.writeFile(dist, result.source);
+    await fs.mkdir(path.dirname(dest), { recursive: true });
+    await fs.writeFile(dest, result.source);
   }
 
   {
@@ -84,10 +96,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     using _ = defer(() => console.groupEnd());
 
     const packageJson = JSON.parse(
-      await fs.readFile(path.join(config.e2eDir, 'package.json'), 'utf8'),
+      await fs.readFile(path.join(e2eDir, 'package.json'), 'utf8'),
     );
 
-    const name = `@example/${path.basename(config.dest)}`;
+    const name = `@example/${path.basename(exampleDir)}`;
     console.log(`Setting name to "${name}"`);
     packageJson.name = name;
 
@@ -124,15 +136,15 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.log(`Setting start script "${start}"`);
     packageJson.scripts = { start };
 
-    const dist = path.join(config.dest, 'package.json');
-    console.log(`Writing "${dist}"`);
-    await fs.writeFile(dist, JSON.stringify(packageJson, null, '  '));
+    const dest = path.join(exampleDir, 'package.json');
+    console.log(`Writing "${dest}"`);
+    await fs.writeFile(dest, JSON.stringify(packageJson, null, '  '));
   }
 
-  console.log(`Installing deps in "${config.dest}" with "npm i"`);
+  console.log(`Installing deps in "${exampleDir}" with "npm i"`);
   let waitForExit: Promise<void>;
   [, waitForExit] = await spawn(
-    { cwd: config.dest, pipeLogs: true },
+    { cwd: exampleDir, pipeLogs: true },
     'npm',
     'i',
   );
@@ -142,7 +154,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   let proc: Proc;
   const signal = AbortSignal.timeout(5_000);
   [proc, waitForExit] = await spawn(
-    { cwd: config.dest, pipeLogs: true, signal },
+    { cwd: exampleDir, pipeLogs: true, signal },
     'npm',
     'start',
   );
