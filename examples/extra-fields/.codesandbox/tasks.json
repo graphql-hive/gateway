@@ -10,6 +10,10 @@
       "command": "npm run services &"
     },
     {
+      "name": "Wait",
+      "command": "sleep 3"
+    },
+    {
       "name": "Compose",
       "command": "npm run compose"
     }
