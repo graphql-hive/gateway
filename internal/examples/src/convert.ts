@@ -236,7 +236,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       const [proc, waitForExit] = await spawn(
         {
           cwd: exampleDir,
-          signal: isBackgroundJob ? AbortSignal.timeout(10_000) : undefined,
+          signal: isBackgroundJob ? undefined : AbortSignal.timeout(10_000),
         },
         cmd,
         ...args,
@@ -251,7 +251,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     console.log(`Starting Hive Gateway...`);
     const [proc, waitForExit] = await spawn(
-      { cwd: exampleDir, signal: AbortSignal.timeout(10_000) },
+      { cwd: exampleDir },
       'npm',
       'run',
       'gateway',
