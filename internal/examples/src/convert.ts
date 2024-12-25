@@ -214,7 +214,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     const dest = path.join(exampleDir, '.codesandbox', 'tasks.json');
     console.log(`Writing "${dest}"`);
-    await fs.writeFile(dest, JSON.stringify({ setupTasks, tasks }, null, '  '));
+    await writeFileMkdir(
+      dest,
+      JSON.stringify({ setupTasks, tasks }, null, '  '),
+    );
   }
 
   {
