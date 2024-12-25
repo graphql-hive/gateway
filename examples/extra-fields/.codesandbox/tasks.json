@@ -22,7 +22,7 @@
     "gateway": {
       "name": "Start Hive Gateway",
       "runAtStart": true,
-      "command": "npm start",
+      "command": "npm run gateway",
       "preview": {
         "port": 4000
       }
