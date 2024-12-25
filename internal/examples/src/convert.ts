@@ -189,7 +189,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       });
       setupTasks.push({
         name: `Wait for service ${service}`,
-        command: `curl --retry-connrefused --retry 10 --retry-delay 1 http://localhost:${portForService[service]}`,
+        command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${portForService[service]}`,
       });
     }
 
