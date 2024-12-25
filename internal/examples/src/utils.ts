@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { ASTPath } from 'jscodeshift';
 
 /** Checks whether a file exists at the given {@link path}. */
@@ -28,4 +29,10 @@ export function loc({ node }: ASTPath, includeColumn?: true) {
     str += `:${node.loc.start.column}`;
   }
   return str;
+}
+
+/** Writes the the {@link file} creating all directories leading to it. */
+export async function writeFileMkdir(file: string, contents: string) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, contents);
 }

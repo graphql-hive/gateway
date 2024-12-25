@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Proc, spawn, waitForPort } from '@internal/proc';
+import { spawn, waitForPort } from '@internal/proc';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
 import j from 'jscodeshift';
-import { defer, exists, loc } from './utils';
+import { defer, exists, loc, writeFileMkdir } from './utils';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -53,8 +54,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   let portForService: PortForService = {};
 
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
-  const meshConfigTsFileExists = await exists(meshConfigTsFile);
-  if (meshConfigTsFileExists) {
+  const composes = await exists(meshConfigTsFile);
+  if (composes) {
     console.group(`"mesh.config.ts" found, transforming...`);
     using _ = defer(() => console.groupEnd());
 
@@ -67,10 +68,12 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     await fs.writeFile(dest, result.source);
   }
 
-  const relativeServiceFiles = [];
+  const services: { [name: string]: string /* relative file */ } = {};
   for (const serviceFile of await glob(path.join(e2eDir, 'services/**/*.ts'))) {
     const relativeServiceFile = path.relative(e2eDir, serviceFile);
-    relativeServiceFiles.push(relativeServiceFile);
+    services[path.basename(serviceFile, path.extname(serviceFile))] =
+      relativeServiceFile;
+
     console.group(
       `service file "${relativeServiceFile}" found, transforming...`,
     );
@@ -84,21 +87,20 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     const dest = path.join(exampleDir, relativeServiceFile);
     console.log(`Writing "${dest}"`);
 
-    await fs.mkdir(path.dirname(dest), { recursive: true });
-    await fs.writeFile(dest, result.source);
+    await writeFileMkdir(dest, result.source);
   }
 
   {
     console.group('Transforming package.json...');
-    using _ = defer(() => console.groupEnd());
+    using _0 = defer(() => console.groupEnd());
 
     const packageJson = JSON.parse(
       await fs.readFile(path.join(e2eDir, 'package.json'), 'utf8'),
     );
 
     const name = `@example/${path.basename(exampleDir)}`;
-    console.log(`Setting name to "${name}"`);
     packageJson.name = name;
+    console.log(`Set name to "${name}"`);
 
     const gatewayVersion = JSON.parse(
       await fs.readFile(
@@ -115,66 +117,149 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       ),
     ).version;
     console.log(
-      `Adding "@graphql-hive/gateway@^${gatewayVersion}" as dependency`,
+      `Adding "@graphql-hive/gateway@^${gatewayVersion}" as dependency...`,
     );
     packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
 
-    console.log(`Adding "tsx" and "concurrency" as dev dependencies`);
-    packageJson.devDependencies ||= {};
-    packageJson.devDependencies['tsx'] = '^4.19.2';
-    packageJson.devDependencies['concurrently'] = '^9.1.0';
-
-    // start all services
-    let start = 'conc --kill-others-on-fail';
-    for (const relativeServiceFile of relativeServiceFiles) {
-      start += ` 'tsx ${relativeServiceFile}'`;
+    if (Object.keys(services).length) {
+      const version = '^4.19.2';
+      console.log(
+        `Adding "tsx@${version}" dev dependency because there are services...`,
+      );
+      packageJson.devDependencies ||= {};
+      packageJson.devDependencies['tsx'] = version; // TODO: use the version from root package.json
     }
 
-    start += " '";
-    if (relativeServiceFiles.length) {
-      // allow some time for the services to start, if any
-      start += 'sleep 1 && ';
+    {
+      console.group('Adding scripts...');
+      using _1 = defer(() => console.groupEnd());
+
+      const scripts: Record<string, string> = {};
+      for (const [name, relativeFile] of Object.entries(services)) {
+        // will be used in tasks.json
+        scripts[`service:${name}`] = `tsx ${relativeFile}`;
+      }
+      if (composes) {
+        scripts['compose'] = 'mesh-compose -o supergraph.graphql';
+      }
+      scripts['gateway'] = 'hive-gateway supergraph';
+
+      console.log(JSON.stringify(scripts, null, '  '));
+      packageJson.scripts = scripts;
     }
-    if (meshConfigTsFileExists) {
-      // compose if something to compose
-      start += 'mesh-compose -o supergraph.graphql && ';
-    }
-    // start gateway (after composition)
-    start += 'hive-gateway supergraph';
-    start += "'";
-    console.log(`Setting start script "${start}"`);
-    packageJson.scripts = { start };
 
     const dest = path.join(exampleDir, 'package.json');
     console.log(`Writing "${dest}"`);
     await fs.writeFile(dest, JSON.stringify(packageJson, null, '  '));
   }
 
-  console.log(`Installing deps in "${exampleDir}" with "npm i"`);
-  let waitForExit: Promise<void>;
-  [, waitForExit] = await spawn(
-    { cwd: exampleDir, pipeLogs: true },
-    'npm',
-    'i',
-  );
-  await waitForExit;
+  {
+    console.group('Adding devcontainer...');
+    using _ = defer(() => console.groupEnd());
 
-  console.log('Trying start script');
-  let proc: Proc;
-  const signal = AbortSignal.timeout(5_000);
-  [proc, waitForExit] = await spawn(
-    { cwd: exampleDir, pipeLogs: true, signal },
-    'npm',
-    'start',
-  );
-  try {
+    const dest = path.join(exampleDir, '.devcontainer', 'devcontainer.json');
+    console.log(`Writing "${dest}"`);
+    await writeFileMkdir(
+      dest,
+      JSON.stringify(
+        {
+          name: 'Node.js',
+          image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
+        },
+        null,
+        '  ',
+      ),
+    );
+  }
+
+  const setupTasks: { name: string; command: string }[] = [];
+  {
+    console.group('Defining codesandbox setup and tasks...');
+    using _ = defer(() => console.groupEnd());
+
+    setupTasks.push({
+      name: 'Install',
+      command: 'npm i',
+    });
+
+    for (const service of Object.keys(services)) {
+      setupTasks.push({
+        name: `Start service ${service}`,
+        command: `npm run service:${service} &`,
+      });
+      setupTasks.push({
+        name: `Wait for service ${service}`,
+        command: `curl --retry-connrefused --retry 10 --retry-delay 1 http://localhost:${portForService[service]}`,
+      });
+    }
+
+    if (composes) {
+      setupTasks.push({
+        name: 'Compose',
+        command: 'npm run compose',
+      });
+    }
+
+    const tasks = {
+      gateway: {
+        name: 'Hive Gateway',
+        runAtStart: true,
+        command: 'npm run gateway',
+        preview: {
+          port: 4000,
+        },
+      },
+    };
+    console.log(JSON.stringify({ setupTasks, tasks }, null, '  '));
+
+    const dest = path.join(exampleDir, '.codesandbox', 'tasks.json');
+    console.log(`Writing "${dest}"`);
+    await fs.writeFile(dest, JSON.stringify({ setupTasks, tasks }, null, '  '));
+  }
+
+  {
+    console.group('Testing codesandbox setup and starting Hive Gateway...');
+    using _ = defer(() => console.groupEnd());
+
+    await using stack = new AsyncDisposableStack();
+
+    for (const task of setupTasks) {
+      console.log(`Running "${task.name}"...`);
+      const [cmd, ...args] = task.command.split(' ');
+      if (!cmd) {
+        throw new Error(`Task "${task.name}" does not have a command`);
+      }
+      const isBackgroundJob = args[args.length - 1] === '&';
+      const [proc, waitForExit] = await spawn(
+        {
+          cwd: exampleDir,
+          signal: isBackgroundJob ? AbortSignal.timeout(10_000) : undefined,
+        },
+        cmd,
+        ...args,
+      );
+      if (isBackgroundJob) {
+        console.info('Task is a background job, not waiting for exit');
+        stack.use(proc);
+      } else {
+        await waitForExit;
+      }
+    }
+
+    console.log(`Starting Hive Gateway...`);
+    const [proc, waitForExit] = await spawn(
+      { cwd: exampleDir, signal: AbortSignal.timeout(10_000) },
+      'npm',
+      'run',
+      'gateway',
+    );
+    stack.use(proc);
     await Promise.race([
       waitForExit,
-      waitForPort(4000, AbortSignal.timeout(7_000)),
+      waitForPort(4000, AbortSignal.timeout(10_000)),
     ]);
-  } finally {
-    await proc[Symbol.asyncDispose]();
   }
+
   console.log('Ok');
 }
 
