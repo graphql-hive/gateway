@@ -128,19 +128,22 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     packageJson.devDependencies['tsx'] = '^4.19.2';
     packageJson.devDependencies['concurrently'] = '^9.1.0';
 
+    // start all services
     let start = 'conc --kill-others-on-fail';
     for (const relativeServiceFile of relativeServiceFiles) {
       start += ` 'tsx ${relativeServiceFile}'`;
     }
+
     start += " '";
     if (relativeServiceFiles.length) {
-      // allow some time for the services to start
+      // allow some time for the services to start, if any
       start += 'sleep 1 && '
     }
     if (meshConfigTsFileExists) {
-      // compose first
+      // compose if something to compose
       start += 'mesh-compose -o supergraph.graphql && '
     }
+    // start gateway (after composition)
     start += 'hive-gateway supergraph';
     start += "'";
     console.log(`Setting start script "${start}"`);
