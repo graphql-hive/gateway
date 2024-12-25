@@ -50,4 +50,4 @@ jobs:
         with:
           file_pattern: examples/*
           commit_message: 'docs(examples): converted from e2es'
-          commit_author: ''
+          commit_options: '--reset-author' # dont use the actor as an author
