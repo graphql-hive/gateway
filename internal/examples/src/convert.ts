@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from '@internal/proc';
+import { Proc, spawn, waitForPort } from '@internal/proc';
 import { glob } from 'glob';
 import j from 'jscodeshift';
 import z from 'zod';
@@ -142,21 +142,22 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   await waitForExit;
 
   console.log('Trying start script');
+  let proc: Proc;
   const signal = AbortSignal.timeout(5_000);
-  [, waitForExit] = await spawn(
+  [proc, waitForExit] = await spawn(
     { cwd: config.dest, pipeLogs: true, signal },
     'npm',
     'start',
   );
   try {
-    await waitForExit;
-  } catch (err) {
-    if (Object(err).name === 'AbortError') {
-      console.log('Ok');
-    } else {
-      throw new Error('Some process exitted with non-zero code');
-    }
+    await Promise.race([
+      waitForExit,
+      waitForPort(4000, AbortSignal.timeout(7_000)),
+    ]);
+  } finally {
+    await proc[Symbol.asyncDispose]();
   }
+  console.log('Ok');
 }
 
 interface PortForService {
