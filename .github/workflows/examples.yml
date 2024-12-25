@@ -21,7 +21,7 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
       - name: Convert
-        run: yarn workspace @internal/examples run start ${{matrix.e2e}}
+        run: yarn workspace @internal/examples run start ${{matrix.e2e}} true
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -45,8 +45,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: examples
-      # - name: Commit
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     file_pattern: examples/*
-      #     commit_message: 'docs(examples): converted from e2es'
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: examples/*
+          commit_message: 'docs(examples): converted from e2es'
