@@ -21,6 +21,7 @@
   "tasks": {
     "gateway": {
       "name": "Start Hive Gateway",
+      "runAtStart": true,
       "command": "npm start",
       "preview": {
         "port": 4000
