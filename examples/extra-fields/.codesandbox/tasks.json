@@ -7,7 +7,7 @@
     },
     {
       "name": "Services",
-      "command": "npm run services"
+      "command": "npm run services &"
     },
     {
       "name": "Compose",
