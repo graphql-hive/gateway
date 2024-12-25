@@ -5,6 +5,8 @@ import { glob } from 'glob';
 import j from 'jscodeshift';
 import { defer, exists, loc } from './utils';
 
+const __dirname = path.dirname(import.meta.filename);
+
 export interface ConvertE2EToExampleConfig {
   /** The name of the E2E test to convert to an example. */
   e2e: string;
@@ -20,20 +22,13 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     throw new Error('E2E test name not provided');
   }
 
-  const e2eDir = path.resolve(
-    import.meta.dirname,
-    '..',
-    '..',
-    '..',
-    'e2e',
-    config.e2e,
-  );
+  const e2eDir = path.resolve(__dirname, '..', '..', '..', 'e2e', config.e2e);
   if (!(await exists(e2eDir))) {
     throw new Error(`E2E test at "${e2eDir}" does not exist`);
   }
 
   const exampleDir = path.resolve(
-    import.meta.dirname,
+    __dirname,
     '..',
     '..',
     '..',
@@ -107,7 +102,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     const gatewayVersion = JSON.parse(
       await fs.readFile(
         path.resolve(
-          import.meta.dirname,
+          __dirname,
           '..',
           '..',
           '..',
