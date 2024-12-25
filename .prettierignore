@@ -8,4 +8,3 @@ __generated__
 !.changeset/config.json
 .wrangler/
 *.Dockerfile
-examples/

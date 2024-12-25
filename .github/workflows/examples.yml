@@ -41,7 +41,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: examples
+      - name: Format
+        run: yarn format
       - name: Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          file_pattern: examples/*
           commit_message: 'docs(examples): converted from e2es'
