@@ -4,3 +4,4 @@ export * from './getLocalhost';
 export * from './opts';
 export * from './assertions';
 export * from './benchConfig';
+export * from './trimError';

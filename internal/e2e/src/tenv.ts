@@ -1,4 +1,3 @@
-import childProcess from 'child_process';
 import fs from 'fs/promises';
 import { createServer } from 'http';
 import type { AddressInfo } from 'net';
@@ -15,6 +14,7 @@ import {
   fakePromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
+import { spawn } from '@internal/proc';
 import {
   boolEnv,
   createOpt,
@@ -28,10 +28,8 @@ import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
-import terminate from 'terminate/promise';
 import { leftoverStack } from './leftoverStack';
 import { interval, retries } from './timeout';
-import { trimError } from './trimError';
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
@@ -366,11 +364,18 @@ export function createTenv(cwd: string): Tenv {
         return fs.writeFile(filePath, content, 'utf-8');
       },
     },
-    spawn(command, { args: extraArgs = [], ...opts } = {}) {
+    async spawn(command, { args: extraArgs = [], ...opts } = {}) {
       const [cmd, ...args] = Array.isArray(command)
         ? command
         : command.split(' ');
-      return spawn({ ...opts, cwd }, String(cmd), ...args, ...extraArgs);
+      const [proc, waitForExit] = await spawn(
+        { ...opts, cwd, replaceStderr: (str) => str.replaceAll(__project, '') },
+        String(cmd),
+        ...args,
+        ...extraArgs,
+      );
+      leftoverStack.use(proc);
+      return [proc, waitForExit];
     },
     gatewayRunner,
     async gateway(opts) {
@@ -527,21 +532,33 @@ export function createTenv(cwd: string): Tenv {
         }
         case 'node': {
           [proc, waitForExit] = await spawn(
-            { env, cwd, pipeLogs },
+            {
+              env,
+              cwd,
+              pipeLogs,
+              replaceStderr: (str) => str.replaceAll(__project, ''),
+            },
             'node',
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
+          leftoverStack.use(proc);
           break;
         }
         case 'bin': {
           [proc, waitForExit] = await spawn(
-            { env, cwd, pipeLogs },
+            {
+              env,
+              cwd,
+              pipeLogs,
+              replaceStderr: (str) => str.replaceAll(__project, ''),
+            },
             path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
             ...getFullArgs(),
           );
+          leftoverStack.use(proc);
           break;
         }
         default:
@@ -627,7 +644,12 @@ export function createTenv(cwd: string): Tenv {
         );
       }
       const [proc, waitForExit] = await spawn(
-        { cwd, pipeLogs, env },
+        {
+          cwd,
+          pipeLogs,
+          env,
+          replaceStderr: (str) => str.replaceAll(__project, ''),
+        },
         'node',
         '--import',
         'tsx', // we use tsx because we want to leverage tsconfig paths
@@ -643,6 +665,7 @@ export function createTenv(cwd: string): Tenv {
         ...services.map(({ name, port }) => createServicePortOpt(name, port)),
         ...args,
       );
+      leftoverStack.use(proc);
       await waitForExit;
       let result = '';
       if (output) {
@@ -692,7 +715,12 @@ export function createTenv(cwd: string): Tenv {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
       const [proc, waitForExit] = await spawn(
-        { cwd, pipeLogs, signal: ctrl.signal },
+        {
+          cwd,
+          pipeLogs,
+          signal: ctrl.signal,
+          replaceStderr: (str) => str.replaceAll(__project, ''),
+        },
         'node',
         '--import',
         'tsx',
@@ -701,6 +729,7 @@ export function createTenv(cwd: string): Tenv {
         gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
+      leftoverStack.use(proc);
       const service: Service = { ...proc, name, port, protocol };
       await Promise.race([
         waitForExit
@@ -960,115 +989,6 @@ export function createTenv(cwd: string): Tenv {
     },
   };
   return tenv;
-}
-
-interface SpawnOptions extends ProcOptions {
-  cwd: string;
-  shell?: boolean;
-  signal?: AbortSignal;
-}
-
-function spawn(
-  { cwd, pipeLogs = isDebug(), env = {}, shell, signal }: SpawnOptions,
-  cmd: string,
-  ...args: (string | number | boolean | null | undefined)[]
-): Promise<[proc: Proc, waitForExit: Promise<void>]> {
-  const child = childProcess.spawn(cmd, args.filter(Boolean).map(String), {
-    cwd,
-    // ignore stdin, pipe stdout and stderr
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: Object.entries(env).reduce(
-      (acc, [key, val]) => ({ ...acc, [key]: String(val) }),
-      { ...process.env },
-    ),
-    shell,
-    signal,
-  });
-
-  const exitDeferred = createDeferred<void>();
-  const waitForExit = exitDeferred.promise;
-  let exited = false;
-  let stdout = '';
-  let stderr = '';
-  let stdboth = '';
-  const proc: Proc = {
-    getStd(o) {
-      switch (o) {
-        case 'out':
-          return stdout;
-        case 'err':
-          return stderr;
-        case 'both':
-          return stdboth;
-      }
-    },
-    async getStats() {
-      const [proc, waitForExit] = await spawn(
-        { cwd, pipeLogs: isDebug() },
-        'ps',
-        '-o',
-        'pcpu=,rss=',
-        '-p',
-        child.pid!,
-      );
-      await waitForExit;
-      const [cpu, mem] = proc.getStd('out').trim().split(/\s+/);
-      return {
-        cpu: parseFloat(cpu!),
-        mem: parseFloat(mem!) * 0.001, // KB to MB
-      };
-    },
-    [DisposableSymbols.asyncDispose]: () => {
-      const childPid = child.pid;
-      if (childPid && !exited) {
-        return terminate(childPid);
-      }
-      return waitForExit;
-    },
-  };
-  leftoverStack.use(proc);
-
-  child.stdout.on('data', (x) => {
-    const str = x.toString();
-    stdout += str;
-    stdboth += str;
-    pipeLog({ cwd, pipeLogs }, x);
-  });
-  child.stderr.on('data', (x) => {
-    // prefer relative paths for logs consistency
-    const str = x.toString().replaceAll(__project, '');
-    stderr += str;
-    stdboth += str;
-    pipeLog({ cwd, pipeLogs }, x);
-  });
-
-  child.once('exit', () => {
-    // process ended
-    child.stdout.destroy();
-    child.stderr.destroy();
-  });
-  child.once('close', (code) => {
-    exited = true;
-    // process ended _and_ the stdio streams have been closed
-    if (code) {
-      exitDeferred.reject(
-        new Error(
-          `Exit code ${code} from ${cmd} ${args.join(' ')}\n${trimError(stdboth)}`,
-        ),
-      );
-    } else {
-      exitDeferred.resolve();
-    }
-  });
-
-  return new Promise((resolve, reject) => {
-    child.once('error', (err) => {
-      exited = true;
-      exitDeferred.reject(err); // reject waitForExit promise
-      reject(err);
-    });
-    child.once('spawn', () => resolve([proc, waitForExit]));
-  });
 }
 
 export function getAvailablePort(): Promise<number> {

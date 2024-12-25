@@ -1,9 +1,9 @@
+import { trimError } from '@internal/testing';
 import {
   AsyncDisposableStack,
   SuppressedError,
 } from '@whatwg-node/disposablestack';
 import { afterAll } from 'vitest';
-import { trimError } from './trimError';
 
 export let leftoverStack = new AsyncDisposableStack();
 

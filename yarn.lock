@@ -4563,6 +4563,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/proc@workspace:internal/proc":
+  version: 0.0.0-use.local
+  resolution: "@internal/proc@workspace:internal/proc"
+  languageName: unknown
+  linkType: soft
+
 "@internal/testing@workspace:internal/testing":
   version: 0.0.0-use.local
   resolution: "@internal/testing@workspace:internal/testing"
