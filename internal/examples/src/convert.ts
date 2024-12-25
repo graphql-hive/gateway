@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { spawn } from '@internal/proc';
 import { glob } from 'glob';
 import j from 'jscodeshift';
 import z from 'zod';
@@ -23,10 +24,24 @@ export const convertE2EToExampleConfigSchema = z.object({
     .string()
     .refine(exists, 'Directory does not exist')
     .transform((arg) => path.resolve(arg)),
+  clean: z.boolean().optional(),
 });
 
 export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
-  console.log(`Converting E2E test at "${config.e2eDir}" to an example`);
+  console.log(
+    `Converting E2E test "${config.e2eDir}" to an example "${config.dest}"`,
+  );
+
+  if (config.clean) {
+    console.warn('Cleaning example...');
+    try {
+      await fs.rm(config.dest, { recursive: true });
+    } catch {
+      // noop
+    }
+  }
+
+  await fs.mkdir(config.dest, { recursive: true });
 
   let portForService: PortForService = {};
 
@@ -44,10 +59,12 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     await fs.writeFile(dist, result.source);
   }
 
+  const relativeServiceFiles = [];
   for (const serviceFile of await glob(
     path.join(config.e2eDir, 'services/**/*.ts'),
   )) {
     const relativeServiceFile = path.relative(config.e2eDir, serviceFile);
+    relativeServiceFiles.push(relativeServiceFile);
     console.group(
       `service file "${relativeServiceFile}" found, transforming...`,
     );
@@ -73,11 +90,9 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       await fs.readFile(path.join(config.e2eDir, 'package.json'), 'utf8'),
     );
 
-    console.log('Adding name and scripts');
-    packageJson.name = `@gateway/${path.basename(config.dest)}`;
-    packageJson.scripts = {
-      start: 'mesh-compose && hive-gateway supergraph',
-    };
+    const name = `@example/${path.basename(config.dest)}`;
+    console.log(`Setting name to "${name}"`);
+    packageJson.name = name;
 
     const gatewayVersion = JSON.parse(
       await fs.readFile(
@@ -98,9 +113,49 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     );
     packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
 
+    console.log(`Adding "tsx" and "concurrency" as dev dependencies`);
+    packageJson.devDependencies ||= {};
+    packageJson.devDependencies['tsx'] = '^4.19.2';
+    packageJson.devDependencies['concurrently'] = '^9.1.0';
+
+    let start = 'conc --kill-others-on-fail';
+    for (const relativeServiceFile of relativeServiceFiles) {
+      start += ` 'tsx ${relativeServiceFile}'`;
+    }
+    start += ` 'mesh-compose -o supergraph.graphql'`;
+    start += ` 'hive-gateway supergraph'`;
+    console.log(`Setting start script "${start}"`);
+    packageJson.scripts = { start };
+
     const dist = path.join(config.dest, 'package.json');
     console.log(`Writing "${dist}"`);
     await fs.writeFile(dist, JSON.stringify(packageJson, null, '  '));
+  }
+
+  console.log(`Installing deps in "${config.dest}" with "npm i"`);
+  let waitForExit: Promise<void>;
+  [, waitForExit] = await spawn(
+    { cwd: config.dest, pipeLogs: true },
+    'npm',
+    'i',
+  );
+  await waitForExit;
+
+  console.log('Trying start script');
+  const signal = AbortSignal.timeout(5_000);
+  [, waitForExit] = await spawn(
+    { cwd: config.dest, pipeLogs: true, signal },
+    'npm',
+    'start',
+  );
+  try {
+    await waitForExit;
+  } catch (err) {
+    if (Object(err).name === 'AbortError') {
+      console.log('Ok');
+    } else {
+      throw new Error('Some process exitted with non-zero code');
+    }
   }
 }
 
