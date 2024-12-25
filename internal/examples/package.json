@@ -2,10 +2,9 @@
   "name": "@internal/examples",
   "type": "module",
   "private": true,
-  "bin": "./src/bin.ts",
   "main": "./src/index.ts",
   "scripts": {
-    "start": "./src/bin.ts"
+    "start": "tsx ./src/bin.ts"
   },
   "devDependencies": {
     "@types/jscodeshift": "^0.12.0",

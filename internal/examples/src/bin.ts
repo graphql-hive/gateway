@@ -1,4 +1,3 @@
-#!/usr/bin/env node --import tsx
 import { convertE2EToExample } from './convert';
 
 await convertE2EToExample({
