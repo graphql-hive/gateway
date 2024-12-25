@@ -20,10 +20,7 @@ export const convertE2EToExampleConfigSchema = z.object({
         glob(path.join(arg, '*.e2e.ts')).then((paths) => paths.length > 0),
       'Directory does not contain an E2E test (no "*.e2e.ts" file)',
     ),
-  dest: z
-    .string()
-    .refine(exists, 'Directory does not exist')
-    .transform((arg) => path.resolve(arg)),
+  dest: z.string().transform((arg) => path.resolve(arg)),
   clean: z.boolean().optional(),
 });
 
