@@ -6,19 +6,19 @@
       "command": "npm i"
     },
     {
-      "name": "Service bar",
-      "command": "npm run service:bar &"
-    },
-    {
-      "name": "Wait for service bar",
-      "command": "curl --retry-connrefused --retry 5 --retry-delay 1 http://localhost:4001"
-    },
-    {
       "name": "Service foo",
       "command": "npm run service:foo &"
     },
     {
       "name": "Wait for service foo",
+      "command": "curl --retry-connrefused --retry 5 --retry-delay 1 http://localhost:4001"
+    },
+    {
+      "name": "Service bar",
+      "command": "npm run service:bar &"
+    },
+    {
+      "name": "Wait for service bar",
       "command": "curl --retry-connrefused --retry 5 --retry-delay 1 http://localhost:4002"
     },
     {
