@@ -14,13 +14,12 @@ import {
   fakePromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
-import { spawn } from '@internal/proc';
+import { Proc, ProcOptions, spawn, waitForPort } from '@internal/proc';
 import {
   boolEnv,
   createOpt,
   createPortOpt,
   createServicePortOpt,
-  hostnames,
   isDebug,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -82,36 +81,6 @@ E2E_GATEWAY_RUNNER=bun-docker yarn build && yarn workspace @graphql-hive/gateway
   }
   return runner as ServeRunner;
 })();
-
-export interface ProcOptions {
-  /**
-   * Pipe the logs from the spawned process to the current process, or to a file
-   * relative to the Tenv cwd when passing a string.
-   *
-   * Useful for debugging.
-   *
-   * @default boolEnv('DEBUG')
-   */
-  pipeLogs?: boolean | string;
-  /**
-   * Additional environment variables to pass to the spawned process.
-   *
-   * They will be merged with `process.env` overriding any existing value.
-   */
-  env?: Record<string, string | number>;
-  /** Extra args to pass to the process. */
-  args?: (string | number | boolean)[];
-}
-
-export interface Proc extends AsyncDisposable {
-  getStd(o: 'out' | 'err' | 'both'): string;
-  getStats(): Promise<{
-    // Total CPU utilization (of all cores) as a percentage.
-    cpu: number;
-    // Memory consumption in megabytes (MB).
-    mem: number;
-  }>;
-}
 
 export interface Server extends Proc {
   port: number;
@@ -1010,36 +979,6 @@ export function getAvailablePort(): Promise<number> {
     }
   });
   return deferred.promise;
-}
-
-async function waitForPort({
-  port,
-  signal,
-  protocol = 'http',
-}: {
-  port: number;
-  signal: AbortSignal;
-  protocol: string;
-}) {
-  outer: while (!signal.aborted) {
-    for (const localHostname of hostnames) {
-      try {
-        await fetch(`${protocol}://${localHostname}:${port}`, { signal });
-        break outer;
-      } catch (err) {
-        if (
-          err instanceof Error &&
-          err.message.includes('self-signed certificate') &&
-          protocol === 'https'
-        ) {
-          break outer;
-        }
-      }
-    }
-    // no need to track retries, jest will time out aborting the signal
-    signal.throwIfAborted();
-    await setTimeout(interval);
-  }
 }
 
 function waitForReachable(server: Server | Container, signal: AbortSignal) {

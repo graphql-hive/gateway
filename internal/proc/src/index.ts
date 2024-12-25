@@ -3,8 +3,9 @@ import fs from 'fs/promises';
 import { createServer } from 'http';
 import type { AddressInfo } from 'net';
 import path from 'path';
+import { setTimeout } from 'timers/promises';
 import { createDeferred } from '@graphql-tools/utils';
-import { isDebug, trimError } from '@internal/testing';
+import { hostnames, isDebug, trimError } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import terminate from 'terminate/promise';
 
@@ -184,5 +185,35 @@ function pipeLog(
     process.stderr.write(log);
   } else if (typeof pipeLogs === 'string') {
     fs.appendFile(path.join(cwd, pipeLogs), log);
+  }
+}
+
+export async function waitForPort({
+  port,
+  signal,
+  protocol = 'http',
+}: {
+  port: number;
+  signal: AbortSignal;
+  protocol: string;
+}) {
+  outer: while (!signal.aborted) {
+    for (const localHostname of hostnames) {
+      try {
+        await fetch(`${protocol}://${localHostname}:${port}`, { signal });
+        break outer;
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          err.message.includes('self-signed certificate') &&
+          protocol === 'https'
+        ) {
+          break outer;
+        }
+      }
+    }
+    // no need to track retries, jest will time out aborting the signal
+    signal.throwIfAborted();
+    await setTimeout(1_000);
   }
 }
