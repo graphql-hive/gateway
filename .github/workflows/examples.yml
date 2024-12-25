@@ -54,4 +54,4 @@ jobs:
         with:
           file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'
-          commit_options: '--reset-author' # dont use the actor as an author
+          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # dont use the actor as an author
