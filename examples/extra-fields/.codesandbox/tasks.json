@@ -1,25 +1,24 @@
 {
-  "$schema": "https://codesandbox.io/schemas/tasks.json",
   "setupTasks": [
     {
       "name": "Install",
       "command": "npm i"
     },
     {
-      "name": "Service foo",
+      "name": "Start service foo",
       "command": "npm run service:foo &"
     },
     {
       "name": "Wait for service foo",
-      "command": "curl --retry-connrefused --retry 10 --retry-delay 1 http://localhost:4001"
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:4001"
     },
     {
-      "name": "Service bar",
+      "name": "Start service bar",
       "command": "npm run service:bar &"
     },
     {
       "name": "Wait for service bar",
-      "command": "curl --retry-connrefused --retry 10 --retry-delay 1 http://localhost:4002"
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:4002"
     },
     {
       "name": "Compose",
@@ -28,7 +27,7 @@
   ],
   "tasks": {
     "gateway": {
-      "name": "Start Hive Gateway",
+      "name": "Hive Gateway",
       "runAtStart": true,
       "command": "npm run gateway",
       "preview": {
