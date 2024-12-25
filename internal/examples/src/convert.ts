@@ -57,7 +57,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   let portForService: PortForService = {};
 
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
-  if (await exists(meshConfigTsFile)) {
+  const meshConfigTsFileExists = await exists(meshConfigTsFile)
+  if (meshConfigTsFileExists) {
     console.group(`"mesh.config.ts" found, transforming...`);
     using _ = defer(() => console.groupEnd());
 
@@ -131,8 +132,17 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     for (const relativeServiceFile of relativeServiceFiles) {
       start += ` 'tsx ${relativeServiceFile}'`;
     }
-    start += ` 'mesh-compose -o supergraph.graphql'`;
-    start += ` 'hive-gateway supergraph'`;
+    start += " '";
+    if (relativeServiceFiles.length) {
+      // allow some time for the services to start
+      start += 'sleep 1 && '
+    }
+    if (meshConfigTsFileExists) {
+      // compose first
+      start += 'mesh-compose -o supergraph.graphql && '
+    }
+    start += 'hive-gateway supergraph';
+    start += "'";
     console.log(`Setting start script "${start}"`);
     packageJson.scripts = { start };
 
