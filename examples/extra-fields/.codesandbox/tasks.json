@@ -6,12 +6,20 @@
       "command": "npm i"
     },
     {
-      "name": "Services",
-      "command": "npm run services &"
+      "name": "Service bar",
+      "command": "npm run service:bar &"
     },
     {
-      "name": "Wait",
-      "command": "sleep 3"
+      "name": "Wait for service bar",
+      "command": "curl --retry-connrefused --retry 5 --retry-delay 1 http://localhost:4001"
+    },
+    {
+      "name": "Service foo",
+      "command": "npm run service:foo &"
+    },
+    {
+      "name": "Wait for service foo",
+      "command": "curl --retry-connrefused --retry 5 --retry-delay 1 http://localhost:4002"
     },
     {
       "name": "Compose",

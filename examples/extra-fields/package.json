@@ -4,7 +4,8 @@
   "scripts": {
     "compose": "mesh-compose -o supergraph.graphql",
     "gateway": "hive-gateway supergraph",
-    "services": "conc --kill-others-on-fail 'tsx services/foo.ts' 'tsx services/bar.ts'"
+    "service:bar": "tsx services/bar.ts",
+    "service:foo": "tsx services/foo.ts"
   },
   "dependencies": {
     "@graphql-hive/gateway": "^1.7.3",
