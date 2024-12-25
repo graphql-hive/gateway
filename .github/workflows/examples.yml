@@ -13,7 +13,7 @@ jobs:
       matrix:
         e2e:
           - extra-fields
-    name: Convert E2E ${{matrix.e2e}} to example
+    name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,7 +30,7 @@ jobs:
 
   commit:
     needs: [convert]
-    name: Commit examples
+    name: Commit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
