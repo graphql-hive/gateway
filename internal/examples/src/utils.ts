@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { ASTPath } from 'jscodeshift';
+import { ASTNode, ASTPath } from 'jscodeshift';
 
 /** Checks whether a file exists at the given {@link path}. */
 export function exists(path: string) {
@@ -17,7 +17,8 @@ export function defer(cb: () => void) {
 }
 
 /** Gets the Line Of Code numbers (with optional column number) in format `L0:0`. */
-export function loc({ node }: ASTPath, includeColumn?: true) {
+export function loc(pathOrNode: ASTPath | ASTNode, includeColumn?: true) {
+  const node = 'node' in pathOrNode ? pathOrNode.node : pathOrNode;
   if (!('loc' in node)) {
     throw new Error('Node does not have a location in source');
   }

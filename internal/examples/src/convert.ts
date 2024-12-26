@@ -313,9 +313,9 @@ export function transformServicePorts(
       path.node.specifiers
         // import { Opts } from '@internal/testing'
         ?.filter((s) => 'imported' in s && s.imported.name === 'Opts')
-        .forEach((optsImportSpecifier, i) => {
+        .forEach((optsImportSpecifier) => {
           console.group(
-            `Processing imported "Opts" #${i + 1} (as "${optsImportSpecifier.local!.name}")`,
+            `Processing imported "Opts" (as "${optsImportSpecifier.local!.name}") at ${loc(optsImportSpecifier, true)}`,
           );
           using _ = defer(() => console.groupEnd());
 
