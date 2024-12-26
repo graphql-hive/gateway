@@ -1,7 +1,7 @@
+import { execSync } from 'child_process';
 import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
-import { execSync } from 'child_process';
 
 describe('HMAC Signature', async () => {
   execSync('yarn workspace hmac-auth-https generate-users-cert');
