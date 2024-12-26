@@ -3123,7 +3123,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:packages/gateway":
+"@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
@@ -11144,6 +11144,18 @@ __metadata:
   checksum: 10c0/c9f295d9d8e38fa50679281fd70d80726962256e888a76c8e72e526453da7a1832dcb427caa716c1ad5d79841d4537301b90156fa30298fefd3d68f4ea2181bb
   languageName: node
   linkType: hard
+
+"hmac-signature-example@workspace:e2e/hmac-signature":
+  version: 0.0.0-use.local
+  resolution: "hmac-signature-example@workspace:e2e/hmac-signature"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.9.3"
+    "@graphql-hive/gateway": "workspace:^"
+    "@graphql-mesh/hmac-upstream-signature": "workspace:^"
+    graphql: "npm:^16.10.0"
+    graphql-yoga: "npm:^5.10.6"
+  languageName: unknown
+  linkType: soft
 
 "hotscript@npm:^1.0.11":
   version: 1.0.13
