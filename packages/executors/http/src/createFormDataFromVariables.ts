@@ -9,8 +9,8 @@ import {
   FormData as DefaultFormData,
 } from '@whatwg-node/fetch';
 import { extractFiles, isExtractableFile } from 'extract-files';
-import { SerializedRequest } from './index.js';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
+import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
 
 function collectAsyncIterableValues<T>(
   asyncIterable: AsyncIterable<T>,
@@ -32,7 +32,7 @@ function collectAsyncIterableValues<T>(
 }
 
 export function createFormDataFromVariables(
-  body: SerializedRequest,
+  body: SerializedExecutionRequest,
   {
     File: FileCtor = DefaultFile,
     FormData: FormDataCtor = DefaultFormData,

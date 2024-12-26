@@ -1,8 +1,8 @@
 import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import {
   defaultPrintFn,
-  executionRequestToGraphQLParams,
-  GraphQLParams,
+  serializeExecutionRequest,
+  SerializedExecutionRequest,
 } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
@@ -249,8 +249,8 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
-    let serializeFn = function serialize(): MaybePromise<GraphQLParams> {
-      return executionRequestToGraphQLParams({
+    let serializeFn = function serialize(): MaybePromise<SerializedExecutionRequest> {
+      return serializeExecutionRequest({
         executionRequest: request,
         excludeQuery,
         printFn,
@@ -258,14 +258,14 @@ export function buildHTTPExecutor(
     };
 
     if (options?.apq) {
-      serializeFn = function serializeWithAPQ(): MaybePromise<GraphQLParams> {
+      serializeFn = function serializeWithAPQ(): MaybePromise<SerializedExecutionRequest> {
         return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
           const extensions: Record<string, any> = request.extensions || {};
           extensions['persistedQuery'] = {
             version: 1,
             sha256Hash,
           };
-          return executionRequestToGraphQLParams({
+          return serializeExecutionRequest({
             executionRequest: {
               ...request,
               extensions,
@@ -277,7 +277,7 @@ export function buildHTTPExecutor(
       };
     }
 
-    return mapMaybePromise(serializeFn(), (body: GraphQLParams) =>
+    return mapMaybePromise(serializeFn(), (body: SerializedExecutionRequest) =>
       new ValueOrPromise(() => {
         switch (method) {
           case 'GET': {

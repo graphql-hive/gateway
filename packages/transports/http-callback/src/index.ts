@@ -6,7 +6,7 @@ import {
   type Transport,
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
-import { executionRequestToGraphQLParams } from '@graphql-tools/executor-common';
+import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
   mapMaybePromise,
@@ -108,7 +108,7 @@ export default {
       const subscriptionLogger = logger?.child(subscriptionId);
       const callbackUrl = `${publicUrl}${callbackPath}/${subscriptionId}`;
       const subscriptionCallbackPath = `${callbackPath}/${subscriptionId}`;
-      const serializedParams = executionRequestToGraphQLParams({
+      const serializedParams = serializeExecutionRequest({
         executionRequest,
       });
       const fetchBody = JSON.stringify({

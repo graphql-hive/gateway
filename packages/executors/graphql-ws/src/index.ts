@@ -1,6 +1,6 @@
 import {
   defaultPrintFn,
-  executionRequestToGraphQLParams,
+  serializeExecutionRequest,
 } from '@graphql-tools/executor-common';
 import {
   DisposableAsyncExecutor,
@@ -93,7 +93,7 @@ export function buildGraphQLWSExecutor(
       );
     }
     const iterableIterator = graphqlWSClient.iterate<TData, TExtensions>(
-      executionRequestToGraphQLParams({ executionRequest, printFn }),
+      serializeExecutionRequest({ executionRequest, printFn }),
     );
     if (iterableIterator.return && signal) {
       registerAbortSignalListener(signal, () => {

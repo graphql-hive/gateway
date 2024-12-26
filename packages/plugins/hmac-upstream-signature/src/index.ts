@@ -1,6 +1,6 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
-import { executionRequestToGraphQLParams } from '@graphql-tools/executor-common';
+import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import { mapMaybePromise } from '@graphql-tools/utils';
 import type { ExecutionRequest, MaybePromise } from '@graphql-tools/utils';
 import type {
@@ -32,7 +32,7 @@ export const defaultExecutionRequestSerializer = (
   executionRequest: ExecutionRequest,
 ) =>
   jsonStableStringify(
-    executionRequestToGraphQLParams({
+    serializeExecutionRequest({
       executionRequest: {
         document: executionRequest.document,
         variables: executionRequest.variables,

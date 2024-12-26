@@ -14,31 +14,31 @@ interface ExecutionRequestToGraphQLParams {
   printFn?: typeof defaultPrintFn;
 }
 
-export interface GraphQLParams {
+export interface SerializedExecutionRequest {
   query?: string | undefined;
   variables?: Record<string, any>;
   operationName?: string;
   extensions?: Record<string, any>;
 }
 
-export function executionRequestToGraphQLParams(
+export function serializeExecutionRequest(
   opts: Omit<ExecutionRequestToGraphQLParams, 'excludeQuery'> & {
     excludeQuery: true;
   },
-): Omit<GraphQLParams, 'query'>;
-export function executionRequestToGraphQLParams(
+): Omit<SerializedExecutionRequest, 'query'>;
+export function serializeExecutionRequest(
   opts: Omit<ExecutionRequestToGraphQLParams, 'excludeQuery'> & {
     excludeQuery?: false;
   },
-): Omit<GraphQLParams, 'query'> & { query: string };
-export function executionRequestToGraphQLParams(
+): Omit<SerializedExecutionRequest, 'query'> & { query: string };
+export function serializeExecutionRequest(
   opts: ExecutionRequestToGraphQLParams,
-): GraphQLParams;
-export function executionRequestToGraphQLParams({
+): SerializedExecutionRequest;
+export function serializeExecutionRequest({
   executionRequest,
   excludeQuery,
   printFn = defaultPrintFn,
-}: ExecutionRequestToGraphQLParams): GraphQLParams {
+}: ExecutionRequestToGraphQLParams): SerializedExecutionRequest {
   return {
     query: excludeQuery ? undefined : printFn(executionRequest.document),
     variables:
