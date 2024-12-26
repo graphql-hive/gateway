@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/transport-common",
-  "version": "0.7.24",
+  "version": "0.7.25",
   "type": "module",
   "repository": {
     "type": "git",
