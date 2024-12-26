@@ -1,23 +1,39 @@
+import { execSync } from 'child_process';
 import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
-const { service, gateway } = createTenv(__dirname);
-describe('HMAC Signature', () => {
-  // It never reaches to `Users` subgraph because `User.name` is not authorized for this user.
-  it('User 1 Flow (with ReadComments role)', async () => {
-    const { execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [
-          await service('users', { protocol: 'https' }),
-          await service('comments'),
+describe('HMAC Signature', async () => {
+  execSync('yarn workspace hmac-auth-https generate-users-cert');
+  const { service, gateway, gatewayRunner } = createTenv(__dirname);
+  const localCertFile = join(__dirname, 'users_cert.pem');
+  const dockerCertFile = '/gateway/users_cert.pem';
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [
+        await service('users', { protocol: 'https' }),
+        await service('comments'),
+      ],
+    },
+    env: {
+      NODE_EXTRA_CA_CERTS: gatewayRunner.includes('docker')
+        ? '/gateway/users_cert.pem'
+        : join(__dirname, 'users_cert.pem'),
+    },
+    runner: {
+      docker: {
+        volumes: [
+          {
+            host: localCertFile,
+            container: dockerCertFile,
+          },
         ],
       },
-      env: {
-        NODE_EXTRA_CA_CERTS: join(__dirname, 'services', 'users', 'cert.pem'),
-      },
-    });
+    },
+  });
+  // It never reaches to `Users` subgraph because `User.name` is not authorized for this user.
+  it('User 1 Flow (with ReadComments role)', async () => {
     const result = await execute({
       query: /* GraphQL */ `
         query {
@@ -57,18 +73,6 @@ describe('HMAC Signature', () => {
     });
   });
   it('User 2 Flow (read:comments and read:users_names)', async () => {
-    const { execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [
-          await service('users', { protocol: 'https' }),
-          await service('comments'),
-        ],
-      },
-      env: {
-        NODE_EXTRA_CA_CERTS: join(__dirname, 'services', 'users', 'cert.pem'),
-      },
-    });
     const result = await execute({
       query: /* GraphQL */ `
         query {

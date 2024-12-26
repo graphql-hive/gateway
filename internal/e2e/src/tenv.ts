@@ -75,7 +75,7 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
 
 `);
   }
-  if (runner === 'docker' && !boolEnv('CI')) {
+  if (runner === 'bun-docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 E2E_GATEWAY_RUNNER=bun-docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
@@ -493,7 +493,7 @@ export function createTenv(cwd: string): Tenv {
             containerPort: port,
             healthcheck: runner?.docker?.healthcheck || [
               'CMD-SHELL',
-              `wget --spider http://0.0.0.0:${port}/healthcheck`,
+              `wget --spider ${protocol}://0.0.0.0:${port}/healthcheck`,
             ],
             cmd: getFullArgs(),
             volumes,
@@ -542,35 +542,41 @@ export function createTenv(cwd: string): Tenv {
         port,
         protocol,
         async execute({ headers, ...args }) {
-          const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              accept: 'application/graphql-response+json, application/json',
-              ...headers,
-            },
-            body: JSON.stringify(args),
-          });
-          if (!res.ok) {
-            const resText = await res.text();
-            const err = new Error(
-              `${res.status} ${res.statusText}\n${resText}`,
-            );
-            err.name = 'ResponseError';
-            if (resText.includes('Unexpected')) {
+          try {
+            const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                accept: 'application/graphql-response+json, application/json',
+                ...headers,
+              },
+              body: JSON.stringify(args),
+            });
+            if (!res.ok) {
+              const resText = await res.text();
+              const err = new Error(
+                `${res.status} ${res.statusText}\n${resText}`,
+              );
+              err.name = 'ResponseError';
+              if (resText.includes('Unexpected')) {
+                process.stderr.write(proc.getStd('both'));
+              }
+              throw err;
+            }
+            const resBody: ExecutionResult = await res.json();
+            if (
+              resBody?.errors?.some((error) =>
+                error.message.includes('Unexpected'),
+              )
+            ) {
               process.stderr.write(proc.getStd('both'));
             }
-            throw err;
+            return resBody;
+          } catch (err) {
+            throw new Error(
+              `Failed to execute query on gateway\n${proc.getStd('both')}\n${err}`,
+            );
           }
-          const resBody: ExecutionResult = await res.json();
-          if (
-            resBody?.errors?.some((error) =>
-              error.message.includes('Unexpected'),
-            )
-          ) {
-            process.stderr.write(proc.getStd('both'));
-          }
-          return resBody;
         },
       };
       const ctrl = new AbortController();
@@ -921,7 +927,7 @@ export function createTenv(cwd: string): Tenv {
       for (const service of services) {
         subgraphs.push({
           name: service.name,
-          url: `http://0.0.0.0:${service.port}/graphql`,
+          url: `${service.protocol}://0.0.0.0:${service.port}/graphql`,
         });
       }
 
