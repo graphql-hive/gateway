@@ -7,9 +7,7 @@ describe('HMAC Signature', () => {
     const { execute } = await gateway({
       supergraph: {
         with: 'mesh',
-        services: [
-          await service('users'),
-        ],
+        services: [await service('users')],
       },
     });
     const result = await execute({

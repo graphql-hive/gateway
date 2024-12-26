@@ -900,9 +900,7 @@ export function createTenv(cwd: string): Tenv {
       }
       return container;
     },
-    async composeWithApollo(
-      services,
-    ) {
+    async composeWithApollo(services) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
         subgraphs.push({

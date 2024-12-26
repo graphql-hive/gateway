@@ -1,10 +1,10 @@
+import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { useHmacSignatureValidation } from '@graphql-mesh/hmac-upstream-signature';
+import { Opts } from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { Opts } from '@internal/testing';
-import { readFileSync } from 'fs';
 
 const users = [
   { id: '1', name: 'Alice' },

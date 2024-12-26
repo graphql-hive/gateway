@@ -1,7 +1,7 @@
-import { defineConfig } from "@graphql-hive/gateway";
+import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-    hmacSignature: {
-        secret: 'HMAC_SIGNING_SECRET',
-    }
+  hmacSignature: {
+    secret: 'HMAC_SIGNING_SECRET',
+  },
 });
