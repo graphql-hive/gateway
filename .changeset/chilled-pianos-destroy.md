@@ -1,6 +1,7 @@
 ---
 '@graphql-mesh/hmac-upstream-signature': patch
 '@graphql-tools/executor-graphql-ws': patch
+'@graphql-tools/executor-common': patch
 '@graphql-mesh/transport-common': patch
 '@graphql-mesh/transport-http': patch
 '@graphql-tools/executor-http': patch
