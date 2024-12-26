@@ -291,7 +291,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     stack.use(proc);
     await Promise.race([
       waitForExit,
-      waitForPort(4000, AbortSignal.timeout(10_000)),
+      waitForPort({
+        port: 4000,
+        signal: AbortSignal.timeout(10_000),
+      }),
     ]);
   }
 

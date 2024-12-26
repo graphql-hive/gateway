@@ -195,7 +195,7 @@ export async function waitForPort({
 }: {
   port: number;
   signal: AbortSignal;
-  protocol: string;
+  protocol?: string;
 }) {
   outer: while (!signal.aborted) {
     for (const localHostname of hostnames) {
