@@ -3,8 +3,9 @@ import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('HMAC Signature', async () => {
-  const { service, gateway } = createTenv(__dirname);
-  const NODE_EXTRA_CA_CERTS = join(__dirname, 'services', 'users', 'cert.pem');
+  const { service, gateway, gatewayRunner } = createTenv(__dirname);
+  const localCertFile = join(__dirname, 'users_cert.pem');
+  const dockerCertFile = '/gateway/users_cert.pem';
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
@@ -14,14 +15,16 @@ describe('HMAC Signature', async () => {
       ],
     },
     env: {
-      NODE_EXTRA_CA_CERTS,
+      NODE_EXTRA_CA_CERTS: gatewayRunner.includes('docker')
+        ? '/gateway/users_cert.pem'
+        : join(__dirname, 'users_cert.pem'),
     },
     runner: {
       docker: {
         volumes: [
           {
-            host: NODE_EXTRA_CA_CERTS,
-            container: NODE_EXTRA_CA_CERTS,
+            host: localCertFile,
+            container: dockerCertFile,
           },
         ],
       },
