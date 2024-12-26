@@ -1,5 +1,10 @@
 import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import {
+  defaultPrintFn,
+  executionRequestToGraphQLParams,
+  GraphQLParams,
+} from '@graphql-tools/executor-common';
+import {
   createGraphQLError,
   DisposableAsyncExecutor,
   DisposableExecutor,
@@ -16,7 +21,6 @@ import { fetch as defaultFetch } from '@whatwg-node/fetch';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
-import { defaultPrintFn } from './defaultPrintFn.js';
 import { handleEventStreamResponse } from './handleEventStreamResponse.js';
 import { handleMultipartMixedResponse } from './handleMultipartMixedResponse.js';
 import { isLiveQueryOperationDefinitionNode } from './isLiveQueryOperationDefinitionNode.js';
@@ -122,13 +126,6 @@ export interface HTTPExecutorOptions {
    */
   disposable?: boolean;
 }
-
-export type SerializedRequest = {
-  query?: string;
-  variables?: Record<string, any>;
-  operationName?: string;
-  extensions?: any;
-};
 
 export type HeadersConfig = Record<string, string>;
 
@@ -252,48 +249,35 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
-    let serializeFn = function serialize(): MaybePromise<SerializedRequest> {
-      return {
-        query: excludeQuery ? undefined : printFn(request.document),
-        variables:
-          (request.variables && Object.keys(request.variables).length) > 0
-            ? request.variables
-            : undefined,
-        operationName: request.operationName
-          ? request.operationName
-          : undefined,
-        extensions:
-          request.extensions && Object.keys(request.extensions).length > 0
-            ? request.extensions
-            : undefined,
-      };
+    let serializeFn = function serialize(): MaybePromise<GraphQLParams> {
+      return executionRequestToGraphQLParams({
+        executionRequest: request,
+        excludeQuery,
+        printFn,
+      });
     };
 
     if (options?.apq) {
-      serializeFn =
-        function serializeWithAPQ(): MaybePromise<SerializedRequest> {
-          return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
-            const extensions: Record<string, any> = request.extensions || {};
-            extensions['persistedQuery'] = {
-              version: 1,
-              sha256Hash,
-            };
-            return {
-              query: excludeQuery ? undefined : query,
-              variables:
-                (request.variables && Object.keys(request.variables).length) > 0
-                  ? request.variables
-                  : undefined,
-              operationName: request.operationName
-                ? request.operationName
-                : undefined,
+      serializeFn = function serializeWithAPQ(): MaybePromise<GraphQLParams> {
+        return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
+          const extensions: Record<string, any> = request.extensions || {};
+          extensions['persistedQuery'] = {
+            version: 1,
+            sha256Hash,
+          };
+          return executionRequestToGraphQLParams({
+            executionRequest: {
+              ...request,
               extensions,
-            };
+            },
+            excludeQuery,
+            printFn,
           });
-        };
+        });
+      };
     }
 
-    return mapMaybePromise(serializeFn(), (body: SerializedRequest) =>
+    return mapMaybePromise(serializeFn(), (body: GraphQLParams) =>
       new ValueOrPromise(() => {
         switch (method) {
           case 'GET': {

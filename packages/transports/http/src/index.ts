@@ -1,7 +1,6 @@
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
-  defaultPrintFn,
   type Transport,
   type TransportEntry,
 } from '@graphql-mesh/transport-common';
@@ -55,7 +54,6 @@ export default {
               info: execReq?.info,
             })
         : undefined,
-      print: defaultPrintFn,
       ...payload.transportEntry.options,
       // @ts-expect-error - TODO: Fix this in executor-http
       fetch: payload.fetch,

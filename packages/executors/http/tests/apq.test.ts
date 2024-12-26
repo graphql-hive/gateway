@@ -1,10 +1,10 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 import { fetch } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { defaultPrintFn } from '../src/defaultPrintFn';
 import { hashSHA256 } from '../src/utils';
 
 describe('APQ to the upstream', () => {

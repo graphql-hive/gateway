@@ -1,7 +1,6 @@
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
-  defaultPrintFn,
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
@@ -107,8 +106,6 @@ export default {
               executorLogger?.debug('error', { error });
             },
           },
-          // @ts-expect-error wrong typings for print fn
-          print: defaultPrintFn,
         });
         wsExecutorMap.set(hash, wsExecutor);
       }

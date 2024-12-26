@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@graphql-hive/gateway-abort-signal-any": "workspace:^",
+    "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.7.0",
     "@repeaterjs/repeater": "^3.0.4",
     "@whatwg-node/disposablestack": "^0.0.5",

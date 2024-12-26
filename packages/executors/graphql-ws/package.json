@@ -39,6 +39,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
+    "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.7.0",
     "@whatwg-node/disposablestack": "^0.0.5",
     "graphql-ws": "^5.14.0",

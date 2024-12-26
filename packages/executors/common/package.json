@@ -1,17 +1,14 @@
 {
-  "name": "@graphql-mesh/transport-http-callback",
-  "version": "0.5.15",
+  "name": "@graphql-tools/executor-common",
+  "version": "0.0.0",
   "type": "module",
+  "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/graphql-hive/gateway.git",
-    "directory": "packages/transports/http-callback"
+    "directory": "packages/executors/graphql-ws"
   },
-  "author": {
-    "email": "contact@the-guild.dev",
-    "name": "The Guild",
-    "url": "https://the-guild.dev"
-  },
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
@@ -39,19 +36,11 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0"
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
-    "@graphql-mesh/cross-helpers": "^0.4.9",
-    "@graphql-mesh/string-interpolation": "^0.5.6",
-    "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/types": "^0.103.6",
-    "@graphql-mesh/utils": "^0.103.6",
-    "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.7.0",
-    "@repeaterjs/repeater": "^3.0.6",
-    "@whatwg-node/fetch": "^0.10.1",
-    "tslib": "^2.8.1"
+    "@envelop/core": "^5.0.2",
+    "@graphql-tools/utils": "^10.7.0"
   },
   "devDependencies": {
     "graphql": "^16.9.0",
