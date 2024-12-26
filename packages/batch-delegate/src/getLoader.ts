@@ -117,6 +117,11 @@ export function getLoader<K = any, V = any, C = K>(
     cacheKey += memoizedPrint(selectionSet);
   }
 
+  const fieldNode = fieldNodes?.[0];
+  if (fieldNode?.arguments) {
+    cacheKey += fieldNode.arguments.map((arg) => memoizedPrint(arg)).join(',');
+  }
+
   let loader = loaders.get(cacheKey);
 
   if (loader === undefined) {
