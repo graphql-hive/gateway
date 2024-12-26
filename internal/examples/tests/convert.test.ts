@@ -1,72 +1,71 @@
 import dedent from 'dedent';
 import { expect, it } from 'vitest';
-import { PortForService, transformServicePorts } from '../src/convert';
+import {
+  Eenv,
+  parseTenv,
+  PortForService,
+  transformServicePorts,
+} from '../src/convert';
+
+it.each([
+  {
+    name: 'destructured services',
+    source: dedent`
+    import { createTenv } from '@internal/e2e';
+    const { gateway, service } = createTenv(__dirname);
+    service('foo');
+    service('bar');
+    `,
+    result: {
+      gateway: { port: 4000 },
+      services: {
+        foo: {
+          port: 4001,
+        },
+        bar: {
+          port: 4002,
+        },
+      },
+    } satisfies Eenv,
+  },
+])('should detect tenv $name', ({ source, result }) => {
+  const actualResult = parseTenv(source);
+  expect(actualResult).toEqual(result);
+});
 
 it.each([
   {
     name: 'declaring opts variable',
+    eenv: {
+      gateway: { port: 4000 },
+      services: { foo: { port: 5001 }, bar: { port: 6001 } },
+    } as Eenv,
     source: dedent`
     import { Opts } from '@internal/testing';
     const opts = Opts();
-    const port = opts.getServicePort('foo');
+    const portFoo = opts.getServicePort('foo');
+    const portBar = opts.getServicePort('bar');
     `,
-    auto: {
-      result: {
-        source: dedent`
-        const port = 4001;
-        `,
-        portForService: {
-          foo: 4001,
-        } satisfies PortForService,
-      },
-    },
-    manual: {
-      portForService: {
-        foo: 5001,
-      } satisfies PortForService,
-      result: {
-        source: dedent`
-        const port = 5001;
-        `,
-      },
-    },
+    result: dedent`
+    const portFoo = 5001;
+    const portBar = 6001;
+    `,
   },
   {
     name: 'using Opts() directly',
+    eenv: {
+      gateway: { port: 4000 },
+      services: { foo: { port: 6001 } },
+    } as Eenv,
     source: dedent`
     import { Opts } from '@internal/testing';
     const port = Opts().getServicePort('foo');
     `,
-    auto: {
-      result: {
-        source: dedent`
-        const port = 4001;
-        `,
-        portForService: {
-          foo: 4001,
-        } satisfies PortForService,
-      },
-    },
-    manual: {
-      portForService: {
-        foo: 7001,
-      } satisfies PortForService,
-      result: {
-        source: dedent`
-        const port = 7001;
-        `,
-      },
-    },
+    result: dedent`
+    const port = 6001;
+    `,
   },
-])('should transform service ports $name', ({ source, auto, manual }) => {
-  // auto
-  const actualAutoResult = transformServicePorts(source);
-  expect(actualAutoResult).toEqual(auto.result);
-
-  // manual
-  const actualManualResult = transformServicePorts(
-    source,
-    manual.portForService,
-  );
-  expect(actualManualResult).toEqual(manual.result);
+])('should transform service ports $name', ({ eenv, source, result }) => {
+  const actualResult = transformServicePorts(eenv, source);
+  expect(actualResult).toEqual(result);
 });

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
-import j from 'jscodeshift';
+import j, { Collection } from 'jscodeshift';
 import { defer, exists, loc, writeFileMkdir } from './utils';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -38,8 +38,6 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     config.e2e,
   );
 
-  console.log(`Converting E2E test "${e2eDir}" to an example "${exampleDir}"`);
-
   if (config.clean) {
     console.warn('Cleaning example...');
     try {
@@ -49,9 +47,28 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
   }
 
+  console.log(`Converting E2E test "${e2eDir}" to an example "${exampleDir}"`);
   await fs.mkdir(exampleDir, { recursive: true });
 
-  let portForService: PortForService = {};
+  const e2eTestFiles = await glob(path.join(e2eDir, '*.e2e.ts'));
+  if (!e2eTestFiles.length) {
+    throw new Error('No E2E test files (*.e2e.ts) found');
+  }
+  if (e2eTestFiles.length > 1) {
+    throw new Error('Multiple E2E test files (*.e2e.ts) found');
+  }
+  let eenv: Eenv;
+  {
+    const e2eTestFile = e2eTestFiles[0]!;
+
+    console.group(
+      `"${path.basename(e2eTestFile)}" found, parsing tenv to eenv (example environment)...`,
+    );
+    using _ = defer(() => console.groupEnd());
+
+    eenv = parseTenv(await fs.readFile(e2eTestFile, 'utf8'));
+    console.log('eenv', JSON.stringify(eenv, null, '  '));
+  }
 
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
   const composes = await exists(meshConfigTsFile);
@@ -59,35 +76,49 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.group(`"mesh.config.ts" found, transforming service ports...`);
     using _ = defer(() => console.groupEnd());
 
-    const result = transformServicePorts(
+    const source = transformServicePorts(
+      eenv,
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
-    portForService = result.portForService;
     const dest = path.join(exampleDir, 'mesh.config.ts');
     console.log(`Writing "${dest}"`);
-    await fs.writeFile(dest, result.source);
+    await fs.writeFile(dest, source);
   }
 
-  const services: { [name: string]: string /* relative file */ } = {};
-  for (const serviceFile of await glob(path.join(e2eDir, 'services/**/*.ts'))) {
-    const relativeServiceFile = path.relative(e2eDir, serviceFile);
-    services[path.basename(serviceFile, path.extname(serviceFile))] =
-      relativeServiceFile;
+  for (const service of Object.keys(eenv.services)) {
+    const loc = await findServiceLocation(e2eDir, service);
 
-    console.group(
-      `service file "${relativeServiceFile}" found, transforming service ports...`,
-    );
-    using _ = defer(() => console.groupEnd());
+    const relativeServiceFiles: string[] = []; // relative paths to service files
+    if (loc.type === 'file') {
+      relativeServiceFiles.push(loc.relativePath);
+    } /** loc.type === 'dir' */ else {
+      for (const serviceFile of await glob(path.join(loc.path, '**/*.ts'))) {
+        const relativeServiceFile = path.relative(e2eDir, serviceFile);
+        relativeServiceFiles.push(relativeServiceFile);
+      }
+    }
 
-    const result = transformServicePorts(
-      await fs.readFile(serviceFile, 'utf8'),
-      portForService,
-    );
+    loc.type === 'dir' &&
+      console.group(
+        `service dir "${loc.relativePath}" found, transforming files within...`,
+      );
+    for (const relativeServiceFile of relativeServiceFiles) {
+      console.group(
+        `service file "${relativeServiceFile}" found, transforming service ports...`,
+      );
+      using _ = defer(() => console.groupEnd());
 
-    const dest = path.join(exampleDir, relativeServiceFile);
-    console.log(`Writing "${dest}"`);
+      const source = transformServicePorts(
+        eenv,
+        await fs.readFile(path.join(e2eDir, relativeServiceFile), 'utf8'),
+      );
 
-    await writeFileMkdir(dest, result.source);
+      const dest = path.join(exampleDir, relativeServiceFile);
+      console.log(`Writing "${dest}"`);
+
+      await writeFileMkdir(dest, source);
+    }
+    loc.type === 'dir' && console.groupEnd();
   }
 
   {
@@ -121,7 +152,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     );
     packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
 
-    if (Object.keys(services).length) {
+    if (Object.keys(eenv.services).length) {
       const version = '^4.19.2';
       console.log(
         `Adding "tsx@${version}" dev dependency because there are services...`,
@@ -135,9 +166,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       using _1 = defer(() => console.groupEnd());
 
       const scripts: Record<string, string> = {};
-      for (const [name, relativeFile] of Object.entries(services)) {
+      for (const service of Object.keys(eenv.services)) {
         // will be used in tasks.json
-        scripts[`service:${name}`] = `tsx ${relativeFile}`;
+        const loc = await findServiceLocation(exampleDir, service);
+        scripts[`service:${service}`] = `tsx ${loc.relativePath}`;
       }
       if (composes) {
         scripts['compose'] = 'mesh-compose -o supergraph.graphql';
@@ -182,14 +214,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       command: 'npm i',
     });
 
-    for (const service of Object.keys(services)) {
+    for (const [name, opts] of Object.entries(eenv.services)) {
       setupTasks.push({
-        name: `Start service ${service}`,
-        command: `npm run service:${service} &`,
+        name: `Start service ${name}`,
+        command: `npm run service:${name} &`,
       });
       setupTasks.push({
-        name: `Wait for service ${service}`,
-        command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${portForService[service]}`,
+        name: `Wait for service ${name}`,
+        command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${opts.port}`,
       });
     }
 
@@ -266,36 +298,129 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   console.log('Ok');
 }
 
+/** Parsing an E2E `Tenv` creates and `Eenv` (Example environment). */
+export interface Eenv {
+  gateway: { port: number };
+  services: { [name: string]: { port: number } };
+}
+
+/** Parses a source file containing `createTenv` and creates an {@link Eenv} from it. */
+export function parseTenv(source: string): Eenv {
+  const root = j(source);
+
+  const eenv: Eenv = { gateway: { port: 4000 }, services: {} };
+  const startingServicePort = eenv.gateway.port + 1;
+
+  root
+    // import '@internal/e2e'
+    .find(j.ImportDeclaration, {
+      source: {
+        value: '@internal/e2e',
+      },
+    })
+    .forEach((path) => {
+      console.group(`Processing "@internal/e2e" import at ${loc(path)}`);
+      using _ = defer(() => console.groupEnd());
+
+      path.node.specifiers
+        // import { createTenv } from '@internal/e2e'
+        ?.filter((s) => 'imported' in s && s.imported.name === 'createTenv')
+        .forEach((createTenvImport) => {
+          console.group(
+            `Processing imported "createTenv" (as "${createTenvImport.local!.name}") at ${loc(createTenvImport, true)}`,
+          );
+          using _ = defer(() => console.groupEnd());
+
+          root
+            // const ? = createTenv()
+            .find(j.VariableDeclarator, {
+              init: {
+                type: 'CallExpression',
+                callee: {
+                  type: 'Identifier',
+                  name: createTenvImport.local!.name,
+                },
+              },
+            })
+            .forEach((path) => {
+              if (path.node.id.type !== 'ObjectPattern') {
+                throw new Error(
+                  `variable declaration with createTenv() is not an ObjectPattern, but "${path.node.id.type}"`,
+                );
+              }
+
+              let serviceVar = '';
+              for (const prop of path.node.id.properties) {
+                if (
+                  prop.type === 'Property' &&
+                  prop.key.type === 'Identifier' &&
+                  prop.key.name === 'service'
+                ) {
+                  if (prop.value.type !== 'Identifier') {
+                    throw new Error(
+                      `property value for "service" declaration not an Identifier, but "${prop.value.type}"`,
+                    );
+                  }
+                  serviceVar = prop.value.name;
+                }
+              }
+
+              if (serviceVar) {
+                console.group(
+                  `Variable "service" (as "${serviceVar}") declared at ${loc(path, true)}`,
+                );
+                using _ = defer(() => console.groupEnd());
+
+                // TODO: shadowed variables not supported
+                root
+                  // service()
+                  .find(j.CallExpression, {
+                    callee: {
+                      type: 'Identifier',
+                      name: serviceVar,
+                    },
+                  })
+                  .forEach((path) => {
+                    const arg0 = path.node.arguments[0];
+                    if (arg0?.type !== 'Literal') {
+                      throw new Error(
+                        'TODO: get variable value when literal is not used in "service()" argument',
+                      );
+                    }
+
+                    const service = arg0.value!.toString();
+                    if (!(service in eenv.services)) {
+                      console.log(
+                        `Found distinct "service('${service}')" at ${loc(path, true)}`,
+                      );
+                      const port =
+                        startingServicePort + Object.keys(eenv.services).length;
+                      console.log(
+                        `Adding service "${service}" with port "${port}"`,
+                      );
+                      eenv.services[service] = { port };
+                    }
+                  });
+              }
+            });
+        });
+    });
+
+  return eenv;
+}
+
 export interface PortForService {
   [service: string]: number /* port */;
 }
 
 /**
- * Finds and replaces all service ports in the given source file.
- *
- * If no {@link portForService} argument is provided, then ports will be auto-assigned
- * starting from `4001` and the map of used ports will be returned. Otherwise, the ports
- * from {@link portForService} will be used.
- *
- * @param source - Source code of the `mesh.config.ts` file.
- * @param portForService - Map of service names to ports.
+ * Transforms the given source code by finding and replacing all service ports using the
+ * {@link Eenv.services services} from the provided {@link eenv}.
  */
-export function transformServicePorts(source: string): {
-  source: string;
-  portForService: PortForService;
-};
-export function transformServicePorts(
-  source: string,
-  portForService: PortForService,
-): { source: string };
-export function transformServicePorts(
-  source: string,
-  portForService?: PortForService,
-): { source: string; portForService?: PortForService } {
+export function transformServicePorts(eenv: Eenv, source: string): string {
   const root = j(source);
 
-  const startingServicePort = 4001;
-  const autoPortForService: PortForService = {};
+  let removeOptsVarDeclarator: Collection | undefined;
 
   root
     // import '@internal/testing'
@@ -313,9 +438,9 @@ export function transformServicePorts(
       path.node.specifiers
         // import { Opts } from '@internal/testing'
         ?.filter((s) => 'imported' in s && s.imported.name === 'Opts')
-        .forEach((optsImportSpecifier) => {
+        .forEach((createTenvImport) => {
           console.group(
-            `Processing imported "Opts" (as "${optsImportSpecifier.local!.name}") at ${loc(optsImportSpecifier, true)}`,
+            `Processing imported "Opts" (as "${createTenvImport.local!.name}") at ${loc(createTenvImport, true)}`,
           );
           using _ = defer(() => console.groupEnd());
 
@@ -341,14 +466,14 @@ export function transformServicePorts(
               if (
                 callee.object.type === 'CallExpression' &&
                 callee.object.callee.type === 'Identifier' &&
-                callee.object.callee.name === optsImportSpecifier.local!.name
+                callee.object.callee.name === createTenvImport.local!.name
               ) {
                 // Opts().getServicePort()
                 return true;
               }
 
               if (callee.object.type === 'Identifier') {
-                const removed = root
+                removeOptsVarDeclarator = root
                   // const opts = Opts()
                   .find(j.VariableDeclarator, {
                     id: {
@@ -357,7 +482,7 @@ export function transformServicePorts(
                     },
                     init: {
                       callee: {
-                        name: optsImportSpecifier.local!.name,
+                        name: createTenvImport.local!.name,
                       },
                     },
                   })
@@ -368,19 +493,18 @@ export function transformServicePorts(
                       );
                     }
                     console.log(
-                      `Variable "${path.node.id.name}" declared with "${optsImportSpecifier.local!.name}()" at ${loc(path)}, removing...`,
+                      `Variable "${path.node.id.name}" declared with "${createTenvImport.local!.name}()" at ${loc(path)}, removing...`,
                     );
-                  })
-                  .remove(); // remove const opts = Opts()
+                  });
 
                 // const opts = Opts()
                 // opts.getServicePort()
-                return removed.length > 0;
+                return removeOptsVarDeclarator.length > 0;
               }
 
               return false;
             })
-            .forEach((path, i) => {
+            .forEach((path) => {
               const arg0 = path.node.arguments[0];
               if (arg0?.type !== 'Literal') {
                 throw new Error(
@@ -390,18 +514,9 @@ export function transformServicePorts(
 
               const serviceName = arg0.value!.toString();
 
-              let port: number;
-              if (portForService) {
-                const foundPort = portForService[serviceName];
-                if (!foundPort) {
-                  throw new Error(
-                    `Port for service "${serviceName}" not found`,
-                  );
-                }
-                port = foundPort;
-              } else {
-                port = startingServicePort + i;
-                autoPortForService[serviceName] = port;
+              const port = eenv.services[serviceName]?.port;
+              if (!port) {
+                throw new Error(`Port for service "${serviceName}" not found`);
               }
 
               console.log(
@@ -414,8 +529,24 @@ export function transformServicePorts(
     })
     .remove(); // remove all import '@internal/testing'
 
-  if (!portForService) {
-    return { source: root.toSource(), portForService: autoPortForService };
+  removeOptsVarDeclarator?.remove();
+
+  return root.toSource();
+}
+
+async function findServiceLocation(
+  cwd: string,
+  service: string,
+): Promise<{ type: 'dir' | 'file'; path: string; relativePath: string }> {
+  let loc = path.join(cwd, 'services', service);
+  if (await exists(loc)) {
+    return { type: 'dir', path: loc, relativePath: path.relative(cwd, loc) };
   }
-  return { source: root.toSource() };
+
+  loc += '.ts';
+  if (await exists(loc)) {
+    return { type: 'file', path: loc, relativePath: path.relative(cwd, loc) };
+  }
+
+  throw new Error(`Service "${service}" location not found in "${cwd}"`);
 }
