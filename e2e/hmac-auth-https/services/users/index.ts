@@ -1,0 +1,60 @@
+import { readFileSync } from "fs";
+import { join } from "path";
+import { parse } from "graphql";
+import { createYoga } from "graphql-yoga";
+import { buildSubgraphSchema } from "@apollo/subgraph";
+import { useHmacSignatureValidation } from "@graphql-mesh/hmac-upstream-signature";
+import {
+  JWTExtendContextFields,
+  useForwardedJWT,
+} from "@graphql-mesh/plugin-jwt-auth";
+import { createServer } from "https";
+import { Opts } from "@internal/testing";
+
+const users = [
+  { id: "1", name: "Alice" },
+  { id: "2", name: "Bob" },
+];
+
+const yoga = createYoga({
+    logging: true,
+    plugins: [
+      useHmacSignatureValidation({
+        secret: 'HMAC_SIGNING_SECRET',
+      }),
+      useForwardedJWT({}),
+    ],
+    schema: buildSubgraphSchema({
+      typeDefs: parse(
+        readFileSync(join(__dirname, "typeDefs.graphql"), "utf-8")
+      ),
+      resolvers: {
+        Query: {
+          me: (_, __, context: any) => {
+            const jwtPayload: JWTExtendContextFields = context.jwt;
+            return users.find((user) => user.id === jwtPayload?.payload?.sub);
+          },
+          users: () => users,
+          user: (_, { id }) => users.find((user) => user.id === id),
+        },
+        User: {
+          __resolveReference: (reference) => {
+            return users.find((user) => user.id === reference.id);
+          },
+        },
+      },
+    }),
+  });
+
+const opts = Opts(process.argv);
+const port = opts.getServicePort("users");
+
+createServer(
+  {
+    key: readFileSync(join(__dirname, "key.pem")),
+    cert: readFileSync(join(__dirname, "cert.pem")),
+  },
+  yoga
+).listen(port, () => {
+  console.log("Users subgraph is running on https://localhost:" + port);
+});

@@ -123,7 +123,7 @@ export function useHmacUpstreamSignature(
             String.fromCharCode(...new Uint8Array(signature)),
           );
           logger?.debug(
-            `produced hmac signature for subgraph ${subgraphName}, signature: ${signature}, signed payload: ${serializedExecutionRequest}`,
+            `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
           );
 
           setExecutionRequest({

@@ -290,10 +290,6 @@ export function wrapExecutorWithHooks({
             },
             executionRequest,
             setExecutionRequest(newExecutionRequest) {
-              execReqLogger?.debug(
-                'Updating execution request to: ',
-                newExecutionRequest,
-              );
               executionRequest = newExecutionRequest;
             },
             executor,
