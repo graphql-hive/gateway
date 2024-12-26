@@ -1,3 +1,4 @@
+import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
 import {
   isAsyncIterable,
   isPromise,
@@ -10,7 +11,6 @@ import {
 } from '@whatwg-node/fetch';
 import { extractFiles, isExtractableFile } from 'extract-files';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
-import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
 
 function collectAsyncIterableValues<T>(
   asyncIterable: AsyncIterable<T>,

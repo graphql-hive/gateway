@@ -1,8 +1,8 @@
 import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import {
   defaultPrintFn,
-  serializeExecutionRequest,
   SerializedExecutionRequest,
+  serializeExecutionRequest,
 } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
@@ -249,32 +249,34 @@ export function buildHTTPExecutor(
 
     const query = printFn(request.document);
 
-    let serializeFn = function serialize(): MaybePromise<SerializedExecutionRequest> {
-      return serializeExecutionRequest({
-        executionRequest: request,
-        excludeQuery,
-        printFn,
-      });
-    };
-
-    if (options?.apq) {
-      serializeFn = function serializeWithAPQ(): MaybePromise<SerializedExecutionRequest> {
-        return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
-          const extensions: Record<string, any> = request.extensions || {};
-          extensions['persistedQuery'] = {
-            version: 1,
-            sha256Hash,
-          };
-          return serializeExecutionRequest({
-            executionRequest: {
-              ...request,
-              extensions,
-            },
-            excludeQuery,
-            printFn,
-          });
+    let serializeFn =
+      function serialize(): MaybePromise<SerializedExecutionRequest> {
+        return serializeExecutionRequest({
+          executionRequest: request,
+          excludeQuery,
+          printFn,
         });
       };
+
+    if (options?.apq) {
+      serializeFn =
+        function serializeWithAPQ(): MaybePromise<SerializedExecutionRequest> {
+          return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
+            const extensions: Record<string, any> = request.extensions || {};
+            extensions['persistedQuery'] = {
+              version: 1,
+              sha256Hash,
+            };
+            return serializeExecutionRequest({
+              executionRequest: {
+                ...request,
+                extensions,
+              },
+              excludeQuery,
+              printFn,
+            });
+          });
+        };
     }
 
     return mapMaybePromise(serializeFn(), (body: SerializedExecutionRequest) =>
