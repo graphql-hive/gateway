@@ -120,7 +120,7 @@ export interface Server extends Proc {
   protocol: string;
 }
 
-export interface ServeOptions extends ProcOptions {
+export interface GatewayOptions extends ProcOptions {
   port?: number;
   /**
    * Path to the supergraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
@@ -291,7 +291,7 @@ export interface Tenv {
     opts?: ProcOptions,
   ): Promise<[proc: Proc, waitForExit: Promise<void>]>;
   gatewayRunner: ServeRunner;
-  gateway(opts?: ServeOptions): Promise<Gateway>;
+  gateway(opts?: GatewayOptions): Promise<Gateway>;
   /**
    * Starts a service by name. Services are services that serve data, not necessarily GraphQL.
    * The TypeScript service executable must be at `services/<name>.ts` or `services/<name>/index.ts`.
