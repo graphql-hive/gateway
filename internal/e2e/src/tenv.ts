@@ -662,7 +662,13 @@ export function createTenv(cwd: string): Tenv {
     },
     async service(
       name,
-      { port, gatewayPort, pipeLogs = isDebug(), args = [], protocol = 'http' } = {},
+      {
+        port,
+        gatewayPort,
+        pipeLogs = isDebug(),
+        args = [],
+        protocol = 'http',
+      } = {},
     ) {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
@@ -1067,14 +1073,26 @@ export function getAvailablePort(): Promise<number> {
   return deferred.promise;
 }
 
-async function waitForPort({ port, signal, protocol = 'http' }: { port: number; signal: AbortSignal; protocol: string }) {
+async function waitForPort({
+  port,
+  signal,
+  protocol = 'http',
+}: {
+  port: number;
+  signal: AbortSignal;
+  protocol: string;
+}) {
   outer: while (!signal.aborted) {
     for (const localHostname of hostnames) {
       try {
         await fetch(`${protocol}://${localHostname}:${port}`, { signal });
         break outer;
       } catch (err) {
-        if (err instanceof Error && err.message.includes('self-signed certificate') && protocol === 'https') {
+        if (
+          err instanceof Error &&
+          err.message.includes('self-signed certificate') &&
+          protocol === 'https'
+        ) {
           break outer;
         }
       }
@@ -1090,7 +1108,11 @@ function waitForReachable(server: Server | Container, signal: AbortSignal) {
   if ('additionalPorts' in server) {
     ports.push(...Object.values(server.additionalPorts));
   }
-  return Promise.all(ports.map((port) => waitForPort({ port, signal, protocol: server.protocol })));
+  return Promise.all(
+    ports.map((port) =>
+      waitForPort({ port, signal, protocol: server.protocol }),
+    ),
+  );
 }
 
 class DockerError extends Error {

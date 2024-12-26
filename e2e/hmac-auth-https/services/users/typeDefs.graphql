@@ -1,5 +1,8 @@
 extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes", "@authenticated"])
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.5"
+    import: ["@key", "@requiresScopes", "@authenticated"]
+  )
 
 type User @key(fields: "id") {
   id: ID!

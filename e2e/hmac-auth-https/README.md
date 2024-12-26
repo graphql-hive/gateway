@@ -2,7 +2,7 @@ User 1 token with the 'ReadComments' role:
 
 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZXMiOlsiUmVhZENvbW1lbnRzIl0sImlhdCI6MTcyNDE0MTQwNiwiZXhwIjoxNzU1Njk5MDA2fQ.yNmp7hrCWorrdHfJ1IOFyA33UeU2ak72GgjxJ-wuWdE`
 
-User 2 token with 'ReadComments' and 'ReadUsersName' roles: 
+User 2 token with 'ReadComments' and 'ReadUsersName' roles:
 
 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwicm9sZXMiOlsiUmVhZENvbW1lbnRzIiwiUmVhZFVzZXJzTmFtZSJdLCJpYXQiOjE3MjQxNDE0MTgsImV4cCI6MTc1NTY5OTAxOH0.wnR3TDJDljtZ9cwP_XYAm1c-prvkDTzkD-cqbDbBui0`
 
@@ -32,7 +32,6 @@ flowchart LR
         4--->|"X-HMAC-Signature: XyZ\nquery: query { comments { id author { id }} }\nextensions: { jwt: { sub: 1, roles: ["ReadComments"] }}"|6
     end
 ```
-
 
 ### User 2 Flow (read:comments and read:users_names)
 
