@@ -56,10 +56,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
   const composes = await exists(meshConfigTsFile);
   if (composes) {
-    console.group(`"mesh.config.ts" found, transforming...`);
+    console.group(`"mesh.config.ts" found, transforming service ports...`);
     using _ = defer(() => console.groupEnd());
 
-    const result = transformMeshConfig(
+    const result = transformServicePorts(
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
     portForService = result.portForService;
@@ -75,11 +75,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       relativeServiceFile;
 
     console.group(
-      `service file "${relativeServiceFile}" found, transforming...`,
+      `service file "${relativeServiceFile}" found, transforming service ports...`,
     );
     using _ = defer(() => console.groupEnd());
 
-    const result = transformService(
+    const result = transformServicePorts(
       await fs.readFile(serviceFile, 'utf8'),
       portForService,
     );
@@ -266,18 +266,36 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   console.log('Ok');
 }
 
-interface PortForService {
+export interface PortForService {
   [service: string]: number /* port */;
 }
 
 /**
+ * Finds and replaces all service ports in the given source file.
+ *
+ * If no {@link portForService} argument is provided, then ports will be auto-assigned
+ * starting from `4001` and the map of used ports will be returned. Otherwise, the ports
+ * from {@link portForService} will be used.
+ *
  * @param source - Source code of the `mesh.config.ts` file.
+ * @param portForService - Map of service names to ports.
  */
-function transformMeshConfig(source: string) {
+export function transformServicePorts(source: string): {
+  source: string;
+  portForService: PortForService;
+};
+export function transformServicePorts(
+  source: string,
+  portForService: PortForService,
+): { source: string };
+export function transformServicePorts(
+  source: string,
+  portForService?: PortForService,
+): { source: string; portForService?: PortForService } {
   const root = j(source);
 
   const startingServicePort = 4001;
-  const portForService: PortForService = {};
+  const autoPortForService: PortForService = {};
 
   root
     // import '@internal/testing'
@@ -344,101 +362,19 @@ function transformMeshConfig(source: string) {
                   }
 
                   const serviceName = arg0.value!.toString();
-                  const port = startingServicePort + i;
-                  portForService[serviceName] = port;
 
-                  console.log(
-                    `Replacing "${variableName}.getServicePort('${serviceName}')" with "${port}" at ${loc(path, true)}`,
-                  );
-
-                  j(path).replaceWith(j.literal(port)); // replace opts.portForService('foo') with port literal
-                });
-            })
-            .remove(); // remove all const opts = Opts()
-        });
-    })
-    .remove(); // remove all import '@internal/testing'
-
-  return { source: root.toSource(), portForService };
-}
-
-/**
- * @param source - Source code of the `mesh.config.ts` file.
- * @param portForService - Map of service names to ports.
- */
-function transformService(source: string, portForService: PortForService) {
-  const root = j(source);
-
-  root
-    // import '@internal/testing'
-    .find(j.ImportDeclaration, {
-      source: {
-        value: '@internal/testing',
-      },
-    })
-    .forEach((path) => {
-      console.group(
-        `Processing "@internal/testing" import at ${loc(path)}, will remove`,
-      );
-      using _ = defer(() => console.groupEnd());
-
-      path.node.specifiers
-        // import { Opts } from '@internal/testing'
-        ?.filter((s) => 'imported' in s && s.imported.name === 'Opts')
-        .forEach((s, i) => {
-          console.group(
-            `Processing imported "Opts" #${i + 1} (as "${s.local!.name}")`,
-          );
-          using _ = defer(() => console.groupEnd());
-
-          root
-            // const opts = Opts()
-            .find(j.VariableDeclarator, {
-              init: {
-                callee: {
-                  name: s.local!.name,
-                },
-              },
-            })
-            .forEach((path) => {
-              if (path.node.id.type !== 'Identifier') {
-                throw new Error(
-                  `Expected "Opts()" to declare a node of type "Identifier", but got "${path.node.id.type}"`,
-                );
-              }
-
-              const variableName = path.node.id.name;
-              console.group(
-                `Variable "${variableName}" declared with "Opts()" at ${loc(path)}`,
-              );
-              using _ = defer(() => console.groupEnd());
-
-              root
-                // opts.getServicePort()
-                .find(j.CallExpression, {
-                  callee: {
-                    object: {
-                      name: variableName,
-                    },
-                    property: {
-                      name: 'getServicePort',
-                    },
-                  },
-                })
-                .forEach((path) => {
-                  const arg0 = path.node.arguments[0];
-                  if (arg0?.type !== 'Literal') {
-                    throw new Error(
-                      'TODO: get variable value when literal is not used in "opts.getServicePort" argument',
-                    );
-                  }
-
-                  const serviceName = arg0.value!.toString();
-                  const port = portForService[serviceName];
-                  if (!port) {
-                    throw new Error(
-                      `Port for service "${serviceName}" not found`,
-                    );
+                  let port: number;
+                  if (portForService) {
+                    const foundPort = portForService[serviceName];
+                    if (!foundPort) {
+                      throw new Error(
+                        `Port for service "${serviceName}" not found`,
+                      );
+                    }
+                    port = foundPort;
+                  } else {
+                    port = startingServicePort + i;
+                    autoPortForService[serviceName] = port;
                   }
 
                   console.log(
@@ -453,5 +389,8 @@ function transformService(source: string, portForService: PortForService) {
     })
     .remove(); // remove all import '@internal/testing'
 
+  if (!portForService) {
+    return { source: root.toSource(), portForService: autoPortForService };
+  }
   return { source: root.toSource() };
 }
