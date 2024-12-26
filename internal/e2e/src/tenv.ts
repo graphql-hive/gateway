@@ -493,7 +493,7 @@ export function createTenv(cwd: string): Tenv {
             containerPort: port,
             healthcheck: runner?.docker?.healthcheck || [
               'CMD-SHELL',
-              `wget --spider http://0.0.0.0:${port}/healthcheck`,
+              `wget --spider ${protocol}://0.0.0.0:${port}/healthcheck`,
             ],
             cmd: getFullArgs(),
             volumes,
@@ -921,7 +921,7 @@ export function createTenv(cwd: string): Tenv {
       for (const service of services) {
         subgraphs.push({
           name: service.name,
-          url: `http://0.0.0.0:${service.port}/graphql`,
+          url: `${service.protocol}://0.0.0.0:${service.port}/graphql`,
         });
       }
 
