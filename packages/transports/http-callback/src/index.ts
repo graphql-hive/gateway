@@ -2,11 +2,11 @@ import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
   abortSignalAny,
-  defaultPrintFn,
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
+import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
   mapMaybePromise,
@@ -102,19 +102,19 @@ export default {
     const heartbeatIntervalMs =
       transportEntry.options?.heartbeat_interval || 50000;
     const httpCallbackExecutor = function httpCallbackExecutor(
-      execReq: ExecutionRequest,
+      executionRequest: ExecutionRequest,
     ) {
-      const query = defaultPrintFn(execReq.document);
       const subscriptionId = crypto.randomUUID();
       const subscriptionLogger = logger?.child(subscriptionId);
       const callbackUrl = `${publicUrl}${callbackPath}/${subscriptionId}`;
       const subscriptionCallbackPath = `${callbackPath}/${subscriptionId}`;
+      const serializedParams = serializeExecutionRequest({
+        executionRequest,
+      });
       const fetchBody = JSON.stringify({
-        query,
-        variables: execReq.variables,
-        operationName: execReq.operationName,
+        ...serializedParams,
         extensions: {
-          ...(execReq.extensions || {}),
+          ...(serializedParams || {}),
           subscription: {
             callbackUrl,
             subscriptionId,
@@ -153,7 +153,7 @@ export default {
           `HTTP Callback Transport: \`location\` is missing in the transport entry!`,
         );
       }
-      let signal = execReq.signal || execReq.info?.signal;
+      let signal = executionRequest.signal || executionRequest.info?.signal;
       if (signal) {
         signal = abortSignalAny([reqAbortCtrl.signal, signal]);
       }
@@ -166,17 +166,17 @@ export default {
               'Content-Type': 'application/json',
               ...headersFactory({
                 env: process.env as Record<string, string>,
-                root: execReq.rootValue,
-                context: execReq.context,
-                info: execReq.info,
+                root: executionRequest.rootValue,
+                context: executionRequest.context,
+                info: executionRequest.info,
               }),
               Accept: 'application/json;callbackSpec=1.0; charset=utf-8',
             },
             body: fetchBody,
             signal,
           },
-          execReq.context,
-          execReq.info,
+          executionRequest.context,
+          executionRequest.info,
         ),
         (res) =>
           mapMaybePromise(res.text(), (resText) => {
@@ -220,7 +220,7 @@ export default {
           stopSubscription(e);
         },
       );
-      execReq.context?.waitUntil?.(subFetchCall$);
+      executionRequest.context?.waitUntil?.(subFetchCall$);
       return new Repeater<ExecutionResult>((push, stop) => {
         if (signal) {
           registerAbortSignalListener(signal, () => {

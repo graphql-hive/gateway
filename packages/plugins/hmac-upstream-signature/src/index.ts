@@ -1,6 +1,6 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
-import { defaultPrintFn } from '@graphql-mesh/transport-common';
+import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import { mapMaybePromise } from '@graphql-tools/utils';
 import type { ExecutionRequest, MaybePromise } from '@graphql-tools/utils';
 import type {
@@ -31,14 +31,21 @@ const DEFAULT_SHOULD_SIGN_FN: NonNullable<
 export const defaultExecutionRequestSerializer = (
   executionRequest: ExecutionRequest,
 ) =>
-  jsonStableStringify({
-    query: defaultPrintFn(executionRequest.document),
-    variables: executionRequest.variables,
-  });
+  jsonStableStringify(
+    serializeExecutionRequest({
+      executionRequest: {
+        document: executionRequest.document,
+        variables: executionRequest.variables,
+      },
+    }),
+  );
 export const defaultParamsSerializer = (params: GraphQLParams) =>
   jsonStableStringify({
     query: params.query,
-    variables: params.variables,
+    variables:
+      params.variables != null && Object.keys(params.variables).length > 0
+        ? params.variables
+        : undefined,
   });
 
 function createCryptoKey({
@@ -116,7 +123,7 @@ export function useHmacUpstreamSignature(
             String.fromCharCode(...new Uint8Array(signature)),
           );
           logger?.debug(
-            `produced hmac signature for subgraph ${subgraphName}, signature: ${signature}, signed payload: ${serializedExecutionRequest}`,
+            `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
           );
 
           setExecutionRequest({

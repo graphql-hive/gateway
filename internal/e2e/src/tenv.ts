@@ -103,6 +103,8 @@ export interface ProcOptions {
   env?: Record<string, string | number>;
   /** Extra args to pass to the process. */
   args?: (string | number | boolean)[];
+  /** Protocol to use for the service (default: http) */
+  protocol?: string;
 }
 
 export interface Proc extends AsyncDisposable {
@@ -117,6 +119,7 @@ export interface Proc extends AsyncDisposable {
 
 export interface Server extends Proc {
   port: number;
+  protocol: string;
 }
 
 export interface ServeOptions extends ProcOptions {
@@ -130,10 +133,12 @@ export interface ServeOptions extends ProcOptions {
     | {
         with: 'mesh';
         services?: Service[];
+        env?: Record<string, string | number>;
       }
     | {
         with: 'apollo';
         services: Service[];
+        env?: Record<string, string | number>;
       };
   /**
    * Path to the subgraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
@@ -365,6 +370,7 @@ export function createTenv(cwd: string): Tenv {
         runner,
         args = [],
         services,
+        protocol = 'http',
       } = opts || {};
 
       let proc: Proc,
@@ -377,6 +383,7 @@ export function createTenv(cwd: string): Tenv {
         const { output } = await tenv.composeWithMesh({
           output: 'graphql',
           services: supergraphOpt.services,
+          env: supergraphOpt.env,
         });
         supergraph = output;
       } else if (supergraphOpt?.with === 'apollo') {
@@ -533,8 +540,9 @@ export function createTenv(cwd: string): Tenv {
       const gw: Gateway = {
         ...proc,
         port,
+        protocol,
         async execute({ headers, ...args }) {
-          const res = await fetch(`http://0.0.0.0:${port}/graphql`, {
+          const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
@@ -654,7 +662,13 @@ export function createTenv(cwd: string): Tenv {
     },
     async service(
       name,
-      { port, gatewayPort, pipeLogs = isDebug(), args = [] } = {},
+      {
+        port,
+        gatewayPort,
+        pipeLogs = isDebug(),
+        args = [],
+        protocol = 'http',
+      } = {},
     ) {
       port ||= await getAvailablePort();
       const ctrl = new AbortController();
@@ -668,7 +682,7 @@ export function createTenv(cwd: string): Tenv {
         gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
-      const service: Service = { ...proc, name, port };
+      const service: Service = { ...proc, name, port, protocol };
       await Promise.race([
         waitForExit
           .then(() => {
@@ -694,6 +708,7 @@ export function createTenv(cwd: string): Tenv {
       cmd = [],
       volumes = [],
       args = [],
+      protocol = 'http',
     }) {
       const containerName = `${name}_${Math.random().toString(32).slice(2)}`;
 
@@ -829,6 +844,7 @@ export function createTenv(cwd: string): Tenv {
         containerName,
         name,
         port: hostPort,
+        protocol,
         additionalPorts,
         getStd() {
           // TODO: distinguish stdout and stderr
@@ -1057,13 +1073,29 @@ export function getAvailablePort(): Promise<number> {
   return deferred.promise;
 }
 
-async function waitForPort(port: number, signal: AbortSignal) {
+async function waitForPort({
+  port,
+  signal,
+  protocol = 'http',
+}: {
+  port: number;
+  signal: AbortSignal;
+  protocol: string;
+}) {
   outer: while (!signal.aborted) {
     for (const localHostname of hostnames) {
       try {
-        await fetch(`http://${localHostname}:${port}`, { signal });
+        await fetch(`${protocol}://${localHostname}:${port}`, { signal });
         break outer;
-      } catch (err) {}
+      } catch (err) {
+        if (
+          err instanceof Error &&
+          err.message.includes('self-signed certificate') &&
+          protocol === 'https'
+        ) {
+          break outer;
+        }
+      }
     }
     // no need to track retries, jest will time out aborting the signal
     signal.throwIfAborted();
@@ -1076,7 +1108,11 @@ function waitForReachable(server: Server | Container, signal: AbortSignal) {
   if ('additionalPorts' in server) {
     ports.push(...Object.values(server.additionalPorts));
   }
-  return Promise.all(ports.map((port) => waitForPort(port, signal)));
+  return Promise.all(
+    ports.map((port) =>
+      waitForPort({ port, signal, protocol: server.protocol }),
+    ),
+  );
 }
 
 class DockerError extends Error {

@@ -1,16 +1,17 @@
 import {
+  defaultPrintFn,
+  serializeExecutionRequest,
+} from '@graphql-tools/executor-common';
+import {
   DisposableAsyncExecutor,
   ExecutionRequest,
   getOperationASTFromRequest,
-  memoize1,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { print } from 'graphql';
 import { Client, ClientOptions, createClient } from 'graphql-ws';
 import WebSocket from 'isomorphic-ws';
-
-const defaultPrintFn = memoize1(print);
 
 interface GraphQLWSExecutorOptions extends ClientOptions {
   onClient?: (client: Client) => void;
@@ -75,9 +76,6 @@ export function buildGraphQLWSExecutor(
     TExtensions extends Record<string, any>,
   >(executionRequest: ExecutionRequest<TArgs, any, TRoot, TExtensions>) {
     const {
-      document,
-      variables,
-      operationName,
       extensions,
       operationType = getOperationASTFromRequest(executionRequest).operation,
       info,
@@ -94,13 +92,9 @@ export function buildGraphQLWSExecutor(
         extensions['connectionParams'],
       );
     }
-    const query = printFn(document);
-    const iterableIterator = graphqlWSClient.iterate<TData, TExtensions>({
-      query,
-      variables,
-      operationName,
-      extensions,
-    });
+    const iterableIterator = graphqlWSClient.iterate<TData, TExtensions>(
+      serializeExecutionRequest({ executionRequest, printFn }),
+    );
     if (iterableIterator.return && signal) {
       registerAbortSignalListener(signal, () => {
         iterableIterator.return?.();

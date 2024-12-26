@@ -1,0 +1,14 @@
+{
+  "name": "hmac-auth-https",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/subgraph": "^2.9.3",
+    "@graphql-hive/gateway": "workspace:^",
+    "@graphql-mesh/compose-cli": "^1.3.3",
+    "@graphql-mesh/hmac-upstream-signature": "workspace:^",
+    "@graphql-mesh/plugin-jwt-auth": "^1.4.0",
+    "graphql": "^16.10.0",
+    "graphql-yoga": "^5.10.6"
+  }
+}

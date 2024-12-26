@@ -1,11 +1,11 @@
-import { SerializedRequest } from '.';
+import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
 
 export function prepareGETUrl({
   baseUrl = '',
   body,
 }: {
   baseUrl: string;
-  body: SerializedRequest;
+  body: SerializedExecutionRequest;
 }) {
   const dummyHostname = 'https://dummyhostname.com';
   const validUrl = baseUrl.startsWith('http')
