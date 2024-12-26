@@ -313,78 +313,103 @@ export function transformServicePorts(
       path.node.specifiers
         // import { Opts } from '@internal/testing'
         ?.filter((s) => 'imported' in s && s.imported.name === 'Opts')
-        .forEach((s, i) => {
+        .forEach((optsImportSpecifier, i) => {
           console.group(
-            `Processing imported "Opts" #${i + 1} (as "${s.local!.name}")`,
+            `Processing imported "Opts" #${i + 1} (as "${optsImportSpecifier.local!.name}")`,
           );
           using _ = defer(() => console.groupEnd());
 
           root
-            // const opts = Opts()
-            .find(j.VariableDeclarator, {
-              init: {
-                callee: {
-                  name: s.local!.name,
+            // ?.getServicePort()
+            .find(j.CallExpression, {
+              callee: {
+                type: 'MemberExpression',
+                property: {
+                  name: 'getServicePort',
                 },
               },
             })
-            .forEach((path) => {
-              if (path.node.id.type !== 'Identifier') {
+            .filter((path) => {
+              const callee = path.node.callee;
+              if (callee.type !== 'MemberExpression') {
+                // should never happen because of filter in find
                 throw new Error(
-                  `Expected "Opts()" to declare a node of type "Identifier", but got "${path.node.id.type}"`,
+                  `getServicePort() callee is not a MemberExpression, but "${callee.type}"`,
                 );
               }
 
-              const variableName = path.node.id.name;
-              console.group(
-                `Variable "${variableName}" declared with "Opts()" at ${loc(path)}`,
-              );
-              using _ = defer(() => console.groupEnd());
+              if (
+                callee.object.type === 'CallExpression' &&
+                callee.object.callee.type === 'Identifier' &&
+                callee.object.callee.name === optsImportSpecifier.local!.name
+              ) {
+                // Opts().getServicePort()
+                return true;
+              }
 
-              root
-                // opts.getServicePort()
-                .find(j.CallExpression, {
-                  callee: {
-                    object: {
-                      name: variableName,
+              if (callee.object.type === 'Identifier') {
+                const removed = root
+                  // const opts = Opts()
+                  .find(j.VariableDeclarator, {
+                    id: {
+                      type: 'Identifier',
+                      name: callee.object.name,
                     },
-                    property: {
-                      name: 'getServicePort',
+                    init: {
+                      callee: {
+                        name: optsImportSpecifier.local!.name,
+                      },
                     },
-                  },
-                })
-                .forEach((path, i) => {
-                  const arg0 = path.node.arguments[0];
-                  if (arg0?.type !== 'Literal') {
-                    throw new Error(
-                      'TODO: get variable value when literal is not used in "opts.getServicePort" argument',
-                    );
-                  }
-
-                  const serviceName = arg0.value!.toString();
-
-                  let port: number;
-                  if (portForService) {
-                    const foundPort = portForService[serviceName];
-                    if (!foundPort) {
+                  })
+                  .forEach((path) => {
+                    if (path.node.id.type !== 'Identifier') {
                       throw new Error(
-                        `Port for service "${serviceName}" not found`,
+                        `opts variable declaration id is not an Identifier, but "${callee.type}"`,
                       );
                     }
-                    port = foundPort;
-                  } else {
-                    port = startingServicePort + i;
-                    autoPortForService[serviceName] = port;
-                  }
+                    console.log(
+                      `Variable "${path.node.id.name}" declared with "${optsImportSpecifier.local!.name}()" at ${loc(path)}, removing...`,
+                    );
+                  })
+                  .remove(); // remove const opts = Opts()
 
-                  console.log(
-                    `Replacing "${variableName}.getServicePort('${serviceName}')" with "${port}" at ${loc(path, true)}`,
-                  );
+                // const opts = Opts()
+                // opts.getServicePort()
+                return removed.length > 0;
+              }
 
-                  j(path).replaceWith(j.literal(port)); // replace opts.portForService('foo') with port literal
-                });
+              return false;
             })
-            .remove(); // remove all const opts = Opts()
+            .forEach((path, i) => {
+              const arg0 = path.node.arguments[0];
+              if (arg0?.type !== 'Literal') {
+                throw new Error(
+                  'TODO: get variable value when literal is not used in "opts.getServicePort" argument',
+                );
+              }
+
+              const serviceName = arg0.value!.toString();
+
+              let port: number;
+              if (portForService) {
+                const foundPort = portForService[serviceName];
+                if (!foundPort) {
+                  throw new Error(
+                    `Port for service "${serviceName}" not found`,
+                  );
+                }
+                port = foundPort;
+              } else {
+                port = startingServicePort + i;
+                autoPortForService[serviceName] = port;
+              }
+
+              console.log(
+                `Replacing "?.getServicePort('${serviceName}')" with "${port}" at ${loc(path, true)}`,
+              );
+
+              j(path).replaceWith(j.literal(port)); // replace opts.portForService('foo') with port literal
+            });
         });
     })
     .remove(); // remove all import '@internal/testing'

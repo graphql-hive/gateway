@@ -31,6 +31,33 @@ it.each([
       },
     },
   },
+  {
+    name: 'using Opts() directly',
+    source: dedent`
+    import { Opts } from '@internal/testing';
+    const port = Opts().getServicePort('foo');
+    `,
+    auto: {
+      result: {
+        source: dedent`
+        const port = 4001;
+        `,
+        portForService: {
+          foo: 4001,
+        } satisfies PortForService,
+      },
+    },
+    manual: {
+      portForService: {
+        foo: 7001,
+      } satisfies PortForService,
+      result: {
+        source: dedent`
+        const port = 7001;
+        `,
+      },
+    },
+  },
 ])('should transform service ports $name', ({ source, auto, manual }) => {
   // auto
   const actualAutoResult = transformServicePorts(source);
