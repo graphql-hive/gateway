@@ -2,22 +2,33 @@ import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
-const { service, gateway } = createTenv(__dirname);
-describe('HMAC Signature', () => {
-  // It never reaches to `Users` subgraph because `User.name` is not authorized for this user.
-  it('User 1 Flow (with ReadComments role)', async () => {
-    const { execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [
-          await service('users', { protocol: 'https' }),
-          await service('comments'),
+describe('HMAC Signature', async () => {
+  const { service, gateway } = createTenv(__dirname);
+  const NODE_EXTRA_CA_CERTS = join(__dirname, 'services', 'users', 'cert.pem');
+  const { execute } = await gateway({
+    supergraph: {
+      with: 'mesh',
+      services: [
+        await service('users', { protocol: 'https' }),
+        await service('comments'),
+      ],
+    },
+    env: {
+      NODE_EXTRA_CA_CERTS,
+    },
+    runner: {
+      docker: {
+        volumes: [
+          {
+            host: NODE_EXTRA_CA_CERTS,
+            container: NODE_EXTRA_CA_CERTS,
+          },
         ],
       },
-      env: {
-        NODE_EXTRA_CA_CERTS: join(__dirname, 'services', 'users', 'cert.pem'),
-      },
-    });
+    },
+  });
+  // It never reaches to `Users` subgraph because `User.name` is not authorized for this user.
+  it('User 1 Flow (with ReadComments role)', async () => {
     const result = await execute({
       query: /* GraphQL */ `
         query {
@@ -57,18 +68,6 @@ describe('HMAC Signature', () => {
     });
   });
   it('User 2 Flow (read:comments and read:users_names)', async () => {
-    const { execute } = await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [
-          await service('users', { protocol: 'https' }),
-          await service('comments'),
-        ],
-      },
-      env: {
-        NODE_EXTRA_CA_CERTS: join(__dirname, 'services', 'users', 'cert.pem'),
-      },
-    });
     const result = await execute({
       query: /* GraphQL */ `
         query {
