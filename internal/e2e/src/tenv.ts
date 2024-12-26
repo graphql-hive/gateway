@@ -103,8 +103,6 @@ export interface ProcOptions {
   env?: Record<string, string | number>;
   /** Extra args to pass to the process. */
   args?: (string | number | boolean)[];
-  /** Protocol to use for the service (default: http) */
-  protocol?: string;
 }
 
 export interface Proc extends AsyncDisposable {
@@ -158,6 +156,11 @@ export interface ServeOptions extends ProcOptions {
     docker?: Partial<Pick<ContainerOptions, 'volumes' | 'healthcheck'>>;
   };
   services?: Service[];
+  /**
+   * Protocol to use for the gateway.
+   * @default http
+   */
+  protocol?: string;
 }
 
 export interface Gateway extends Server {
@@ -181,6 +184,11 @@ export interface ServiceOptions extends ProcOptions {
    * Is set to the `--port` argument (available under `Args.getPort()`).
    */
   gatewayPort?: number;
+  /**
+   * Protocol to use for the service.
+   * @default http
+   */
+  protocol?: string;
 }
 
 export interface Service extends Server {
@@ -255,6 +263,11 @@ export interface ContainerOptions extends ProcOptions {
   cmd?: (string | number | boolean)[];
   /** Volume bindings for the container relative to the cwd of Tenv. */
   volumes?: { host: string; container: string }[];
+  /**
+   * Protocol to use for the container.
+   * @default http
+   */
+  protocol?: string;
 }
 
 export interface Container extends Service {
