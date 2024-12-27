@@ -311,7 +311,10 @@ export interface Eenv {
 export function parseTenv(source: string): Eenv {
   const root = j(source);
 
-  const eenv: Eenv = { gateway: { port: 4000 }, services: {} };
+  const eenv: Eenv = {
+    gateway: { port: 4000 },
+    services: {},
+  };
   const startingServicePort = eenv.gateway.port + 1;
 
   root
@@ -324,6 +327,43 @@ export function parseTenv(source: string): Eenv {
     .forEach((path) => {
       console.group(`Processing "@internal/e2e" import at ${loc(path)}`);
       using _ = defer(() => console.groupEnd());
+
+      path.node.specifiers
+        // import { createExampleSetup } from '@internal/e2e'
+        ?.filter(
+          (s) => 'imported' in s && s.imported.name === 'createExampleSetup',
+        )
+        .forEach((createExampleSetupImport) => {
+          console.group(
+            `Detected "createExampleSetup" import (as "${createExampleSetupImport.local!.name}") at ${loc(createExampleSetupImport, true)}`,
+          );
+          using _ = defer(() => console.groupEnd());
+
+          root
+            .find(j.CallExpression, {
+              callee: {
+                type: 'Identifier',
+                name: createExampleSetupImport.local!.name,
+              },
+            })
+            .forEach((path) => {
+              console.group(`createExampleSetup() used at ${loc(path, true)}`);
+              using _ = defer(() => console.groupEnd());
+
+              // BEWARE: keep in sync with @internal/e2e example setup
+              for (const service of [
+                'accounts',
+                'inventory',
+                'products',
+                'reviews',
+              ]) {
+                const port =
+                  startingServicePort + Object.keys(eenv.services).length;
+                console.log(`Adding service "${service}" with port "${port}"`);
+                eenv.services[service] = { port };
+              }
+            });
+        });
 
       path.node.specifiers
         // import { createTenv } from '@internal/e2e'
@@ -537,10 +577,16 @@ export function transformServicePorts(eenv: Eenv, source: string): string {
   return root.toSource();
 }
 
+interface ServiceLocation {
+  type: 'dir' | 'file';
+  path: string;
+  relativePath: string;
+}
+
 async function findServiceLocation(
   cwd: string,
   service: string,
-): Promise<{ type: 'dir' | 'file'; path: string; relativePath: string }> {
+): Promise<ServiceLocation> {
   let loc = path.join(cwd, 'services', service);
   if (await exists(loc)) {
     return { type: 'dir', path: loc, relativePath: path.relative(cwd, loc) };

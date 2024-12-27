@@ -1,6 +1,8 @@
 import { createTenv } from '@internal/e2e';
 
 type ServiceName = 'accounts' | 'inventory' | 'products' | 'reviews';
+
+// BEWARE: keep in sync with @internal/examples converter
 const SERVICES: ServiceName[] = [
   'accounts',
   'inventory',

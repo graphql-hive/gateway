@@ -23,6 +23,30 @@ it.each([
       },
     } satisfies Eenv,
   },
+  {
+    name: 'example setup',
+    source: dedent`
+    import { createExampleSetup } from '@internal/e2e';
+    const setup = createExampleSetup();
+    `,
+    result: {
+      gateway: { port: 4000 },
+      services: {
+        accounts: {
+          port: 4001,
+        },
+        inventory: {
+          port: 4002,
+        },
+        products: {
+          port: 4003,
+        },
+        reviews: {
+          port: 4004,
+        },
+      },
+    } satisfies Eenv,
+  },
 ])('should detect tenv $name', ({ source, result }) => {
   const actualResult = parseTenv(source);
   expect(actualResult).toEqual(result);
