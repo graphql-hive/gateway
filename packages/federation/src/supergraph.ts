@@ -1207,7 +1207,11 @@ export function getStitchingOptionsFromSupergraphSdl(
         return candidates[0].fieldConfig;
       }
     }
-    if (candidates.some((candidate) => rootTypeMap.has(candidate.type.name))) {
+    if (
+      candidates.some(
+        (candidate) => rootTypeMap.get(candidate.type.name) === 'query',
+      )
+    ) {
       const defaultMergedField = defaultMerger(candidates);
       return {
         ...defaultMergedField,
