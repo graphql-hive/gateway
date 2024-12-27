@@ -68,6 +68,7 @@
     "./vitest.config.ts",
     "./vitest.projects.ts",
     "./internal/**/src",
+    "./internal/**/tests",
     "./internal/**/fixtures",
     "./packages/**/src",
     "./packages/**/tests",

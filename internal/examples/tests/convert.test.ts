@@ -1,11 +1,6 @@
 import dedent from 'dedent';
 import { expect, it } from 'vitest';
-import {
-  Eenv,
-  parseTenv,
-  PortForService,
-  transformServicePorts,
-} from '../src/convert';
+import { Eenv, parseTenv, transformServicePorts } from '../src/convert';
 
 it.each([
   {
