@@ -39,7 +39,7 @@ export async function writeFileMkdir(file: string, contents: string) {
 }
 
 /** Copies the {@link from file} to the {@link to destination} creating all directories leading to it. */
-export async function copyFileMkdir(from: string, to: string) {
+export async function copyMkdir(from: string, to: string) {
   await fs.mkdir(path.dirname(to), { recursive: true });
-  await fs.copyFile(from, to);
+  await fs.cp(from, to, { recursive: true });
 }

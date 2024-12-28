@@ -6,7 +6,7 @@ import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 import { parser } from './parser';
-import { copyFileMkdir, defer, exists, loc, writeFileMkdir } from './utils';
+import { copyMkdir, defer, exists, loc, writeFileMkdir } from './utils';
 
 const j = jscodeshift.withParser(parser);
 
@@ -147,7 +147,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       console.log(
         `Found extra at "${path.relative(e2eDir, extraDirOrFile)}", copying to "${path.relative(__project, exampleDir)}"`,
       );
-      await copyFileMkdir(
+      await copyMkdir(
         extraDirOrFile,
         path.join(exampleDir, path.basename(extraDirOrFile)),
       );
@@ -168,7 +168,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         console.log(
           `not a JavaScript/TypeScript file, copying to "${path.relative(__project, dest)}"`,
         );
-        await copyFileMkdir(serviceFile.path, dest);
+        await copyMkdir(serviceFile.path, dest);
         continue;
       }
 
