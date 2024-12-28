@@ -162,6 +162,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         ...packageJson.dependencies,
         ...packageJson.devDependencies,
       };
+      packageJson.devDependencies = {};
     }
 
     const gatewayVersion = JSON.parse(
