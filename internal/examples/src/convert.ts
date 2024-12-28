@@ -142,7 +142,9 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         'services',
       ].includes(path.basename(extraDirOrFile)) &&
       // not a testfile
-      !path.basename(extraDirOrFile).includes('.e2e.')
+      !path.basename(extraDirOrFile).includes('.e2e.') &&
+      // not a dockerile
+      !path.basename(extraDirOrFile).includes('Dockerfile')
     ) {
       console.log(
         `Found extra at "${path.relative(e2eDir, extraDirOrFile)}", copying to "${path.relative(__project, exampleDir)}"`,
