@@ -4,8 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
-import j, { Collection } from 'jscodeshift';
+import jscodeshift, { Collection } from 'jscodeshift';
+// @ts-expect-error there is a ts parser but it's not properly typed
+import tsParser from 'jscodeshift/parser/ts';
 import { defer, exists, loc, writeFileMkdir } from './utils';
+
+const j = jscodeshift.withParser(tsParser());
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -309,10 +313,7 @@ export interface Eenv {
 
 /** Parses a source file containing `createTenv` and creates an {@link Eenv} from it. */
 export function parseTenv(source: string): Eenv {
-  // type s = j.Options;
-  const root = j(source, {
-    parser: 'ts',
-  });
+  const root = j(source);
 
   const eenv: Eenv = {
     gateway: { port: 4000 },
@@ -398,7 +399,7 @@ export function parseTenv(source: string): Eenv {
               let serviceVar = '';
               for (const prop of path.node.id.properties) {
                 if (
-                  prop.type === 'Property' &&
+                  prop.type === 'ObjectProperty' &&
                   prop.key.type === 'Identifier' &&
                   prop.key.name === 'service'
                 ) {
@@ -428,9 +429,9 @@ export function parseTenv(source: string): Eenv {
                   })
                   .forEach((path) => {
                     const arg0 = path.node.arguments[0];
-                    if (arg0?.type !== 'Literal') {
+                    if (arg0?.type !== 'StringLiteral') {
                       throw new Error(
-                        'TODO: get variable value when literal is not used in "service()" argument',
+                        `TODO: get variable value when StringLiteral is not used in "service()" argument, but "${arg0?.type} is"`,
                       );
                     }
 
@@ -552,9 +553,9 @@ export function transformServicePorts(eenv: Eenv, source: string): string {
             })
             .forEach((path) => {
               const arg0 = path.node.arguments[0];
-              if (arg0?.type !== 'Literal') {
+              if (arg0?.type !== 'StringLiteral') {
                 throw new Error(
-                  'TODO: get variable value when literal is not used in "opts.getServicePort" argument',
+                  `TODO: get variable value when StringLiteral is not used in "opts.getServicePort()" argument, but "${arg0?.type} is"`,
                 );
               }
 
