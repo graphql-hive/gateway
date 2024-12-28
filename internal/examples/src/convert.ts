@@ -269,7 +269,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         });
         scripts[script] = String(command);
       }
-      for (const [service, { port }] of Object.entries(eenv.services)) {
+      for (const [service, { port, https }] of Object.entries(eenv.services)) {
         const serviceFiles = await findServiceFiles(exampleDir, service);
 
         if (serviceFiles.length === 1) {
@@ -293,7 +293,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         });
         setupTasks.push({
           name: `Wait for service ${service}`,
-          command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${port}`,
+          command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://localhost:${port}`,
         });
       }
 
@@ -423,7 +423,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 export interface Eenv {
   gateway: { port: number };
   hasExampleSetup: boolean;
-  services: { [name: string]: { port: number } };
+  services: { [name: string]: { port: number; https?: true } };
 }
 
 /** Parses a source file containing `createTenv` and creates an {@link Eenv} from it. */
@@ -555,15 +555,32 @@ export function parseTenv(source: string): Eenv {
 
                     const service = arg0.value!.toString();
                     if (!(service in eenv.services)) {
+                      const arg1 = path.node.arguments[1];
+                      const https =
+                        // { protocol: 'https' }
+                        arg1?.type === 'ObjectExpression' &&
+                        arg1.properties.find(
+                          (prop) =>
+                            prop.type === 'ObjectProperty' &&
+                            prop.key.type === 'Identifier' &&
+                            prop.key.name === 'protocol' &&
+                            prop.value.type === 'StringLiteral' && // TODO: support non-literals
+                            prop.value.value === 'https',
+                        );
+
                       console.log(
-                        `Found distinct "service('${service}')" at ${loc(path, true)}`,
+                        `Found distinct "service('${service}'${https ? ", { protocol: 'https\' }" : ''})" at ${loc(path, true)}`,
                       );
+
                       const port =
                         startingServicePort + Object.keys(eenv.services).length;
                       console.log(
-                        `Adding service "${service}" with port "${port}"`,
+                        `Adding service "${service}" with port "${port}"${https ? ' using https protocol' : ''}`,
                       );
                       eenv.services[service] = { port };
+                      if (https) {
+                        eenv.services[service].https = true;
+                      }
                     }
                   });
               }

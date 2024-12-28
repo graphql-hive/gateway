@@ -25,6 +25,24 @@ it.each([
     } satisfies Eenv,
   },
   {
+    name: 'https service',
+    source: dedent`
+    import { createTenv } from '@internal/e2e';
+    const { service } = createTenv(__dirname);
+    service('secure', { protocol: 'https' })
+    `,
+    result: {
+      gateway: { port: 4000 },
+      hasExampleSetup: false,
+      services: {
+        secure: {
+          https: true,
+          port: 4001,
+        },
+      },
+    } satisfies Eenv,
+  },
+  {
     name: 'example setup',
     source: dedent`
     import { createExampleSetup } from '@internal/e2e';
