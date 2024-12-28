@@ -12,6 +12,7 @@ import { defer, exists, loc, writeFileMkdir } from './utils';
 const j = jscodeshift.withParser(tsParser());
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __project = path.resolve(__dirname, '..', '..', '..');
 
 export interface ConvertE2EToExampleConfig {
   /** The name of the E2E test to convert to an example. */
@@ -85,44 +86,27 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       await fs.readFile(meshConfigTsFile, 'utf8'),
     );
     const dest = path.join(exampleDir, 'mesh.config.ts');
-    console.log(`Writing "${dest}"`);
+    console.log(`Writing "${path.relative(__project, dest)}"`);
     await fs.writeFile(dest, source);
   }
 
   for (const service of Object.keys(eenv.services)) {
-    const loc = await findServiceLocation(e2eDir, service);
-
-    const relativeServiceFiles: string[] = []; // relative paths to service files
-    if (loc.type === 'file') {
-      relativeServiceFiles.push(loc.relativePath);
-    } /** loc.type === 'dir' */ else {
-      for (const serviceFile of await glob(path.join(loc.path, '**/*.ts'))) {
-        const relativeServiceFile = path.relative(e2eDir, serviceFile);
-        relativeServiceFiles.push(relativeServiceFile);
-      }
-    }
-
-    loc.type === 'dir' &&
+    for (const serviceFile of await findServiceFiles(e2eDir, service)) {
       console.group(
-        `service dir "${loc.relativePath}" found, transforming files within...`,
-      );
-    for (const relativeServiceFile of relativeServiceFiles) {
-      console.group(
-        `service file "${relativeServiceFile}" found, transforming service ports...`,
+        `service file "${path.relative(e2eDir, serviceFile.path)}" found, transforming service ports...`,
       );
       using _ = defer(() => console.groupEnd());
 
       const source = transformServicePorts(
         eenv,
-        await fs.readFile(path.join(e2eDir, relativeServiceFile), 'utf8'),
+        await fs.readFile(serviceFile.path, 'utf8'),
       );
 
-      const dest = path.join(exampleDir, relativeServiceFile);
-      console.log(`Writing "${dest}"`);
+      const dest = path.join(exampleDir, serviceFile.relativePath);
+      console.log(`Writing "${path.relative(__project, dest)}"`);
 
       await writeFileMkdir(dest, source);
     }
-    loc.type === 'dir' && console.groupEnd();
   }
 
   {
@@ -136,6 +120,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     const name = `@example/${path.basename(exampleDir)}`;
     packageJson.name = name;
     console.log(`Set name to "${name}"`);
+
+    if ('devDependencies' in packageJson) {
+      console.log('Moving devDependencies to dependencies...');
+      packageJson.dependencies ||= {
+        ...packageJson.dependencies,
+        ...packageJson.devDependencies,
+      };
+    }
 
     const gatewayVersion = JSON.parse(
       await fs.readFile(
@@ -171,9 +163,23 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
       const scripts: Record<string, string> = {};
       for (const service of Object.keys(eenv.services)) {
+        const serviceFiles = await findServiceFiles(exampleDir, service);
+
         // will be used in tasks.json
-        const loc = await findServiceLocation(exampleDir, service);
-        scripts[`service:${service}`] = `tsx ${loc.relativePath}`;
+        if (serviceFiles.length === 1) {
+          scripts[`service:${service}`] =
+            `tsx ${serviceFiles[0]!.relativePath}`;
+        } /** serviceFiles.length > 1 */ else {
+          const indexFile = serviceFiles.find((f) =>
+            f.relativePath.endsWith('index.ts'),
+          );
+          if (!indexFile) {
+            throw new Error(
+              `Service "${service}" has multiple service files but no index.ts`,
+            );
+          }
+          scripts[`service:${service}`] = `tsx ${indexFile.relativePath}`;
+        }
       }
       if (composes) {
         scripts['compose'] = 'mesh-compose -o supergraph.graphql';
@@ -185,7 +191,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
 
     const dest = path.join(exampleDir, 'package.json');
-    console.log(`Writing "${dest}"`);
+    console.log(`Writing "${path.relative(__project, dest)}"`);
     await fs.writeFile(dest, JSON.stringify(packageJson, null, '  '));
   }
 
@@ -194,7 +200,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     using _ = defer(() => console.groupEnd());
 
     const dest = path.join(exampleDir, '.devcontainer', 'devcontainer.json');
-    console.log(`Writing "${dest}"`);
+    console.log(`Writing "${path.relative(__project, dest)}"`);
     await writeFileMkdir(
       dest,
       JSON.stringify(
@@ -249,7 +255,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.log(JSON.stringify({ setupTasks, tasks }, null, '  '));
 
     const dest = path.join(exampleDir, '.codesandbox', 'tasks.json');
-    console.log(`Writing "${dest}"`);
+    console.log(`Writing "${path.relative(__project, dest)}"`);
     await writeFileMkdir(
       dest,
       JSON.stringify({ setupTasks, tasks }, null, '  '),
@@ -581,38 +587,45 @@ export function transformServicePorts(eenv: Eenv, source: string): string {
   return root.toSource();
 }
 
-interface ServiceLocation {
-  type: 'dir' | 'file';
+interface ServiceFile {
+  type: 'file';
   path: string;
   relativePath: string;
 }
 
-async function findServiceLocation(
+async function findServiceFiles(
   cwd: string,
   service: string,
-): Promise<ServiceLocation> {
+): Promise<ServiceFile[]> {
+  const serviceFiles: ServiceFile[] = [];
   for (const potentialCwd of [
     cwd,
-    path.resolve(__dirname, '..', '..', 'e2e', 'src'),
+    path.resolve(__dirname, '..', '..', 'e2e', 'src'), // @internal/e2e#createExampleSetup
   ]) {
-    let loc = path.join(potentialCwd, 'services', service);
-    if (await exists(loc)) {
-      return {
-        type: 'dir',
-        path: loc,
-        relativePath: path.relative(potentialCwd, loc),
-      };
+    const filePath = path.join(potentialCwd, 'services', service + '.ts');
+    if (await exists(filePath)) {
+      serviceFiles.push({
+        type: 'file',
+        path: filePath,
+        relativePath: path.relative(potentialCwd, filePath),
+      });
+      break; // there can be only one service file
     }
 
-    loc += '.ts';
-    if (await exists(loc)) {
-      return {
-        type: 'file',
-        path: loc,
-        relativePath: path.relative(potentialCwd, loc),
-      };
+    const dirPath = path.join(potentialCwd, 'services', service);
+    if (await exists(dirPath)) {
+      for (const filePath of await glob(path.join(dirPath, '**/*.ts'))) {
+        serviceFiles.push({
+          type: 'file',
+          path: filePath,
+          relativePath: path.relative(potentialCwd, filePath),
+        });
+      }
+      continue;
     }
   }
-
-  throw new Error(`Service "${service}" location not found in "${cwd}"`);
+  if (!serviceFiles.length) {
+    throw new Error(`No service files found for "${service}"`);
+  }
+  return serviceFiles;
 }
