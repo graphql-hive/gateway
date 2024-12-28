@@ -7,7 +7,7 @@ import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 // @ts-expect-error there is a ts parser but it's not properly typed
 import tsParser from 'jscodeshift/parser/ts';
-import { defer, exists, loc, writeFileMkdir } from './utils';
+import { copyFileMkdir, defer, exists, loc, writeFileMkdir } from './utils';
 
 const j = jscodeshift.withParser(tsParser());
 
@@ -104,7 +104,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         console.log(
           `not a JavaScript/TypeScript file, copying to "${path.relative(__project, dest)}"`,
         );
-        await fs.copyFile(serviceFile.path, dest);
+        await copyFileMkdir(serviceFile.path, dest);
         continue;
       }
 
