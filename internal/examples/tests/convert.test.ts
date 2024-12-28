@@ -13,6 +13,7 @@ it.each([
     `,
     result: {
       gateway: { port: 4000 },
+      hasExampleSetup: false,
       services: {
         foo: {
           port: 4001,
@@ -31,6 +32,7 @@ it.each([
     `,
     result: {
       gateway: { port: 4000 },
+      hasExampleSetup: true,
       services: {
         accounts: {
           port: 4001,
@@ -57,6 +59,7 @@ it.each([
     name: 'declaring opts variable',
     eenv: {
       gateway: { port: 4000 },
+      hasExampleSetup: false,
       services: { foo: { port: 5001 }, bar: { port: 6001 } },
     } as Eenv,
     source: dedent`
@@ -74,6 +77,7 @@ it.each([
     name: 'using Opts() directly',
     eenv: {
       gateway: { port: 4000 },
+      hasExampleSetup: false,
       services: { foo: { port: 6001 } },
     } as Eenv,
     source: dedent`

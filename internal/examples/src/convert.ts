@@ -325,6 +325,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 /** Parsing an E2E `Tenv` creates and `Eenv` (Example environment). */
 export interface Eenv {
   gateway: { port: number };
+  hasExampleSetup: boolean;
   services: { [name: string]: { port: number } };
 }
 
@@ -334,6 +335,7 @@ export function parseTenv(source: string): Eenv {
 
   const eenv: Eenv = {
     gateway: { port: 4000 },
+    hasExampleSetup: false,
     services: {},
   };
   const startingServicePort = eenv.gateway.port + 1;
@@ -370,6 +372,8 @@ export function parseTenv(source: string): Eenv {
             .forEach((path) => {
               console.group(`createExampleSetup() used at ${loc(path, true)}`);
               using _ = defer(() => console.groupEnd());
+
+              eenv.hasExampleSetup = true;
 
               // BEWARE: keep in sync with @internal/e2e example setup
               for (const service of [
