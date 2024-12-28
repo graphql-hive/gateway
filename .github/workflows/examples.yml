@@ -90,4 +90,6 @@ jobs:
         with:
           file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'
+          commit_user_name: theguild-bot
+          commit_user_email: bot@the-guild.dev
           commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
