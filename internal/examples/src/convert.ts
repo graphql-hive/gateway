@@ -356,6 +356,12 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         signal: AbortSignal.timeout(10_000),
       }),
     ]);
+
+    console.log('Checking Hive Gateway health...');
+    const res = await fetch('http://localhost:4000/healthcheck');
+    if (!res.ok) {
+      throw new Error('Hive Gateway not healthy');
+    }
   }
 
   console.log('Ok');
