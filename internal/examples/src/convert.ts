@@ -91,7 +91,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
   // TODO: improve detection of composition by reading test files
   const composesWithMesh = await exists(meshConfigTsFile);
-  const composesWithApollo = eenv.hasExampleSetup;
+  const composesWithApollo =
+    eenv.hasExampleSetup ||
+    // if composition does not happen with mesh, it's very likely it happens with apollo
+    !composesWithMesh;
   const composes = composesWithMesh || composesWithApollo;
   if (composesWithMesh) {
     console.group(`"mesh.config.ts" found, transforming service ports...`);
