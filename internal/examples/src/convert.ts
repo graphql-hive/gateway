@@ -672,7 +672,7 @@ async function findServiceFiles(
           relativePath: path.relative(potentialCwd, filePath),
         });
       }
-      continue;
+      break;
     }
   }
   if (!serviceFiles.length) {
