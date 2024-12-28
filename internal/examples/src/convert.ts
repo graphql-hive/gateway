@@ -120,8 +120,6 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
   }
 
-  return;
-
   {
     console.group('Transforming package.json...');
     using _0 = defer(() => console.groupEnd());
