@@ -67,6 +67,7 @@ jobs:
           path: |
             README.md
             examples/${{matrix.e2e}}
+            !examples/${{matrix.e2e}}/node_modules
 
   commit:
     needs: [convert]
