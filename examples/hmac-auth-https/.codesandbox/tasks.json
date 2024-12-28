@@ -5,19 +5,23 @@
       "command": "npm i"
     },
     {
-      "name": "Start service foo",
-      "command": "npm run service:foo &"
+      "name": "Run generate-users-cert",
+      "command": "npm run generate-users-cert"
     },
     {
-      "name": "Wait for service foo",
-      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
+      "name": "Start service users",
+      "command": "npm run service:users &"
     },
     {
-      "name": "Start service bar",
-      "command": "npm run service:bar &"
+      "name": "Wait for service users",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 -k https://0.0.0.0:4001"
     },
     {
-      "name": "Wait for service bar",
+      "name": "Start service comments",
+      "command": "npm run service:comments &"
+    },
+    {
+      "name": "Wait for service comments",
       "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
     },
     {

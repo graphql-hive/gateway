@@ -1,0 +1,16 @@
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.5"
+    import: ["@key", "@requiresScopes", "@authenticated"]
+  )
+
+type User @key(fields: "id") {
+  id: ID!
+  name: String! @requiresScopes(scopes: [["ReadUsersName"]])
+}
+
+type Query {
+  me: User @authenticated
+  users: [User]
+  user(id: ID!): User
+}

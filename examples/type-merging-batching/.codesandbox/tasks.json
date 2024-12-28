@@ -5,19 +5,19 @@
       "command": "npm i"
     },
     {
-      "name": "Start service foo",
-      "command": "npm run service:foo &"
+      "name": "Start service authors",
+      "command": "npm run service:authors &"
     },
     {
-      "name": "Wait for service foo",
+      "name": "Wait for service authors",
       "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
     },
     {
-      "name": "Start service bar",
-      "command": "npm run service:bar &"
+      "name": "Start service books",
+      "command": "npm run service:books &"
     },
     {
-      "name": "Wait for service bar",
+      "name": "Wait for service books",
       "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
     },
     {

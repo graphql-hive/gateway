@@ -5,20 +5,12 @@
       "command": "npm i"
     },
     {
-      "name": "Start service foo",
-      "command": "npm run service:foo &"
+      "name": "Start service bucket",
+      "command": "npm run service:bucket &"
     },
     {
-      "name": "Wait for service foo",
+      "name": "Wait for service bucket",
       "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
-    },
-    {
-      "name": "Start service bar",
-      "command": "npm run service:bar &"
-    },
-    {
-      "name": "Wait for service bar",
-      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
     },
     {
       "name": "Compose",

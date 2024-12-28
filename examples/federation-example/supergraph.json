@@ -1,0 +1,25 @@
+{
+  "federation_version": "=2.9.0",
+  "subgraphs": {
+    "accounts": {
+      "schema": {
+        "subgraph_url": "http://0.0.0.0:4001/graphql"
+      }
+    },
+    "inventory": {
+      "schema": {
+        "subgraph_url": "http://0.0.0.0:4002/graphql"
+      }
+    },
+    "products": {
+      "schema": {
+        "subgraph_url": "http://0.0.0.0:4003/graphql"
+      }
+    },
+    "reviews": {
+      "schema": {
+        "subgraph_url": "http://0.0.0.0:4004/graphql"
+      }
+    }
+  }
+}

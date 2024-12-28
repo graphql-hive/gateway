@@ -1,0 +1,22 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}
