@@ -96,8 +96,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     using _ = defer(() => console.groupEnd());
 
     const supergraphConfig: {
+      federation_version: string;
       subgraphs: { [name: string]: { schema: { subgraph_url: string } } };
     } = {
+      federation_version: '=2.9.0',
       subgraphs: {},
     };
 
