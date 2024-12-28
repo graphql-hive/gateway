@@ -183,24 +183,29 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies = {};
     }
 
-    const gatewayVersion = JSON.parse(
-      await fs.readFile(
-        path.resolve(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          'packages',
-          'gateway',
-          'package.json',
-        ),
-        'utf8',
-      ),
-    ).version;
+    const gatewayVersion = await getWorkspaceVersion('@graphql-hive/gateway');
     console.log(
       `Adding "@graphql-hive/gateway@^${gatewayVersion}" as dependency...`,
     );
     packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
+
+    for (const [name, version] of Object.entries(packageJson.dependencies)) {
+      const [, range] = String(version).split('workspace:');
+      if (!range) continue;
+
+      const workspaceVersion = await getWorkspaceVersion(name);
+      if (range === '^') {
+        packageJson.dependencies[name] = `^${workspaceVersion}`;
+      } else if (range === '~') {
+        packageJson.dependencies[name] = `~${workspaceVersion}`;
+      } else {
+        packageJson.dependencies[name] = workspaceVersion;
+      }
+
+      console.log(
+        `Resolving "${name}@${version}" to version "${packageJson.dependencies[name]}"...`,
+      );
+    }
 
     if (Object.keys(eenv.services).length) {
       const version = '^4.19.2'; // TODO: use the version from root package.json
@@ -701,4 +706,35 @@ async function findServiceFiles(
     throw new Error(`No service files found for "${service}"`);
   }
   return serviceFiles;
+}
+
+const workspaces: { [name: string]: string /* location */ } = {};
+
+/** Gets the workspace's current version as defined in the package.json */
+async function getWorkspaceVersion(name: string) {
+  if (!Object.keys(workspaces).length) {
+    const [proc, waitForExit] = await spawn(
+      { cwd: __project },
+      'yarn',
+      'workspaces',
+      'list',
+      '--json',
+    );
+    await waitForExit;
+    for (const line of proc.getStd('out').split('\n')) {
+      if (line) {
+        const workspace: { location: string; name: string } = JSON.parse(line);
+        workspaces[workspace.name] = workspace.location;
+      }
+    }
+  }
+
+  const location = workspaces[name];
+  if (!location) {
+    throw new Error(`Workspace "${name}" does not exist`);
+  }
+
+  return JSON.parse(
+    await fs.readFile(path.join(__project, location, 'package.json'), 'utf8'),
+  ).version;
 }
