@@ -7,6 +7,7 @@ import { setTimeout } from 'timers/promises';
 import { createDeferred } from '@graphql-tools/utils';
 import { hostnames, isDebug, trimError } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { fetch } from '@whatwg-node/fetch';
 import terminate from 'terminate/promise';
 
 export interface Proc extends AsyncDisposable {
