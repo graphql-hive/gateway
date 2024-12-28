@@ -61,7 +61,7 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
         with:
-          name: example-*
+          pattern: example-*
       - name: Diff
         run: git diff --pretty
       - name: Commit
