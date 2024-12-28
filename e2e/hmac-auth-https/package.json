@@ -1,5 +1,5 @@
 {
-  "name": "hmac-auth-https",
+  "name": "@e2e/hmac-auth-https",
   "version": "0.0.0",
   "private": true,
   "scripts": {
