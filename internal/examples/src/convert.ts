@@ -76,8 +76,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
-  const composes = await exists(meshConfigTsFile);
-  if (composes) {
+  // TODO: improve detection of composition by reading test files
+  const composesWithMesh = await exists(meshConfigTsFile);
+  const composesWithApollo = eenv.hasExampleSetup;
+  const composes = composesWithMesh || composesWithApollo;
+  if (composesWithMesh) {
     console.group(`"mesh.config.ts" found, transforming service ports...`);
     using _ = defer(() => console.groupEnd());
 
@@ -88,6 +91,27 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     const dest = path.join(exampleDir, 'mesh.config.ts');
     console.log(`Writing "${path.relative(__project, dest)}"`);
     await fs.writeFile(dest, source);
+  } else if (composesWithApollo) {
+    console.group(`Composing with Apollo, creating config...`);
+    using _ = defer(() => console.groupEnd());
+
+    const supergraphConfig: {
+      subgraphs: { [name: string]: { schema: { subgraph_url: string } } };
+    } = {
+      subgraphs: {},
+    };
+
+    for (const [service, { port }] of Object.entries(eenv.services)) {
+      supergraphConfig.subgraphs[service] = {
+        schema: { subgraph_url: `http://localhost:${port}/graphql` },
+      };
+    }
+
+    const dest = path.join(exampleDir, 'supergraph.json');
+    console.log(`Writing "${path.relative(__project, dest)}"`);
+    await fs.writeFile(dest, JSON.stringify(supergraphConfig, null, '  '));
+  } else {
+    throw new Error('Composition of supergraph.graphql does not happen');
   }
 
   for (const service of Object.keys(eenv.services)) {
@@ -160,12 +184,21 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     packageJson.dependencies['@graphql-hive/gateway'] = `^${gatewayVersion}`;
 
     if (Object.keys(eenv.services).length) {
-      const version = '^4.19.2';
+      const version = '^4.19.2'; // TODO: use the version from root package.json
       console.log(
         `Adding "tsx@${version}" dev dependency because there are services...`,
       );
       packageJson.devDependencies ||= {};
-      packageJson.devDependencies['tsx'] = version; // TODO: use the version from root package.json
+      packageJson.devDependencies['tsx'] = version;
+    }
+
+    if (composesWithApollo) {
+      const version = '^0.26.3'; // TODO: use the latest version
+      console.log(
+        `Adding "@apollo/rover@${version}" dev dependency because composition is done with Apollo...`,
+      );
+      packageJson.devDependencies ||= {};
+      packageJson.devDependencies['@apollo/rover'] = version;
     }
 
     {
@@ -192,8 +225,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           scripts[`service:${service}`] = `tsx ${indexFile.relativePath}`;
         }
       }
-      if (composes) {
+      if (composesWithMesh) {
         scripts['compose'] = 'mesh-compose -o supergraph.graphql';
+      } else if (composesWithApollo) {
+        scripts['compose'] =
+          'rover supergraph compose --config supergraph.json --output supergraph.graphql';
       }
       scripts['gateway'] = 'hive-gateway supergraph';
 
