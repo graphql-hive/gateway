@@ -309,7 +309,10 @@ export interface Eenv {
 
 /** Parses a source file containing `createTenv` and creates an {@link Eenv} from it. */
 export function parseTenv(source: string): Eenv {
-  const root = j(source);
+  // type s = j.Options;
+  const root = j(source, {
+    parser: 'ts',
+  });
 
   const eenv: Eenv = {
     gateway: { port: 4000 },
@@ -587,14 +590,27 @@ async function findServiceLocation(
   cwd: string,
   service: string,
 ): Promise<ServiceLocation> {
-  let loc = path.join(cwd, 'services', service);
-  if (await exists(loc)) {
-    return { type: 'dir', path: loc, relativePath: path.relative(cwd, loc) };
-  }
+  for (const potentialCwd of [
+    cwd,
+    path.resolve(__dirname, '..', '..', 'e2e', 'src'),
+  ]) {
+    let loc = path.join(potentialCwd, 'services', service);
+    if (await exists(loc)) {
+      return {
+        type: 'dir',
+        path: loc,
+        relativePath: path.relative(potentialCwd, loc),
+      };
+    }
 
-  loc += '.ts';
-  if (await exists(loc)) {
-    return { type: 'file', path: loc, relativePath: path.relative(cwd, loc) };
+    loc += '.ts';
+    if (await exists(loc)) {
+      return {
+        type: 'file',
+        path: loc,
+        relativePath: path.relative(potentialCwd, loc),
+      };
+    }
   }
 
   throw new Error(`Service "${service}" location not found in "${cwd}"`);
