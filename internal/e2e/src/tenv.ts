@@ -998,7 +998,7 @@ function waitForReachable(server: Server | Container, signal: AbortSignal) {
   }
   return Promise.all(
     ports.map((port) =>
-      waitForPort({ port, signal, protocol: server.protocol }),
+      waitForPort({ port, signal, protocol: server.protocol, interval }),
     ),
   );
 }

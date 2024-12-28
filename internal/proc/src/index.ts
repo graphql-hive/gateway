@@ -195,10 +195,12 @@ export async function waitForPort({
   port,
   signal,
   protocol = 'http',
+  interval = 1_000,
 }: {
   port: number;
   signal: AbortSignal;
   protocol?: string;
+  interval?: number;
 }) {
   outer: while (!signal.aborted) {
     for (const localHostname of hostnames) {
@@ -217,6 +219,6 @@ export async function waitForPort({
     }
     // no need to track retries, jest will time out aborting the signal
     signal.throwIfAborted();
-    await setTimeout(1_000);
+    await setTimeout(interval);
   }
 }
