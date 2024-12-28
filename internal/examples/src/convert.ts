@@ -143,6 +143,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       ].includes(path.basename(extraDirOrFile)) &&
       // not a testfile
       !path.basename(extraDirOrFile).includes('.e2e.') &&
+      // not a bench
+      !path.basename(extraDirOrFile).includes('.bench.') &&
       // not a dockerile
       !path.basename(extraDirOrFile).includes('Dockerfile')
     ) {
