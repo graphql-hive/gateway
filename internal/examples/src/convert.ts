@@ -132,6 +132,28 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     throw new Error('Composition of supergraph.graphql does not happen');
   }
 
+  for (const extraDirOrFile of await glob(path.join(e2eDir, '*'))) {
+    if (
+      // not transformed directories/files
+      ![
+        'package.json',
+        'gateway.config.ts',
+        'mesh.config.ts',
+        'services',
+      ].includes(path.basename(extraDirOrFile)) &&
+      // not a testfile
+      !path.basename(extraDirOrFile).includes('.e2e.')
+    ) {
+      console.log(
+        `Found extra at "${path.relative(e2eDir, extraDirOrFile)}", copying to "${path.relative(__project, exampleDir)}"`,
+      );
+      await copyFileMkdir(
+        extraDirOrFile,
+        path.join(exampleDir, path.basename(extraDirOrFile)),
+      );
+    }
+  }
+
   for (const service of Object.keys(eenv.services)) {
     for (const serviceFile of await findServiceFiles(e2eDir, service)) {
       console.group(
