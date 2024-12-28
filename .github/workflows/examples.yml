@@ -41,7 +41,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: examples
+          name: example-${{matrix.e2e}}
           # include all files and folders starting with a dot (.)
           include-hidden-files: true
           # > If multiple paths are provided as input, the least common ancestor of all the search paths will be used as the root directory of the artifact.
@@ -62,7 +62,7 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
         with:
-          name: examples
+          name: example-*
       - name: Diff
         run: git diff --pretty
       - name: Commit
