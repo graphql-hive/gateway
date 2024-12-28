@@ -93,21 +93,34 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   for (const service of Object.keys(eenv.services)) {
     for (const serviceFile of await findServiceFiles(e2eDir, service)) {
       console.group(
-        `service file "${path.relative(e2eDir, serviceFile.path)}" found, transforming service ports...`,
+        `service file "${path.relative(e2eDir, serviceFile.path)}" found`,
       );
       using _ = defer(() => console.groupEnd());
+
+      const dest = path.join(exampleDir, serviceFile.relativePath);
+
+      const ext = path.extname(serviceFile.path);
+      if (ext !== '.ts' && ext !== '.js') {
+        console.log(
+          `not a JavaScript/TypeScript file, copying to "${path.relative(__project, dest)}"`,
+        );
+        await fs.copyFile(serviceFile.path, dest);
+        continue;
+      }
+
+      console.log(`transforming service ports...`);
 
       const source = transformServicePorts(
         eenv,
         await fs.readFile(serviceFile.path, 'utf8'),
       );
 
-      const dest = path.join(exampleDir, serviceFile.relativePath);
       console.log(`Writing "${path.relative(__project, dest)}"`);
-
       await writeFileMkdir(dest, source);
     }
   }
+
+  return;
 
   {
     console.group('Transforming package.json...');
@@ -588,7 +601,6 @@ export function transformServicePorts(eenv: Eenv, source: string): string {
 }
 
 interface ServiceFile {
-  type: 'file';
   path: string;
   relativePath: string;
 }
@@ -605,7 +617,6 @@ async function findServiceFiles(
     const filePath = path.join(potentialCwd, 'services', service + '.ts');
     if (await exists(filePath)) {
       serviceFiles.push({
-        type: 'file',
         path: filePath,
         relativePath: path.relative(potentialCwd, filePath),
       });
@@ -614,9 +625,8 @@ async function findServiceFiles(
 
     const dirPath = path.join(potentialCwd, 'services', service);
     if (await exists(dirPath)) {
-      for (const filePath of await glob(path.join(dirPath, '**/*.ts'))) {
+      for (const filePath of await glob(path.join(dirPath, '**/*'))) {
         serviceFiles.push({
-          type: 'file',
           path: filePath,
           relativePath: path.relative(potentialCwd, filePath),
         });
