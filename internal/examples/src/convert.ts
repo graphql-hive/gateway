@@ -303,7 +303,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         scripts['compose'] = 'mesh-compose -o supergraph.graphql';
       } else if (composesWithApollo) {
         scripts['compose'] =
-          'rover supergraph compose --config supergraph.json --output supergraph.graphql';
+          'rover supergraph compose --elv2-license=accept --config supergraph.json --output supergraph.graphql';
       }
       if (composes) {
         setupTasks.push({
