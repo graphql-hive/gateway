@@ -184,6 +184,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
   }
 
+  const setupTasks: { name: string; command: string }[] = [];
+
   {
     console.group('Transforming package.json...');
     using _0 = defer(() => console.groupEnd());
@@ -248,14 +250,28 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
 
     {
-      console.group('Adding scripts...');
+      console.group('Adding scripts and setup...');
       using _1 = defer(() => console.groupEnd());
 
+      setupTasks.push({
+        name: 'Install',
+        command: 'npm i',
+      });
+
       const scripts: Record<string, string> = {};
-      for (const service of Object.keys(eenv.services)) {
+      for (const [script, command] of Object.entries(
+        packageJson.scripts || {},
+      )) {
+        console.log(`Adding custom script "${script}" to setup...`);
+        setupTasks.push({
+          name: `Run ${script}`,
+          command: `npm run ${script}`,
+        });
+        scripts[script] = String(command);
+      }
+      for (const [service, { port }] of Object.entries(eenv.services)) {
         const serviceFiles = await findServiceFiles(exampleDir, service);
 
-        // will be used in tasks.json
         if (serviceFiles.length === 1) {
           scripts[`service:${service}`] =
             `tsx ${serviceFiles[0]!.relativePath}`;
@@ -270,13 +286,30 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           }
           scripts[`service:${service}`] = `tsx ${indexFile.relativePath}`;
         }
+
+        setupTasks.push({
+          name: `Start service ${service}`,
+          command: `npm run service:${service} &`,
+        });
+        setupTasks.push({
+          name: `Wait for service ${service}`,
+          command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${port}`,
+        });
       }
+
       if (composesWithMesh) {
         scripts['compose'] = 'mesh-compose -o supergraph.graphql';
       } else if (composesWithApollo) {
         scripts['compose'] =
           'rover supergraph compose --config supergraph.json --output supergraph.graphql';
       }
+      if (composes) {
+        setupTasks.push({
+          name: 'Compose',
+          command: 'npm run compose',
+        });
+      }
+
       scripts['gateway'] = 'hive-gateway supergraph';
 
       console.log(JSON.stringify(scripts, null, '  '));
@@ -289,51 +322,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   {
-    console.group('Adding devcontainer...');
-    using _ = defer(() => console.groupEnd());
-
-    const dest = path.join(exampleDir, '.devcontainer', 'devcontainer.json');
-    console.log(`Writing "${path.relative(__project, dest)}"`);
-    await writeFileMkdir(
-      dest,
-      JSON.stringify(
-        {
-          name: 'Node.js',
-          image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
-        },
-        null,
-        '  ',
-      ),
-    );
-  }
-
-  const setupTasks: { name: string; command: string }[] = [];
-  {
     console.group('Defining codesandbox setup and tasks...');
     using _ = defer(() => console.groupEnd());
-
-    setupTasks.push({
-      name: 'Install',
-      command: 'npm i',
-    });
-
-    for (const [name, opts] of Object.entries(eenv.services)) {
-      setupTasks.push({
-        name: `Start service ${name}`,
-        command: `npm run service:${name} &`,
-      });
-      setupTasks.push({
-        name: `Wait for service ${name}`,
-        command: `curl --retry-connrefused --retry 10 --retry-delay 3 http://localhost:${opts.port}`,
-      });
-    }
-
-    if (composes) {
-      setupTasks.push({
-        name: 'Compose',
-        command: 'npm run compose',
-      });
-    }
 
     const tasks = {
       gateway: {
@@ -352,6 +342,25 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     await writeFileMkdir(
       dest,
       JSON.stringify({ setupTasks, tasks }, null, '  '),
+    );
+  }
+
+  {
+    console.group('Adding devcontainer...');
+    using _ = defer(() => console.groupEnd());
+
+    const dest = path.join(exampleDir, '.devcontainer', 'devcontainer.json');
+    console.log(`Writing "${path.relative(__project, dest)}"`);
+    await writeFileMkdir(
+      dest,
+      JSON.stringify(
+        {
+          name: 'Node.js',
+          image: 'mcr.microsoft.com/devcontainers/javascript-node:20',
+        },
+        null,
+        '  ',
+      ),
     );
   }
 
