@@ -75,6 +75,20 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.log('eenv', JSON.stringify(eenv, null, '  '));
   }
 
+  const gatewayConfigTsFile = path.join(e2eDir, 'gateway.config.ts');
+  if (await exists(gatewayConfigTsFile)) {
+    console.group(`"gatway.config.ts" found, transforming service ports...`);
+    using _ = defer(() => console.groupEnd());
+
+    const source = transformServicePorts(
+      eenv,
+      await fs.readFile(gatewayConfigTsFile, 'utf8'),
+    );
+    const dest = path.join(exampleDir, 'gateway.config.ts');
+    console.log(`Writing "${path.relative(__project, dest)}"`);
+    await fs.writeFile(dest, source);
+  }
+
   const meshConfigTsFile = path.join(e2eDir, 'mesh.config.ts');
   // TODO: improve detection of composition by reading test files
   const composesWithMesh = await exists(meshConfigTsFile);
