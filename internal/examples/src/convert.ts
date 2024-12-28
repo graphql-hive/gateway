@@ -5,11 +5,10 @@ import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
-// @ts-expect-error there is a ts parser but it's not properly typed
-import tsParser from 'jscodeshift/parser/ts';
+import { parser } from './parser';
 import { copyFileMkdir, defer, exists, loc, writeFileMkdir } from './utils';
 
-const j = jscodeshift.withParser(tsParser());
+const j = jscodeshift.withParser(parser);
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const __project = path.resolve(__dirname, '..', '..', '..');
