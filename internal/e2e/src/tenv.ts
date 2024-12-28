@@ -333,18 +333,21 @@ export function createTenv(cwd: string): Tenv {
         return fs.writeFile(filePath, content, 'utf-8');
       },
     },
-    async spawn(command, { args: extraArgs = [], ...opts } = {}) {
+    spawn(command, { args: extraArgs = [], ...opts } = {}) {
       const [cmd, ...args] = Array.isArray(command)
         ? command
         : command.split(' ');
-      const [proc, waitForExit] = await spawn(
-        { ...opts, cwd, replaceStderr: (str) => str.replaceAll(__project, '') },
+      return spawn(
+        {
+          ...opts,
+          cwd,
+          stack: leftoverStack,
+          replaceStderr: (str) => str.replaceAll(__project, ''),
+        },
         String(cmd),
         ...args,
         ...extraArgs,
       );
-      leftoverStack.use(proc);
-      return [proc, waitForExit];
     },
     gatewayRunner,
     async gateway(opts) {
@@ -491,7 +494,13 @@ export function createTenv(cwd: string): Tenv {
         }
         case 'bun': {
           [proc, waitForExit] = await spawn(
-            { env, cwd, pipeLogs },
+            {
+              env,
+              cwd,
+              pipeLogs,
+              stack: leftoverStack,
+              replaceStderr: (str) => str.replaceAll(__project, ''),
+            },
             'npx',
             'bun',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
@@ -505,6 +514,7 @@ export function createTenv(cwd: string): Tenv {
               env,
               cwd,
               pipeLogs,
+              stack: leftoverStack,
               replaceStderr: (str) => str.replaceAll(__project, ''),
             },
             'node',
@@ -522,12 +532,12 @@ export function createTenv(cwd: string): Tenv {
               env,
               cwd,
               pipeLogs,
+              stack: leftoverStack,
               replaceStderr: (str) => str.replaceAll(__project, ''),
             },
             path.resolve(__project, 'packages', 'gateway', 'hive-gateway'),
             ...getFullArgs(),
           );
-          leftoverStack.use(proc);
           break;
         }
         default:
@@ -617,6 +627,7 @@ export function createTenv(cwd: string): Tenv {
           cwd,
           pipeLogs,
           env,
+          stack: leftoverStack,
           replaceStderr: (str) => str.replaceAll(__project, ''),
         },
         'node',
@@ -634,7 +645,6 @@ export function createTenv(cwd: string): Tenv {
         ...services.map(({ name, port }) => createServicePortOpt(name, port)),
         ...args,
       );
-      leftoverStack.use(proc);
       await waitForExit;
       let result = '';
       if (output) {
@@ -688,6 +698,7 @@ export function createTenv(cwd: string): Tenv {
           cwd,
           pipeLogs,
           signal: ctrl.signal,
+          stack: leftoverStack,
           replaceStderr: (str) => str.replaceAll(__project, ''),
         },
         'node',
@@ -698,7 +709,6 @@ export function createTenv(cwd: string): Tenv {
         gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
-      leftoverStack.use(proc);
       const service: Service = { ...proc, name, port, protocol };
       await Promise.race([
         waitForExit

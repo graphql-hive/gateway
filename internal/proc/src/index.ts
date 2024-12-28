@@ -45,6 +45,7 @@ interface SpawnOptions extends ProcOptions {
   cwd: string;
   shell?: boolean;
   signal?: AbortSignal;
+  stack?: AsyncDisposableStack;
 }
 
 export function spawn(
@@ -54,6 +55,7 @@ export function spawn(
     env = {},
     shell,
     signal,
+    stack,
     replaceStderr = (str) => str,
   }: SpawnOptions,
   cmd: string,
@@ -112,6 +114,7 @@ export function spawn(
       return waitForExit;
     },
   };
+  stack?.use(proc);
 
   child.stdout.on('data', (x) => {
     const str = x.toString();
