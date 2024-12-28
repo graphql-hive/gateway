@@ -13,6 +13,7 @@ jobs:
       matrix:
         e2e:
           - extra-fields
+          - federation-example
     name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:
