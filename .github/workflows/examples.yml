@@ -16,6 +16,18 @@ jobs:
           - federation-example
           - federation-mixed
           - file-upload
+          - apq-subgraphs
+          - federation-subscriptions-passthrough
+          - hmac-auth-https
+          - interface-additional-resolvers
+          - json-schema-subscriptions
+          - openapi-additional-resolvers
+          - openapi-arg-rename
+          - openapi-javascript-wiki
+          - openapi-subscriptions
+          - programmatic-batching
+          - subscriptions-with-transforms
+          - type-merging-batching
     name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:
