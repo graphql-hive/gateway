@@ -1,11 +1,13 @@
-import { execSync } from 'child_process';
 import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('HMAC Signature', async () => {
-  execSync('yarn workspace hmac-auth-https generate-users-cert');
-  const { service, gateway, gatewayRunner } = createTenv(__dirname);
+  const { service, gateway, gatewayRunner, spawn } = createTenv(__dirname);
+  const [, waitForCert] = await spawn(
+    'yarn workspace @e2e/hmac-auth-https generate-users-cert',
+  );
+  await waitForCert;
   const localCertFile = join(__dirname, 'users_cert.pem');
   const dockerCertFile = '/gateway/users_cert.pem';
   const { execute } = await gateway({
