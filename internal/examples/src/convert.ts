@@ -121,7 +121,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     for (const [service, { port }] of Object.entries(eenv.services)) {
       supergraphConfig.subgraphs[service] = {
-        schema: { subgraph_url: `http://localhost:${port}/graphql` },
+        schema: { subgraph_url: `http://0.0.0.0:${port}/graphql` },
       };
     }
 
@@ -295,7 +295,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         });
         setupTasks.push({
           name: `Wait for service ${service}`,
-          command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://localhost:${port}`,
+          command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://0.0.0.0:${port}`,
         });
       }
 
@@ -412,7 +412,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     ]);
 
     console.log('Checking Hive Gateway health...');
-    const res = await fetch('http://localhost:4000/healthcheck');
+    const res = await fetch('http://0.0.0.0:4000/healthcheck');
     if (!res.ok) {
       throw new Error('Hive Gateway not healthy');
     }
