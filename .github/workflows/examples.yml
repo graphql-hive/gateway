@@ -8,7 +8,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # NOTE: github.event.head_commit.message is not available on pull_request events
+  head-commit:
+    name: Inspect head commit
+    runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.commit.outputs.message }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{github.event.pull_request.head.sha}}
+      - name: Inspect
+        id: commit
+        run: echo "message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
+
   convert:
+    needs: [head-commit]
+    if: "${{needs.head-commit.outputs.message != 'docs(examples): converted from e2es'}}"
     strategy:
       matrix:
         e2e:
@@ -58,6 +75,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{secrets.BOT_GITHUB_TOKEN}}
       - name: Download
         uses: actions/download-artifact@v4
         with:
@@ -70,4 +89,4 @@ jobs:
         with:
           file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'
-          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> # dont use the actor as an author
+          commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
