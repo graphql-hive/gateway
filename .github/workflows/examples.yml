@@ -10,6 +10,7 @@ concurrency:
 jobs:
   convert:
     strategy:
+      fail-fast: false # TODO: remove once finished testing
       matrix:
         e2e:
           - extra-fields
