@@ -146,7 +146,9 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       // not a bench
       !path.basename(extraDirOrFile).includes('.bench.') &&
       // not a dockerile
-      !path.basename(extraDirOrFile).includes('Dockerfile')
+      !path.basename(extraDirOrFile).includes('Dockerfile') &&
+      // not test snapshots
+      !path.basename(extraDirOrFile).includes('__snapshots__')
     ) {
       console.log(
         `Found extra at "${path.relative(e2eDir, extraDirOrFile)}", copying to "${path.relative(__project, exampleDir)}"`,
