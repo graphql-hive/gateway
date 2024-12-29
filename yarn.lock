@@ -6947,17 +6947,17 @@ __metadata:
   linkType: hard
 
 "@yarnpkg/cli@npm:^4.5.3":
-  version: 4.5.3
-  resolution: "@yarnpkg/cli@npm:4.5.3"
+  version: 4.6.0
+  resolution: "@yarnpkg/cli@npm:4.6.0"
   dependencies:
-    "@yarnpkg/core": "npm:^4.1.6"
+    "@yarnpkg/core": "npm:^4.2.0"
     "@yarnpkg/fslib": "npm:^3.1.1"
     "@yarnpkg/libzip": "npm:^3.1.0"
     "@yarnpkg/parsers": "npm:^3.0.2"
     "@yarnpkg/plugin-compat": "npm:^4.0.10"
     "@yarnpkg/plugin-constraints": "npm:^4.0.2"
     "@yarnpkg/plugin-dlx": "npm:^4.0.0"
-    "@yarnpkg/plugin-essentials": "npm:^4.2.2"
+    "@yarnpkg/plugin-essentials": "npm:^4.3.0"
     "@yarnpkg/plugin-exec": "npm:^3.0.0"
     "@yarnpkg/plugin-file": "npm:^3.0.0"
     "@yarnpkg/plugin-git": "npm:^3.1.0"
@@ -6971,12 +6971,12 @@ __metadata:
     "@yarnpkg/plugin-npm-cli": "npm:^4.0.4"
     "@yarnpkg/plugin-pack": "npm:^4.0.0"
     "@yarnpkg/plugin-patch": "npm:^4.0.1"
-    "@yarnpkg/plugin-pnp": "npm:^4.0.5"
+    "@yarnpkg/plugin-pnp": "npm:^4.0.6"
     "@yarnpkg/plugin-pnpm": "npm:^2.0.0"
     "@yarnpkg/plugin-stage": "npm:^4.0.0"
     "@yarnpkg/plugin-typescript": "npm:^4.1.1"
     "@yarnpkg/plugin-version": "npm:^4.0.4"
-    "@yarnpkg/plugin-workspace-tools": "npm:^4.1.1"
+    "@yarnpkg/plugin-workspace-tools": "npm:^4.1.2"
     "@yarnpkg/shell": "npm:^4.1.1"
     ci-info: "npm:^4.0.0"
     clipanion: "npm:^4.0.0-rc.2"
@@ -6984,14 +6984,14 @@ __metadata:
     tslib: "npm:^2.4.0"
     typanion: "npm:^3.14.0"
   peerDependencies:
-    "@yarnpkg/core": ^4.1.6
-  checksum: 10c0/9f6e6eba63d766394cb4e55cc3720e6d5fb672494ca7c166aae878734de51fb41e943626bf130c5893634caa20c85b8688f5e07d7e34285f658a835ad0f5dd42
+    "@yarnpkg/core": ^4.2.0
+  checksum: 10c0/50b67766e1a9f8db3bf5a421bf7ce6ee60f918a8d54bf362658b838a3dc2a4a4a48c8725bca7098991a6c4d2832715327c17c754650e92cd996979bc45ffe872
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:^4.1.6":
-  version: 4.1.6
-  resolution: "@yarnpkg/core@npm:4.1.6"
+"@yarnpkg/core@npm:^4.1.6, @yarnpkg/core@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "@yarnpkg/core@npm:4.2.0"
   dependencies:
     "@arcanis/slice-ansi": "npm:^1.1.1"
     "@types/semver": "npm:^7.1.0"
@@ -7019,7 +7019,7 @@ __metadata:
     treeify: "npm:^1.1.0"
     tslib: "npm:^2.4.0"
     tunnel: "npm:^0.0.6"
-  checksum: 10c0/09d8dac4cf7917d37d3b3e9de510a2422d0a49a5f351ccda1ba0246d1d53e7fbde213ff72298474711f375f6e0394a75123afc3b0fda0cd54d7c7246f538d343
+  checksum: 10c0/9b87c982180201ed3d65d26eee017d645ee2841e336579057ee1fb84ab07837397eee05cdd08c9d2b174e451a72947eff9123e401ddbd28410b8ff37ffc7ee9e
   languageName: node
   linkType: hard
 
@@ -7129,11 +7129,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-essentials@npm:^4.2.2":
-  version: 4.2.2
-  resolution: "@yarnpkg/plugin-essentials@npm:4.2.2"
+"@yarnpkg/plugin-essentials@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@yarnpkg/plugin-essentials@npm:4.3.0"
   dependencies:
-    "@yarnpkg/fslib": "npm:^3.1.0"
+    "@yarnpkg/fslib": "npm:^3.1.1"
     "@yarnpkg/parsers": "npm:^3.0.2"
     ci-info: "npm:^4.0.0"
     clipanion: "npm:^4.0.0-rc.2"
@@ -7144,10 +7144,10 @@ __metadata:
     tslib: "npm:^2.4.0"
     typanion: "npm:^3.14.0"
   peerDependencies:
-    "@yarnpkg/cli": ^4.4.0
-    "@yarnpkg/core": ^4.1.2
+    "@yarnpkg/cli": ^4.6.0
+    "@yarnpkg/core": ^4.2.0
     "@yarnpkg/plugin-git": ^3.1.0
-  checksum: 10c0/eb339407dca3f84c5cb8ef453f55d12afdf7121df5cbb84d75c85873c5757ddcf49f4b8b5c27faf8db4ffff52dad261e2477e9b1339f29586cc8b200a2d4315f
+  checksum: 10c0/ae9a0321f1421e02dd65b82d334bdf658e72244b0bbcba5587ff5c4af8b7faa726067b6b8baae9c581b52935d02d84365531d55108d1485885afc54500dbcdf6
   languageName: node
   linkType: hard
 
@@ -7369,6 +7369,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@yarnpkg/plugin-pnp@npm:^4.0.6":
+  version: 4.0.6
+  resolution: "@yarnpkg/plugin-pnp@npm:4.0.6"
+  dependencies:
+    "@yarnpkg/fslib": "npm:^3.1.1"
+    "@yarnpkg/plugin-stage": "npm:^4.0.0"
+    "@yarnpkg/pnp": "npm:^4.0.8"
+    clipanion: "npm:^4.0.0-rc.2"
+    micromatch: "npm:^4.0.2"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@yarnpkg/cli": ^4.6.0
+    "@yarnpkg/core": ^4.2.0
+  checksum: 10c0/b4b35962d0bd76fc0cb5c81553ef4e72a3591e78f6020ef55556dad8d658cb64088c33225c6e5e89afa2499c298566a47a6d0bec6d7aba30c13d516b8051a64f
+  languageName: node
+  linkType: hard
+
 "@yarnpkg/plugin-pnpm@npm:^2.0.0":
   version: 2.0.0
   resolution: "@yarnpkg/plugin-pnpm@npm:2.0.0"
@@ -7438,9 +7455,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/plugin-workspace-tools@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "@yarnpkg/plugin-workspace-tools@npm:4.1.1"
+"@yarnpkg/plugin-workspace-tools@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "@yarnpkg/plugin-workspace-tools@npm:4.1.2"
   dependencies:
     "@yarnpkg/fslib": "npm:^3.1.1"
     clipanion: "npm:^4.0.0-rc.2"
@@ -7449,10 +7466,10 @@ __metadata:
     tslib: "npm:^2.4.0"
     typanion: "npm:^3.14.0"
   peerDependencies:
-    "@yarnpkg/cli": ^4.5.3
-    "@yarnpkg/core": ^4.1.6
+    "@yarnpkg/cli": ^4.6.0
+    "@yarnpkg/core": ^4.2.0
     "@yarnpkg/plugin-git": ^3.1.0
-  checksum: 10c0/a0df7abab0d771b445e7367ce138b708eaeb95e33bcbb752e1c71bd21d2d882bdae672e1b7ebb146f6d2e48e1a5a206e0e3b5ac79cf3acab303cf41c4f4352f9
+  checksum: 10c0/5e21d3c425c02593436cc5830af91f9b2b34d985d104c7bdd96da95ad8cdebbaf257988f8dc67df6da642f6b5eaf016122d5cdb84011461bec841072412194a2
   languageName: node
   linkType: hard
 
@@ -7463,6 +7480,16 @@ __metadata:
     "@types/node": "npm:^18.17.15"
     "@yarnpkg/fslib": "npm:^3.1.1"
   checksum: 10c0/841ca675432b0e58ffddd08ada9e9c19dea4a5ecd409bd3c9d4e9db0bbf50079f65446f3c6c35d3d19771fe4ccec7e52c04572d6c02a45307e4e18c95b49a01a
+  languageName: node
+  linkType: hard
+
+"@yarnpkg/pnp@npm:^4.0.8":
+  version: 4.0.8
+  resolution: "@yarnpkg/pnp@npm:4.0.8"
+  dependencies:
+    "@types/node": "npm:^18.17.15"
+    "@yarnpkg/fslib": "npm:^3.1.1"
+  checksum: 10c0/0a68cb867742a171d4f2ee07f7981ec8be0a049f11846f588ed0af95677e25da070836b4957f7c754552f9ab8a303d3ea6f143fc17ccc0ab6a1541dc1374fdb6
   languageName: node
   linkType: hard
 
