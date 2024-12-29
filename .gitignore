@@ -10,4 +10,5 @@ tsconfig.tsbuildinfo
 sea-prep.blob
 hive-gateway
 .cache/
+*.pem
 /examples/**/*/supergraph.graphql
