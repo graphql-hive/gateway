@@ -19,7 +19,28 @@ module.exports = new Proxy(require('@jest/globals'), {
       describeFn.only = function describeOnly(name, ...args) {
         return jestGlobals.describe.only(name, ...args);
       };
+      describeFn.each = function describeEach(table) {
+        return jestGlobals.describe.each(table);
+      };
       return describeFn;
+    }
+    if (prop === 'it') {
+      const itFn = function it(name, ...args) {
+        return jestGlobals.it(name, ...args);
+      };
+      itFn.skipIf = function itSkipIf(condition) {
+        return condition ? itFn.skip : itFn;
+      };
+      itFn.skip = function itSkip(name, ...args) {
+        return jestGlobals.it.skip(name, ...args);
+      };
+      itFn.only = function itOnly(name, ...args) {
+        return jestGlobals.it.only(name, ...args);
+      };
+      itFn.each = function itEach(table) {
+        return jestGlobals.it.each(table);
+      };
+      return itFn;
     }
     return Reflect.get(jestGlobals, prop, receiver);
   },
