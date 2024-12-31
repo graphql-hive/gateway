@@ -2290,15 +2290,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@commander-js/extra-typings@npm:^12.1.0":
-  version: 12.1.0
-  resolution: "@commander-js/extra-typings@npm:12.1.0"
-  peerDependencies:
-    commander: ~12.1.0
-  checksum: 10c0/5d29eaa724b577e2a52a393ad54992924d2559931b8e493ab892477b7a4e878e475c6bf771260f8585d835f7d8e17ae4a2656c191e9595d210ae0b48291c0b3d
-  languageName: node
-  linkType: hard
-
 "@commander-js/extra-typings@npm:^13.0.0":
   version: 13.0.0
   resolution: "@commander-js/extra-typings@npm:13.0.0"
@@ -3358,10 +3349,10 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.2.13, @graphql-mesh/compose-cli@npm:^1.2.7, @graphql-mesh/compose-cli@npm:^1.3.3":
-  version: 1.3.3
-  resolution: "@graphql-mesh/compose-cli@npm:1.3.3"
+  version: 1.3.4
+  resolution: "@graphql-mesh/compose-cli@npm:1.3.4"
   dependencies:
-    "@commander-js/extra-typings": "npm:^12.1.0"
+    "@commander-js/extra-typings": "npm:^13.0.0"
     "@graphql-mesh/fusion-composition": "npm:^0.7.16"
     "@graphql-mesh/include": "npm:^0.2.9"
     "@graphql-mesh/string-interpolation": "npm:^0.5.7"
@@ -3373,13 +3364,13 @@ __metadata:
     "@graphql-tools/schema": "npm:^10.0.5"
     "@graphql-tools/utils": "npm:^10.6.0"
     "@whatwg-node/fetch": "npm:^0.10.0"
-    commander: "npm:^12.0.0"
+    commander: "npm:^13.0.0"
     dotenv: "npm:^16.3.1"
   peerDependencies:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/66aaf6b8ebc76c36a843011f06efc51fd96b4c126dfd0afbc1a8e2bb29e33b083a8c70a6faec5b6740df23a2d4305aff5aca0e6610a323e0003a9045fdb96a58
+  checksum: 10c0/ce3ed91e24cfa0947c5a68522d8f8ef3eef383aed00c81c153dc71bb041c708ed659e8560e6a834f2b21d0f36878d74bcfb83584c5d07e099fdbf6d1f70554ca
   languageName: node
   linkType: hard
 
@@ -8865,13 +8856,6 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 10c0/53f33d8927758a911094adadda4b2cbac111a5b377d8706700587650fd8f45b0bbe336de4b5c3fe47fd61f420a3d9bd452b6e0e6e5600a7e74d7bf0174f6efe3
-  languageName: node
-  linkType: hard
-
-"commander@npm:^12.0.0":
-  version: 12.1.0
-  resolution: "commander@npm:12.1.0"
-  checksum: 10c0/6e1996680c083b3b897bfc1cfe1c58dfbcd9842fd43e1aaf8a795fbc237f65efcc860a3ef457b318e73f29a4f4a28f6403c3d653d021d960e4632dd45bde54a9
   languageName: node
   linkType: hard
 
