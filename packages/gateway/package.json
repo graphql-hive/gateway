@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "type": "module",
   "repository": {
     "type": "git",

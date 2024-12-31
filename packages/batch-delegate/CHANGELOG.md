@@ -1,5 +1,13 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.26
+
+### Patch Changes
+
+- [#382](https://github.com/graphql-hive/gateway/pull/382) [`21e1f05`](https://github.com/graphql-hive/gateway/commit/21e1f05373a78c93b52b5321f1f4e8d7aba17151) Thanks [@ardatan](https://github.com/ardatan)! - Memoize the batched delegation loader by respecting the arguments correctly
+
+  [See more details in the PR](https://github.com/ardatan/graphql-tools/pull/5189)
+
 ## 9.0.25
 
 ### Patch Changes
