@@ -18,7 +18,6 @@ import {
   defaultOptions,
   type AddCommand,
   type CLIContext,
-  type CLIGlobals,
   type GatewayCLIConfig,
 } from '../cli';
 import {
@@ -57,7 +56,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
-      } = this.optsWithGlobals<CLIGlobals>();
+      } = this.optsWithGlobals();
 
       // TODO: move to optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
       const { apolloUplink } = this.opts();
