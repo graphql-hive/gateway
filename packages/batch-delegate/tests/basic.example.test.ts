@@ -102,7 +102,6 @@ describe('batch delegation within basic stitching example', () => {
     const chirps: any = result.data!['trendingChirps'];
     expect(chirps[0].chirpedAtUser.email).not.toBe(null);
   });
-
   test('works with key arrays', async () => {
     let numCalls = 0;
 
@@ -216,7 +215,6 @@ describe('batch delegation within basic stitching example', () => {
       ],
     });
   });
-
   test('works with keys passed to lazyOptionsFn', async () => {
     let numCalls = 0;
 

@@ -12,7 +12,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { Executor } from '@graphql-tools/utils';
 import { OperationTypeNode, parse } from 'graphql';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 describe('non-key arguments are taken into account when memoizing result', () => {
   test('memoizes non-key arguments as part of batch delegation', async () => {
@@ -119,16 +119,30 @@ describe('non-key arguments are taken into account when memoizing result', () =>
     expect(chirps[0].withoutObfuscatedEmail.email).toBe(`1@test.com`);
     expect(chirps[1].withoutObfuscatedEmail.email).toBe(`2@test.com`);
   });
-  test('memoizes key arguments as part of batch delegation', async () => {
+  describe('memoizes key arguments as part of batch delegation', () => {
     const users = [
-      { id: '1', email: 'john@doe.com' },
-      { id: '2', email: 'jane@doe.com' },
+      { id: '1', email: 'john@doe.com', friends: [{ id: '1' }], entity: true },
+      { id: '2', email: 'jane@doe.com', friends: [{ id: '2' }], entity: true },
     ];
+    const getUsersByIds = vi.fn((ids: string[]) =>
+      ids.map((id: string) => users.find((user) => user.id === id)),
+    );
+    const getArgsFromFriendIds = vi.fn(function (
+      friendIdsList: readonly string[][],
+    ) {
+      return {
+        ids: [...new Set(friendIdsList.flat())],
+      };
+    });
+    const getFriendIdsFromUser = vi.fn((user: { friends: typeof users }) =>
+      user.friends.map((friend) => friend.id),
+    );
     const userSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type User {
           id: ID!
           email: String!
+          friends: [User]
         }
         type Query {
           userById(id: ID!): User
@@ -138,9 +152,7 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       resolvers: {
         Query: {
           usersByIds: (_root, args) => {
-            return args.ids.map((id: string) =>
-              users.find((user) => user.id === id),
-            );
+            return getUsersByIds(args.ids);
           },
           userById: (root, args, context, info) => {
             return batchDelegateToSchema({
@@ -153,6 +165,18 @@ describe('non-key arguments are taken into account when memoizing result', () =>
             });
           },
         },
+        User: {
+          friends(root: { friends: typeof users }, _args, context, info) {
+            return batchDelegateToSchema({
+              schema: userSubschema,
+              fieldName: 'usersByIds',
+              key: getFriendIdsFromUser(root),
+              argsFromKeys: getArgsFromFriendIds,
+              context,
+              info,
+            });
+          },
+        },
       },
     });
     const executorFn = vi.fn(createDefaultExecutor(userSchema));
@@ -160,25 +184,146 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       schema: userSchema,
       executor: executorFn as Executor,
     };
-    const result = await normalizedExecutor({
-      schema: userSchema,
-      document: parse(/* GraphQL */ `
-        query {
-          user1: userById(id: "1") {
-            email
+    afterEach(() => {
+      getUsersByIds.mockClear();
+      executorFn.mockClear();
+    });
+    test('root level', async () => {
+      const result = await normalizedExecutor({
+        schema: userSchema,
+        document: parse(/* GraphQL */ `
+          query {
+            user1: userById(id: "1") {
+              email
+            }
+            user2: userById(id: "2") {
+              email
+            }
           }
-          user2: userById(id: "2") {
-            email
+        `),
+      });
+      expect(result).toEqual({
+        data: {
+          user1: { email: 'john@doe.com' },
+          user2: { email: 'jane@doe.com' },
+        },
+      });
+      expect(executorFn).toHaveBeenCalledTimes(1);
+      expect(getUsersByIds).toHaveBeenCalledTimes(1);
+      expect(getUsersByIds).toHaveBeenCalledWith(['1', '2']);
+    });
+    test('nested level', async () => {
+      const result = await normalizedExecutor({
+        schema: userSchema,
+        document: parse(/* GraphQL */ `
+          query {
+            user1: userById(id: "1") {
+              id
+              email
+              friends {
+                id
+                email
+                friends {
+                  id
+                  email
+                }
+              }
+            }
+            user2: userById(id: "2") {
+              id
+              email
+              friends {
+                id
+                email
+                friends {
+                  id
+                  email
+                }
+              }
+            }
           }
+        `),
+      });
+      expect(result).toMatchInlineSnapshot(
+        {
+          data: {
+            user1: {
+              email: 'john@doe.com',
+              friends: [
+                {
+                  email: 'john@doe.com',
+                  friends: [
+                    {
+                      email: 'john@doe.com',
+                      id: '1',
+                    },
+                  ],
+                  id: '1',
+                },
+              ],
+              id: '1',
+            },
+            user2: {
+              email: 'jane@doe.com',
+              friends: [
+                {
+                  email: 'jane@doe.com',
+                  friends: [
+                    {
+                      email: 'jane@doe.com',
+                      id: '2',
+                    },
+                  ],
+                  id: '2',
+                },
+              ],
+              id: '2',
+            },
+          },
+        },
+        `
+        {
+          "data": {
+            "user1": {
+              "email": "john@doe.com",
+              "friends": [
+                {
+                  "email": "john@doe.com",
+                  "friends": [
+                    {
+                      "email": "john@doe.com",
+                      "id": "1",
+                    },
+                  ],
+                  "id": "1",
+                },
+              ],
+              "id": "1",
+            },
+            "user2": {
+              "email": "jane@doe.com",
+              "friends": [
+                {
+                  "email": "jane@doe.com",
+                  "friends": [
+                    {
+                      "email": "jane@doe.com",
+                      "id": "2",
+                    },
+                  ],
+                  "id": "2",
+                },
+              ],
+              "id": "2",
+            },
+          },
         }
-      `),
+      `,
+      );
+      // For each level of the query, we expect a single executor call
+      // So we have 3 levels in this query, so we expect 3 executor calls
+      expect(executorFn).toHaveBeenCalledTimes(3);
+      expect(getUsersByIds).toHaveBeenCalledWith(['1', '2']);
     });
-    expect(result).toEqual({
-      data: {
-        user1: { email: 'john@doe.com' },
-        user2: { email: 'jane@doe.com' },
-      },
-    });
-    expect(executorFn).toHaveBeenCalledTimes(1);
   });
 });
