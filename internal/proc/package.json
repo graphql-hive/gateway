@@ -1,0 +1,6 @@
+{
+  "name": "@internal/proc",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts"
+}

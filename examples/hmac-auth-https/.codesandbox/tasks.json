@@ -1,0 +1,42 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Run generate-users-cert",
+      "command": "npm run generate-users-cert"
+    },
+    {
+      "name": "Start service users",
+      "command": "npm run service:users &"
+    },
+    {
+      "name": "Wait for service users",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 -k https://0.0.0.0:4001"
+    },
+    {
+      "name": "Start service comments",
+      "command": "npm run service:comments &"
+    },
+    {
+      "name": "Wait for service comments",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}

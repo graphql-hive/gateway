@@ -2,7 +2,7 @@
 import LeakDetector from 'jest-leak-detector';
 import { describe, expect, it } from 'vitest';
 
-describe.skipIf(process.env.LEAK_TEST || globalThis.Bun)(
+describe.skipIf(process.env['LEAK_TEST'] || globalThis.Bun)(
   'Leak Detector',
   () => {
     it('should detect simple leak', async () => {

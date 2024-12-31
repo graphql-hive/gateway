@@ -1,0 +1,18 @@
+{
+  "name": "@internal/examples",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": {
+    "start": "tsx ./src/bin.ts"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.26.3",
+    "@types/jscodeshift": "^0.12.0",
+    "@whatwg-node/disposablestack": "^0.0.5",
+    "dedent": "^1.5.3",
+    "glob": "^11.0.0",
+    "jscodeshift": "^17.1.1",
+    "tsx": "^4.19.2"
+  }
+}

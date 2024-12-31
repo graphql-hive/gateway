@@ -1,0 +1,95 @@
+name: Examples
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # NOTE: github.event.head_commit.message is not available on pull_request events
+  head-commit:
+    name: Inspect head commit
+    runs-on: ubuntu-latest
+    outputs:
+      message: ${{ steps.commit.outputs.message }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{github.event.pull_request.head.sha}}
+      - name: Inspect
+        id: commit
+        run: echo "message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
+
+  convert:
+    needs: [head-commit]
+    if: "${{needs.head-commit.outputs.message != 'docs(examples): converted from e2es'}}"
+    strategy:
+      matrix:
+        e2e:
+          - extra-fields
+          - federation-example
+          - federation-mixed
+          - file-upload
+          - apq-subgraphs
+          - federation-subscriptions-passthrough
+          - hmac-auth-https
+          - interface-additional-resolvers
+          - json-schema-subscriptions
+          - openapi-additional-resolvers
+          - openapi-arg-rename
+          - openapi-javascript-wiki
+          - openapi-subscriptions
+          - programmatic-batching
+          - subscriptions-with-transforms
+          - type-merging-batching
+    name: Convert ${{matrix.e2e}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+      - name: Convert
+        run: yarn workspace @internal/examples run start ${{matrix.e2e}} true
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{matrix.e2e}}
+          # include all files and folders starting with a dot (.)
+          include-hidden-files: true
+          # > If multiple paths are provided as input, the least common ancestor of all the search paths will be used as the root directory of the artifact.
+          # https://github.com/actions/upload-artifact#upload-using-multiple-paths-and-exclusions
+          #
+          # Because of this, we include the root README.md to maintain the paths during artifact downloads
+          path: |
+            README.md
+            examples/${{matrix.e2e}}
+            !examples/${{matrix.e2e}}/node_modules
+
+  commit:
+    needs: [convert]
+    name: Commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{secrets.BOT_GITHUB_TOKEN}}
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          pattern: example-*
+          merge-multiple: true
+      - name: Diff
+        run: git diff --pretty
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: examples/
+          commit_message: 'docs(examples): converted from e2es'
+          commit_user_name: theguild-bot
+          commit_user_email: bot@the-guild.dev
+          commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author

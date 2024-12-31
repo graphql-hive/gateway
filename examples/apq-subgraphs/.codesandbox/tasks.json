@@ -1,0 +1,30 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Start service greetings",
+      "command": "npm run service:greetings &"
+    },
+    {
+      "name": "Wait for service greetings",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}

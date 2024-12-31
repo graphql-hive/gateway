@@ -32,5 +32,11 @@ export default {
     }),
   },
   transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    // we dont care about leaks in internal tests
+    // furthermore, some internal files use ESM (and import.meta) which jest does not support
+    'internal/',
+  ],
   testMatch: ['**/*.(test|spec).ts'],
 } satisfies Config;

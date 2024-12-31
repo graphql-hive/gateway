@@ -1,0 +1,3 @@
+extend type pageview_project {
+  apple: String!
+}

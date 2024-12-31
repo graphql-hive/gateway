@@ -1,0 +1,38 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Start service authors",
+      "command": "npm run service:authors &"
+    },
+    {
+      "name": "Wait for service authors",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
+    },
+    {
+      "name": "Start service books",
+      "command": "npm run service:books &"
+    },
+    {
+      "name": "Wait for service books",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}
