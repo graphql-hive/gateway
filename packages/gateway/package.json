@@ -54,7 +54,7 @@
     }
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^12.1.0",
+    "@commander-js/extra-typings": "^13.0.0",
     "@envelop/core": "^5.0.2",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.104.0",

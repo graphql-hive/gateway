@@ -2248,6 +2248,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@commander-js/extra-typings@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "@commander-js/extra-typings@npm:13.0.0"
+  peerDependencies:
+    commander: ~13.0.0
+  checksum: 10c0/7d1f75624ef5026462600b9ef9f7dbb701cefa3a17204bf57a9946aece44ccff343407d910620645c1daa9416439f5be6597adf75a0b8b4cfd08d59b345d0fcc
+  languageName: node
+  linkType: hard
+
 "@cspotcode/source-map-support@npm:0.8.1, @cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"
@@ -3127,7 +3136,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
-    "@commander-js/extra-typings": "npm:^12.1.0"
+    "@commander-js/extra-typings": "npm:^13.0.0"
     "@envelop/core": "npm:^5.0.2"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.104.0"
