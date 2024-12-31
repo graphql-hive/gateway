@@ -1,9 +1,18 @@
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
-import { execute, isIncrementalResult } from '@graphql-tools/executor';
+import {
+  createDefaultExecutor,
+  SubschemaConfig,
+} from '@graphql-tools/delegate';
+import {
+  execute,
+  isIncrementalResult,
+  normalizedExecutor,
+} from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
+import { Executor } from '@graphql-tools/utils';
 import { OperationTypeNode, parse } from 'graphql';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 describe('non-key arguments are taken into account when memoizing result', () => {
   test('memoizes non-key arguments as part of batch delegation', async () => {
@@ -109,5 +118,67 @@ describe('non-key arguments are taken into account when memoizing result', () =>
 
     expect(chirps[0].withoutObfuscatedEmail.email).toBe(`1@test.com`);
     expect(chirps[1].withoutObfuscatedEmail.email).toBe(`2@test.com`);
+  });
+  test('memoizes key arguments as part of batch delegation', async () => {
+    const users = [
+      { id: '1', email: 'john@doe.com' },
+      { id: '2', email: 'jane@doe.com' },
+    ];
+    const userSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        type User {
+          id: ID!
+          email: String!
+        }
+        type Query {
+          userById(id: ID!): User
+          usersByIds(ids: [ID!]): [User]
+        }
+      `,
+      resolvers: {
+        Query: {
+          usersByIds: (_root, args) => {
+            return args.ids.map((id: string) =>
+              users.find((user) => user.id === id),
+            );
+          },
+          userById: (root, args, context, info) => {
+            return batchDelegateToSchema({
+              schema: userSubschema,
+              fieldName: 'usersByIds',
+              key: args.id,
+              rootValue: root,
+              context,
+              info,
+            });
+          },
+        },
+      },
+    });
+    const executorFn = vi.fn(createDefaultExecutor(userSchema));
+    const userSubschema: SubschemaConfig = {
+      schema: userSchema,
+      executor: executorFn as Executor,
+    };
+    const result = await normalizedExecutor({
+      schema: userSchema,
+      document: parse(/* GraphQL */ `
+        query {
+          user1: userById(id: "1") {
+            email
+          }
+          user2: userById(id: "2") {
+            email
+          }
+        }
+      `),
+    });
+    expect(result).toEqual({
+      data: {
+        user1: { email: 'john@doe.com' },
+        user2: { email: 'jane@doe.com' },
+      },
+    });
+    expect(executorFn).toHaveBeenCalledTimes(1);
   });
 });

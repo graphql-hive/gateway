@@ -14,9 +14,10 @@ import DataLoader from 'dataloader';
 import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
 import { BatchDelegateOptions } from './types.js';
 
+const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
+
 function createBatchFn<K = any>(options: BatchDelegateOptions) {
-  const argsFromKeys =
-    options.argsFromKeys ?? ((keys: ReadonlyArray<K>) => ({ ids: keys }));
+  const argsFromKeys = options.argsFromKeys ?? DEFAULT_ARGS_FROM_KEYS;
   const fieldName = options.fieldName ?? options.info.fieldName;
   const { valuesFromResults, lazyOptionsFn } = options;
 
@@ -103,6 +104,8 @@ export function getLoader<K = any, V = any, C = K>(
     fieldNodes = info.fieldNodes[0] && getActualFieldNodes(info.fieldNodes[0]),
     selectionSet = fieldNodes?.[0]?.selectionSet,
     returnType = info.returnType,
+    argsFromKeys = DEFAULT_ARGS_FROM_KEYS,
+    key,
   } = options;
   const loaders = getLoadersMap<K, V, C>(context ?? GLOBAL_CONTEXT, schema);
 
@@ -119,7 +122,11 @@ export function getLoader<K = any, V = any, C = K>(
 
   const fieldNode = fieldNodes?.[0];
   if (fieldNode?.arguments) {
-    cacheKey += fieldNode.arguments.map((arg) => memoizedPrint(arg)).join(',');
+    const args = argsFromKeys([key]);
+    cacheKey += fieldNode.arguments
+      .filter((arg) => arg.name.value in args)
+      .map((arg) => memoizedPrint(arg))
+      .join(',');
   }
 
   let loader = loaders.get(cacheKey);
