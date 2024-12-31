@@ -244,82 +244,42 @@ describe('non-key arguments are taken into account when memoizing result', () =>
           }
         `),
       });
-      expect(result).toMatchInlineSnapshot(
-        {
-          data: {
-            user1: {
-              email: 'john@doe.com',
-              friends: [
-                {
-                  email: 'john@doe.com',
-                  friends: [
-                    {
-                      email: 'john@doe.com',
-                      id: '1',
-                    },
-                  ],
-                  id: '1',
-                },
-              ],
-              id: '1',
-            },
-            user2: {
-              email: 'jane@doe.com',
-              friends: [
-                {
-                  email: 'jane@doe.com',
-                  friends: [
-                    {
-                      email: 'jane@doe.com',
-                      id: '2',
-                    },
-                  ],
-                  id: '2',
-                },
-              ],
-              id: '2',
-            },
+      expect(result).toEqual({
+        data: {
+          user1: {
+            email: 'john@doe.com',
+            friends: [
+              {
+                email: 'john@doe.com',
+                friends: [
+                  {
+                    email: 'john@doe.com',
+                    id: '1',
+                  },
+                ],
+                id: '1',
+              },
+            ],
+            id: '1',
+          },
+          user2: {
+            email: 'jane@doe.com',
+            friends: [
+              {
+                email: 'jane@doe.com',
+                friends: [
+                  {
+                    email: 'jane@doe.com',
+                    id: '2',
+                  },
+                ],
+                id: '2',
+              },
+            ],
+            id: '2',
           },
         },
-        `
-        {
-          "data": {
-            "user1": {
-              "email": "john@doe.com",
-              "friends": [
-                {
-                  "email": "john@doe.com",
-                  "friends": [
-                    {
-                      "email": "john@doe.com",
-                      "id": "1",
-                    },
-                  ],
-                  "id": "1",
-                },
-              ],
-              "id": "1",
-            },
-            "user2": {
-              "email": "jane@doe.com",
-              "friends": [
-                {
-                  "email": "jane@doe.com",
-                  "friends": [
-                    {
-                      "email": "jane@doe.com",
-                      "id": "2",
-                    },
-                  ],
-                  "id": "2",
-                },
-              ],
-              "id": "2",
-            },
-          },
-        }
-      `,
-      );
+      });
       // For each level of the query, we expect a single executor call
       // So we have 3 levels in this query, so we expect 3 executor calls
       expect(executorFn).toHaveBeenCalledTimes(3);
