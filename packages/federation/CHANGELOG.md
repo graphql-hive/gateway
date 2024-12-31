@@ -1,5 +1,12 @@
 # @graphql-tools/federation
 
+## 3.0.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/stitch@9.4.12
+
 ## 3.0.5
 
 ### Patch Changes
