@@ -1,5 +1,24 @@
 # @graphql-hive/gateway
 
+## 1.7.5
+
+### Patch Changes
+
+- [#390](https://github.com/graphql-hive/gateway/pull/390) [`708c32f`](https://github.com/graphql-hive/gateway/commit/708c32f30bd0950e0e397a50c64af3ed9bd40d5c) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`commander@^13.0.0` ↗︎](https://www.npmjs.com/package/commander/v/13.0.0) (from `^12.0.0`, in `dependencies`)
+
+- [#392](https://github.com/graphql-hive/gateway/pull/392) [`121751d`](https://github.com/graphql-hive/gateway/commit/121751db50bc13454122f4decbba715ba8d400c2) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@commander-js/extra-typings@^13.0.0` ↗︎](https://www.npmjs.com/package/@commander-js/extra-typings/v/13.0.0) (from `^12.1.0`, in `dependencies`)
+  - Updated dependency [`commander@^13.0.0` ↗︎](https://www.npmjs.com/package/commander/v/13.0.0) (from `^12.0.0`, in `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-hive/gateway-runtime@1.4.5
+  - @graphql-mesh/plugin-opentelemetry@1.3.33
+  - @graphql-mesh/plugin-prometheus@1.3.21
+
 ## 1.7.4
 
 ### Patch Changes

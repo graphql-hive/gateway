@@ -280,56 +280,62 @@ export async function runSupergraph(
     }
   }
 
-  if (absSchemaPath && cluster.isPrimary) {
-    let watcher: typeof import('@parcel/watcher') | undefined;
-    try {
-      watcher = await import('@parcel/watcher');
-    } catch (e) {
-      if (Object(e).code !== 'MODULE_NOT_FOUND') {
-        log.debug('Problem while importing @parcel/watcher', e);
-      }
-      log.warn(
-        `If you want to enable hot reloading when ${absSchemaPath} changes, make sure "@parcel/watcher" is available`,
-      );
-    }
-    if (watcher) {
+  if (absSchemaPath) {
+    // Polling should not be enabled when watching the file
+    delete config.pollingInterval;
+    if (cluster.isPrimary) {
+      let watcher: typeof import('@parcel/watcher') | undefined;
       try {
-        log.info(`Watching ${absSchemaPath} for changes`);
-        const absSupergraphDirname = dirname(absSchemaPath);
-        const subscription = await watcher.subscribe(
-          absSupergraphDirname,
-          (err, events) => {
-            if (err) {
-              log.error(err);
-              return;
-            }
-            if (
-              events.some(
-                (event) =>
-                  event.path === absSchemaPath && event.type === 'update',
-              )
-            ) {
-              log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
-              if (config.fork && config.fork > 1) {
-                for (const workerId in cluster.workers) {
-                  cluster.workers[workerId]!.send('invalidateUnifiedGraph');
-                }
-              } else {
-                runtime.invalidateUnifiedGraph();
-              }
-            }
-          },
+        watcher = await import('@parcel/watcher');
+      } catch (e) {
+        if (Object(e).code !== 'MODULE_NOT_FOUND') {
+          log.debug('Problem while importing @parcel/watcher', e);
+        }
+        log.warn(
+          `If you want to enable hot reloading when ${absSchemaPath} changes, make sure "@parcel/watcher" is available`,
         );
-        registerTerminateHandler((signal) => {
-          log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
-          return subscription.unsubscribe().catch((err) => {
-            // https://github.com/parcel-bundler/watcher/issues/129
-            log.error(`Failed to close watcher for ${absSchemaPath}!`, err);
+      }
+      if (watcher) {
+        try {
+          log.info(`Watching ${absSchemaPath} for changes`);
+          const absSupergraphDirname = dirname(absSchemaPath);
+          const subscription = await watcher.subscribe(
+            absSupergraphDirname,
+            (err, events) => {
+              if (err) {
+                log.error(err);
+                return;
+              }
+              if (
+                events.some(
+                  (event) =>
+                    event.path === absSchemaPath && event.type === 'update',
+                )
+              ) {
+                log.info(
+                  `${absSchemaPath} changed. Invalidating supergraph...`,
+                );
+                if (config.fork && config.fork > 1) {
+                  for (const workerId in cluster.workers) {
+                    cluster.workers[workerId]!.send('invalidateUnifiedGraph');
+                  }
+                } else {
+                  runtime.invalidateUnifiedGraph();
+                }
+              }
+            },
+          );
+          registerTerminateHandler((signal) => {
+            log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
+            return subscription.unsubscribe().catch((err) => {
+              // https://github.com/parcel-bundler/watcher/issues/129
+              log.error(`Failed to close watcher for ${absSchemaPath}!`, err);
+            });
           });
-        });
-      } catch (err) {
-        log.error(`Failed to watch ${absSchemaPath}!`);
-        throw err;
+        } catch (err) {
+          log.error(`Failed to watch ${absSchemaPath}!`);
+          throw err;
+        }
       }
     }
   }

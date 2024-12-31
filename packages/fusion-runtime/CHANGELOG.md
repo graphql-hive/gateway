@@ -1,5 +1,13 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.26
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/stitch@9.4.12
+  - @graphql-tools/federation@3.0.6
+
 ## 0.10.25
 
 ### Patch Changes
