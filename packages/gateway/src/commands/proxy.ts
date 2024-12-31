@@ -8,7 +8,6 @@ import {
   defaultOptions,
   type AddCommand,
   type CLIContext,
-  type CLIGlobals,
   type GatewayCLIConfig,
 } from '../cli';
 import {
@@ -40,7 +39,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
-      } = this.optsWithGlobals<CLIGlobals>();
+      } = this.optsWithGlobals();
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
