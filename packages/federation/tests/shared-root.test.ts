@@ -1,11 +1,12 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { parse } from 'graphql';
-import { describe, expect, it } from 'vitest';
+import { ExecutionRequest } from '@graphql-tools/utils';
+import { ExecutionResult, parse } from 'graphql';
+import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
-describe('Aliased Shared Root Fields', () => {
-  it('issue #6613', async () => {
+describe('Shared Root Fields', () => {
+  it('Aliased shared root fields issue #6613', async () => {
     const query = /* GraphQL */ `
       query {
         testNestedField {
@@ -108,5 +109,77 @@ describe('Aliased Shared Root Fields', () => {
     });
 
     expect(result).toEqual(expectedResult);
+  });
+  it('Mutations should not be batched', async () => {
+    const SUBGRAPHA = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          test: String
+        }
+
+        type Mutation {
+          testMutation: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          test: () => 'test',
+        },
+        Mutation: {
+          testMutation: () => 'testMutation',
+        },
+      },
+    });
+    const SUBGRAPHB = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          test: String
+        }
+
+        type Mutation {
+          testMutation: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          test: () => 'test',
+        },
+        Mutation: {
+          testMutation: () => 'testMutation',
+        },
+      },
+    });
+    const onSubgraphExecuteFn =
+      vi.fn<
+        (
+          subgraph: string,
+          executionRequest: ExecutionRequest,
+          result: ExecutionResult | AsyncIterable<ExecutionResult>,
+        ) => void
+      >();
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
+      {
+        SUBGRAPHA,
+        SUBGRAPHB,
+      },
+      onSubgraphExecuteFn,
+    );
+
+    const result = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        mutation {
+          testMutation
+        }
+      `),
+    });
+
+    expect(result).toEqual({
+      data: {
+        testMutation: 'testMutation',
+      },
+    });
+
+    expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(1);
   });
 });
