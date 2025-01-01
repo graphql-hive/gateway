@@ -42,7 +42,7 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       typeDefs: /* GraphQL */ `
         type User {
           id: ID!
-          email: String!
+          email(obfuscated: Boolean): String!
         }
         type Query {
           usersByIds(ids: [ID!], obfuscateEmail: Boolean!): [User]
@@ -56,6 +56,11 @@ describe('non-key arguments are taken into account when memoizing result', () =>
               id,
               email: args.obfuscateEmail ? '***' : `${id}@test.com`,
             }));
+          },
+        },
+        User: {
+          email(user, { obfuscated }) {
+            return obfuscated ? '***' : `${user.email}`;
           },
         },
       },
@@ -118,26 +123,26 @@ describe('non-key arguments are taken into account when memoizing result', () =>
     const query = /* GraphQL */ `
       query {
         trendingChirps {
-          withObfuscatedEmail: chirpedAtUser(obfuscateEmail: true) {
+          withObfuscatedEmail: chirpedAtUser(obfuscateEmail: true) { # Batch 1
             id
             email
-            friendsWithoutObfuscatedEmail: friends(obfuscateEmail: false) {
+            friendsWithoutObfuscatedEmail: friends(obfuscateEmail: false) { # Batch 3
               id
               email
             }
-            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) {
+            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) { # Batch 4
               id
               email
             }
           }
-          withoutObfuscatedEmail: chirpedAtUser(obfuscateEmail: false) {
+          withoutObfuscatedEmail: chirpedAtUser(obfuscateEmail: false) { # Batch 2
             id
             email
-            friendsWithoutObfuscatedEmail: friends(obfuscateEmail: false) {
+            friendsWithoutObfuscatedEmailArgButEmailObfuscatedArg: friends(obfuscateEmail: false) { # Batch 5
               id
-              email
+              email(obfuscated: true)
             }
-            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) {
+            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) { # Batch 4
               id
               email
             }
@@ -151,114 +156,112 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       document: parse(query),
     });
 
-    // With obfuscateEmail true on root, we expect 2 calls to usersByIds
-    // With obfuscateEmail false on root, we expect 2 calls to usersByIds
-    // With friends, we have 2 calls like above.
-    expect(numCalls).toEqual(4);
+    // According to the query, we expect 5 calls
+    expect(numCalls).toEqual(5);
 
     if (isIncrementalResult(result)) throw Error('result is incremental');
 
     expect(result).toEqual({
-      data: {
-        trendingChirps: [
+      "data": {
+        "trendingChirps": [
           {
-            withObfuscatedEmail: {
-              id: '1',
-              email: '***',
-              friendsWithObfuscatedEmail: [
+            "withObfuscatedEmail": {
+              "email": "***",
+              "friendsWithObfuscatedEmail": [
                 {
-                  id: '2',
-                  email: '***',
+                  "email": "***",
+                  "id": "2",
                 },
                 {
-                  id: '4',
-                  email: '***',
-                },
-              ],
-              friendsWithoutObfuscatedEmail: [
-                {
-                  id: '2',
-                  email: '2@test.com',
-                },
-                {
-                  id: '4',
-                  email: '4@test.com',
+                  "email": "***",
+                  "id": "4",
                 },
               ],
+              "friendsWithoutObfuscatedEmail": [
+                {
+                  "email": "2@test.com",
+                  "id": "2",
+                },
+                {
+                  "email": "4@test.com",
+                  "id": "4",
+                },
+              ],
+              "id": "1",
             },
-            withoutObfuscatedEmail: {
-              id: '1',
-              email: '1@test.com',
-              friendsWithObfuscatedEmail: [
+            "withoutObfuscatedEmail": {
+              "email": "1@test.com",
+              "friendsWithObfuscatedEmail": [
                 {
-                  id: '2',
-                  email: '***',
+                  "email": "***",
+                  "id": "2",
                 },
                 {
-                  id: '4',
-                  email: '***',
-                },
-              ],
-              friendsWithoutObfuscatedEmail: [
-                {
-                  id: '2',
-                  email: '2@test.com',
-                },
-                {
-                  id: '4',
-                  email: '4@test.com',
+                  "email": "***",
+                  "id": "4",
                 },
               ],
+              "friendsWithoutObfuscatedEmailArgButEmailObfuscatedArg": [
+                {
+                  "email": "***",
+                  "id": "2",
+                },
+                {
+                  "email": "***",
+                  "id": "4",
+                },
+              ],
+              "id": "1",
             },
           },
           {
-            withObfuscatedEmail: {
-              id: '2',
-              email: '***',
-              friendsWithObfuscatedEmail: [
+            "withObfuscatedEmail": {
+              "email": "***",
+              "friendsWithObfuscatedEmail": [
                 {
-                  id: '1',
-                  email: '***',
+                  "email": "***",
+                  "id": "1",
                 },
                 {
-                  id: '3',
-                  email: '***',
-                },
-              ],
-              friendsWithoutObfuscatedEmail: [
-                {
-                  id: '1',
-                  email: '1@test.com',
-                },
-                {
-                  id: '3',
-                  email: '3@test.com',
+                  "email": "***",
+                  "id": "3",
                 },
               ],
+              "friendsWithoutObfuscatedEmail": [
+                {
+                  "email": "1@test.com",
+                  "id": "1",
+                },
+                {
+                  "email": "3@test.com",
+                  "id": "3",
+                },
+              ],
+              "id": "2",
             },
-            withoutObfuscatedEmail: {
-              id: '2',
-              email: '2@test.com',
-              friendsWithObfuscatedEmail: [
+            "withoutObfuscatedEmail": {
+              "email": "2@test.com",
+              "friendsWithObfuscatedEmail": [
                 {
-                  id: '1',
-                  email: '***',
+                  "email": "***",
+                  "id": "1",
                 },
                 {
-                  id: '3',
-                  email: '***',
-                },
-              ],
-              friendsWithoutObfuscatedEmail: [
-                {
-                  id: '1',
-                  email: '1@test.com',
-                },
-                {
-                  id: '3',
-                  email: '3@test.com',
+                  "email": "***",
+                  "id": "3",
                 },
               ],
+              "friendsWithoutObfuscatedEmailArgButEmailObfuscatedArg": [
+                {
+                  "email": "***",
+                  "id": "1",
+                },
+                {
+                  "email": "***",
+                  "id": "3",
+                },
+              ],
+              "id": "2",
             },
           },
         ],
