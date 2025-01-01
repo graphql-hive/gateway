@@ -151,6 +151,9 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       document: parse(query),
     });
 
+    // With obfuscateEmail true on root, we expect 2 calls to usersByIds
+    // With obfuscateEmail false on root, we expect 2 calls to usersByIds
+    // With friends, we have 2 calls like above.
     expect(numCalls).toEqual(4);
 
     if (isIncrementalResult(result)) throw Error('result is incremental');
