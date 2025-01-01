@@ -1,8 +1,8 @@
 import { getLoader } from './getLoader.js';
 import { BatchDelegateOptions } from './types.js';
 
-export function batchDelegateToSchema<TContext = any>(
-  options: BatchDelegateOptions<TContext>,
+export function batchDelegateToSchema<TContext = any, K = any, V = any, C = K>(
+  options: BatchDelegateOptions<TContext, K, V, C>,
 ): any {
   const key = options.key;
   if (key == null) {

@@ -41,6 +41,7 @@ describe('non-key arguments are taken into account when memoizing result', () =>
     const authorSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type User {
+          id: ID!
           email: String!
         }
         type Query {
@@ -52,6 +53,7 @@ describe('non-key arguments are taken into account when memoizing result', () =>
           usersByIds: (_root, args) => {
             numCalls++;
             return args.ids.map((id: string) => ({
+              id,
               email: args.obfuscateEmail ? '***' : `${id}@test.com`,
             }));
           },
@@ -62,6 +64,10 @@ describe('non-key arguments are taken into account when memoizing result', () =>
     const linkTypeDefs = /* GraphQL */ `
       extend type Chirp {
         chirpedAtUser(obfuscateEmail: Boolean!): User
+      }
+
+      extend type User {
+        friends(obfuscateEmail: Boolean!): [User]
       }
     `;
 
@@ -85,6 +91,27 @@ describe('non-key arguments are taken into account when memoizing result', () =>
             },
           },
         },
+        User: {
+          friends: {
+            selectionSet: `{ id }`,
+            resolve(user: { id: string }, args, context, info) {
+              return batchDelegateToSchema({
+                schema: authorSchema,
+                operation: 'query' as OperationTypeNode,
+                fieldName: 'usersByIds',
+                key: user.id === '1' ? ['2', '4'] : ['1', '3'],
+                argsFromKeys: (friendIdsList) => {
+                  return {
+                    ids: [...new Set(friendIdsList.flat())],
+                    ...args,
+                  };
+                },
+                context,
+                info,
+              });
+            },
+          },
+        },
       },
     });
 
@@ -92,10 +119,28 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       query {
         trendingChirps {
           withObfuscatedEmail: chirpedAtUser(obfuscateEmail: true) {
+            id
             email
+            friendsWithoutObfuscatedEmail: friends(obfuscateEmail: false) {
+              id
+              email
+            }
+            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) {
+              id
+              email
+            }
           }
           withoutObfuscatedEmail: chirpedAtUser(obfuscateEmail: false) {
+            id
             email
+            friendsWithoutObfuscatedEmail: friends(obfuscateEmail: false) {
+              id
+              email
+            }
+            friendsWithObfuscatedEmail: friends(obfuscateEmail: true) {
+              id
+              email
+            }
           }
         }
       }
@@ -106,18 +151,116 @@ describe('non-key arguments are taken into account when memoizing result', () =>
       document: parse(query),
     });
 
-    expect(numCalls).toEqual(2);
+    expect(numCalls).toEqual(4);
 
     if (isIncrementalResult(result)) throw Error('result is incremental');
 
-    expect(result.errors).toBeUndefined();
-
-    const chirps: any = result.data!['trendingChirps'];
-    expect(chirps[0].withObfuscatedEmail.email).toBe(`***`);
-    expect(chirps[1].withObfuscatedEmail.email).toBe(`***`);
-
-    expect(chirps[0].withoutObfuscatedEmail.email).toBe(`1@test.com`);
-    expect(chirps[1].withoutObfuscatedEmail.email).toBe(`2@test.com`);
+    expect(result).toEqual({
+      data: {
+        trendingChirps: [
+          {
+            withObfuscatedEmail: {
+              id: '1',
+              email: '***',
+              friendsWithObfuscatedEmail: [
+                {
+                  id: '2',
+                  email: '***',
+                },
+                {
+                  id: '4',
+                  email: '***',
+                },
+              ],
+              friendsWithoutObfuscatedEmail: [
+                {
+                  id: '2',
+                  email: '2@test.com',
+                },
+                {
+                  id: '4',
+                  email: '4@test.com',
+                },
+              ],
+            },
+            withoutObfuscatedEmail: {
+              id: '1',
+              email: '1@test.com',
+              friendsWithObfuscatedEmail: [
+                {
+                  id: '2',
+                  email: '***',
+                },
+                {
+                  id: '4',
+                  email: '***',
+                },
+              ],
+              friendsWithoutObfuscatedEmail: [
+                {
+                  id: '2',
+                  email: '2@test.com',
+                },
+                {
+                  id: '4',
+                  email: '4@test.com',
+                },
+              ],
+            },
+          },
+          {
+            withObfuscatedEmail: {
+              id: '2',
+              email: '***',
+              friendsWithObfuscatedEmail: [
+                {
+                  id: '1',
+                  email: '***',
+                },
+                {
+                  id: '3',
+                  email: '***',
+                },
+              ],
+              friendsWithoutObfuscatedEmail: [
+                {
+                  id: '1',
+                  email: '1@test.com',
+                },
+                {
+                  id: '3',
+                  email: '3@test.com',
+                },
+              ],
+            },
+            withoutObfuscatedEmail: {
+              id: '2',
+              email: '2@test.com',
+              friendsWithObfuscatedEmail: [
+                {
+                  id: '1',
+                  email: '***',
+                },
+                {
+                  id: '3',
+                  email: '***',
+                },
+              ],
+              friendsWithoutObfuscatedEmail: [
+                {
+                  id: '1',
+                  email: '1@test.com',
+                },
+                {
+                  id: '3',
+                  email: '3@test.com',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
   });
   describe('memoizes key arguments as part of batch delegation', () => {
     const users = [
