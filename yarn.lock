@@ -3132,7 +3132,7 @@ __metadata:
     pkgroll: "npm:2.6.0"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    graphql: ^16.9.0 || ^17.0.0
+    graphql: ^15.0.0 || ^16.9.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
