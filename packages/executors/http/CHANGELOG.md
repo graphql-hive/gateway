@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 1.2.4
+
+### Patch Changes
+
+- Updated dependencies [[`c60a8f4`](https://github.com/graphql-hive/gateway/commit/c60a8f446c5ca59a74a580050f5c20c0c9e61e97)]:
+  - @graphql-hive/gateway-abort-signal-any@0.0.3
+
 ## 1.2.3
 
 ### Patch Changes

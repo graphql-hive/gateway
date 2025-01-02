@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-common
 
+## 0.7.26
+
+### Patch Changes
+
+- Updated dependencies [[`c60a8f4`](https://github.com/graphql-hive/gateway/commit/c60a8f446c5ca59a74a580050f5c20c0c9e61e97)]:
+  - @graphql-hive/gateway-abort-signal-any@0.0.3
+
 ## 0.7.25
 
 ### Patch Changes

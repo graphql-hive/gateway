@@ -1,5 +1,13 @@
 # @graphql-hive/gateway-abort-signal-any
 
+## 0.0.3
+
+### Patch Changes
+
+- [#401](https://github.com/graphql-hive/gateway/pull/401) [`c60a8f4`](https://github.com/graphql-hive/gateway/commit/c60a8f446c5ca59a74a580050f5c20c0c9e61e97) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`graphql@^15.0.0 || ^16.9.0 || ^17.0.0` ↗︎](https://www.npmjs.com/package/graphql/v/15.0.0) (from `^16.9.0 || ^17.0.0`, in `peerDependencies`)
+
 ## 0.0.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @graphql-tools/federation
 
+## 3.0.7
+
+### Patch Changes
+
+- [#387](https://github.com/graphql-hive/gateway/pull/387) [`3571399`](https://github.com/graphql-hive/gateway/commit/35713997b5330989b001c6317631621af24c404b) Thanks [@ardatan](https://github.com/ardatan)! - In case of shared root field on Mutation, it was batched incorrectly across subgraphs. But instead only one mutation should be called as mutations should not be parallel
+
+- Updated dependencies []:
+  - @graphql-tools/executor-http@1.2.4
+  - @graphql-tools/stitch@9.4.13
+
 ## 3.0.6
 
 ### Patch Changes

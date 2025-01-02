@@ -1,5 +1,71 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.27
+
+### Patch Changes
+
+- [#396](https://github.com/graphql-hive/gateway/pull/396) [`da65b2d`](https://github.com/graphql-hive/gateway/commit/da65b2d8a66714fb5a135e66ebbe59fa37182600) Thanks [@ardatan](https://github.com/ardatan)! - Memoize the key arguments correctly;
+
+  With the following schema and resolvers, `userById` should batch all the requests to `usersByIds`;
+
+  ```ts
+  {
+        typeDefs: /* GraphQL */ `
+          type User {
+            id: ID!
+            email: String!
+          }
+          type Query {
+            userById(id: ID!): User
+            usersByIds(ids: [ID!]): [User]
+          }
+        `,
+        resolvers: {
+          Query: {
+            usersByIds: (_root, args) => {
+              return args.ids.map((id: string) => users.find((user) => user.id === id));
+            },
+            userById: (root, args, context, info) => {
+              return batchDelegateToSchema({
+                schema: userSubschema,
+                fieldName: 'usersByIds',
+                key: args.id,
+                rootValue: root,
+                context,
+                info,
+              })
+            },
+          },
+        },
+      }
+  ```
+
+  This query should batch all the requests to `usersByIds`:
+
+  ```graphql
+  {
+    userById(id: "1") {
+      id
+      email
+    }
+    userById(id: "2") {
+      id
+      email
+    }
+  }
+  ```
+
+  The delegation request should be;
+
+  ```graphql
+  {
+    usersByIds(ids: ["1", "2"]) {
+      id
+      email
+    }
+  }
+  ```
+
 ## 9.0.26
 
 ### Patch Changes

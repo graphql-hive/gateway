@@ -1,5 +1,19 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`c60a8f4`](https://github.com/graphql-hive/gateway/commit/c60a8f446c5ca59a74a580050f5c20c0c9e61e97), [`3571399`](https://github.com/graphql-hive/gateway/commit/35713997b5330989b001c6317631621af24c404b), [`da65b2d`](https://github.com/graphql-hive/gateway/commit/da65b2d8a66714fb5a135e66ebbe59fa37182600)]:
+  - @graphql-hive/gateway-abort-signal-any@0.0.3
+  - @graphql-tools/federation@3.0.7
+  - @graphql-tools/batch-delegate@9.0.27
+  - @graphql-tools/executor-http@1.2.4
+  - @graphql-mesh/transport-common@0.7.26
+  - @graphql-mesh/fusion-runtime@0.10.27
+  - @graphql-tools/stitch@9.4.13
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+
 ## 1.4.5
 
 ### Patch Changes
