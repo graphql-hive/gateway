@@ -1,4 +1,7 @@
-import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
+import {
+  abortSignalAny,
+  createTimeoutSignalWithDispose,
+} from '@graphql-hive/gateway-abort-signal-any';
 import {
   defaultPrintFn,
   SerializedExecutionRequest,
@@ -235,8 +238,12 @@ export function buildHTTPExecutor(
       }
       signals.push(signalFromRequest);
     }
+    let timeoutSignal:
+      | ReturnType<typeof createTimeoutSignalWithDispose>
+      | undefined;
     if (options?.timeout) {
-      signals.push(AbortSignal.timeout(options.timeout));
+      timeoutSignal = createTimeoutSignalWithDispose(options.timeout);
+      signals.push(timeoutSignal.signal);
     }
 
     const signal = abortSignalAny(signals);
@@ -336,6 +343,7 @@ export function buildHTTPExecutor(
         }
       })
         .then((fetchResult: Response): any => {
+          timeoutSignal?.[DisposableSymbols.dispose]();
           upstreamErrorExtensions.response ||= {};
           upstreamErrorExtensions.response.status = fetchResult.status;
           upstreamErrorExtensions.response.statusText = fetchResult.statusText;
@@ -431,6 +439,7 @@ export function buildHTTPExecutor(
           }
         })
         .catch((e: any) => {
+          timeoutSignal?.[DisposableSymbols.dispose]();
           if (e.name === 'AggregateError') {
             return {
               errors: e.errors.map((e: any) =>

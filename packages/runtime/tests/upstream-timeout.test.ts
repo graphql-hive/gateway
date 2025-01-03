@@ -44,9 +44,6 @@ describe('Upstream Timeout', () => {
         throw new Error('Unexpected subgraph');
       },
     });
-    setTimeout(() => {
-      greetingsDeferred.resolve('Hello, World!');
-    }, 1500);
     const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
@@ -73,6 +70,62 @@ describe('Upstream Timeout', () => {
           path: ['hello'],
         }),
       ],
+    });
+    greetingsDeferred.resolve('Hello, World!');
+  });
+  // Just for leak detection
+  it('does not time out', async () => {
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          hello: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          hello: () => 'Hello, World!',
+        },
+      },
+    });
+    await using upstreamServer = createYoga({
+      schema: upstreamSchema,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: getUnifiedGraphGracefully([
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+          url: 'http://localhost:4001/graphql',
+        },
+      ]),
+      plugins() {
+        return [useCustomFetch(upstreamServer.fetch as MeshFetch)];
+      },
+      upstreamTimeout({ subgraphName }) {
+        if (subgraphName === 'upstream') {
+          return 1000;
+        }
+        throw new Error('Unexpected subgraph');
+      },
+    });
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            hello
+          }
+        `,
+      }),
+    });
+    const resJson = await res.json();
+    expect(resJson).toEqual({
+      data: {
+        hello: 'Hello, World!',
+      },
     });
   });
 });

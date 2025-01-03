@@ -1,4 +1,7 @@
-import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
+import {
+  abortSignalAny,
+  createTimeoutSignalWithDispose,
+} from '@graphql-hive/gateway-abort-signal-any';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -12,6 +15,7 @@ import {
   MaybePromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { GatewayPlugin } from '../types';
 
 export interface TimeoutFactoryPayload {
@@ -29,7 +33,10 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
   const timeoutFactory = typeof opts === 'function' ? opts : () => opts;
   const timeoutSignalsByExecutionRequest = new WeakMap<
     ExecutionRequest,
-    AbortSignal
+    {
+      signal: AbortSignal;
+      [Symbol.dispose](): void;
+    }
   >();
   const errorExtensionsByExecRequest = new WeakMap<
     ExecutionRequest,
@@ -50,13 +57,13 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           let timeoutSignal =
             timeoutSignalsByExecutionRequest.get(executionRequest);
           if (!timeoutSignal) {
-            timeoutSignal = AbortSignal.timeout(timeout);
+            timeoutSignal = createTimeoutSignalWithDispose(timeout);
           }
           timeoutSignalsByExecutionRequest.set(executionRequest, timeoutSignal);
-          const timeout$ = getAbortPromise(timeoutSignal);
-          let finalSignal: AbortSignal | undefined = timeoutSignal;
+          const timeout$ = getAbortPromise(timeoutSignal.signal);
+          let finalSignal: AbortSignal | undefined = timeoutSignal.signal;
           const signals = new Set<AbortSignal>();
-          signals.add(timeoutSignal);
+          signals.add(timeoutSignal.signal);
           if (executionRequest.signal) {
             signals.add(executionRequest.signal);
             finalSignal = abortSignalAny(signals);
@@ -74,8 +81,8 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
                   [Symbol.asyncIterator]() {
                     const iterator = result[Symbol.asyncIterator]();
                     if (iterator.return) {
-                      registerAbortSignalListener(timeoutSignal, () =>
-                        iterator.return?.(timeoutSignal.reason),
+                      registerAbortSignalListener(timeoutSignal.signal, () =>
+                        iterator.return?.(timeoutSignal.signal.reason),
                       );
                     }
                     return iterator;
@@ -85,7 +92,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               return result;
             })
             .catch((e) => {
-              if (e === timeoutSignal.reason) {
+              if (e === timeoutSignal.signal.reason) {
                 const upstreamErrorExtensions =
                   errorExtensionsByExecRequest.get(executionRequest);
                 throw createGraphQLError(e.message, {
@@ -98,6 +105,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             .finally(() => {
               // Remove from the map after used so we don't see it again
               errorExtensionsByExecRequest.delete(executionRequest);
+              timeoutSignal[DisposableSymbols.dispose]();
               timeoutSignalsByExecutionRequest.delete(executionRequest);
             }) as MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
         });
@@ -108,28 +116,33 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
       const subgraphName =
         executionRequest &&
         subgraphNameByExecutionRequest.get(executionRequest);
+      let timeoutSignal:
+        | {
+            signal: AbortSignal;
+            [Symbol.dispose](): void;
+          }
+        | undefined;
       if (
         !executionRequest ||
         !timeoutSignalsByExecutionRequest.has(executionRequest)
       ) {
         const timeout = timeoutFactory({ subgraphName, executionRequest });
         if (timeout) {
-          let timeoutSignal: AbortSignal | undefined;
           if (executionRequest) {
             timeoutSignal =
               timeoutSignalsByExecutionRequest.get(executionRequest);
             if (!timeoutSignal) {
-              timeoutSignal = AbortSignal.timeout(timeout);
+              timeoutSignal = createTimeoutSignalWithDispose(timeout);
               timeoutSignalsByExecutionRequest.set(
                 executionRequest,
                 timeoutSignal,
               );
             }
           } else {
-            timeoutSignal = AbortSignal.timeout(timeout);
+            timeoutSignal = createTimeoutSignalWithDispose(timeout);
           }
           const signals = new Set<AbortSignal>();
-          signals.add(timeoutSignal);
+          signals.add(timeoutSignal.signal);
           if (options.signal) {
             signals.add(options.signal);
             setOptions({
@@ -153,6 +166,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           upstreamErrorExtensions,
         );
         return function onFetchDone({ response }) {
+          timeoutSignal?.[DisposableSymbols.dispose]();
           timeoutSignalsByExecutionRequest.delete(executionRequest);
           upstreamErrorExtensions.response = {
             status: response.status,
