@@ -1,4 +1,5 @@
 import { registerAbortSignalListener } from '@graphql-tools/utils';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 
 export type AbortSignalFromAny = AbortSignal & {
   signals: Set<AbortSignal>;
@@ -9,6 +10,29 @@ export function isAbortSignalFromAny(
   signal?: AbortSignal | null,
 ): signal is AbortSignalFromAny {
   return signal != null && 'signals' in signal && 'addSignals' in signal;
+}
+
+export function createTimeoutSignalWithDispose(timeout: number): {
+  signal: AbortSignal;
+  [Symbol.dispose](): void;
+} {
+  const ctrl = new AbortController();
+  const id = setTimeout(
+    () =>
+      ctrl.abort(
+        new DOMException(
+          'The operation was aborted due to timeout',
+          'TimeoutError',
+        ),
+      ),
+    timeout,
+  );
+  return {
+    signal: ctrl.signal,
+    [DisposableSymbols.dispose]() {
+      clearTimeout(id);
+    },
+  };
 }
 
 export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
