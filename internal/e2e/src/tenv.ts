@@ -61,7 +61,7 @@ const gatewayRunner = (function getServeRunner() {
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
-E2E_GATEWAY_RUNNER=docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
+yarn build && E2E_GATEWAY_RUNNER=docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
 
 `);
   }
@@ -75,7 +75,7 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
   if (runner === 'bun-docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
-E2E_GATEWAY_RUNNER=bun-docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
+yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
 
 `);
   }
