@@ -45,6 +45,7 @@ jobs:
           - programmatic-batching
           - subscriptions-with-transforms
           - type-merging-batching
+          - operation-field-permissions
     name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:
