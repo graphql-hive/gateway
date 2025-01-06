@@ -32,5 +32,8 @@ COPY --chown=root bundle/dist .
 RUN chown bun . && \
     echo "{}" > package.json && chown bun package.json
 
+# npm install should ignore peer deps (which is often "graphql" which is available in root)
+RUN echo "omit=peer" > .npmrc && chown bun .npmrc
+
 USER bun
 ENTRYPOINT ["dumb-init", "bun", "bin.mjs"]
