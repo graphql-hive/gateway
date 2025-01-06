@@ -1,4 +1,4 @@
-import { createTenv, Service } from '@internal/e2e';
+import { createTenv, dockerHostName, Service } from '@internal/e2e';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('openapi-subgraph', () => {
@@ -10,7 +10,7 @@ describe('openapi-subgraph', () => {
     GQLService = await service('GQL');
   });
   function replaceDockerHostNamesBack(sdl?: string) {
-    return sdl?.replaceAll('172.17.0.1', 'localhost');
+    return sdl?.replaceAll(dockerHostName, 'localhost');
   }
   it('exposes the SDL correctly', async () => {
     const { result, output } = await composeWithMesh({

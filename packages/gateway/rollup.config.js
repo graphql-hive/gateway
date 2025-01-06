@@ -55,6 +55,9 @@ const deps = {
     '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
     '../transports/http-callback/src/index.ts',
+  // include envelop core
+  'node_modules/@envelop/core/index':
+    '../../node_modules/@envelop/core/esm/index.js',
   // extras for docker only
   'node_modules/@graphql-mesh/plugin-http-cache/index':
     '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',

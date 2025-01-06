@@ -21,45 +21,6 @@ target "gateway" {
   ]
 }
 
-//
-
-group "e2e" {
-  targets = ["gateway_e2e", "gateway_e2e_openapi-javascript-wiki"]
-}
-
-group "e2e_bun" {
-  targets = ["gateway_e2e_bun",  "gateway_e2e_openapi-javascript-wiki_bun"]
-}
-
-target "gateway_e2e" {
-  context = "packages/gateway"
-  dockerfile = "node.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e"]
-}
-
-target "gateway_e2e_bun" {
-  context = "packages/gateway"
-  dockerfile = "bun.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e-bun"]
-}
-target "gateway_e2e_openapi-javascript-wiki" {
-  context = "e2e/openapi-javascript-wiki"
-  dockerfile = "gateway.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki"]
-  contexts = {
-    "gateway_e2e": "target:gateway_e2e"
-  }
-}
-
-target "gateway_e2e_openapi-javascript-wiki_bun" {
-  context = "e2e/openapi-javascript-wiki"
-  dockerfile = "gateway_bun.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki-bun"]
-  contexts = {
-    "gateway_e2e_bun": "target:gateway_e2e_bun"
-  }
-}
-
 target "gateway_bun" {
   context = "packages/gateway"
   dockerfile = "bun.Dockerfile"
@@ -73,4 +34,67 @@ target "gateway_bun" {
     "index:org.opencontainers.image.source=https://github.com/graphql-hive/gateway/tree/main/packages/gateway",
     "index:org.opencontainers.image.documentation=https://the-guild.dev/graphql/hive/docs/gateway/deployment/docker"
   ]
+}
+
+//
+
+group "e2e" {
+  targets = [
+    "gateway_e2e",
+    "gateway_e2e_openapi-javascript-wiki",
+    "gateway_e2e_operation-field-permissions"
+  ]
+}
+
+group "e2e_bun" {
+  targets = [
+    "gateway_e2e_bun",
+    "gateway_e2e_openapi-javascript-wiki_bun",
+    "gateway_e2e_operation-field-permissions_bun"
+  ]
+}
+
+target "gateway_e2e" {
+  context = "packages/gateway"
+  dockerfile = "node.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e"]
+}
+target "gateway_e2e_bun" {
+  context = "packages/gateway"
+  dockerfile = "bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e-bun"]
+}
+
+target "gateway_e2e_openapi-javascript-wiki" {
+  context = "e2e/openapi-javascript-wiki"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
+target "gateway_e2e_openapi-javascript-wiki_bun" {
+  context = "e2e/openapi-javascript-wiki"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.openapi-javascript-wiki-bun"]
+  contexts = {
+    "gateway_e2e_bun": "target:gateway_e2e_bun"
+  }
+}
+
+target "gateway_e2e_operation-field-permissions" {
+  context = "e2e/operation-field-permissions"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.operation-field-permissions"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
+target "gateway_e2e_operation-field-permissions_bun" {
+  context = "e2e/operation-field-permissions"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.operation-field-permissions-bun"]
+  contexts = {
+    "gateway_e2e_bun": "target:gateway_e2e_bun"
+  }
 }

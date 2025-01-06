@@ -61,7 +61,7 @@ const gatewayRunner = (function getServeRunner() {
   if (runner === 'docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
-E2E_GATEWAY_RUNNER=docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
+yarn build && E2E_GATEWAY_RUNNER=docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
 
 `);
   }
@@ -75,7 +75,7 @@ yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @gra
   if (runner === 'bun-docker' && !boolEnv('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
-E2E_GATEWAY_RUNNER=bun-docker yarn build && yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
+yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
 
 `);
   }
@@ -270,6 +270,12 @@ export interface Tenv {
   composeWithApollo(services: Service[]): Promise<string>;
 }
 
+// docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
+// and locally the host.docker.internal (or just on macos?) should just work
+export const dockerHostName = boolEnv('CI')
+  ? '172.17.0.1'
+  : 'host.docker.internal';
+
 async function handleDockerHostName(
   supergraph: string,
   volumes: {
@@ -277,25 +283,22 @@ async function handleDockerHostName(
     container: string;
   }[],
 ) {
-  // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
-  // and locally the host.docker.internal (or just on macos?) should just work
-  const dockerLocalHost = boolEnv('CI') ? '172.17.0.1' : 'host.docker.internal';
   // we need to replace all local servers in the supergraph to use docker's local hostname.
   // without this, the services running on the host wont be accessible by the docker container
   if (/^http(s?):\/\//.test(supergraph)) {
     // supergraph is a url
     supergraph = supergraph
-      .replaceAll('0.0.0.0', dockerLocalHost)
-      .replaceAll('localhost', dockerLocalHost)
-      .replaceAll('127.0.0.1', dockerLocalHost);
+      .replaceAll('0.0.0.0', dockerHostName)
+      .replaceAll('localhost', dockerHostName)
+      .replaceAll('127.0.0.1', dockerHostName);
   } else {
     // supergraph is a path
     await fs.writeFile(
       supergraph,
       (await fs.readFile(supergraph, 'utf8'))
-        .replaceAll('0.0.0.0', dockerLocalHost)
-        .replaceAll('localhost', dockerLocalHost)
-        .replaceAll('127.0.0.1', dockerLocalHost),
+        .replaceAll('0.0.0.0', dockerHostName)
+        .replaceAll('localhost', dockerHostName)
+        .replaceAll('127.0.0.1', dockerHostName),
     );
     volumes.push({
       host: supergraph,
