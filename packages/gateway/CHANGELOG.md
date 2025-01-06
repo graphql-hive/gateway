@@ -1,5 +1,14 @@
 # @graphql-hive/gateway
 
+## 1.7.7
+
+### Patch Changes
+
+- [#412](https://github.com/graphql-hive/gateway/pull/412) [`0d7b42d`](https://github.com/graphql-hive/gateway/commit/0d7b42d8631962be78ab5b8c4655b812b9f71817) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Dont install peer dependencies automatically with npm in Docker
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+
 ## 1.7.6
 
 ### Patch Changes
