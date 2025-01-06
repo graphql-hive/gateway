@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 
 const { gateway, service } = createTenv(__dirname);
 
-it('should disallow disallowed', async () => {
+it('should allow checking registration but disallow "me" when not authenticated', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
@@ -15,7 +15,25 @@ it('should disallow disallowed', async () => {
     execute({
       query: /* GraphQL */ `
         {
-          disallowed
+          registrationOpen
+        }
+      `,
+    }),
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "registrationOpen": false,
+      },
+    }
+  `);
+
+  await expect(
+    execute({
+      query: /* GraphQL */ `
+        {
+          me {
+            name
+          }
         }
       `,
     }),
@@ -30,33 +48,52 @@ it('should disallow disallowed', async () => {
               "line": 3,
             },
           ],
-          "message": "Insufficient permissions for selecting 'Query.disallowed'.",
+          "message": "Insufficient permissions for selecting 'Query.me'.",
+        },
+        {
+          "locations": [
+            {
+              "column": 13,
+              "line": 4,
+            },
+          ],
+          "message": "Insufficient permissions for selecting 'User.name'.",
         },
       ],
     }
   `);
 });
 
-it('should allow allowed', async () => {
+it('should allow "me" when authenticated', async () => {
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
       services: [await service('users')],
     },
+    pipeLogs: 'gw.log',
   });
 
   await expect(
     execute({
       query: /* GraphQL */ `
         {
-          allowed
+          registrationOpen
+          me {
+            name
+          }
         }
       `,
+      headers: {
+        authorization: 'Bearer TOKEN',
+      },
     }),
   ).resolves.toMatchInlineSnapshot(`
     {
       "data": {
-        "allowed": "cool",
+        "me": {
+          "name": "John",
+        },
+        "registrationOpen": false,
       },
     }
   `);
