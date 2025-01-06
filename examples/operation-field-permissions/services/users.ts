@@ -7,14 +7,17 @@ createServer(
     schema: createSchema<any>({
       typeDefs: /* GraphQL */ `
         type Query {
-          allowed: String!
-          disallowed: String!
+          registrationOpen: Boolean!
+          me: User!
+        }
+        type User {
+          name: String!
         }
       `,
       resolvers: {
         Query: {
-          allowed: () => 'cool',
-          disallowed: () => 'very not cool',
+          registrationOpen: () => false,
+          me: () => ({ name: 'John' }),
         },
       },
     }),
