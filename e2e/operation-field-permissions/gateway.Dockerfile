@@ -1,3 +1,3 @@
 FROM gateway_e2e
 
-RUN npm i @envelop/core @envelop/operation-field-permissions
+RUN npm i @envelop/operation-field-permissions
