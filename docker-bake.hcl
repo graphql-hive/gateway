@@ -49,7 +49,7 @@ group "e2e" {
 group "e2e_bun" {
   targets = [
     "gateway_e2e_bun",
-    "gateway_e2e_openapi-javascript-wiki_bun"
+    "gateway_e2e_openapi-javascript-wiki_bun",
     "gateway_e2e_operation-field-permissions_bun"
   ]
 }
