@@ -172,7 +172,6 @@ describe.skipIf(process.env['LEAK_TEST'])(
           supergraph,
           cache,
           plugins: (ctx) => [
-            // @ts-expect-error - we need to fix the types
             useHttpCache(ctx),
           ],
         });
