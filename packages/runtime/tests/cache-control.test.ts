@@ -171,9 +171,7 @@ describe.skipIf(process.env['LEAK_TEST'])(
         await using gw = createGatewayRuntime({
           supergraph,
           cache,
-          plugins: (ctx) => [
-            useHttpCache(ctx),
-          ],
+          plugins: (ctx) => [useHttpCache(ctx)],
         });
         async function makeRequest() {
           const res = await gw.fetch('http://localhost:4000/graphql', {
