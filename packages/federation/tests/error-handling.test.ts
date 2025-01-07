@@ -1,8 +1,8 @@
-import { IntrospectAndCompose, LocalGraphQLDataSource } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { fakePromise, isAsyncIterable } from '@graphql-tools/utils';
+import { isAsyncIterable } from '@graphql-tools/utils';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema, parse } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -66,30 +66,16 @@ describe('Error handling', () => {
   });
   let supergraph: GraphQLSchema;
   beforeAll(async () => {
-    const { supergraphSdl } = await new IntrospectAndCompose({
-      subgraphs: [
-        {
-          name: 'A',
-          url: 'http://localhost:4001/graphql',
-        },
-        {
-          name: 'B',
-          url: 'http://localhost:4002/graphql',
-        },
-      ],
-    }).initialize({
-      getDataSource({ name }) {
-        if (name === 'A') {
-          return new LocalGraphQLDataSource(subgraphA);
-        }
-        if (name === 'B') {
-          return new LocalGraphQLDataSource(subgraphB);
-        }
-        throw new Error(`Unknown subgraph: ${name}`);
+    const supergraphSdl = await composeLocalSchemasWithApollo([
+      {
+        name: 'A',
+        schema: subgraphA,
       },
-      healthCheck: () => fakePromise(undefined),
-      update() {},
-    });
+      {
+        name: 'B',
+        schema: subgraphB,
+      },
+    ]);
     supergraph = getStitchedSchemaFromSupergraphSdl({
       supergraphSdl,
       onSubschemaConfig(subschemaConfig) {

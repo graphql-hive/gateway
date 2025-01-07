@@ -2,9 +2,9 @@ import { createDefaultExecutor } from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
-  fakePromise,
   mapMaybePromise,
 } from '@graphql-tools/utils';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -22,30 +22,13 @@ export async function getStitchedSchemaFromLocalSchemas(
     result: ExecutionResult | AsyncIterable<ExecutionResult>,
   ) => void,
 ): Promise<GraphQLSchema> {
-  const { IntrospectAndCompose, LocalGraphQLDataSource } = await import(
-    '@apollo/gateway'
-  );
-  const introspectAndCompose = await new IntrospectAndCompose({
-    subgraphs: Object.keys(localSchemas).map((name) => ({
+  const supergraphSdl = await composeLocalSchemasWithApollo(
+    Object.entries(localSchemas).map(([name, schema]) => ({
       name,
-      url: 'http://localhost/' + name,
+      schema,
+      url: `http://localhost/${name}`,
     })),
-  }).initialize({
-    healthCheck() {
-      return fakePromise(undefined);
-    },
-    update() {},
-    getDataSource({ name }) {
-      const [, localSchema] =
-        Object.entries(localSchemas).find(
-          ([key]) => kebabCase(key) === kebabCase(name),
-        ) || [];
-      if (localSchema) {
-        return new LocalGraphQLDataSource(localSchema);
-      }
-      throw new Error(`Unknown subgraph ${name}`);
-    },
-  });
+  );
   function createTracedExecutor(name: string, schema: GraphQLSchema) {
     const executor = createDefaultExecutor(schema);
     return function tracedExecutor(request: ExecutionRequest) {
@@ -60,7 +43,7 @@ export async function getStitchedSchemaFromLocalSchemas(
     };
   }
   return getStitchedSchemaFromSupergraphSdl({
-    supergraphSdl: introspectAndCompose.supergraphSdl,
+    supergraphSdl,
     onSubschemaConfig(subschemaConfig) {
       const [name, localSchema] =
         Object.entries(localSchemas).find(
