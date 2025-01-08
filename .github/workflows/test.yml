@@ -141,6 +141,6 @@ jobs:
 
   examples:
     needs: [e2e]
-    uses: graphql-hive/gateway/.github/workflows/examples.yml@main
+    uses: graphql-hive/gateway/.github/workflows/examples.yml@examples-call # TODO: change to main
     with:
       sha: ${{github.sha}}
