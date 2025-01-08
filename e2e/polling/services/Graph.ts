@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { Opts } from '@internal/testing';
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { buildSchema } from 'graphql';
-import { Opts } from '@internal/testing';
 
 const app = express();
 const opts = Opts(process.argv);
