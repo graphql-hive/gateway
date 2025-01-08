@@ -65,7 +65,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Convert
-        run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs}}'
+        run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs.publishedPackages}}'
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
