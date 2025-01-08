@@ -13,6 +13,13 @@ const j = jscodeshift.withParser(parser);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const __project = path.resolve(__dirname, '..', '..', '..');
 
+/**
+ * Published packages from changesets. Matches `publishedPackages` output in:
+ * - https://github.com/dotansimha/changesets-action
+ * - https://github.com/the-guild-org/changesets-snapshot-action
+ */
+export type PublishedPackages = { name: string; version: string }[];
+
 export interface ConvertE2EToExampleConfig {
   /** The name of the E2E test to convert to an example. */
   e2e: string;
@@ -21,6 +28,10 @@ export interface ConvertE2EToExampleConfig {
    * @default false
    */
   clean?: boolean;
+  /**
+   * Read more at {@link PublishedPackages}.
+   */
+  publishedPackages?: PublishedPackages;
 }
 
 export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
@@ -52,6 +63,12 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   console.log(`Converting E2E test "${e2eDir}" to an example "${exampleDir}"`);
+  if (config.publishedPackages) {
+    console.log(
+      'Using publishedPackages',
+      JSON.stringify(config.publishedPackages, null, '  '),
+    );
+  }
   await fs.mkdir(exampleDir, { recursive: true });
 
   const e2eTestFiles = await glob(path.join(e2eDir, '*.e2e.ts'));
@@ -213,7 +230,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies = {};
     }
 
-    const gatewayVersion = await getWorkspaceVersion('@graphql-hive/gateway');
+    const gatewayVersion = await getWorkspaceVersion(
+      '@graphql-hive/gateway',
+      config.publishedPackages,
+    );
     console.log(
       `Adding "@graphql-hive/gateway@^${gatewayVersion}" as dependency...`,
     );
@@ -223,7 +243,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       const [, range] = String(version).split('workspace:');
       if (!range) continue;
 
-      const workspaceVersion = await getWorkspaceVersion(name);
+      const workspaceVersion = await getWorkspaceVersion(
+        name,
+        config.publishedPackages,
+      );
       if (range === '^') {
         packageJson.dependencies[name] = `^${workspaceVersion}`;
       } else if (range === '~') {
@@ -764,8 +787,23 @@ async function findServiceFiles(
 
 const workspaces: { [name: string]: string /* location */ } = {};
 
-/** Gets the workspace's current version as defined in the package.json */
-async function getWorkspaceVersion(name: string) {
+/**
+ * Gets the workspace's current version as defined in the package.json.
+ *
+ * If the package exists in {@link publishedPackage}, its version will be used instead.
+ */
+async function getWorkspaceVersion(
+  name: string,
+  /**
+   * Read more at {@link PublishedPackages}.
+   */
+  publishedPackages: PublishedPackages | undefined,
+) {
+  const publishedPackage = publishedPackages?.find((pkg) => pkg.name === name);
+  if (publishedPackage) {
+    return publishedPackage.version;
+  }
+
   if (!Object.keys(workspaces).length) {
     const [proc, waitForExit] = await spawn(
       { cwd: __project },

@@ -6,6 +6,10 @@ on:
       sha:
         type: string
         required: true
+      publishedPackages:
+        type: string
+        description: >
+          A JSON array to present the published packages. The format is `[{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]`
 
 concurrency:
   group: examples-${{ github.workflow }}-${{ github.ref }}
@@ -61,7 +65,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Convert
-        run: yarn workspace @internal/examples run start ${{matrix.e2e}} true
+        run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs}}'
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
