@@ -82,3 +82,5 @@ jobs:
     uses: graphql-hive/gateway/.github/workflows/examples.yml@examples-call # TODO: change to main
     with:
       sha: ${{github.sha}}
+    secrets:
+      token: ${{secrets.BOT_GITHUB_TOKEN}}

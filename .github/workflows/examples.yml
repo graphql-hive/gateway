@@ -10,6 +10,10 @@ on:
         type: string
         description: >
           A JSON array to present the published packages. The format is `[{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]`
+    secrets:
+      token:
+        required: true
+        description: The GitHub token for commiting and opening PRs
 
 concurrency:
   group: examples-${{ github.workflow }}-${{ github.ref }}
@@ -90,7 +94,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{inputs.sha}}
-          token: ${{secrets.BOT_GITHUB_TOKEN}}
+          token: ${{secrets.token}}
       - name: Download
         uses: actions/download-artifact@v4
         with:
