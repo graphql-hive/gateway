@@ -58,6 +58,8 @@ jobs:
           ref: ${{inputs.sha}}
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
       - name: Convert
         run: yarn workspace @internal/examples run start ${{matrix.e2e}} true
       - name: Upload
