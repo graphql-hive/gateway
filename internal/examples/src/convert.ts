@@ -54,9 +54,13 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   );
 
   if (config.clean) {
-    console.warn('Cleaning example...');
+    console.warn('Cleaning example (skipping package-lock.json if exists)...');
     try {
-      await fs.rm(exampleDir, { recursive: true });
+      for (const file of await fs.readdir(exampleDir)) {
+        if (file !== 'package-lock.json') {
+          await fs.rm(path.join(exampleDir, file), { recursive: true });
+        }
+      }
     } catch {
       // noop
     }
