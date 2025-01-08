@@ -75,56 +75,11 @@ jobs:
     strategy:
       matrix:
         setup:
-          # Node
-          - workflow-name: Node 18 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            node-version: 18
-          - workflow-name: Node 20 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            node-version: 20
+          # TODO: revert to original setup, we use only node 22 for testing the examples workflow
           - workflow-name: Node 22 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
             node-version: 22
-
-          # Node on Docker
-          - workflow-name: Node Docker on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: docker
-            node-version: 22
-
-          # Node Binary
-          - workflow-name: Node Binary on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: bin
-            node-version: 22
-          - workflow-name: Node Binary on Windows
-            os: windows-latest
-            gateway-runner: bin
-            node-version: 22
-
-          # Should be the same with Linux
-          # - workflow-name: Node Binary on MacOS Arm64
-          #   os: macos-14 # MacOS Arm64
-          #   gateway-runner: bin
-          #   node-version: 22
-          # - workflow-name: Node Binary on MacOS x86_64
-          #   os: macos-13 # MacOS x86_64
-          #   gateway-runner: bin
-          #   node-version: 22
-
-          # Bun
-          - workflow-name: Bun on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: bun
-            node-version: 22
-          - workflow-name: Bun Docker on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: bun-docker
-            node-version: 22
-
     name: E2E / ${{matrix.setup.workflow-name}}
     steps:
       - name: Checkout
