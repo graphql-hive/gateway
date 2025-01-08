@@ -1,16 +1,19 @@
 name: Examples
 
 on:
-  pull_request:
+  workflow_call:
+    inputs:
+      sha:
+        type: string
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # NOTE: github.event.head_commit.message is not available on pull_request events
-  head-commit:
-    name: Inspect head commit
+  inspect-sha:
+    name: Inspect SHA
     runs-on: ubuntu-latest
     outputs:
       message: ${{ steps.commit.outputs.message }}
@@ -18,14 +21,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{github.event.pull_request.head.sha}}
+          ref: ${{inputs.sha}}
       - name: Inspect
         id: commit
         run: echo "message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
 
   convert:
-    needs: [head-commit]
-    if: "${{needs.head-commit.outputs.message != 'docs(examples): converted from e2es'}}"
+    needs: [inspect-sha]
+    if: "${{needs.inspect-sha.outputs.message != 'docs(examples): converted from e2es'}}"
     strategy:
       matrix:
         e2e:
@@ -51,6 +54,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{inputs.sha}}
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
       - name: Convert
@@ -78,6 +83,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{inputs.sha}}
           token: ${{secrets.BOT_GITHUB_TOKEN}}
       - name: Download
         uses: actions/download-artifact@v4

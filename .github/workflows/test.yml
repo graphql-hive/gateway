@@ -183,3 +183,9 @@ jobs:
           timeout_minutes: 10
           max_attempts: 2
           command: yarn test:e2e
+
+  examples:
+    needs: [e2e]
+    uses: graphql-hive/gateway/.github/workflows/examples.yml@main
+    with:
+      sha: ${{github.sha}}
