@@ -1,5 +1,15 @@
 # @graphql-hive/gateway
 
+## 1.7.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@1.4.7
+  - @graphql-mesh/plugin-opentelemetry@1.3.35
+  - @graphql-mesh/plugin-prometheus@1.3.23
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+
 ## 1.7.7
 
 ### Patch Changes
