@@ -1,12 +1,20 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 import { parser } from './parser';
-import { copyMkdir, defer, exists, loc, writeFileMkdir } from './utils';
+import {
+  asyncDefer,
+  copyMkdir,
+  defer,
+  exists,
+  loc,
+  writeFileMkdir,
+} from './utils';
 
 const j = jscodeshift.withParser(parser);
 
@@ -397,6 +405,19 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     );
   }
 
+  console.log('Hiding root node_modules');
+  await fs.rename(
+    path.join(__project, 'node_modules'),
+    path.join(__project, 'HIDDEN_node_modules'),
+  );
+  await using _ = asyncDefer(() => {
+    console.log('Restoring root node_modules');
+    return fs.rename(
+      path.join(__project, 'HIDDEN_node_modules'),
+      path.join(__project, 'node_modules'),
+    );
+  });
+
   {
     console.group('Testing codesandbox setup and starting Hive Gateway...');
     using _ = defer(() => console.groupEnd());
@@ -419,7 +440,13 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         ...args,
       );
       if (isBackgroundJob) {
-        console.info('Task is a background job, not waiting for exit');
+        console.info(
+          'Task is a background job, making sure it starts and not waiting for exit',
+        );
+
+        // wait 1 second and see whether the process will fail
+        await Promise.race([waitForExit, setTimeout(1_000)]);
+
         stack.use(proc);
       } else {
         await waitForExit;
