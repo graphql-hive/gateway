@@ -103,6 +103,7 @@ jobs:
       - name: Diff
         run: git diff --pretty
       - name: Commit
+        if: github.ref != 'refs/heads/main'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           file_pattern: examples/
@@ -110,3 +111,15 @@ jobs:
           commit_user_name: theguild-bot
           commit_user_email: bot@the-guild.dev
           commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
+      - name: PR
+        if: github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{secrets.token}}
+          add-paths: examples/
+          branch: examples/update
+          commit-message: 'docs(examples): converted from e2es'
+          title: Update Examples
+          body: The examples converted from E2E tests have changed on the main branch.
+          committer: theguild-bot <bot@the-guild.dev>
+          author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
