@@ -331,7 +331,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
         setupTasks.push({
           name: `Start service ${service}`,
-          command: `npm run service:${service} &`,
+          command: `nohup npm run service:${service} $> service-${service}.out &`,
         });
         setupTasks.push({
           name: `Wait for service ${service}`,

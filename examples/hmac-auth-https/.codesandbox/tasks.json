@@ -10,7 +10,7 @@
     },
     {
       "name": "Start service users",
-      "command": "npm run service:users &"
+      "command": "nohup npm run service:users $> service-users.out &"
     },
     {
       "name": "Wait for service users",
@@ -18,7 +18,7 @@
     },
     {
       "name": "Start service comments",
-      "command": "npm run service:comments &"
+      "command": "nohup npm run service:comments $> service-comments.out &"
     },
     {
       "name": "Wait for service comments",

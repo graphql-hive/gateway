@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service users",
-      "command": "npm run service:users &"
+      "command": "nohup npm run service:users $> service-users.out &"
     },
     {
       "name": "Wait for service users",

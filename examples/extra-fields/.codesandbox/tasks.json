@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service foo",
-      "command": "npm run service:foo &"
+      "command": "nohup npm run service:foo $> service-foo.out &"
     },
     {
       "name": "Wait for service foo",
@@ -14,7 +14,7 @@
     },
     {
       "name": "Start service bar",
-      "command": "npm run service:bar &"
+      "command": "nohup npm run service:bar $> service-bar.out &"
     },
     {
       "name": "Wait for service bar",

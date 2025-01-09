@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service greetings",
-      "command": "npm run service:greetings &"
+      "command": "nohup npm run service:greetings $> service-greetings.out &"
     },
     {
       "name": "Wait for service greetings",
