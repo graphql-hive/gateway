@@ -131,6 +131,7 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
+  console.log(config);
   let fetchAPI = config.fetchAPI;
   let logger: Logger;
   if (config.logging == null) {
@@ -152,8 +153,8 @@ export function createGatewayRuntime<
     fetch: wrappedFetchFn,
     logger,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
-    ...('cache' in config ? { cache: config.cache } : {}),
-    ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
+    cache: config.cache,
+    pubsub: config.pubsub,
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
@@ -720,24 +721,16 @@ export function createGatewayRuntime<
       onSchemaChange(unifiedGraph) {
         setSchema(unifiedGraph);
       },
-      ...(config.transports ? { transports: config.transports } : {}),
-      ...(config.transportEntries
-        ? { transportEntryAdditions: config.transportEntries }
-        : {}),
-      ...(config.pollingInterval
-        ? { pollingInterval: config.pollingInterval }
-        : {}),
+      transports: config.transports,
+      transportEntryAdditions: config.transportEntries,
+      pollingInterval: config.pollingInterval,
       transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
       onDelegationStageExecuteHooks,
-      ...(config.additionalTypeDefs
-        ? { additionalTypeDefs: config.additionalTypeDefs }
-        : {}),
-      ...((config.additionalResolvers
-        ? { additionalResolvers: config.additionalResolvers }
-        : {}) as IResolvers),
+      additionalTypeDefs: config.additionalTypeDefs,
+      additionalResolvers: config.additionalResolvers as IResolvers[],
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -1137,6 +1130,7 @@ function isDynamicUnifiedGraphSchema(
       // remote url
       return true;
     }
+    return false;
   }
-  return false;
+  return true;
 }
