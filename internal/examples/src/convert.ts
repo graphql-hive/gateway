@@ -406,17 +406,30 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     );
   }
 
-  console.log('Hiding root node_modules');
-  await fs.rename(
-    path.join(__project, 'node_modules'),
-    path.join(__project, 'HIDDEN_node_modules'),
-  );
-  await using _ = asyncDefer(() => {
-    console.log('Restoring root node_modules');
-    return fs.rename(
-      path.join(__project, 'HIDDEN_node_modules'),
+  console.log('Hiding root node_modules and tsconfig.json');
+  const hiddenPrefix = 'HIDDEN_';
+  await Promise.all([
+    fs.rename(
       path.join(__project, 'node_modules'),
-    );
+      path.join(__project, `${hiddenPrefix}node_modules`),
+    ),
+    fs.rename(
+      path.join(__project, 'tsconfig.json'),
+      path.join(__project, `${hiddenPrefix}tsconfig.json`),
+    ),
+  ]);
+  await using _ = asyncDefer(() => {
+    console.log('Restoring root node_modules and tsconfig.json');
+    return Promise.all([
+      fs.rename(
+        path.join(__project, `${hiddenPrefix}node_modules`),
+        path.join(__project, 'node_modules'),
+      ),
+      fs.rename(
+        path.join(__project, `${hiddenPrefix}tsconfig.json`),
+        path.join(__project, 'tsconfig.json'),
+      ),
+    ]);
   });
 
   {

@@ -10,13 +10,13 @@ export function exists(path: string) {
     .catch(() => false);
 }
 
-export function defer(cb: () => void) {
+export function defer(cb: () => any) {
   return {
     [Symbol.dispose]: cb,
   };
 }
 
-export function asyncDefer(cb: () => Promise<void>) {
+export function asyncDefer(cb: () => Promise<any>) {
   return {
     [Symbol.asyncDispose]: cb,
   };
