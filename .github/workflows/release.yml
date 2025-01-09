@@ -226,7 +226,7 @@ jobs:
     name: Examples
     needs: [stable, snapshot]
     if: always() && github.event.pull_request.title != 'Upcoming Release Changes'
-    uses: graphql-hive/gateway/.github/workflows/examples.yml@examples-call # TODO: change to main
+    uses: graphql-hive/gateway/.github/workflows/examples.yml@main
     # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
     #       want the main branch to always use examples of stable releases. yeah sure, the examples
     #       workflow will open a PR to update the examples to stable ones - but there will be some window
