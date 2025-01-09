@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service products",
-      "command": "npm run service:products &"
+      "command": "nohup npm run service:products $> service-products.out &"
     },
     {
       "name": "Wait for service products",
@@ -14,7 +14,7 @@
     },
     {
       "name": "Start service reviews",
-      "command": "npm run service:reviews &"
+      "command": "nohup npm run service:reviews $> service-reviews.out &"
     },
     {
       "name": "Wait for service reviews",

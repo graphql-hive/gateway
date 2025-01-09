@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service my-subgraph",
-      "command": "npm run service:my-subgraph &"
+      "command": "nohup npm run service:my-subgraph $> service-my-subgraph.out &"
     },
     {
       "name": "Wait for service my-subgraph",

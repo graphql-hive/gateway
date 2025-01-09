@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service Test",
-      "command": "npm run service:Test &"
+      "command": "nohup npm run service:Test $> service-Test.out &"
     },
     {
       "name": "Wait for service Test",
