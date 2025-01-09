@@ -235,7 +235,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     if ('devDependencies' in packageJson) {
       console.log('Moving devDependencies to dependencies...');
-      packageJson.dependencies ||= {
+      packageJson.dependencies ||= {};
+      packageJson.dependencies = {
         ...packageJson.dependencies,
         ...packageJson.devDependencies,
       };
