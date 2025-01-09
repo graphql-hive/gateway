@@ -1,14 +1,22 @@
 name: Examples
 
 on:
-  pull_request:
+  workflow_call:
+    inputs:
+      publishedPackages:
+        type: string
+        description: >
+          A JSON array to present the published packages. The format is `[{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]`
+    secrets:
+      token:
+        required: true
+        description: The GitHub token for commiting and opening PRs
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: examples-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # NOTE: github.event.head_commit.message is not available on pull_request events
   head-commit:
     name: Inspect head commit
     runs-on: ubuntu-latest
@@ -18,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{github.event.pull_request.head.sha}}
+          ref: ${{github.event.pull_request.head.sha || github.sha}}
       - name: Inspect
         id: commit
         run: echo "message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
@@ -53,8 +61,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
       - name: Convert
-        run: yarn workspace @internal/examples run start ${{matrix.e2e}} true
+        run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs.publishedPackages}}'
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -78,7 +88,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{secrets.BOT_GITHUB_TOKEN}}
+          token: ${{secrets.token}}
       - name: Download
         uses: actions/download-artifact@v4
         with:
@@ -87,6 +97,7 @@ jobs:
       - name: Diff
         run: git diff --pretty
       - name: Commit
+        if: github.ref != 'refs/heads/main'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           file_pattern: examples/
@@ -94,3 +105,16 @@ jobs:
           commit_user_name: theguild-bot
           commit_user_email: bot@the-guild.dev
           commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
+      - name: PR
+        if: github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{secrets.token}}
+          add-paths: examples/
+          base: ${{github.head_ref || github.ref_name}}
+          branch: examples/update
+          commit-message: 'docs(examples): converted from e2es'
+          title: Update Examples
+          body: The examples converted from E2E tests have changed in ${{github.event.pull_request.head.sha || github.sha}}.
+          committer: theguild-bot <bot@the-guild.dev>
+          author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author

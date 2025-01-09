@@ -1,6 +1,30 @@
-import { convertE2EToExample } from './convert';
+import { Opts } from '@internal/testing';
+import z from 'zod';
+import { convertE2EToExample, PublishedPackages } from './convert';
+
+const opts = Opts(process.argv);
+
+let publishedPackages: PublishedPackages | undefined;
+const publishedPackagesOpt = opts.get('publishedPackages');
+if (publishedPackagesOpt) {
+  try {
+    publishedPackages = z
+      .array(
+        z.object({
+          name: z.string(),
+          version: z.string(),
+        }),
+      )
+      .parse(JSON.parse(publishedPackagesOpt));
+  } catch (err) {
+    throw new Error('Problem while parsing "publishedPackages" option', {
+      cause: err,
+    });
+  }
+}
 
 await convertE2EToExample({
-  e2e: process.argv[2] || '',
-  clean: ['1', 't', 'true', 'y', 'yes'].includes(String(process.argv[3])),
+  e2e: opts.get('e2e', true),
+  clean: ['1', 't', 'true', 'y', 'yes'].includes(String(opts.get('clean'))),
+  publishedPackages,
 });
