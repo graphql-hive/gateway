@@ -221,3 +221,14 @@ jobs:
             The latest changes of this PR are available for download (based on the declared `changesets`).
 
             [![Download](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload.outputs.artifact-id }})
+
+  examples:
+    name: Examples
+    needs: [stable, snapshot]
+    if: always() && github.event.pull_request.title != 'Upcoming Release Changes'
+    uses: graphql-hive/gateway/.github/workflows/examples.yml@examples-call # TODO: change to main
+    with:
+      sha: ${{github.sha}}
+      publishedPackages: ${{needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages}}
+    secrets:
+      token: ${{secrets.BOT_GITHUB_TOKEN}}
