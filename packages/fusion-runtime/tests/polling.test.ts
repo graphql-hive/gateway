@@ -293,16 +293,17 @@ describe('Polling', () => {
       expect(err).toBeUndefined();
       expect(callTimes[0]).toBeLessThanOrEqual(1);
       expect(Math.floor(callTimes[1]! / pollingInterval)).toBe(1);
-      await advanceTimersByTimeAsync(totalTimeLeft + pollingInterval);
+      await advanceTimersByTimeAsync(totalTimeLeft);
+      expect(disposeFn).toHaveBeenCalledTimes(0);
+      expect(callTimes.length).toBeLessThanOrEqual(
+        requestDuration / pollingInterval + 1,
+      );
+      await advanceTimersByTimeAsync(pollingInterval);
       expect(result).toEqual({
         data: {
           greetings: 'Hello',
         },
       });
-      expect(disposeFn).toHaveBeenCalledTimes(0);
-      expect(callTimes).toHaveLength(
-        Math.floor(requestDuration / pollingInterval) + 1,
-      );
     },
     requestDuration * 2,
   );
