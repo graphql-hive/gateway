@@ -1,7 +1,10 @@
 import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
-import { createDefaultExecutor, type DisposableExecutor } from '@graphql-mesh/transport-common';
+import {
+  createDefaultExecutor,
+  type DisposableExecutor,
+} from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { fakePromise, isAsyncIterable } from '@graphql-tools/utils';
@@ -217,86 +220,90 @@ describe('Polling', () => {
   });
   const requestDuration = 10_000;
   const pollingInterval = 1000;
-  it('does not stop request if the polled schema is not changed', async () => {
-    vi.useFakeTimers?.();
-    const schema = createSchema({
-      typeDefs: /* GraphQL */ `
-        type Query {
-          greetings: String
-        }
-      `,
-      resolvers: {
-        Query: {
-          greetings() {
-            return new Promise<string>((resolve) => {
-              globalThis.setTimeout(() => {
-                resolve('Hello');
-              }, requestDuration);
-            });
-          },
-        },
-      },
-    });
-    const callTimes: number[] = [];
-    const startTime = Date.now();
-    const unifiedGraphFetcher = vi.fn(() => {
-      callTimes.push(Date.now() - startTime);
-      return getUnifiedGraphGracefully([
-        {
-          name: 'Test',
-          schema,
-        },
-      ]);
-    });
-    let disposeFn = vi.fn();
-    await using executor = getExecutorForUnifiedGraph({
-      getUnifiedGraph: unifiedGraphFetcher,
-      pollingInterval,
-      transports() {
-        return {
-          getSubgraphExecutor() {
-            return makeDisposable(createDefaultExecutor(schema), disposeFn);
-          },
-        };
-      },
-    });
-    let result: ExecutionResult | undefined;
-    let err: Error | undefined;
-    fakePromise(
-      executor({
-        document: parse(/* GraphQL */ `
-          query {
-            greetings
+  it(
+    'does not stop request if the polled schema is not changed',
+    async () => {
+      vi.useFakeTimers?.();
+      const schema = createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            greetings: String
           }
-        `),
-      }),
-    ).then(
-      (r) => {
-        assertSingleExecutionValue(r);
-        result = r;
-        return r;
-      },
-      (e) => {
-        err = e;
-      },
-    );
-    let totalTimeLeft = requestDuration;
-    await advanceTimersByTimeAsync(pollingInterval * 2);
-    totalTimeLeft -= pollingInterval * 2;
-    // After twice polling interval, the request should be still pending
-    expect(result).toBeUndefined();
-    expect(err).toBeUndefined();
-    expect(callTimes[0]).toBeLessThanOrEqual(1);
-    expect(Math.floor(callTimes[1]! / pollingInterval)).toBe(1);
-    await advanceTimersByTimeAsync(totalTimeLeft + pollingInterval);
-    expect(result).toEqual({
-      data: {
-        greetings: 'Hello',
-      },
-    });
-    expect(disposeFn).toHaveBeenCalledTimes(0);
-    expect(callTimes).toHaveLength(
-      Math.floor(requestDuration / pollingInterval) + 1,
-    );
-  }, requestDuration * 2);
+        `,
+        resolvers: {
+          Query: {
+            greetings() {
+              return new Promise<string>((resolve) => {
+                globalThis.setTimeout(() => {
+                  resolve('Hello');
+                }, requestDuration);
+              });
+            },
+          },
+        },
+      });
+      const callTimes: number[] = [];
+      const startTime = Date.now();
+      const unifiedGraphFetcher = vi.fn(() => {
+        callTimes.push(Date.now() - startTime);
+        return getUnifiedGraphGracefully([
+          {
+            name: 'Test',
+            schema,
+          },
+        ]);
+      });
+      let disposeFn = vi.fn();
+      await using executor = getExecutorForUnifiedGraph({
+        getUnifiedGraph: unifiedGraphFetcher,
+        pollingInterval,
+        transports() {
+          return {
+            getSubgraphExecutor() {
+              return makeDisposable(createDefaultExecutor(schema), disposeFn);
+            },
+          };
+        },
+      });
+      let result: ExecutionResult | undefined;
+      let err: Error | undefined;
+      fakePromise(
+        executor({
+          document: parse(/* GraphQL */ `
+            query {
+              greetings
+            }
+          `),
+        }),
+      ).then(
+        (r) => {
+          assertSingleExecutionValue(r);
+          result = r;
+          return r;
+        },
+        (e) => {
+          err = e;
+        },
+      );
+      let totalTimeLeft = requestDuration;
+      await advanceTimersByTimeAsync(pollingInterval * 2);
+      totalTimeLeft -= pollingInterval * 2;
+      // After twice polling interval, the request should be still pending
+      expect(result).toBeUndefined();
+      expect(err).toBeUndefined();
+      expect(callTimes[0]).toBeLessThanOrEqual(1);
+      expect(Math.floor(callTimes[1]! / pollingInterval)).toBe(1);
+      await advanceTimersByTimeAsync(totalTimeLeft + pollingInterval);
+      expect(result).toEqual({
+        data: {
+          greetings: 'Hello',
+        },
+      });
+      expect(disposeFn).toHaveBeenCalledTimes(0);
+      expect(callTimes).toHaveLength(
+        Math.floor(requestDuration / pollingInterval) + 1,
+      );
+    },
+    requestDuration * 2,
+  );
 });
