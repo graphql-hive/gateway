@@ -18,7 +18,7 @@ if (!isDarwin && !isWindows && !isLinux) {
 const dest = 'hive-gateway' + (isWindows ? '.exe' : '');
 
 const signToolPath =
-  'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.18362.0\\x64\\signtool.exe';
+  'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe';
 
 console.log(
   `Packaging binary with Node SEA for ${platform}-${arch} to ${dest}`,
