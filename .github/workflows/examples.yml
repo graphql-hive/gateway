@@ -3,9 +3,6 @@ name: Examples
 on:
   workflow_call:
     inputs:
-      sha:
-        type: string
-        required: true
       publishedPackages:
         type: string
         description: >
@@ -20,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  inspect-sha:
-    name: Inspect SHA
+  head-commit:
+    name: Inspect head commit
     runs-on: ubuntu-latest
     outputs:
       message: ${{ steps.commit.outputs.message }}
@@ -29,14 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{inputs.sha}}
+          ref: ${{github.event.pull_request.head.sha || github.sha}}
       - name: Inspect
         id: commit
         run: echo "message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
 
   convert:
-    needs: [inspect-sha]
-    if: "${{needs.inspect-sha.outputs.message != 'docs(examples): converted from e2es'}}"
+    needs: [head-commit]
+    if: "${{needs.head-commit.outputs.message != 'docs(examples): converted from e2es'}}"
     strategy:
       matrix:
         e2e:
@@ -62,8 +59,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{inputs.sha}}
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -93,7 +88,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{inputs.sha}}
           token: ${{secrets.token}}
       - name: Download
         uses: actions/download-artifact@v4
@@ -117,7 +111,6 @@ jobs:
         with:
           token: ${{secrets.token}}
           add-paths: examples/
-          base: ${{github.head_ref}}
           branch: examples/update
           commit-message: 'docs(examples): converted from e2es'
           title: Update Examples

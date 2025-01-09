@@ -228,8 +228,6 @@ jobs:
     if: always() && github.event.pull_request.title != 'Upcoming Release Changes'
     uses: graphql-hive/gateway/.github/workflows/examples.yml@examples-call # TODO: change to main
     with:
-      # NOTE: github.sha in a freshly opened pull_request is the merge commit, not the latest commit in the PR/branch itself
-      sha: ${{github.event.pull_request.head.sha || github.sha}}
       # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
       #       want the main branch to always use examples of stable releases. yeah sure, the examples
       #       workflow will open a PR to update the examples to stable ones - but there will be some window
