@@ -1,9 +1,10 @@
-import type {
-  Transport,
-  TransportContext,
-  TransportEntry,
-  TransportGetSubgraphExecutor,
-  TransportGetSubgraphExecutorOptions,
+import {
+  defaultPrintFn,
+  type Transport,
+  type TransportContext,
+  type TransportEntry,
+  type TransportGetSubgraphExecutor,
+  type TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
 import type { Logger } from '@graphql-mesh/types';
 import {
@@ -31,7 +32,6 @@ import {
 import { constantCase } from 'constant-case';
 import {
   FragmentDefinitionNode,
-  print,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -494,7 +494,7 @@ export function compareSchemas(
   if (typeof a === 'string') {
     aStr = a;
   } else if (isDocumentNode(a)) {
-    aStr = print(a);
+    aStr = defaultPrintFn(a);
   } else {
     aStr = printSchemaWithDirectives(a);
   }
@@ -502,7 +502,7 @@ export function compareSchemas(
   if (typeof b === 'string') {
     bStr = b;
   } else if (isDocumentNode(b)) {
-    bStr = print(b);
+    bStr = defaultPrintFn(b);
   } else {
     bStr = printSchemaWithDirectives(b);
   }

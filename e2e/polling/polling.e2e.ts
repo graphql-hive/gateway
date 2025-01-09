@@ -2,11 +2,15 @@ import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('Polling', async () => {
-  const { service, gateway } = createTenv(__dirname);
+  const { service, gateway, composeWithMesh } = createTenv(__dirname);
+  const { output } = await composeWithMesh({
+    services: [await service('Graph')],
+    output: 'graphql',
+  });
   const gw = await gateway({
-    supergraph: {
-      with: 'mesh',
-      services: [await service('Graph')],
+    args: ['supergraph'],
+    env: {
+      SUPERGRAPH_PATH: output,
     },
   });
   it('should not break the long running query while polling and schema remaining the same', async () => {
@@ -17,7 +21,7 @@ describe('Polling', async () => {
         }
       `,
     });
-    expect(res).toMatchObject({
+    expect(res).toEqual({
       data: {
         hello: 'Hello world!',
       },

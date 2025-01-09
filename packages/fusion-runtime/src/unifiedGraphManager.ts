@@ -270,7 +270,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         this._transportExecutorStack.defer(() => {
           this.cleanup();
         });
-        this.lastLoadedUnifiedGraph ||= loadedUnifiedGraph;
         this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
         this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
         const {

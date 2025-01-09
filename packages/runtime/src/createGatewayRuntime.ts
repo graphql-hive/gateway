@@ -9,7 +9,6 @@ import type {
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   TransportEntry,
-  UnifiedGraphManagerOptions,
 } from '@graphql-mesh/fusion-runtime';
 import {
   getOnSubgraphExecute,
@@ -36,6 +35,7 @@ import {
   delegateToSchema,
   type SubschemaConfig,
 } from '@graphql-tools/delegate';
+import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
 import {
   asArray,
@@ -46,6 +46,7 @@ import {
   mapMaybePromise,
   mergeDeep,
   parseSelectionSet,
+  printSchemaWithDirectives,
   type Executor,
   type MaybePromise,
   type TypeSource,
@@ -59,6 +60,7 @@ import {
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
 import {
+  buildASTSchema,
   buildSchema,
   GraphQLSchema,
   isSchema,
@@ -78,8 +80,8 @@ import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
-  getUnifiedGraphSDL,
   handleUnifiedGraphConfig,
+  UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
 import { useChangingSchema } from './plugins/useChangingSchema';
@@ -294,7 +296,21 @@ export function createGatewayRuntime<
             configContext,
           ),
           (schema) => {
-            setSchema(schema);
+            if (isSchema(schema)) {
+              unifiedGraph = schema;
+            } else if (isDocumentNode(schema)) {
+              unifiedGraph = buildASTSchema(schema, {
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            } else {
+              unifiedGraph = buildSchema(schema, {
+                noLocation: true,
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            }
+            setSchema(unifiedGraph);
             continuePolling();
             return true;
           },
@@ -403,7 +419,20 @@ export function createGatewayRuntime<
         getSubschemaConfig$ = mapMaybePromise(
           handleUnifiedGraphConfig(subgraphInConfig, configContext),
           (newUnifiedGraph) => {
-            unifiedGraph = newUnifiedGraph;
+            if (isSchema(newUnifiedGraph)) {
+              unifiedGraph = newUnifiedGraph;
+            } else if (isDocumentNode(newUnifiedGraph)) {
+              unifiedGraph = buildASTSchema(newUnifiedGraph, {
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            } else {
+              unifiedGraph = buildSchema(newUnifiedGraph, {
+                noLocation: true,
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            }
             unifiedGraph = restoreExtraDirectives(unifiedGraph);
             subschemaConfig = {
               name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
@@ -536,7 +565,13 @@ export function createGatewayRuntime<
                 _service() {
                   return {
                     sdl() {
-                      return getUnifiedGraphSDL(newUnifiedGraph);
+                      if (isSchema(newUnifiedGraph)) {
+                        return printSchemaWithDirectives(newUnifiedGraph);
+                      }
+                      if (isDocumentNode(newUnifiedGraph)) {
+                        return defaultPrintFn(newUnifiedGraph);
+                      }
+                      return newUnifiedGraph;
                     },
                   };
                 },
@@ -578,7 +613,7 @@ export function createGatewayRuntime<
       },
     };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
+    let unifiedGraphFetcher: () => MaybePromise<UnifiedGraphSchema>;
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
@@ -659,7 +694,6 @@ export function createGatewayRuntime<
       }
     } else {
       // local or remote
-
       if (!isDynamicUnifiedGraphSchema(config.supergraph)) {
         // no polling for static schemas
         logger.debug(`Disabling polling for static supergraph`);
@@ -671,11 +705,8 @@ export function createGatewayRuntime<
       }
 
       unifiedGraphFetcher = () =>
-        handleUnifiedGraphConfig(
-          // @ts-expect-error TODO: what's up with type narrowing
-          config.supergraph,
-          configContext,
-        );
+        // @ts-expect-error TODO: what's up with type narrowing
+        handleUnifiedGraphConfig(config.supergraph, configContext);
       if (typeof config.supergraph === 'function') {
         const fnName = config.supergraph.name || '';
         supergraphLoadedPlace = `a custom loader ${fnName}`;
@@ -1098,12 +1129,14 @@ function isDynamicUnifiedGraphSchema(
     return false;
   }
   if (typeof schema === 'string') {
-    try {
-      // sdl
-      parse(schema);
-      return false;
-    } catch {}
+    if (isValidPath(schema)) {
+      // local file path
+      return true;
+    }
+    if (isUrl(schema)) {
+      // remote url
+      return true;
+    }
   }
-  // likely a dynamic schema that can be polled
-  return true;
+  return false;
 }
