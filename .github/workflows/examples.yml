@@ -117,7 +117,7 @@ jobs:
         with:
           token: ${{secrets.token}}
           add-paths: examples/
-          base: ${{github.ref_name}}
+          base: ${{github.head_ref}}
           branch: examples/update
           commit-message: 'docs(examples): converted from e2es'
           title: Update Examples
