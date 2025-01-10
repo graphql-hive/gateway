@@ -6328,11 +6328,11 @@ __metadata:
   linkType: hard
 
 "@types/bun@npm:^1.1.13":
-  version: 1.1.15
-  resolution: "@types/bun@npm:1.1.15"
+  version: 1.1.16
+  resolution: "@types/bun@npm:1.1.16"
   dependencies:
-    bun-types: "npm:1.1.42"
-  checksum: 10c0/af6a0dc50c6459e3c5b445e766aa98b593227ee2b71ba2623ddc0ef23d94ee8a922a56b1b4525410f2fe16d9c71f86b4b8f243c5165d6607e2a9d35427586cfd
+    bun-types: "npm:1.1.43"
+  checksum: 10c0/2bd939f24676a7d1cae72ca2f424d4068906c8eea16501b6efd64c7ac64e47c0a89cd421790ffd7df258681aed933c19dde90bfab7fcd31c4fd1464296862913
   languageName: node
   linkType: hard
 
@@ -8360,13 +8360,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.1.42":
-  version: 1.1.42
-  resolution: "bun-types@npm:1.1.42"
+"bun-types@npm:1.1.43":
+  version: 1.1.43
+  resolution: "bun-types@npm:1.1.43"
   dependencies:
     "@types/node": "npm:~20.12.8"
     "@types/ws": "npm:~8.5.10"
-  checksum: 10c0/8b5db9062be170799bb21bc671af0b1c5ac88f3cd6862ada9bd095172a7dbc11a0d43fed734b8803e6f815e996f4d456f4fa645d4a10b22317db8c95b0bd65c9
+  checksum: 10c0/aea1d4f0c020c0e19c5eee60ce06c8daaae7b30b6263bec4b2143ec5c0e53e4a140d291a8083fcacffbc81f3513e11c7f5161a3cd094515222788e5ae534ed79
   languageName: node
   linkType: hard
 
