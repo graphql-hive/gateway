@@ -1,12 +1,20 @@
-import { createTenv } from '@internal/e2e';
+import { createTenv, handleDockerHostName } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('Polling', async () => {
-  const { service, gateway, composeWithMesh } = createTenv(__dirname);
-  const { output } = await composeWithMesh({
+  const { service, gateway, composeWithMesh, gatewayRunner } =
+    createTenv(__dirname);
+  let { output } = await composeWithMesh({
     services: [await service('Graph')],
     output: 'graphql',
   });
+  const volumes: {
+    host: string;
+    container: string;
+  }[] = [];
+  if (gatewayRunner.includes('docker')) {
+    output = await handleDockerHostName(output, volumes);
+  }
   const gw = await gateway({
     args: ['supergraph'],
     env: {
@@ -14,12 +22,7 @@ describe('Polling', async () => {
     },
     runner: {
       docker: {
-        volumes: [
-          {
-            host: output,
-            container: output,
-          },
-        ],
+        volumes,
       },
     },
   });

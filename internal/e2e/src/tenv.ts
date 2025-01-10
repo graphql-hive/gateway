@@ -276,7 +276,7 @@ export const dockerHostName = boolEnv('CI')
   ? '172.17.0.1'
   : 'host.docker.internal';
 
-async function handleDockerHostName(
+export async function handleDockerHostName(
   supergraph: string,
   volumes: {
     host: string;
