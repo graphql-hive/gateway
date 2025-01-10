@@ -12,6 +12,16 @@ describe('Polling', async () => {
     env: {
       SUPERGRAPH_PATH: output,
     },
+    runner: {
+      docker: {
+        volumes: [
+          {
+            host: output,
+            container: output,
+          },
+        ],
+      },
+    },
   });
   it('should not break the long running query while polling and schema remaining the same', async () => {
     const res = await gw.execute({
