@@ -1126,9 +1126,18 @@ function isDynamicUnifiedGraphSchema(
       // remote url is dynamic
       return true;
     }
-    if (isValidPath(schema))
+    if (isValidPath(schema)) {
       // local file path
       return false;
+    }
+    try {
+      parse(schema);
+      // valid AST
+      return false;
+    } catch (e) {
+      // invalid AST
+    }
   }
+  // anything else is dynamic
   return true;
 }
