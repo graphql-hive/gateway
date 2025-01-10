@@ -1121,9 +1121,8 @@ function isDynamicUnifiedGraphSchema(
     // document node that could be a schema
     return false;
   }
-  if (typeof schema === 'string') {
-    // local file or remote url
-    return isValidPath(schema);
+  if (typeof schema === 'string' && isValidPath(schema)) {
+    // local file path
     return false;
   }
   return true;
