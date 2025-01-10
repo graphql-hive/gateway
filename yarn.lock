@@ -3825,22 +3825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.8.2":
-  version: 0.8.2
-  resolution: "@graphql-hive/core@npm:0.8.2"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:0.9.21"
-    async-retry: "npm:1.3.3"
-    lodash.sortby: "npm:4.7.0"
-    tiny-lru: "npm:8.0.2"
-  peerDependencies:
-    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/3a483ccadfb1a94b734a9f80d35aa19fe68401217399cf77c75ac50466af1e100bcf57f689a37a66a3e5e68ef4cc3b1707ff654911330426a9f4fef8dfb59373
-  languageName: node
-  linkType: hard
-
-"@graphql-hive/core@npm:^0.8.1":
+"@graphql-hive/core@npm:0.8.3, @graphql-hive/core@npm:^0.8.1, @graphql-hive/core@npm:^0.8.3":
   version: 0.8.3
   resolution: "@graphql-hive/core@npm:0.8.3"
   dependencies:
@@ -3993,17 +3978,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:^0.39.0":
-  version: 0.39.1
-  resolution: "@graphql-hive/yoga@npm:0.39.1"
+"@graphql-hive/yoga@npm:^0.39.2":
+  version: 0.39.2
+  resolution: "@graphql-hive/yoga@npm:0.39.2"
   dependencies:
-    "@graphql-hive/core": "npm:0.8.2"
+    "@graphql-hive/core": "npm:0.8.3"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
-    tiny-lru: "npm:8.0.2"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-    graphql-yoga: ^5.9.0
-  checksum: 10c0/f197aa0f0069247c393b0d298817a9f513026e73bee8a8dca2fd61e93b71c43ebf3b66c35cceea5056e89a1f7dc3ecd1f313765dab8ce16f20809211fb4af1f7
+    graphql-yoga: ^5.10.8
+  checksum: 10c0/b6baefef4d1fe2deff3f7eb0415dd22711cfdec7ba1b10d0290c285b6e4db3384c6fb6f59222d6c71e5cabfbedf0e0ab91ca6fa2e8c761899282f42a11610109
   languageName: node
   linkType: hard
 
@@ -4216,19 +4200,18 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-hive@npm:^0.103.0":
-  version: 0.103.11
-  resolution: "@graphql-mesh/plugin-hive@npm:0.103.11"
+  version: 0.103.12
+  resolution: "@graphql-mesh/plugin-hive@npm:0.103.12"
   dependencies:
-    "@graphql-hive/core": "npm:^0.8.1"
-    "@graphql-hive/yoga": "npm:^0.39.0"
+    "@graphql-hive/core": "npm:^0.8.3"
+    "@graphql-hive/yoga": "npm:^0.39.2"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/string-interpolation": "npm:0.5.7"
     "@graphql-mesh/types": "npm:^0.103.11"
-    "@graphql-mesh/utils": "npm:^0.103.11"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/34792a0b125c29b0bd34a079e6b58ef553c6be786a5cc9cb3f7a122d59b69984c286ee0408d11de124a53690e37406696444c50791f17a03c703ac0af0622fab
+  checksum: 10c0/3be5b5ef683072530b08a146a69a1475779f8e9e250ce0796f9d0ffea0ccfbd9129326744c7c27668851c60c68a2b0fbe812bcf660c146be394aad7f2e5a18a9
   languageName: node
   linkType: hard
 
@@ -5695,13 +5678,6 @@ __metadata:
   version: 1.7.5
   resolution: "@json-schema-tools/meta-schema@npm:1.7.5"
   checksum: 10c0/20326fea5d5342f14a7f34922298a8dc1c12b5c7ac78abc5b6ee5de035a9836a69edb404366cbe4cd352c31a894f5e761a5786f24a865ea72ea46312b2ca4ee5
-  languageName: node
-  linkType: hard
-
-"@kamilkisiela/fast-url-parser@npm:^1.1.4":
-  version: 1.1.4
-  resolution: "@kamilkisiela/fast-url-parser@npm:1.1.4"
-  checksum: 10c0/2c85202cb4924720ac812c8bc06967fd5df4db759a68aa3acc2962b8cf9e2b3bc131de863f00473c0b0602df13891b35140f667a87eea04c9b897b6c1ae89c4a
   languageName: node
   linkType: hard
 
@@ -8313,16 +8289,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.9.21":
-  version: 0.9.21
-  resolution: "@whatwg-node/fetch@npm:0.9.21"
-  dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.5.23"
-    urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/c0727e32673fa0596aff9786995b308fc92c33290807c72333af2a5c7a7e38ca6e236ec641bb4caded25e30127bee4b9df2e15d47c064970c2f7df58b084ca8d
-  languageName: node
-  linkType: hard
-
 "@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.1, @whatwg-node/fetch@npm:^0.9.15 || ^0.10.0":
   version: 0.10.3
   resolution: "@whatwg-node/fetch@npm:0.10.3"
@@ -8330,18 +8296,6 @@ __metadata:
     "@whatwg-node/node-fetch": "npm:^0.7.7"
     urlpattern-polyfill: "npm:^10.0.0"
   checksum: 10c0/9ddffea0d97cd465c6d531a3af8c68d702591670367976daeeff4a94737cf9022b56e4070fcd4bdf9a5e05aad558518f4fdd9e6bdf60b2b285818ddf1934c7a9
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/node-fetch@npm:^0.5.23":
-  version: 0.5.27
-  resolution: "@whatwg-node/node-fetch@npm:0.5.27"
-  dependencies:
-    "@kamilkisiela/fast-url-parser": "npm:^1.1.4"
-    busboy: "npm:^1.6.0"
-    fast-querystring: "npm:^1.1.1"
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/1cd036e1ef36bfc71436a3e7438b180b94c33d7958c02e33540c35d37db19fb598f2ab09f0aef538a3bbc771c32d34c5728a596ffabf8be7961435a80fcb8f62
   languageName: node
   linkType: hard
 
@@ -11604,13 +11558,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-decode-uri-component@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "fast-decode-uri-component@npm:1.0.1"
-  checksum: 10c0/039d50c2e99d64f999c3f2126c23fbf75a04a4117e218a149ca0b1d2aeb8c834b7b19d643b9d35d4eabce357189a6a94085f78cf48869e6e26cc59b036284bc3
-  languageName: node
-  linkType: hard
-
 "fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3
   resolution: "fast-deep-equal@npm:3.1.3"
@@ -11657,15 +11604,6 @@ __metadata:
   version: 2.0.6
   resolution: "fast-levenshtein@npm:2.0.6"
   checksum: 10c0/111972b37338bcb88f7d9e2c5907862c280ebf4234433b95bc611e518d192ccb2d38119c4ac86e26b668d75f7f3894f4ff5c4982899afced7ca78633b08287c4
-  languageName: node
-  linkType: hard
-
-"fast-querystring@npm:^1.1.1":
-  version: 1.1.2
-  resolution: "fast-querystring@npm:1.1.2"
-  dependencies:
-    fast-decode-uri-component: "npm:^1.0.1"
-  checksum: 10c0/e8223273a9b199722f760f5a047a77ad049a14bd444b821502cb8218f5925e3a5fffb56b64389bca73ab2ac6f1aa7aebbe4e203e5f6e53ff5978de97c0fde4e3
   languageName: node
   linkType: hard
 
