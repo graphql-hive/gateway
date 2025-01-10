@@ -3825,7 +3825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.8.2, @graphql-hive/core@npm:^0.8.1":
+"@graphql-hive/core@npm:0.8.2":
   version: 0.8.2
   resolution: "@graphql-hive/core@npm:0.8.2"
   dependencies:
@@ -3837,6 +3837,21 @@ __metadata:
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/3a483ccadfb1a94b734a9f80d35aa19fe68401217399cf77c75ac50466af1e100bcf57f689a37a66a3e5e68ef4cc3b1707ff654911330426a9f4fef8dfb59373
+  languageName: node
+  linkType: hard
+
+"@graphql-hive/core@npm:^0.8.1":
+  version: 0.8.3
+  resolution: "@graphql-hive/core@npm:0.8.3"
+  dependencies:
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:0.10.1"
+    async-retry: "npm:1.3.3"
+    lodash.sortby: "npm:4.7.0"
+    tiny-lru: "npm:8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/66a26df49c0ade6f3623b9ecc2e24bb4aafc6748392a3abdb38c7b842425e637863554b2d2592c10ad16aa11184eaf0960ce494e8be192175717153063cf3d4d
   languageName: node
   linkType: hard
 
@@ -8288,6 +8303,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@whatwg-node/fetch@npm:0.10.1":
+  version: 0.10.1
+  resolution: "@whatwg-node/fetch@npm:0.10.1"
+  dependencies:
+    "@whatwg-node/node-fetch": "npm:^0.7.1"
+    urlpattern-polyfill: "npm:^10.0.0"
+  checksum: 10c0/8db24a980181683676a503d63ff22e7ac9ce70bb842f3a1a83d260ffd0682cc0fdcab24d825cb742364bf075fedaa404d08508703ecf7302e3332612bdb35d61
+  languageName: node
+  linkType: hard
+
 "@whatwg-node/fetch@npm:0.9.21":
   version: 0.9.21
   resolution: "@whatwg-node/fetch@npm:0.9.21"
@@ -8320,7 +8345,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.7.7":
+"@whatwg-node/node-fetch@npm:^0.7.1, @whatwg-node/node-fetch@npm:^0.7.7":
   version: 0.7.7
   resolution: "@whatwg-node/node-fetch@npm:0.7.7"
   dependencies:
