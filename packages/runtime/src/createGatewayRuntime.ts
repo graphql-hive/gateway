@@ -1122,14 +1122,8 @@ function isDynamicUnifiedGraphSchema(
     return false;
   }
   if (typeof schema === 'string') {
-    if (isValidPath(schema)) {
-      // local file path
-      return true;
-    }
-    if (isUrl(schema)) {
-      // remote url
-      return true;
-    }
+    // local file or remote url
+    return isValidPath(schema);
     return false;
   }
   return true;
