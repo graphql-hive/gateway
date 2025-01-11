@@ -1,5 +1,4 @@
 import { setTimeout } from 'timers/promises';
-import { createGraphQLError } from '@graphql-tools/utils';
 import {
   assertAsyncIterable,
   assertSingleExecutionValue,
