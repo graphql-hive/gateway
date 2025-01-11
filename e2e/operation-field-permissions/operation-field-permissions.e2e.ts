@@ -70,7 +70,6 @@ it('should allow "me" when authenticated', async () => {
       with: 'mesh',
       services: [await service('users')],
     },
-    pipeLogs: 'gw.log',
   });
 
   await expect(
