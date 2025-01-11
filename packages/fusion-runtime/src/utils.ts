@@ -32,6 +32,7 @@ import {
 import { constantCase } from 'constant-case';
 import {
   FragmentDefinitionNode,
+  GraphQLError,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -81,12 +82,14 @@ function getTransportExecutor({
   subgraphName = '',
   subgraph,
   transports = defaultTransportsGetter,
+  getDisposeReason,
 }: {
   transportContext: TransportContext;
   transportEntry: TransportEntry;
   subgraphName?: string;
   subgraph: GraphQLSchema;
   transports?: Transports;
+  getDisposeReason?: () => GraphQLError | undefined;
 }): MaybePromise<Executor> {
   // TODO
   const kind = transportEntry?.kind || '';
@@ -133,8 +136,10 @@ function getTransportExecutor({
             subgraphName,
             subgraph,
             transports,
+            getDisposeReason,
           });
         },
+        getDisposeReason,
         ...transportContext,
       });
     },
@@ -157,6 +162,7 @@ export function getOnSubgraphExecute({
   getSubgraphSchema,
   transportExecutorStack,
   transports,
+  getDisposeReason,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -164,6 +170,7 @@ export function getOnSubgraphExecute({
   transportEntryMap: Record<string, TransportEntry>;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
+  getDisposeReason?: () => GraphQLError | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -201,6 +208,7 @@ export function getOnSubgraphExecute({
               return transportEntryMap[subgraphName]!;
             },
             transports,
+            getDisposeReason,
           }),
           (executor_) => {
             if (isDisposable(executor_)) {

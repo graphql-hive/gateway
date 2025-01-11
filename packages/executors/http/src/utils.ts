@@ -15,11 +15,18 @@ export function createGraphQLErrorForAbort(
   }
   if (reason?.name === 'TimeoutError') {
     return createGraphQLError(reason.message, {
-      extensions,
+      extensions: {
+        http: {
+          status: 504,
+          ...(extensions?.['http'] || {}),
+        },
+        code: 'TIMEOUT_ERROR',
+        ...(extensions || {}),
+      },
       originalError: reason,
     });
   }
-  return createGraphQLError('The operation was aborted. reason: ' + reason, {
+  return createGraphQLError(reason.message, {
     extensions,
     originalError: reason,
   });

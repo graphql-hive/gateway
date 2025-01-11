@@ -85,14 +85,14 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toEqual({
+    expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
           extensions: {
             code: 'SHUTTING_DOWN',
           },
           message:
-            'subscription has been closed because the server is shutting down',
+            'operation has been aborted because the server is shutting down',
         },
       ],
     });
@@ -147,13 +147,13 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toEqual({
+    expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
           extensions: {
-            code: 'SUBSCRIPTION_SCHEMA_RELOAD',
+            code: 'SCHEMA_RELOAD',
           },
-          message: 'subscription has been closed due to a schema reload',
+          message: 'operation has been aborted due to a schema reload',
         },
       ],
     });

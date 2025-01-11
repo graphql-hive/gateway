@@ -62,6 +62,9 @@ function createTimeoutError() {
   return createGraphQLError('Subscription timed out', {
     extensions: {
       code: 'TIMEOUT_ERROR',
+      http: {
+        status: 504,
+      },
     },
   });
 }

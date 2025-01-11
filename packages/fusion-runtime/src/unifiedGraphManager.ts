@@ -15,6 +15,7 @@ import type {
   TypeSource,
 } from '@graphql-tools/utils';
 import {
+  createGraphQLError,
   isDocumentNode,
   isPromise,
   mapMaybePromise,
@@ -24,7 +25,7 @@ import {
   AsyncDisposableStack,
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
-import type { DocumentNode, GraphQLSchema } from 'graphql';
+import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
 import {
@@ -196,6 +197,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     return this.initialUnifiedGraph$;
   }
 
+  private disposeReason: GraphQLError | undefined;
+
   private handleLoadedUnifiedGraph(
     loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
     doNotCache?: boolean,
@@ -212,6 +215,17 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       return true;
     }
     if (this.lastLoadedUnifiedGraph != null) {
+      this.disposeReason = createGraphQLError(
+        'operation has been aborted due to a schema reload',
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+            http: {
+              status: 503,
+            },
+          },
+        },
+      );
       this.opts.transportContext?.logger?.debug(
         'Supergraph has been changed, updating...',
       );
@@ -266,6 +280,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     return mapMaybePromise(
       this._transportExecutorStack?.disposeAsync?.(),
       () => {
+        this.disposeReason = undefined;
         this._transportExecutorStack = new AsyncDisposableStack();
         this._transportExecutorStack.defer(() => {
           this.cleanup();
@@ -305,6 +320,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             return subgraph.schema;
           },
           transportExecutorStack: this._transportExecutorStack,
+          getDisposeReason: () => this.disposeReason,
         });
         if (this.opts.additionalResolvers || additionalResolvers.length) {
           this.inContextSDK = getInContextSDK(
@@ -464,6 +480,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   [DisposableSymbols.asyncDispose]() {
     this.cleanup();
+    this.disposeReason = createGraphQLError(
+      'operation has been aborted because the server is shutting down',
+      {
+        extensions: {
+          code: 'SHUTTING_DOWN',
+        },
+      },
+    );
     return this._transportExecutorStack?.disposeAsync() as PromiseLike<void>;
   }
 }

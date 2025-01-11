@@ -85,8 +85,6 @@ import {
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
 import { useChangingSchema } from './plugins/useChangingSchema';
-import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscriptionsOnDispose';
-import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -131,7 +129,6 @@ export type GatewayRuntime<
 export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
-  console.log(config);
   let fetchAPI = config.fetchAPI;
   let logger: Logger;
   if (config.logging == null) {
@@ -950,8 +947,6 @@ export function createGatewayRuntime<
     useChangingSchema(getSchema, (_setSchema) => {
       setSchema = _setSchema;
     }),
-    useCompleteSubscriptionsOnDispose(),
-    useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
   ];
 

@@ -251,7 +251,7 @@ describe('buildHTTPExecutor', () => {
     await expect(result).resolves.toMatchObject({
       errors: [
         {
-          message: expect.stringContaining('Executor was disposed'),
+          message: 'This operation was aborted',
         },
       ],
     });
@@ -271,11 +271,7 @@ describe('buildHTTPExecutor', () => {
         `),
       }),
     ).toMatchObject({
-      errors: [
-        createGraphQLError(
-          'The operation was aborted. reason: Error: Executor was disposed.',
-        ),
-      ],
+      errors: [createGraphQLError('This operation was aborted')],
     });
   });
   it('should return return GraphqlError instances', async () => {
