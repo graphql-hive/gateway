@@ -275,7 +275,7 @@ describe('Managed Federation', () => {
       );
       using gateway = new SupergraphSchemaManager({
         fetch: mockSDL,
-        onSchema(schema) {
+        onStitchedSchema(schema) {
           // Modify the schema to add a resolver
           return addResolversToSchema({
             schema,

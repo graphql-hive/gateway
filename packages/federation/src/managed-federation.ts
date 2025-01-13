@@ -304,7 +304,7 @@ export async function getStitchedSchemaFromManagedFederation(
       schema: getStitchedSchemaFromSupergraphSdl({
         supergraphSdl: result.supergraphSdl,
         onStitchingOptions: options.onStitchingOptions,
-        onSchema: options.onSchema,
+        onStitchedSchema: options.onStitchedSchema,
         httpExecutorOpts: options.httpExecutorOpts,
         onSubschemaConfig: options.onSubschemaConfig,
         batch: options.batch,

@@ -14,8 +14,8 @@ const apolloServer = new ApolloServer({
 });
 ```
 
-And with the new `onSchema` option, you can manipulate the executable schema created from the supergraph.
-The following example demonstrates how to use `onSchema` with `applyMiddleware` from `graphql-middleware`:
+And with the new `onStitchedSchema` option, you can manipulate the executable schema created from the supergraph.
+The following example demonstrates how to use `onStitchedSchema` with `applyMiddleware` from `graphql-middleware`:
 
 ```ts
 import { SupergraphSchemaManager } from '@graphql-tools/federation';
@@ -36,7 +36,7 @@ const logResult = async (resolve, root, args, context, info) => {
 }
 
 const gateway = new SupergraphSchemaManager({
-  onSchema: async (schema) => {
+  onStitchedSchema: async (schema) => {
     // Manipulate the schema
     return applyMiddleware(schema, logInput, logResult);
   },
