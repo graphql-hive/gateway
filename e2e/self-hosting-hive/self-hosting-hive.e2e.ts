@@ -1,4 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
+import { DisposableSymbols } from '@graphql-hive/gateway';
 import { createExampleSetup, createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
@@ -18,7 +19,7 @@ describe('Self Hosting Hive', () => {
         query,
       }),
     ).resolves.toEqual(result);
-    await setTimeout(300);
+    await gw[DisposableSymbols.asyncDispose]();
     const incomingData = selfHostingHive.getStd('out');
     // Check if `/usage` endpoint receives the POST request
     expect(incomingData).toContain('POST /usage');

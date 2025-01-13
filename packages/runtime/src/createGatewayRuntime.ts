@@ -818,6 +818,7 @@ export function createGatewayRuntime<
     check: readinessChecker,
   });
 
+  let replaceSchema: (schema: GraphQLSchema) => void;
   const defaultGatewayPlugin: GatewayPlugin = {
     onFetch({ setFetchFn }) {
       if (fetchAPI?.fetch) {
@@ -827,13 +828,11 @@ export function createGatewayRuntime<
     // @ts-expect-error TODO: what's up with type narrowing
     onRequestParse() {
       return mapMaybePromise(getSchema(), (schema) => {
-        unifiedGraph = schema;
+        replaceSchema(schema);
       });
     },
-    onEnveloped({ setSchema }) {
-      setSchema(unifiedGraph);
-    },
-    onPluginInit({ plugins }) {
+    onPluginInit({ plugins, setSchema }) {
+      replaceSchema = setSchema;
       onFetchHooks.splice(0, onFetchHooks.length);
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
       onDelegateHooks.splice(0, onDelegateHooks.length);
@@ -1037,6 +1036,7 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
+    schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
     logging: logger,

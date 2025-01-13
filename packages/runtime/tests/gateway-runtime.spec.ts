@@ -490,8 +490,6 @@ describe('Gateway Runtime', () => {
     });
     subgraphDeferred.resolve(subgraphSchema);
     const [resp1, resp2] = await Promise.all([resp1$, resp2$]);
-    expect(resp1.ok).toBeTruthy();
-    expect(resp2.ok).toBeTruthy();
     expect(await resp1.json()).toEqual({
       data: {
         _service: {
@@ -499,6 +497,7 @@ describe('Gateway Runtime', () => {
         },
       },
     });
+    expect(resp1.ok).toBeTruthy();
     expect(await resp2.json()).toEqual({
       data: {
         greetings: {
@@ -506,6 +505,7 @@ describe('Gateway Runtime', () => {
         },
       },
     });
+    expect(resp2.ok).toBeTruthy();
     expect(subgraphCallCnt).toBe(1);
   });
 });
