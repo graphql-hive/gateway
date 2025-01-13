@@ -43,7 +43,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
-    "@envelop/core": "^5.0.1",
+    "@envelop/core": "^5.0.3",
     "@graphql-mesh/cross-helpers": "^0.4.9",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.6",

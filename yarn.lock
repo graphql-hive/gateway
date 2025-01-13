@@ -2717,7 +2717,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.1, @envelop/core@npm:^5.0.2":
+"@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.2, @envelop/core@npm:^5.0.3":
   version: 5.0.3
   resolution: "@envelop/core@npm:5.0.3"
   dependencies:
@@ -3456,7 +3456,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
   dependencies:
-    "@envelop/core": "npm:^5.0.1"
+    "@envelop/core": "npm:^5.0.3"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.103.6"
@@ -3767,7 +3767,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
-    "@envelop/core": "npm:^5.0.1"
+    "@envelop/core": "npm:^5.0.3"
     "@graphql-hive/gateway-abort-signal-any": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/types": "npm:^0.103.6"
