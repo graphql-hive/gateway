@@ -1036,6 +1036,7 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
+    // @ts-expect-error Types???
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
