@@ -36,7 +36,10 @@ import {
   type SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
-import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
+import {
+  DEFAULT_UPLINKS,
+  fetchSupergraphSdlFromManagedFederation,
+} from '@graphql-tools/federation';
 import {
   asArray,
   getDirectiveExtensions,
@@ -625,57 +628,99 @@ export function createGatewayRuntime<
           'GraphOS Managed Federation <br>' + opts.graphRef || '';
         let lastSeenId: string;
         let lastSupergraphSdl: string;
-        let minDelayMS = config.pollingInterval || 0;
-        unifiedGraphFetcher = () =>
-          mapMaybePromise(
-            fetchSupergraphSdlFromManagedFederation({
-              graphRef: opts.graphRef,
-              apiKey: opts.apiKey,
-              upLink: opts.upLink,
-              lastSeenId,
-              // @ts-expect-error TODO: what's up with type narrowing
-              fetch: configContext.fetch,
-              loggerByMessageLevel: {
-                ERROR(message) {
-                  configContext.logger.child('GraphOS').error(message);
+        let minDelaySeconds = 0;
+        const uplinksParam =
+          opts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
+        const uplinks =
+          uplinksParam?.split(',').map((uplink) => uplink.trim()) ||
+          DEFAULT_UPLINKS;
+        unifiedGraphFetcher = () => {
+          let uplinksToUse = [...uplinks];
+          let retries = opts.maxRetries || Math.max(3, uplinks.length);
+          const fetchSupergraph = (): MaybePromise<string> => {
+            retries--;
+            try {
+              return mapMaybePromise(
+                fetchSupergraphSdlFromManagedFederation({
+                  graphRef: opts.graphRef,
+                  apiKey: opts.apiKey,
+                  upLink: (uplinksToUse ||= [...uplinks]).pop(),
+                  lastSeenId,
+                  // @ts-expect-error TODO: what's up with type narrowing
+                  fetch: configContext.fetch,
+                  loggerByMessageLevel: {
+                    ERROR(message) {
+                      configContext.logger.child('GraphOS').error(message);
+                    },
+                    INFO(message) {
+                      configContext.logger.child('GraphOS').info(message);
+                    },
+                    WARN(message) {
+                      configContext.logger.child('GraphOS').warn(message);
+                    },
+                  },
+                }),
+                (result) => {
+                  if (
+                    result.minDelaySeconds &&
+                    result.minDelaySeconds > minDelaySeconds
+                  ) {
+                    minDelaySeconds = result.minDelaySeconds;
+                    if (config.pollingInterval) {
+                      if (minDelaySeconds <= config.pollingInterval) {
+                        minDelaySeconds = 0;
+                      } else if (minDelaySeconds > config.pollingInterval) {
+                        minDelaySeconds -= config.pollingInterval;
+                      }
+                    }
+                  }
+                  if ('error' in result) {
+                    configContext.logger
+                      .child('GraphOS')
+                      .error(result.error.code, result.error.message);
+                    if (retries > 0) {
+                      return fetchSupergraph();
+                    }
+                  }
+                  if ('id' in result) {
+                    lastSeenId = result.id;
+                  }
+                  if ('supergraphSdl' in result) {
+                    lastSupergraphSdl = result.supergraphSdl;
+                  }
+                  if (!lastSupergraphSdl) {
+                    if (retries > 0) {
+                      return fetchSupergraph();
+                    }
+                    throw new Error('Failed to fetch supergraph SDL');
+                  }
+                  return lastSupergraphSdl;
                 },
-                INFO(message) {
-                  configContext.logger.child('GraphOS').info(message);
+                (err) => {
+                  configContext.logger.child('GraphOS').error(err);
+                  if (retries > 0) {
+                    return fetchSupergraph();
+                  }
+                  return lastSupergraphSdl;
                 },
-                WARN(message) {
-                  configContext.logger.child('GraphOS').warn(message);
-                },
-              },
-            }),
-            async (result) => {
-              if (minDelayMS) {
-                await new Promise((resolve) => setTimeout(resolve, minDelayMS));
-              }
-              if (
-                result.minDelaySeconds &&
-                result.minDelaySeconds > minDelayMS
-              ) {
-                minDelayMS = result.minDelaySeconds;
-              }
-              if ('error' in result) {
-                configContext.logger
-                  .child('GraphOS')
-                  .error(result.error.message);
-                return lastSupergraphSdl;
-              }
-              if ('id' in result) {
-                lastSeenId = result.id;
-              }
-              if ('supergraphSdl' in result) {
-                lastSupergraphSdl = result.supergraphSdl;
-                return result.supergraphSdl;
-              }
-              if (lastSupergraphSdl) {
-                throw new Error('Failed to fetch supergraph SDL');
+              );
+            } catch (e) {
+              configContext.logger.child('GraphOS').error(e);
+              if (retries > 0) {
+                return fetchSupergraph();
               }
               return lastSupergraphSdl;
-            },
-          );
+            }
+          };
+          if (minDelaySeconds && lastSupergraphSdl) {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(fetchSupergraph());
+              }, minDelaySeconds * 1000);
+            });
+          }
+          return fetchSupergraph();
+        };
       } else {
         unifiedGraphFetcher = () => {
           throw new Error(
