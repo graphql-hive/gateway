@@ -1,5 +1,7 @@
 import { setTimeout } from 'timers/promises';
-import { Response } from '@whatwg-node/fetch';
+import { addResolversToSchema } from '@graphql-tools/schema';
+import { fetch, Response } from '@whatwg-node/fetch';
+import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchSupergraphSdlFromManagedFederation,
@@ -264,6 +266,68 @@ describe('Managed Federation', () => {
           },
         }),
       );
+    });
+
+    it.skipIf(process.env['LEAK_TEST'])('works with ApolloServer', async () => {
+      const { ApolloServer } = await import('@apollo/server');
+      const { startStandaloneServer } = await import(
+        '@apollo/server/standalone'
+      );
+      using gateway = new SupergraphSchemaManager({
+        fetch: mockSDL,
+        onSchema(schema) {
+          // Modify the schema to add a resolver
+          return addResolversToSchema({
+            schema,
+            resolvers: {
+              Query: {
+                me() {
+                  return {
+                    name: 'Ada Lovelace',
+                  };
+                },
+              },
+            },
+          });
+        },
+      });
+      const apolloServer = new ApolloServer({
+        gateway,
+      });
+      const { url } = await startStandaloneServer(apolloServer, {
+        listen: { port: 0 },
+      });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: getIntrospectionQuery(),
+        }),
+      });
+      const result = await res.json();
+      const schemaFromIntrospection = buildClientSchema(result.data);
+      expect(printSchema(schemaFromIntrospection)).toBe(
+        printSchema(gateway.schema!),
+      );
+      const resMock = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            {
+              me {
+                name
+              }
+            }
+          `,
+        }),
+      });
+      const resultMock = await resMock.json();
+      expect(resultMock.data).toEqual({
+        me: {
+          name: 'Ada Lovelace',
+        },
+      });
     });
   });
 });
