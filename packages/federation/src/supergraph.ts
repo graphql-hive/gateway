@@ -1207,11 +1207,14 @@ export function getStitchingOptionsFromSupergraphSdl(
         return candidates[0].fieldConfig;
       }
     }
-    if (
-      candidates.some(
-        (candidate) => rootTypeMap.get(candidate.type.name) === 'query',
-      )
-    ) {
+    let operationType: OperationTypeNode | undefined;
+    for (const candidate of candidates) {
+      const candidateOperationType = rootTypeMap.get(candidate.type.name);
+      if (candidateOperationType) {
+        operationType = candidateOperationType;
+      }
+    }
+    if (operationType) {
       const defaultMergedField = defaultMerger(candidates);
       return {
         ...defaultMergedField,
@@ -1317,6 +1320,9 @@ export function getStitchingOptionsFromSupergraphSdl(
                 }
               : info,
           });
+          if (operationType !== 'query') {
+            return mainJob;
+          }
           if (isPromise(mainJob)) {
             hasPromise = true;
           }
