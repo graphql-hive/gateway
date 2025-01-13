@@ -13,9 +13,6 @@ describe('Subscriptions', () => {
   afterAll(() => Promise.all(leftovers.map((l) => l())));
   const upstreamSchema = createSchema({
     typeDefs: /* GraphQL */ `
-      """
-      Fetched on ${new Date().toISOString()}
-      """
       type Query {
         foo: String
       }
@@ -104,11 +101,11 @@ describe('Subscriptions', () => {
     await using serve = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
-      supergraph() {
+      async supergraph() {
         if (changeSchema) {
           return /* GraphQL */ `
             type Query {
-              hello: Int!
+              foo: String!
             }
           `;
         }
@@ -143,6 +140,26 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
+    globalThis.setTimeout(async () => {
+      const res = await serve.fetch('http://mesh/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              __typename
+            }
+          `,
+        }),
+      });
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }, 1000);
     for await (const msg of sub) {
       msgs.push(msg);
     }

@@ -202,6 +202,7 @@ describe('Gateway Runtime', () => {
     await new Promise<void>((done) => {
       const serve = createGatewayRuntime({
         logging: isDebug(),
+        pollingInterval: 500,
         supergraph() {
           if (onSchemaChangeCalls > 0) {
             // change schema after onSchemaChange was invoked
@@ -234,6 +235,67 @@ describe('Gateway Runtime', () => {
 
       // trigger mesh
       serve.fetch('http://mesh/graphql?query={__typename}');
+
+      globalThis.setTimeout(() => {
+        // trigger mesh again
+        serve.fetch('http://mesh/graphql?query={__typename}');
+      }, 1000);
+    });
+  });
+  it('should not invoke onSchemaChange hooks when schema does not change', async () => {
+    let onSchemaChangeCalls = 0;
+    let supergraphFetcherCalls = 0;
+
+    const serve = createGatewayRuntime({
+      logging: isDebug(),
+      pollingInterval: 500,
+      supergraph() {
+        supergraphFetcherCalls++;
+        return /* GraphQL */ `
+          type Query {
+            world: String!
+          }
+        `;
+      },
+      plugins: () => [
+        {
+          onSchemaChange() {
+            onSchemaChangeCalls++;
+          },
+        },
+      ],
+    });
+
+    // trigger mesh
+    const res = await serve.fetch('http://mesh/graphql?query={__typename}');
+    expect(res.ok).toBeTruthy();
+    expect(await res.json()).toMatchObject({
+      data: {
+        __typename: 'Query',
+      },
+    });
+    expect(onSchemaChangeCalls).toBe(1);
+    expect(supergraphFetcherCalls).toBe(1);
+
+    await new Promise<void>((resolve, reject) => {
+      globalThis.setTimeout(async () => {
+        try {
+          // trigger mesh again
+          await serve.fetch('http://mesh/graphql?query={__typename}');
+          expect(res.ok).toBeTruthy();
+          expect(await res.json()).toMatchObject({
+            data: {
+              __typename: 'Query',
+            },
+          });
+          expect(onSchemaChangeCalls).toBe(1);
+          expect(supergraphFetcherCalls).toBe(2);
+          await serve[DisposableSymbols.asyncDispose]();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 2000);
     });
   });
 

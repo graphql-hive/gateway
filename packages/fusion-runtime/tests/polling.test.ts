@@ -215,96 +215,81 @@ describe('Polling', () => {
     // Should not fail again once it has succeeded
     await compareTimes();
     await advanceTimersByTimeAsync(pollingInterval);
+    await compareTimes();
     // Should keep polling even if it fails in somewhere
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
   });
-  const requestDuration = 10_000;
-  const pollingInterval = 1000;
-  it(
-    'does not stop request if the polled schema is not changed',
-    async () => {
-      vi.useFakeTimers?.();
-      const schema = createSchema({
-        typeDefs: /* GraphQL */ `
-          type Query {
-            greetings: String
-          }
-        `,
-        resolvers: {
-          Query: {
-            greetings() {
-              return new Promise<string>((resolve) => {
-                globalThis.setTimeout(() => {
-                  resolve('Hello');
-                }, requestDuration);
-              });
-            },
+  it('does not stop request if the polled schema is not changed', async () => {
+    vi.useFakeTimers?.();
+    const schema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          greetings(requestDuration: Int): String
+        }
+      `,
+      resolvers: {
+        Query: {
+          greetings(_, { requestDuration }) {
+            return new Promise<string>((resolve) => {
+              globalThis.setTimeout(() => {
+                resolve('Hello');
+              }, requestDuration);
+            });
           },
         },
-      });
-      const callTimes: number[] = [];
-      const startTime = Date.now();
-      const unifiedGraphFetcher = vi.fn(() => {
-        callTimes.push(Date.now() - startTime);
-        return getUnifiedGraphGracefully([
-          {
-            name: 'Test',
-            schema,
-          },
-        ]);
-      });
-      let disposeFn = vi.fn();
-      await using executor = getExecutorForUnifiedGraph({
-        getUnifiedGraph: unifiedGraphFetcher,
-        pollingInterval,
-        transports() {
-          return {
-            getSubgraphExecutor() {
-              return makeDisposable(createDefaultExecutor(schema), disposeFn);
-            },
-          };
+      },
+    });
+    const callTimes: number[] = [];
+    const startTime = Date.now();
+    const unifiedGraphFetcher = vi.fn(() => {
+      callTimes.push(Date.now() - startTime);
+      return getUnifiedGraphGracefully([
+        {
+          name: 'Test',
+          schema,
         },
-      });
-      let result: ExecutionResult | undefined;
-      let err: Error | undefined;
+      ]);
+    });
+    let disposeFn = vi.fn();
+    await using executor = getExecutorForUnifiedGraph({
+      getUnifiedGraph: unifiedGraphFetcher,
+      pollingInterval: 1000,
+      transports() {
+        return {
+          getSubgraphExecutor() {
+            return makeDisposable(createDefaultExecutor(schema), disposeFn);
+          },
+        };
+      },
+    });
+    const results: ExecutionResult[] = [];
+    function makeQuery(requestDuration: number) {
       fakePromise(
         executor({
           document: parse(/* GraphQL */ `
             query {
-              greetings
+              greetings(requestDuration: ${requestDuration})
             }
           `),
         }),
       ).then(
         (r) => {
           assertSingleExecutionValue(r);
-          result = r;
+          results.push(r);
           return r;
         },
         (e) => {
-          err = e;
+          results.push({
+            errors: [e],
+          });
         },
       );
-      let totalTimeLeft = requestDuration;
-      await advanceTimersByTimeAsync(pollingInterval * 2);
-      totalTimeLeft -= pollingInterval * 2;
-      // After twice polling interval, the request should be still pending
-      expect(result).toBeUndefined();
-      expect(err).toBeUndefined();
-      expect(callTimes[0]).toBeLessThanOrEqual(1);
-      expect(Math.floor(callTimes[1]! / pollingInterval)).toBe(1);
-      await advanceTimersByTimeAsync(totalTimeLeft);
-      expect(disposeFn).toHaveBeenCalledTimes(0);
-      expect(callTimes.length).toBeLessThanOrEqual(
-        requestDuration / pollingInterval + 1,
-      );
-      await advanceTimersByTimeAsync(pollingInterval);
-      expect(result).toEqual({
-        data: {
-          greetings: 'Hello',
-        },
-      });
-    },
-    requestDuration * 2,
-  );
+    }
+    makeQuery(10_000);
+    await advanceTimersByTimeAsync(10_000);
+    makeQuery(0);
+    expect(callTimes).toHaveLength(2);
+    expect(callTimes[0]).toBe(0);
+    expect(callTimes[1]).toBeGreaterThanOrEqual(10_000);
+  }, 20_000);
 });

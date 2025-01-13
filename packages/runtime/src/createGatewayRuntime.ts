@@ -84,7 +84,6 @@ import {
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
-import { useChangingSchema } from './plugins/useChangingSchema';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -168,9 +167,6 @@ export function createGatewayRuntime<
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
-  let setSchema: (schema: GraphQLSchema) => void = (schema) => {
-    unifiedGraph = schema;
-  };
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
@@ -270,7 +266,6 @@ export function createGatewayRuntime<
               assumeValid: true,
               assumeValidSDL: true,
             });
-            setSchema(unifiedGraph);
           }
           continuePolling();
           return true;
@@ -308,7 +303,6 @@ export function createGatewayRuntime<
                 assumeValidSDL: true,
               });
             }
-            setSchema(unifiedGraph);
             continuePolling();
             return true;
           },
@@ -325,7 +319,6 @@ export function createGatewayRuntime<
           }),
           (schema) => {
             unifiedGraph = schema;
-            setSchema(schema);
             continuePolling();
             return true;
           },
@@ -715,9 +708,6 @@ export function createGatewayRuntime<
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
-      onSchemaChange(unifiedGraph) {
-        setSchema(unifiedGraph);
-      },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
@@ -944,9 +934,6 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useChangingSchema(getSchema, (_setSchema) => {
-      setSchema = _setSchema;
-    }),
     useRequestId(),
   ];
 
@@ -1041,6 +1028,8 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
+    // @ts-expect-error TODO: what's up with type narrowing
+    schema: getSchema,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
     logging: logger,
