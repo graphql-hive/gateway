@@ -5256,8 +5256,8 @@ __metadata:
   linkType: hard
 
 "@ianvs/prettier-plugin-sort-imports@npm:^4.3.1":
-  version: 4.4.0
-  resolution: "@ianvs/prettier-plugin-sort-imports@npm:4.4.0"
+  version: 4.4.1
+  resolution: "@ianvs/prettier-plugin-sort-imports@npm:4.4.1"
   dependencies:
     "@babel/generator": "npm:^7.26.2"
     "@babel/parser": "npm:^7.26.2"
@@ -5270,7 +5270,7 @@ __metadata:
   peerDependenciesMeta:
     "@vue/compiler-sfc":
       optional: true
-  checksum: 10c0/8578ae3de4c965e59196388c2ce5d06cb16cbb445c3ba9ce301cf167facfdf9049cfcc343cacc3e383e2bda051b73c1620c8d18812decf1a3a17acacc1dee61b
+  checksum: 10c0/bdf2f658f495d0899318c6d4542b10007bc7343d53c5436cc6eb82cc29e57be97e19fb74004c282c4a44da2e015c5ddaa2c3c451fbc7fec64b1a96ff0e4d0f6d
   languageName: node
   linkType: hard
 
