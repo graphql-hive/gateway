@@ -3202,6 +3202,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.103.6"
     "@graphql-tools/batch-delegate": "workspace:^"
     "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/executor-http": "workspace:^"
     "@graphql-tools/federation": "workspace:^"
     "@graphql-tools/stitch": "workspace:^"
