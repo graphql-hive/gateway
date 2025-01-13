@@ -246,7 +246,7 @@ describe('Gateway Runtime', () => {
     let onSchemaChangeCalls = 0;
     let supergraphFetcherCalls = 0;
 
-    const serve = createGatewayRuntime({
+    const gwRuntime = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
       supergraph() {
@@ -266,31 +266,30 @@ describe('Gateway Runtime', () => {
       ],
     });
 
-    // trigger mesh
-    const res = await serve.fetch('http://mesh/graphql?query={__typename}');
-    expect(res.ok).toBeTruthy();
-    expect(await res.json()).toMatchObject({
-      data: {
-        __typename: 'Query',
-      },
-    });
+    async function triggerGw() {
+      const res = await gwRuntime.fetch(
+        'http://gateway/graphql?query={__typename}',
+      );
+      expect(res.ok).toBeTruthy();
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }
+    // trigger gw
+    await triggerGw();
     expect(onSchemaChangeCalls).toBe(1);
     expect(supergraphFetcherCalls).toBe(1);
 
     await new Promise<void>((resolve, reject) => {
       globalThis.setTimeout(async () => {
         try {
-          // trigger mesh again
-          await serve.fetch('http://mesh/graphql?query={__typename}');
-          expect(res.ok).toBeTruthy();
-          expect(await res.json()).toMatchObject({
-            data: {
-              __typename: 'Query',
-            },
-          });
+          // trigger gateway again
+          await triggerGw();
           expect(onSchemaChangeCalls).toBe(1);
           expect(supergraphFetcherCalls).toBe(2);
-          await serve[DisposableSymbols.asyncDispose]();
+          await gwRuntime[DisposableSymbols.asyncDispose]();
           resolve();
         } catch (e) {
           reject(e);
