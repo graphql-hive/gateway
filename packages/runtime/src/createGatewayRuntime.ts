@@ -824,6 +824,15 @@ export function createGatewayRuntime<
         setFetchFn(fetchAPI.fetch);
       }
     },
+    // @ts-expect-error TODO: what's up with type narrowing
+    onRequestParse() {
+      return mapMaybePromise(getSchema(), (schema) => {
+        unifiedGraph = schema;
+      });
+    },
+    onEnveloped({ setSchema }) {
+      setSchema(unifiedGraph);
+    },
     onPluginInit({ plugins }) {
       onFetchHooks.splice(0, onFetchHooks.length);
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
@@ -1028,8 +1037,6 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
-    // @ts-expect-error TODO: what's up with type narrowing
-    schema: getSchema,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
     logging: logger,
