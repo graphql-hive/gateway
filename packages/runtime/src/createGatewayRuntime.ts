@@ -696,8 +696,11 @@ export function createGatewayRuntime<
       }
 
       unifiedGraphFetcher = () =>
-        // @ts-expect-error TODO: what's up with type narrowing
-        handleUnifiedGraphConfig(config.supergraph, configContext);
+        handleUnifiedGraphConfig(
+          // @ts-expect-error TODO: what's up with type narrowing
+          config.supergraph,
+          configContext,
+        );
       if (typeof config.supergraph === 'function') {
         const fnName = config.supergraph.name || '';
         supergraphLoadedPlace = `a custom loader ${fnName}`;
