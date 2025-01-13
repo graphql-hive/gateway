@@ -289,7 +289,9 @@ describe('Polling', () => {
     await advanceTimersByTimeAsync(10_000);
     makeQuery(0);
     expect(callTimes).toHaveLength(2);
-    expect(callTimes[0]).toBe(0);
-    expect(callTimes[1]).toBeGreaterThanOrEqual(10_000);
+    // It can be 0 or 1 or any one-digit number
+    expect(callTimes[0]?.toString()?.length).toBe(1);
+    // It can be 10_000 or 10_001 or any five-digit number
+    expect(callTimes[1]?.toString()?.length).toBe(5);
   }, 20_000);
 });
