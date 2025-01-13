@@ -1492,7 +1492,8 @@ export function getStitchedSchemaFromSupergraphSdl(
   let supergraphSchema = stitchSchemas(stitchSchemasOpts);
   supergraphSchema = filterInternalFieldsAndTypes(supergraphSchema);
   if (opts.onStitchedSchema) {
-    supergraphSchema = opts.onStitchedSchema(supergraphSchema) || supergraphSchema;
+    supergraphSchema =
+      opts.onStitchedSchema(supergraphSchema) || supergraphSchema;
   }
   return supergraphSchema;
 }
