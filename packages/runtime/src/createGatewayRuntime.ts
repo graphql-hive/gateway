@@ -634,29 +634,55 @@ export function createGatewayRuntime<
         const uplinks =
           uplinksParam?.split(',').map((uplink) => uplink.trim()) ||
           DEFAULT_UPLINKS;
+        const graphosLogger = configContext.logger.child('GraphOS');
+        graphosLogger.info(
+          'Using GraphOS Managed Federation with uplinks: ',
+          ...uplinks,
+        );
+        const maxRetries = opts.maxRetries || Math.max(3, uplinks.length);
         unifiedGraphFetcher = () => {
-          let uplinksToUse = [...uplinks];
+          const uplinksToUse: string[] = [];
           let retries = opts.maxRetries || Math.max(3, uplinks.length);
+          const fetchSupergraphWithDelay = (): MaybePromise<string> => {
+            if (minDelaySeconds) {
+              graphosLogger.info(
+                `Fetching supergraph with delay: ${minDelaySeconds}s`,
+              );
+              return new Promise((resolve) => {
+                setTimeout(() => {
+                  resolve(fetchSupergraph());
+                }, minDelaySeconds * 1000);
+              });
+            }
+            return fetchSupergraph();
+          };
           const fetchSupergraph = (): MaybePromise<string> => {
+            if (uplinksToUse.length === 0) {
+              uplinksToUse.push(...uplinks);
+            }
             retries--;
             try {
+              const uplinkToUse = uplinksToUse.pop();
+              graphosLogger.info(
+                `Attempt ${maxRetries - retries} to fetch supergraph from ${uplinkToUse}`,
+              );
               return mapMaybePromise(
                 fetchSupergraphSdlFromManagedFederation({
                   graphRef: opts.graphRef,
                   apiKey: opts.apiKey,
-                  upLink: (uplinksToUse ||= [...uplinks]).pop(),
+                  upLink: uplinkToUse,
                   lastSeenId,
                   // @ts-expect-error TODO: what's up with type narrowing
                   fetch: configContext.fetch,
                   loggerByMessageLevel: {
                     ERROR(message) {
-                      configContext.logger.child('GraphOS').error(message);
+                      graphosLogger.error(message);
                     },
                     INFO(message) {
-                      configContext.logger.child('GraphOS').info(message);
+                      graphosLogger.info(message);
                     },
                     WARN(message) {
-                      configContext.logger.child('GraphOS').warn(message);
+                      graphosLogger.warn(message);
                     },
                   },
                 }),
@@ -673,13 +699,17 @@ export function createGatewayRuntime<
                         minDelaySeconds -= config.pollingInterval;
                       }
                     }
+                    graphosLogger.info(
+                      `Setting min delay to ${minDelaySeconds}s`,
+                    );
                   }
                   if ('error' in result) {
-                    configContext.logger
-                      .child('GraphOS')
-                      .error(result.error.code, result.error.message);
+                    graphosLogger.error(
+                      result.error.code,
+                      result.error.message,
+                    );
                     if (retries > 0) {
-                      return fetchSupergraph();
+                      return fetchSupergraphWithDelay();
                     }
                   }
                   if ('id' in result) {
@@ -690,7 +720,7 @@ export function createGatewayRuntime<
                   }
                   if (!lastSupergraphSdl) {
                     if (retries > 0) {
-                      return fetchSupergraph();
+                      return fetchSupergraphWithDelay();
                     }
                     throw new Error('Failed to fetch supergraph SDL');
                   }
@@ -699,7 +729,7 @@ export function createGatewayRuntime<
                 (err) => {
                   configContext.logger.child('GraphOS').error(err);
                   if (retries > 0) {
-                    return fetchSupergraph();
+                    return fetchSupergraphWithDelay();
                   }
                   return lastSupergraphSdl;
                 },
@@ -707,19 +737,12 @@ export function createGatewayRuntime<
             } catch (e) {
               configContext.logger.child('GraphOS').error(e);
               if (retries > 0) {
-                return fetchSupergraph();
+                return fetchSupergraphWithDelay();
               }
               return lastSupergraphSdl;
             }
           };
-          if (minDelaySeconds && lastSupergraphSdl) {
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(fetchSupergraph());
-              }, minDelaySeconds * 1000);
-            });
-          }
-          return fetchSupergraph();
+          return fetchSupergraphWithDelay();
         };
       } else {
         unifiedGraphFetcher = () => {
