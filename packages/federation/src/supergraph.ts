@@ -1244,7 +1244,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                   () => true,
                   info.fragments,
                 );
-              const score = calculateSelectionScore(unavailableFields);
+              const score = calculateSelectionScore(
+                unavailableFields,
+                info.fragments,
+              );
               if (score < currentScore) {
                 currentScore = score;
                 currentSubschema = candidate.transformedSubschema;
@@ -1278,6 +1281,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                     );
                   const friendScore = calculateSelectionScore(
                     unavailableFieldsInFriend,
+                    info.fragments,
                   );
                   if (friendScore < score) {
                     const unavailableInFriendSelectionSet: SelectionSetNode = {

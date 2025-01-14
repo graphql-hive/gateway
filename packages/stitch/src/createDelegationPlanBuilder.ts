@@ -29,6 +29,7 @@ function calculateDelegationStage(
   sourceSubschemas: Array<Subschema>,
   targetSubschemas: Array<Subschema>,
   fieldNodes: Array<FieldNode>,
+  fragments: Record<string, FragmentDefinitionNode>,
 ): {
   delegationMap: Map<Subschema, SelectionSetNode>;
   proxiableSubschemas: Array<Subschema>;
@@ -192,7 +193,10 @@ function calculateDelegationStage(
               return true;
             },
           );
-          const currentScore = calculateSelectionScore(unavailableFields);
+          const currentScore = calculateSelectionScore(
+            unavailableFields,
+            fragments,
+          );
           if (currentScore < bestScore) {
             bestScore = currentScore;
             bestUniqueSubschema = nonUniqueSubschema;
@@ -218,25 +222,43 @@ function calculateDelegationStage(
   };
 }
 
-export function calculateSelectionScore(selections: readonly SelectionNode[]) {
-  let score = 0;
-  for (const selectionNode of selections) {
-    switch (selectionNode.kind) {
-      case Kind.FIELD:
-        score++;
-        if (selectionNode.selectionSet?.selections) {
+export const calculateSelectionScore = memoize2(
+  function calculateSelectionScore(
+    selections: readonly SelectionNode[],
+    fragments: Record<string, FragmentDefinitionNode>,
+  ): number {
+    let score = 0;
+    for (const selectionNode of selections) {
+      switch (selectionNode.kind) {
+        case Kind.FIELD:
+          score++;
+          if (selectionNode.selectionSet?.selections) {
+            score += calculateSelectionScore(
+              selectionNode.selectionSet.selections,
+              fragments,
+            );
+          }
+          break;
+        case Kind.INLINE_FRAGMENT:
           score += calculateSelectionScore(
             selectionNode.selectionSet.selections,
+            fragments,
           );
-        }
-        break;
-      case Kind.INLINE_FRAGMENT:
-        score += calculateSelectionScore(selectionNode.selectionSet.selections);
-        break;
+          break;
+        case Kind.FRAGMENT_SPREAD:
+          const fragment = fragments?.[selectionNode.name.value];
+          if (fragment) {
+            score += calculateSelectionScore(
+              fragment.selectionSet.selections,
+              fragments,
+            );
+          }
+          break;
+      }
     }
-  }
-  return score;
-}
+    return score;
+  },
+);
 
 function getStitchingInfo(schema: GraphQLSchema): StitchingInfo {
   const stitchingInfo = schema.extensions?.['stitchingInfo'] as
@@ -295,6 +317,7 @@ export function createDelegationPlanBuilder(
         sourceSubschemas,
         targetSubschemas,
         fieldsNotInSubschema,
+        fragments,
       );
       let { delegationMap } = delegationStage;
       while (delegationMap.size) {
@@ -316,6 +339,7 @@ export function createDelegationPlanBuilder(
           sourceSubschemas,
           nonProxiableSubschemas,
           unproxiableFieldNodes,
+          fragments,
         );
         delegationMap = delegationStage.delegationMap;
       }
