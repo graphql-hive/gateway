@@ -307,3 +307,5 @@ function getExecutor<TContext extends Record<string, any>>(
 
   return executor;
 }
+
+export { executorFromSchema as createDefaultExecutor };
