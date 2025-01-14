@@ -15,7 +15,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.title != 'Upcoming Release Changes'
     name: Dependencies
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.ref }}-dependencies
       cancel-in-progress: true
     uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yml@v1
     with:
@@ -26,7 +26,7 @@ jobs:
     if: github.event_name == 'pull_request'
     name: Snapshot
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.ref }}-release-snapshot
       cancel-in-progress: true
     permissions:
       contents: read
@@ -42,7 +42,7 @@ jobs:
       npmToken: ${{ secrets.NPM_TOKEN }}
   stable:
     if: github.ref == 'refs/heads/main'
-    concurrency: ${{ github.workflow }}-${{ github.ref }}
+    concurrency: ${{ github.workflow }}-${{ github.ref }}-release-stable
     name: Stable
     permissions:
       contents: read
