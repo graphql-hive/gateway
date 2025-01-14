@@ -663,9 +663,10 @@ export function createGatewayRuntime<
             retries--;
             try {
               const uplinkToUse = uplinksToUse.pop();
-              graphosLogger.info(
-                `Attempt ${maxRetries - retries} to fetch supergraph from ${uplinkToUse}`,
+              const attemptLogger = graphosLogger.child(
+                `Attempt ${maxRetries - retries} - UpLink: ${uplinkToUse}`,
               );
+              attemptLogger.debug(`Fetching supergraph`);
               return mapMaybePromise(
                 fetchSupergraphSdlFromManagedFederation({
                   graphRef: opts.graphRef,
@@ -676,13 +677,13 @@ export function createGatewayRuntime<
                   fetch: configContext.fetch,
                   loggerByMessageLevel: {
                     ERROR(message) {
-                      graphosLogger.error(message);
+                      attemptLogger.error(message);
                     },
                     INFO(message) {
-                      graphosLogger.info(message);
+                      attemptLogger.info(message);
                     },
                     WARN(message) {
-                      graphosLogger.warn(message);
+                      attemptLogger.warn(message);
                     },
                   },
                 }),
@@ -699,12 +700,12 @@ export function createGatewayRuntime<
                         minDelaySeconds -= config.pollingInterval;
                       }
                     }
-                    graphosLogger.info(
+                    attemptLogger.debug(
                       `Setting min delay to ${minDelaySeconds}s`,
                     );
                   }
                   if ('error' in result) {
-                    graphosLogger.error(
+                    attemptLogger.error(
                       result.error.code,
                       result.error.message,
                     );
@@ -716,6 +717,9 @@ export function createGatewayRuntime<
                     lastSeenId = result.id;
                   }
                   if ('supergraphSdl' in result) {
+                    attemptLogger.info(
+                      `Fetched the new supergraph ${lastSeenId ? `with id ${lastSeenId}` : ''}`,
+                    );
                     lastSupergraphSdl = result.supergraphSdl;
                   }
                   if (!lastSupergraphSdl) {
