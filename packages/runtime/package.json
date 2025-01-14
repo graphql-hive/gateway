@@ -36,7 +36,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "yarn generate-landing-page && pkgroll --clean-dist",
+    "prebuild": "yarn generate-landing-page",
+    "build": "pkgroll --clean-dist",
     "generate-landing-page": "tsx scripts/generate-landing-page-html.ts",
     "prepack": "yarn build"
   },
