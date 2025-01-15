@@ -7,7 +7,11 @@ import {
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { fakePromise, isAsyncIterable } from '@graphql-tools/utils';
+import {
+  createDeferred,
+  fakePromise,
+  isAsyncIterable,
+} from '@graphql-tools/utils';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
@@ -294,4 +298,91 @@ describe('Polling', () => {
     // It can be 10_000 or 10_001 or any five-digit number
     expect(callTimes[1]?.toString()?.length).toBe(5);
   }, 20_000);
+  it('does not block incoming requests while polling', async () => {
+    vi.useFakeTimers?.();
+    let schema: GraphQLSchema;
+    let unifiedGraph: string;
+    let graphDeferred: PromiseWithResolvers<string> | undefined;
+    function updateGraph() {
+      const createdTime = new Date().toISOString();
+      schema = createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            createdTime: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            createdTime: () => createdTime,
+          },
+        },
+      });
+      unifiedGraph = getUnifiedGraphGracefully([
+        {
+          name: 'Test',
+          schema,
+        },
+      ]);
+      return createdTime;
+    }
+    const firstCreatedTime = updateGraph();
+    const unifiedGraphFetcher = vi.fn(() =>
+      graphDeferred ? graphDeferred.promise : unifiedGraph,
+    );
+    await using executor = getExecutorForUnifiedGraph({
+      getUnifiedGraph: unifiedGraphFetcher,
+      pollingInterval: 10_000,
+      transports() {
+        return {
+          getSubgraphExecutor() {
+            return function dynamicExecutor(...args) {
+              return createDefaultExecutor(schema)(...args);
+            };
+          },
+        };
+      },
+    });
+    const firstRes = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          createdTime
+        }
+      `),
+    });
+    expect(firstRes).toEqual({
+      data: {
+        createdTime: firstCreatedTime,
+      },
+    });
+    expect(unifiedGraphFetcher).toHaveBeenCalledTimes(1);
+    graphDeferred = createDeferred();
+    await advanceTimersByTimeAsync(10_000);
+    const secondRes = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          createdTime
+        }
+      `),
+    });
+    expect(secondRes).toEqual({
+      data: {
+        createdTime: firstCreatedTime,
+      },
+    });
+    expect(unifiedGraphFetcher).toHaveBeenCalledTimes(2);
+    const secondFetchTime = updateGraph();
+    graphDeferred.resolve(unifiedGraph!);
+    const thirdRes = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          createdTime
+        }
+      `),
+    });
+    expect(thirdRes).toEqual({
+      data: {
+        createdTime: secondFetchTime,
+      },
+    });
+  }, 30_000);
 });

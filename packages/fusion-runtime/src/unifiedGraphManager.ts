@@ -122,7 +122,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
   private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
   private inContextSDK: any;
-  private initialUnifiedGraph$?: MaybePromise<true>;
+  private initialUnifiedGraph$?: MaybePromise<GraphQLSchema>;
+  private polling$?: MaybePromise<void>;
   private _transportEntryMap?: Record<string, TransportEntry>;
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
@@ -147,45 +148,51 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.inContextSDK = undefined;
     this.initialUnifiedGraph$ = undefined;
     this.lastLoadTime = undefined;
+    this.polling$ = undefined;
   }
 
-  private ensureUnifiedGraph(): MaybePromise<true> {
+  private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
     if (
+      this.polling$ == null &&
       this.opts?.pollingInterval != null &&
       this.lastLoadTime != null &&
       Date.now() - this.lastLoadTime >= this.opts.pollingInterval
     ) {
-      this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
-      return this.initialUnifiedGraph$;
+      this.polling$ = mapMaybePromise(this.getAndSetUnifiedGraph(), () => {
+        this.polling$ = undefined;
+      });
     }
-    if (this.unifiedGraph) {
-      return true;
-    }
-    if (!this.initialUnifiedGraph$) {
-      if (this.opts.transportContext?.cache) {
-        this.opts.transportContext?.logger?.debug(
-          `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
-        );
-        this.initialUnifiedGraph$ = mapMaybePromise(
-          this.opts.transportContext.cache.get(UNIFIEDGRAPH_CACHE_KEY),
-          (cachedUnifiedGraph) => {
-            if (cachedUnifiedGraph) {
-              this.opts.transportContext?.logger?.debug(
-                'Found Supergraph in cache',
-              );
-              return this.handleLoadedUnifiedGraph(cachedUnifiedGraph, true);
-            }
-            return this.getAndSetUnifiedGraph();
-          },
-          () => {
-            return this.getAndSetUnifiedGraph();
-          },
-        );
-      } else {
-        this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
+    if (!this.unifiedGraph) {
+      if (!this.initialUnifiedGraph$) {
+        if (this.opts.transportContext?.cache) {
+          this.opts.transportContext?.logger?.debug(
+            `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
+          );
+          this.initialUnifiedGraph$ = mapMaybePromise(
+            this.opts.transportContext.cache.get(UNIFIEDGRAPH_CACHE_KEY),
+            (cachedUnifiedGraph) => {
+              if (cachedUnifiedGraph) {
+                this.opts.transportContext?.logger?.debug(
+                  'Found Supergraph in cache',
+                );
+                return this.handleLoadedUnifiedGraph(cachedUnifiedGraph, true);
+              }
+              return this.getAndSetUnifiedGraph();
+            },
+            () => {
+              return this.getAndSetUnifiedGraph();
+            },
+          );
+        } else {
+          this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
+        }
       }
+      return mapMaybePromise(this.initialUnifiedGraph$, (v) => {
+        this.initialUnifiedGraph$ = undefined;
+        return v;
+      });
     }
-    return this.initialUnifiedGraph$;
+    return this.unifiedGraph;
   }
 
   private disposeReason: GraphQLError | undefined;
@@ -193,7 +200,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private handleLoadedUnifiedGraph(
     loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
     doNotCache?: boolean,
-  ): MaybePromise<true> {
+  ): MaybePromise<GraphQLSchema> {
     if (
       loadedUnifiedGraph != null &&
       this.lastLoadedUnifiedGraph != null &&
@@ -203,7 +210,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         'Supergraph has not been changed, skipping...',
       );
       this.lastLoadTime = Date.now();
-      return true;
+      if (!this.unifiedGraph) {
+        throw new Error(`This should not happen!`);
+      }
+      return this.unifiedGraph;
     }
     if (this.lastLoadedUnifiedGraph != null) {
       this.disposeReason = createGraphQLError(
@@ -405,12 +415,12 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             }
           }
         }
-        return true;
+        return this.unifiedGraph;
       },
     );
   }
 
-  private getAndSetUnifiedGraph(): MaybePromise<true> {
+  private getAndSetUnifiedGraph(): MaybePromise<GraphQLSchema> {
     try {
       return mapMaybePromise(
         this.opts.getUnifiedGraph(this.opts.transportContext || {}),
@@ -425,7 +435,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           if (!this.unifiedGraph) {
             throw err;
           }
-          return true;
+          return this.unifiedGraph;
         },
       );
     } catch (e) {
@@ -434,7 +444,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       if (!this.unifiedGraph) {
         throw e;
       }
-      return true;
+      return this.unifiedGraph;
     }
   }
 
