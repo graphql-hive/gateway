@@ -526,7 +526,6 @@ export function createTenv(cwd: string): Tenv {
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
-          leftoverStack.use(proc);
           break;
         }
         case 'bin': {
