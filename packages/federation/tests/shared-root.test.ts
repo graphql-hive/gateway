@@ -182,4 +182,118 @@ describe('Shared Root Fields', () => {
 
     expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(1);
   });
+  it('should choose the best mutation root field', async () => {
+    const SUBGRAPHA = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          test: String
+        }
+
+        type Mutation {
+          testMutation: TestMutationResult
+        }
+
+        type TestMutationResult @key(fields: "shared") {
+          onlyA: String
+          shared: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          test: () => 'test',
+        },
+        Mutation: {
+          testMutation: () => ({
+            onlyA: 'onlyA',
+            shared: 'shared',
+          }),
+        },
+      },
+    });
+    const SUBGRAPHB = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          test: String
+        }
+
+        type Mutation {
+          testMutation: TestMutationResult
+        }
+
+        type TestMutationResult @key(fields: "shared") {
+          onlyB: String
+          shared: String
+        }
+      `),
+      resolvers: {
+        Query: {
+          test: () => 'test',
+        },
+        Mutation: {
+          testMutation: () => ({
+            onlyB: 'onlyB',
+            shared: 'shared',
+          }),
+        },
+      },
+    });
+    const onSubgraphExecuteFn =
+      vi.fn<
+        (
+          subgraph: string,
+          executionRequest: ExecutionRequest,
+          result: ExecutionResult | AsyncIterable<ExecutionResult>,
+        ) => void
+      >();
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
+      {
+        SUBGRAPHA,
+        SUBGRAPHB,
+      },
+      onSubgraphExecuteFn,
+    );
+
+    const resultA = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        mutation {
+          testMutation {
+            onlyA
+          }
+        }
+      `),
+    });
+
+    expect(resultA).toEqual({
+      data: {
+        testMutation: {
+          onlyA: 'onlyA',
+        },
+      },
+    });
+
+    expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(1);
+    expect(onSubgraphExecuteFn.mock.calls[0]?.[0]).toBe('SUBGRAPHA');
+    const resultB = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        mutation {
+          testMutation {
+            onlyB
+          }
+        }
+      `),
+    });
+
+    expect(resultB).toEqual({
+      data: {
+        testMutation: {
+          onlyB: 'onlyB',
+        },
+      },
+    });
+
+    expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(2);
+    expect(onSubgraphExecuteFn.mock.calls[1]?.[0]).toBe('SUBGRAPHB');
+  });
 });

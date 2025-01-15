@@ -1207,11 +1207,14 @@ export function getStitchingOptionsFromSupergraphSdl(
         return candidates[0].fieldConfig;
       }
     }
-    if (
-      candidates.some(
-        (candidate) => rootTypeMap.get(candidate.type.name) === 'query',
-      )
-    ) {
+    let operationType: OperationTypeNode | undefined;
+    for (const candidate of candidates) {
+      const candidateOperationType = rootTypeMap.get(candidate.type.name);
+      if (candidateOperationType) {
+        operationType = candidateOperationType;
+      }
+    }
+    if (operationType) {
       const defaultMergedField = defaultMerger(candidates);
       return {
         ...defaultMergedField,
@@ -1241,7 +1244,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                   () => true,
                   info.fragments,
                 );
-              const score = calculateSelectionScore(unavailableFields);
+              const score = calculateSelectionScore(
+                unavailableFields,
+                info.fragments,
+              );
               if (score < currentScore) {
                 currentScore = score;
                 currentSubschema = candidate.transformedSubschema;
@@ -1275,6 +1281,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                     );
                   const friendScore = calculateSelectionScore(
                     unavailableFieldsInFriend,
+                    info.fragments,
                   );
                   if (friendScore < score) {
                     const unavailableInFriendSelectionSet: SelectionSetNode = {
@@ -1317,6 +1324,9 @@ export function getStitchingOptionsFromSupergraphSdl(
                 }
               : info,
           });
+          if (operationType !== 'query') {
+            return mainJob;
+          }
           if (isPromise(mainJob)) {
             hasPromise = true;
           }
