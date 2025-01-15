@@ -21,6 +21,8 @@
         "./internal/testing/src/to-be-similar-gql-doc.ts"
       ],
       "@internal/testing/fixtures/*": ["./internal/testing/fixtures/*"],
+      "@graphql-hive/importer": ["./packages/importer/src/index.ts"],
+      "@graphql-hive/importer/*": ["./packages/importer/src/*"],
       "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
       "@graphql-mesh/fusion-runtime": [
