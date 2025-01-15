@@ -8,7 +8,7 @@ import {
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type { DocumentNode } from 'graphql';
+import { print, type DocumentNode } from 'graphql';
 import {
   UnifiedGraphManager,
   type UnifiedGraphManagerOptions,
@@ -32,11 +32,16 @@ export function getExecutorForUnifiedGraph<TContext>(
       (context) => {
         return mapMaybePromise(
           unifiedGraphManager.getUnifiedGraph(),
-          (unifiedGraph) =>
-            createDefaultExecutor(unifiedGraph)({
+          (unifiedGraph) => {
+            opts?.transportContext?.logger?.debug(
+              'Executing request on unified graph',
+              print(execReq.document),
+            );
+            return createDefaultExecutor(unifiedGraph)({
               ...execReq,
               context,
-            }),
+            });
+          },
         );
       },
     );
@@ -46,6 +51,9 @@ export function getExecutorForUnifiedGraph<TContext>(
     enumerable: true,
     get() {
       return function unifiedGraphExecutorDispose() {
+        opts?.transportContext?.logger?.debug(
+          'Disposing unified graph executor',
+        );
         return unifiedGraphManager[DisposableSymbols.asyncDispose]();
       };
     },

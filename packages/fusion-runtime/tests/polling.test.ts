@@ -5,7 +5,7 @@ import {
   createDefaultExecutor,
   type DisposableExecutor,
 } from '@graphql-mesh/transport-common';
-import { makeDisposable } from '@graphql-mesh/utils';
+import { DefaultLogger, makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   createDeferred,
@@ -299,7 +299,12 @@ describe('Polling', () => {
     expect(callTimes[1]?.toString()?.length).toBe(5);
   }, 20_000);
   it('does not block incoming requests while polling', async () => {
-    vi.useFakeTimers?.();
+    // Jest's timer is acting weird
+    if (process.env['LEAK_TEST']) {
+      vi.useRealTimers?.();
+    } else {
+      vi.useFakeTimers?.();
+    }
     let schema: GraphQLSchema;
     let unifiedGraph: string;
     let graphDeferred: PromiseWithResolvers<string> | undefined;
@@ -326,16 +331,23 @@ describe('Polling', () => {
       return createdTime;
     }
     const firstCreatedTime = updateGraph();
-    const unifiedGraphFetcher = vi.fn(() =>
-      graphDeferred ? graphDeferred.promise : unifiedGraph,
-    );
+    const unifiedGraphFetcher = vi.fn(() => {
+      return graphDeferred ? graphDeferred.promise : unifiedGraph;
+    });
+    const logger = new DefaultLogger();
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,
+      transportContext: {
+        logger,
+      },
       transports() {
+        logger.debug('transports');
         return {
           getSubgraphExecutor() {
+            logger.debug('getSubgraphExecutor');
             return function dynamicExecutor(...args) {
+              logger.debug('dynamicExecutor');
               return createDefaultExecutor(schema)(...args);
             };
           },
@@ -356,7 +368,13 @@ describe('Polling', () => {
     });
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(1);
     graphDeferred = createDeferred();
+    const timeout$ = new Promise<void>((resolve) => {
+      globalThis.setTimeout(() => {
+        resolve();
+      }, 10_000);
+    });
     await advanceTimersByTimeAsync(10_000);
+    await timeout$;
     const secondRes = await executor({
       document: parse(/* GraphQL */ `
         query {
