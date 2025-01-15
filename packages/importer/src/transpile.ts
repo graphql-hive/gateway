@@ -35,7 +35,7 @@ export async function transpileTypeScriptFile(
   if (format === 'commonjs') {
     transforms.push('imports');
   }
-  const { code } = transform(source, { transforms });
+  const { code } = transform(source, { transforms, filePath });
   return {
     format,
     source: code,
