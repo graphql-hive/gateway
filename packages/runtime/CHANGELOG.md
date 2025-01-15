@@ -1,5 +1,30 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.8
+
+### Patch Changes
+
+- [#420](https://github.com/graphql-hive/gateway/pull/420) [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-tools/executor-common@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor-common/v/workspace:^) (to `dependencies`)
+
+- [#420](https://github.com/graphql-hive/gateway/pull/420) [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92) Thanks [@ardatan](https://github.com/ardatan)! - - In case of schema reload, throw `SCHEMA_RELOAD` error while recreating the transports and executors
+
+  - In case of shut down, throw `SHUTTING_DOWN` error while cleaning the transports and executors up
+
+  Previously, these errors are only thrown for subscriptions not it is thrown in other type of operations as well.
+  And previously the thrown errors during these two cleanup and restart process were cryptic, now the mentioned two errors above are thrown with more clear messages
+
+- [#420](https://github.com/graphql-hive/gateway/pull/420) [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92) Thanks [@ardatan](https://github.com/ardatan)! - Leave the supergraph configuration handling logic to fusion-runtime package so it can compare bare read supergraph sdl directly inside unified graph manager to decide if the supergraph has changed.
+
+- Updated dependencies [[`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92), [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92), [`a625269`](https://github.com/graphql-hive/gateway/commit/a62526936680d030339fc26cc55d76507134b022), [`a625269`](https://github.com/graphql-hive/gateway/commit/a62526936680d030339fc26cc55d76507134b022), [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92), [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92)]:
+  - @graphql-mesh/fusion-runtime@0.10.29
+  - @graphql-mesh/transport-common@0.7.27
+  - @graphql-tools/stitch@9.4.14
+  - @graphql-tools/federation@3.0.9
+  - @graphql-tools/executor-http@1.2.5
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+
 ## 1.4.7
 
 ### Patch Changes

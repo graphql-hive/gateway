@@ -1,5 +1,20 @@
 # @graphql-mesh/transport-common
 
+## 0.7.27
+
+### Patch Changes
+
+- [#420](https://github.com/graphql-hive/gateway/pull/420) [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@envelop/core@^5.0.3` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.0.3) (from `^5.0.1`, in `dependencies`)
+
+- [#420](https://github.com/graphql-hive/gateway/pull/420) [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92) Thanks [@ardatan](https://github.com/ardatan)! - - In case of schema reload, throw `SCHEMA_RELOAD` error while recreating the transports and executors
+
+  - In case of shut down, throw `SHUTTING_DOWN` error while cleaning the transports and executors up
+
+  Previously, these errors are only thrown for subscriptions not it is thrown in other type of operations as well.
+  And previously the thrown errors during these two cleanup and restart process were cryptic, now the mentioned two errors above are thrown with more clear messages
+
 ## 0.7.26
 
 ### Patch Changes
