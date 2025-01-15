@@ -23,7 +23,7 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
     execute: (args) => (args as EnvelopedExecutionArgs).rootValue.execute(args),
     subscribe: (args) =>
       (args as EnvelopedExecutionArgs).rootValue.subscribe(args),
-    onSubscribe: async (ctx, msg) => {
+    onSubscribe: async (ctx, _id, payload) => {
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         gwRuntime.getEnveloped({
           connectionParams: ctx.connectionParams,
@@ -31,9 +31,9 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
         });
       const args: EnvelopedExecutionArgs = {
         schema: schema || (await gwRuntime.getSchema()),
-        operationName: msg.payload.operationName,
-        document: parse(msg.payload.query),
-        variableValues: msg.payload.variables,
+        operationName: payload.operationName,
+        document: parse(payload.query),
+        variableValues: payload.variables,
         contextValue: await contextFactory(),
         rootValue: {
           execute,
