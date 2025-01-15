@@ -1,5 +1,11 @@
 # @graphql-tools/stitch
 
+## 9.4.14
+
+### Patch Changes
+
+- [#443](https://github.com/graphql-hive/gateway/pull/443) [`a625269`](https://github.com/graphql-hive/gateway/commit/a62526936680d030339fc26cc55d76507134b022) Thanks [@ardatan](https://github.com/ardatan)! - Respect fragments while calculating the selection score
+
 ## 9.4.13
 
 ### Patch Changes

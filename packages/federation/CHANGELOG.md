@@ -1,5 +1,15 @@
 # @graphql-tools/federation
 
+## 3.0.9
+
+### Patch Changes
+
+- [#443](https://github.com/graphql-hive/gateway/pull/443) [`a625269`](https://github.com/graphql-hive/gateway/commit/a62526936680d030339fc26cc55d76507134b022) Thanks [@ardatan](https://github.com/ardatan)! - In case of shared Mutation field in different subgraphs, choose the best option instead of choosing the last option just like we do in Query root fields
+
+- Updated dependencies [[`a625269`](https://github.com/graphql-hive/gateway/commit/a62526936680d030339fc26cc55d76507134b022), [`14152f7`](https://github.com/graphql-hive/gateway/commit/14152f70d91572c0e60ba15ddeb2ffd0b41c9e92)]:
+  - @graphql-tools/stitch@9.4.14
+  - @graphql-tools/executor-http@1.2.5
+
 ## 3.0.8
 
 ### Patch Changes
