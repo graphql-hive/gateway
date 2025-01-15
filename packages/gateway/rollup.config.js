@@ -43,8 +43,7 @@ const deps = {
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
   'node_modules/@graphql-mesh/fusion-runtime/index':
     '../fusion-runtime/src/index.ts',
-  'node_modules/@graphql-mesh/include/hooks':
-    '../../node_modules/@graphql-mesh/include/esm/hooks.js',
+  'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',
 
   // default transports should be in the container
   'node_modules/@graphql-mesh/transport-common/index':
@@ -141,7 +140,7 @@ function packagejson() {
           const mjsFile = path
             .basename(bundle.fileName, '.mjs')
             .replace(/\\/g, '/');
-          // if the bundled file is not "index", then it's an exports path (like with @graphql-mesh/include/hooks)
+          // if the bundled file is not "index", then it's an package.json exports path
           pkg['exports'] = { [`./${mjsFile}`]: `./${bundledFile}` };
         }
         this.emitFile({

@@ -13,7 +13,7 @@ it.skipIf(gatewayRunner.includes('bun'))('should start gateway', async () => {
       'type Query { hello: String }',
     ),
     env: {
-      MESH_INCLUDE_TSCONFIG_SEARCH_PATH: 'tsconfig-paths.tsconfig.json',
+      HIVE_IMPORTER_TSCONFIG_SEARCH_PATH: 'tsconfig-paths.tsconfig.json',
     },
     runner: {
       docker: {
