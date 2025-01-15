@@ -156,11 +156,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       this.polling$ == null &&
       this.opts?.pollingInterval != null &&
       this.lastLoadTime != null &&
-      (Date.now() - this.lastLoadTime) >= this.opts.pollingInterval
+      Date.now() - this.lastLoadTime >= this.opts.pollingInterval
     ) {
-      this.opts?.transportContext?.logger?.debug(
-        `Polling Supergraph`,
-      )
+      this.opts?.transportContext?.logger?.debug(`Polling Supergraph`);
       this.polling$ = mapMaybePromise(this.getAndSetUnifiedGraph(), () => {
         this.polling$ = undefined;
       });
@@ -169,7 +167,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       if (!this.initialUnifiedGraph$) {
         this.opts?.transportContext?.logger?.debug(
           'Fetching the initial Supergraph',
-        )
+        );
         if (this.opts.transportContext?.cache) {
           this.opts.transportContext?.logger?.debug(
             `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
@@ -192,13 +190,16 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         } else {
           this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
         }
-        this.initialUnifiedGraph$ = mapMaybePromise(this.initialUnifiedGraph$, (v) => {
-          this.initialUnifiedGraph$ = undefined;
-          this.opts.transportContext?.logger?.debug(
-            'Initial Supergraph fetched',
-          );
-          return v;
-        })
+        this.initialUnifiedGraph$ = mapMaybePromise(
+          this.initialUnifiedGraph$,
+          (v) => {
+            this.initialUnifiedGraph$ = undefined;
+            this.opts.transportContext?.logger?.debug(
+              'Initial Supergraph fetched',
+            );
+            return v;
+          },
+        );
       }
       return this.initialUnifiedGraph$ || this.unifiedGraph;
     }

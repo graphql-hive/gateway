@@ -331,7 +331,7 @@ describe('Polling', () => {
       return createdTime;
     }
     const firstCreatedTime = updateGraph();
-    const unifiedGraphFetcher = vi.fn(() =>{
+    const unifiedGraphFetcher = vi.fn(() => {
       return graphDeferred ? graphDeferred.promise : unifiedGraph;
     });
     const logger = new DefaultLogger();
