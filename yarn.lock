@@ -4438,15 +4438,15 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-prometheus@npm:^6.5.3":
-  version: 6.5.6
-  resolution: "@graphql-yoga/plugin-prometheus@npm:6.5.6"
+  version: 6.5.7
+  resolution: "@graphql-yoga/plugin-prometheus@npm:6.5.7"
   dependencies:
     "@envelop/prometheus": "npm:^11.1.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.10.9
     prom-client: ^15.0.0
-  checksum: 10c0/568be764da81e7d4c5727b873337c5dd92acf2dac00415e07b00f8f6eb64ab3621616d31850f8ea33a0de96bfc6040c9e33a092365a9a08b217e8dc4d4641e4a
+  checksum: 10c0/1f42ad090cc9116aaba97c2558d48191f1dfc7eb5f17d086fb2aa8ddb12d05a2f9e7c439e06009d4bccd557df5596838d30388c22fda474e1432f58f7754cac1
   languageName: node
   linkType: hard
 
