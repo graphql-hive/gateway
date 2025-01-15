@@ -3321,6 +3321,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/importer@workspace:packages/importer":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/importer@workspace:packages/importer"
+  dependencies:
+    get-tsconfig: "npm:^4.7.6"
+    glob: "npm:^11.0.0"
+    pkgroll: "npm:2.6.1"
+    sucrase: "npm:^3.35.0"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/yoga@npm:^0.39.2":
   version: 0.39.2
   resolution: "@graphql-hive/yoga@npm:0.39.2"
