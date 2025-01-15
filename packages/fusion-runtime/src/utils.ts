@@ -1,9 +1,10 @@
-import type {
-  Transport,
-  TransportContext,
-  TransportEntry,
-  TransportGetSubgraphExecutor,
-  TransportGetSubgraphExecutorOptions,
+import {
+  defaultPrintFn,
+  type Transport,
+  type TransportContext,
+  type TransportEntry,
+  type TransportGetSubgraphExecutor,
+  type TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
 import type { Logger } from '@graphql-mesh/types';
 import {
@@ -31,7 +32,7 @@ import {
 import { constantCase } from 'constant-case';
 import {
   FragmentDefinitionNode,
-  print,
+  GraphQLError,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -81,12 +82,14 @@ function getTransportExecutor({
   subgraphName = '',
   subgraph,
   transports = defaultTransportsGetter,
+  getDisposeReason,
 }: {
   transportContext: TransportContext;
   transportEntry: TransportEntry;
   subgraphName?: string;
   subgraph: GraphQLSchema;
   transports?: Transports;
+  getDisposeReason?: () => GraphQLError | undefined;
 }): MaybePromise<Executor> {
   // TODO
   const kind = transportEntry?.kind || '';
@@ -133,8 +136,10 @@ function getTransportExecutor({
             subgraphName,
             subgraph,
             transports,
+            getDisposeReason,
           });
         },
+        getDisposeReason,
         ...transportContext,
       });
     },
@@ -157,6 +162,7 @@ export function getOnSubgraphExecute({
   getSubgraphSchema,
   transportExecutorStack,
   transports,
+  getDisposeReason,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -164,6 +170,7 @@ export function getOnSubgraphExecute({
   transportEntryMap: Record<string, TransportEntry>;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
+  getDisposeReason?: () => GraphQLError | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -201,6 +208,7 @@ export function getOnSubgraphExecute({
               return transportEntryMap[subgraphName]!;
             },
             transports,
+            getDisposeReason,
           }),
           (executor_) => {
             if (isDisposable(executor_)) {
@@ -494,7 +502,7 @@ export function compareSchemas(
   if (typeof a === 'string') {
     aStr = a;
   } else if (isDocumentNode(a)) {
-    aStr = print(a);
+    aStr = defaultPrintFn(a);
   } else {
     aStr = printSchemaWithDirectives(a);
   }
@@ -502,7 +510,7 @@ export function compareSchemas(
   if (typeof b === 'string') {
     bStr = b;
   } else if (isDocumentNode(b)) {
-    bStr = print(b);
+    bStr = defaultPrintFn(b);
   } else {
     bStr = printSchemaWithDirectives(b);
   }

@@ -1,6 +1,9 @@
 import { setTimeout } from 'timers/promises';
-import { createGraphQLError } from '@graphql-tools/utils';
-import { assertAsyncIterable, createDisposableServer } from '@internal/testing';
+import {
+  assertAsyncIterable,
+  assertSingleExecutionValue,
+  createDisposableServer,
+} from '@internal/testing';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ReadableStream, Request, Response } from '@whatwg-node/fetch';
@@ -240,7 +243,7 @@ describe('buildHTTPExecutor', () => {
     await using executor = buildHTTPExecutor({
       endpoint: server.url,
     });
-    const result = executor({
+    const result$ = executor({
       document: parse(/* GraphQL */ `
         query {
           hello
@@ -248,13 +251,9 @@ describe('buildHTTPExecutor', () => {
       `),
     });
     await executor[Symbol.asyncDispose]();
-    await expect(result).resolves.toMatchObject({
-      errors: [
-        {
-          message: expect.stringContaining('Executor was disposed'),
-        },
-      ],
-    });
+    const result = await result$;
+    assertSingleExecutionValue(result);
+    expect(result?.errors?.[0]?.message).toContain('operation was aborted');
     neverResolves.resolve(Response.error());
   });
   it('does not allow new requests when the executor is disposed', async () => {
@@ -262,21 +261,15 @@ describe('buildHTTPExecutor', () => {
       fetch: () => Response.json({ data: { hello: 'world' } }),
     });
     executor[DisposableSymbols.asyncDispose]?.();
-    expect(
-      executor({
-        document: parse(/* GraphQL */ `
-          query {
-            hello
-          }
-        `),
-      }),
-    ).toMatchObject({
-      errors: [
-        createGraphQLError(
-          'The operation was aborted. reason: Error: Executor was disposed.',
-        ),
-      ],
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          hello
+        }
+      `),
     });
+    assertSingleExecutionValue(res);
+    expect(res?.errors?.[0]?.message).toContain('operation was aborted');
   });
   it('should return return GraphqlError instances', async () => {
     await using executor = buildHTTPExecutor({

@@ -26,7 +26,6 @@ import { handleMultipartMixedResponse } from './handleMultipartMixedResponse.js'
 import { isLiveQueryOperationDefinitionNode } from './isLiveQueryOperationDefinitionNode.js';
 import { prepareGETUrl } from './prepareGETUrl.js';
 import {
-  createAbortErrorReason,
   createGraphQLErrorForAbort,
   createResultForAbort,
   hashSHA256,
@@ -125,6 +124,10 @@ export interface HTTPExecutorOptions {
    * @deprecated The executors are always disposable, and this option will be removed in the next major version, there is no need to have a flag for this.
    */
   disposable?: boolean;
+  /**
+   * On dispose abort error
+   */
+  getDisposeReason?(): Error | undefined;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -514,14 +517,14 @@ export function buildHTTPExecutor(
     [DisposableSymbols.dispose]: {
       get() {
         return function dispose() {
-          return disposeCtrl.abort(createAbortErrorReason());
+          return disposeCtrl.abort(options?.getDisposeReason?.());
         };
       },
     },
     [DisposableSymbols.asyncDispose]: {
       get() {
         return function asyncDispose() {
-          return disposeCtrl.abort(createAbortErrorReason());
+          return disposeCtrl.abort(options?.getDisposeReason?.());
         };
       },
     },

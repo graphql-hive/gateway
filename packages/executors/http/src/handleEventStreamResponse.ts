@@ -36,7 +36,7 @@ export function handleEventStreamResponse(
     let currChunk = '';
     async function pump() {
       if (signal?.aborted) {
-        await push(createResultForAbort(signal));
+        await push(createResultForAbort(signal.reason));
         return stop();
       }
       if (!body?.locked) {

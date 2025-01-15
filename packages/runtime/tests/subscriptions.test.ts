@@ -13,9 +13,6 @@ describe('Subscriptions', () => {
   afterAll(() => Promise.all(leftovers.map((l) => l())));
   const upstreamSchema = createSchema({
     typeDefs: /* GraphQL */ `
-      """
-      Fetched on ${new Date().toISOString()}
-      """
       type Query {
         foo: String
       }
@@ -85,14 +82,14 @@ describe('Subscriptions', () => {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toEqual({
+    expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
           extensions: {
             code: 'SHUTTING_DOWN',
           },
           message:
-            'subscription has been closed because the server is shutting down',
+            'operation has been aborted because the server is shutting down',
         },
       ],
     });
@@ -104,11 +101,11 @@ describe('Subscriptions', () => {
     await using serve = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
-      supergraph() {
+      async supergraph() {
         if (changeSchema) {
           return /* GraphQL */ `
             type Query {
-              hello: Int!
+              foo: String!
             }
           `;
         }
@@ -143,17 +140,37 @@ describe('Subscriptions', () => {
     });
 
     const msgs: unknown[] = [];
+    globalThis.setTimeout(async () => {
+      const res = await serve.fetch('http://mesh/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              __typename
+            }
+          `,
+        }),
+      });
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }, 1000);
     for await (const msg of sub) {
       msgs.push(msg);
     }
 
-    expect(msgs[msgs.length - 1]).toEqual({
+    expect(msgs[msgs.length - 1]).toMatchObject({
       errors: [
         {
           extensions: {
-            code: 'SUBSCRIPTION_SCHEMA_RELOAD',
+            code: 'SCHEMA_RELOAD',
           },
-          message: 'subscription has been closed due to a schema reload',
+          message: 'operation has been aborted due to a schema reload',
         },
       ],
     });

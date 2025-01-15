@@ -9,7 +9,6 @@ import type {
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
   TransportEntry,
-  UnifiedGraphManagerOptions,
 } from '@graphql-mesh/fusion-runtime';
 import {
   getOnSubgraphExecute,
@@ -36,6 +35,7 @@ import {
   delegateToSchema,
   type SubschemaConfig,
 } from '@graphql-tools/delegate';
+import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
 import {
   asArray,
@@ -46,6 +46,7 @@ import {
   mapMaybePromise,
   mergeDeep,
   parseSelectionSet,
+  printSchemaWithDirectives,
   type Executor,
   type MaybePromise,
   type TypeSource,
@@ -59,6 +60,7 @@ import {
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
 import {
+  buildASTSchema,
   buildSchema,
   GraphQLSchema,
   isSchema,
@@ -78,13 +80,10 @@ import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
-  getUnifiedGraphSDL,
   handleUnifiedGraphConfig,
+  UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
-import { useChangingSchema } from './plugins/useChangingSchema';
-import { useCompleteSubscriptionsOnDispose } from './plugins/useCompleteSubscriptionsOnDispose';
-import { useCompleteSubscriptionsOnSchemaChange } from './plugins/useCompleteSubscriptionsOnSchemaChange';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -150,8 +149,8 @@ export function createGatewayRuntime<
     fetch: wrappedFetchFn,
     logger,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
-    ...('cache' in config ? { cache: config.cache } : {}),
-    ...('pubsub' in config ? { pubsub: config.pubsub } : {}),
+    cache: config.cache,
+    pubsub: config.pubsub,
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
@@ -168,9 +167,6 @@ export function createGatewayRuntime<
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
-  let setSchema: (schema: GraphQLSchema) => void = (schema) => {
-    unifiedGraph = schema;
-  };
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
@@ -270,7 +266,6 @@ export function createGatewayRuntime<
               assumeValid: true,
               assumeValidSDL: true,
             });
-            setSchema(unifiedGraph);
           }
           continuePolling();
           return true;
@@ -294,7 +289,20 @@ export function createGatewayRuntime<
             configContext,
           ),
           (schema) => {
-            setSchema(schema);
+            if (isSchema(schema)) {
+              unifiedGraph = schema;
+            } else if (isDocumentNode(schema)) {
+              unifiedGraph = buildASTSchema(schema, {
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            } else {
+              unifiedGraph = buildSchema(schema, {
+                noLocation: true,
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            }
             continuePolling();
             return true;
           },
@@ -311,7 +319,6 @@ export function createGatewayRuntime<
           }),
           (schema) => {
             unifiedGraph = schema;
-            setSchema(schema);
             continuePolling();
             return true;
           },
@@ -403,7 +410,20 @@ export function createGatewayRuntime<
         getSubschemaConfig$ = mapMaybePromise(
           handleUnifiedGraphConfig(subgraphInConfig, configContext),
           (newUnifiedGraph) => {
-            unifiedGraph = newUnifiedGraph;
+            if (isSchema(newUnifiedGraph)) {
+              unifiedGraph = newUnifiedGraph;
+            } else if (isDocumentNode(newUnifiedGraph)) {
+              unifiedGraph = buildASTSchema(newUnifiedGraph, {
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            } else {
+              unifiedGraph = buildSchema(newUnifiedGraph, {
+                noLocation: true,
+                assumeValid: true,
+                assumeValidSDL: true,
+              });
+            }
             unifiedGraph = restoreExtraDirectives(unifiedGraph);
             subschemaConfig = {
               name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
@@ -536,7 +556,13 @@ export function createGatewayRuntime<
                 _service() {
                   return {
                     sdl() {
-                      return getUnifiedGraphSDL(newUnifiedGraph);
+                      if (isSchema(newUnifiedGraph)) {
+                        return printSchemaWithDirectives(newUnifiedGraph);
+                      }
+                      if (isDocumentNode(newUnifiedGraph)) {
+                        return defaultPrintFn(newUnifiedGraph);
+                      }
+                      return newUnifiedGraph;
                     },
                   };
                 },
@@ -578,7 +604,7 @@ export function createGatewayRuntime<
       },
     };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher: UnifiedGraphManagerOptions<unknown>['getUnifiedGraph'];
+    let unifiedGraphFetcher: () => MaybePromise<UnifiedGraphSchema>;
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
@@ -659,7 +685,6 @@ export function createGatewayRuntime<
       }
     } else {
       // local or remote
-
       if (!isDynamicUnifiedGraphSchema(config.supergraph)) {
         // no polling for static schemas
         logger.debug(`Disabling polling for static supergraph`);
@@ -686,27 +711,16 @@ export function createGatewayRuntime<
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
-      onSchemaChange(unifiedGraph) {
-        setSchema(unifiedGraph);
-      },
-      ...(config.transports ? { transports: config.transports } : {}),
-      ...(config.transportEntries
-        ? { transportEntryAdditions: config.transportEntries }
-        : {}),
-      ...(config.pollingInterval
-        ? { pollingInterval: config.pollingInterval }
-        : {}),
+      transports: config.transports,
+      transportEntryAdditions: config.transportEntries,
+      pollingInterval: config.pollingInterval,
       transportContext: configContext,
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
       onDelegationStageExecuteHooks,
-      ...(config.additionalTypeDefs
-        ? { additionalTypeDefs: config.additionalTypeDefs }
-        : {}),
-      ...((config.additionalResolvers
-        ? { additionalResolvers: config.additionalResolvers }
-        : {}) as IResolvers),
+      additionalTypeDefs: config.additionalTypeDefs,
+      additionalResolvers: config.additionalResolvers as IResolvers[],
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -807,13 +821,21 @@ export function createGatewayRuntime<
     check: readinessChecker,
   });
 
+  let replaceSchema: (schema: GraphQLSchema) => void;
   const defaultGatewayPlugin: GatewayPlugin = {
     onFetch({ setFetchFn }) {
       if (fetchAPI?.fetch) {
         setFetchFn(fetchAPI.fetch);
       }
     },
-    onPluginInit({ plugins }) {
+    // @ts-expect-error TODO: what's up with type narrowing
+    onRequestParse() {
+      return mapMaybePromise(getSchema(), (schema) => {
+        replaceSchema(schema);
+      });
+    },
+    onPluginInit({ plugins, setSchema }) {
+      replaceSchema = setSchema;
       onFetchHooks.splice(0, onFetchHooks.length);
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
       onDelegateHooks.splice(0, onDelegateHooks.length);
@@ -923,11 +945,6 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useChangingSchema(getSchema, (_setSchema) => {
-      setSchema = _setSchema;
-    }),
-    useCompleteSubscriptionsOnDispose(),
-    useCompleteSubscriptionsOnSchemaChange(),
     useRequestId(),
   ];
 
@@ -1022,6 +1039,8 @@ export function createGatewayRuntime<
   }
 
   const yoga = createYoga<any, GatewayContext & TContext>({
+    // @ts-expect-error Types???
+    schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
     logging: logger,
@@ -1098,12 +1117,22 @@ function isDynamicUnifiedGraphSchema(
     return false;
   }
   if (typeof schema === 'string') {
-    try {
-      // sdl
-      parse(schema);
+    if (isUrl(schema)) {
+      // remote url is dynamic
+      return true;
+    }
+    if (isValidPath(schema)) {
+      // local file path
       return false;
-    } catch {}
+    }
+    try {
+      parse(schema);
+      // valid AST
+      return false;
+    } catch (e) {
+      // invalid AST
+    }
   }
-  // likely a dynamic schema that can be polled
+  // anything else is dynamic
   return true;
 }

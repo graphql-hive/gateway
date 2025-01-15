@@ -5,7 +5,7 @@ import type {
   MeshPubSub,
 } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
-import type { GraphQLSchema } from 'graphql';
+import type { GraphQLError, GraphQLSchema } from 'graphql';
 
 export interface Transport<
   Options extends Record<string, any> = Record<string, any>,
@@ -38,6 +38,7 @@ export interface TransportGetSubgraphExecutorOptions<
   transportEntry: TransportEntry<Options>;
   getTransportExecutor(transportEntry: TransportEntry): MaybePromise<Executor>;
   subgraph: GraphQLSchema;
+  getDisposeReason?: () => GraphQLError | undefined;
 }
 
 export type TransportExecutorFactoryGetter = (

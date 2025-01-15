@@ -15,6 +15,7 @@ import type {
   TypeSource,
 } from '@graphql-tools/utils';
 import {
+  createGraphQLError,
   isDocumentNode,
   isPromise,
   mapMaybePromise,
@@ -24,7 +25,7 @@ import {
   AsyncDisposableStack,
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
-import type { DocumentNode, GraphQLSchema } from 'graphql';
+import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
 import {
@@ -89,7 +90,6 @@ export interface UnifiedGraphManagerOptions<TContext> {
   ): MaybePromise<GraphQLSchema | string | DocumentNode>;
   // Handle the unified graph by any specification
   handleUnifiedGraph?: UnifiedGraphHandler;
-  onSchemaChange?(unifiedGraph: GraphQLSchema): void;
   transports?: Transports;
   transportEntryAdditions?: TransportEntryAdditions;
   /** Schema polling interval in milliseconds. */
@@ -121,11 +121,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
   private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
   private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
-  private currentTimeout: ReturnType<typeof setTimeout> | undefined;
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<true>;
   private _transportEntryMap?: Record<string, TransportEntry>;
   private _transportExecutorStack?: AsyncDisposableStack;
+  private lastLoadTime?: number;
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
@@ -146,26 +146,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.lastLoadedUnifiedGraph = undefined;
     this.inContextSDK = undefined;
     this.initialUnifiedGraph$ = undefined;
-    this.pausePolling();
-  }
-
-  private pausePolling() {
-    if (this.currentTimeout) {
-      clearTimeout(this.currentTimeout);
-      this.currentTimeout = undefined;
-    }
-  }
-
-  private continuePolling() {
-    if (this.opts.pollingInterval) {
-      this.currentTimeout = setTimeout(() => {
-        this.currentTimeout = undefined;
-        return this.getAndSetUnifiedGraph();
-      }, this.opts.pollingInterval);
-    }
+    this.lastLoadTime = undefined;
   }
 
   private ensureUnifiedGraph(): MaybePromise<true> {
+    if (
+      this.opts?.pollingInterval != null &&
+      this.lastLoadTime != null &&
+      Date.now() - this.lastLoadTime >= this.opts.pollingInterval
+    ) {
+      this.initialUnifiedGraph$ = this.getAndSetUnifiedGraph();
+      return this.initialUnifiedGraph$;
+    }
     if (this.unifiedGraph) {
       return true;
     }
@@ -196,6 +188,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     return this.initialUnifiedGraph$;
   }
 
+  private disposeReason: GraphQLError | undefined;
+
   private handleLoadedUnifiedGraph(
     loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
     doNotCache?: boolean,
@@ -208,10 +202,21 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       this.opts.transportContext?.logger?.debug(
         'Supergraph has not been changed, skipping...',
       );
-      this.continuePolling();
+      this.lastLoadTime = Date.now();
       return true;
     }
     if (this.lastLoadedUnifiedGraph != null) {
+      this.disposeReason = createGraphQLError(
+        'operation has been aborted due to a schema reload',
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+            http: {
+              status: 503,
+            },
+          },
+        },
+      );
       this.opts.transportContext?.logger?.debug(
         'Supergraph has been changed, updating...',
       );
@@ -266,11 +271,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     return mapMaybePromise(
       this._transportExecutorStack?.disposeAsync?.(),
       () => {
+        this.disposeReason = undefined;
         this._transportExecutorStack = new AsyncDisposableStack();
         this._transportExecutorStack.defer(() => {
           this.cleanup();
         });
-        this.lastLoadedUnifiedGraph ||= loadedUnifiedGraph;
         this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
         this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
         const {
@@ -306,6 +311,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             return subgraph.schema;
           },
           transportExecutorStack: this._transportExecutorStack,
+          getDisposeReason: () => this.disposeReason,
         });
         if (this.opts.additionalResolvers || additionalResolvers.length) {
           this.inContextSDK = getInContextSDK(
@@ -316,9 +322,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             this.opts.onDelegateHooks || [],
           );
         }
-        this.continuePolling();
+        this.lastLoadTime = Date.now();
         this._transportEntryMap = transportEntryMap;
-        this.opts.onSchemaChange?.(this.unifiedGraph);
         const stitchingInfo = this.unifiedGraph?.extensions?.[
           'stitchingInfo'
         ] as StitchingInfo;
@@ -406,7 +411,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   private getAndSetUnifiedGraph(): MaybePromise<true> {
-    this.pausePolling();
     try {
       return mapMaybePromise(
         this.opts.getUnifiedGraph(this.opts.transportContext || {}),
@@ -417,7 +421,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             'Failed to load Supergraph',
             err,
           );
-          this.continuePolling();
+          this.lastLoadTime = Date.now();
           if (!this.unifiedGraph) {
             throw err;
           }
@@ -426,7 +430,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       );
     } catch (e) {
       this.opts.transportContext?.logger?.error('Failed to load Supergraph', e);
-      this.continuePolling();
+      this.lastLoadTime = Date.now();
       if (!this.unifiedGraph) {
         throw e;
       }
@@ -465,6 +469,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   [DisposableSymbols.asyncDispose]() {
     this.cleanup();
+    this.disposeReason = createGraphQLError(
+      'operation has been aborted because the server is shutting down',
+      {
+        extensions: {
+          code: 'SHUTTING_DOWN',
+        },
+      },
+    );
     return this._transportExecutorStack?.disposeAsync() as PromiseLike<void>;
   }
 }

@@ -202,6 +202,7 @@ describe('Gateway Runtime', () => {
     await new Promise<void>((done) => {
       const serve = createGatewayRuntime({
         logging: isDebug(),
+        pollingInterval: 500,
         supergraph() {
           if (onSchemaChangeCalls > 0) {
             // change schema after onSchemaChange was invoked
@@ -234,6 +235,66 @@ describe('Gateway Runtime', () => {
 
       // trigger mesh
       serve.fetch('http://mesh/graphql?query={__typename}');
+
+      globalThis.setTimeout(() => {
+        // trigger mesh again
+        serve.fetch('http://mesh/graphql?query={__typename}');
+      }, 1000);
+    });
+  });
+  it('should not invoke onSchemaChange hooks when schema does not change', async () => {
+    let onSchemaChangeCalls = 0;
+    let supergraphFetcherCalls = 0;
+
+    const gwRuntime = createGatewayRuntime({
+      logging: isDebug(),
+      pollingInterval: 500,
+      supergraph() {
+        supergraphFetcherCalls++;
+        return /* GraphQL */ `
+          type Query {
+            world: String!
+          }
+        `;
+      },
+      plugins: () => [
+        {
+          onSchemaChange() {
+            onSchemaChangeCalls++;
+          },
+        },
+      ],
+    });
+
+    async function triggerGw() {
+      const res = await gwRuntime.fetch(
+        'http://gateway/graphql?query={__typename}',
+      );
+      expect(res.ok).toBeTruthy();
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }
+    // trigger gw
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(1);
+    expect(supergraphFetcherCalls).toBe(1);
+
+    await new Promise<void>((resolve, reject) => {
+      globalThis.setTimeout(async () => {
+        try {
+          // trigger gateway again
+          await triggerGw();
+          expect(onSchemaChangeCalls).toBe(1);
+          expect(supergraphFetcherCalls).toBe(2);
+          await gwRuntime[DisposableSymbols.asyncDispose]();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 2000);
     });
   });
 
@@ -429,8 +490,6 @@ describe('Gateway Runtime', () => {
     });
     subgraphDeferred.resolve(subgraphSchema);
     const [resp1, resp2] = await Promise.all([resp1$, resp2$]);
-    expect(resp1.ok).toBeTruthy();
-    expect(resp2.ok).toBeTruthy();
     expect(await resp1.json()).toEqual({
       data: {
         _service: {
@@ -438,6 +497,7 @@ describe('Gateway Runtime', () => {
         },
       },
     });
+    expect(resp1.ok).toBeTruthy();
     expect(await resp2.json()).toEqual({
       data: {
         greetings: {
@@ -445,6 +505,7 @@ describe('Gateway Runtime', () => {
         },
       },
     });
+    expect(resp2.ok).toBeTruthy();
     expect(subgraphCallCnt).toBe(1);
   });
 });

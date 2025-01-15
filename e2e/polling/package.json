@@ -1,0 +1,9 @@
+{
+  "name": "@e2e/polling",
+  "private": true,
+  "dependencies": {
+    "@graphql-mesh/compose-cli": "^1.2.13",
+    "express-graphql": "^0.12.0",
+    "graphql": "^16.10.0"
+  }
+}

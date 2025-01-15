@@ -1,13 +1,16 @@
 import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
   createDefaultExecutor,
   type DisposableExecutor,
 } from '@graphql-mesh/transport-common';
+import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { isAsyncIterable } from '@graphql-tools/utils';
+import { fakePromise, isAsyncIterable } from '@graphql-tools/utils';
+import { assertSingleExecutionValue } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { GraphQLSchema, parse } from 'graphql';
+import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
@@ -200,7 +203,7 @@ describe('Polling', () => {
     }
     try {
       await manager.getUnifiedGraph();
-      await expect(true).toBeFalsy();
+      expect(true).toBeFalsy();
     } catch (e) {
       // Ignore
     }
@@ -212,7 +215,83 @@ describe('Polling', () => {
     // Should not fail again once it has succeeded
     await compareTimes();
     await advanceTimersByTimeAsync(pollingInterval);
+    await compareTimes();
     // Should keep polling even if it fails in somewhere
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
   });
+  it('does not stop request if the polled schema is not changed', async () => {
+    vi.useFakeTimers?.();
+    const schema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          greetings(requestDuration: Int): String
+        }
+      `,
+      resolvers: {
+        Query: {
+          greetings(_, { requestDuration }) {
+            return new Promise<string>((resolve) => {
+              globalThis.setTimeout(() => {
+                resolve('Hello');
+              }, requestDuration);
+            });
+          },
+        },
+      },
+    });
+    const callTimes: number[] = [];
+    const startTime = Date.now();
+    const unifiedGraphFetcher = vi.fn(() => {
+      callTimes.push(Date.now() - startTime);
+      return getUnifiedGraphGracefully([
+        {
+          name: 'Test',
+          schema,
+        },
+      ]);
+    });
+    let disposeFn = vi.fn();
+    await using executor = getExecutorForUnifiedGraph({
+      getUnifiedGraph: unifiedGraphFetcher,
+      pollingInterval: 1000,
+      transports() {
+        return {
+          getSubgraphExecutor() {
+            return makeDisposable(createDefaultExecutor(schema), disposeFn);
+          },
+        };
+      },
+    });
+    const results: ExecutionResult[] = [];
+    function makeQuery(requestDuration: number) {
+      fakePromise(
+        executor({
+          document: parse(/* GraphQL */ `
+            query {
+              greetings(requestDuration: ${requestDuration})
+            }
+          `),
+        }),
+      ).then(
+        (r) => {
+          assertSingleExecutionValue(r);
+          results.push(r);
+          return r;
+        },
+        (e) => {
+          results.push({
+            errors: [e],
+          });
+        },
+      );
+    }
+    makeQuery(10_000);
+    await advanceTimersByTimeAsync(10_000);
+    makeQuery(0);
+    expect(callTimes).toHaveLength(2);
+    // It can be 0 or 1 or any one-digit number
+    expect(callTimes[0]?.toString()?.length).toBe(1);
+    // It can be 10_000 or 10_001 or any five-digit number
+    expect(callTimes[1]?.toString()?.length).toBe(5);
+  }, 20_000);
 });
