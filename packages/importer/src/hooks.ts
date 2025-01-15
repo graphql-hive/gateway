@@ -14,7 +14,8 @@ import module from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createPathsMatcher, getTsconfig } from 'get-tsconfig';
-import { debug, transpileTypeScriptFile } from './index';
+import { debug } from './debug';
+import { transpileTypeScriptFile } from './transpile';
 
 const resolveFilename: (path: string) => string =
   //  @ts-expect-error property '_resolveFilename' does exist on type Module
