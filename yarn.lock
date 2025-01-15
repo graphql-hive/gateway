@@ -2355,6 +2355,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/config-syntax-error@workspace:e2e/config-syntax-error":
+  version: 0.0.0-use.local
+  resolution: "@e2e/config-syntax-error@workspace:e2e/config-syntax-error"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.2.13"
+    "@graphql-tools/utils": "npm:^10.7.2"
+    graphql: "npm:^16.9.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
