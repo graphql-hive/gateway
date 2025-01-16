@@ -893,7 +893,7 @@ export function createTenv(cwd: string): Tenv {
       };
 
       // verify that the container has started
-      let startCheckRetries = 5;
+      let startCheckRetries = 3;
       while (startCheckRetries) {
         await setTimeout(interval);
         try {
