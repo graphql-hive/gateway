@@ -891,7 +891,6 @@ export function createTenv(cwd: string): Tenv {
           return ctr.stop({ t: 0, signal: 'SIGTERM' });
         },
       };
-      leftoverStack.use(container);
 
       // verify that the container has started
       await setTimeout(interval);
@@ -903,6 +902,9 @@ export function createTenv(cwd: string): Tenv {
         }
         throw err;
       }
+
+      // we add the container to the stack only if it started
+      leftoverStack.use(container);
 
       // wait for healthy
       if (healthcheck.length > 0) {
