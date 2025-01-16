@@ -1,7 +1,7 @@
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
-const { gateway, service } = createTenv(__dirname);
+const { gateway, service, gatewayRunner } = createTenv(__dirname);
 
 it('should point to exact location of syntax error when parsing a malformed config', async () => {
   await expect(
@@ -12,6 +12,8 @@ it('should point to exact location of syntax error when parsing a malformed conf
       },
     }),
   ).rejects.toThrowError(
-    /SyntaxError \[Error\]: Error transforming (.*)\/custom-resolvers.ts: Unexpected token, expected "{" \(8:11\)/,
+    gatewayRunner === 'bun'
+      ? /error: Expected "{" but found "hello"(.|\n)*\/custom-resolvers.ts:8:11/
+      : /SyntaxError \[Error\]: Error transforming (.*)\/custom-resolvers.ts: Unexpected token, expected "{" \(8:11\)/,
   );
 });
