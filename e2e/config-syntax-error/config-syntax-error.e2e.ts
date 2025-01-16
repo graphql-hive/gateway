@@ -10,6 +10,16 @@ it('should point to exact location of syntax error when parsing a malformed conf
         with: 'mesh',
         services: [await service('hello')],
       },
+      runner: {
+        docker: {
+          volumes: [
+            {
+              host: 'custom-resolvers.ts',
+              container: '/gateway/custom-resolvers.ts',
+            },
+          ],
+        },
+      },
     }),
   ).rejects.toThrowError(
     gatewayRunner === 'bun' || gatewayRunner === 'bun-docker'
