@@ -107,12 +107,15 @@ export function spawn(
         mem: parseFloat(mem!) * 0.001, // KB to MB
       };
     },
-    [DisposableSymbols.asyncDispose]: () => {
-      const childPid = child.pid;
-      if (childPid && !exited) {
-        return terminate(childPid);
+    [DisposableSymbols.asyncDispose]: async () => {
+      if (exited) {
+        // there's nothing to dispose since the process already exitted (error or not)
+        return Promise.resolve();
       }
-      return waitForExit;
+      if (child.pid) {
+        await terminate(child.pid);
+      }
+      await waitForExit;
     },
   };
   stack?.use(proc);
