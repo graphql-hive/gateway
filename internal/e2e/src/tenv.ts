@@ -900,7 +900,7 @@ export function createTenv(cwd: string): Tenv {
         if (Object(err).statusCode === 404) {
           throw new DockerError('Container was not started', container);
         }
-        throw err;
+        throw new DockerError(String(err), container);
       }
 
       // we add the container to the stack only if it started
@@ -919,7 +919,7 @@ export function createTenv(cwd: string): Tenv {
             if (Object(err).statusCode === 404) {
               throw new DockerError('Container was not started', container);
             }
-            throw err;
+            throw new DockerError(String(err), container);
           }
 
           if (status === 'none') {
