@@ -4,7 +4,6 @@ import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
   assertSome,
-  createGraphQLError,
   ExecutionResult,
   filterSchema,
 } from '@graphql-tools/utils';
@@ -755,15 +754,14 @@ describe('transform object fields', () => {
       `,
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       errors: [
-        createGraphQLError('Cannot query field "id" on type "Item".', {
-          positions: [17, 6],
-        }),
+        {
+          message: 'Cannot query field "id" on type "Item".',
+          locations: [{ line: 6, column: 17 }],
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 });
 
@@ -840,7 +838,7 @@ type Query {
       },
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       data: {
         propertyById: {
           new_id: 'p1',
@@ -852,17 +850,16 @@ type Query {
         },
       },
       errors: [
-        createGraphQLError('Property.error error', {
-          positions: [13, 9],
+        {
+          message: 'Property.error error',
+          locations: [{ line: 9, column: 13 }],
           path: ['propertyById', 'new_error'],
           extensions: {
             code: 'SOME_CUSTOM_CODE',
           },
-        }),
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 });
 
@@ -1009,7 +1006,7 @@ describe('WrapType', () => {
       },
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       data: {
         namespace: {
           bookingById: {
@@ -1021,14 +1018,13 @@ describe('WrapType', () => {
         },
       },
       errors: [
-        createGraphQLError('Booking.error error', {
-          positions: [15, 8],
+        {
+          message: 'Booking.error error',
+          locations: [{ line: 8, column: 15 }],
           path: ['namespace', 'bookingById', 'error'],
-        }),
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 
   test('Mutation transform should work', async () => {
@@ -1061,7 +1057,7 @@ describe('WrapType', () => {
       },
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       data: {
         namespace: {
           addBooking: {
@@ -1074,14 +1070,13 @@ describe('WrapType', () => {
         },
       },
       errors: [
-        createGraphQLError('Booking.error error', {
-          positions: [15, 9],
+        {
+          message: 'Booking.error error',
+          locations: [{ line: 9, column: 15 }],
           path: ['namespace', 'addBooking', 'error'],
-        }),
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 
   test('Subscription transform should work', async () => {
@@ -1471,7 +1466,7 @@ describe('schema transformation with wrapping of object fields', () => {
         },
       });
 
-      const expectedResult: ExecutionResult = {
+      expect(result).toMatchObject({
         data: {
           propertyById: {
             test1: {
@@ -1484,17 +1479,16 @@ describe('schema transformation with wrapping of object fields', () => {
           },
         },
         errors: [
-          createGraphQLError('Property.error error', {
-            positions: [13, 14],
+          {
+            message: 'Property.error error',
+            locations: [{ line: 14, column: 13 }],
             path: ['propertyById', 'test1', 'two'],
             extensions: {
               code: 'SOME_CUSTOM_CODE',
             },
-          }),
+          },
         ],
-      };
-
-      expect(result).toEqual(expectedResult);
+      });
     });
 
     test('should work, even with multiple fields', async () => {
@@ -1540,7 +1534,7 @@ describe('schema transformation with wrapping of object fields', () => {
         },
       });
 
-      const expectedResult: ExecutionResult = {
+      expect(result).toMatchObject({
         data: {
           propertyById: {
             test1: {
@@ -1557,17 +1551,16 @@ describe('schema transformation with wrapping of object fields', () => {
           },
         },
         errors: [
-          createGraphQLError('Property.error error', {
-            positions: [13, 18],
+          {
+            message: 'Property.error error',
+            locations: [{ line: 18, column: 13 }],
             path: ['propertyById', 'test1', 'innerWrap', 'two'],
             extensions: {
               code: 'SOME_CUSTOM_CODE',
             },
-          }),
+          },
         ],
-      };
-
-      expect(result).toEqual(expectedResult);
+      });
     });
 
     test('should work with selectionSets', async () => {

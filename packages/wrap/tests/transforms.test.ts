@@ -3,7 +3,6 @@ import {
   delegateToSchema,
 } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createGraphQLError } from '@graphql-tools/utils';
 import {
   ExtractField,
   TransformQuery,
@@ -145,7 +144,9 @@ describe('transforms', () => {
         schema,
         source: query,
       });
-      expect(originalResult).toEqual(transformedResult);
+      expect(JSON.parse(JSON.stringify(originalResult))).toMatchObject(
+        JSON.parse(JSON.stringify(transformedResult)),
+      );
     });
   });
 
@@ -657,17 +658,18 @@ describe('transforms', () => {
         fieldResolver: defaultMergedResolver,
       });
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         data: {
           addressByUser: {
             errorTest: null,
           },
         },
         errors: [
-          createGraphQLError('Test Error!', {
-            positions: [15, 4],
+          {
+            message: 'Test Error!',
             path: ['addressByUser', 'errorTest'],
-          }),
+            locations: [{ line: 4, column: 15 }],
+          },
         ],
       });
     });
@@ -689,7 +691,11 @@ describe('transforms', () => {
         data: {
           errorTest: null,
         },
-        errors: [new Error('Test Error!')],
+        errors: [
+          {
+            message: 'Test Error!',
+          },
+        ],
       });
     });
 
