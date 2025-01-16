@@ -893,14 +893,20 @@ export function createTenv(cwd: string): Tenv {
       };
 
       // verify that the container has started
-      await setTimeout(interval);
-      try {
-        await ctr.inspect();
-      } catch (err) {
-        if (Object(err).statusCode === 404) {
-          throw new DockerError('Container did not start', container);
+      let startCheckRetries = 5;
+      while (startCheckRetries) {
+        await setTimeout(interval);
+        try {
+          await ctr.inspect();
+        } catch (err) {
+          if (Object(err).statusCode === 404) {
+            if (!--startCheckRetries) {
+              throw new DockerError('Container did not start', container);
+            }
+            continue;
+          }
+          throw new DockerError(String(err), container);
         }
-        throw new DockerError(String(err), container);
       }
 
       // we add the container to the stack only if it started
@@ -917,7 +923,7 @@ export function createTenv(cwd: string): Tenv {
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
             if (Object(err).statusCode === 404) {
-              throw new DockerError('Container did not start', container);
+              throw new DockerError('Container not healthy', container);
             }
             throw new DockerError(String(err), container);
           }
