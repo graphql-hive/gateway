@@ -2248,19 +2248,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/unenv-preset@npm:1.x":
-  version: 1.0.0
-  resolution: "@cloudflare/unenv-preset@npm:1.0.0"
-  peerDependencies:
-    unenv: "*"
-    workerd: ^1.20241230.0
-  peerDependenciesMeta:
-    workerd:
-      optional: true
-  checksum: 10c0/766e6b25948b7aecd960d935ba59114ecbef19cb55e05a06044a0bcf4b916fac9419be168e24ae3b14d1cbf75d146b0fdc98fe7f5458a48b9fbac212485b4f03
-  languageName: node
-  linkType: hard
-
 "@cloudflare/workerd-darwin-64@npm:1.20241230.0":
   version: 1.20241230.0
   resolution: "@cloudflare/workerd-darwin-64@npm:1.20241230.0"
@@ -17550,11 +17537,10 @@ __metadata:
   linkType: hard
 
 "wrangler@npm:^3.88.0":
-  version: 3.103.0
-  resolution: "wrangler@npm:3.103.0"
+  version: 3.103.1
+  resolution: "wrangler@npm:3.103.1"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.3.4"
-    "@cloudflare/unenv-preset": "npm:1.x"
     "@esbuild-plugins/node-globals-polyfill": "npm:0.2.3"
     "@esbuild-plugins/node-modules-polyfill": "npm:0.2.2"
     blake3-wasm: "npm:2.1.5"
@@ -17575,7 +17561,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/8476f29c056e812f3d9b861013d9775bbd15f62e02e0839bc97a996d983a6917e0d39c9b3b081051f3df5015772f65c13842f7056be68e622fdbc2cccf9b81d8
+  checksum: 10c0/1547555817d5be8c2a86396f4a6473e36e0e579ba14780e706c94a7520b984d237fef3f1014fd9713136983dfb84ab75d326bf9fc64bc498f1154501f3d6fc46
   languageName: node
   linkType: hard
 
