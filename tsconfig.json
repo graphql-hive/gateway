@@ -78,5 +78,10 @@
     "./packages/**/rollup.config.*",
     "./e2e",
     "./bench"
+  ],
+  "exclude": [
+    "./packages/importer/tests/fixtures/syntax-error.ts",
+    "./e2e/config-syntax-error/gateway.config.ts",
+    "./e2e/config-syntax-error/custom-resolvers.ts"
   ]
 }
