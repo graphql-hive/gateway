@@ -1,8 +1,8 @@
 diff --git a/dist/index.js b/dist/index.js
-index c984d3d..3fec461 100644
+index e798670e0bcee619c181680665eb4d8755f49b07..09b8df1bbba3ffdb0c464ff62b9c0b3926e85cb3 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1718,7 +1718,7 @@ async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
+@@ -1717,7 +1717,7 @@ async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
        normalizeNewlines(snapshotData[key])
      )};`
    );
@@ -11,14 +11,14 @@ index c984d3d..3fec461 100644
  
  ${snapshots.join("\n\n")}
  `;
-@@ -2159,10 +2159,10 @@ class SnapshotClient {
+@@ -2201,10 +2201,10 @@ class SnapshotClient {
          throw err;
        }
      }
 -    const testName = [name, ...message ? [message] : []].join(" > ");
 +    const testName = [name, ...message ? [message] : []].join(": ");
-     const snapshotState = this.getSnapshotState(filepath);
      const { actual, expected, key, pass } = snapshotState.match({
+       testId,
 -      testName,
 +      testName: testName.replaceAll(' >', ''),
        received,
