@@ -898,7 +898,7 @@ export function createTenv(cwd: string): Tenv {
         await ctr.inspect();
       } catch (err) {
         if (Object(err).statusCode === 404) {
-          throw new DockerError('Container was not started', container);
+          throw new DockerError('Container did not start', container);
         }
         throw new DockerError(String(err), container);
       }
@@ -917,7 +917,7 @@ export function createTenv(cwd: string): Tenv {
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
             if (Object(err).statusCode === 404) {
-              throw new DockerError('Container was not started', container);
+              throw new DockerError('Container did not start', container);
             }
             throw new DockerError(String(err), container);
           }
