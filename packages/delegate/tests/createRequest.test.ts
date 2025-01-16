@@ -255,7 +255,11 @@ describe('bare requests', () => {
       data: {
         delegate: null,
       },
-      errors: [createGraphQLError('test')],
+      errors: [
+        createGraphQLError('test', {
+          path: ['delegate'],
+        }),
+      ],
     });
   });
 });

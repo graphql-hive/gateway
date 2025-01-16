@@ -87,7 +87,11 @@ describe('merge failures', () => {
 
     const expectedResult: ExecutionResult = {
       data: { thing: null },
-      errors: [createGraphQLError('unable to produce the thing')],
+      errors: [
+        createGraphQLError('unable to produce the thing', {
+          path: ['thing', 'description'],
+        }),
+      ],
     };
 
     expect(result).toEqual(expectedResult);
@@ -191,16 +195,16 @@ describe('merge failures', () => {
       `,
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       data: { thing: null },
       errors: [
-        createGraphQLError(
-          'Cannot return null for non-nullable field Thing.description.',
-        ),
+        {
+          message:
+            'Cannot return null for non-nullable field Thing.description.',
+          path: ['thing', 'description'],
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 
   it('proxies errors on object', async () => {
@@ -236,16 +240,17 @@ describe('merge failures', () => {
       `,
     });
 
-    const expectedResult: ExecutionResult = {
+    expect(result).toMatchObject({
       data: { thing: null },
       errors: [
-        createGraphQLError(
-          'Cannot return null for non-nullable field Thing.description.',
-        ),
+        {
+          message:
+            'Cannot return null for non-nullable field Thing.description.',
+          path: ['thing', 'description'],
+          locations: [{ line: 6, column: 13 }],
+        },
       ],
-    };
-
-    expect(result).toEqual(expectedResult);
+    });
   });
 });
 

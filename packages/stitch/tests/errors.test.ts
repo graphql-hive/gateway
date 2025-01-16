@@ -354,6 +354,10 @@ describe('executor errors are propagated', () => {
       },
     });
 
-    expect(result.errors).toEqual([createGraphQLError('Service is down')]);
+    expect(result.errors).toMatchObject([
+      {
+        message: 'Service is down',
+      },
+    ]);
   });
 });

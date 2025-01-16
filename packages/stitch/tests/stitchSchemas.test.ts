@@ -875,10 +875,11 @@ bookingById(id: "b1") {
             },
           } as any,
           errors: [
-            createGraphQLError('subscription field error', {
-              positions: [4, 15],
+            {
+              message: 'subscription field error',
+              locations: [{ line: 4, column: 15 }],
               path: ['notifications', 'throwError'],
-            }),
+            },
           ],
         };
 
@@ -903,7 +904,10 @@ bookingById(id: "b1") {
           mockNotification,
         );
 
-        expect(await payload).toEqual({ done: false, value: expectedResult });
+        expect(await payload).toMatchObject({
+          done: false,
+          value: expectedResult,
+        });
       });
 
       test('links in queries', async () => {
