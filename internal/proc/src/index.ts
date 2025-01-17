@@ -116,7 +116,10 @@ export function spawn(
         await terminate(child.pid);
       }
       child.kill();
-      await waitForExit;
+      await waitForExit.catch(() => {
+        // we dont care about if abnormal exit code when disposing
+        // specifically in Windows, exit code is always 1 when killing a live process
+      });
     },
   };
   stack?.use(proc);
