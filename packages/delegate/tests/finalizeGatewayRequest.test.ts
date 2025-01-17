@@ -188,19 +188,17 @@ describe('finalizeGatewayRequest', () => {
         } as DelegationContext,
         () => {},
       );
-      expect(print(filteredQuery.document)).toBe(/* GraphQL */ `
-        query foo {
-          foo {
-            __typename
-            ... on Baz {
-              name {
-                first
-                last
-              }
-            }
-          }
-        }
-      `);
+      expect(print(filteredQuery.document)).toBe(`query foo {
+  foo {
+    __typename
+    ... on Baz {
+      name {
+        first
+        last
+      }
+    }
+  }
+}`);
     });
     it('should remove fields without selection sets on composite types', () => {
       const query = parse(/* GraphQL */ `
@@ -219,16 +217,14 @@ describe('finalizeGatewayRequest', () => {
         } as DelegationContext,
         () => {},
       );
-      expect(print(filteredQuery.document)).toBe(/* GraphQL */ `
-        query foo {
-          foo {
-            __typename
-            ... on Bar {
-              name
-            }
-          }
-        }
-      `);
+      expect(print(filteredQuery.document)).toBe(`query foo {
+  foo {
+    __typename
+    ... on Bar {
+      name
+    }
+  }
+}`);
     });
   });
 });
