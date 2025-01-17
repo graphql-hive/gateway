@@ -882,13 +882,13 @@ export function createTenv(cwd: string): Tenv {
         getStats() {
           throw new Error('Cannot get stats of a container.');
         },
-        [DisposableSymbols.asyncDispose]() {
+        async [DisposableSymbols.asyncDispose]() {
           if (ctrl.signal.aborted) {
             // noop if already disposed
-            return undefined as unknown as Promise<void>;
+            return;
           }
           ctrl.abort();
-          return ctr.stop({ t: 0, signal: 'SIGTERM' });
+          await ctr.stop({ t: 0, signal: 'SIGTERM' });
         },
       };
 
@@ -897,7 +897,7 @@ export function createTenv(cwd: string): Tenv {
       while (startCheckRetries) {
         await setTimeout(interval);
         try {
-          await ctr.inspect();
+          await ctr.inspect({ abortSignal: ctrl.signal });
           break;
         } catch (err) {
           // we dont use the err.statusCode because it doesnt work in CI, why? no clue
@@ -924,8 +924,8 @@ export function createTenv(cwd: string): Tenv {
             } = await ctr.inspect({ abortSignal: ctrl.signal });
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
-            if (Object(err).statusCode === 404) {
-              throw new DockerError('Container not healthy', container);
+            if (/no such container/i.test(String(err))) {
+              throw new DockerError('Container died', container);
             }
             throw new DockerError(String(err), container);
           }
