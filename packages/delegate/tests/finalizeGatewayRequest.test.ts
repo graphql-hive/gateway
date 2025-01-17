@@ -3,8 +3,8 @@ import {
   bookingSchema,
   propertySchema,
 } from '@internal/testing/fixtures/schemas';
-import { parse, print } from 'graphql';
-import { describe, expect, test } from 'vitest';
+import { buildSchema, parse, print } from 'graphql';
+import { describe, expect, it, test } from 'vitest';
 import { finalizeGatewayRequest } from '../src/finalizeGatewayRequest.js';
 
 describe('finalizeGatewayRequest', () => {
@@ -143,5 +143,92 @@ describe('finalizeGatewayRequest', () => {
       }
     `);
     expect(print(filteredQuery.document)).toBe(print(expected));
+  });
+
+  describe('Spreading on unions', () => {
+    const targetSchema = buildSchema(/* GraphQL */ `
+      type Query {
+        foo: Foo
+      }
+
+      union Foo = Bar | Baz
+
+      type Bar {
+        id: ID!
+        name: String
+      }
+
+      type Baz {
+        id: ID!
+        name: Name
+      }
+
+      type Name {
+        first: String
+        last: String
+      }
+    `);
+    it('should remove fields with selection sets on leaf types', () => {
+      const query = parse(/* GraphQL */ `
+        query foo {
+          foo {
+            name {
+              first
+              last
+            }
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        {
+          document: query,
+        },
+        {
+          targetSchema,
+        } as DelegationContext,
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toBe(/* GraphQL */ `
+        query foo {
+          foo {
+            __typename
+            ... on Baz {
+              name {
+                first
+                last
+              }
+            }
+          }
+        }
+      `);
+    });
+    it('should remove fields without selection sets on composite types', () => {
+      const query = parse(/* GraphQL */ `
+        query foo {
+          foo {
+            name
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        {
+          document: query,
+        },
+        {
+          targetSchema,
+        } as DelegationContext,
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toBe(/* GraphQL */ `
+        query foo {
+          foo {
+            __typename
+            ... on Bar {
+              name
+            }
+          }
+        }
+      `);
+    });
   });
 });
