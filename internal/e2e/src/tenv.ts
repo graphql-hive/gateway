@@ -903,11 +903,11 @@ export function createTenv(cwd: string): Tenv {
           // we dont use the err.statusCode because it doesnt work in CI, why? no clue
           if (/no such container/i.test(String(err))) {
             if (!--startCheckRetries) {
-              throw new DockerError('Container did not start', container);
+              throw new DockerError('Container did not start', container, err);
             }
             continue;
           }
-          throw new DockerError(String(err), container);
+          throw new DockerError(String(err), container, err);
         }
       }
 
@@ -925,9 +925,9 @@ export function createTenv(cwd: string): Tenv {
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
             if (/no such container/i.test(String(err))) {
-              throw new DockerError('Container died', container);
+              throw new DockerError('Container died', container, err);
             }
-            throw new DockerError(String(err), container);
+            throw new DockerError(String(err), container, err);
           }
 
           if (status === 'none') {
@@ -935,10 +935,11 @@ export function createTenv(cwd: string): Tenv {
             throw new DockerError(
               'Container has "none" health status, but has a healthcheck',
               container,
+              null,
             );
           } else if (status === 'unhealthy') {
             await container[DisposableSymbols.asyncDispose]();
-            throw new DockerError('Container is unhealthy', container);
+            throw new DockerError('Container is unhealthy', container, null);
           } else if (status === 'healthy') {
             break;
           } else if (status === 'starting') {
@@ -947,6 +948,7 @@ export function createTenv(cwd: string): Tenv {
             throw new DockerError(
               `Unknown health status "${status}"`,
               container,
+              null,
             );
           }
         }
@@ -1019,10 +1021,12 @@ class DockerError extends Error {
   constructor(
     public override message: string,
     container: Container,
+    cause: unknown,
   ) {
     super();
     this.name = 'DockerError';
     this.message = message + '\n' + container.getStd('both');
+    this.cause = cause;
   }
 }
 
