@@ -92,7 +92,7 @@ return module.exports;
         JSON.stringify(__MODULES_HASH__),
       );
 
-      // replace all "graphql*" requires to use the packed deps (the new require will invoke @graphql-mesh/include/hooks)
+      // replace all "graphql*" requires to use the packed deps (the new require will invoke @graphql-hive/importer/hooks)
       for (const [match, path] of code.matchAll(/require\('(graphql.*)'\)/g)) {
         code = code.replace(
           match,
@@ -101,13 +101,13 @@ return module.exports;
         );
       }
 
-      // replace the @graphql-mesh/include/hooks register to use the absolute path of the packed deps
+      // replace the @graphql-hive/importer/hooks register to use the absolute path of the packed deps
       const includeHooksRegisterDest =
-        /register\(\s*'@graphql-mesh\/include\/hooks'/g; // intentionally no closing bracked because there's more arguments
+        /register\(\s*'@graphql-hive\/importer\/hooks'/g; // intentionally no closing bracked because there's more arguments
       if (includeHooksRegisterDest.test(code)) {
         code = code.replaceAll(
           includeHooksRegisterDest,
-          `register(require('node:url').pathToFileURL(require('node:path').join(globalThis.__PACKED_DEPS_PATH__, '@graphql-mesh', 'include', 'hooks.mjs'))`,
+          `register(require('node:url').pathToFileURL(require('node:path').join(globalThis.__PACKED_DEPS_PATH__, '@graphql-hive', 'importer', 'hooks.mjs'))`,
         );
       } else {
         throw new Error(

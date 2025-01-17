@@ -2342,6 +2342,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/config-syntax-error@workspace:e2e/config-syntax-error":
+  version: 0.0.0-use.local
+  resolution: "@e2e/config-syntax-error@workspace:e2e/config-syntax-error"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.2.13"
+    "@graphql-tools/utils": "npm:^10.7.2"
+    graphql: "npm:^16.9.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
@@ -3232,12 +3243,12 @@ __metadata:
     "@commander-js/extra-typings": "npm:^13.0.0"
     "@envelop/core": "npm:^5.0.2"
     "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/importer": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.104.0"
     "@graphql-mesh/cache-localforage": "npm:^0.103.0"
     "@graphql-mesh/cache-redis": "npm:^0.103.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
-    "@graphql-mesh/include": "npm:^0.2.3"
     "@graphql-mesh/plugin-deduplicate-request": "npm:^0.103.0"
     "@graphql-mesh/plugin-http-cache": "npm:^0.103.0"
     "@graphql-mesh/plugin-jit": "npm:^0.1.0"
@@ -3294,6 +3305,17 @@ __metadata:
       optional: true
   bin:
     hive-gateway: ./dist/bin.js
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/importer@workspace:^, @graphql-hive/importer@workspace:packages/importer":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/importer@workspace:packages/importer"
+  dependencies:
+    get-tsconfig: "npm:^4.7.6"
+    glob: "npm:^11.0.0"
+    pkgroll: "npm:2.6.1"
+    sucrase: "npm:^3.35.0"
   languageName: unknown
   linkType: soft
 
@@ -3491,7 +3513,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/include@npm:^0.2.10, @graphql-mesh/include@npm:^0.2.3":
+"@graphql-mesh/include@npm:^0.2.10":
   version: 0.2.10
   resolution: "@graphql-mesh/include@npm:0.2.10"
   dependencies:

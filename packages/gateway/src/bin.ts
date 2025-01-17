@@ -2,13 +2,13 @@
 import 'dotenv/config'; // inject dotenv options to process.env
 
 import module from 'node:module';
-import type { InitializeData } from '@graphql-mesh/include/hooks';
+import type { InitializeData } from '@graphql-hive/importer/hooks';
 import { DefaultLogger } from '@graphql-mesh/utils';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // @inject-version globalThis.__VERSION__ here
 
-module.register('@graphql-mesh/include/hooks', {
+module.register('@graphql-hive/importer/hooks', {
   parentURL:
     // @ts-ignore bob will complain when bundling for cjs
     import.meta.url,

@@ -107,12 +107,19 @@ export function spawn(
         mem: parseFloat(mem!) * 0.001, // KB to MB
       };
     },
-    [DisposableSymbols.asyncDispose]: () => {
-      const childPid = child.pid;
-      if (childPid && !exited) {
-        return terminate(childPid);
+    [DisposableSymbols.asyncDispose]: async () => {
+      if (exited) {
+        // there's nothing to dispose since the process already exitted (error or not)
+        return Promise.resolve();
       }
-      return waitForExit;
+      if (child.pid) {
+        await terminate(child.pid);
+      }
+      child.kill();
+      await waitForExit.catch(() => {
+        // we dont care about if abnormal exit code when disposing
+        // specifically in Windows, exit code is always 1 when killing a live process
+      });
     },
   };
   stack?.use(proc);

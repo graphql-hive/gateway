@@ -526,7 +526,6 @@ export function createTenv(cwd: string): Tenv {
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
-          leftoverStack.use(proc);
           break;
         }
         case 'bin': {
@@ -883,27 +882,37 @@ export function createTenv(cwd: string): Tenv {
         getStats() {
           throw new Error('Cannot get stats of a container.');
         },
-        [DisposableSymbols.asyncDispose]() {
+        async [DisposableSymbols.asyncDispose]() {
           if (ctrl.signal.aborted) {
             // noop if already disposed
-            return undefined as unknown as Promise<void>;
+            return;
           }
           ctrl.abort();
-          return ctr.stop({ t: 0, signal: 'SIGTERM' });
+          await ctr.stop({ t: 0, signal: 'SIGTERM' });
         },
       };
-      leftoverStack.use(container);
 
       // verify that the container has started
-      await setTimeout(interval);
-      try {
-        await ctr.inspect();
-      } catch (err) {
-        if (Object(err).statusCode === 404) {
-          throw new DockerError('Container was not started', container);
+      let startCheckRetries = 3;
+      while (startCheckRetries) {
+        await setTimeout(interval);
+        try {
+          await ctr.inspect({ abortSignal: ctrl.signal });
+          break;
+        } catch (err) {
+          // we dont use the err.statusCode because it doesnt work in CI, why? no clue
+          if (/no such container/i.test(String(err))) {
+            if (!--startCheckRetries) {
+              throw new DockerError('Container did not start', container, err);
+            }
+            continue;
+          }
+          throw new DockerError(String(err), container, err);
         }
-        throw err;
       }
+
+      // we add the container to the stack only if it started
+      leftoverStack.use(container);
 
       // wait for healthy
       if (healthcheck.length > 0) {
@@ -915,10 +924,11 @@ export function createTenv(cwd: string): Tenv {
             } = await ctr.inspect({ abortSignal: ctrl.signal });
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
-            if (Object(err).statusCode === 404) {
-              throw new DockerError('Container was not started', container);
+            if (/no such container/i.test(String(err))) {
+              ctrl.abort(); // container died so no need to dispose of it (see async dispose implementation)
+              throw new DockerError('Container died', container, err);
             }
-            throw err;
+            throw new DockerError(String(err), container, err);
           }
 
           if (status === 'none') {
@@ -926,10 +936,11 @@ export function createTenv(cwd: string): Tenv {
             throw new DockerError(
               'Container has "none" health status, but has a healthcheck',
               container,
+              null,
             );
           } else if (status === 'unhealthy') {
             await container[DisposableSymbols.asyncDispose]();
-            throw new DockerError('Container is unhealthy', container);
+            throw new DockerError('Container is unhealthy', container, null);
           } else if (status === 'healthy') {
             break;
           } else if (status === 'starting') {
@@ -938,6 +949,7 @@ export function createTenv(cwd: string): Tenv {
             throw new DockerError(
               `Unknown health status "${status}"`,
               container,
+              null,
             );
           }
         }
@@ -1010,10 +1022,12 @@ class DockerError extends Error {
   constructor(
     public override message: string,
     container: Container,
+    cause: unknown,
   ) {
     super();
     this.name = 'DockerError';
     this.message = message + '\n' + container.getStd('both');
+    this.cause = cause;
   }
 }
 
