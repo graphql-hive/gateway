@@ -15,6 +15,7 @@ export const composeConfig = defineConfig({
       sourceHandler: loadOpenAPISubgraph('authors', {
         source: `http://localhost:${authorsPort}/openapi.json`,
         endpoint: `http://localhost:${authorsPort}`,
+        ignoreErrorResponses: true,
       }),
       transforms: [
         createNamingConventionTransform({

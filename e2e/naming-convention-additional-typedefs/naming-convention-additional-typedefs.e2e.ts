@@ -34,38 +34,36 @@ describe('Additional Type Definitions with Naming Convention', () => {
       `,
     });
     expect(result.errors).toBeUndefined();
-    expect(result.data).toMatchInlineSnapshot(`
-      {
-        "getBooks": [
-          {
-            "author": {
-              "id": "1",
-              "name": "F. Scott Fitzgerald",
-            },
-            "authorId": "1",
-            "id": "1",
-            "title": "The Great Gatsby",
+    expect(result.data).toEqual({
+      getBooks: [
+        {
+          author: {
+            id: '1',
+            name: 'F. Scott Fitzgerald',
           },
-          {
-            "author": {
-              "id": "2",
-              "name": "Harper Lee",
-            },
-            "authorId": "2",
-            "id": "2",
-            "title": "To Kill a Mockingbird",
+          authorId: '1',
+          id: '1',
+          title: 'The Great Gatsby',
+        },
+        {
+          author: {
+            id: '2',
+            name: 'Harper Lee',
           },
-          {
-            "author": {
-              "id": "3",
-              "name": "George Orwell",
-            },
-            "authorId": "3",
-            "id": "3",
-            "title": "1984",
+          authorId: '2',
+          id: '2',
+          title: 'To Kill a Mockingbird',
+        },
+        {
+          author: {
+            id: '3',
+            name: 'George Orwell',
           },
-        ],
-      }
-    `);
+          authorId: '3',
+          id: '3',
+          title: '1984',
+        },
+      ],
+    });
   });
 });
