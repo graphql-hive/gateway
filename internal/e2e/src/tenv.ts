@@ -925,6 +925,7 @@ export function createTenv(cwd: string): Tenv {
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
             if (/no such container/i.test(String(err))) {
+              ctrl.abort(); // container died so no need to dispose of it (see async dispose implementation)
               throw new DockerError('Container died', container, err);
             }
             throw new DockerError(String(err), container, err);
