@@ -23,7 +23,7 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
   private readonly renamer: RenamerFunction;
   private readonly transformer: TransformObjectFields<TContext>;
   private reverseMap: Record<string, Record<string, Record<string, string>>>;
-  private transformedSchema: GraphQLSchema;
+  private transformedSchema: GraphQLSchema | undefined;
 
   constructor(renamer: RenamerFunction) {
     this.renamer = renamer;
@@ -115,9 +115,9 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
     transformationContext: RenameObjectFieldArgumentsTransformationContext,
   ): ExecutionRequest {
     if (delegationContext.args != null) {
-      const operationType = this.transformedSchema.getRootType(
-        delegationContext.operation,
-      );
+      const operationType = (
+        this.transformedSchema || delegationContext.transformedSchema
+      ).getRootType(delegationContext.operation);
       if (operationType != null) {
         const reverseFieldsMap = this.reverseMap[operationType.name];
         if (reverseFieldsMap != null) {
