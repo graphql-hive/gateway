@@ -6,22 +6,28 @@ const { gateway, service, gatewayRunner } = createTenv(__dirname);
 it.skipIf(gatewayRunner !== 'docker')(
   'should point to exact location of syntax error when parsing a malformed config',
   async () => {
-    await gateway({
-      supergraph: {
-        with: 'mesh',
-        services: [await service('hello')],
-      },
-      runner: {
-        docker: {
-          volumes: [
-            {
-              host: 'custom-resolvers.ts',
-              container: '/gateway/custom-resolvers.ts',
-            },
-          ],
+    try {
+      await gateway({
+        supergraph: {
+          with: 'mesh',
+          services: [await service('hello')],
         },
-      },
-    });
+        runner: {
+          docker: {
+            volumes: [
+              {
+                host: 'custom-resolvers.ts',
+                container: '/gateway/custom-resolvers.ts',
+              },
+            ],
+          },
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      console.error(Object(err).stack);
+      throw err;
+    }
     // await expect(
     //   gateway({
     //     supergraph: {
