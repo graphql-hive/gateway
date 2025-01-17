@@ -5546,79 +5546,79 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-darwin-aarch64@npm:1.1.43"
+"@oven/bun-darwin-aarch64@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-darwin-aarch64@npm:1.1.44"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64-baseline@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.43"
+"@oven/bun-darwin-x64-baseline@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.1.44"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-darwin-x64@npm:1.1.43"
+"@oven/bun-darwin-x64@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-darwin-x64@npm:1.1.44"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64-musl@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-aarch64-musl@npm:1.1.43"
+"@oven/bun-linux-aarch64-musl@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-aarch64-musl@npm:1.1.44"
   conditions: os=linux & cpu=aarch64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-aarch64@npm:1.1.43"
+"@oven/bun-linux-aarch64@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-aarch64@npm:1.1.44"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-baseline@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.43"
+"@oven/bun-linux-x64-baseline@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.1.44"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl-baseline@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.1.43"
+"@oven/bun-linux-x64-musl-baseline@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.1.44"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-x64-musl@npm:1.1.43"
+"@oven/bun-linux-x64-musl@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-x64-musl@npm:1.1.44"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-linux-x64@npm:1.1.43"
+"@oven/bun-linux-x64@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-linux-x64@npm:1.1.44"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64-baseline@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.43"
+"@oven/bun-windows-x64-baseline@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.1.44"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64@npm:1.1.43":
-  version: 1.1.43
-  resolution: "@oven/bun-windows-x64@npm:1.1.43"
+"@oven/bun-windows-x64@npm:1.1.44":
+  version: 1.1.44
+  resolution: "@oven/bun-windows-x64@npm:1.1.44"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -6352,11 +6352,11 @@ __metadata:
   linkType: hard
 
 "@types/bun@npm:^1.1.13":
-  version: 1.1.16
-  resolution: "@types/bun@npm:1.1.16"
+  version: 1.1.17
+  resolution: "@types/bun@npm:1.1.17"
   dependencies:
-    bun-types: "npm:1.1.43"
-  checksum: 10c0/2bd939f24676a7d1cae72ca2f424d4068906c8eea16501b6efd64c7ac64e47c0a89cd421790ffd7df258681aed933c19dde90bfab7fcd31c4fd1464296862913
+    bun-types: "npm:1.1.44"
+  checksum: 10c0/6f794670cbb230ddb6a6cbf8b1eb077e9e96024fd9afca143e946e415cde14fb06d0f5e9b65b4b3f57370cc17afe5f94c88d259a055305266ee283cd9c29fbcf
   languageName: node
   linkType: hard
 
@@ -8352,31 +8352,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.1.43":
-  version: 1.1.43
-  resolution: "bun-types@npm:1.1.43"
+"bun-types@npm:1.1.44":
+  version: 1.1.44
+  resolution: "bun-types@npm:1.1.44"
   dependencies:
     "@types/node": "npm:~20.12.8"
     "@types/ws": "npm:~8.5.10"
-  checksum: 10c0/aea1d4f0c020c0e19c5eee60ce06c8daaae7b30b6263bec4b2143ec5c0e53e4a140d291a8083fcacffbc81f3513e11c7f5161a3cd094515222788e5ae534ed79
+  checksum: 10c0/a924d3608a54816215c82c09b4a480902b2ce68feb8f167c37be9d1fa16587b68d7620eaef572d3c52df832e7f987ce5772e5695b1c75e39f5a413ad6806da7c
   languageName: node
   linkType: hard
 
 "bun@npm:^1.1.34":
-  version: 1.1.43
-  resolution: "bun@npm:1.1.43"
+  version: 1.1.44
+  resolution: "bun@npm:1.1.44"
   dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.1.43"
-    "@oven/bun-darwin-x64": "npm:1.1.43"
-    "@oven/bun-darwin-x64-baseline": "npm:1.1.43"
-    "@oven/bun-linux-aarch64": "npm:1.1.43"
-    "@oven/bun-linux-aarch64-musl": "npm:1.1.43"
-    "@oven/bun-linux-x64": "npm:1.1.43"
-    "@oven/bun-linux-x64-baseline": "npm:1.1.43"
-    "@oven/bun-linux-x64-musl": "npm:1.1.43"
-    "@oven/bun-linux-x64-musl-baseline": "npm:1.1.43"
-    "@oven/bun-windows-x64": "npm:1.1.43"
-    "@oven/bun-windows-x64-baseline": "npm:1.1.43"
+    "@oven/bun-darwin-aarch64": "npm:1.1.44"
+    "@oven/bun-darwin-x64": "npm:1.1.44"
+    "@oven/bun-darwin-x64-baseline": "npm:1.1.44"
+    "@oven/bun-linux-aarch64": "npm:1.1.44"
+    "@oven/bun-linux-aarch64-musl": "npm:1.1.44"
+    "@oven/bun-linux-x64": "npm:1.1.44"
+    "@oven/bun-linux-x64-baseline": "npm:1.1.44"
+    "@oven/bun-linux-x64-musl": "npm:1.1.44"
+    "@oven/bun-linux-x64-musl-baseline": "npm:1.1.44"
+    "@oven/bun-windows-x64": "npm:1.1.44"
+    "@oven/bun-windows-x64-baseline": "npm:1.1.44"
   dependenciesMeta:
     "@oven/bun-darwin-aarch64":
       optional: true
@@ -8403,7 +8403,7 @@ __metadata:
   bin:
     bun: bin/bun.exe
     bunx: bin/bun.exe
-  checksum: 10c0/9b91b6ea2341bf2d27a130115bee024ac8b0b2e99ddcd06e590e484b2f319166bf2d1969496e16dc7dca618680408670e272d550bf434c01748218f34cad2a9a
+  checksum: 10c0/b33ea969c76531b182f3dca8750719adfdd6ace17f31a62ecc5015ee58f55018f3d61099984bbaffb817995ee342a808d8cfb4ac76f469f2d9ddef501bf399bb
   conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64 | cpu=aarch64)
   languageName: node
   linkType: hard
