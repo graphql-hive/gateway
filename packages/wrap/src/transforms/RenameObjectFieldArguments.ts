@@ -112,6 +112,30 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
     delegationContext: DelegationContext<TContext>,
     transformationContext: RenameObjectFieldArgumentsTransformationContext,
   ): ExecutionRequest {
+    if (delegationContext.args != null) {
+      const operationType = delegationContext.transformedSchema.getRootType(
+        delegationContext.operation,
+      );
+      if (operationType != null) {
+        const reverseFieldsMap = this.reverseMap[operationType.name];
+        if (reverseFieldsMap != null) {
+          const reverseArgsMap = reverseFieldsMap[delegationContext.fieldName];
+          if (reverseArgsMap) {
+            const newArgs = Object.create(null);
+            for (const argName in delegationContext.args) {
+              const argument = delegationContext.args[argName];
+              const newArgName = reverseArgsMap[argName];
+              if (newArgName != null) {
+                newArgs[newArgName] = argument;
+              } else {
+                newArgs[argName] = argument;
+              }
+            }
+            delegationContext.args = newArgs;
+          }
+        }
+      }
+    }
     return this.transformer.transformRequest(
       originalRequest,
       delegationContext,

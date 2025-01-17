@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Additional Type Definitions with Naming Convention composes the schema correctly 1`] = `
+"schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@statusCodeTypeName", "@httpOperation", "@transport", "@source", "@extraSchemaDefinitionDirective"]) {
+  query: Query
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+directive @statusCodeTypeName(subgraph: String, typeName: String, statusCode: String) repeatable on UNION
+
+directive @httpOperation(subgraph: String, path: String, operationSpecificHeaders: [[String]], httpMethod: HTTPMethod, isBinary: Boolean, requestBaseBody: ObjMap, queryParamArgMap: ObjMap, queryStringOptionsByParam: ObjMap, jsonApiFields: Boolean, queryStringOptions: ObjMap) repeatable on FIELD_DEFINITION
+
+directive @transport(subgraph: String, kind: String, location: String, headers: [[String]], queryStringOptions: ObjMap, queryParams: [[String]]) repeatable on SCHEMA
+
+directive @source(name: String!, type: String, subgraph: String!) repeatable on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+
+directive @extraSchemaDefinitionDirective(directives: _DirectiveExtensions) repeatable on OBJECT
+
+directive @additionalField on FIELD_DEFINITION
+
+scalar join__FieldSet
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  \`SECURITY\` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+  """
+  \`EXECUTION\` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+enum join__Graph {
+  AUTHORS @join__graph(name: "authors", url: "http://localhost:<authors_port>")
+  BOOKS @join__graph(name: "books", url: "http://localhost:<books_port>")
+}
+
+scalar ObjMap @join__type(graph: AUTHORS) @join__type(graph: BOOKS)
+
+scalar _DirectiveExtensions @join__type(graph: AUTHORS) @join__type(graph: BOOKS)
+
+type Query @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "authors", kind: "rest", location: "http://localhost:<authors_port>"}]}) @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "books", kind: "rest", location: "http://localhost:<books_port>"}]}) @join__type(graph: AUTHORS) @join__type(graph: BOOKS) {
+  getAuthors: [Author] @httpOperation(subgraph: "authors", path: "/authors", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @source(name: "get_authors", type: "[Author]", subgraph: "authors") @join__field(graph: AUTHORS)
+  getAuthor(authorId: String! @source(name: "author_id", type: "String!", subgraph: "authors")): get_author_response @httpOperation(subgraph: "authors", path: "/authors/{args.author_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @source(name: "get_author", type: "get_author_response", subgraph: "authors") @join__field(graph: AUTHORS)
+  getBooks: [Book] @httpOperation(subgraph: "books", path: "/books", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @source(name: "get_books", type: "[Book]", subgraph: "books") @join__field(graph: BOOKS)
+  getBook(bookId: String! @source(name: "book_id", type: "String!", subgraph: "books")): get_book_response @httpOperation(subgraph: "books", path: "/books/{args.book_id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @source(name: "get_book", type: "get_book_response", subgraph: "books") @join__field(graph: BOOKS)
+}
+
+type Author @join__type(graph: AUTHORS) {
+  id: String!
+  name: String!
+}
+
+type get_author_404_response @join__type(graph: AUTHORS) {
+  message: String!
+}
+
+type Book @join__type(graph: BOOKS) {
+  id: String!
+  title: String!
+  authorId: String! @source(name: "author_id", type: "String!", subgraph: "books")
+  author: Author @resolveTo(sourceName: "authors", sourceTypeName: "Query", sourceFieldName: "getAuthor", requiredSelectionSet: "{ authorId }", sourceArgs: {authorId: "{root.authorId}"}) @additionalField
+}
+
+type get_book_404_response @join__type(graph: BOOKS) {
+  message: String!
+}
+
+union get_author_response @statusCodeTypeName(subgraph: "authors", statusCode: "200", typeName: "Author") @statusCodeTypeName(subgraph: "authors", statusCode: "404", typeName: "get_author_404_response") @join__type(graph: AUTHORS) @join__unionMember(graph: AUTHORS, member: "Author") @join__unionMember(graph: AUTHORS, member: "get_author_404_response") = Author | get_author_404_response
+
+union get_book_response @statusCodeTypeName(subgraph: "books", statusCode: "200", typeName: "Book") @statusCodeTypeName(subgraph: "books", statusCode: "404", typeName: "get_book_404_response") @join__type(graph: BOOKS) @join__unionMember(graph: BOOKS, member: "Book") @join__unionMember(graph: BOOKS, member: "get_book_404_response") = Book | get_book_404_response
+
+enum HTTPMethod @join__type(graph: AUTHORS) @join__type(graph: BOOKS) {
+  GET @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  HEAD @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  POST @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  PUT @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  DELETE @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  CONNECT @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  OPTIONS @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  TRACE @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+  PATCH @join__enumValue(graph: AUTHORS) @join__enumValue(graph: BOOKS)
+}
+"
+`;
