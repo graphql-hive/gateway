@@ -900,7 +900,8 @@ export function createTenv(cwd: string): Tenv {
           await ctr.inspect();
           break;
         } catch (err) {
-          if (Object(err).statusCode === 404) {
+          // we dont use the err.statusCode because it doesnt work in CI, why? no clue
+          if (/no such container/i.test(String(err))) {
             if (!--startCheckRetries) {
               throw new DockerError('Container did not start', container);
             }
