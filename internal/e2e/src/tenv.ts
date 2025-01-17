@@ -898,6 +898,7 @@ export function createTenv(cwd: string): Tenv {
         await setTimeout(interval);
         try {
           await ctr.inspect();
+          break;
         } catch (err) {
           if (Object(err).statusCode === 404) {
             if (!--startCheckRetries) {
