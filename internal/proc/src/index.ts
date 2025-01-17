@@ -112,7 +112,9 @@ export function spawn(
         // there's nothing to dispose since the process already exitted (error or not)
         return Promise.resolve();
       }
-      await terminate(child.pid!);
+      if (child.pid) {
+        await terminate(child.pid);
+      }
       child.kill();
       await waitForExit;
     },
