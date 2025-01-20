@@ -388,7 +388,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     for (const { name, command } of [
       ...tasks,
-      { name: 'Start Hive Gateway', command: 'npm run gateway' },
+      { name: 'Start the gateway', command: 'npm run gateway' },
     ]) {
       readme += dedent`
         1. ${name}
@@ -401,7 +401,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     readme += '\n';
     readme +=
-      'Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see it in action! 🚀\n\n';
+      'Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀\n\n';
 
     readme += dedent`
     ## Note

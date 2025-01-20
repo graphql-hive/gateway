@@ -18,12 +18,12 @@
    ```sh
    npm run compose
    ```
-1. Start Hive Gateway
+1. Start the gateway
    ```sh
    npm run gateway
    ```
 
-Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see it in action! 🚀
+Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀
 
 ## Note
 
