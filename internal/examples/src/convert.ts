@@ -425,6 +425,25 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   {
+    console.group('Creating an example archive...');
+    using _ = defer(() => console.groupEnd());
+
+    const [, waitForExit] = await spawn(
+      { cwd: path.join(__project, 'examples') },
+      'tar',
+      '-czf',
+      `${config.e2e}.tar.gz`,
+      `--exclude=${config.e2e}/node_modules`,
+      config.e2e,
+    );
+    await waitForExit;
+
+    await fs.rename(
+      path.join(__project, 'examples', `${config.e2e}.tar.gz`),
+      path.join(__project, 'examples', config.e2e, 'example.tar.gz'),
+    );
+  }
+  {
     console.group('Defining codesandbox setup and tasks...');
     using _ = defer(() => console.groupEnd());
 
