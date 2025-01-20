@@ -5,7 +5,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { Executor, isAsyncIterable } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
 import { parse } from 'graphql';
-import { useServer } from 'graphql-ws/use/ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { Repeater } from 'graphql-yoga';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { WebSocketServer } from 'ws'; // yarn add ws
