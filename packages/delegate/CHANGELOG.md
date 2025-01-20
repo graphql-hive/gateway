@@ -1,5 +1,81 @@
 # @graphql-tools/delegate
 
+## 10.2.10
+
+### Patch Changes
+
+- [#471](https://github.com/graphql-hive/gateway/pull/471) [`18682e6`](https://github.com/graphql-hive/gateway/commit/18682e6873091afe63f09414f02f93649a4da141) Thanks [@ardatan](https://github.com/ardatan)! - While creating a delegation request for the subschema, an selection set should be spreaded on the union type field correctly.
+
+  In case of the following schema;
+
+  ```graphql
+  type Query {
+    foo: Foo
+  }
+
+  union Foo = Bar | Baz
+
+  type Bar {
+    id: ID!
+    name: String
+    age: Age
+  }
+
+  type Age {
+    years: Int
+    months: Int
+  }
+
+  type Baz {
+    id: ID!
+    name: Name
+    age: Int
+  }
+
+  type Name {
+    first: String
+    last: String
+  }
+  ```
+
+  If the operation is generated as following;
+
+  ```graphql
+  query {
+    foo {
+      id
+      name
+      age {
+        years
+        months
+      }
+    }
+  }
+  ```
+
+  It should be spreaded on the union type field correctly as following;
+
+  ```graphql
+  query {
+    foo {
+      ... on Bar {
+        id
+        age {
+          years
+          months
+        }
+      }
+      ... on Baz {
+        id
+        name {
+          first
+          last
+        }
+      }
+    }
+  }
+  ```
+
 ## 10.2.9
 
 ### Patch Changes

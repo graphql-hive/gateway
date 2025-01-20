@@ -1,5 +1,79 @@
 # @graphql-tools/wrap
 
+## 10.0.28
+
+### Patch Changes
+
+- [#472](https://github.com/graphql-hive/gateway/pull/472) [`e9f78cd`](https://github.com/graphql-hive/gateway/commit/e9f78cd29681ca9b4371e12953a31d2b8f5e4c17) Thanks [@ardatan](https://github.com/ardatan)! - `RenameObjectFieldArguments` should transform the passed `args` in `delegationContext`.
+
+  When a subschema's a root field argument is renamed, the passed arguments should be also transformed;
+
+  ```graphql
+  type Query {
+    # This is the original field
+    book(book_id: ID): [Book]
+  }
+
+  type Book {
+    id: ID
+    title: String
+  }
+  ```
+
+  When the subschema above is transformed to;
+
+  ```graphql
+  type Query {
+    # This is the transformed field
+    book(bookId: ID): [Book]
+  }
+
+  type Book {
+    id: ID
+    title: String
+  }
+  ```
+
+  The following call should be transformed;
+
+  ```ts
+  delegateToSchema({
+    schema: {
+      schema,
+      transforms: [
+        new RenameObjectFieldArguments((typeName, fieldName, argName) => {
+          if (
+            typeName === 'Query' &&
+            fieldName === 'book' &&
+            argName === 'book_id'
+          ) {
+            return 'bookId';
+          }
+          return argName;
+        }),
+      ],
+    },
+    operation: 'query',
+    fieldName: 'book',
+    args: {
+      bookId: '1',
+    },
+  });
+  ```
+
+  To this query;
+
+  ```graphql
+  {
+      book(book_id: "1") {
+          # ...
+      }
+  }
+  ```
+
+- Updated dependencies [[`18682e6`](https://github.com/graphql-hive/gateway/commit/18682e6873091afe63f09414f02f93649a4da141)]:
+  - @graphql-tools/delegate@10.2.10
+
 ## 10.0.27
 
 ### Patch Changes

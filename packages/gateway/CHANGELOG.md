@@ -1,5 +1,27 @@
 # @graphql-hive/gateway
 
+## 1.8.0
+
+### Minor Changes
+
+- [#462](https://github.com/graphql-hive/gateway/pull/462) [`9a6ae85`](https://github.com/graphql-hive/gateway/commit/9a6ae85470de66fa397c8f0f03e66f6919eddfdb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Point to exact location of syntax error when parsing malformed config files
+
+### Patch Changes
+
+- [#462](https://github.com/graphql-hive/gateway/pull/462) [`9a6ae85`](https://github.com/graphql-hive/gateway/commit/9a6ae85470de66fa397c8f0f03e66f6919eddfdb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/importer@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/importer/v/workspace:^) (to `dependencies`)
+  - Removed dependency [`@graphql-mesh/include@^0.2.3` ↗︎](https://www.npmjs.com/package/@graphql-mesh/include/v/0.2.3) (from `dependencies`)
+
+- [#462](https://github.com/graphql-hive/gateway/pull/462) [`9a6ae85`](https://github.com/graphql-hive/gateway/commit/9a6ae85470de66fa397c8f0f03e66f6919eddfdb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use `@graphql-hive/importer` for importing configs and transpiling TypeScript files
+
+- Updated dependencies [[`9a6ae85`](https://github.com/graphql-hive/gateway/commit/9a6ae85470de66fa397c8f0f03e66f6919eddfdb)]:
+  - @graphql-hive/importer@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-hive/gateway-runtime@1.4.9
+  - @graphql-mesh/plugin-opentelemetry@1.3.37
+  - @graphql-mesh/plugin-prometheus@1.3.25
+
 ## 1.7.9
 
 ### Patch Changes
