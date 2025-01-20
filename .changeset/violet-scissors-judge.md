@@ -1,5 +1,5 @@
 ---
-'@graphql-mesh/transport-ws': major
+'@graphql-mesh/transport-ws': minor
 ---
 
 Upgrade graphql-ws to v6
