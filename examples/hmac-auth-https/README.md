@@ -1,66 +1,42 @@
-User 1 token with the 'ReadComments' role:
+# hmac-auth-https
 
-`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwicm9sZXMiOlsiUmVhZENvbW1lbnRzIl0sImlhdCI6MTcyNDE0MTQwNiwiZXhwIjoxNzU1Njk5MDA2fQ.yNmp7hrCWorrdHfJ1IOFyA33UeU2ak72GgjxJ-wuWdE`
+## How to open in CodeSandbox?
 
-User 2 token with 'ReadComments' and 'ReadUsersName' roles:
+This example is available online as a [CodeSandbox Devbox](https://codesandbox.io/docs/learn/devboxes/overview).
 
-`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwicm9sZXMiOlsiUmVhZENvbW1lbnRzIiwiUmVhZFVzZXJzTmFtZSJdLCJpYXQiOjE3MjQxNDE0MTgsImV4cCI6MTc1NTY5OTAxOH0.wnR3TDJDljtZ9cwP_XYAm1c-prvkDTzkD-cqbDbBui0`
+Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https](https://githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https).
 
-### User 1 Flow (with ReadComments role)
+## How to run locally?
 
-> It never reaches to `Users` subgraph because `User.name` is not authorized for this user.
+1. Install
+   ```sh
+   npm i
+   ```
+1. Run generate-users-cert
+   ```sh
+   npm run generate-users-cert
+   ```
+1. Start service users
+   ```sh
+   npm run service:users
+   ```
+1. Start service comments
+   ```sh
+   npm run service:comments
+   ```
+1. Compose
+   ```sh
+   npm run compose
+   ```
+1. Start the gateway
+   ```sh
+   npm run gateway
+   ```
 
-```mermaid
-flowchart LR
-	1(["End-user"]) --->|"query { comments { id author { id name }}}"| 2
+Then visit [localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀
 
-    3--->7["Remote JWKS"]
+## Note
 
-    subgraph Hive Gateway
-    2["Gateway Engine"]
-    3["JWT Plugin"]
-    4["Query Planner"]
-    2--->|"Bearer XYZ"|3
-    3--->|"{ sub: 1, roles: ["ReadComments"] }"|2
-    2--->4
-    end
+This example was auto-generated from the [hmac-auth-https E2E test](/e2e/hmac-auth-https) using our [example converter](/internal/examples).
 
-    subgraph "Comments"
-        6["Yoga Engine"]
-        6--->8["validateHMAC"]
-
-        4--->|"X-HMAC-Signature: XyZ\nquery: query { comments { id author { id }} }\nextensions: { jwt: { sub: 1, roles: ["ReadComments"] }}"|6
-    end
-```
-
-### User 2 Flow (read:comments and read:users_names)
-
-```mermaid
-flowchart LR
-	1(["End-user"]) --->|"query { comments { id author { id name }}}"| 2
-
-    3--->7["Remote JWKS"]
-
-    subgraph Hive Gateway
-    2["Gateway Engine"]
-    3["JWT Plugin"]
-    4["Query Planner"]
-    2--->|"Bearer XYZ"|3
-    3--->|"{ sub: 2, roles: ["ReadComments", "ReadUsersNames"] }"|2
-    2--->4
-    end
-
-    subgraph "Users"
-        5["Yoga Engine"]
-        5--->9["validateHMAC"]
-        5--->10["extractJWT"]
-        4--->|"X-HMAC-Signature: AbC\nquery: query { _entities(representations: $r) { ... on User { name }} }\nextensions: { jwt: { sub: 2, roles: ["ReadComments", "ReadUsersNames"] }}"|5
-    end
-
-    subgraph "Comments"
-        6["Yoga Engine"]
-        6--->8["validateHMAC"]
-
-        4--->|"X-HMAC-Signature: XyZ\nquery: query { comments { id author { id }} }\nextensions: { jwt: { sub: 123, sub: 2, roles: ["ReadComments", "ReadUsersNames"] }}"|6
-    end
-```
+You can browse the [hmac-auth-https.e2e.ts test file](/e2e/hmac-auth-https/hmac-auth-https.e2e.ts) to understand what to expect.
