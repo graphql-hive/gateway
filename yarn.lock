@@ -4199,8 +4199,8 @@ __metadata:
   linkType: hard
 
 "@graphql-tools/mock@npm:^9.0.3":
-  version: 9.0.14
-  resolution: "@graphql-tools/mock@npm:9.0.14"
+  version: 9.0.15
+  resolution: "@graphql-tools/mock@npm:9.0.15"
   dependencies:
     "@graphql-tools/schema": "npm:^10.0.16"
     "@graphql-tools/utils": "npm:^10.7.2"
@@ -4208,7 +4208,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/c0f83d63969ae40811f0aadb5de9cceaa5d0146e579200b062bb7aec671d2ad17380ecda806aa0b6498e4482894b7d2e1d6081d74c155cfa96af827254db5d5b
+  checksum: 10c0/b5719cb0a0062ac6002b7e3df39afa754b18c8c18f4b2d99986347310e5bcae2c5de96dd24cac97c44a92dbbed9c2d36734d1f6fcc325785585a78181dae0e46
   languageName: node
   linkType: hard
 
@@ -4374,16 +4374,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/logger@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@graphql-yoga/logger@npm:2.0.0"
-  dependencies:
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/1489588485c9974aba66c0e5002a1251085771b0703ac1aaa2a3df93b895fc57f7cf6203680ff453b304d4ba438ea6a4cc9999d13a4bf6fd5128f3f088ff927b
-  languageName: node
-  linkType: hard
-
-"@graphql-yoga/logger@npm:^2.0.1":
+"@graphql-yoga/logger@npm:^2.0.0, @graphql-yoga/logger@npm:^2.0.1":
   version: 2.0.1
   resolution: "@graphql-yoga/logger@npm:2.0.1"
   dependencies:
@@ -4444,8 +4435,8 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-jwt@npm:^3.4.9":
-  version: 3.4.10
-  resolution: "@graphql-yoga/plugin-jwt@npm:3.4.10"
+  version: 3.4.11
+  resolution: "@graphql-yoga/plugin-jwt@npm:3.4.11"
   dependencies:
     "@whatwg-node/server-plugin-cookies": "npm:^1.0.3"
     jsonwebtoken: "npm:^9.0.0"
@@ -4453,8 +4444,8 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.10.9
-  checksum: 10c0/60a32994183203aa77e1387e1546947b37d264e58c2ceb0fa8897911abedd199e66b423405a6b06a5eda755618f76c70c5c04bc606c9bff09254d7828239c1bc
+    graphql-yoga: ^5.10.10
+  checksum: 10c0/750783c798df551f2014685ca0080d4a9aa6b9eebceb0c758be03caf42491afa0dd082aeaafef9bf9164e485375c7433cb860065bfe0500ff294e3939018a7a5
   languageName: node
   linkType: hard
 
@@ -4482,31 +4473,19 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-response-cache@npm:^3.1.1":
-  version: 3.12.9
-  resolution: "@graphql-yoga/plugin-response-cache@npm:3.12.9"
+  version: 3.12.10
+  resolution: "@graphql-yoga/plugin-response-cache@npm:3.12.10"
   dependencies:
     "@envelop/core": "npm:^5.0.2"
     "@envelop/response-cache": "npm:^6.1.2"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.10.9
-  checksum: 10c0/8dcc017092e916f08b92b01467fa6c1b8661f39023449f8862f85e44eb040268eb59bf706806e26d33c535aeaa0ed3d5408376d27c1c4e8a2ab8bf34bf9c4b57
+    graphql-yoga: ^5.10.10
+  checksum: 10c0/d1f3e720cd37163f9ef3c27d2f3bfdff7cc94a28131d18b5939f0506ee8630ca420dc63780bf53f8ee53eaff1e10019faeff8fe557630eb7453246410ea263b4
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:^5.0.2":
-  version: 5.0.2
-  resolution: "@graphql-yoga/subscription@npm:5.0.2"
-  dependencies:
-    "@graphql-yoga/typed-event-target": "npm:^3.0.1"
-    "@repeaterjs/repeater": "npm:^3.0.4"
-    "@whatwg-node/events": "npm:^0.1.0"
-    tslib: "npm:^2.5.2"
-  checksum: 10c0/92bf5c43e87d1943bae215aed975daeb79d11642006208386d11d12dece2ee6cdd80b0e93e1c7ac90e2c352ec5492ee9ea0bc5e950e6ead0b96b3ad4733ae76a
-  languageName: node
-  linkType: hard
-
-"@graphql-yoga/subscription@npm:^5.0.3":
+"@graphql-yoga/subscription@npm:^5.0.2, @graphql-yoga/subscription@npm:^5.0.3":
   version: 5.0.3
   resolution: "@graphql-yoga/subscription@npm:5.0.3"
   dependencies:
@@ -6210,9 +6189,9 @@ __metadata:
   linkType: hard
 
 "@sinclair/typebox@npm:^0.34.0":
-  version: 0.34.13
-  resolution: "@sinclair/typebox@npm:0.34.13"
-  checksum: 10c0/3095d62d697f332d2b2f6b75ea05ee7e0b3e97666c82aea6ea95798b79087509ddcece3bb39126d560fa3eb978c418275df8c01a086ba6cc20b0a31cfd5a49b8
+  version: 0.34.14
+  resolution: "@sinclair/typebox@npm:0.34.14"
+  checksum: 10c0/880a99ea958aed1b8074c10feb554dc588f6a1ee649f54d143855311c919699216690b88ff210a3023fd8552a6c3005f7cf58b2c6e9bc1e1a122dea06fd54433
   languageName: node
   linkType: hard
 
@@ -6251,8 +6230,8 @@ __metadata:
   linkType: hard
 
 "@theguild/federation-composition@npm:^0.14.0":
-  version: 0.14.2
-  resolution: "@theguild/federation-composition@npm:0.14.2"
+  version: 0.14.3
+  resolution: "@theguild/federation-composition@npm:0.14.3"
   dependencies:
     constant-case: "npm:^3.0.0"
     debug: "npm:4.3.4"
@@ -6260,7 +6239,7 @@ __metadata:
     lodash.sortby: "npm:^4.7.0"
   peerDependencies:
     graphql: ^16.0.0
-  checksum: 10c0/98f0e015c25d8e9504a784c5edf2de1d6d5998bcc3c737e80f0494447a740f40c6361303c8e0683d5a2a5f274ec1b1e91243f52d672330e1af80734100b8ada4
+  checksum: 10c0/371c524477dc783cbcdfa93a51005bb8e4b8670030add1ea1ab4a11398ff9fea21373a24566a1f46ea806960fcf560c1619567384164aa692c01b7efa24860a7
   languageName: node
   linkType: hard
 
@@ -8579,9 +8558,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001688":
-  version: 1.0.30001692
-  resolution: "caniuse-lite@npm:1.0.30001692"
-  checksum: 10c0/fca5105561ea12f3de593f3b0f062af82f7d07519e8dbcb97f34e7fd23349bcef1b1622a9a6cd2164d98e3d2f20059ef7e271edae46567aef88caf4c16c7708a
+  version: 1.0.30001695
+  resolution: "caniuse-lite@npm:1.0.30001695"
+  checksum: 10c0/acf90a767051fdd8083711b3ff9f07a28149c55e394115d8f874f149aa4f130e6bc50cea1dd94fe03035b9ebbe13b64f446518a6d2e19f72650962bdff44b2c5
   languageName: node
   linkType: hard
 
@@ -9520,9 +9499,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.73":
-  version: 1.5.82
-  resolution: "electron-to-chromium@npm:1.5.82"
-  checksum: 10c0/0d495077406adf4701c2b14d63a10e03128fbff0ca960c3c4132ef9b3ef36378f90618d8ca9f9f909270414b5e90b3912b65d10ea7f33418ea2e429d83593196
+  version: 1.5.83
+  resolution: "electron-to-chromium@npm:1.5.83"
+  checksum: 10c0/12380962d057c4679add1047cdddb18b909904614272da0527e505a3859eaffde2022dd0688ce7f230582de96405c3d33b667680614475cdafd3f629caa2fee1
   languageName: node
   linkType: hard
 
@@ -10397,14 +10376,14 @@ __metadata:
   linkType: hard
 
 "fdir@npm:^6.2.0":
-  version: 6.4.2
-  resolution: "fdir@npm:6.4.2"
+  version: 6.4.3
+  resolution: "fdir@npm:6.4.3"
   peerDependencies:
     picomatch: ^3 || ^4
   peerDependenciesMeta:
     picomatch:
       optional: true
-  checksum: 10c0/34829886f34a3ca4170eca7c7180ec4de51a3abb4d380344063c0ae2e289b11d2ba8b724afee974598c83027fea363ff598caf2b51bc4e6b1e0d8b80cc530573
+  checksum: 10c0/d13c10120e9625adf21d8d80481586200759928c19405a816b77dd28eaeb80e7c59c5def3e2941508045eb06d34eb47fad865ccc8bf98e6ab988bb0ed160fb6f
   languageName: node
   linkType: hard
 
@@ -10552,9 +10531,9 @@ __metadata:
   linkType: hard
 
 "flow-parser@npm:0.*":
-  version: 0.258.1
-  resolution: "flow-parser@npm:0.258.1"
-  checksum: 10c0/1858914237402fad4603f75a855e99739d6282416486f17a05fcf3d01e47365a10e07ae9f888b49cbe3e36f4060a88e7f182dc2ee757b6ec8a1feef638d702fc
+  version: 0.259.1
+  resolution: "flow-parser@npm:0.259.1"
+  checksum: 10c0/d9b4bcc512621f7560bd8604a2e4fa7e13d1fdcc9f9965e5c714daf005fa54c39a85a2434913b3cb4053d03685decb7674c3f5854122ae3cfe691003f9332ead
   languageName: node
   linkType: hard
 
@@ -14544,9 +14523,9 @@ __metadata:
   linkType: hard
 
 "pathe@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "pathe@npm:2.0.1"
-  checksum: 10c0/902139a0beddcdc4396f59bf94315a2a228f01666348cd0b4274d9d0aab31325c390a883a6707b9149a9ec39a7a6fe4846e7d11de83be9c596a33daa850a37ef
+  version: 2.0.2
+  resolution: "pathe@npm:2.0.2"
+  checksum: 10c0/21fce96ca9cebf037b075de8e5cc4ac6aa1009bce57946a72695f47ded84cf4b29f03bed721ea0f6e39b69eb1a0620bcee1f72eca46086765214a2965399b83a
   languageName: node
   linkType: hard
 
@@ -16721,7 +16700,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.1, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.5.2, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.7.0, tslib@npm:^2.8.1":
+"tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.1, tslib@npm:^2.4.0, tslib@npm:^2.5.0, tslib@npm:^2.6.2, tslib@npm:^2.6.3, tslib@npm:^2.7.0, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
@@ -16972,11 +16951,11 @@ __metadata:
   linkType: hard
 
 "undici@npm:^5.28.4":
-  version: 5.28.4
-  resolution: "undici@npm:5.28.4"
+  version: 5.28.5
+  resolution: "undici@npm:5.28.5"
   dependencies:
     "@fastify/busboy": "npm:^2.0.0"
-  checksum: 10c0/08d0f2596553aa0a54ca6e8e9c7f45aef7d042c60918564e3a142d449eda165a80196f6ef19ea2ef2e6446959e293095d8e40af1236f0d67223b06afac5ecad7
+  checksum: 10c0/4dfaa13089fe4c0758f84ec0d34b257e58608e6be3aa540f493b9864b39e3fdcd0a1ace38e434fe79db55f833aa30bcfddd8d6cbe3e0982b0dcae8ec17b65e08
   languageName: node
   linkType: hard
 
