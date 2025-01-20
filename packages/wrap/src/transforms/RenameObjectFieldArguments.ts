@@ -23,6 +23,7 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
   private readonly renamer: RenamerFunction;
   private readonly transformer: TransformObjectFields<TContext>;
   private reverseMap: Record<string, Record<string, Record<string, string>>>;
+  private transformedSchema: GraphQLSchema | undefined;
 
   constructor(renamer: RenamerFunction) {
     this.renamer = renamer;
@@ -101,10 +102,11 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
       },
     });
 
-    return this.transformer.transformSchema(
+    this.transformedSchema = this.transformer.transformSchema(
       originalWrappingSchema,
       subschemaConfig,
     );
+    return this.transformedSchema;
   }
 
   public transformRequest(
@@ -112,6 +114,30 @@ export default class RenameObjectFieldArguments<TContext = Record<string, any>>
     delegationContext: DelegationContext<TContext>,
     transformationContext: RenameObjectFieldArgumentsTransformationContext,
   ): ExecutionRequest {
+    if (delegationContext.args != null) {
+      const operationType = (
+        this.transformedSchema || delegationContext.transformedSchema
+      ).getRootType(delegationContext.operation);
+      if (operationType != null) {
+        const reverseFieldsMap = this.reverseMap[operationType.name];
+        if (reverseFieldsMap != null) {
+          const reverseArgsMap = reverseFieldsMap[delegationContext.fieldName];
+          if (reverseArgsMap) {
+            const newArgs = Object.create(null);
+            for (const argName in delegationContext.args) {
+              const argument = delegationContext.args[argName];
+              const newArgName = reverseArgsMap[argName];
+              if (newArgName != null) {
+                newArgs[newArgName] = argument;
+              } else {
+                newArgs[argName] = argument;
+              }
+            }
+            delegationContext.args = newArgs;
+          }
+        }
+      }
+    }
     return this.transformer.transformRequest(
       originalRequest,
       delegationContext,
