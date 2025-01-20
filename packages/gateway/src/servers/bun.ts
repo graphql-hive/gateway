@@ -1,6 +1,6 @@
 import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
 import type { Server, TLSServeOptions, WebSocketServeOptions } from 'bun';
-import type { Extra } from 'graphql-ws/lib/use/bun';
+import type { Extra } from 'graphql-ws/use/bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
 
@@ -40,7 +40,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
     }
   }
   if (!opts.disableWebsockets) {
-    const { makeHandler } = await import('graphql-ws/lib/use/bun');
+    const { makeHandler } = await import('graphql-ws/use/bun');
     serverOptions.websocket = makeHandler(
       getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
         socket: ctx.extra.socket,
