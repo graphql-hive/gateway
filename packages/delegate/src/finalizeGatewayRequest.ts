@@ -20,7 +20,9 @@ import {
   GraphQLSchema,
   GraphQLType,
   isAbstractType,
+  isCompositeType,
   isInterfaceType,
+  isLeafType,
   isNullableType,
   isObjectType,
   isUnionType,
@@ -513,9 +515,26 @@ function finalizeSelectionSet(
           }
           if (isUnionType(parentType) && typeInfo.getType() == null) {
             const possibleTypeNames: Array<string> = [];
+            const fieldName = node.name.value;
             for (const memberType of parentType.getTypes()) {
-              const possibleField = memberType.getFields()[node.name.value];
+              const memberFields = memberType.getFields();
+              const possibleField = memberFields[fieldName];
               if (possibleField != null) {
+                const namedType = getNamedType(possibleField.type);
+                // If the field is a leaf type, it cannot have a selection set
+                if (
+                  node.selectionSet?.selections?.length &&
+                  isLeafType(namedType)
+                ) {
+                  continue;
+                }
+                // If the field is a composite type, it must have a selection set
+                if (
+                  !node.selectionSet?.selections?.length &&
+                  isCompositeType(namedType)
+                ) {
+                  continue;
+                }
                 possibleTypeNames.push(memberType.name);
               }
             }
@@ -547,7 +566,7 @@ function finalizeSelectionSet(
             return null;
           }
           const namedType = getNamedType(type);
-          if (!schema.getType(namedType.name) == null) {
+          if (schema.getType(namedType.name) == null) {
             return null;
           }
 
