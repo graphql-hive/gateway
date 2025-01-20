@@ -37,6 +37,11 @@ export interface ConvertE2EToExampleConfig {
    */
   clean?: boolean;
   /**
+   * Whether to skip testing the generated example.
+   * @default false
+   */
+  skipTest?: boolean;
+  /**
    * Read more at {@link PublishedPackages}.
    */
   publishedPackages?: PublishedPackages;
@@ -422,6 +427,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         '  ',
       ),
     );
+  }
+
+  if (config.skipTest) {
+    console.log('Skipping example tests...');
+    return;
   }
 
   console.log('Hiding root node_modules and tsconfig.json');

@@ -12,7 +12,21 @@ export function isCI() {
 
 /** Checks if the environment variable with {@link name} is truthy. */
 export function boolEnv(name: string) {
-  return ['1', 't', 'true', 'y', 'yes'].includes(String(process.env[name]));
+  return strToBool(String(process.env[name]));
+}
+
+/**
+ * Parses the string to a truthy value.
+ *
+ * String values considered truthy are:
+ * - 1
+ * - t
+ * - true
+ * - y
+ * - yes
+ */
+export function strToBool(val: string) {
+  return ['1', 't', 'true', 'y', 'yes'].includes(val);
 }
 
 /** Returns `true` if the OS platform is one of the provided {@link platforms}. */
