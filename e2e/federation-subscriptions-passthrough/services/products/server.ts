@@ -8,7 +8,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Repeater } from '@repeaterjs/repeater';
 import express from 'express';
 import { parse } from 'graphql';
-import { useServer } from 'graphql-ws/use/ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import { WebSocketServer } from 'ws';
 
 export const TOKEN = 'wowmuchsecret';
