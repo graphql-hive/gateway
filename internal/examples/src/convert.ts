@@ -4,6 +4,7 @@ import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import dedent from 'dedent';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 import { parser } from './parser';
@@ -225,12 +226,13 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   const tasks: Task[] = [];
+  let packageJson: any;
 
   {
     console.group('Transforming package.json...');
     using _0 = defer(() => console.groupEnd());
 
-    const packageJson = JSON.parse(
+    packageJson = JSON.parse(
       await fs.readFile(path.join(e2eDir, 'package.json'), 'utf8'),
     );
 
@@ -370,6 +372,49 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     const dest = path.join(exampleDir, 'package.json');
     console.log(`Writing "${path.relative(__project, dest)}"`);
     await fs.writeFile(dest, JSON.stringify(packageJson, null, '  '));
+  }
+
+  {
+    console.group('Generating README.md...');
+    using _ = defer(() => console.groupEnd());
+
+    let readme = `# ${config.e2e}\n\n`;
+
+    if (packageJson.description) {
+      readme += `${packageJson.description}\n\n`;
+    }
+
+    readme += `## How to run?\n\n`;
+
+    for (const { name, command } of [
+      ...tasks,
+      { name: 'Start Hive Gateway', command: 'npm run gateway' },
+    ]) {
+      readme += dedent`
+        1. ${name}
+           \`\`\`sh
+           ${command}
+           \`\`\`
+        `;
+      readme += '\n';
+    }
+
+    readme += '\n';
+    readme +=
+      'Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see it in action! 🚀\n\n';
+
+    readme += dedent`
+    ## Note
+
+    This example was auto-generated from the [${config.e2e} E2E test](/e2e/${config.e2e}) using our [example converter](/internal/examples).
+
+    You can browse the [${config.e2e}.e2e.ts test file](/e2e/${config.e2e}/${config.e2e}.e2e.ts) to understand what to expect.
+    `;
+    readme += '\n';
+
+    const dest = path.join(exampleDir, 'README.md');
+    console.log(`Writing "${path.relative(__project, dest)}"`);
+    await fs.writeFile(dest, readme);
   }
 
   {
