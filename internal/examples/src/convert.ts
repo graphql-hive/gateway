@@ -219,7 +219,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
   }
 
-  const setupTasks: { name: string; command: string }[] = [];
+  const tasks: Task[] = [];
 
   {
     console.group('Transforming package.json...');
@@ -295,7 +295,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       console.group('Adding scripts and setup...');
       using _1 = defer(() => console.groupEnd());
 
-      setupTasks.push({
+      tasks.push({
         name: 'Install',
         command: 'npm i',
       });
@@ -305,7 +305,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         packageJson.scripts || {},
       )) {
         console.log(`Adding custom script "${script}" to setup...`);
-        setupTasks.push({
+        tasks.push({
           name: `Run ${script}`,
           command: `npm run ${script}`,
         });
@@ -329,13 +329,17 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           scripts[`service:${service}`] = `tsx ${indexFile.relativePath}`;
         }
 
-        setupTasks.push({
+        tasks.push({
           name: `Start service ${service}`,
-          command: `nohup npm run service:${service} $> service-${service}.out &`,
-        });
-        setupTasks.push({
-          name: `Wait for service ${service}`,
-          command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://0.0.0.0:${port}`,
+          // command: `nohup npm run service:${service} $> service-${service}.out &`,
+          command: `npm run service:${service}`,
+          background: {
+            service,
+            wait: {
+              name: `Wait for service ${service}`,
+              command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://0.0.0.0:${port}`,
+            },
+          },
         });
       }
 
@@ -346,7 +350,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           'rover supergraph compose --elv2-license=accept --config supergraph.json --output supergraph.graphql';
       }
       if (composes) {
-        setupTasks.push({
+        tasks.push({
           name: 'Compose',
           command: 'npm run compose',
         });
@@ -367,24 +371,38 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.group('Defining codesandbox setup and tasks...');
     using _ = defer(() => console.groupEnd());
 
-    const tasks = {
-      gateway: {
-        name: 'Hive Gateway',
-        runAtStart: true,
-        command: 'npm run gateway',
-        preview: {
-          port: 4000,
+    const tasksJson = JSON.stringify(
+      {
+        setupTasks: tasks.flatMap(({ background, ...task }) =>
+          background
+            ? [
+                {
+                  name: task.name,
+                  command: `nohup ${task.command} $> service-${background.service}.out &`,
+                },
+                background.wait,
+              ]
+            : task,
+        ),
+        tasks: {
+          gateway: {
+            name: 'Hive Gateway',
+            runAtStart: true,
+            command: 'npm run gateway',
+            preview: {
+              port: 4000,
+            },
+          },
         },
       },
-    };
-    console.log(JSON.stringify({ setupTasks, tasks }, null, '  '));
+      null,
+      '  ',
+    );
+    console.log(tasksJson);
 
     const dest = path.join(exampleDir, '.codesandbox', 'tasks.json');
     console.log(`Writing "${path.relative(__project, dest)}"`);
-    await writeFileMkdir(
-      dest,
-      JSON.stringify({ setupTasks, tasks }, null, '  '),
-    );
+    await writeFileMkdir(dest, tasksJson);
   }
 
   {
@@ -438,22 +456,17 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     await using stack = new AsyncDisposableStack();
 
-    for (const task of setupTasks) {
+    for (const { background, ...task } of tasks) {
       console.log(`Running "${task.name}"...`);
-      const [cmd, ...args] = task.command.split(' ');
-      if (!cmd) {
-        throw new Error(`Task "${task.name}" does not have a command`);
-      }
-      const isBackgroundJob = args[args.length - 1] === '&';
+
       const [proc, waitForExit] = await spawn(
         {
           cwd: exampleDir,
-          signal: isBackgroundJob ? undefined : AbortSignal.timeout(60_000),
+          signal: background ? undefined : AbortSignal.timeout(60_000),
         },
-        cmd,
-        ...args,
+        ...cmdAndArgs(task),
       );
-      if (isBackgroundJob) {
+      if (background) {
         console.info(
           'Task is a background job, making sure it starts and not waiting for exit',
         );
@@ -462,6 +475,15 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         await Promise.race([waitForExit, setTimeout(1_000)]);
 
         stack.use(proc);
+
+        console.log(`Running "${background.wait.name}"...`);
+        await spawn(
+          {
+            cwd: exampleDir,
+            signal: AbortSignal.timeout(60_000),
+          },
+          ...cmdAndArgs(background.wait),
+        );
       } else {
         await waitForExit;
       }
@@ -491,6 +513,30 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   console.log('Ok');
+}
+
+interface Task {
+  /** Human-friendly name of the task. */
+  name: string;
+  /** The command to execute. */
+  command: string;
+  /**
+   * If set, marks this task as a background task. Background tasks are ran with `nohup`.
+   *
+   * The provided `wait` task definition is the task waiting for the background task's avilability.
+   */
+  background?: {
+    service: string;
+    wait: Omit<Task, 'background'>;
+  };
+}
+
+function cmdAndArgs(task: Task): [cmd: string, ...args: string[]] {
+  const [cmd, ...args] = task.command.split(' ');
+  if (!cmd) {
+    throw new Error(`Task "${task.name}" does not have a command`);
+  }
+  return [cmd, ...args];
 }
 
 /** Parsing an E2E `Tenv` creates and `Eenv` (Example environment). */
