@@ -391,9 +391,26 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     readme += `Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}](https://githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}).\n\n`;
 
+    readme += `ℹ️ You can open an example from other branches by changing the \`/tree/main\` to the branch name (\`/tree/<branch_name>\`) in the URL above.\n\n`;
+
     readme += `## How to run locally?\n\n`;
 
+    readme += dedent`
+        1. Download example
+           \`\`\`sh
+           curl -L https://github.com/graphql-hive/gateway/raw/refs/heads/main/examples/${config.e2e}/example.tar.gz | tar -x
+           \`\`\`
+
+           ℹ️ You can download examples from other branches by changing the \`/refs/heads/main\` to the branch name (\`/refs/heads/<branch_name>\`) in the URL above.
+        `;
+
+    readme += '\n\n';
+
     for (const { name, command } of [
+      {
+        name: 'Open example',
+        command: `cd ${config.e2e}`,
+      },
       ...tasks,
       { name: 'Start the gateway', command: 'npm run gateway' },
     ]) {
@@ -408,7 +425,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     readme += '\n';
     readme +=
-      'Then visit [localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀\n\n';
+      '🚀 Then visit [localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action!\n\n';
 
     readme += dedent`
     ## Note
