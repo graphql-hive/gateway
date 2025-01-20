@@ -384,7 +384,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       readme += `${packageJson.description}\n\n`;
     }
 
-    readme += `## How to run?\n\n`;
+    readme += `## How to open in CodeSandbox?\n\n`;
+
+    readme +=
+      'This example is available online as a [CodeSandbox Devbox](https://codesandbox.io/docs/learn/devboxes/overview).\n\n';
+
+    readme += `Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}](https://githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}).\n\n`;
+
+    readme += `## How to run locally?\n\n`;
 
     for (const { name, command } of [
       ...tasks,
@@ -401,7 +408,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     readme += '\n';
     readme +=
-      'Then visit [http://localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀\n\n';
+      'Then visit [localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action! 🚀\n\n';
 
     readme += dedent`
     ## Note
