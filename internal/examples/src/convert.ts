@@ -463,10 +463,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       '--owner=0',
       '--group=0',
       '--numeric-owner',
-      '-czf',
+      // create gzip
+      '-cz',
+      // filename
+      '-f',
       `${config.e2e}.tar.gz`,
+      // skip node_modules
       `--exclude=${config.e2e}/node_modules`,
-      // ignore existing example archive
+      // skip existing example archive
       `--exclude=${config.e2e}/example.tar.gz`,
       config.e2e,
     );
