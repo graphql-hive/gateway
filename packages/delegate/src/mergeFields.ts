@@ -215,15 +215,19 @@ export function handleResolverResult(
                   ),
           );
         } else if (!(sourcePropValue instanceof Error)) {
-          object[responseKey] = mergeDeep(
-            [existingPropValue, sourcePropValue],
-            undefined,
-            true,
-            true,
-          );
+          if (responseKey !== '__proto__' && responseKey !== 'constructor' && responseKey !== 'prototype') {
+            object[responseKey] = mergeDeep(
+              [existingPropValue, sourcePropValue],
+              undefined,
+              true,
+              true,
+            );
+          }
         }
       } else {
-        object[responseKey] = sourcePropValue;
+        if (responseKey !== '__proto__' && responseKey !== 'constructor' && responseKey !== 'prototype') {
+          object[responseKey] = sourcePropValue;
+        }
       }
     }
     combinedFieldSubschemaMap[responseKey] =
