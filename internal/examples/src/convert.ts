@@ -458,6 +458,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       '--sort=name',
       // set modify time to zero
       '--mtime=@0',
+      // set default permissions and owners
+      '--mode=a+rwX',
+      '--owner=0',
+      '--group=0',
+      '--numeric-owner',
       '-czf',
       `${config.e2e}.tar.gz`,
       `--exclude=${config.e2e}/node_modules`,
