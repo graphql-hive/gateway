@@ -446,16 +446,12 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     using _ = defer(() => console.groupEnd());
 
     const [, waitForExit] = await spawn(
-      {
-        cwd: path.join(__project, 'examples'),
-        env: {
-          // remove timestamps
-          GZIP: '-n',
-        },
-      },
+      { cwd: path.join(__project, 'examples') },
       'tar',
       // consistent sort of files (by default tar sorts files by order of the filesystem)
       '--sort=name',
+      // set modify time to zero
+      '--mtime=@0',
       '-czf',
       `${config.e2e}.tar.gz`,
       `--exclude=${config.e2e}/node_modules`,
