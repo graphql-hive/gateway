@@ -449,16 +449,29 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       {
         cwd: path.join(__project, 'examples'),
         env: {
-          // remove timestamps
+          // remove timestamps from gzip
           GZIP: '-n',
         },
       },
       'tar',
       // consistent sort of files (by default tar sorts files by order of the filesystem)
       '--sort=name',
-      '-czf',
+      // set modify time to zero
+      '--mtime=@0',
+      // set default permissions and owners
+      '--mode=a+rwX',
+      '--owner=0',
+      '--group=0',
+      '--numeric-owner',
+      // create gzip
+      '-cz',
+      // filename
+      '-f',
       `${config.e2e}.tar.gz`,
+      // skip node_modules
       `--exclude=${config.e2e}/node_modules`,
+      // skip existing example archive
+      `--exclude=${config.e2e}/example.tar.gz`,
       config.e2e,
     );
     await waitForExit;
