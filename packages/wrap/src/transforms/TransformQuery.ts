@@ -55,7 +55,7 @@ export default class TransformQuery<TContext = Record<string, any>>
     errorPathTransformer?: ErrorPathTransformer;
     fragments?: Record<string, FragmentDefinitionNode>;
   }) {
-    this.path = path;
+    this.path = path.filter(key => key !== '__proto__' && key !== 'constructor' && key !== 'prototype');
     this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.errorPathTransformer = errorPathTransformer;
