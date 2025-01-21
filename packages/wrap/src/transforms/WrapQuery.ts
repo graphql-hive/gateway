@@ -87,11 +87,18 @@ export default class WrapQuery<TContext = Record<string, any>>
       const path = [...this.path];
       while (path.length > 1) {
         const next = path.shift()!;
+        if (next === '__proto__' || next === 'constructor' || next === 'prototype') {
+          throw new Error('Invalid path key');
+        }
         if (data[next]) {
           data = data[next];
         }
       }
-      data[path[0]!] = this.extractor(data[path[0]!]);
+      const lastKey = path[0]!;
+      if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
+        throw new Error('Invalid path key');
+      }
+      data[lastKey] = this.extractor(data[lastKey]);
     }
 
     return {
