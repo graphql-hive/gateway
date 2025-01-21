@@ -179,7 +179,7 @@ export function handleResolverResult(
   const objectSubschema = resolverResult[OBJECT_SUBSCHEMA_SYMBOL];
   const fieldSubschemaMap = resolverResult[FIELD_SUBSCHEMA_MAP_SYMBOL];
   for (const responseKey in resolverResult) {
-    if (responseKey === '__proto__') {
+    if (responseKey === '__proto__' || responseKey === 'constructor' || responseKey === 'prototype') {
       continue;
     }
     const existingPropValue = object[responseKey];
