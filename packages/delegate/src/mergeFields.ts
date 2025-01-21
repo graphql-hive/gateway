@@ -99,7 +99,9 @@ export function mergeFields<TContext>(
 
   const leftOver = leftOverByDelegationPlan.get(delegationMaps);
   if (leftOver) {
-    object[PLAN_LEFT_OVER] = leftOver;
+    if (PLAN_LEFT_OVER !== '__proto__' && PLAN_LEFT_OVER !== 'constructor' && PLAN_LEFT_OVER !== 'prototype') {
+      object[PLAN_LEFT_OVER] = leftOver;
+    }
   }
 
   return mapMaybePromise(
