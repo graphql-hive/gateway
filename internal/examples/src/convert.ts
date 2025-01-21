@@ -4,6 +4,7 @@ import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import dedent from 'dedent';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 import { parser } from './parser';
@@ -36,6 +37,11 @@ export interface ConvertE2EToExampleConfig {
    * @default false
    */
   clean?: boolean;
+  /**
+   * Whether to skip testing the generated example.
+   * @default false
+   */
+  skipTest?: boolean;
   /**
    * Read more at {@link PublishedPackages}.
    */
@@ -219,13 +225,14 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
   }
 
-  const setupTasks: { name: string; command: string }[] = [];
+  const tasks: Task[] = [];
+  let packageJson: any;
 
   {
     console.group('Transforming package.json...');
     using _0 = defer(() => console.groupEnd());
 
-    const packageJson = JSON.parse(
+    packageJson = JSON.parse(
       await fs.readFile(path.join(e2eDir, 'package.json'), 'utf8'),
     );
 
@@ -295,7 +302,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       console.group('Adding scripts and setup...');
       using _1 = defer(() => console.groupEnd());
 
-      setupTasks.push({
+      tasks.push({
         name: 'Install',
         command: 'npm i',
       });
@@ -305,7 +312,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         packageJson.scripts || {},
       )) {
         console.log(`Adding custom script "${script}" to setup...`);
-        setupTasks.push({
+        tasks.push({
           name: `Run ${script}`,
           command: `npm run ${script}`,
         });
@@ -329,13 +336,17 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           scripts[`service:${service}`] = `tsx ${indexFile.relativePath}`;
         }
 
-        setupTasks.push({
+        tasks.push({
           name: `Start service ${service}`,
-          command: `nohup npm run service:${service} $> service-${service}.out &`,
-        });
-        setupTasks.push({
-          name: `Wait for service ${service}`,
-          command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://0.0.0.0:${port}`,
+          // command: `nohup npm run service:${service} $> service-${service}.out &`,
+          command: `npm run service:${service}`,
+          background: {
+            service,
+            wait: {
+              name: `Wait for service ${service}`,
+              command: `curl --retry-connrefused --retry 10 --retry-delay 3 ${https ? '-k https' : 'http'}://0.0.0.0:${port}`,
+            },
+          },
         });
       }
 
@@ -346,7 +357,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
           'rover supergraph compose --elv2-license=accept --config supergraph.json --output supergraph.graphql';
       }
       if (composes) {
-        setupTasks.push({
+        tasks.push({
           name: 'Compose',
           command: 'npm run compose',
         });
@@ -364,27 +375,127 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   {
+    console.group('Generating README.md...');
+    using _ = defer(() => console.groupEnd());
+
+    let readme = `# ${config.e2e}\n\n`;
+
+    if (packageJson.description) {
+      readme += `${packageJson.description}\n\n`;
+    }
+
+    readme += `## How to open in CodeSandbox?\n\n`;
+
+    readme +=
+      'This example is available online as a [CodeSandbox Devbox](https://codesandbox.io/docs/learn/devboxes/overview).\n\n';
+
+    readme += `Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}](https://githubbox.com/graphql-hive/gateway/tree/main/examples/${config.e2e}).\n\n`;
+
+    readme += `ℹ️ You can open an example from other branches by changing the \`/tree/main\` to the branch name (\`/tree/<branch_name>\`) in the URL above.\n\n`;
+
+    readme += `## How to run locally?\n\n`;
+
+    readme += dedent`
+        1. Download example
+           \`\`\`sh
+           curl -L https://github.com/graphql-hive/gateway/raw/refs/heads/main/examples/${config.e2e}/example.tar.gz | tar -x
+           \`\`\`
+
+           ℹ️ You can download examples from other branches by changing the \`/refs/heads/main\` to the branch name (\`/refs/heads/<branch_name>\`) in the URL above.
+        `;
+
+    readme += '\n\n';
+
+    for (const { name, command } of [
+      {
+        name: 'Open example',
+        command: `cd ${config.e2e}`,
+      },
+      ...tasks,
+      { name: 'Start the gateway', command: 'npm run gateway' },
+    ]) {
+      readme += dedent`
+        1. ${name}
+           \`\`\`sh
+           ${command}
+           \`\`\`
+        `;
+      readme += '\n';
+    }
+
+    readme += '\n';
+    readme +=
+      '🚀 Then visit [localhost:4000/graphql](http://localhost:4000/graphql) to see Hive Gateway in action!\n\n';
+
+    readme += dedent`
+    ## Note
+
+    This example was auto-generated from the [${config.e2e} E2E test](/e2e/${config.e2e}) using our [example converter](/internal/examples).
+
+    You can browse the [${config.e2e}.e2e.ts test file](/e2e/${config.e2e}/${config.e2e}.e2e.ts) to understand what to expect.
+    `;
+    readme += '\n';
+
+    const dest = path.join(exampleDir, 'README.md');
+    console.log(`Writing "${path.relative(__project, dest)}"`);
+    await fs.writeFile(dest, readme);
+  }
+
+  {
+    console.group('Creating an example archive...');
+    using _ = defer(() => console.groupEnd());
+
+    const [, waitForExit] = await spawn(
+      { cwd: path.join(__project, 'examples') },
+      'tar',
+      '-czf',
+      `${config.e2e}.tar.gz`,
+      `--exclude=${config.e2e}/node_modules`,
+      config.e2e,
+    );
+    await waitForExit;
+
+    await fs.rename(
+      path.join(__project, 'examples', `${config.e2e}.tar.gz`),
+      path.join(__project, 'examples', config.e2e, 'example.tar.gz'),
+    );
+  }
+  {
     console.group('Defining codesandbox setup and tasks...');
     using _ = defer(() => console.groupEnd());
 
-    const tasks = {
-      gateway: {
-        name: 'Hive Gateway',
-        runAtStart: true,
-        command: 'npm run gateway',
-        preview: {
-          port: 4000,
+    const tasksJson = JSON.stringify(
+      {
+        setupTasks: tasks.flatMap(({ background, ...task }) =>
+          background
+            ? [
+                {
+                  name: task.name,
+                  command: `nohup ${task.command} $> service-${background.service}.out &`,
+                },
+                background.wait,
+              ]
+            : task,
+        ),
+        tasks: {
+          gateway: {
+            name: 'Hive Gateway',
+            runAtStart: true,
+            command: 'npm run gateway',
+            preview: {
+              port: 4000,
+            },
+          },
         },
       },
-    };
-    console.log(JSON.stringify({ setupTasks, tasks }, null, '  '));
+      null,
+      '  ',
+    );
+    console.log(tasksJson);
 
     const dest = path.join(exampleDir, '.codesandbox', 'tasks.json');
     console.log(`Writing "${path.relative(__project, dest)}"`);
-    await writeFileMkdir(
-      dest,
-      JSON.stringify({ setupTasks, tasks }, null, '  '),
-    );
+    await writeFileMkdir(dest, tasksJson);
   }
 
   {
@@ -404,6 +515,11 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         '  ',
       ),
     );
+  }
+
+  if (config.skipTest) {
+    console.log('Skipping example tests...');
+    return;
   }
 
   console.log('Hiding root node_modules and tsconfig.json');
@@ -438,22 +554,17 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
 
     await using stack = new AsyncDisposableStack();
 
-    for (const task of setupTasks) {
+    for (const { background, ...task } of tasks) {
       console.log(`Running "${task.name}"...`);
-      const [cmd, ...args] = task.command.split(' ');
-      if (!cmd) {
-        throw new Error(`Task "${task.name}" does not have a command`);
-      }
-      const isBackgroundJob = args[args.length - 1] === '&';
+
       const [proc, waitForExit] = await spawn(
         {
           cwd: exampleDir,
-          signal: isBackgroundJob ? undefined : AbortSignal.timeout(60_000),
+          signal: background ? undefined : AbortSignal.timeout(60_000),
         },
-        cmd,
-        ...args,
+        ...cmdAndArgs(task),
       );
-      if (isBackgroundJob) {
+      if (background) {
         console.info(
           'Task is a background job, making sure it starts and not waiting for exit',
         );
@@ -462,6 +573,15 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         await Promise.race([waitForExit, setTimeout(1_000)]);
 
         stack.use(proc);
+
+        console.log(`Running "${background.wait.name}"...`);
+        await spawn(
+          {
+            cwd: exampleDir,
+            signal: AbortSignal.timeout(60_000),
+          },
+          ...cmdAndArgs(background.wait),
+        );
       } else {
         await waitForExit;
       }
@@ -491,6 +611,30 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   console.log('Ok');
+}
+
+interface Task {
+  /** Human-friendly name of the task. */
+  name: string;
+  /** The command to execute. */
+  command: string;
+  /**
+   * If set, marks this task as a background task. Background tasks are ran with `nohup`.
+   *
+   * The provided `wait` task definition is the task waiting for the background task's avilability.
+   */
+  background?: {
+    service: string;
+    wait: Omit<Task, 'background'>;
+  };
+}
+
+function cmdAndArgs(task: Task): [cmd: string, ...args: string[]] {
+  const [cmd, ...args] = task.command.split(' ');
+  if (!cmd) {
+    throw new Error(`Task "${task.name}" does not have a command`);
+  }
+  return [cmd, ...args];
 }
 
 /** Parsing an E2E `Tenv` creates and `Eenv` (Example environment). */

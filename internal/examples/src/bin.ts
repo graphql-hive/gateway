@@ -1,4 +1,4 @@
-import { Opts } from '@internal/testing';
+import { Opts, strToBool } from '@internal/testing';
 import z from 'zod';
 import { convertE2EToExample, PublishedPackages } from './convert';
 
@@ -25,6 +25,7 @@ if (publishedPackagesOpt) {
 
 await convertE2EToExample({
   e2e: opts.get('e2e', true),
-  clean: ['1', 't', 'true', 'y', 'yes'].includes(String(opts.get('clean'))),
+  clean: strToBool(String(opts.get('clean'))),
+  skipTest: strToBool(String(opts.get('skipTest'))),
   publishedPackages,
 });

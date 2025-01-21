@@ -1,10 +1,10 @@
-# hmac-auth-https
+# federation-mixed
 
 ## How to open in CodeSandbox?
 
 This example is available online as a [CodeSandbox Devbox](https://codesandbox.io/docs/learn/devboxes/overview).
 
-Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https](https://githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https).
+Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/federation-mixed](https://githubbox.com/graphql-hive/gateway/tree/main/examples/federation-mixed).
 
 ℹ️ You can open an example from other branches by changing the `/tree/main` to the branch name (`/tree/<branch_name>`) in the URL above.
 
@@ -12,30 +12,34 @@ Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https](ht
 
 1. Download example
    ```sh
-   curl -L https://github.com/graphql-hive/gateway/raw/refs/heads/main/examples/hmac-auth-https/example.tar.gz | tar -x
+   curl -L https://github.com/graphql-hive/gateway/raw/refs/heads/main/examples/federation-mixed/example.tar.gz | tar -x
    ```
 
    ℹ️ You can download examples from other branches by changing the `/refs/heads/main` to the branch name (`/refs/heads/<branch_name>`) in the URL above.
 
 1. Open example
    ```sh
-   cd hmac-auth-https
+   cd federation-mixed
    ```
 1. Install
    ```sh
    npm i
    ```
-1. Run generate-users-cert
+1. Start service accounts
    ```sh
-   npm run generate-users-cert
+   npm run service:accounts
    ```
-1. Start service users
+1. Start service inventory
    ```sh
-   npm run service:users
+   npm run service:inventory
    ```
-1. Start service comments
+1. Start service products
    ```sh
-   npm run service:comments
+   npm run service:products
+   ```
+1. Start service reviews
+   ```sh
+   npm run service:reviews
    ```
 1. Compose
    ```sh
@@ -50,6 +54,6 @@ Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/hmac-auth-https](ht
 
 ## Note
 
-This example was auto-generated from the [hmac-auth-https E2E test](/e2e/hmac-auth-https) using our [example converter](/internal/examples).
+This example was auto-generated from the [federation-mixed E2E test](/e2e/federation-mixed) using our [example converter](/internal/examples).
 
-You can browse the [hmac-auth-https.e2e.ts test file](/e2e/hmac-auth-https/hmac-auth-https.e2e.ts) to understand what to expect.
+You can browse the [federation-mixed.e2e.ts test file](/e2e/federation-mixed/federation-mixed.e2e.ts) to understand what to expect.
