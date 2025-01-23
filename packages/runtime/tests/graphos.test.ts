@@ -3,12 +3,12 @@ import type {
   GatewayConfigContext,
   GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway';
-import { DefaultLogger } from '@graphql-mesh/utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
+import { Response } from '@whatwg-node/fetch';
 
 describe('GraphOS', () => {
-  describe('supergraph fetching', async () => {
+  describe('supergraph fetching', () => {
     vi.useFakeTimers?.();
     const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
 
@@ -117,7 +117,16 @@ function createTestFetcher(
 ) {
   return createGraphOSFetcher({
     configContext: {
-      logger: new DefaultLogger(),
+      logger: {
+        child() {
+          return this;
+        },
+        info: () => {},
+        debug: () => {},
+        error: () => {},
+        warn: () => {},
+        log: () => {},
+      },
       cwd: process.cwd(),
       ...configContext,
     },
@@ -131,7 +140,7 @@ function createTestFetcher(
 }
 
 let supergraphSdl = 'TEST SDL';
-const mockSDL = vi.fn(async () =>
+const mockSDL = vi.fn(() =>
   Response.json({
     data: {
       routerConfig: {
@@ -145,7 +154,7 @@ const mockSDL = vi.fn(async () =>
   }),
 );
 
-const mockUnchanged = vi.fn(async () =>
+const mockUnchanged = vi.fn(() =>
   Response.json({
     data: {
       routerConfig: {
@@ -157,7 +166,7 @@ const mockUnchanged = vi.fn(async () =>
   }),
 );
 
-const mockFetchError = vi.fn(async () =>
+const mockFetchError = vi.fn(() =>
   Response.json({
     data: {
       routerConfig: {
