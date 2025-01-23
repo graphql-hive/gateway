@@ -21,7 +21,7 @@ import { defaultStitchingDirectiveOptions } from './defaultStitchingDirectiveOpt
 import { parseMergeArgsExpr } from './parseMergeArgsExpr.js';
 import { StitchingDirectivesOptions } from './types.js';
 
-const dottedNameRegEx = /^[_A-Za-z][_0-9A-Za-z]*(\.[_A-Za-z][_0-9A-Za-z]*)*$/;
+const dottedNameRegEx = /^[_A-Za-z][_0-9A-Za-z]*(.[_A-Za-z][_0-9A-Za-z]*)*$/;
 
 export function stitchingDirectivesValidator(
   options: StitchingDirectivesOptions = {},
