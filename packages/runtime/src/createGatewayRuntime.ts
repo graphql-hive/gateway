@@ -21,6 +21,7 @@ import {
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshHive from '@graphql-mesh/plugin-hive';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
+import { TransportContext } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
 import {
   DefaultLogger,
@@ -604,7 +605,9 @@ export function createGatewayRuntime<
       },
     };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher: () => MaybePromise<UnifiedGraphSchema>;
+    let unifiedGraphFetcher: (
+      transportCtx: TransportContext,
+    ) => MaybePromise<UnifiedGraphSchema>;
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {

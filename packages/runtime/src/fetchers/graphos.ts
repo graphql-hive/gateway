@@ -1,3 +1,4 @@
+import { TransportContext } from '@graphql-mesh/transport-common';
 import {
   DEFAULT_UPLINKS,
   fetchSupergraphSdlFromManagedFederation,
@@ -27,10 +28,7 @@ export function createGraphOSFetcher({
   const uplinks =
     uplinksParam?.split(',').map((uplink) => uplink.trim()) || DEFAULT_UPLINKS;
   const graphosLogger = configContext.logger.child('GraphOS');
-  graphosLogger.info(
-    'Using GraphOS Managed Federation with uplinks: ',
-    ...uplinks,
-  );
+  graphosLogger.info('Using Managed Federation with uplinks: ', ...uplinks);
   const maxRetries = graphosOpts.maxRetries || Math.max(3, uplinks.length);
   let supergraphLoadedPlace = defaultLoadedPlacePrefix;
   if (graphosOpts.graphRef) {
@@ -38,7 +36,7 @@ export function createGraphOSFetcher({
   }
   return {
     supergraphLoadedPlace,
-    unifiedGraphFetcher() {
+    unifiedGraphFetcher(transportContext: TransportContext) {
       const uplinksToUse: string[] = [];
       let retries = maxRetries;
       function fetchSupergraphWithDelay(): Promise<string> {
@@ -69,7 +67,7 @@ export function createGraphOSFetcher({
           upLink: uplinkToUse,
           lastSeenId,
           // @ts-expect-error TODO: Fetch types mismatch
-          fetch: configContext.fetch,
+          fetch: transportContext.fetch || configContext.fetch,
           loggerByMessageLevel: {
             ERROR(message) {
               attemptLogger.error(message);
