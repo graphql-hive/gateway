@@ -25,7 +25,14 @@ export default class WrapQuery<TContext = Record<string, any>>
     private readonly path: Array<string>,
     private readonly wrapper: QueryWrapper,
     private readonly extractor: (result: any) => any,
-  ) {}
+  ) {
+    const pollutingKeys = this.path.filter(isPrototypePollutingKey);
+    if (pollutingKeys.length > 0) {
+      throw new TypeError(
+        `Invalid path - cannot be a prototype polluting keys: ${pollutingKeys.join('.')}`,
+      );
+    }
+  }
 
   public transformRequest(
     originalRequest: ExecutionRequest,
