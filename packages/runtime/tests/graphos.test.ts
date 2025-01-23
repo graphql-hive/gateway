@@ -51,9 +51,7 @@ describe('GraphOS', () => {
         { maxRetries: 3 },
       );
 
-      const result = unifiedGraphFetcher({}).catch(
-        err => err
-      );
+      const result = unifiedGraphFetcher({}).catch((err) => err);
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
@@ -132,16 +130,18 @@ function createTestFetcher(
 ) {
   return createGraphOSFetcher({
     configContext: {
-      logger: process.env['DEBUG'] ? new DefaultLogger() : {
-        child() {
-          return this;
-        },
-        info: () => { },
-        debug: () => { },
-        error: () => { },
-        warn: () => { },
-        log: () => { },
-      },
+      logger: process.env['DEBUG']
+        ? new DefaultLogger()
+        : {
+            child() {
+              return this;
+            },
+            info: () => {},
+            debug: () => {},
+            error: () => {},
+            warn: () => {},
+            log: () => {},
+          },
       cwd: process.cwd(),
       ...configContext,
     },
