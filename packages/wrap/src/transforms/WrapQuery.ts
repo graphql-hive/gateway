@@ -1,4 +1,8 @@
-import { DelegationContext, Transform } from '@graphql-tools/delegate';
+import {
+  DelegationContext,
+  isPrototypePollutingKey,
+  Transform,
+} from '@graphql-tools/delegate';
 import { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
 import {
   FieldNode,
@@ -87,7 +91,7 @@ export default class WrapQuery<TContext = Record<string, any>>
       const path = [...this.path];
       while (path.length > 1) {
         const next = path.shift()!;
-        if (next === '__proto__' || next === 'constructor' || next === 'prototype') {
+        if (isPrototypePollutingKey(next)) {
           throw new Error('Invalid path key');
         }
         if (data[next]) {
@@ -95,7 +99,7 @@ export default class WrapQuery<TContext = Record<string, any>>
         }
       }
       const lastKey = path[0]!;
-      if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
+      if (isPrototypePollutingKey(lastKey)) {
         throw new Error('Invalid path key');
       }
       data[lastKey] = this.extractor(data[lastKey]);

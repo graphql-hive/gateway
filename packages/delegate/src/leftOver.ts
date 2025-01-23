@@ -18,7 +18,7 @@ export const leftOverByDelegationPlan = new WeakMap<
   ReturnType<DelegationPlanBuilder>,
   DelegationPlanLeftOver
 >();
-export const PLAN_LEFT_OVER = Symbol('PLAN_LEFT_OVER');
+export const PLAN_LEFT_OVER: symbol = Symbol('PLAN_LEFT_OVER');
 export function getPlanLeftOverFromParent(
   parent: any,
 ): DelegationPlanLeftOver | undefined {

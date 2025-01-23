@@ -1,4 +1,8 @@
-import { DelegationContext, Transform } from '@graphql-tools/delegate';
+import {
+  DelegationContext,
+  isPrototypePollutingKey,
+  Transform,
+} from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
@@ -55,7 +59,7 @@ export default class TransformQuery<TContext = Record<string, any>>
     errorPathTransformer?: ErrorPathTransformer;
     fragments?: Record<string, FragmentDefinitionNode>;
   }) {
-    this.path = path.filter(key => key !== '__proto__' && key !== 'constructor' && key !== 'prototype');
+    this.path = path.filter((key) => !isPrototypePollutingKey(key));
     this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.errorPathTransformer = errorPathTransformer;

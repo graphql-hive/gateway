@@ -18,6 +18,7 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
+import { isPrototypePollutingKey } from './isPrototypePollutingKey.js';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
 import { Subschema } from './Subschema.js';
 import {
@@ -99,9 +100,7 @@ export function mergeFields<TContext>(
 
   const leftOver = leftOverByDelegationPlan.get(delegationMaps);
   if (leftOver) {
-    if (PLAN_LEFT_OVER !== '__proto__' && PLAN_LEFT_OVER !== 'constructor' && PLAN_LEFT_OVER !== 'prototype') {
-      object[PLAN_LEFT_OVER] = leftOver;
-    }
+    object[PLAN_LEFT_OVER] = leftOver;
   }
 
   return mapMaybePromise(
@@ -181,7 +180,7 @@ export function handleResolverResult(
   const objectSubschema = resolverResult[OBJECT_SUBSCHEMA_SYMBOL];
   const fieldSubschemaMap = resolverResult[FIELD_SUBSCHEMA_MAP_SYMBOL];
   for (const responseKey in resolverResult) {
-    if (responseKey === '__proto__' || responseKey === 'constructor' || responseKey === 'prototype') {
+    if (isPrototypePollutingKey(responseKey)) {
       continue;
     }
     const existingPropValue = object[responseKey];
@@ -217,19 +216,15 @@ export function handleResolverResult(
                   ),
           );
         } else if (!(sourcePropValue instanceof Error)) {
-          if (responseKey !== '__proto__' && responseKey !== 'constructor' && responseKey !== 'prototype') {
-            object[responseKey] = mergeDeep(
-              [existingPropValue, sourcePropValue],
-              undefined,
-              true,
-              true,
-            );
-          }
+          object[responseKey] = mergeDeep(
+            [existingPropValue, sourcePropValue],
+            undefined,
+            true,
+            true,
+          );
         }
       } else {
-        if (responseKey !== '__proto__' && responseKey !== 'constructor' && responseKey !== 'prototype') {
-          object[responseKey] = sourcePropValue;
-        }
+        object[responseKey] = sourcePropValue;
       }
     }
     combinedFieldSubschemaMap[responseKey] =
