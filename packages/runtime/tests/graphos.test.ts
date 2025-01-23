@@ -55,7 +55,7 @@ describe('GraphOS', () => {
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
-      expect(await result).resolves.toBeInstanceOf(Error);
+      expect(await result).toBeInstanceOf(Error);
       expect(mockFetchError).toHaveBeenCalledTimes(3);
     });
 
