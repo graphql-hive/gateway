@@ -37,10 +37,6 @@ import {
 } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import {
-  DEFAULT_UPLINKS,
-  fetchSupergraphSdlFromManagedFederation,
-} from '@graphql-tools/federation';
-import {
   asArray,
   getDirectiveExtensions,
   IResolvers,
@@ -80,6 +76,7 @@ import {
   type YogaServerInstance,
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
+import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -623,126 +620,12 @@ export function createGatewayRuntime<
         unifiedGraphFetcher = () =>
           fetcher().then(({ supergraphSdl }) => supergraphSdl);
       } else if (config.supergraph.type === 'graphos') {
-        const opts = config.supergraph;
-        supergraphLoadedPlace =
-          'GraphOS Managed Federation <br>' + opts.graphRef || '';
-        let lastSeenId: string;
-        let lastSupergraphSdl: string;
-        let nextFetchTime: number;
-        const uplinksParam =
-          opts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
-        const uplinks =
-          uplinksParam?.split(',').map((uplink) => uplink.trim()) ||
-          DEFAULT_UPLINKS;
-        const graphosLogger = configContext.logger.child('GraphOS');
-        graphosLogger.info(
-          'Using GraphOS Managed Federation with uplinks: ',
-          ...uplinks,
-        );
-        const maxRetries = opts.maxRetries || Math.max(3, uplinks.length);
-        unifiedGraphFetcher = () => {
-          const uplinksToUse: string[] = [];
-          let retries = opts.maxRetries || Math.max(3, uplinks.length);
-          const fetchSupergraphWithDelay = (): MaybePromise<string> => {
-            if (nextFetchTime) {
-              const currentTime = Date.now();
-              if (nextFetchTime >= currentTime) {
-                const delay = nextFetchTime - currentTime;
-                graphosLogger.info(
-                  `Fetching supergraph with delay: ${delay}ms`,
-                );
-                return new Promise((resolve) =>
-                  setTimeout(() => {
-                    nextFetchTime = 0;
-                    resolve(fetchSupergraph());
-                  }, delay),
-                );
-              }
-            }
-            return fetchSupergraph();
-          };
-          const fetchSupergraph = (): MaybePromise<string> => {
-            if (uplinksToUse.length === 0) {
-              uplinksToUse.push(...uplinks);
-            }
-            retries--;
-            try {
-              const uplinkToUse = uplinksToUse.pop();
-              const attemptLogger = graphosLogger.child(
-                `Attempt ${maxRetries - retries} - UpLink: ${uplinkToUse}`,
-              );
-              attemptLogger.debug(`Fetching supergraph`);
-              return mapMaybePromise(
-                fetchSupergraphSdlFromManagedFederation({
-                  graphRef: opts.graphRef,
-                  apiKey: opts.apiKey,
-                  upLink: uplinkToUse,
-                  lastSeenId,
-                  // @ts-expect-error TODO: what's up with type narrowing
-                  fetch: configContext.fetch,
-                  loggerByMessageLevel: {
-                    ERROR(message) {
-                      attemptLogger.error(message);
-                    },
-                    INFO(message) {
-                      attemptLogger.info(message);
-                    },
-                    WARN(message) {
-                      attemptLogger.warn(message);
-                    },
-                  },
-                }),
-                (result) => {
-                  if (result.minDelaySeconds) {
-                    attemptLogger.debug(
-                      `Setting min delay to ${result.minDelaySeconds}s`,
-                    );
-                    nextFetchTime = Date.now() + result.minDelaySeconds * 1000;
-                  }
-                  if ('error' in result) {
-                    attemptLogger.error(
-                      result.error.code,
-                      result.error.message,
-                    );
-                    if (retries > 0) {
-                      return fetchSupergraphWithDelay();
-                    }
-                  }
-                  if ('id' in result) {
-                    lastSeenId = result.id;
-                  }
-                  if ('supergraphSdl' in result) {
-                    attemptLogger.info(
-                      `Fetched the new supergraph ${lastSeenId ? `with id ${lastSeenId}` : ''}`,
-                    );
-                    lastSupergraphSdl = result.supergraphSdl;
-                  }
-                  if (!lastSupergraphSdl) {
-                    if (retries > 0) {
-                      return fetchSupergraphWithDelay();
-                    }
-                    throw new Error('Failed to fetch supergraph SDL');
-                  }
-                  return lastSupergraphSdl;
-                },
-                (err) => {
-                  configContext.logger.child('GraphOS').error(err);
-                  if (retries > 0) {
-                    return fetchSupergraphWithDelay();
-                  }
-                  return lastSupergraphSdl;
-                },
-              );
-            } catch (e) {
-              configContext.logger.child('GraphOS').error(e);
-              if (retries > 0) {
-                return fetchSupergraphWithDelay();
-              }
-              return lastSupergraphSdl;
-            }
-          };
-          return fetchSupergraphWithDelay();
-        };
+        const graphosFetcherContainer = createGraphOSFetcher({
+          graphosOpts: config.supergraph,
+          configContext,
+        });
+        unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
+        supergraphLoadedPlace = graphosFetcherContainer.supergraphLoadedPlace;
       } else {
         unifiedGraphFetcher = () => {
           throw new Error(
