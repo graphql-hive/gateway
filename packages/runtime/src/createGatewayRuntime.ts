@@ -644,13 +644,18 @@ export function createGatewayRuntime<
           const uplinksToUse: string[] = [];
           let retries = opts.maxRetries || Math.max(3, uplinks.length);
           const fetchSupergraphWithDelay = (): MaybePromise<string> => {
-            const currentTime = Date.now();
-            if (nextFetchTime >= currentTime) {
-              const delay = nextFetchTime - currentTime;
-              graphosLogger.info(`Fetching supergraph with delay: ${delay}ms`);
-              return new Promise((resolve) =>
-                setTimeout(() => resolve(fetchSupergraph()), delay),
-              );
+            if (nextFetchTime) {
+              const currentTime = Date.now();
+              if (nextFetchTime >= currentTime) {
+                const delay = nextFetchTime - currentTime;
+                graphosLogger.info(`Fetching supergraph with delay: ${delay}ms`);
+                return new Promise((resolve) =>
+                  setTimeout(() => {
+                    nextFetchTime = 0;
+                    resolve(fetchSupergraph());
+                  }, delay),
+                );
+              }
             }
             return fetchSupergraph();
           };
