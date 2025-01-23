@@ -648,7 +648,9 @@ export function createGatewayRuntime<
               const currentTime = Date.now();
               if (nextFetchTime >= currentTime) {
                 const delay = nextFetchTime - currentTime;
-                graphosLogger.info(`Fetching supergraph with delay: ${delay}ms`);
+                graphosLogger.info(
+                  `Fetching supergraph with delay: ${delay}ms`,
+                );
                 return new Promise((resolve) =>
                   setTimeout(() => {
                     nextFetchTime = 0;
