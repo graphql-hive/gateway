@@ -21,19 +21,11 @@ interface WrapQueryTransformationContext extends Record<string, any> {}
 export default class WrapQuery<TContext = Record<string, any>>
   implements Transform<WrapQueryTransformationContext, TContext>
 {
-  private readonly wrapper: QueryWrapper;
-  private readonly extractor: (result: any) => any;
-  private readonly path: Array<string>;
-
   constructor(
-    path: Array<string>,
-    wrapper: QueryWrapper,
-    extractor: (result: any) => any,
-  ) {
-    this.path = path;
-    this.wrapper = wrapper;
-    this.extractor = extractor;
-  }
+    private readonly path: Array<string>,
+    private readonly wrapper: QueryWrapper,
+    private readonly extractor: (result: any) => any,
+  ) {}
 
   public transformRequest(
     originalRequest: ExecutionRequest,
@@ -91,17 +83,11 @@ export default class WrapQuery<TContext = Record<string, any>>
       const path = [...this.path];
       while (path.length > 1) {
         const next = path.shift()!;
-        if (isPrototypePollutingKey(next)) {
-          throw new Error('Invalid path key');
-        }
         if (data[next]) {
           data = data[next];
         }
       }
       const lastKey = path[0]!;
-      if (isPrototypePollutingKey(lastKey)) {
-        throw new Error('Invalid path key');
-      }
       data[lastKey] = this.extractor(data[lastKey]);
     }
 
