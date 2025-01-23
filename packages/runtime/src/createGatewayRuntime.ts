@@ -628,7 +628,7 @@ export function createGatewayRuntime<
           'GraphOS Managed Federation <br>' + opts.graphRef || '';
         let lastSeenId: string;
         let lastSupergraphSdl: string;
-        let minDelaySeconds = 0;
+        let nextFetchTime: number;
         const uplinksParam =
           opts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
         const uplinks =
@@ -644,15 +644,13 @@ export function createGatewayRuntime<
           const uplinksToUse: string[] = [];
           let retries = opts.maxRetries || Math.max(3, uplinks.length);
           const fetchSupergraphWithDelay = (): MaybePromise<string> => {
-            if (minDelaySeconds) {
-              graphosLogger.info(
-                `Fetching supergraph with delay: ${minDelaySeconds}s`,
+            const currentTime = Date.now();
+            if (nextFetchTime >= currentTime) {
+              const delay = nextFetchTime - currentTime;
+              graphosLogger.info(`Fetching supergraph with delay: ${delay}ms`);
+              return new Promise((resolve) =>
+                setTimeout(() => resolve(fetchSupergraph()), delay),
               );
-              return new Promise((resolve) => {
-                setTimeout(() => {
-                  resolve(fetchSupergraph());
-                }, minDelaySeconds * 1000);
-              });
             }
             return fetchSupergraph();
           };
@@ -688,21 +686,11 @@ export function createGatewayRuntime<
                   },
                 }),
                 (result) => {
-                  if (
-                    result.minDelaySeconds &&
-                    result.minDelaySeconds > minDelaySeconds
-                  ) {
-                    minDelaySeconds = result.minDelaySeconds;
-                    if (config.pollingInterval) {
-                      if (minDelaySeconds <= config.pollingInterval) {
-                        minDelaySeconds = 0;
-                      } else if (minDelaySeconds > config.pollingInterval) {
-                        minDelaySeconds -= config.pollingInterval;
-                      }
-                    }
+                  if (result.minDelaySeconds) {
                     attemptLogger.debug(
-                      `Setting min delay to ${minDelaySeconds}s`,
+                      `Setting min delay to ${result.minDelaySeconds}s`,
                     );
+                    nextFetchTime = Date.now() + result.minDelaySeconds * 1000;
                   }
                   if ('error' in result) {
                     attemptLogger.error(
