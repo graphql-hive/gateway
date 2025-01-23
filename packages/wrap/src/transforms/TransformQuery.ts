@@ -59,7 +59,13 @@ export default class TransformQuery<TContext = Record<string, any>>
     errorPathTransformer?: ErrorPathTransformer;
     fragments?: Record<string, FragmentDefinitionNode>;
   }) {
-    this.path = path.filter((key) => !isPrototypePollutingKey(key));
+    this.path = path;
+    const pollutingKeys = this.path.filter(isPrototypePollutingKey);
+    if (pollutingKeys.length > 0) {
+      throw new TypeError(
+        `Invalid path - cannot be a prototype polluting keys: ${pollutingKeys.join('.')}`,
+      );
+    }
     this.queryTransformer = queryTransformer;
     this.resultTransformer = resultTransformer;
     this.errorPathTransformer = errorPathTransformer;
