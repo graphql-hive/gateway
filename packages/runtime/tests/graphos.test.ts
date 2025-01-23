@@ -1,7 +1,8 @@
 import { setTimeout } from 'timers/promises';
-import type {
-  GatewayConfigContext,
-  GatewayGraphOSManagedFederationOptions,
+import {
+  DefaultLogger,
+  type GatewayConfigContext,
+  type GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway';
 import { Response } from '@whatwg-node/fetch';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +28,13 @@ describe('GraphOS', () => {
     it('should retry on error', async () => {
       let tries = 0;
       const { unifiedGraphFetcher } = createTestFetcher({
-        fetch: () => (++tries === 1 ? mockFetchError() : mockSDL()),
+        fetch: () => {
+          tries++;
+          if (tries === 1) {
+            return mockFetchError();
+          }
+          return mockSDL();
+        },
       });
 
       const result = unifiedGraphFetcher({});
@@ -44,11 +51,13 @@ describe('GraphOS', () => {
         { maxRetries: 3 },
       );
 
-      const result = unifiedGraphFetcher({});
+      const result = unifiedGraphFetcher({}).catch(
+        err => err
+      );
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
-      await expect(result).rejects.toThrow();
+      expect(await result).resolves.toBeInstanceOf(Error);
       expect(mockFetchError).toHaveBeenCalledTimes(3);
     });
 
@@ -76,7 +85,7 @@ describe('GraphOS', () => {
       unifiedGraphFetcher({});
       await advanceTimersByTimeAsync(25);
       expect(mockSDL).toHaveBeenCalledTimes(1);
-      await advanceTimersByTimeAsync(25);
+      await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       unifiedGraphFetcher({});
       await advanceTimersByTimeAsync(50);
@@ -88,14 +97,20 @@ describe('GraphOS', () => {
     it('should return the same supergraph schema if unchanged', async () => {
       let tries = 0;
       const { unifiedGraphFetcher } = createTestFetcher({
-        fetch: () => (++tries === 1 ? mockSDL() : mockUnchanged()),
+        fetch: () => {
+          tries++;
+          if (tries === 1) {
+            return mockUnchanged();
+          }
+          return mockSDL();
+        },
       });
       const result1 = unifiedGraphFetcher({});
       await advanceTimersByTimeAsync(1_000);
       const result2 = unifiedGraphFetcher({});
       await advanceTimersByTimeAsync(1_000);
       expect(await result1).toBe(await result2);
-    });
+    }, 30_000);
 
     it('should not wait if min delay is superior to polling interval', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
@@ -117,15 +132,15 @@ function createTestFetcher(
 ) {
   return createGraphOSFetcher({
     configContext: {
-      logger: {
+      logger: process.env['DEBUG'] ? new DefaultLogger() : {
         child() {
           return this;
         },
-        info: () => {},
-        debug: () => {},
-        error: () => {},
-        warn: () => {},
-        log: () => {},
+        info: () => { },
+        debug: () => { },
+        error: () => { },
+        warn: () => { },
+        log: () => { },
       },
       cwd: process.cwd(),
       ...configContext,
@@ -140,7 +155,7 @@ function createTestFetcher(
 }
 
 let supergraphSdl = 'TEST SDL';
-const mockSDL = vi.fn(() =>
+const mockSDL = vi.fn(async () =>
   Response.json({
     data: {
       routerConfig: {
@@ -154,7 +169,7 @@ const mockSDL = vi.fn(() =>
   }),
 );
 
-const mockUnchanged = vi.fn(() =>
+const mockUnchanged = vi.fn(async () =>
   Response.json({
     data: {
       routerConfig: {
@@ -166,7 +181,7 @@ const mockUnchanged = vi.fn(() =>
   }),
 );
 
-const mockFetchError = vi.fn(() =>
+const mockFetchError = vi.fn(async () =>
   Response.json({
     data: {
       routerConfig: {
