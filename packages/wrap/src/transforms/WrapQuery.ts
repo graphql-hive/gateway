@@ -21,18 +21,17 @@ interface WrapQueryTransformationContext extends Record<string, any> {}
 export default class WrapQuery<TContext = Record<string, any>>
   implements Transform<WrapQueryTransformationContext, TContext>
 {
-  private readonly wrapper: QueryWrapper;
-  private readonly extractor: (result: any) => any;
-  private readonly path: Array<string>;
-
   constructor(
-    path: Array<string>,
-    wrapper: QueryWrapper,
-    extractor: (result: any) => any,
+    private readonly path: Array<string>,
+    private readonly wrapper: QueryWrapper,
+    private readonly extractor: (result: any) => any,
   ) {
-    this.path = path;
-    this.wrapper = wrapper;
-    this.extractor = extractor;
+    const pollutingKeys = this.path.filter(isPrototypePollutingKey);
+    if (pollutingKeys.length > 0) {
+      throw new TypeError(
+        `Invalid path - cannot be a prototype polluting keys: ${pollutingKeys.join('.')}`,
+      );
+    }
   }
 
   public transformRequest(
@@ -91,17 +90,11 @@ export default class WrapQuery<TContext = Record<string, any>>
       const path = [...this.path];
       while (path.length > 1) {
         const next = path.shift()!;
-        if (isPrototypePollutingKey(next)) {
-          throw new Error('Invalid path key');
-        }
         if (data[next]) {
           data = data[next];
         }
       }
       const lastKey = path[0]!;
-      if (isPrototypePollutingKey(lastKey)) {
-        throw new Error('Invalid path key');
-      }
       data[lastKey] = this.extractor(data[lastKey]);
     }
 
