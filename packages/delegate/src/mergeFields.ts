@@ -18,6 +18,7 @@ import {
   locatedError,
   SelectionSetNode,
 } from 'graphql';
+import { isPrototypePollutingKey } from './isPrototypePollutingKey.js';
 import { leftOverByDelegationPlan, PLAN_LEFT_OVER } from './leftOver.js';
 import { Subschema } from './Subschema.js';
 import {
@@ -179,7 +180,7 @@ export function handleResolverResult(
   const objectSubschema = resolverResult[OBJECT_SUBSCHEMA_SYMBOL];
   const fieldSubschemaMap = resolverResult[FIELD_SUBSCHEMA_MAP_SYMBOL];
   for (const responseKey in resolverResult) {
-    if (responseKey === '__proto__') {
+    if (isPrototypePollutingKey(responseKey)) {
       continue;
     }
     const existingPropValue = object[responseKey];
