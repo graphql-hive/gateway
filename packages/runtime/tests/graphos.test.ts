@@ -3,9 +3,9 @@ import type {
   GatewayConfigContext,
   GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway';
+import { Response } from '@whatwg-node/fetch';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
-import { Response } from '@whatwg-node/fetch';
 
 describe('GraphOS', () => {
   describe('supergraph fetching', () => {
