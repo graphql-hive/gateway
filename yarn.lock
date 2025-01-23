@@ -3270,9 +3270,9 @@ __metadata:
     "@envelop/core": "npm:^5.0.2"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
-    "@graphql-mesh/cache-cfw-kv": "npm:^0.104.0"
-    "@graphql-mesh/cache-localforage": "npm:^0.103.0"
-    "@graphql-mesh/cache-redis": "npm:^0.103.0"
+    "@graphql-mesh/cache-cfw-kv": "npm:^0.104.12"
+    "@graphql-mesh/cache-localforage": "npm:^0.103.13"
+    "@graphql-mesh/cache-redis": "npm:^0.103.13"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
     "@graphql-mesh/plugin-deduplicate-request": "npm:^0.103.0"
@@ -3371,7 +3371,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-cfw-kv@npm:^0.104.0":
+"@graphql-mesh/cache-cfw-kv@npm:^0.104.12":
   version: 0.104.12
   resolution: "@graphql-mesh/cache-cfw-kv@npm:0.104.12"
   dependencies:
@@ -3398,7 +3398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-localforage@npm:^0.103.0":
+"@graphql-mesh/cache-localforage@npm:^0.103.13":
   version: 0.103.13
   resolution: "@graphql-mesh/cache-localforage@npm:0.103.13"
   dependencies:
@@ -3413,7 +3413,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-redis@npm:^0.103.0":
+"@graphql-mesh/cache-redis@npm:^0.103.13":
   version: 0.103.13
   resolution: "@graphql-mesh/cache-redis@npm:0.103.13"
   dependencies:
