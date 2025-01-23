@@ -110,7 +110,7 @@ export function createGraphOSFetcher({
             return lastSupergraphSdl;
           },
           (err) => {
-            graphosLogger.error(err);
+            attemptLogger.error(err);
             if (retries > 0) {
               return fetchSupergraphWithDelay();
             }
