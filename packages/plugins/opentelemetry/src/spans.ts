@@ -4,6 +4,7 @@ import {
   mapMaybePromise,
   type ExecutionRequest,
   type ExecutionResult,
+  type MaybeAsyncIterable,
   type MaybePromise,
 } from '@graphql-tools/utils';
 import {
@@ -206,12 +207,12 @@ export function startGraphQLExecuteSpan(input: {
 
 export const subgraphExecReqSpanMap = new WeakMap<ExecutionRequest, Span>();
 
-export function startSubgraphExecuteFetchSpan<T>(input: {
-  callback: (span: Span) => T;
+export function startSubgraphExecuteFetchSpan(input: {
+  callback: (span: Span) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
   tracer: Tracer;
   executionRequest: ExecutionRequest;
   subgraphName: string;
-}) {
+}): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
   return input.tracer.startActiveSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
@@ -230,7 +231,7 @@ export function startSubgraphExecuteFetchSpan<T>(input: {
     },
     spanCallback((span) => {
       const result$ = input.callback(span);
-      return mapMaybePromise(
+      const r = mapMaybePromise(
         result$,
         (result) => {
           span.end();
@@ -241,6 +242,7 @@ export function startSubgraphExecuteFetchSpan<T>(input: {
           throw err;
         },
       );
+      return r;
     }),
   );
 }
