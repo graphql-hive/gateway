@@ -87,10 +87,6 @@ export function startHttpSpan(input: {
   );
 }
 
-export function completeHttpSpan(span: Span, response: Response) {
-  span.end();
-}
-
 export function startGraphQLParseSpan(input: {
   callback: (span: Span) => any;
   tracer: Tracer;
