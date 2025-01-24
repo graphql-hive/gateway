@@ -7,11 +7,7 @@ import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import {
-  fakePromise,
-  isAsyncIterable,
-  MaybePromise,
-} from '@graphql-tools/utils';
+import { fakePromise, MaybePromise } from '@graphql-tools/utils';
 import {
   context,
   diag,
@@ -29,7 +25,6 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
-  completeHttpSpan,
   createSubgraphExecuteFetchSpan,
   startGraphQLExecuteSpan,
   startGraphQLParseSpan,
