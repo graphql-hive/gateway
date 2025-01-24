@@ -21,6 +21,7 @@ import {
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshHive from '@graphql-mesh/plugin-hive';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
+import { TransportContext } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
 import {
   DefaultLogger,
@@ -36,7 +37,6 @@ import {
   type SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
-import { fetchSupergraphSdlFromManagedFederation } from '@graphql-tools/federation';
 import {
   asArray,
   getDirectiveExtensions,
@@ -77,6 +77,7 @@ import {
   type YogaServerInstance,
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
+import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -604,7 +605,9 @@ export function createGatewayRuntime<
       },
     };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher: () => MaybePromise<UnifiedGraphSchema>;
+    let unifiedGraphFetcher: (
+      transportCtx: TransportContext,
+    ) => MaybePromise<UnifiedGraphSchema>;
     let supergraphLoadedPlace: string;
 
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
@@ -620,62 +623,12 @@ export function createGatewayRuntime<
         unifiedGraphFetcher = () =>
           fetcher().then(({ supergraphSdl }) => supergraphSdl);
       } else if (config.supergraph.type === 'graphos') {
-        const opts = config.supergraph;
-        supergraphLoadedPlace =
-          'GraphOS Managed Federation <br>' + opts.graphRef || '';
-        let lastSeenId: string;
-        let lastSupergraphSdl: string;
-        let minDelayMS = config.pollingInterval || 0;
-        unifiedGraphFetcher = () =>
-          mapMaybePromise(
-            fetchSupergraphSdlFromManagedFederation({
-              graphRef: opts.graphRef,
-              apiKey: opts.apiKey,
-              upLink: opts.upLink,
-              lastSeenId,
-              // @ts-expect-error TODO: what's up with type narrowing
-              fetch: configContext.fetch,
-              loggerByMessageLevel: {
-                ERROR(message) {
-                  configContext.logger.child('GraphOS').error(message);
-                },
-                INFO(message) {
-                  configContext.logger.child('GraphOS').info(message);
-                },
-                WARN(message) {
-                  configContext.logger.child('GraphOS').warn(message);
-                },
-              },
-            }),
-            async (result) => {
-              if (minDelayMS) {
-                await new Promise((resolve) => setTimeout(resolve, minDelayMS));
-              }
-              if (
-                result.minDelaySeconds &&
-                result.minDelaySeconds > minDelayMS
-              ) {
-                minDelayMS = result.minDelaySeconds;
-              }
-              if ('error' in result) {
-                configContext.logger
-                  .child('GraphOS')
-                  .error(result.error.message);
-                return lastSupergraphSdl;
-              }
-              if ('id' in result) {
-                lastSeenId = result.id;
-              }
-              if ('supergraphSdl' in result) {
-                lastSupergraphSdl = result.supergraphSdl;
-                return result.supergraphSdl;
-              }
-              if (lastSupergraphSdl) {
-                throw new Error('Failed to fetch supergraph SDL');
-              }
-              return lastSupergraphSdl;
-            },
-          );
+        const graphosFetcherContainer = createGraphOSFetcher({
+          graphosOpts: config.supergraph,
+          configContext,
+        });
+        unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
+        supergraphLoadedPlace = graphosFetcherContainer.supergraphLoadedPlace;
       } else {
         unifiedGraphFetcher = () => {
           throw new Error(

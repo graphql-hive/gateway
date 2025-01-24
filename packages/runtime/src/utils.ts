@@ -61,3 +61,17 @@ export const defaultQueryText = /* GraphQL */ `
   #     }
   #
 `;
+
+export function delayInMs(ms: number, signal?: AbortSignal) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = globalThis.setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        globalThis.clearTimeout(timeoutId);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+  });
+}
