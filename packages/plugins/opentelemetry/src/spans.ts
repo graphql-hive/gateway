@@ -156,8 +156,10 @@ export function startGraphQLValidateSpan(input: {
             span.recordException(error);
           }
         }
+        return result;
       } catch (err) {
         span.recordException(err as Exception);
+        throw err;
       }
     },
   );
