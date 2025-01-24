@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service authors",
-      "command": "nohup npm run service:authors $> service-authors.out &"
+      "command": "nohup npm run service:authors &> service-authors.out &"
     },
     {
       "name": "Wait for service authors",
@@ -14,7 +14,7 @@
     },
     {
       "name": "Start service books",
-      "command": "nohup npm run service:books $> service-books.out &"
+      "command": "nohup npm run service:books &> service-books.out &"
     },
     {
       "name": "Wait for service books",

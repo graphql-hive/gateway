@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service Wiki",
-      "command": "nohup npm run service:Wiki $> service-Wiki.out &"
+      "command": "nohup npm run service:Wiki &> service-Wiki.out &"
     },
     {
       "name": "Wait for service Wiki",
