@@ -25,11 +25,11 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
-  createSubgraphExecuteFetchSpan,
   startGraphQLExecuteSpan,
   startGraphQLParseSpan,
   startGraphQLValidateSpan,
   startHttpSpan,
+  startSubgraphExecuteFetchSpan,
   startUpstreamHttpFetchSpan,
 } from './spans';
 
@@ -314,7 +314,7 @@ export function useOpenTelemetry(
         const { subgraphName, executionRequest, executor, setExecutor } =
           onSubgraphPayload;
         setExecutor((...args) =>
-          createSubgraphExecuteFetchSpan({
+          startSubgraphExecuteFetchSpan({
             tracer,
             executionRequest,
             subgraphName,

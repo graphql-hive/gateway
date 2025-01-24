@@ -61,29 +61,25 @@ export function startHttpSpan(input: {
       },
       kind: SpanKind.SERVER,
     },
-    (span) => {
-      try {
-        const response$ = callback(span);
-        return mapMaybePromise(
-          response$,
-          (response) => {
-            span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-            span.setStatus({
-              code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-              message: response.ok ? undefined : response.statusText,
-            });
-            return response;
-          },
-          (err) => {
-            span.recordException(err as Exception);
-            throw err;
-          },
-        );
-      } catch (err) {
-        span.recordException(err as Exception);
-        throw err;
-      }
-    },
+    spanCallback((span) => {
+      const response$ = callback(span);
+      return mapMaybePromise(
+        response$,
+        (response) => {
+          span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+          span.setStatus({
+            code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+            message: response.ok ? undefined : response.statusText,
+          });
+          span.end();
+          return response;
+        },
+        (err) => {
+          recordAndEndSpan(span, err);
+          throw err;
+        },
+      );
+    }),
   );
 }
 
@@ -102,23 +98,19 @@ export function startGraphQLParseSpan<T>(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    (span) => {
-      try {
-        const result = input.callback(span);
-        if (result instanceof Error) {
-          span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
-          span.recordException(result);
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: result.message,
-          });
-        }
-        return result;
-      } catch (err) {
-        span.recordException(err as Exception);
-        throw err;
+    spanCallback((span) => {
+      const result = input.callback(span);
+      if (result instanceof Error) {
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+        span.recordException(result);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: result.message,
+        });
       }
-    },
+      span.end();
+      return result;
+    }),
   );
 }
 
@@ -137,31 +129,27 @@ export function startGraphQLValidateSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    (span) => {
-      try {
-        const result: any[] | readonly Error[] = input.callback(span);
-        if (result instanceof Error) {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: result.message,
-          });
-        } else if (Array.isArray(result) && result.length > 0) {
-          span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: result.map((e) => e.message).join(', '),
-          });
+    spanCallback((span) => {
+      const result: any[] | readonly Error[] = input.callback(span);
+      if (result instanceof Error) {
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: result.message,
+        });
+      } else if (Array.isArray(result) && result.length > 0) {
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: result.map((e) => e.message).join(', '),
+        });
 
-          for (const error in result) {
-            span.recordException(error);
-          }
+        for (const error in result) {
+          span.recordException(error);
         }
-        return result;
-      } catch (err) {
-        span.recordException(err as Exception);
-        throw err;
       }
-    },
+      span.end();
+      return result;
+    }),
   );
 }
 
@@ -185,44 +173,40 @@ export function startGraphQLExecuteSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    (span) => {
-      try {
-        const result$ = input.callback(span);
-        return mapMaybePromise(
-          result$,
-          (result) => {
-            if (result.errors && result.errors.length > 0) {
-              span.setAttribute(
-                SEMATTRS_GRAPHQL_ERROR_COUNT,
-                result.errors.length,
-              );
-              span.setStatus({
-                code: SpanStatusCode.ERROR,
-                message: result.errors.map((e) => e.message).join(', '),
-              });
+    spanCallback((span) => {
+      const result$ = input.callback(span);
+      return mapMaybePromise(
+        result$,
+        (result) => {
+          if (result.errors && result.errors.length > 0) {
+            span.setAttribute(
+              SEMATTRS_GRAPHQL_ERROR_COUNT,
+              result.errors.length,
+            );
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: result.errors.map((e) => e.message).join(', '),
+            });
 
-              for (const error of result.errors) {
-                span.recordException(error);
-              }
+            for (const error of result.errors) {
+              span.recordException(error);
             }
-            return result;
-          },
-          (err) => {
-            span.recordException(err as Exception);
-            throw err;
-          },
-        );
-      } catch (err) {
-        span.recordException(err as Exception);
-        throw err;
-      }
-    },
+          }
+          span.end();
+          return result;
+        },
+        (err) => {
+          recordAndEndSpan(span, err);
+          throw err;
+        },
+      );
+    }),
   );
 }
 
 export const subgraphExecReqSpanMap = new WeakMap<ExecutionRequest, Span>();
 
-export function createSubgraphExecuteFetchSpan<T>(input: {
+export function startSubgraphExecuteFetchSpan<T>(input: {
   callback: (span: Span) => T;
   tracer: Tracer;
   executionRequest: ExecutionRequest;
@@ -244,7 +228,20 @@ export function createSubgraphExecuteFetchSpan<T>(input: {
       },
       kind: SpanKind.CLIENT,
     },
-    input.callback,
+    spanCallback((span) => {
+      const result$ = input.callback(span);
+      return mapMaybePromise(
+        result$,
+        (result) => {
+          span.end();
+          return result;
+        },
+        (err) => {
+          recordAndEndSpan(span, err);
+          throw err;
+        },
+      );
+    }),
   );
 }
 
@@ -272,28 +269,52 @@ export function startUpstreamHttpFetchSpan(input: {
       attributes,
       kind: SpanKind.CLIENT,
     },
-    (span) => {
-      try {
-        const response$ = input.callback(span);
-        return mapMaybePromise(
-          response$,
-          (response) => {
-            span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-            span.setStatus({
-              code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-              message: response.ok ? undefined : response.statusText,
-            });
-            return response;
-          },
-          (err) => {
-            span.recordException(err as Exception);
-            throw err;
-          },
-        );
-      } catch (err) {
-        span.recordException(err as Exception);
-        throw err;
-      }
-    },
+    spanCallback((span) => {
+      const response$ = input.callback(span);
+      return mapMaybePromise(
+        response$,
+        (response) => {
+          span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+          span.setStatus({
+            code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+            message: response.ok ? undefined : response.statusText,
+          });
+          span.end();
+          return response;
+        },
+        (err) => {
+          recordAndEndSpan(span, err);
+          throw err;
+        },
+      );
+    }),
   );
+}
+
+function spanCallback<T>(callback: (span: Span) => T): (span: Span) => T {
+  return (span) => {
+    try {
+      return callback(span);
+    } catch (err) {
+      recordAndEndSpan(span, err);
+      throw err;
+    }
+  };
+}
+
+function recordAndEndSpan(span: Span, err: unknown) {
+  let message = 'Error';
+  if (err && typeof err === 'object' && 'message' in err) {
+    const errMessage = err['message'];
+    if (typeof errMessage === 'string') {
+      message = errMessage;
+    }
+  }
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message,
+  });
+  span.recordException(err as Exception);
+  span.end();
 }
