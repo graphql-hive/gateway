@@ -87,12 +87,12 @@ export function startHttpSpan(input: {
   );
 }
 
-export function startGraphQLParseSpan(input: {
-  callback: (span: Span) => any;
+export function startGraphQLParseSpan<T>(input: {
+  callback: (span: Span) => T;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}): MaybePromise<any> {
+}): T {
   return input.tracer.startActiveSpan(
     'graphql.parse',
     {
@@ -127,7 +127,7 @@ export function startGraphQLValidateSpan(input: {
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}) {
+}): any[] | readonly Error[] {
   return input.tracer.startActiveSpan(
     'graphql.validate',
     {
