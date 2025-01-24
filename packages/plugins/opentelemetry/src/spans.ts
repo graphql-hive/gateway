@@ -1,13 +1,15 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
+  mapMaybePromise,
   type ExecutionRequest,
   type ExecutionResult,
+  type MaybePromise,
 } from '@graphql-tools/utils';
 import {
   SpanKind,
   SpanStatusCode,
-  type Context,
+  type Exception,
   type Span,
   type Tracer,
 } from '@opentelemetry/api';
@@ -29,13 +31,13 @@ import {
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
-export function createHttpSpan(input: {
+export function startHttpSpan(input: {
   tracer: Tracer;
   request: Request;
   url: URL;
-  otelContext: Context;
-}): Span {
-  const { url, request, tracer, otelContext } = input;
+  callback: (span: Span) => Response | Promise<Response>;
+}): MaybePromise<Response> {
+  const { url, request, tracer, callback } = input;
   const path = url.pathname;
   const userAgent = request.headers.get('user-agent');
   const ips = request.headers.get('x-forwarded-for');
@@ -44,7 +46,7 @@ export function createHttpSpan(input: {
   const hostname = url.hostname || host || 'localhost';
   const rootSpanName = `${method} ${path}`;
 
-  return tracer.startSpan(
+  return tracer.startActiveSpan(
     rootSpanName,
     {
       attributes: {
@@ -59,26 +61,43 @@ export function createHttpSpan(input: {
       },
       kind: SpanKind.SERVER,
     },
-    otelContext,
+    (span) => {
+      try {
+        const response$ = callback(span);
+        return mapMaybePromise(
+          response$,
+          (response) => {
+            span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+            span.setStatus({
+              code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+              message: response.ok ? undefined : response.statusText,
+            });
+            return response;
+          },
+          (err) => {
+            span.recordException(err as Exception);
+            throw err;
+          },
+        );
+      } catch (err) {
+        span.recordException(err as Exception);
+        throw err;
+      }
+    },
   );
 }
 
 export function completeHttpSpan(span: Span, response: Response) {
-  span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-  span.setStatus({
-    code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-    message: response.ok ? undefined : response.statusText,
-  });
   span.end();
 }
 
-export function createGraphQLParseSpan(input: {
-  otelContext: Context;
+export function startGraphQLParseSpan(input: {
+  callback: (span: Span) => any;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}) {
-  const parseSpan = input.tracer.startSpan(
+}): MaybePromise<any> {
+  return input.tracer.startActiveSpan(
     'graphql.parse',
     {
       attributes: {
@@ -87,33 +106,33 @@ export function createGraphQLParseSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
-  );
-
-  return {
-    parseSpan,
-    done: (result: any | Error | null) => {
-      if (result instanceof Error) {
-        parseSpan.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
-        parseSpan.recordException(result);
-        parseSpan.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.message,
-        });
+    (span) => {
+      try {
+        const result = input.callback;
+        if (result instanceof Error) {
+          span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+          span.recordException(result);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: result.message,
+          });
+        }
+        return result;
+      } catch (err) {
+        span.recordException(err as Exception);
+        throw err;
       }
-
-      parseSpan.end();
     },
-  };
+  );
 }
 
-export function createGraphQLValidateSpan(input: {
-  otelContext: Context;
+export function startGraphQLValidateSpan(input: {
+  callback: (span: Span) => any;
   tracer: Tracer;
   query?: string;
   operationName?: string;
 }) {
-  const validateSpan = input.tracer.startSpan(
+  return input.tracer.startActiveSpan(
     'graphql.validate',
     {
       attributes: {
@@ -122,44 +141,42 @@ export function createGraphQLValidateSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
-  );
+    (span) => {
+      try {
+        const result: any[] | readonly Error[] = input.callback(span);
+        if (result instanceof Error) {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: result.message,
+          });
+        } else if (Array.isArray(result) && result.length > 0) {
+          span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: result.map((e) => e.message).join(', '),
+          });
 
-  return {
-    validateSpan,
-    done: (result: any[] | readonly Error[]) => {
-      if (result instanceof Error) {
-        validateSpan.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.message,
-        });
-      } else if (Array.isArray(result) && result.length > 0) {
-        validateSpan.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
-        validateSpan.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.map((e) => e.message).join(', '),
-        });
-
-        for (const error in result) {
-          validateSpan.recordException(error);
+          for (const error in result) {
+            span.recordException(error);
+          }
         }
+      } catch (err) {
+        span.recordException(err as Exception);
       }
-
-      validateSpan.end();
     },
-  };
+  );
 }
 
-export function createGraphQLExecuteSpan(input: {
+export function startGraphQLExecuteSpan(input: {
   args: ExecutionArgs;
-  otelContext: Context;
+  callback: (span: Span) => ExecutionResult | Promise<ExecutionResult>;
   tracer: Tracer;
-}) {
+}): MaybePromise<ExecutionResult> {
   const operation = getOperationASTFromDocument(
     input.args.document,
     input.args.operationName || undefined,
   );
-  const executeSpan = input.tracer.startSpan(
+  return input.tracer.startActiveSpan(
     'graphql.execute',
     {
       attributes: {
@@ -170,41 +187,50 @@ export function createGraphQLExecuteSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
-  );
+    (span) => {
+      try {
+        const result$ = input.callback(span);
+        return mapMaybePromise(
+          result$,
+          (result) => {
+            if (result.errors && result.errors.length > 0) {
+              span.setAttribute(
+                SEMATTRS_GRAPHQL_ERROR_COUNT,
+                result.errors.length,
+              );
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: result.errors.map((e) => e.message).join(', '),
+              });
 
-  return {
-    executeSpan,
-    done: (result: ExecutionResult) => {
-      if (result.errors && result.errors.length > 0) {
-        executeSpan.setAttribute(
-          SEMATTRS_GRAPHQL_ERROR_COUNT,
-          result.errors.length,
+              for (const error of result.errors) {
+                span.recordException(error);
+              }
+            }
+            return result;
+          },
+          (err) => {
+            span.recordException(err as Exception);
+            throw err;
+          },
         );
-        executeSpan.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.errors.map((e) => e.message).join(', '),
-        });
-
-        for (const error in result.errors) {
-          executeSpan.recordException(error);
-        }
+      } catch (err) {
+        span.recordException(err as Exception);
+        throw err;
       }
-
-      executeSpan.end();
     },
-  };
+  );
 }
 
 export const subgraphExecReqSpanMap = new WeakMap<ExecutionRequest, Span>();
 
-export function createSubgraphExecuteFetchSpan(input: {
-  otelContext: Context;
+export function createSubgraphExecuteFetchSpan<T>(input: {
+  callback: (span: Span) => T;
   tracer: Tracer;
   executionRequest: ExecutionRequest;
   subgraphName: string;
 }) {
-  const subgraphExecuteSpan = input.tracer.startSpan(
+  return input.tracer.startActiveSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
@@ -220,25 +246,17 @@ export function createSubgraphExecuteFetchSpan(input: {
       },
       kind: SpanKind.CLIENT,
     },
-    input.otelContext,
+    input.callback,
   );
-
-  subgraphExecReqSpanMap.set(input.executionRequest, subgraphExecuteSpan);
-
-  return {
-    done() {
-      subgraphExecuteSpan.end();
-    },
-  };
 }
 
-export function createUpstreamHttpFetchSpan(input: {
-  otelContext: Context;
+export function startUpstreamHttpFetchSpan(input: {
+  callback: (span: Span) => MaybePromise<Response>;
   tracer: Tracer;
   url: string;
   fetchOptions: RequestInit;
   executionRequest?: ExecutionRequest;
-}) {
+}): MaybePromise<Response> {
   const urlObj = new URL(input.url);
 
   const attributes = {
@@ -250,39 +268,34 @@ export function createUpstreamHttpFetchSpan(input: {
     [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
   };
 
-  let fetchSpan: Span | undefined;
-  let isOrigSpan: boolean;
-
-  if (input.executionRequest) {
-    fetchSpan = subgraphExecReqSpanMap.get(input.executionRequest);
-    if (fetchSpan) {
-      isOrigSpan = false;
-      fetchSpan.setAttributes(attributes);
-    }
-  }
-
-  if (!fetchSpan) {
-    fetchSpan = input.tracer.startSpan(
-      'http.fetch',
-      {
-        attributes,
-        kind: SpanKind.CLIENT,
-      },
-      input.otelContext,
-    );
-    isOrigSpan = true;
-  }
-
-  return {
-    done: (response: Response) => {
-      fetchSpan.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-      fetchSpan.setStatus({
-        code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-        message: response.ok ? undefined : response.statusText,
-      });
-      if (isOrigSpan) {
-        fetchSpan.end();
+  return input.tracer.startActiveSpan(
+    'http.fetch',
+    {
+      attributes,
+      kind: SpanKind.CLIENT,
+    },
+    (span) => {
+      try {
+        const response$ = input.callback(span);
+        return mapMaybePromise(
+          response$,
+          (response) => {
+            span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+            span.setStatus({
+              code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+              message: response.ok ? undefined : response.statusText,
+            });
+            return response;
+          },
+          (err) => {
+            span.recordException(err as Exception);
+            throw err;
+          },
+        );
+      } catch (err) {
+        span.recordException(err as Exception);
+        throw err;
       }
     },
-  };
+  );
 }

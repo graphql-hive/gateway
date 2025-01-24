@@ -3680,6 +3680,7 @@ __metadata:
     "@opentelemetry/sdk-trace-web": "npm:^1.29.0"
     "@opentelemetry/semantic-conventions": "npm:^1.28.0"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
+    "@whatwg-node/server": "npm:^0.9.65"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.10.11"
     pkgroll: "npm:2.6.1"
@@ -7247,7 +7248,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.60, @whatwg-node/server@npm:^0.9.64":
+"@whatwg-node/server@npm:^0.9.55, @whatwg-node/server@npm:^0.9.60, @whatwg-node/server@npm:^0.9.64, @whatwg-node/server@npm:^0.9.65":
   version: 0.9.65
   resolution: "@whatwg-node/server@npm:0.9.65"
   dependencies:

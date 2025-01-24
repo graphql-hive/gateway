@@ -30,12 +30,12 @@ import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
   completeHttpSpan,
-  createGraphQLExecuteSpan,
-  createGraphQLParseSpan,
-  createGraphQLValidateSpan,
-  createHttpSpan,
   createSubgraphExecuteFetchSpan,
-  createUpstreamHttpFetchSpan,
+  startGraphQLExecuteSpan,
+  startGraphQLParseSpan,
+  startGraphQLValidateSpan,
+  startHttpSpan,
+  startUpstreamHttpFetchSpan,
 } from './spans';
 
 type PrimitiveOrEvaluated<TExpectedResult, TInput = never> =
@@ -219,33 +219,40 @@ export function useOpenTelemetry(
       });
     },
     onRequest(onRequestPayload) {
+      let { requestHandler, request, setRequestHandler } = onRequestPayload;
+
+      if (inheritContext) {
+        const originalRequestHandler = requestHandler;
+
+        requestHandler = (...args) =>
+          context.with(
+            propagation.extract(
+              context.active(),
+              request.headers,
+              HeadersTextMapGetter,
+            ),
+            () => originalRequestHandler(...args),
+          );
+      }
+
       const shouldTraceHttp =
         typeof options.spans?.http === 'function'
           ? options.spans.http(onRequestPayload)
           : (options.spans?.http ?? true);
 
-      if (!shouldTraceHttp) {
-        return preparation$;
+      if (shouldTraceHttp) {
+        const { url } = onRequestPayload;
+        const originalRequestHandler = requestHandler;
+        requestHandler = (...args) =>
+          startHttpSpan({
+            tracer,
+            request,
+            url,
+            callback: () => originalRequestHandler(...args),
+          }) as Response | Promise<Response>; // FIXME: MaybePromise is not assignable to T|Promise<T>
       }
 
-      const { request, url } = onRequestPayload;
-      const otelContext = inheritContext
-        ? propagation.extract(
-            context.active(),
-            request.headers,
-            HeadersTextMapGetter,
-          )
-        : context.active();
-
-      const httpSpan = createHttpSpan({
-        request,
-        url,
-        tracer,
-        otelContext,
-      });
-
-      requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
-
+      setRequestHandler(requestHandler);
       return preparation$;
     },
     onValidate(onValidatePayload) {
@@ -254,20 +261,17 @@ export function useOpenTelemetry(
           ? options.spans.graphqlValidate(onValidatePayload)
           : (options.spans?.graphqlValidate ?? true);
 
-      const { context } = onValidatePayload;
-      const otelContext = requestContextMapping.get(context.request);
-
-      if (shouldTraceValidate && otelContext) {
-        const { done } = createGraphQLValidateSpan({
-          otelContext,
-          tracer,
-          query: context.params.query,
-          operationName: context.params.operationName,
-        });
-
-        return ({ result }) => done(result);
+      if (shouldTraceValidate) {
+        const { context, setValidationFn, validateFn } = onValidatePayload;
+        setValidationFn((...args) =>
+          startGraphQLValidateSpan({
+            tracer,
+            query: context.params.query?.trim(),
+            operationName: context.params.operationName,
+            callback: () => validateFn(...args),
+          }),
+        );
       }
-      return void 0;
     },
     onParse(onParsePayload) {
       const shouldTracePrase =
@@ -275,18 +279,16 @@ export function useOpenTelemetry(
           ? options.spans.graphqlParse(onParsePayload)
           : (options.spans?.graphqlParse ?? true);
 
-      const { context } = onParsePayload;
-      const otelContext = requestContextMapping.get(context.request);
-
-      if (shouldTracePrase && otelContext) {
-        const { done } = createGraphQLParseSpan({
-          otelContext,
-          tracer,
-          query: context.params.query,
-          operationName: context.params.operationName,
-        });
-
-        return ({ result }) => done(result);
+      if (shouldTracePrase) {
+        const { context, setParseFn, parseFn } = onParsePayload;
+        setParseFn((...args) =>
+          startGraphQLParseSpan({
+            tracer,
+            operationName: context.params.operationName,
+            query: context.params.query?.trim(),
+            callback: () => parseFn(...args),
+          }),
+        );
       }
       return void 0;
     },
@@ -296,25 +298,16 @@ export function useOpenTelemetry(
           ? options.spans.graphqlExecute(onExecuteArgs)
           : (options.spans?.graphqlExecute ?? true);
 
-      const { args } = onExecuteArgs;
-      const otelContext = requestContextMapping.get(args.contextValue.request);
-
-      if (shouldTraceExecute && otelContext) {
-        const { done } = createGraphQLExecuteSpan({
-          args,
-          otelContext,
-          tracer,
-        });
-
-        return {
-          onExecuteDone: ({ result }) => {
-            if (!isAsyncIterable(result)) {
-              done(result);
-            }
-          },
-        };
+      if (shouldTraceExecute) {
+        const { setExecuteFn, executeFn } = onExecuteArgs;
+        setExecuteFn((...args) =>
+          startGraphQLExecuteSpan({
+            args: onExecuteArgs.args,
+            tracer,
+            callback: () => executeFn(...args),
+          }),
+        );
       }
-      return void 0;
     },
     onSubgraphExecute(onSubgraphPayload) {
       const shouldTraceSubgraphExecute =
@@ -322,24 +315,18 @@ export function useOpenTelemetry(
           ? options.spans.subgraphExecute(onSubgraphPayload)
           : (options.spans?.subgraphExecute ?? true);
 
-      const otelContext = onSubgraphPayload.executionRequest.context?.request
-        ? requestContextMapping.get(
-            onSubgraphPayload.executionRequest.context.request,
-          )
-        : undefined;
-
-      if (shouldTraceSubgraphExecute && otelContext) {
-        const { subgraphName, executionRequest } = onSubgraphPayload;
-        const { done } = createSubgraphExecuteFetchSpan({
-          otelContext,
-          tracer,
-          executionRequest,
-          subgraphName,
-        });
-
-        return done;
+      if (shouldTraceSubgraphExecute) {
+        const { subgraphName, executionRequest, executor, setExecutor } =
+          onSubgraphPayload;
+        setExecutor((...args) =>
+          createSubgraphExecuteFetchSpan({
+            tracer,
+            executionRequest,
+            subgraphName,
+            callback: () => executor(...args),
+          }),
+        );
       }
-      return void 0;
     },
     onFetch(onFetchPayload) {
       const shouldTraceFetch =
@@ -347,51 +334,27 @@ export function useOpenTelemetry(
           ? options.spans.upstreamFetch(onFetchPayload)
           : (options.spans?.upstreamFetch ?? true);
 
-      const {
-        context,
-        options: fetchOptions,
-        url,
-        setOptions,
-        executionRequest,
-      } = onFetchPayload;
-
-      const otelContext = requestContextMapping.get(context.request);
-      if (shouldTraceFetch && otelContext) {
-        if (propagateContext) {
-          const reqHeaders = getHeadersObj(fetchOptions.headers || {});
-          propagation.inject(otelContext, reqHeaders);
-
-          setOptions({
-            ...fetchOptions,
-            headers: reqHeaders,
-          });
-        }
-
-        const { done } = createUpstreamHttpFetchSpan({
-          otelContext,
-          tracer,
-          url,
-          fetchOptions,
-          executionRequest,
-        });
-
-        return (fetchDonePayload) => done(fetchDonePayload.response);
-      }
-      return void 0;
-    },
-    onResponse({ request, response }) {
-      const otelContext = requestContextMapping.get(request);
-      if (!otelContext) {
-        return;
+      if (propagateContext) {
+        const { setOptions, options } = onFetchPayload;
+        const reqHeaders = getHeadersObj(options.headers || {});
+        propagation.inject(context.active(), reqHeaders);
+        setOptions({ ...options, headers: reqHeaders });
       }
 
-      const rootSpan = trace.getSpan(otelContext);
+      if (shouldTraceFetch) {
+        const { setFetchFn, fetchFn, executionRequest, url, options } =
+          onFetchPayload;
 
-      if (rootSpan) {
-        completeHttpSpan(rootSpan, response);
+        setFetchFn((...args) =>
+          startUpstreamHttpFetchSpan({
+            tracer,
+            url,
+            fetchOptions: options,
+            executionRequest,
+            callback: () => fetchFn(...args),
+          }),
+        );
       }
-
-      requestContextMapping.delete(request);
     },
     async [DisposableSymbols.asyncDispose]() {
       if (spanProcessors) {
