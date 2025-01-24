@@ -38,7 +38,6 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
-    "@apollo/server-gateway-interface": "^1.1.1",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/merge": "^9.0.12",
@@ -55,6 +54,7 @@
   "devDependencies": {
     "@apollo/gateway": "^2.5.4",
     "@apollo/server": "^4.11.3",
+    "@apollo/server-gateway-interface": "^1.1.1",
     "@apollo/subgraph": "^2.5.4",
     "graphql": "^16.9.0",
     "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#main",
