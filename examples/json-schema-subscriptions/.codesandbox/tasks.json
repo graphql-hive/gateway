@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service api",
-      "command": "nohup npm run service:api $> service-api.out &"
+      "command": "nohup npm run service:api &> service-api.out &"
     },
     {
       "name": "Wait for service api",

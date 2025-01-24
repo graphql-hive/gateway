@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service bucket",
-      "command": "nohup npm run service:bucket $> service-bucket.out &"
+      "command": "nohup npm run service:bucket &> service-bucket.out &"
     },
     {
       "name": "Wait for service bucket",

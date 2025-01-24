@@ -6,7 +6,7 @@
     },
     {
       "name": "Start service accounts",
-      "command": "nohup npm run service:accounts $> service-accounts.out &"
+      "command": "nohup npm run service:accounts &> service-accounts.out &"
     },
     {
       "name": "Wait for service accounts",
@@ -14,7 +14,7 @@
     },
     {
       "name": "Start service inventory",
-      "command": "nohup npm run service:inventory $> service-inventory.out &"
+      "command": "nohup npm run service:inventory &> service-inventory.out &"
     },
     {
       "name": "Wait for service inventory",
@@ -22,7 +22,7 @@
     },
     {
       "name": "Start service products",
-      "command": "nohup npm run service:products $> service-products.out &"
+      "command": "nohup npm run service:products &> service-products.out &"
     },
     {
       "name": "Wait for service products",
@@ -30,7 +30,7 @@
     },
     {
       "name": "Start service reviews",
-      "command": "nohup npm run service:reviews $> service-reviews.out &"
+      "command": "nohup npm run service:reviews &> service-reviews.out &"
     },
     {
       "name": "Wait for service reviews",
