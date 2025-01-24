@@ -18,6 +18,7 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -188,6 +189,9 @@ export function useOpenTelemetry(
           });
           webProvider.register();
           provider = webProvider;
+          const contextManager = new AsyncLocalStorageContextManager();
+          contextManager.enable();
+          context.setGlobalContextManager(contextManager);
         }
         const pluginLogger = options.logger.child('OpenTelemetry');
         diag.setLogger(
