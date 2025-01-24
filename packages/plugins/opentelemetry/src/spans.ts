@@ -104,7 +104,7 @@ export function startGraphQLParseSpan(input: {
     },
     (span) => {
       try {
-        const result = input.callback;
+        const result = input.callback(span);
         if (result instanceof Error) {
           span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
           span.recordException(result);
