@@ -16,10 +16,12 @@ import {
 } from '@graphql-tools/schema';
 import { inspect, IResolvers } from '@graphql-tools/utils';
 import {
+  execute,
   extendSchema,
   GraphQLDirective,
   GraphQLObjectType,
   GraphQLSchema,
+  parse,
   specifiedDirectives,
 } from 'graphql';
 import {
@@ -117,6 +119,26 @@ export function stitchSchemas<
     extensions: null,
     assumeValid: rest.assumeValid,
   });
+
+  console.log(
+    JSON.stringify(
+      execute({
+        schema,
+        document: parse(/* GraphQL */ `
+          {
+            __type(name: "UpdateFooInput") {
+              inputFields {
+                deprecationReason
+                name
+              }
+            }
+          }
+        `),
+      }),
+      null,
+      '  ',
+    ),
+  );
 
   for (const extension of extensions) {
     schema = extendSchema(schema, extension, {

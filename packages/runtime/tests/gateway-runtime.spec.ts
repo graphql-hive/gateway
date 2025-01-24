@@ -25,6 +25,7 @@ describe('Gateway Runtime', () => {
   let upstreamIsDownForNextRequest = false;
 
   function createSupergraphRuntime() {
+    return null;
     return createGatewayRuntime({
       logging: isDebug(),
       supergraph: () => {
@@ -53,6 +54,13 @@ describe('Gateway Runtime', () => {
       typeDefs: /* GraphQL */ `
         type Query {
           foo: String
+        }
+        type Mutation {
+          updateFoo(input: UpdateFooInput!): String
+        }
+        input UpdateFooInput {
+          good: String!
+          bad: String @deprecated(reason: "No bad only good!")
         }
       `,
       resolvers: {
@@ -507,5 +515,50 @@ describe('Gateway Runtime', () => {
     });
     expect(resp2.ok).toBeTruthy();
     expect(subgraphCallCnt).toBe(1);
+  });
+
+  describe('Introspection', () => {
+    it('should keep deprecated input fields', async () => {
+      await using gw = createGatewayRuntime({
+        logging: isDebug(),
+        supergraph: () =>
+          getUnifiedGraphGracefully([
+            {
+              name: 'upstream',
+              schema: createUpstreamSchema(),
+              url: 'http://localhost:4000/graphql',
+            },
+          ]),
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstreamFetch,
+          ),
+        ],
+      });
+
+      const res = await gw.fetch(
+        'http://localhost:4000/graphql?query={__type(name:"UpdateFooInput"){inputFields{deprecationReason name}}}',
+      );
+
+      await expect(res.json()).resolves.toMatchInlineSnapshot(`
+        {
+          "data": {
+            "__type": {
+              "inputFields": [
+                {
+                  "deprecationReason": null,
+                  "name": "good",
+                },
+                {
+                  "deprecationReason": "No bad only good!",
+                  "name": "bad",
+                },
+              ],
+            },
+          },
+        }
+      `);
+    });
   });
 });
