@@ -201,7 +201,7 @@ export const defaultOptions = {
       ? '127.0.0.1'
       : '0.0.0.0',
   port: 4000,
-  polling: '10s',
+  pollingInterval: 10_000,
 };
 
 /** Root cli for the gateway. */
@@ -213,9 +213,10 @@ let cli = new Command()
   .addOption(
     new Option(
       '--fork <count>',
-      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${JSON.stringify(defaultOptions.fork)}`,
+      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker`,
     )
       .env('FORK')
+      .default(defaultOptions.fork)
       .argParser((v) => {
         const count = parseInt(v);
         if (isNaN(count)) {
@@ -235,17 +236,16 @@ let cli = new Command()
       `path to the configuration file. defaults to the following files respectively in the current working directory: ${createDefaultConfigPaths('gateway').join(', ')}`,
     ).env('CONFIG_PATH'),
   )
-  .option(
-    '-h, --host <hostname>',
-    `host to use for serving (default: ${JSON.stringify(defaultOptions.host)}`,
-    defaultOptions.host,
+  .addOption(
+    new Option('-h, --host <hostname>', `host to use for serving`).default(
+      defaultOptions.host,
+      defaultOptions.host,
+    ),
   )
   .addOption(
-    new Option(
-      '-p, --port <number>',
-      `port to use for serving (default: ${JSON.stringify(defaultOptions.port)}`,
-    )
+    new Option('-p, --port <number>', `port to use for serving`)
       .env('PORT')
+      .default(defaultOptions.port)
       .argParser((v) => {
         const port = parseInt(v);
         if (isNaN(port)) {
@@ -257,9 +257,9 @@ let cli = new Command()
   .addOption(
     new Option(
       '--polling, --pollingInterval <duration>',
-      `schema polling interval in human readable duration (default: ${JSON.stringify(defaultOptions.polling)})`,
+      `schema polling interval in human readable duration`,
     )
-      .default(parseDuration(defaultOptions.polling))
+      .default(10_000, '10s')
       .env('POLLING')
       .argParser((v) => {
         const interval = parseDuration(v) as number;
