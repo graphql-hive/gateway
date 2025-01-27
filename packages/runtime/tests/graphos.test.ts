@@ -3,7 +3,7 @@ import {
   DefaultLogger,
   type GatewayConfigContext,
   type GatewayGraphOSManagedFederationOptions,
-} from '@graphql-hive/gateway';
+} from '@graphql-hive/gateway-runtime';
 import { Response } from '@whatwg-node/fetch';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
