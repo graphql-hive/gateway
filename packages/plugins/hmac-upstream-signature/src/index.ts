@@ -1,4 +1,4 @@
-import type { GatewayPlugin } from '@graphql-hive/gateway';
+import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import { mapMaybePromise } from '@graphql-tools/utils';
