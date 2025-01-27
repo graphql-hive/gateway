@@ -15,7 +15,7 @@
     "@types/ws": "^8",
     "express": "^4.21.1",
     "graphql-sse": "^2.5.3",
-    "graphql-ws": "^6.0.1",
+    "graphql-ws": "^6.0.2",
     "ws": "^8.17.1"
   }
 }
