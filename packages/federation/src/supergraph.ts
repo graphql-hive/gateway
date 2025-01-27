@@ -1481,6 +1481,7 @@ export interface GetStitchedSchemaFromSupergraphSdlOpts
   onStitchingOptions?(
     opts: ReturnType<typeof getStitchingOptionsFromSupergraphSdl>,
   ): void;
+  onStitchedSchema?(schema: GraphQLSchema): GraphQLSchema | void;
 }
 
 export function getStitchedSchemaFromSupergraphSdl(
@@ -1488,8 +1489,13 @@ export function getStitchedSchemaFromSupergraphSdl(
 ) {
   const stitchSchemasOpts = getStitchingOptionsFromSupergraphSdl(opts);
   opts.onStitchingOptions?.(stitchSchemasOpts);
-  const supergraphSchema = stitchSchemas(stitchSchemasOpts);
-  return filterInternalFieldsAndTypes(supergraphSchema);
+  let supergraphSchema = stitchSchemas(stitchSchemasOpts);
+  supergraphSchema = filterInternalFieldsAndTypes(supergraphSchema);
+  if (opts.onStitchedSchema) {
+    supergraphSchema =
+      opts.onStitchedSchema(supergraphSchema) || supergraphSchema;
+  }
+  return supergraphSchema;
 }
 
 const anyTypeDefinitionNode: ScalarTypeDefinitionNode = {

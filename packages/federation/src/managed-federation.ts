@@ -1,5 +1,13 @@
+import type {
+  GatewayApolloConfig,
+  GatewayGraphQLRequestContext,
+  GatewayInterface,
+  GatewayLoadResult,
+  GatewaySchemaLoadOrUpdateCallback,
+} from '@apollo/server-gateway-interface';
+import { createDefaultExecutor } from '@graphql-tools/delegate';
 import type { FetchFn } from '@graphql-tools/executor-http';
-import { ExecutionResult } from '@graphql-tools/utils';
+import { ExecutionResult, fakePromise } from '@graphql-tools/utils';
 import type { TypedEventTarget } from '@graphql-yoga/typed-event-target';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { CustomEvent } from '@whatwg-node/events';
@@ -296,6 +304,7 @@ export async function getStitchedSchemaFromManagedFederation(
       schema: getStitchedSchemaFromSupergraphSdl({
         supergraphSdl: result.supergraphSdl,
         onStitchingOptions: options.onStitchingOptions,
+        onStitchedSchema: options.onStitchedSchema,
         httpExecutorOpts: options.httpExecutorOpts,
         onSubschemaConfig: options.onSubschemaConfig,
         batch: options.batch,
@@ -350,7 +359,7 @@ const TypedEventTargetCtor = EventTarget as unknown as new <
 
 export class SupergraphSchemaManager
   extends TypedEventTargetCtor<SupergraphSchemaManagerEvent>
-  implements Disposable
+  implements GatewayInterface
 {
   public schema?: GraphQLSchema = undefined;
 
@@ -359,9 +368,41 @@ export class SupergraphSchemaManager
 
   #timeout: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private options: SupergraphSchemaManagerOptions) {
+  constructor(private options: SupergraphSchemaManagerOptions = {}) {
     super();
   }
+
+  load = async (options: {
+    apollo: GatewayApolloConfig;
+  }): Promise<GatewayLoadResult> => {
+    this.options.apiKey ||= options.apollo.key;
+    this.options.graphRef ||= options.apollo.graphRef;
+    await this.#fetchSchema();
+    return {
+      executor(requestContext: GatewayGraphQLRequestContext) {
+        return createDefaultExecutor(requestContext.schema)({
+          document: requestContext.document,
+          variables: requestContext.request.variables,
+          operationType: requestContext.operation.operation,
+          operationName: requestContext.operationName || undefined,
+          context: requestContext.context,
+        }) as Promise<ExecutionResult>;
+      },
+    };
+  };
+
+  onSchemaLoadOrUpdate = (callback: GatewaySchemaLoadOrUpdateCallback) => {
+    const onSchemaChange = (event: SupergraphSchemaManagerSchemaEvent) => {
+      callback({
+        apiSchema: event.detail.schema,
+        coreSupergraphSdl: event.detail.supergraphSdl,
+      });
+    };
+    this.addEventListener('schema', onSchemaChange);
+    return () => {
+      this.removeEventListener('schema', onSchemaChange);
+    };
+  };
 
   start = (delayInSeconds = 0) => {
     if (this.#timeout) {
@@ -390,6 +431,7 @@ export class SupergraphSchemaManager
       clearTimeout(this.#timeout);
       this.#timeout = undefined;
     }
+    return fakePromise();
   };
 
   #fetchSchema = async () => {

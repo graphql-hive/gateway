@@ -296,7 +296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:^4.10.3, @apollo/server@npm:^4.11.2":
+"@apollo/server@npm:^4.10.3, @apollo/server@npm:^4.11.2, @apollo/server@npm:^4.11.3":
   version: 4.11.3
   resolution: "@apollo/server@npm:4.11.3"
   dependencies:
@@ -4093,6 +4093,8 @@ __metadata:
   resolution: "@graphql-tools/federation@workspace:packages/federation"
   dependencies:
     "@apollo/gateway": "npm:^2.5.4"
+    "@apollo/server": "npm:^4.11.3"
+    "@apollo/server-gateway-interface": "npm:^1.1.1"
     "@apollo/subgraph": "npm:^2.5.4"
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/executor-http": "workspace:^"
