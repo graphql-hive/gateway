@@ -3299,7 +3299,7 @@ __metadata:
     graphql-middleware: "npm:^6.1.35"
     graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.10.11"
-    parse-duration: "npm:^1.1.0"
+    parse-duration: "npm:^2.0.0"
     pkgroll: "npm:2.6.1"
     postject: "npm:^1.0.0-alpha.6"
     rimraf: "npm:^6.0.1"
@@ -14364,10 +14364,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse-duration@npm:^1.1.0":
-  version: 1.1.2
-  resolution: "parse-duration@npm:1.1.2"
-  checksum: 10c0/2e014150ecfa4a509028a6122b045bda5c1e0c367ca5eae854cdb91cf2a9ce763bb4ae551cecffda19330316976f699a71f6c125c26e6cacbc02fced812316ab
+"parse-duration@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "parse-duration@npm:2.0.1"
+  checksum: 10c0/8629786dbefd20603daddca03af9ac383cf5220e2728c616bb3a51aa60a64c8bfb2ef9603ccb4805642447c7f788334003a54226e39fedd9ca09acdf0321c8e8
   languageName: node
   linkType: hard
 
