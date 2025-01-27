@@ -256,13 +256,13 @@ let cli = new Command()
   )
   .addOption(
     new Option(
-      '--polling <duration>',
+      '--polling, --pollingInterval <duration>',
       `schema polling interval in human readable duration (default: ${JSON.stringify(defaultOptions.polling)})`,
     )
       .default(parseDuration(defaultOptions.polling))
       .env('POLLING')
       .argParser((v) => {
-        const interval = parseDuration(v);
+        const interval = parseDuration(v) as number;
         if (!interval) {
           throw new InvalidArgumentError('not a duration.');
         }

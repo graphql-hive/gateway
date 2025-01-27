@@ -35,7 +35,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveCdnKey,
         hiveRegistryToken,
         maskedErrors,
-        polling,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
@@ -123,7 +122,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
               },
             }
           : {}),
-        ...(polling ? { pollingInterval: polling } : {}),
         proxy,
         ...(schema ? { schema } : {}),
         logging: loadedConfig.logging ?? ctx.log,
