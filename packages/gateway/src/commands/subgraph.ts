@@ -36,7 +36,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const {
         maskedErrors,
         hiveRegistryToken,
-        polling,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
@@ -84,7 +83,6 @@ export const addCommand: AddCommand = (ctx, cli) =>
               },
             }
           : {}),
-        ...(polling ? { pollingInterval: polling } : {}),
         subgraph,
         logging: loadedConfig.logging ?? ctx.log,
         productName: ctx.productName,
