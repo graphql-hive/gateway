@@ -1,15 +1,18 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
+import { GetEnvelopedFn } from '@envelop/core';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { MaybePromise } from '@graphql-tools/utils';
-import { execute, subscribe, type ExecutionArgs } from 'graphql';
+import { type ExecutionArgs } from 'graphql';
 import type { ConnectionInitMessage, Context, ServerOptions } from 'graphql-ws';
+
+type Envelope = ReturnType<GetEnvelopedFn<unknown>>;
 
 // so we need to make sure we always use the freshest instance
 type EnvelopedExecutionArgs = ExecutionArgs & {
   rootValue: {
-    execute: typeof execute;
-    subscribe: typeof subscribe;
+    execute: Envelope['execute'];
+    subscribe: Envelope['subscribe'];
   };
 };
 
