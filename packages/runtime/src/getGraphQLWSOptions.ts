@@ -1,9 +1,9 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
-import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { MaybePromise } from '@graphql-tools/utils';
 import { execute, subscribe, type ExecutionArgs } from 'graphql';
 import type { ConnectionInitMessage, Context, ServerOptions } from 'graphql-ws';
+import type { GatewayRuntime } from './createGatewayRuntime';
 
 // so we need to make sure we always use the freshest instance
 type EnvelopedExecutionArgs = ExecutionArgs & {
