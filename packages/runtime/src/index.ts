@@ -14,3 +14,4 @@ export {
 } from '@graphql-mesh/fusion-runtime';
 export { useUpstreamRetry } from './plugins/useUpstreamRetry';
 export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
+export { getGraphQLWSOptions } from './getGraphQLWSOptions';

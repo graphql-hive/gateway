@@ -3,9 +3,9 @@ import { createServer as createHTTPServer, type Server } from 'node:http';
 import { createServer as createHTTPSServer } from 'node:https';
 import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
 import type { Extra } from 'graphql-ws/lib/use/ws';
 import { defaultOptions } from '../cli';
-import { getGraphQLWSOptions } from './graphqlWs';
 import type { ServerForRuntimeOptions } from './types';
 
 export async function startNodeHttpServer<TContext extends Record<string, any>>(

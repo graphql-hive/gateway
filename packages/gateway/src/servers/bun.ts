@@ -1,7 +1,7 @@
+import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
 import type { Server, TLSServeOptions, WebSocketServeOptions } from 'bun';
 import type { Extra } from 'graphql-ws/lib/use/bun';
 import { defaultOptions, GatewayRuntime } from '..';
-import { getGraphQLWSOptions } from './graphqlWs';
 import type { ServerForRuntimeOptions } from './types';
 
 export async function startBunServer<TContext extends Record<string, any>>(
