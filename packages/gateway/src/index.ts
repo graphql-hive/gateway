@@ -25,3 +25,4 @@ export {
   type HTTPTransportOptions,
   default as HTTPTransport,
 } from '@graphql-mesh/transport-http';
+export { getGraphQLWSOptions } from './servers/graphqlWs';
