@@ -297,7 +297,7 @@ describe('Shared Root Fields', () => {
     expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(2);
     expect(onSubgraphExecuteFn.mock.calls[1]?.[0]).toBe('SUBGRAPHB');
   });
-  it('should choose the best subscription root field', async () => {
+  it('should not consider subscription types as resolvable from other roots', async () => {
     interface Review {
       id: string;
       url: string;
