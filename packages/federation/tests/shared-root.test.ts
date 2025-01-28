@@ -1,6 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest } from '@graphql-tools/utils';
+import { assertAsyncIterable } from '@internal/testing';
 import { ExecutionResult, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
@@ -295,5 +296,90 @@ describe('Shared Root Fields', () => {
 
     expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(2);
     expect(onSubgraphExecuteFn.mock.calls[1]?.[0]).toBe('SUBGRAPHB');
+  });
+  it('should choose the best subscription root field', async () => {
+    interface Review {
+      id: string;
+      url: string;
+      comment: string;
+    }
+    const reviews: Review[] = [
+      {
+        id: 'r1',
+        url: 'http://r1',
+        comment: 'Tractor 👍',
+      },
+      {
+        id: 'r2',
+        url: 'http://r2',
+        comment: 'Washing machine 👎',
+      },
+    ];
+    const REVIEWS = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          allReviews: [Review!]!
+        }
+
+        type Subscription {
+          newReview: Review!
+        }
+
+        type Review @key(fields: "id") @key(fields: "url") {
+          id: ID!
+          url: String!
+          comment: String!
+        }
+      `),
+      resolvers: {
+        Query: {
+          allReviews: () => reviews,
+        },
+        Subscription: {
+          newReview: {
+            async *subscribe() {
+              yield { newReview: reviews[reviews.length - 1] };
+            },
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      REVIEWS,
+    });
+
+    const newReviewSub = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        subscription {
+          newReview {
+            id
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(newReviewSub);
+    const iter = newReviewSub[Symbol.asyncIterator]();
+
+    await expect(iter.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": false,
+        "value": {
+          "data": {
+            "newReview": {
+              "id": "r2",
+            },
+          },
+        },
+      }
+    `);
+
+    await expect(iter.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
   });
 });
