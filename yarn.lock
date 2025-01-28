@@ -3298,6 +3298,7 @@ __metadata:
     dotenv: "npm:^16.3.1"
     graphql: "npm:^16.9.0"
     graphql-middleware: "npm:^6.1.35"
+    graphql-ws: "npm:^5.16.0"
     graphql-yoga: "npm:^5.10.11"
     parse-duration: "npm:^2.0.0"
     pkgroll: "npm:2.6.1"
