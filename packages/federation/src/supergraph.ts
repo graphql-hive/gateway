@@ -1207,14 +1207,19 @@ export function getStitchingOptionsFromSupergraphSdl(
         return candidates[0].fieldConfig;
       }
     }
-    let operationType: OperationTypeNode | undefined;
+    let queryOrMutationOperationType: 'query' | 'mutation' | undefined;
     for (const candidate of candidates) {
       const candidateOperationType = rootTypeMap.get(candidate.type.name);
-      if (candidateOperationType) {
-        operationType = candidateOperationType;
+      if (
+        candidateOperationType === 'query' ||
+        candidateOperationType === 'mutation'
+        // we skip 'subscription' because types from that operation type cannot be resolved
+        // from multiple subgraphs, only from the subgraph that is actually executing
+      ) {
+        queryOrMutationOperationType = candidateOperationType;
       }
     }
-    if (operationType) {
+    if (queryOrMutationOperationType) {
       const defaultMergedField = defaultMerger(candidates);
       return {
         ...defaultMergedField,
@@ -1324,7 +1329,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 }
               : info,
           });
-          if (operationType !== 'query') {
+          if (queryOrMutationOperationType === 'mutation') {
             return mainJob;
           }
           if (isPromise(mainJob)) {
