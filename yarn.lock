@@ -16969,16 +16969,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unenv@npm:2.0.0-rc.0":
-  version: 2.0.0-rc.0
-  resolution: "unenv@npm:2.0.0-rc.0"
+"unenv@npm:2.0.0-rc.1":
+  version: 2.0.0-rc.1
+  resolution: "unenv@npm:2.0.0-rc.1"
   dependencies:
     defu: "npm:^6.1.4"
     mlly: "npm:^1.7.4"
     ohash: "npm:^1.1.4"
     pathe: "npm:^1.1.2"
     ufo: "npm:^1.5.4"
-  checksum: 10c0/87e2d8485ce17ba8342cbd65072c3ed5b19aea695bff4033bd3e1bc673aa9a8f9aec3ebf5a396be70953a948a269da1ad01935c7d89f1a3c392105447dd4a8aa
+  checksum: 10c0/a0cf41c490e4b84cfc16b764ac8989928e38d8176a2f19d2733d19ed497a749feb20c24be1683004ed39941e0d81bf3fc9c6ecbe2e3cdd51efc317ba4b64bfea
   languageName: node
   linkType: hard
 
@@ -17542,8 +17542,8 @@ __metadata:
   linkType: hard
 
 "wrangler@npm:^3.88.0":
-  version: 3.105.1
-  resolution: "wrangler@npm:3.105.1"
+  version: 3.106.0
+  resolution: "wrangler@npm:3.106.0"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.3.4"
     "@esbuild-plugins/node-globals-polyfill": "npm:0.2.3"
@@ -17553,7 +17553,7 @@ __metadata:
     fsevents: "npm:~2.3.2"
     miniflare: "npm:3.20250124.0"
     path-to-regexp: "npm:6.3.0"
-    unenv: "npm:2.0.0-rc.0"
+    unenv: "npm:2.0.0-rc.1"
     workerd: "npm:1.20250124.0"
   peerDependencies:
     "@cloudflare/workers-types": ^4.20250121.0
@@ -17566,7 +17566,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/6f2903fe05bdd31856f07f3dc5703358564997f31ba63774cefcff8b0b17830cab3b7ff72e700157135774ca5271c8d0c2ef70027ce18f105e663ece91f5d378
+  checksum: 10c0/def17d37a579378e6bc397538273504ac197f547535ed36fb9b2ad501bc3b9374f34f49185c4115f4a5922b93ab482a5aaa03662fe4f6dd9d4e495f50ceb16d4
   languageName: node
   linkType: hard
 
