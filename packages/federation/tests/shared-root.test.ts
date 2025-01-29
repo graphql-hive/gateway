@@ -6,7 +6,6 @@ import { ExecutionResult, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
-
 describe('Shared Root Fields', () => {
   it('Aliased shared root fields issue #6613', async () => {
     const query = /* GraphQL */ `
@@ -104,7 +103,7 @@ describe('Shared Root Fields', () => {
       localSchemas: {
         subgraph1,
         subgraph2,
-      }
+      },
     });
 
     const result = await normalizedExecutor({
@@ -161,14 +160,13 @@ describe('Shared Root Fields', () => {
           result: ExecutionResult | AsyncIterable<ExecutionResult>,
         ) => void
       >();
-    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
-    {
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
         SUBGRAPHA,
         SUBGRAPHB,
-      }, onSubgraphExecute: onSubgraphExecuteFn
-    },
-    );
+      },
+      onSubgraphExecute: onSubgraphExecuteFn,
+    });
 
     const result = await normalizedExecutor({
       schema: gatewaySchema,
@@ -250,14 +248,13 @@ describe('Shared Root Fields', () => {
           result: ExecutionResult | AsyncIterable<ExecutionResult>,
         ) => void
       >();
-    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
-    {
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
         SUBGRAPHA,
         SUBGRAPHB,
-      }, onSubgraphExecute: onSubgraphExecuteFn
-    },
-    );
+      },
+      onSubgraphExecute: onSubgraphExecuteFn,
+    });
 
     const resultA = await normalizedExecutor({
       schema: gatewaySchema,
@@ -351,7 +348,7 @@ describe('Shared Root Fields', () => {
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
         REVIEWS,
-      }
+      },
     });
 
     const newReviewSub = await normalizedExecutor({
@@ -411,8 +408,7 @@ describe('Shared Root Fields', () => {
           @link(
             url: "https://specs.apollo.dev/federation/v2.5"
             import: ["@key", "@shareable"]
-          )
-        {
+          ) {
           query: Query
           subscription: Subscription
         }
@@ -449,8 +445,7 @@ describe('Shared Root Fields', () => {
           @link(
             url: "https://specs.apollo.dev/federation/v2.5"
             import: ["@key", "@shareable"]
-          )
-        {
+          ) {
           query: Query
           subscription: Subscription
         }
@@ -481,7 +476,7 @@ describe('Shared Root Fields', () => {
         },
       },
     });
-    
+
     let subgraphCalls: Record<string, number> = {};
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
       localSchemas: {
@@ -491,7 +486,7 @@ describe('Shared Root Fields', () => {
       composeWith: 'guild',
       ignoreRules: ['InvalidFieldSharingRule'],
       onSubgraphExecute(subgraph) {
-          subgraphCalls[subgraph] = (subgraphCalls[subgraph] || 0) + 1;
+        subgraphCalls[subgraph] = (subgraphCalls[subgraph] || 0) + 1;
       },
     });
 
@@ -510,7 +505,9 @@ describe('Shared Root Fields', () => {
     for await (const result of eventsWithMessageSub) {
       collectedEventsWithMessage.push(result);
     }
-    expect(collectedEventsWithMessage).toEqual(allEvents.map(({ message }) => ({ data: { newEvent: { message }} })));
+    expect(collectedEventsWithMessage).toEqual(
+      allEvents.map(({ message }) => ({ data: { newEvent: { message } } })),
+    );
     expect(subgraphCalls).toEqual({
       EVENTSWITHMESSAGES: 1,
     });
@@ -530,9 +527,11 @@ describe('Shared Root Fields', () => {
     for await (const result of eventsWithTimeSub) {
       collectedEventsWithTime.push(result);
     }
-    expect(collectedEventsWithTime).toEqual(allEvents.map(({ time }) => ({ data: { newEvent: { time }}})));
+    expect(collectedEventsWithTime).toEqual(
+      allEvents.map(({ time }) => ({ data: { newEvent: { time } } })),
+    );
     expect(subgraphCalls).toEqual({
       EVENTSWITHTIME: 1,
     });
-  })
+  });
 });

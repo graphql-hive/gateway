@@ -630,16 +630,15 @@ it('nested recursive requirements', async () => {
 
   const subgraphCalls: Record<string, number> = {};
 
-  const schema = await getStitchedSchemaFromLocalSchemas(
-  {
+  const schema = await getStitchedSchemaFromLocalSchemas({
     localSchemas: {
       inventory,
       spatial,
-    }, onSubgraphExecute: (subgraph) => {
+    },
+    onSubgraphExecute: (subgraph) => {
       subgraphCalls[subgraph] = (subgraphCalls[subgraph] || 0) + 1;
-    }
-  },
-  );
+    },
+  });
 
   expect(
     await normalizedExecutor({

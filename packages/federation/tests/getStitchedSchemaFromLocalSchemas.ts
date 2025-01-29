@@ -47,11 +47,11 @@ export async function getStitchedSchemaFromLocalSchemas({
         typeDefs: getDocumentNodeFromSchema(schema),
         url: `http://localhost/${name}`,
       })),
-      { disableValidationRules: ignoreRules }
+      { disableValidationRules: ignoreRules },
     );
     result.errors?.forEach((error) => {
       console.error(error);
-    })
+    });
     if (!result.supergraphSdl) {
       throw new Error('Failed to compose services');
     }
