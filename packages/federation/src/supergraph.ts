@@ -1325,10 +1325,6 @@ export function getStitchingOptionsFromSupergraphSdl(
               : info,
           });
           if (operationType !== 'query') {
-            console.log({
-              operationType,
-              mainJob,
-            });
             return mainJob;
           }
           if (isPromise(mainJob)) {

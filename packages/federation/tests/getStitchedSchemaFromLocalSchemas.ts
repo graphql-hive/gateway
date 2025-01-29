@@ -2,9 +2,11 @@ import { createDefaultExecutor } from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
+  getDocumentNodeFromSchema,
   mapMaybePromise,
 } from '@graphql-tools/utils';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
+import { composeServices } from '@theguild/federation-composition';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -14,21 +16,49 @@ export interface LocalSchemaItem {
   schema: GraphQLSchema;
 }
 
-export async function getStitchedSchemaFromLocalSchemas(
-  localSchemas: Record<string, GraphQLSchema>,
+export async function getStitchedSchemaFromLocalSchemas({
+  localSchemas,
+  onSubgraphExecute,
+  composeWith = 'apollo',
+  ignoreRules,
+}: {
+  localSchemas: Record<string, GraphQLSchema>;
   onSubgraphExecute?: (
     subgraph: string,
     executionRequest: ExecutionRequest,
     result: ExecutionResult | AsyncIterable<ExecutionResult>,
-  ) => void,
-): Promise<GraphQLSchema> {
-  const supergraphSdl = await composeLocalSchemasWithApollo(
-    Object.entries(localSchemas).map(([name, schema]) => ({
-      name,
-      schema,
-      url: `http://localhost/${name}`,
-    })),
-  );
+  ) => void;
+  composeWith?: 'apollo' | 'guild';
+  ignoreRules?: string[];
+}): Promise<GraphQLSchema> {
+  let supergraphSdl: string;
+  if (composeWith === 'apollo') {
+    supergraphSdl = await composeLocalSchemasWithApollo(
+      Object.entries(localSchemas).map(([name, schema]) => ({
+        name,
+        schema,
+        url: `http://localhost/${name}`,
+      })),
+    );
+  } else if (composeWith === 'guild') {
+    const result = composeServices(
+      Object.entries(localSchemas).map(([name, schema]) => ({
+        name,
+        typeDefs: getDocumentNodeFromSchema(schema),
+        url: `http://localhost/${name}`,
+      })),
+      { disableValidationRules: ignoreRules }
+    );
+    result.errors?.forEach((error) => {
+      console.error(error);
+    })
+    if (!result.supergraphSdl) {
+      throw new Error('Failed to compose services');
+    }
+    supergraphSdl = result.supergraphSdl;
+  } else {
+    throw new Error(`Unknown composeWith ${composeWith}`);
+  }
   function createTracedExecutor(name: string, schema: GraphQLSchema) {
     const executor = createDefaultExecutor(schema);
     return function tracedExecutor(request: ExecutionRequest) {
