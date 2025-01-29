@@ -1,5 +1,39 @@
 # @graphql-hive/gateway
 
+## 1.8.1
+
+### Patch Changes
+
+- [#526](https://github.com/graphql-hive/gateway/pull/526) [`188a763`](https://github.com/graphql-hive/gateway/commit/188a763901be6aeaf33447316bbdd101b0467a46) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.104.0) (from `^0.103.0`, in `dependencies`)
+
+- [#538](https://github.com/graphql-hive/gateway/pull/538) [`aab5441`](https://github.com/graphql-hive/gateway/commit/aab544176983e241c62f15242a35ca1398efa044) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.10.11` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.10.11) (from `^5.10.6`, in `dependencies`)
+
+- [#539](https://github.com/graphql-hive/gateway/pull/539) [`df20361`](https://github.com/graphql-hive/gateway/commit/df203610ff9ed50adb3c3c82631ecb5324648486) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`parse-duration@^2.0.0` ↗︎](https://www.npmjs.com/package/parse-duration/v/2.0.0) (from `^1.1.0`, in `dependencies`)
+
+- [#555](https://github.com/graphql-hive/gateway/pull/555) [`836ab2c`](https://github.com/graphql-hive/gateway/commit/836ab2c8c7579c51b00bdc3d15dcdaee05aaf26a) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Removed dependency [`parse-duration@^2.0.0` ↗︎](https://www.npmjs.com/package/parse-duration/v/2.0.0) (from `dependencies`)
+
+- [#549](https://github.com/graphql-hive/gateway/pull/549) [`46888f1`](https://github.com/graphql-hive/gateway/commit/46888f1202cfb300b540b78199250b0b426c069d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Export `getGraphQLWSOptions` function that creates `graphql-ws` for the Hive Gateway
+
+  Allowing the users to correctly set up WebSockets when using the Hive Gateway programmatically.
+
+- [#555](https://github.com/graphql-hive/gateway/pull/555) [`836ab2c`](https://github.com/graphql-hive/gateway/commit/836ab2c8c7579c51b00bdc3d15dcdaee05aaf26a) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Bundle `parse-duration` dependency
+
+  [`parse-duration` is ESM only starting from v2](https://github.com/jkroso/parse-duration/releases/tag/v2.0.0). We therefore bundle it in because doing so we transpile it to CJS and allow importing the GW in CJS.
+
+- Updated dependencies [[`aab5441`](https://github.com/graphql-hive/gateway/commit/aab544176983e241c62f15242a35ca1398efa044), [`46888f1`](https://github.com/graphql-hive/gateway/commit/46888f1202cfb300b540b78199250b0b426c069d), [`180c2c4`](https://github.com/graphql-hive/gateway/commit/180c2c43218027600d3ad6ce74b413ad7621d427), [`aab5441`](https://github.com/graphql-hive/gateway/commit/aab544176983e241c62f15242a35ca1398efa044), [`46888f1`](https://github.com/graphql-hive/gateway/commit/46888f1202cfb300b540b78199250b0b426c069d), [`61f387c`](https://github.com/graphql-hive/gateway/commit/61f387c8a1e18a5d7a37cd33afb428488ac13aed)]:
+  - @graphql-hive/gateway-runtime@1.4.10
+  - @graphql-mesh/plugin-prometheus@1.3.26
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-mesh/plugin-opentelemetry@1.3.38
+
 ## 1.8.0
 
 ### Minor Changes

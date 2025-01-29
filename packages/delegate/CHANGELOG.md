@@ -1,5 +1,13 @@
 # @graphql-tools/delegate
 
+## 10.2.11
+
+### Patch Changes
+
+- [#506](https://github.com/graphql-hive/gateway/pull/506) [`9144222`](https://github.com/graphql-hive/gateway/commit/91442220b2242a0fa082d4b544d03621572eecd0) Thanks [@ardatan](https://github.com/ardatan)! - Add `isPrototypePollutingKey` to prevent accidential prototype pollution, whenever object manipulation happens with the keys based on the user input, it is validated to prevent prototype pollution.
+
+  For example, `WrapQuery` takes `path` which is used to manipulate the object returned to the client. If the user input is `__proto__`, it will throw an error from now on but previously it would have polluted the prototype.
+
 ## 10.2.10
 
 ### Patch Changes

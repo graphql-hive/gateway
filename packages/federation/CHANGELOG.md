@@ -1,5 +1,62 @@
 # @graphql-tools/federation
 
+## 3.1.0
+
+### Minor Changes
+
+- [#444](https://github.com/graphql-hive/gateway/pull/444) [`b52c9ba`](https://github.com/graphql-hive/gateway/commit/b52c9ba47f84d0905f1f63fdfe071c891dce5b7f) Thanks [@ardatan](https://github.com/ardatan)! - Now `SupergraphSchemaManager` can be used in `ApolloServer` as `gateway`;
+
+  ```ts
+  import { ApolloServer } from '@apollo/server';
+  import { SupergraphSchemaManager } from '@graphql-tools/federation';
+
+  const gateway = new SupergraphSchemaManager();
+  const apolloServer = new ApolloServer({
+    gateway,
+  });
+  ```
+
+  And with the new `onStitchedSchema` option, you can manipulate the executable schema created from the supergraph.
+  The following example demonstrates how to use `onStitchedSchema` with `applyMiddleware` from `graphql-middleware`:
+
+  ```ts
+  import { SupergraphSchemaManager } from '@graphql-tools/federation';
+  import { applyMiddleware } from 'graphql-middleware';
+
+  const logInput = async (resolve, root, args, context, info) => {
+    console.log(`1. logInput: ${JSON.stringify(args)}`);
+    const result = await resolve(root, args, context, info);
+    console.log(`5. logInput`);
+    return result;
+  };
+
+  const logResult = async (resolve, root, args, context, info) => {
+    console.log(`2. logResult`);
+    const result = await resolve(root, args, context, info);
+    console.log(`4. logResult: ${JSON.stringify(result)}`);
+    return result;
+  };
+
+  const gateway = new SupergraphSchemaManager({
+    onStitchedSchema: async (schema) => {
+      // Manipulate the schema
+      return applyMiddleware(schema, logInput, logResult);
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#552](https://github.com/graphql-hive/gateway/pull/552) [`b0bc26b`](https://github.com/graphql-hive/gateway/commit/b0bc26b8e18a2e61e5fa96f48cd77820e3598b52) Thanks [@ardatan](https://github.com/ardatan)! - Handle shared subscription root fields correctly
+
+  In case of conflicting subscription root fields coming from different subgraphs or different entry points(multiple keys),
+  subscription was failing.
+
+- Updated dependencies [[`9144222`](https://github.com/graphql-hive/gateway/commit/91442220b2242a0fa082d4b544d03621572eecd0)]:
+  - @graphql-tools/delegate@10.2.11
+  - @graphql-tools/stitch@9.4.16
+  - @graphql-tools/wrap@10.0.29
+
 ## 3.0.10
 
 ### Patch Changes
