@@ -1,4 +1,4 @@
-export * from './createDisposableServer';
+export * from './server';
 export * from './env';
 export * from './getLocalhost';
 export * from './opts';
