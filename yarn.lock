@@ -3243,7 +3243,7 @@ __metadata:
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
-    graphql-ws: "npm:^5.16.0"
+    graphql-ws: "npm:^6.0.2"
     graphql-yoga: "npm:^5.10.11"
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.6.1"
