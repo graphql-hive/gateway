@@ -8,11 +8,12 @@ import { createDisposableWebSocketServer } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
 import { ServerOptions } from 'graphql-ws';
-import { Extra, useServer } from 'graphql-ws/use/ws';
+import { Extra as BunExtra, makeHandler } from 'graphql-ws/use/bun';
+import { useServer, Extra as WSExtra } from 'graphql-ws/use/ws';
 import { describe, expect, it, vi } from 'vitest';
 import wsTransport, { type WSTransportOptions } from '../src';
 
-type TServerOptions = ServerOptions<{}, Extra>;
+type TServerOptions = ServerOptions<{}, WSExtra | BunExtra>;
 
 async function createTServer(
   transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
@@ -31,15 +32,43 @@ async function createTServer(
     },
   });
 
-  const ws = await createDisposableWebSocketServer();
+  let url: string;
+  let dispose: () => Promise<void>;
 
   const onConnectFn = vi.fn<NonNullable<TServerOptions['onConnect']>>();
-
-  useServer({ schema, onConnect: onConnectFn, ...opts }, ws.server);
+  if (globalThis.Bun) {
+    let headers: Record<string, string>;
+    const server = Bun.serve({
+      port: 0,
+      fetch: (req) => {
+        headers = req.headers.toJSON();
+        if (server.upgrade(req)) {
+          return; // upgraded
+        }
+        return new Response('Upgrade failed', { status: 500 });
+      },
+      websocket: makeHandler({
+        schema,
+        onConnect(...args) {
+          // @ts-expect-error we inject only the headers for testing
+          args[0].extra.request = { headers };
+          onConnectFn(...args);
+        },
+        ...opts,
+      }),
+    });
+    url = server.url.toString().replace('http', 'ws');
+    dispose = () => server.stop(true);
+  } else {
+    const ws = await createDisposableWebSocketServer();
+    useServer({ schema, onConnect: onConnectFn, ...opts }, ws.server);
+    url = ws.url;
+    dispose = () => ws[DisposableSymbols.asyncDispose]();
+  }
 
   const executor = wsTransport.getSubgraphExecutor({
     transportEntry: {
-      location: ws.url,
+      location: url,
       ...transportEntry,
     },
     logger: new DefaultLogger(),
@@ -55,7 +84,7 @@ async function createTServer(
       });
     },
     [DisposableSymbols.asyncDispose]() {
-      return ws[DisposableSymbols.asyncDispose]();
+      return dispose();
     },
   };
 }
@@ -84,7 +113,10 @@ describe('WS Transport', () => {
     await serv.executeHelloQuery({ token: 'test' });
 
     expect(serv.onConnectFn).toHaveBeenCalledTimes(1);
-    expect(serv.onConnectFn.mock.calls[0]![0].extra.request).toMatchObject({
+    expect(
+      // @ts-expect-error headers will be injected for testing in bun
+      serv.onConnectFn.mock.calls[0]![0].extra.request,
+    ).toMatchObject({
       headers: {
         'x-test': 'test',
       },
