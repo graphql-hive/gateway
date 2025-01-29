@@ -1,6 +1,5 @@
 ---
-'@graphql-hive/gateway': patch
-'@graphql-hive/gateway-runtime': patch
+'@graphql-hive/gateway-runtime': minor
 ---
 
 Export `getGraphQLWSOptions` function that creates `graphql-ws` for the Hive Gateway
