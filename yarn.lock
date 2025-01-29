@@ -3207,7 +3207,7 @@ __metadata:
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
     "@graphql-mesh/plugin-hive": "npm:^0.103.0"
-    "@graphql-mesh/plugin-response-cache": "npm:^0.103.0"
+    "@graphql-mesh/plugin-response-cache": "npm:^0.103.13"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/transport-rest": "npm:^0.8.6"
     "@graphql-mesh/types": "npm:^0.103.6"
@@ -3220,7 +3220,7 @@ __metadata:
     "@graphql-tools/stitch": "workspace:^"
     "@graphql-tools/utils": "npm:^10.7.0"
     "@graphql-tools/wrap": "workspace:^"
-    "@graphql-yoga/plugin-apollo-usage-report": "npm:^0.5.3"
+    "@graphql-yoga/plugin-apollo-usage-report": "npm:^0.5.9"
     "@graphql-yoga/plugin-csrf-prevention": "npm:^3.10.6"
     "@graphql-yoga/plugin-defer-stream": "npm:^3.10.6"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.10.6"
@@ -3720,9 +3720,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/plugin-response-cache@npm:^0.103.0":
-  version: 0.103.12
-  resolution: "@graphql-mesh/plugin-response-cache@npm:0.103.12"
+"@graphql-mesh/plugin-response-cache@npm:^0.103.13":
+  version: 0.103.13
+  resolution: "@graphql-mesh/plugin-response-cache@npm:0.103.13"
   dependencies:
     "@envelop/core": "npm:^5.0.0"
     "@envelop/response-cache": "npm:^6.1.1"
@@ -3732,11 +3732,12 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.103.12"
     "@graphql-tools/utils": "npm:^10.6.2"
     "@graphql-yoga/plugin-response-cache": "npm:^3.1.1"
+    cache-control-parser: "npm:^2.0.6"
     graphql-yoga: "npm:^5.7.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/2164e258ed3bc629bbcb447ed98e39df69766f324947f242ffef8f0eac646c1b8e226e4312f724315b58349fdc84d06d52b73072a0e0c7ed3cc06961c4483d00
+  checksum: 10c0/6c129458f8b9348cba4bad4883933a22688bf6625d7f76475a4b741e22fe32be7fd8abadcd954997f79a68b0e67e611322201069e7cdb26706aca9b4b11540c8
   languageName: node
   linkType: hard
 
@@ -4413,7 +4414,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-apollo-usage-report@npm:^0.5.3":
+"@graphql-yoga/plugin-apollo-usage-report@npm:^0.5.9":
   version: 0.5.9
   resolution: "@graphql-yoga/plugin-apollo-usage-report@npm:0.5.9"
   dependencies:
@@ -8489,6 +8490,13 @@ __metadata:
     tar: "npm:^7.4.3"
     unique-filename: "npm:^4.0.0"
   checksum: 10c0/01f2134e1bd7d3ab68be851df96c8d63b492b1853b67f2eecb2c37bb682d37cb70bb858a16f2f0554d3c0071be6dfe21456a1ff6fa4b7eed996570d6a25ffe9c
+  languageName: node
+  linkType: hard
+
+"cache-control-parser@npm:^2.0.6":
+  version: 2.0.6
+  resolution: "cache-control-parser@npm:2.0.6"
+  checksum: 10c0/b34cd72c4bb8899325dfdb806adf9feb6c0b4a224314831efdc6a4308f45445b69d56b96402bf798caf035a8c79cb170b7309d727bef15c21f47181119611546
   languageName: node
   linkType: hard
 
