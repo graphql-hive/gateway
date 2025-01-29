@@ -1,6 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { ExecutionRequest } from '@graphql-tools/utils';
+import { assertAsyncIterable } from '@internal/testing';
 import { ExecutionResult, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
@@ -99,8 +100,10 @@ describe('Shared Root Fields', () => {
     });
 
     const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
-      subgraph1,
-      subgraph2,
+      localSchemas: {
+        subgraph1,
+        subgraph2,
+      },
     });
 
     const result = await normalizedExecutor({
@@ -157,13 +160,13 @@ describe('Shared Root Fields', () => {
           result: ExecutionResult | AsyncIterable<ExecutionResult>,
         ) => void
       >();
-    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
-      {
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
         SUBGRAPHA,
         SUBGRAPHB,
       },
-      onSubgraphExecuteFn,
-    );
+      onSubgraphExecute: onSubgraphExecuteFn,
+    });
 
     const result = await normalizedExecutor({
       schema: gatewaySchema,
@@ -245,13 +248,13 @@ describe('Shared Root Fields', () => {
           result: ExecutionResult | AsyncIterable<ExecutionResult>,
         ) => void
       >();
-    const gatewaySchema = await getStitchedSchemaFromLocalSchemas(
-      {
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
         SUBGRAPHA,
         SUBGRAPHB,
       },
-      onSubgraphExecuteFn,
-    );
+      onSubgraphExecute: onSubgraphExecuteFn,
+    });
 
     const resultA = await normalizedExecutor({
       schema: gatewaySchema,
@@ -295,5 +298,240 @@ describe('Shared Root Fields', () => {
 
     expect(onSubgraphExecuteFn).toHaveBeenCalledTimes(2);
     expect(onSubgraphExecuteFn.mock.calls[1]?.[0]).toBe('SUBGRAPHB');
+  });
+  it('should choose the best subscription root field in case of multiple entry points(keys)', async () => {
+    interface Review {
+      id: string;
+      url: string;
+      comment: string;
+    }
+    const reviews: Review[] = [
+      {
+        id: 'r1',
+        url: 'http://r1',
+        comment: 'Tractor 👍',
+      },
+      {
+        id: 'r2',
+        url: 'http://r2',
+        comment: 'Washing machine 👎',
+      },
+    ];
+    const REVIEWS = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          allReviews: [Review!]!
+        }
+        type Subscription {
+          newReview: Review!
+        }
+        type Review @key(fields: "id") @key(fields: "url") {
+          id: ID!
+          url: String!
+          comment: String!
+        }
+      `),
+      resolvers: {
+        Query: {
+          allReviews: () => reviews,
+        },
+        Subscription: {
+          newReview: {
+            async *subscribe() {
+              yield { newReview: reviews[reviews.length - 1] };
+            },
+          },
+        },
+      },
+    });
+
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
+        REVIEWS,
+      },
+    });
+
+    const newReviewSub = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        subscription {
+          newReview {
+            id
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(newReviewSub);
+    const iter = newReviewSub[Symbol.asyncIterator]();
+
+    await expect(iter.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": false,
+        "value": {
+          "data": {
+            "newReview": {
+              "id": "r2",
+            },
+          },
+        },
+      }
+    `);
+
+    await expect(iter.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+  });
+  it('should choose the best subscription root field in case of conflicting fields', async () => {
+    interface Event {
+      id: string;
+      message: string;
+      time: number;
+    }
+    const allEvents: Event[] = [
+      {
+        id: 'e1',
+        message: 'Event 1',
+        time: 1,
+      },
+      {
+        id: 'e2',
+        message: 'Event 2',
+        time: 2,
+      },
+    ];
+    const EVENTSWITHMESSAGES = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.5"
+            import: ["@key", "@shareable"]
+          ) {
+          query: Query
+          subscription: Subscription
+        }
+
+        type Query {
+          allEventsWithMessage: [Event!]!
+        }
+        type Subscription {
+          newEvent: Event! @shareable
+        }
+        type Event @key(fields: "id") {
+          id: ID!
+          message: String!
+        }
+      `),
+      resolvers: {
+        Query: {
+          allEventsWithMessage: () => allEvents,
+        },
+        Subscription: {
+          newEvent: {
+            async *subscribe() {
+              for (const event of allEvents) {
+                yield { newEvent: event };
+              }
+            },
+          },
+        },
+      },
+    });
+    const EVENTSWITHTIME = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.5"
+            import: ["@key", "@shareable"]
+          ) {
+          query: Query
+          subscription: Subscription
+        }
+
+        type Query {
+          allEventsWithTime: [Event!]!
+        }
+        type Subscription {
+          newEvent: Event! @shareable
+        }
+        type Event @key(fields: "id") {
+          id: ID!
+          time: Int!
+        }
+      `),
+      resolvers: {
+        Query: {
+          allEventsWithTime: () => allEvents,
+        },
+        Subscription: {
+          newEvent: {
+            async *subscribe() {
+              for (const event of allEvents) {
+                yield { newEvent: event };
+              }
+            },
+          },
+        },
+      },
+    });
+
+    let subgraphCalls: Record<string, number> = {};
+    const gatewaySchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
+        EVENTSWITHMESSAGES,
+        EVENTSWITHTIME,
+      },
+      composeWith: 'guild',
+      ignoreRules: ['InvalidFieldSharingRule'],
+      onSubgraphExecute(subgraph) {
+        subgraphCalls[subgraph] = (subgraphCalls[subgraph] || 0) + 1;
+      },
+    });
+
+    const eventsWithMessageSub = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        subscription {
+          newEvent {
+            message
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(eventsWithMessageSub);
+    const collectedEventsWithMessage: ExecutionResult[] = [];
+    for await (const result of eventsWithMessageSub) {
+      collectedEventsWithMessage.push(result);
+    }
+    expect(collectedEventsWithMessage).toEqual(
+      allEvents.map(({ message }) => ({ data: { newEvent: { message } } })),
+    );
+    expect(subgraphCalls).toEqual({
+      EVENTSWITHMESSAGES: 1,
+    });
+    subgraphCalls = {};
+    const eventsWithTimeSub = await normalizedExecutor({
+      schema: gatewaySchema,
+      document: parse(/* GraphQL */ `
+        subscription {
+          newEvent {
+            time
+          }
+        }
+      `),
+    });
+    assertAsyncIterable(eventsWithTimeSub);
+    const collectedEventsWithTime: ExecutionResult[] = [];
+    for await (const result of eventsWithTimeSub) {
+      collectedEventsWithTime.push(result);
+    }
+    expect(collectedEventsWithTime).toEqual(
+      allEvents.map(({ time }) => ({ data: { newEvent: { time } } })),
+    );
+    expect(subgraphCalls).toEqual({
+      EVENTSWITHTIME: 1,
+    });
   });
 });

@@ -41,6 +41,7 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   FieldNode,
+  GraphQLFieldResolver,
   GraphQLInterfaceType,
   GraphQLOutputType,
   GraphQLSchema,
@@ -1216,9 +1217,8 @@ export function getStitchingOptionsFromSupergraphSdl(
     }
     if (operationType) {
       const defaultMergedField = defaultMerger(candidates);
-      return {
-        ...defaultMergedField,
-        resolve(_root, _args, context, info) {
+      const mergedResolver: GraphQLFieldResolver<{}, {}> =
+        function mergedResolver(_root, _args, context, info) {
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
@@ -1361,7 +1361,19 @@ export function getStitchingOptionsFromSupergraphSdl(
             return Promise.all(jobs).then((results) => mergeResults(results));
           }
           return mergeResults(jobs);
-        },
+        };
+      if (operationType === 'subscription') {
+        return {
+          ...defaultMergedField,
+          subscribe: mergedResolver,
+          resolve: function identityFn(payload) {
+            return payload;
+          },
+        };
+      }
+      return {
+        ...defaultMergedField,
+        resolve: mergedResolver,
       };
     }
     const filteredCandidates = candidates.filter((candidate) => {
