@@ -1,5 +1,41 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.10
+
+### Patch Changes
+
+- [#538](https://github.com/graphql-hive/gateway/pull/538) [`aab5441`](https://github.com/graphql-hive/gateway/commit/aab544176983e241c62f15242a35ca1398efa044) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.10.11` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.10.11) (from `^5.10.6`, in `dependencies`)
+
+- [#549](https://github.com/graphql-hive/gateway/pull/549) [`46888f1`](https://github.com/graphql-hive/gateway/commit/46888f1202cfb300b540b78199250b0b426c069d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`graphql-ws@^5.16.0` ↗︎](https://www.npmjs.com/package/graphql-ws/v/5.16.0) (to `dependencies`)
+
+- [#557](https://github.com/graphql-hive/gateway/pull/557) [`180c2c4`](https://github.com/graphql-hive/gateway/commit/180c2c43218027600d3ad6ce74b413ad7621d427) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.103.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.103.13) (from `^0.103.0`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.5.9` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.5.9) (from `^0.5.3`, in `dependencies`)
+
+- [#549](https://github.com/graphql-hive/gateway/pull/549) [`46888f1`](https://github.com/graphql-hive/gateway/commit/46888f1202cfb300b540b78199250b0b426c069d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Export `getGraphQLWSOptions` function that creates `graphql-ws` for the Hive Gateway
+
+  Allowing the users to correctly set up WebSockets when using the Hive Gateway programmatically.
+
+- [#447](https://github.com/graphql-hive/gateway/pull/447) [`61f387c`](https://github.com/graphql-hive/gateway/commit/61f387c8a1e18a5d7a37cd33afb428488ac13aed) Thanks [@ardatan](https://github.com/ardatan)! - Improve GraphOS supergraph fetching;
+
+  - Handle `minDelaySeconds` correctly, before retrying the supergraph request, wait for the `minDelaySeconds` to pass.
+  - Respect `maxRetries` (which is the maximum of the number of available uplink endpoints and 3) when fetching the supergraph.
+  - Try all possible uplinks before failing the supergraph request.
+
+- Updated dependencies [[`aab5441`](https://github.com/graphql-hive/gateway/commit/aab544176983e241c62f15242a35ca1398efa044), [`b52c9ba`](https://github.com/graphql-hive/gateway/commit/b52c9ba47f84d0905f1f63fdfe071c891dce5b7f), [`9144222`](https://github.com/graphql-hive/gateway/commit/91442220b2242a0fa082d4b544d03621572eecd0), [`b0bc26b`](https://github.com/graphql-hive/gateway/commit/b0bc26b8e18a2e61e5fa96f48cd77820e3598b52)]:
+  - @graphql-mesh/fusion-runtime@0.10.31
+  - @graphql-tools/federation@3.1.0
+  - @graphql-tools/delegate@10.2.11
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-tools/batch-delegate@9.0.29
+  - @graphql-tools/stitch@9.4.16
+  - @graphql-tools/wrap@10.0.29
+
 ## 1.4.9
 
 ### Patch Changes
