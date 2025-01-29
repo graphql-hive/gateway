@@ -9,12 +9,9 @@ import {
   isDisposable,
   makeAsyncDisposable,
 } from '@graphql-mesh/utils';
-import {
-  buildGraphQLWSExecutor,
-  makeWebSocketWithHeaders,
-  WebSocket,
-} from '@graphql-tools/executor-graphql-ws';
+import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
 import { createClient } from 'graphql-ws';
+import { WebSocket } from 'isomorphic-ws';
 
 function switchProtocols(url: string) {
   if (url.startsWith('https://')) {
@@ -80,7 +77,11 @@ export default {
         wsExecutor = buildExecutor(
           createClient({
             webSocketImpl: headers
-              ? makeWebSocketWithHeaders(headers)
+              ? class WebSocketWithHeaders extends WebSocket {
+                  constructor(url: string, protocol: string) {
+                    super(url, protocol, { headers });
+                  }
+                }
               : WebSocket,
             url: wsUrl,
             lazy: true,

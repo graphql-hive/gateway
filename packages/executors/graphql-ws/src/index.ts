@@ -64,8 +64,13 @@ export function buildGraphQLWSExecutor(
       printFn = clientOptionsOrClient.print;
     }
 
-    const webSocketImpl = clientOptionsOrClient.headers
-      ? makeWebSocketWithHeaders(clientOptionsOrClient.headers)
+    const headers = clientOptionsOrClient.headers;
+    const webSocketImpl = headers
+      ? class WebSocketWithHeaders extends WebSocket {
+          constructor(url: string, protocol: string) {
+            super(url, protocol, { headers });
+          }
+        }
       : WebSocket;
 
     graphqlWSClient = createClient({
@@ -126,14 +131,4 @@ export function buildGraphQLWSExecutor(
     },
   });
   return executor as DisposableAsyncExecutor;
-}
-
-export { WebSocket };
-
-export function makeWebSocketWithHeaders(headers: Record<string, string>) {
-  return class WebSocketWithHeaders extends WebSocket {
-    constructor(url: string, protocol: string) {
-      super(url, protocol, { headers });
-    }
-  };
 }
