@@ -1,5 +1,5 @@
 ---
-'@graphql-mesh/transport-ws': patch
+'@graphql-hive/gateway-runtime': patch
 ---
 
 dependencies updates: 
