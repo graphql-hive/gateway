@@ -10,7 +10,8 @@ import {
   makeAsyncDisposable,
 } from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
-import { createClient } from 'graphql-ws';
+import { DisposableAsyncExecutor } from '@graphql-tools/utils';
+import { Client, createClient } from 'graphql-ws';
 import { WebSocket } from 'isomorphic-ws';
 
 function switchProtocols(url: string) {
@@ -35,7 +36,9 @@ export interface WSTransportOptions {
 export default {
   getSubgraphExecutor(
     { transportEntry, logger },
-    buildExecutor = buildGraphQLWSExecutor,
+    buildExecutor: (
+      client: Client,
+    ) => DisposableAsyncExecutor = buildGraphQLWSExecutor,
   ) {
     const wsExecutorMap = new Map<string, DisposableExecutor>();
     if (!transportEntry.location) {

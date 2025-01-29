@@ -3,11 +3,13 @@ import type {
   TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
 import { DefaultLogger, dispose } from '@graphql-mesh/utils';
+import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { createDeferred, DisposableAsyncExecutor } from '@graphql-tools/utils';
 import { createDisposableWebSocketServer } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
-import { ServerOptions } from 'graphql-ws';
+import { Client, ServerOptions } from 'graphql-ws';
 import { Extra as BunExtra, makeHandler } from 'graphql-ws/use/bun';
 import { useServer, Extra as WSExtra } from 'graphql-ws/use/ws';
 import { describe, expect, it, vi } from 'vitest';
@@ -17,7 +19,7 @@ type TServerOptions = ServerOptions<{}, WSExtra | BunExtra>;
 
 async function createTServer(
   transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
-  opts?: TServerOptions,
+  buildExecutor?: (client: Client) => DisposableAsyncExecutor,
 ) {
   const schema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
@@ -54,25 +56,27 @@ async function createTServer(
           args[0].extra.request = { headers };
           onConnectFn(...args);
         },
-        ...opts,
       }),
     });
     url = server.url.toString().replace('http', 'ws');
     dispose = () => server.stop(true);
   } else {
     const ws = await createDisposableWebSocketServer();
-    useServer({ schema, onConnect: onConnectFn, ...opts }, ws.server);
+    useServer({ schema, onConnect: onConnectFn }, ws.server);
     url = ws.url;
     dispose = () => ws[DisposableSymbols.asyncDispose]();
   }
 
-  const executor = wsTransport.getSubgraphExecutor({
-    transportEntry: {
-      location: url,
-      ...transportEntry,
-    },
-    logger: new DefaultLogger(),
-  } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>);
+  const executor = wsTransport.getSubgraphExecutor(
+    {
+      transportEntry: {
+        location: url,
+        ...transportEntry,
+      },
+      logger: new DefaultLogger(),
+    } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
+    buildExecutor,
+  );
 
   return {
     onConnectFn,
@@ -193,17 +197,32 @@ describe('WS Transport', () => {
     expect(serv.onConnectFn).toHaveBeenCalledTimes(4);
   });
 
-  it('should create new executor on connection closed', async () => {
-    await using serv = await createTServer();
+  it('should create new executor after connection closed', async () => {
+    let close!: () => void;
+    const { promise: waitForClosed, resolve: closed } = createDeferred<void>();
+
+    const buildGraphQLWSExecutorFn = vi.fn((client: Client) => {
+      client.on('opened', (socket) => {
+        close = () => (socket as WebSocket).close();
+      });
+      client.on('closed', () => {
+        closed();
+      });
+      return buildGraphQLWSExecutor(client);
+    });
+
+    await using serv = await createTServer({}, buildGraphQLWSExecutorFn);
 
     await serv.executeHelloQuery();
 
-    expect(serv.onConnectFn).toBeCalledTimes(1);
-    serv.onConnectFn.mock.calls[0]![0].extra.socket.close();
+    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(1);
+
+    close();
+    await waitForClosed;
 
     await serv.executeHelloQuery();
 
-    expect(serv.onConnectFn).toBeCalledTimes(2);
+    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(2);
   });
 
   it('should dispose async', async () => {
