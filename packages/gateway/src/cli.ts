@@ -256,7 +256,7 @@ let cli = new Command()
   )
   .addOption(
     new Option(
-      '--polling, --pollingInterval <duration>',
+      '--polling <duration>',
       `schema polling interval in human readable duration`,
     )
       .default(10_000, '10s')
