@@ -12,7 +12,7 @@ import {
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
 import { DisposableAsyncExecutor } from '@graphql-tools/utils';
 import { Client, createClient } from 'graphql-ws';
-import { WebSocket } from 'isomorphic-ws';
+import WebSocket from 'isomorphic-ws';
 
 function switchProtocols(url: string) {
   if (url.startsWith('https://')) {
