@@ -113,6 +113,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ...defaultOptions,
         ...loadedConfig,
         ...opts,
+        pollingInterval: opts.polling,
         ...(hiveRegistryToken
           ? {
               reporting: {
