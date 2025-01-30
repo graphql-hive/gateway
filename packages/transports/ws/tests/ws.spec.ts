@@ -228,7 +228,10 @@ describe('WS Transport', () => {
     expect(buildGraphQLWSExecutorFn).toBeCalledTimes(2);
   });
 
-  it('should dispose async', async () => {
+  it.skipIf(
+    // jest's spyOn assigns to readonly which does not work with this case
+    process.env['LEAK_TEST'],
+  )('should dispose async', async () => {
     await using serv = await createTServer();
 
     const asyncDisposeFn = vi.spyOn(
