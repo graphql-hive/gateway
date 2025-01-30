@@ -3,10 +3,9 @@ import { isAbsolute, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type {
   GatewayConfig,
-  GatewayConfigContext,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import type { KeyValueCache, Logger } from '@graphql-mesh/types';
+import type { KeyValueCache, Logger, MeshPubSub } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -99,7 +98,12 @@ export async function loadConfig<
 
 export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
-  ctx: { cache: KeyValueCache; logger: Logger },
+  ctx: {
+    cache: KeyValueCache;
+    logger: Logger;
+    pubsub: MeshPubSub;
+    cwd: string;
+  },
 ) {
   const plugins: GatewayPlugin[] = [];
   if (config.jwt) {
@@ -146,8 +150,12 @@ export async function getBuiltinPluginsFromConfig(
 
 export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
-  ctx: Pick<GatewayConfigContext, 'logger' | 'pubsub'>,
+  ctx: { logger: Logger; pubsub: MeshPubSub; cwd: string },
 ): Promise<KeyValueCache> {
+  if (typeof config.cache === 'function') {
+    return config.cache(ctx);
+  }
+
   if (config.cache && 'type' in config.cache) {
     switch (config.cache.type) {
       case 'redis': {
