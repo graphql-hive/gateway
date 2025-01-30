@@ -1,5 +1,6 @@
 ---
 '@graphql-mesh/transport-ws': minor
+'@graphql-hive/gateway': patch
 ---
 
 Upgrade graphql-ws to v6
