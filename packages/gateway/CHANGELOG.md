@@ -1,5 +1,32 @@
 # @graphql-hive/gateway
 
+## 1.9.0
+
+### Minor Changes
+
+- [#568](https://github.com/graphql-hive/gateway/pull/568) [`de83dd2`](https://github.com/graphql-hive/gateway/commit/de83dd28c01b1c07471a735f7c2b94dd3f45ab0a) Thanks [@dotansimha](https://github.com/dotansimha)! - Improve `cache` configuration signature.
+
+  The `cache` configuration key now allow you to pass a custom factory function to get the cache instance:
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig({
+    // ...
+    cache: (ctx) => {
+      // Here you may create/retrieve your cache store instance, and return a KeyValueCache instance
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#561](https://github.com/graphql-hive/gateway/pull/561) [`7f6490f`](https://github.com/graphql-hive/gateway/commit/7f6490f695d6e7b8e180c4b049cdaeb8b5242e8c) Thanks [@ardatan](https://github.com/ardatan)! - Binary for Linux-ARM64
+
+- [#568](https://github.com/graphql-hive/gateway/pull/568) [`de83dd2`](https://github.com/graphql-hive/gateway/commit/de83dd28c01b1c07471a735f7c2b94dd3f45ab0a) Thanks [@dotansimha](https://github.com/dotansimha)! - Use the same logging instance across different components whenever possible
+
+  For example if the log level is set in the configuration, change it immediately for the cache storages etc.
+
 ## 1.8.1
 
 ### Patch Changes
