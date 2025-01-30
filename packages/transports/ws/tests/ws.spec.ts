@@ -87,8 +87,11 @@ async function createTServer(
         context,
       });
     },
-    [DisposableSymbols.asyncDispose]() {
-      return dispose();
+    async [DisposableSymbols.asyncDispose]() {
+      await Promise.all([
+        dispose(),
+        executor[DisposableSymbols.asyncDispose](),
+      ]);
     },
   };
 }
