@@ -12,7 +12,7 @@ import { defineConfig } from '@graphql-hive/gateway'
 export const gatewayConfig = defineConfig({
   // ...
   cache: (ctx) => {
-    
+    // Here you may create/retrieve your cache store instance, and return a KeyValueCache instance
   } 
 })
 ```
