@@ -93,6 +93,10 @@ export interface GatewayCLIProxyConfig
   proxy?: GatewayConfigProxy['proxy'];
 }
 
+export type KeyValueCacheFactoryFn = (
+  ctx: Pick<GatewayConfigContext, 'logger' | 'pubsub'>,
+) => KeyValueCache;
+
 export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Configure JWT Auth
@@ -129,6 +133,7 @@ export interface GatewayCLIBuiltinPluginConfig {
   jit?: boolean;
   cache?:
     | KeyValueCache
+    | KeyValueCacheFactoryFn
     | GatewayCLILocalforageCacheConfig
     | GatewayCLIRedisCacheConfig
     | GatewayCLICloudflareKVCacheConfig;

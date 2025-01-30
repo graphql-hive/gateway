@@ -148,6 +148,10 @@ export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: Pick<GatewayConfigContext, 'logger' | 'pubsub'>,
 ): Promise<KeyValueCache> {
+  if (typeof config.cache === 'function') {
+    return config.cache(ctx);
+  }
+
   if (config.cache && 'type' in config.cache) {
     switch (config.cache.type) {
       case 'redis': {
