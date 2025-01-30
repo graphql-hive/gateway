@@ -17,6 +17,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
+import { handleLoggingConfig } from './handleLoggingOption';
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
@@ -94,9 +95,14 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
 
       const pubsub = loadedConfig.pubsub || new PubSub();
+      const cwd = loadedConfig.cwd || process.cwd();
+      if (loadedConfig.logging != null) {
+        handleLoggingConfig(loadedConfig.logging, ctx);
+      }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
         logger: ctx.log,
+        cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(
         {
@@ -106,6 +112,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           logger: ctx.log,
           cache,
+          pubsub,
+          cwd,
         },
       );
 
@@ -124,8 +132,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
             }
           : {}),
         proxy,
-        ...(schema ? { schema } : {}),
-        logging: loadedConfig.logging ?? ctx.log,
+        schema,
+        logging: ctx.log,
         productName: ctx.productName,
         productDescription: ctx.productDescription,
         productPackageName: ctx.productPackageName,

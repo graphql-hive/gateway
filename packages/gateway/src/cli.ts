@@ -19,7 +19,12 @@ import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import useMeshRateLimit from '@graphql-mesh/plugin-rate-limit';
-import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  MeshPubSub,
+  YamlConfig,
+} from '@graphql-mesh/types';
 import { DefaultLogger } from '@graphql-mesh/utils';
 import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
@@ -93,9 +98,11 @@ export interface GatewayCLIProxyConfig
   proxy?: GatewayConfigProxy['proxy'];
 }
 
-export type KeyValueCacheFactoryFn = (
-  ctx: Pick<GatewayConfigContext, 'logger' | 'pubsub'>,
-) => KeyValueCache;
+export type KeyValueCacheFactoryFn = (ctx: {
+  logger: Logger;
+  pubsub: MeshPubSub;
+  cwd: string;
+}) => KeyValueCache;
 
 export interface GatewayCLIBuiltinPluginConfig {
   /**
@@ -331,7 +338,7 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: new DefaultLogger(),
+    log: userCtx.log || new DefaultLogger(),
     productName: 'Hive Gateway',
     productDescription: 'Federated GraphQL Gateway',
     productPackageName: '@graphql-hive/gateway',
