@@ -1,15 +1,16 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
-  mapMaybePromise,
+  isAsyncIterable,
   type ExecutionRequest,
   type ExecutionResult,
-  type MaybeAsyncIterable,
-  type MaybePromise,
 } from '@graphql-tools/utils';
 import {
+  context,
   SpanKind,
   SpanStatusCode,
+  trace,
+  type Context,
   type Exception,
   type Span,
   type Tracer,
@@ -32,65 +33,66 @@ import {
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
-export function startHttpSpan(input: {
+const httpSpansByRequest = new WeakMap<Request, Span>();
+export function createHttpSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   request: Request;
   url: URL;
-  callback: (span: Span) => Response | Promise<Response>;
-}): MaybePromise<Response> {
-  const { url, request, tracer, callback } = input;
-  const path = url.pathname;
-  const userAgent = request.headers.get('user-agent');
-  const ips = request.headers.get('x-forwarded-for');
-  const method = request.method || 'GET';
-  const host = url.host || request.headers.get('host');
-  const hostname = url.hostname || host || 'localhost';
-  const rootSpanName = `${method} ${path}`;
+}): { ctx: Context } {
+  const { url, request, tracer } = input;
 
-  return tracer.startActiveSpan(
-    rootSpanName,
+  const span = tracer.startSpan(
+    `${request.method || 'GET'} ${url.pathname}`,
     {
       attributes: {
-        [SEMATTRS_HTTP_METHOD]: method,
+        [SEMATTRS_HTTP_METHOD]: request.method || 'GET',
         [SEMATTRS_HTTP_URL]: request.url,
-        [SEMATTRS_HTTP_ROUTE]: path,
+        [SEMATTRS_HTTP_ROUTE]: url.pathname,
         [SEMATTRS_HTTP_SCHEME]: url.protocol,
-        [SEMATTRS_NET_HOST_NAME]: hostname,
-        [SEMATTRS_HTTP_HOST]: host || undefined,
-        [SEMATTRS_HTTP_CLIENT_IP]: ips?.split(',')[0],
-        [SEMATTRS_HTTP_USER_AGENT]: userAgent || undefined,
+        [SEMATTRS_NET_HOST_NAME]:
+          url.hostname ||
+          url.host ||
+          request.headers.get('host') ||
+          'localhost',
+        [SEMATTRS_HTTP_HOST]:
+          url.host || request.headers.get('host') || undefined,
+        [SEMATTRS_HTTP_CLIENT_IP]: request.headers
+          .get('x-forwarded-for')
+          ?.split(',')[0],
+        [SEMATTRS_HTTP_USER_AGENT]:
+          request.headers.get('user-agent') || undefined,
       },
       kind: SpanKind.SERVER,
     },
-    spanCallback((span) => {
-      const response$ = callback(span);
-      return mapMaybePromise(
-        response$,
-        (response) => {
-          span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-          span.setStatus({
-            code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-            message: response.ok ? undefined : response.statusText,
-          });
-          span.end();
-          return response;
-        },
-        (err) => {
-          recordAndEndSpan(span, err);
-          throw err;
-        },
-      );
-    }),
+    input.ctx,
   );
+
+  httpSpansByRequest.set(request, span);
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+  };
 }
 
-export function startGraphQLParseSpan<T>(input: {
-  callback: (span: Span) => T;
+export function endHttpSpan(request: Request, response: Response) {
+  const span = httpSpansByRequest.get(request);
+  if (span) {
+    span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+    span.setStatus({
+      code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+      message: response.ok ? undefined : response.statusText,
+    });
+    span.end();
+  }
+}
+
+export function startGraphQLParseSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}): T {
-  return input.tracer.startActiveSpan(
+}): { ctx: Context; done: (result: unknown) => void } {
+  const span = input.tracer.startSpan(
     'graphql.parse',
     {
       attributes: {
@@ -99,8 +101,12 @@ export function startGraphQLParseSpan<T>(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    spanCallback((span) => {
-      const result = input.callback(span);
+    input.ctx,
+  );
+
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
       if (result instanceof Error) {
         span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
         span.recordException(result);
@@ -110,18 +116,17 @@ export function startGraphQLParseSpan<T>(input: {
         });
       }
       span.end();
-      return result;
-    }),
-  );
+    },
+  };
 }
 
 export function startGraphQLValidateSpan(input: {
-  callback: (span: Span) => any;
+  ctx: Context;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}): any[] | readonly Error[] {
-  return input.tracer.startActiveSpan(
+}): { ctx: Context; done: (result: any[] | readonly Error[]) => void } {
+  const span = input.tracer.startSpan(
     'graphql.validate',
     {
       attributes: {
@@ -130,8 +135,11 @@ export function startGraphQLValidateSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    spanCallback((span) => {
-      const result: any[] | readonly Error[] = input.callback(span);
+    input.ctx,
+  );
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
       if (result instanceof Error) {
         span.setStatus({
           code: SpanStatusCode.ERROR,
@@ -149,21 +157,25 @@ export function startGraphQLValidateSpan(input: {
         }
       }
       span.end();
-      return result;
-    }),
-  );
+    },
+  };
 }
 
 export function startGraphQLExecuteSpan(input: {
+  ctx: Context;
   args: ExecutionArgs;
-  callback: (span: Span) => ExecutionResult | Promise<ExecutionResult>;
   tracer: Tracer;
-}): MaybePromise<ExecutionResult> {
+}): {
+  ctx: Context;
+  done: (
+    result: ExecutionResult | AsyncIterableIterator<ExecutionResult>,
+  ) => void;
+} {
   const operation = getOperationASTFromDocument(
     input.args.document,
     input.args.operationName || undefined,
   );
-  return input.tracer.startActiveSpan(
+  const span = input.tracer.startSpan(
     'graphql.execute',
     {
       attributes: {
@@ -174,46 +186,42 @@ export function startGraphQLExecuteSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    spanCallback((span) => {
-      const result$ = input.callback(span);
-      return mapMaybePromise(
-        result$,
-        (result) => {
-          if (result.errors && result.errors.length > 0) {
-            span.setAttribute(
-              SEMATTRS_GRAPHQL_ERROR_COUNT,
-              result.errors.length,
-            );
-            span.setStatus({
-              code: SpanStatusCode.ERROR,
-              message: result.errors.map((e) => e.message).join(', '),
-            });
-
-            for (const error of result.errors) {
-              span.recordException(error);
-            }
-          }
-          span.end();
-          return result;
-        },
-        (err) => {
-          recordAndEndSpan(span, err);
-          throw err;
-        },
-      );
-    }),
+    input.ctx,
   );
+
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
+      if (
+        !isAsyncIterable(result) && // FIXME: Handle async iterable too
+        result.errors &&
+        result.errors.length > 0
+      ) {
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: result.errors.map((e) => e.message).join(', '),
+        });
+
+        for (const error of result.errors) {
+          span.recordException(error);
+        }
+      }
+      span.end();
+    },
+  };
 }
 
-export const subgraphExecReqSpanMap = new WeakMap<ExecutionRequest, Span>();
-
 export function startSubgraphExecuteFetchSpan(input: {
-  callback: (span: Span) => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  ctx: Context;
   tracer: Tracer;
   executionRequest: ExecutionRequest;
   subgraphName: string;
-}): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
-  return input.tracer.startActiveSpan(
+}): {
+  ctx: Context;
+  done: (result: unknown) => void;
+} {
+  const span = input.tracer.startSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
@@ -229,79 +237,64 @@ export function startSubgraphExecuteFetchSpan(input: {
       },
       kind: SpanKind.CLIENT,
     },
-    spanCallback((span) => {
-      const result$ = input.callback(span);
-      const r = mapMaybePromise(
-        result$,
-        (result) => {
-          span.end();
-          return result;
-        },
-        (err) => {
-          recordAndEndSpan(span, err);
-          throw err;
-        },
-      );
-      return r;
-    }),
+    input.ctx,
   );
+
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+    done: () => span.end(),
+  };
 }
 
 export function startUpstreamHttpFetchSpan(input: {
-  callback: (span: Span) => MaybePromise<Response>;
+  ctx: Context;
   tracer: Tracer;
   url: string;
   fetchOptions: RequestInit;
   executionRequest?: ExecutionRequest;
-}): MaybePromise<Response> {
+}): { ctx: Context; done: (response: Response) => void } {
   const urlObj = new URL(input.url);
-
-  const attributes = {
-    [SEMATTRS_HTTP_METHOD]: input.fetchOptions.method,
-    [SEMATTRS_HTTP_URL]: input.url,
-    [SEMATTRS_NET_HOST_NAME]: urlObj.hostname,
-    [SEMATTRS_HTTP_HOST]: urlObj.host,
-    [SEMATTRS_HTTP_ROUTE]: urlObj.pathname,
-    [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
-  };
-
-  return input.tracer.startActiveSpan(
+  const span = input.tracer.startSpan(
     'http.fetch',
     {
-      attributes,
+      attributes: {
+        [SEMATTRS_HTTP_METHOD]: input.fetchOptions.method,
+        [SEMATTRS_HTTP_URL]: input.url,
+        [SEMATTRS_NET_HOST_NAME]: urlObj.hostname,
+        [SEMATTRS_HTTP_HOST]: urlObj.host,
+        [SEMATTRS_HTTP_ROUTE]: urlObj.pathname,
+        [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
+      },
       kind: SpanKind.CLIENT,
     },
-    spanCallback((span) => {
-      const response$ = input.callback(span);
-      return mapMaybePromise(
-        response$,
-        (response) => {
-          span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-          span.setStatus({
-            code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-            message: response.ok ? undefined : response.statusText,
-          });
-          span.end();
-          return response;
-        },
-        (err) => {
-          recordAndEndSpan(span, err);
-          throw err;
-        },
-      );
-    }),
+    input.ctx,
   );
+
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (response) => {
+      span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+      span.setStatus({
+        code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+        message: response.ok ? undefined : response.statusText,
+      });
+      span.end();
+    },
+  };
 }
 
-function spanCallback<T>(callback: (span: Span) => T): (span: Span) => T {
-  return (span) => {
-    try {
-      return callback(span);
-    } catch (err) {
-      recordAndEndSpan(span, err);
-      throw err;
-    }
-  };
+function runWithSpanContext<T>(
+  ctx: Context,
+  span: Span,
+  callback: (span: Span) => T,
+): T {
+  try {
+    return context.with(trace.setSpan(ctx, span), callback, globalThis, span);
+  } catch (err) {
+    const span = trace.getSpan(ctx);
+    span && recordAndEndSpan(span, err);
+    throw err;
+  }
 }
 
 function recordAndEndSpan(span: Span, err: unknown) {
