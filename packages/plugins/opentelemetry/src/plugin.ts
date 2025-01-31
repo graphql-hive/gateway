@@ -29,7 +29,6 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import '@opentelemetry/api';
-import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -259,17 +258,23 @@ export function useOpenTelemetry(
       asyncAttributes,
     );
 
+    const contextManager$ =
+      options.contextManager != undefined
+        ? options.contextManager
+        : import('@opentelemetry/context-async-hooks').then(
+            (module) => new module.AsyncLocalStorageContextManager(),
+          );
+
     preparation$ = mapMaybePromise(exporters$, (exporters) => {
       spanProcessors = exporters;
       provider = new WebTracerProvider({ resource, spanProcessors });
-      provider.register({
-        contextManager:
-          options.contextManager === false
-            ? undefined
-            : (options.contextManager ?? new AsyncLocalStorageContextManager()),
+      return mapMaybePromise(contextManager$, (contextManager) => {
+        provider.register({
+          contextManager: contextManager === false ? undefined : contextManager,
+        });
+        tracer = options.tracer || trace.getTracer('gateway');
+        preparation$ = undefined;
       });
-      tracer = options.tracer || trace.getTracer('gateway');
-      preparation$ = undefined;
     });
   } else {
     tracer = options.tracer || trace.getTracer('gateway');
