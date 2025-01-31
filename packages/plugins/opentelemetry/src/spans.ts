@@ -6,12 +6,10 @@ import {
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
-  context,
   SpanKind,
   SpanStatusCode,
   trace,
   type Context,
-  type Exception,
   type Span,
   type Tracer,
 } from '@opentelemetry/api';
@@ -281,35 +279,4 @@ export function startUpstreamHttpFetchSpan(input: {
       span.end();
     },
   };
-}
-
-function runWithSpanContext<T>(
-  ctx: Context,
-  span: Span,
-  callback: (span: Span) => T,
-): T {
-  try {
-    return context.with(trace.setSpan(ctx, span), callback, globalThis, span);
-  } catch (err) {
-    const span = trace.getSpan(ctx);
-    span && recordAndEndSpan(span, err);
-    throw err;
-  }
-}
-
-function recordAndEndSpan(span: Span, err: unknown) {
-  let message = 'Error';
-  if (err && typeof err === 'object' && 'message' in err) {
-    const errMessage = err['message'];
-    if (typeof errMessage === 'string') {
-      message = errMessage;
-    }
-  }
-
-  span.setStatus({
-    code: SpanStatusCode.ERROR,
-    message,
-  });
-  span.recordException(err as Exception);
-  span.end();
 }
