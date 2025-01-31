@@ -82,7 +82,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ...defaultOptions,
         ...loadedConfig,
         ...opts,
-        pollingInterval: opts.polling,
+        pollingInterval:
+          opts.polling ||
+          ('pollingInterval' in loadedConfig
+            ? loadedConfig.pollingInterval
+            : undefined) ||
+          defaultOptions.pollingInterval,
         ...(hiveRegistryToken
           ? {
               reporting: {
@@ -135,7 +140,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         config.pollingInterval < 10_000
       ) {
         process.stderr.write(
-          `error: polling interval duration too short, use at least 10 seconds\n`,
+          `error: polling interval duration too short ${config.pollingInterval}, use at least 10 seconds\n`,
         );
         process.exit(1);
       }

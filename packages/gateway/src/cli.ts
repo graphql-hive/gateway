@@ -225,10 +225,9 @@ let cli = new Command()
   .addOption(
     new Option(
       '--fork <count>',
-      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker`,
+      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${defaultOptions.fork})`,
     )
       .env('FORK')
-      .default(defaultOptions.fork)
       .argParser((v) => {
         const count = parseInt(v);
         if (isNaN(count)) {
@@ -249,15 +248,17 @@ let cli = new Command()
     ).env('CONFIG_PATH'),
   )
   .addOption(
-    new Option('-h, --host <hostname>', `host to use for serving`).default(
-      defaultOptions.host,
-      defaultOptions.host,
+    new Option(
+      '-h, --host <hostname>',
+      `host to use for serving (default: ${defaultOptions.host})`,
     ),
   )
   .addOption(
-    new Option('-p, --port <number>', `port to use for serving`)
+    new Option(
+      '-p, --port <number>',
+      `port to use for serving (default: ${defaultOptions.port})`,
+    )
       .env('PORT')
-      .default(defaultOptions.port)
       .argParser((v) => {
         const port = parseInt(v);
         if (isNaN(port)) {
@@ -269,9 +270,8 @@ let cli = new Command()
   .addOption(
     new Option(
       '--polling <duration>',
-      `schema polling interval in human readable duration`,
+      `schema polling interval in human readable duration (default: 10s)`,
     )
-      .default(10_000, '10s')
       .env('POLLING')
       .argParser((v) => {
         const interval = parseDuration(v) as number;
