@@ -12,6 +12,7 @@ import type {
 } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
+  createDeferred,
   isPromise,
   MaybePromise,
   type ExecutionRequest,
@@ -192,7 +193,7 @@ export function useOpenTelemetry(
 
   let preparation$: Promise<void> | undefined | void;
   const { promise: asyncAttributes, resolve: resolveAsyncAttributes } =
-    Promise.withResolvers<{ [ATTR_SERVICE_VERSION]: string }>();
+    createDeferred<{ [ATTR_SERVICE_VERSION]: string }>();
 
   const otelContextFor = {
     request: new WeakMap<Request, OtelGraphqlContext>(),
