@@ -271,6 +271,8 @@ export function useOpenTelemetry(
       tracer = options.tracer || trace.getTracer('gateway');
       preparation$ = undefined;
     });
+  } else {
+    tracer = options.tracer || trace.getTracer('gateway');
   }
 
   return {
