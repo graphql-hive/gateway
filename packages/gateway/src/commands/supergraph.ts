@@ -2,18 +2,32 @@ import cluster from 'node:cluster';
 import { lstat } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { Option } from '@commander-js/extra-typings';
-import { createGatewayRuntime, type GatewayConfigSupergraph, type GatewayGraphOSManagedFederationOptions, type GatewayHiveCDNOptions, type UnifiedGraphConfig } from '@graphql-hive/gateway-runtime';
+import {
+  createGatewayRuntime,
+  type GatewayConfigSupergraph,
+  type GatewayGraphOSManagedFederationOptions,
+  type GatewayHiveCDNOptions,
+  type UnifiedGraphConfig,
+} from '@graphql-hive/gateway-runtime';
 import { isUrl, PubSub, registerTerminateHandler } from '@graphql-mesh/utils';
 import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadTypedefs } from '@graphql-tools/load';
 import { asArray, isValidPath } from '@graphql-tools/utils';
-import { defaultOptions, type AddCommand, type CLIContext, type GatewayCLIConfig } from '../cli';
-import { getBuiltinPluginsFromConfig, getCacheInstanceFromConfig, loadConfig } from '../config';
+import {
+  defaultOptions,
+  type AddCommand,
+  type CLIContext,
+  type GatewayCLIConfig,
+} from '../cli';
+import {
+  getBuiltinPluginsFromConfig,
+  getCacheInstanceFromConfig,
+  loadConfig,
+} from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
 import { handleLoggingConfig } from './handleLoggingOption';
-
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
