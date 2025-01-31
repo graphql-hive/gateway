@@ -82,7 +82,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ...defaultOptions,
         ...loadedConfig,
         ...opts,
-        pollingInterval: opts.polling || ('pollingInterval' in loadedConfig ? loadedConfig.pollingInterval : undefined) || defaultOptions.pollingInterval,
+        pollingInterval:
+          opts.polling ||
+          ('pollingInterval' in loadedConfig
+            ? loadedConfig.pollingInterval
+            : undefined) ||
+          defaultOptions.pollingInterval,
         ...(hiveRegistryToken
           ? {
               reporting: {
