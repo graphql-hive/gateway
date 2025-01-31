@@ -1,5 +1,11 @@
 # @graphql-hive/gateway
 
+## 1.9.1
+
+### Patch Changes
+
+- [#574](https://github.com/graphql-hive/gateway/pull/574) [`8c466f4`](https://github.com/graphql-hive/gateway/commit/8c466f49cd54fe4a341b398bbda9f06955ad9807) Thanks [@ardatan](https://github.com/ardatan)! - Fix the regression causing `port`, `host` and `pollingInterval` in the configuration is overriden by the default values of CLI parameters
+
 ## 1.9.0
 
 ### Minor Changes
