@@ -1,12 +1,14 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
+  isAsyncIterable,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
   SpanKind,
   SpanStatusCode,
+  trace,
   type Context,
   type Span,
   type Tracer,
@@ -29,56 +31,66 @@ import {
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
+const httpSpansByRequest = new WeakMap<Request, Span>();
 export function createHttpSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   request: Request;
   url: URL;
-  otelContext: Context;
-}): Span {
-  const { url, request, tracer, otelContext } = input;
-  const path = url.pathname;
-  const userAgent = request.headers.get('user-agent');
-  const ips = request.headers.get('x-forwarded-for');
-  const method = request.method || 'GET';
-  const host = url.host || request.headers.get('host');
-  const hostname = url.hostname || host || 'localhost';
-  const rootSpanName = `${method} ${path}`;
+}): { ctx: Context } {
+  const { url, request, tracer } = input;
 
-  return tracer.startSpan(
-    rootSpanName,
+  const span = tracer.startSpan(
+    `${request.method || 'GET'} ${url.pathname}`,
     {
       attributes: {
-        [SEMATTRS_HTTP_METHOD]: method,
+        [SEMATTRS_HTTP_METHOD]: request.method || 'GET',
         [SEMATTRS_HTTP_URL]: request.url,
-        [SEMATTRS_HTTP_ROUTE]: path,
+        [SEMATTRS_HTTP_ROUTE]: url.pathname,
         [SEMATTRS_HTTP_SCHEME]: url.protocol,
-        [SEMATTRS_NET_HOST_NAME]: hostname,
-        [SEMATTRS_HTTP_HOST]: host || undefined,
-        [SEMATTRS_HTTP_CLIENT_IP]: ips?.split(',')[0],
-        [SEMATTRS_HTTP_USER_AGENT]: userAgent || undefined,
+        [SEMATTRS_NET_HOST_NAME]:
+          url.hostname ||
+          url.host ||
+          request.headers.get('host') ||
+          'localhost',
+        [SEMATTRS_HTTP_HOST]:
+          url.host || request.headers.get('host') || undefined,
+        [SEMATTRS_HTTP_CLIENT_IP]: request.headers
+          .get('x-forwarded-for')
+          ?.split(',')[0],
+        [SEMATTRS_HTTP_USER_AGENT]:
+          request.headers.get('user-agent') || undefined,
       },
       kind: SpanKind.SERVER,
     },
-    otelContext,
+    input.ctx,
   );
+
+  httpSpansByRequest.set(request, span);
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+  };
 }
 
-export function completeHttpSpan(span: Span, response: Response) {
-  span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-  span.setStatus({
-    code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-    message: response.ok ? undefined : response.statusText,
-  });
-  span.end();
+export function endHttpSpan(request: Request, response: Response) {
+  const span = httpSpansByRequest.get(request);
+  if (span) {
+    span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+    span.setStatus({
+      code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+      message: response.ok ? undefined : response.statusText,
+    });
+    span.end();
+  }
 }
 
-export function createGraphQLParseSpan(input: {
-  otelContext: Context;
+export function startGraphQLParseSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}) {
-  const parseSpan = input.tracer.startSpan(
+}): { ctx: Context; done: (result: unknown) => void } {
+  const span = input.tracer.startSpan(
     'graphql.parse',
     {
       attributes: {
@@ -87,33 +99,32 @@ export function createGraphQLParseSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
+    input.ctx,
   );
 
   return {
-    parseSpan,
-    done: (result: any | Error | null) => {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
       if (result instanceof Error) {
-        parseSpan.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
-        parseSpan.recordException(result);
-        parseSpan.setStatus({
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+        span.recordException(result);
+        span.setStatus({
           code: SpanStatusCode.ERROR,
           message: result.message,
         });
       }
-
-      parseSpan.end();
+      span.end();
     },
   };
 }
 
-export function createGraphQLValidateSpan(input: {
-  otelContext: Context;
+export function startGraphQLValidateSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}) {
-  const validateSpan = input.tracer.startSpan(
+}): { ctx: Context; done: (result: any[] | readonly Error[]) => void } {
+  const span = input.tracer.startSpan(
     'graphql.validate',
     {
       attributes: {
@@ -122,44 +133,47 @@ export function createGraphQLValidateSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
+    input.ctx,
   );
-
   return {
-    validateSpan,
-    done: (result: any[] | readonly Error[]) => {
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
       if (result instanceof Error) {
-        validateSpan.setStatus({
+        span.setStatus({
           code: SpanStatusCode.ERROR,
           message: result.message,
         });
       } else if (Array.isArray(result) && result.length > 0) {
-        validateSpan.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
-        validateSpan.setStatus({
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+        span.setStatus({
           code: SpanStatusCode.ERROR,
           message: result.map((e) => e.message).join(', '),
         });
 
         for (const error in result) {
-          validateSpan.recordException(error);
+          span.recordException(error);
         }
       }
-
-      validateSpan.end();
+      span.end();
     },
   };
 }
 
-export function createGraphQLExecuteSpan(input: {
+export function startGraphQLExecuteSpan(input: {
+  ctx: Context;
   args: ExecutionArgs;
-  otelContext: Context;
   tracer: Tracer;
-}) {
+}): {
+  ctx: Context;
+  done: (
+    result: ExecutionResult | AsyncIterableIterator<ExecutionResult>,
+  ) => void;
+} {
   const operation = getOperationASTFromDocument(
     input.args.document,
     input.args.operationName || undefined,
   );
-  const executeSpan = input.tracer.startSpan(
+  const span = input.tracer.startSpan(
     'graphql.execute',
     {
       attributes: {
@@ -170,41 +184,42 @@ export function createGraphQLExecuteSpan(input: {
       },
       kind: SpanKind.INTERNAL,
     },
-    input.otelContext,
+    input.ctx,
   );
 
   return {
-    executeSpan,
-    done: (result: ExecutionResult) => {
-      if (result.errors && result.errors.length > 0) {
-        executeSpan.setAttribute(
-          SEMATTRS_GRAPHQL_ERROR_COUNT,
-          result.errors.length,
-        );
-        executeSpan.setStatus({
+    ctx: trace.setSpan(input.ctx, span),
+    done: (result) => {
+      if (
+        !isAsyncIterable(result) && // FIXME: Handle async iterable too
+        result.errors &&
+        result.errors.length > 0
+      ) {
+        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
+        span.setStatus({
           code: SpanStatusCode.ERROR,
           message: result.errors.map((e) => e.message).join(', '),
         });
 
-        for (const error in result.errors) {
-          executeSpan.recordException(error);
+        for (const error of result.errors) {
+          span.recordException(error);
         }
       }
-
-      executeSpan.end();
+      span.end();
     },
   };
 }
 
-export const subgraphExecReqSpanMap = new WeakMap<ExecutionRequest, Span>();
-
-export function createSubgraphExecuteFetchSpan(input: {
-  otelContext: Context;
+export function startSubgraphExecuteFetchSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   executionRequest: ExecutionRequest;
   subgraphName: string;
-}) {
-  const subgraphExecuteSpan = input.tracer.startSpan(
+}): {
+  ctx: Context;
+  done: (result: unknown) => void;
+} {
+  const span = input.tracer.startSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
@@ -220,69 +235,48 @@ export function createSubgraphExecuteFetchSpan(input: {
       },
       kind: SpanKind.CLIENT,
     },
-    input.otelContext,
+    input.ctx,
   );
 
-  subgraphExecReqSpanMap.set(input.executionRequest, subgraphExecuteSpan);
-
   return {
-    done() {
-      subgraphExecuteSpan.end();
-    },
+    ctx: trace.setSpan(input.ctx, span),
+    done: () => span.end(),
   };
 }
 
-export function createUpstreamHttpFetchSpan(input: {
-  otelContext: Context;
+export function startUpstreamHttpFetchSpan(input: {
+  ctx: Context;
   tracer: Tracer;
   url: string;
   fetchOptions: RequestInit;
   executionRequest?: ExecutionRequest;
-}) {
+}): { ctx: Context; done: (response: Response) => void } {
   const urlObj = new URL(input.url);
-
-  const attributes = {
-    [SEMATTRS_HTTP_METHOD]: input.fetchOptions.method,
-    [SEMATTRS_HTTP_URL]: input.url,
-    [SEMATTRS_NET_HOST_NAME]: urlObj.hostname,
-    [SEMATTRS_HTTP_HOST]: urlObj.host,
-    [SEMATTRS_HTTP_ROUTE]: urlObj.pathname,
-    [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
-  };
-
-  let fetchSpan: Span | undefined;
-  let isOrigSpan: boolean;
-
-  if (input.executionRequest) {
-    fetchSpan = subgraphExecReqSpanMap.get(input.executionRequest);
-    if (fetchSpan) {
-      isOrigSpan = false;
-      fetchSpan.setAttributes(attributes);
-    }
-  }
-
-  if (!fetchSpan) {
-    fetchSpan = input.tracer.startSpan(
-      'http.fetch',
-      {
-        attributes,
-        kind: SpanKind.CLIENT,
+  const span = input.tracer.startSpan(
+    'http.fetch',
+    {
+      attributes: {
+        [SEMATTRS_HTTP_METHOD]: input.fetchOptions.method,
+        [SEMATTRS_HTTP_URL]: input.url,
+        [SEMATTRS_NET_HOST_NAME]: urlObj.hostname,
+        [SEMATTRS_HTTP_HOST]: urlObj.host,
+        [SEMATTRS_HTTP_ROUTE]: urlObj.pathname,
+        [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
       },
-      input.otelContext,
-    );
-    isOrigSpan = true;
-  }
+      kind: SpanKind.CLIENT,
+    },
+    input.ctx,
+  );
 
   return {
-    done: (response: Response) => {
-      fetchSpan.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-      fetchSpan.setStatus({
+    ctx: trace.setSpan(input.ctx, span),
+    done: (response) => {
+      span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+      span.setStatus({
         code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
         message: response.ok ? undefined : response.statusText,
       });
-      if (isOrigSpan) {
-        fetchSpan.end();
-      }
+      span.end();
     },
   };
 }

@@ -5,38 +5,48 @@ import {
 } from '@envelop/types';
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
-import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
+import type {
+  Logger,
+  OnFetchHookDone,
+  OnFetchHookPayload,
+} from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
-  fakePromise,
-  isAsyncIterable,
+  createDeferred,
+  isPromise,
   MaybePromise,
+  type ExecutionRequest,
 } from '@graphql-tools/utils';
 import {
   context,
   diag,
   DiagLogLevel,
   propagation,
+  ROOT_CONTEXT,
   trace,
   type Context,
+  type ContextManager,
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
+import '@opentelemetry/api';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
+import { OtelGraphqlContext } from './contextManager';
 import {
-  completeHttpSpan,
-  createGraphQLExecuteSpan,
-  createGraphQLParseSpan,
-  createGraphQLValidateSpan,
   createHttpSpan,
-  createSubgraphExecuteFetchSpan,
-  createUpstreamHttpFetchSpan,
+  endHttpSpan,
+  startGraphQLExecuteSpan,
+  startGraphQLParseSpan,
+  startGraphQLValidateSpan,
+  startSubgraphExecuteFetchSpan,
+  startUpstreamHttpFetchSpan,
 } from './spans';
+import { mapMaybePromise } from './utils';
 
 type PrimitiveOrEvaluated<TExpectedResult, TInput = never> =
   | TExpectedResult
@@ -47,6 +57,12 @@ interface OpenTelemetryGatewayPluginOptionsWithoutInit {
    * Whether to initialize the OpenTelemetry SDK (default: true).
    */
   initializeNodeSDK: false;
+  /**
+   * Whether to rely on OTEL context api for span correlation (default: true).
+   * If false, the plugin will rely on request context for span parenting,
+   * which implies that any user defined context and spans will be ignored.
+   */
+  contextManager?: false;
 }
 
 interface OpenTelemetryGatewayPluginOptionsWithInit {
@@ -67,6 +83,13 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    * Does not apply when `initializeNodeSDK` is `false`.
    */
   serviceName?: string;
+  /**
+   * The context manager used to keep track of the OTEL context.
+   * By default, it uses AsyncLocalStorage based manager, which is compatible only in Node.
+   *
+   * Does not apply when `initializeNodeSDK` is `false`.
+   */
+  contextManager?: ContextManager | false;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -149,262 +172,368 @@ const HeadersTextMapGetter: TextMapGetter<Headers> = {
   },
 };
 
-export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions & { logger: Logger },
-): GatewayPlugin<{
+export type OpenTelemetryContextExtension = {
   opentelemetry: {
     tracer: Tracer;
     activeContext: () => Context;
   };
-}> {
+};
+
+export function useOpenTelemetry(
+  options: OpenTelemetryGatewayPluginOptions & { logger: Logger },
+): GatewayPlugin<OpenTelemetryContextExtension> {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
+  const useContextManager = options.contextManager !== false;
 
-  const requestContextMapping = new WeakMap<Request, Context>();
   let tracer: Tracer;
 
   let spanProcessors: SpanProcessor[];
-  let serviceName: string = 'Gateway';
   let provider: WebTracerProvider;
 
-  let preparation$: Promise<void> | undefined;
+  let preparation$: Promise<void> | undefined | void;
+  const { promise: asyncAttributes, resolve: resolveAsyncAttributes } =
+    createDeferred<{ [ATTR_SERVICE_VERSION]: string }>();
 
-  return {
-    onYogaInit({ yoga }) {
-      preparation$ = fakePromise(undefined).then(async () => {
-        if (
-          !(
-            'initializeNodeSDK' in options &&
-            options.initializeNodeSDK === false
-          )
-        ) {
-          if (options.serviceName) {
-            serviceName = options.serviceName;
-          }
-          if (options.exporters) {
-            spanProcessors = await Promise.all(options.exporters);
-          }
-          const webProvider = new WebTracerProvider({
-            resource: new Resource({
-              [SEMRESATTRS_SERVICE_NAME]: serviceName,
-              [ATTR_SERVICE_VERSION]: yoga.version,
-            }),
-            spanProcessors,
-          });
-          webProvider.register();
-          provider = webProvider;
-        }
-        const pluginLogger = options.logger.child('OpenTelemetry');
-        diag.setLogger(
-          {
-            error: (message, ...args) => pluginLogger.error(message, ...args),
-            warn: (message, ...args) => pluginLogger.warn(message, ...args),
-            info: (message, ...args) => pluginLogger.info(message, ...args),
-            debug: (message, ...args) => pluginLogger.debug(message, ...args),
-            verbose: (message, ...args) => pluginLogger.debug(message, ...args),
-          },
-          DiagLogLevel.VERBOSE,
-        );
+  const otelContextFor = {
+    request: new WeakMap<Request, OtelGraphqlContext>(),
+    operation: new WeakMap<any, OtelGraphqlContext>(), // By graphql context
+    subgraphExecution: new WeakMap<ExecutionRequest, OtelGraphqlContext>(),
+  };
+  function getContext(
+    ctx?: {
+      request: Request;
+      executionRequest?: any;
+    } | null,
+  ): Context {
+    if (useContextManager) {
+      return context.active();
+    }
+    if (!ctx) {
+      return ROOT_CONTEXT;
+    }
+
+    if (ctx.executionRequest) {
+      const ctxForSubgraph = otelContextFor.subgraphExecution.get(
+        ctx.executionRequest,
+      );
+      if (ctxForSubgraph) {
+        return ctxForSubgraph.current;
+      }
+    }
+
+    const ctxForOperation = otelContextFor.operation.get(ctx);
+    if (ctxForOperation) {
+      return ctxForOperation.current;
+    }
+
+    const ctxForRequest = otelContextFor.request.get(ctx.request);
+    if (ctxForRequest) {
+      return ctxForRequest.current;
+    }
+
+    return ROOT_CONTEXT;
+  }
+
+  const pluginLogger = options.logger.child('OpenTelemetry');
+  diag.setLogger(
+    {
+      error: (message, ...args) => pluginLogger.error(message, ...args),
+      warn: (message, ...args) => pluginLogger.warn(message, ...args),
+      info: (message, ...args) => pluginLogger.info(message, ...args),
+      debug: (message, ...args) => pluginLogger.debug(message, ...args),
+      verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+    },
+    DiagLogLevel.VERBOSE,
+  );
+
+  if (
+    !('initializeNodeSDK' in options && options.initializeNodeSDK === false)
+  ) {
+    const exporters$ = containsOnlyValues(options.exporters)
+      ? options.exporters
+      : Promise.all(options.exporters);
+
+    const resource = new Resource(
+      { [SEMRESATTRS_SERVICE_NAME]: options.serviceName || 'Gateway' },
+      asyncAttributes,
+    );
+
+    const contextManager$ =
+      options.contextManager != undefined
+        ? options.contextManager
+        : import('@opentelemetry/context-async-hooks').then(
+            (module) => new module.AsyncLocalStorageContextManager(),
+          );
+
+    preparation$ = mapMaybePromise(exporters$, (exporters) => {
+      spanProcessors = exporters;
+      provider = new WebTracerProvider({ resource, spanProcessors });
+      return mapMaybePromise(contextManager$, (contextManager) => {
+        provider.register({
+          contextManager: contextManager === false ? undefined : contextManager,
+        });
         tracer = options.tracer || trace.getTracer('gateway');
         preparation$ = undefined;
       });
+    });
+  } else {
+    tracer = options.tracer || trace.getTracer('gateway');
+  }
+
+  return {
+    onYogaInit({ yoga }) {
+      resolveAsyncAttributes({ [ATTR_SERVICE_VERSION]: yoga.version });
     },
-    onContextBuilding({ extendContext, context }) {
+    onRequest(onRequestPayload) {
+      return mapMaybePromise(
+        preparation$,
+        () => {
+          let { requestHandler, request, setRequestHandler } = onRequestPayload;
+          const shouldTraceHttp =
+            typeof options.spans?.http === 'function'
+              ? options.spans.http(onRequestPayload)
+              : (options.spans?.http ?? true);
+
+          let rootContext = inheritContext
+            ? propagation.extract(
+                context.active(),
+                request.headers,
+                HeadersTextMapGetter,
+              )
+            : context.active();
+
+          if (shouldTraceHttp) {
+            rootContext = createHttpSpan({
+              ctx: rootContext,
+              request,
+              tracer,
+              url: onRequestPayload.url,
+            }).ctx;
+          }
+
+          if (useContextManager) {
+            setRequestHandler(context.bind(rootContext, requestHandler));
+          }
+
+          otelContextFor.request.set(
+            request,
+            new OtelGraphqlContext(rootContext),
+          );
+        },
+        (error) => {
+          pluginLogger.error('Failed to start http span', { error });
+        },
+      );
+    },
+    onResponse({ request, response }) {
+      try {
+        endHttpSpan(request, response);
+      } catch (error) {
+        pluginLogger.error('Failed to end http span', { error });
+      }
+    },
+    onEnveloped({ extendContext, context: ctx }) {
+      otelContextFor.operation.set(
+        ctx,
+        new OtelGraphqlContext(getContext(ctx)),
+      );
       extendContext({
         opentelemetry: {
           tracer,
-          activeContext: () =>
-            requestContextMapping.get(context.request) ?? context['active'](),
+          activeContext: (): Context => getContext(ctx),
         },
       });
     },
-    onRequest(onRequestPayload) {
-      const shouldTraceHttp =
-        typeof options.spans?.http === 'function'
-          ? options.spans.http(onRequestPayload)
-          : (options.spans?.http ?? true);
-
-      if (!shouldTraceHttp) {
-        return preparation$;
-      }
-
-      const { request, url } = onRequestPayload;
-      const otelContext = inheritContext
-        ? propagation.extract(
-            context.active(),
-            request.headers,
-            HeadersTextMapGetter,
-          )
-        : context.active();
-
-      const httpSpan = createHttpSpan({
-        request,
-        url,
-        tracer,
-        otelContext,
-      });
-
-      requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
-
-      return preparation$;
-    },
-    onValidate(onValidatePayload) {
-      const shouldTraceValidate =
-        typeof options.spans?.graphqlValidate === 'function'
-          ? options.spans.graphqlValidate(onValidatePayload)
-          : (options.spans?.graphqlValidate ?? true);
-
-      const { context } = onValidatePayload;
-      const otelContext = requestContextMapping.get(context.request);
-
-      if (shouldTraceValidate && otelContext) {
-        const { done } = createGraphQLValidateSpan({
-          otelContext,
-          tracer,
-          query: context.params.query,
-          operationName: context.params.operationName,
-        });
-
-        return ({ result }) => done(result);
-      }
-      return void 0;
-    },
     onParse(onParsePayload) {
+      const otelCtx = otelContextFor.operation.get(onParsePayload.context);
+      if (!otelCtx) {
+        pluginLogger.warn('No OTEL context found for this operation.');
+        return;
+      }
       const shouldTracePrase =
         typeof options.spans?.graphqlParse === 'function'
           ? options.spans.graphqlParse(onParsePayload)
           : (options.spans?.graphqlParse ?? true);
 
-      const { context } = onParsePayload;
-      const otelContext = requestContextMapping.get(context.request);
-
-      if (shouldTracePrase && otelContext) {
-        const { done } = createGraphQLParseSpan({
-          otelContext,
+      if (shouldTracePrase) {
+        const { context: gqlCtx, setParseFn, parseFn } = onParsePayload;
+        const { ctx, done } = startGraphQLParseSpan({
+          ctx: getContext(onParsePayload.context),
           tracer,
-          query: context.params.query,
-          operationName: context.params.operationName,
+          operationName: gqlCtx.params.operationName,
+          query: gqlCtx.params.query?.trim(),
         });
+        otelCtx.push(ctx);
+        if (useContextManager) {
+          setParseFn(context.bind(ctx, parseFn));
+        }
+        return ({ result }) => {
+          done(result);
+          otelCtx.pop();
+        };
+      }
+      return void 0;
+    },
+    onValidate(onValidatePayload) {
+      const otelCtx = otelContextFor.operation.get(onValidatePayload.context);
+      if (!otelCtx) {
+        pluginLogger.warn('No OTEL context found for this operation.');
+        return;
+      }
 
-        return ({ result }) => done(result);
+      const shouldTraceValidate =
+        typeof options.spans?.graphqlValidate === 'function'
+          ? options.spans.graphqlValidate(onValidatePayload)
+          : (options.spans?.graphqlValidate ?? true);
+
+      if (shouldTraceValidate) {
+        const {
+          context: gqlCtx,
+          setValidationFn,
+          validateFn,
+        } = onValidatePayload;
+        const { ctx, done } = startGraphQLValidateSpan({
+          ctx: getContext(onValidatePayload.context),
+          tracer,
+          query: gqlCtx.params.query?.trim(),
+          operationName: gqlCtx.params.operationName,
+        });
+        otelCtx?.push(ctx);
+        if (useContextManager) {
+          setValidationFn(context.bind(ctx, validateFn));
+        }
+        return ({ result }) => {
+          done(result);
+          otelCtx.pop();
+        };
       }
       return void 0;
     },
     onExecute(onExecuteArgs) {
+      const otelCtx = otelContextFor.operation.get(
+        onExecuteArgs.args.contextValue,
+      );
+      if (!otelCtx) {
+        pluginLogger.warn('No OTEL context found for this operation.');
+        return;
+      }
       const shouldTraceExecute =
         typeof options.spans?.graphqlExecute === 'function'
           ? options.spans.graphqlExecute(onExecuteArgs)
           : (options.spans?.graphqlExecute ?? true);
 
-      const { args } = onExecuteArgs;
-      const otelContext = requestContextMapping.get(args.contextValue.request);
-
-      if (shouldTraceExecute && otelContext) {
-        const { done } = createGraphQLExecuteSpan({
-          args,
-          otelContext,
+      if (shouldTraceExecute) {
+        const { setExecuteFn, executeFn } = onExecuteArgs;
+        const { ctx, done } = startGraphQLExecuteSpan({
+          ctx: getContext(onExecuteArgs.args.contextValue),
+          args: onExecuteArgs.args,
           tracer,
         });
-
+        otelCtx.push(ctx);
+        if (useContextManager) {
+          setExecuteFn(context.bind(ctx, executeFn));
+        }
         return {
-          onExecuteDone: ({ result }) => {
-            if (!isAsyncIterable(result)) {
-              done(result);
-            }
+          onExecuteDone({ result }) {
+            done(result);
+            otelCtx.pop();
           },
         };
       }
       return void 0;
     },
     onSubgraphExecute(onSubgraphPayload) {
+      const otelCtx = new OtelGraphqlContext(
+        getContext(onSubgraphPayload.executionRequest.context),
+      );
+      otelContextFor.subgraphExecution.set(
+        onSubgraphPayload.executionRequest,
+        otelCtx,
+      );
+
+      // Here it is possible that otelCtx is not present, because this hook can be triggered by
+      // internal introspection queries, which are not linked to any client request, but should
+      // still be traced and monitored
+
       const shouldTraceSubgraphExecute =
         typeof options.spans?.subgraphExecute === 'function'
           ? options.spans.subgraphExecute(onSubgraphPayload)
           : (options.spans?.subgraphExecute ?? true);
 
-      const otelContext = onSubgraphPayload.executionRequest.context?.request
-        ? requestContextMapping.get(
-            onSubgraphPayload.executionRequest.context.request,
-          )
-        : undefined;
-
-      if (shouldTraceSubgraphExecute && otelContext) {
-        const { subgraphName, executionRequest } = onSubgraphPayload;
-        const { done } = createSubgraphExecuteFetchSpan({
-          otelContext,
+      if (shouldTraceSubgraphExecute) {
+        const { subgraphName, executionRequest, executor, setExecutor } =
+          onSubgraphPayload;
+        const { ctx, done } = startSubgraphExecuteFetchSpan({
+          ctx: getContext(onSubgraphPayload.executionRequest.context),
           tracer,
           executionRequest,
           subgraphName,
         });
-
-        return done;
+        otelCtx?.push(ctx);
+        if (useContextManager) {
+          setExecutor(context.bind(ctx, executor));
+        }
+        return ({ result }) => {
+          done(result);
+          otelCtx?.pop();
+        };
       }
       return void 0;
     },
     onFetch(onFetchPayload) {
+      const { executionRequest } = onFetchPayload;
+      const otelCtx =
+        onFetchPayload.executionRequest &&
+        otelContextFor.subgraphExecution.get(onFetchPayload.executionRequest);
+
+      // Here it is possible that otelCtx is not present, because this hook can be triggered by
+      // internal introspection queries, which are not linked to any client request, but should
+      // still be traced and monitored
+
       const shouldTraceFetch =
         typeof options.spans?.upstreamFetch === 'function'
           ? options.spans.upstreamFetch(onFetchPayload)
           : (options.spans?.upstreamFetch ?? true);
 
-      const {
-        context,
-        options: fetchOptions,
-        url,
-        setOptions,
+      let onDone: OnFetchHookDone | undefined = void 0;
+
+      const contextDiscriminant = {
         executionRequest,
-      } = onFetchPayload;
+        request: executionRequest?.context?.request,
+      };
 
-      const otelContext = requestContextMapping.get(context.request);
-      if (shouldTraceFetch && otelContext) {
-        if (propagateContext) {
-          const reqHeaders = getHeadersObj(fetchOptions.headers || {});
-          propagation.inject(otelContext, reqHeaders);
+      if (shouldTraceFetch) {
+        const { setFetchFn, fetchFn, url, options } = onFetchPayload;
 
-          setOptions({
-            ...fetchOptions,
-            headers: reqHeaders,
-          });
-        }
-
-        const { done } = createUpstreamHttpFetchSpan({
-          otelContext,
+        const { ctx, done } = startUpstreamHttpFetchSpan({
+          ctx: getContext(contextDiscriminant),
           tracer,
           url,
-          fetchOptions,
+          fetchOptions: options,
           executionRequest,
         });
-
-        return (fetchDonePayload) => done(fetchDonePayload.response);
-      }
-      return void 0;
-    },
-    onResponse({ request, response }) {
-      const otelContext = requestContextMapping.get(request);
-      if (!otelContext) {
-        return;
-      }
-
-      const rootSpan = trace.getSpan(otelContext);
-
-      if (rootSpan) {
-        completeHttpSpan(rootSpan, response);
+        otelCtx?.push(ctx);
+        if (useContextManager) {
+          setFetchFn(context.bind(ctx, fetchFn));
+        }
+        onDone = ({ response }) => {
+          done(response);
+          otelCtx?.pop();
+        };
       }
 
-      requestContextMapping.delete(request);
+      if (propagateContext) {
+        const { setOptions, options } = onFetchPayload;
+        const reqHeaders = getHeadersObj(options.headers || {});
+        propagation.inject(getContext(contextDiscriminant), reqHeaders);
+        setOptions({ ...options, headers: reqHeaders });
+      }
+
+      return onDone;
     },
     async [DisposableSymbols.asyncDispose]() {
-      if (spanProcessors) {
-        await Promise.all(
-          spanProcessors.map((processor) => processor.forceFlush()),
-        );
-      }
       await provider?.forceFlush?.();
-
-      if (spanProcessors) {
-        spanProcessors.forEach((processor) => processor.shutdown());
-      }
-
       await provider?.shutdown?.();
 
       diag.disable();
@@ -413,4 +542,10 @@ export function useOpenTelemetry(
       propagation.disable();
     },
   };
+}
+
+function containsOnlyValues<T>(
+  maybePromises: MaybePromise<T>[],
+): maybePromises is T[] {
+  return !maybePromises.some(isPromise);
 }
