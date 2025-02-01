@@ -24,13 +24,16 @@ beforeAll(async () => {
 type JaegerTracesApiResponse = {
   data: Array<{
     traceID: string;
-    spans: Array<{
-      traceID: string;
-      spanID: string;
-      operationName: string;
-      tags: Array<{ key: string; value: string; type: string }>;
-    }>;
+    spans: JaegerTraceSpan[];
   }>;
+};
+
+type JaegerTraceSpan = {
+  traceID: string;
+  spanID: string;
+  operationName: string;
+  tags: Array<{ key: string; value: string; type: string }>;
+  references: Array<{ refType: string; spanID: string; traceID: string }>;
 };
 
 describe('OpenTelemetry', () => {
@@ -77,6 +80,9 @@ describe('OpenTelemetry', () => {
             await checkFn(res);
             return;
           } catch (e) {
+            if (signal.aborted) {
+              throw err;
+            }
             err = e;
           }
         }
@@ -559,40 +565,52 @@ describe('OpenTelemetry', () => {
           expect(relevantTraces.length).toBe(1);
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace?.spans.length).toBe(11);
+          expect(relevantTrace!.spans.length).toBe(18);
 
-          expect(relevantTrace?.spans).toContainEqual(
-            expect.objectContaining({ operationName: 'POST /graphql' }),
+          const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
+          expect(spanTree).toBeDefined();
+
+          const expectedHttpChildren = [
+            'graphql.parse',
+            'graphql.validate',
+            'graphql.execute',
+          ];
+          expect(spanTree!.children).toHaveLength(3);
+          for (const operationName of expectedHttpChildren) {
+            expect(spanTree?.children).toContainEqual(
+              expect.objectContaining({
+                span: expect.objectContaining({ operationName }),
+              }),
+            );
+          }
+
+          const executeSpan = spanTree?.children.find(
+            ({ span }) => span.operationName === 'graphql.execute',
           );
-          expect(relevantTrace?.spans).toContainEqual(
-            expect.objectContaining({ operationName: 'graphql.parse' }),
-          );
-          expect(relevantTrace?.spans).toContainEqual(
-            expect.objectContaining({ operationName: 'graphql.validate' }),
-          );
-          expect(relevantTrace?.spans).toContainEqual(
-            expect.objectContaining({ operationName: 'graphql.execute' }),
-          );
-          expect(
-            relevantTrace?.spans.filter(
-              (r) => r.operationName === 'subgraph.execute (accounts)',
-            ).length,
-          ).toBe(2);
-          expect(
-            relevantTrace?.spans.filter(
-              (r) => r.operationName === 'subgraph.execute (products)',
-            ).length,
-          ).toBe(2);
-          expect(
-            relevantTrace?.spans.filter(
-              (r) => r.operationName === 'subgraph.execute (inventory)',
-            ).length,
-          ).toBe(1);
-          expect(
-            relevantTrace?.spans.filter(
-              (r) => r.operationName === 'subgraph.execute (reviews)',
-            ).length,
-          ).toBe(2);
+
+          const expectedExecuteChildren = [
+            ['subgraph.execute (accounts)', 2],
+            ['subgraph.execute (products)', 2],
+            ['subgraph.execute (inventory)', 1],
+            ['subgraph.execute (reviews)', 2],
+          ] as const;
+
+          for (const [operationName, count] of expectedExecuteChildren) {
+            const matchingChildren = executeSpan!.children.filter(
+              ({ span }) => span.operationName === operationName,
+            );
+            expect(matchingChildren).toHaveLength(count);
+            for (const child of matchingChildren) {
+              expect(child.children).toHaveLength(1);
+              expect(child.children).toContainEqual(
+                expect.objectContaining({
+                  span: expect.objectContaining({
+                    operationName: 'http.fetch',
+                  }),
+                }),
+              );
+            }
+          }
         });
       });
 
@@ -1279,3 +1297,28 @@ describe('OpenTelemetry', () => {
     });
   });
 });
+
+type TraceTreeNode = {
+  span: JaegerTraceSpan;
+  children: TraceTreeNode[];
+};
+function buildSpanTree(
+  spans: JaegerTraceSpan[],
+  rootName: string,
+): TraceTreeNode | undefined {
+  function buildNode(root: JaegerTraceSpan): TraceTreeNode {
+    return {
+      span: root,
+      children: spans
+        .filter((span) =>
+          span.references.find(
+            (ref) => ref.refType === 'CHILD_OF' && ref.spanID === root.spanID,
+          ),
+        )
+        .map(buildNode),
+    };
+  }
+
+  const root = spans.find((span) => span.operationName === rootName);
+  return root && buildNode(root);
+}
