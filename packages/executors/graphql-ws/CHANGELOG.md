@@ -1,5 +1,40 @@
 # @graphql-tools/executor-graphql-ws
 
+## 2.0.0
+
+### Major Changes
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Executor options don't exist graphql-ws dependency options
+
+  Removing the dependency on the types. Some options are still exposed, but if you want to further customise the graphql-ws client, you should pass your own instance of the client instead.
+
+  ```ts
+  import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
+  import { createClient } from 'graphql-ws';
+  import { options } from './my-graphql-ws-client-options';
+
+  const executor = buildGraphQLWSExecutor(
+    createClient({
+      url: 'ws://localhost:4000/graphql',
+      ...options,
+    }),
+  );
+  ```
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Upgrade graphql-ws to v6
+
+  If you have a custom graphql-ws configuration when building the executor with `buildGraphQLWSExecutor`, you will have to migrate the graphql-ws side to v6. [Please consult the changelog of graphql-ws.](https://github.com/enisdenjo/graphql-ws/releases/tag/v6.0.0)
+
+### Minor Changes
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Export GraphQLWSExecutorOptions type
+
+### Patch Changes
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`graphql-ws@^6.0.3` ↗︎](https://www.npmjs.com/package/graphql-ws/v/6.0.3) (from `^5.14.0`, in `dependencies`)
+
 ## 1.3.7
 
 ### Patch Changes

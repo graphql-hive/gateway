@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.11
+
+### Patch Changes
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`graphql-ws@^6.0.3` ↗︎](https://www.npmjs.com/package/graphql-ws/v/6.0.3) (from `^5.16.0`, in `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+
 ## 1.4.10
 
 ### Patch Changes
