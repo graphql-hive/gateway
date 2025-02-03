@@ -1,7 +1,5 @@
 import childProcess from 'child_process';
 import fs from 'fs/promises';
-import { createServer } from 'http';
-import type { AddressInfo } from 'net';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { createDeferred } from '@graphql-tools/utils';
@@ -164,27 +162,6 @@ export function spawn(
     });
     child.once('spawn', () => resolve([proc, waitForExit]));
   });
-}
-
-export function getAvailablePort(): Promise<number> {
-  const deferred = createDeferred<number>();
-  const server = createServer();
-  server.once('error', (err) => deferred.reject(err));
-  server.listen(0, () => {
-    try {
-      const addressInfo = server.address() as AddressInfo;
-      server.close((err) => {
-        if (err) {
-          return deferred.reject(err);
-        }
-
-        return deferred.resolve(addressInfo.port);
-      });
-    } catch (err) {
-      return deferred.reject(err);
-    }
-  });
-  return deferred.promise;
 }
 
 /** Maybe pipes the log entry to the stderr of the current process, or appends it to a file relative to the {@link cwd} - if {@link pipeLogs} is a `string`. */

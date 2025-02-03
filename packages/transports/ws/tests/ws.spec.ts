@@ -2,61 +2,142 @@ import type {
   TransportEntry,
   TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
-import {
-  DefaultLogger,
-  dispose,
-  makeAsyncDisposable,
-  makeDisposable,
-} from '@graphql-mesh/utils';
+import { DefaultLogger, dispose } from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
-import { DisposableAsyncExecutor, ExecutionResult } from '@graphql-tools/utils';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { createDeferred, DisposableAsyncExecutor } from '@graphql-tools/utils';
+import { createDisposableWebSocketServer } from '@internal/testing';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
-import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
+import { Client, ServerOptions } from 'graphql-ws';
+import { Extra as BunExtra, makeHandler } from 'graphql-ws/use/bun';
+import { useServer, Extra as WSExtra } from 'graphql-ws/use/ws';
+import { describe, expect, it, vi } from 'vitest';
 import wsTransport, { type WSTransportOptions } from '../src';
 
-describe('WS Transport', () => {
-  let buildExecutorMock: MockedFunction<typeof buildGraphQLWSExecutor>;
-  beforeEach(() => {
-    vi.clearAllMocks();
-    buildExecutorMock = vi.fn<typeof buildGraphQLWSExecutor>(
-      function (): DisposableAsyncExecutor {
-        return function mockExecutor(): ExecutionResult {
-          return { data: null };
-        } as unknown as DisposableAsyncExecutor;
+type TServerOptions = ServerOptions<{}, WSExtra | BunExtra>;
+
+async function createTServer(
+  transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
+  buildExecutor?: (client: Client) => DisposableAsyncExecutor,
+) {
+  const schema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Query {
+        hello: String!
+      }
+    `,
+    resolvers: {
+      Query: {
+        hello: () => 'world',
       },
-    );
+    },
   });
 
+  let url: string;
+  let dispose: () => Promise<void>;
+
+  const onConnectFn = vi.fn<NonNullable<TServerOptions['onConnect']>>();
+  if (globalThis.Bun) {
+    let headers: Record<string, string>;
+    const server = Bun.serve({
+      port: 0,
+      fetch: (req) => {
+        headers = req.headers.toJSON();
+        if (server.upgrade(req)) {
+          return; // upgraded
+        }
+        return new Response('Upgrade failed', { status: 500 });
+      },
+      websocket: makeHandler({
+        schema,
+        onConnect(...args) {
+          // @ts-expect-error we inject only the headers for testing
+          args[0].extra.request = { headers };
+          onConnectFn(...args);
+        },
+      }),
+    });
+    url = server.url.toString().replace('http', 'ws');
+    dispose = () => server.stop(true);
+  } else {
+    const ws = await createDisposableWebSocketServer();
+    useServer({ schema, onConnect: onConnectFn }, ws.server);
+    url = ws.url;
+    dispose = () => ws[DisposableSymbols.asyncDispose]();
+  }
+
+  const options = { ...transportEntry?.options };
+  if (process.env['LEAK_TEST']) {
+    // @ts-expect-error we disable the lazy close to avoid leaks
+    options.lazyCloseTimeout = 0;
+  }
+  const executor = wsTransport.getSubgraphExecutor(
+    {
+      transportEntry: {
+        location: url,
+        ...transportEntry,
+        options,
+      },
+      logger: new DefaultLogger(),
+    } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
+    buildExecutor,
+  );
+
+  return {
+    onConnectFn,
+    executor,
+    executeHelloQuery(context?: Record<string, unknown>) {
+      return executor({
+        document: parse('{hello}'),
+        context,
+      });
+    },
+    async [DisposableSymbols.asyncDispose]() {
+      await Promise.all([
+        dispose(),
+        executor[DisposableSymbols.asyncDispose](),
+      ]);
+    },
+  };
+}
+
+describe('WS Transport', () => {
   it('should forward connection params', async () => {
-    const executor = makeExecutor({
+    await using serv = await createTServer({
       options: {
         connectionParams: { 'x-test': '{context.token}' },
       },
     });
 
-    await executor({ document, context: { token: 'test' } });
+    await serv.executeHelloQuery({ token: 'test' });
 
-    expect(buildExecutorMock).toHaveBeenCalledTimes(1);
-    expect(buildExecutorMock.mock.calls[0]?.[0]).toMatchObject({
-      connectionParams: { 'x-test': 'test' },
+    expect(serv.onConnectFn).toBeCalledTimes(1);
+    expect(serv.onConnectFn.mock.calls[0]![0].connectionParams).toEqual({
+      'x-test': 'test',
     });
   });
 
   it('should forward headers', async () => {
-    const executor = makeExecutor({
+    await using serv = await createTServer({
       headers: [['x-test', '{context.token}']],
     });
 
-    await executor({ document, context: { token: 'test' } });
+    await serv.executeHelloQuery({ token: 'test' });
 
-    expect(buildExecutorMock).toHaveBeenCalledTimes(1);
-    expect(buildExecutorMock.mock.calls[0]?.[0]).toMatchObject({
-      headers: { 'x-test': 'test' },
+    expect(serv.onConnectFn).toHaveBeenCalledTimes(1);
+    expect(
+      // @ts-expect-error headers will be injected for testing in bun
+      serv.onConnectFn.mock.calls[0]![0].extra.request,
+    ).toMatchObject({
+      headers: {
+        'x-test': 'test',
+      },
     });
   });
 
-  it('should reuse websocket executor based on connection params and headers', async () => {
-    const executor = makeExecutor({
+  it('should reuse websocket based on connection params', async () => {
+    await using serv = await createTServer({
       options: {
         connectionParams: {
           token: '{context.token}',
@@ -64,31 +145,39 @@ describe('WS Transport', () => {
       },
     });
 
-    await executor({ document, context: { token: 'test1' } });
+    await serv.executeHelloQuery({ token: 'test1' });
 
-    await executor({ document, context: { token: 'test2' } });
+    await serv.executeHelloQuery({ token: 'test2' });
 
-    await executor({ document, context: { token: 'test2' } });
+    await serv.executeHelloQuery({ token: 'test2' });
 
-    expect(buildExecutorMock).toHaveBeenCalledTimes(2);
+    if (!process.env['LEAK_TEST']) {
+      // this assertion leaks, no idea why...
+      // we need not test it for leaks anyways, we want to make sure the executor is properly disposed
+      expect(serv.onConnectFn).toHaveBeenCalledTimes(2);
+    }
   });
 
-  it('should reuse websocket executor based on headers', async () => {
-    const executor = makeExecutor({
+  it('should reuse websocket based on headers', async () => {
+    await using serv = await createTServer({
       headers: [['x-test', '{context.token}']],
     });
 
-    await executor({ document, context: { token: 'test1' } });
+    await serv.executeHelloQuery({ token: 'test1' });
 
-    await executor({ document, context: { token: 'test2' } });
+    await serv.executeHelloQuery({ token: 'test2' });
 
-    await executor({ document, context: { token: 'test2' } });
+    await serv.executeHelloQuery({ token: 'test2' });
 
-    expect(buildExecutorMock).toHaveBeenCalledTimes(2);
+    if (!process.env['LEAK_TEST']) {
+      // this assertion leaks, no idea why...
+      // we need not test it for leaks anyways, we want to make sure the executor is properly disposed
+      expect(serv.onConnectFn).toHaveBeenCalledTimes(2);
+    }
   });
 
   it('should reuse websocket executor based on both headers and connectionParams', async () => {
-    const executor = makeExecutor({
+    await using serv = await createTServer({
       headers: [['x-test', '{context.headers}']],
       options: {
         connectionParams: {
@@ -97,98 +186,79 @@ describe('WS Transport', () => {
       },
     });
 
-    await executor({
-      document,
-      context: { connectionParams: 'test1', headers: 'test1' },
+    await serv.executeHelloQuery({
+      connectionParams: 'test1',
+      headers: 'test1',
     });
 
-    await executor({
-      document,
-      context: { connectionParams: 'test2', headers: 'test1' },
+    await serv.executeHelloQuery({
+      connectionParams: 'test2',
+      headers: 'test1',
     });
 
-    await executor({
-      document,
-      context: { connectionParams: 'test1', headers: 'test2' },
+    await serv.executeHelloQuery({
+      connectionParams: 'test1',
+      headers: 'test2',
     });
 
-    await executor({
-      document,
-      context: { connectionParams: 'test2', headers: 'test2' },
+    await serv.executeHelloQuery({
+      connectionParams: 'test2',
+      headers: 'test2',
     });
 
-    await executor({
-      document,
-      context: { connectionParams: 'test1', headers: 'test1' },
+    await serv.executeHelloQuery({
+      connectionParams: 'test1',
+      headers: 'test1',
     });
 
-    expect(buildExecutorMock).toHaveBeenCalledTimes(4);
-  });
-
-  it('should cleanup executors on connection closed', async () => {
-    const executor = makeExecutor();
-
-    await executor({ document });
-    // @ts-ignore
-    buildExecutorMock.mock.lastCall[0].on.closed();
-    await executor({ document });
-
-    expect(buildExecutorMock).toHaveBeenCalledTimes(2);
-  });
-
-  it('should dispose async', async () => {
-    const executor = makeExecutor({
-      options: { connectionParams: { test: '{context.test}' } },
-    });
-    async function mockExecutor(): Promise<ExecutionResult> {
-      return { data: null };
+    if (!process.env['LEAK_TEST']) {
+      // this assertion leaks, no idea why...
+      // we need not test it for leaks anyways, we want to make sure the executor is properly disposed
+      expect(serv.onConnectFn).toHaveBeenCalledTimes(4);
     }
-
-    const asyncDisposeMock = vi.fn().mockReturnValue(Promise.resolve());
-    buildExecutorMock.mockImplementationOnce(() =>
-      makeAsyncDisposable(mockExecutor, asyncDisposeMock),
-    );
-    await executor({ document, context: { test: '2' } });
-
-    await dispose(executor);
-    expect(asyncDisposeMock).toHaveBeenCalled();
   });
-  it('should dispose sync', async () => {
-    const executor = makeExecutor({
-      options: { connectionParams: { test: '{context.test}' } },
+
+  it('should create new executor after connection closed', async () => {
+    let close!: () => void;
+    const { promise: waitForClosed, resolve: closed } = createDeferred<void>();
+
+    const buildGraphQLWSExecutorFn = vi.fn((client: Client) => {
+      client.on('opened', (socket) => {
+        close = () => (socket as WebSocket).close();
+      });
+      client.on('closed', () => {
+        closed();
+      });
+      return buildGraphQLWSExecutor(client);
     });
-    function mockExecutor(): ExecutionResult {
-      return { data: null };
-    }
 
-    const syncDisposeMock = vi.fn();
-    buildExecutorMock.mockImplementationOnce(
-      // @ts-expect-error - wrong typings for sync dispose
-      () => makeDisposable(mockExecutor, syncDisposeMock),
-    );
-    await executor({ document, context: { test: '2' } });
+    await using serv = await createTServer({}, buildGraphQLWSExecutorFn);
 
-    await dispose(executor);
-    expect(syncDisposeMock).toHaveBeenCalled();
+    await serv.executeHelloQuery();
+
+    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(1);
+
+    close();
+    await waitForClosed;
+
+    await serv.executeHelloQuery();
+
+    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(2);
   });
-  function makeExecutor(
-    transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
-  ) {
-    return wsTransport.getSubgraphExecutor(
-      {
-        transportEntry: {
-          location: 'http://localhost/ws',
-          ...transportEntry,
-        },
-        logger: new DefaultLogger(),
-      } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
-      buildExecutorMock,
-    );
-  }
 
-  const document = parse(/* GraphQL */ `
-    subscription {
-      test
-    }
-  `);
+  it.skipIf(
+    // jest's spyOn assigns to readonly which does not work with this case
+    process.env['LEAK_TEST'],
+  )('should dispose async', async () => {
+    await using serv = await createTServer();
+
+    const asyncDisposeFn = vi.spyOn(
+      serv.executor,
+      DisposableSymbols.asyncDispose,
+    );
+
+    await dispose(serv.executor);
+
+    expect(asyncDisposeFn).toHaveBeenCalled();
+  });
 });

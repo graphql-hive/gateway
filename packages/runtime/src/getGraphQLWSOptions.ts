@@ -2,7 +2,13 @@
 
 import { MaybePromise } from '@graphql-tools/utils';
 import { execute, subscribe, type ExecutionArgs } from 'graphql';
-import type { ConnectionInitMessage, Context, ServerOptions } from 'graphql-ws';
+import type {
+  ConnectionInitMessage,
+  Context,
+  ServerOptions,
+  SubscribeMessage,
+  SubscribePayload,
+} from 'graphql-ws';
 import type { GatewayRuntime } from './createGatewayRuntime';
 
 // so we need to make sure we always use the freshest instance
@@ -23,7 +29,16 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
     execute: (args) => (args as EnvelopedExecutionArgs).rootValue.execute(args),
     subscribe: (args) =>
       (args as EnvelopedExecutionArgs).rootValue.subscribe(args),
-    onSubscribe: async (ctx, msg) => {
+    onSubscribe: async (ctx, idOrMessage, payloadOrUndefined) => {
+      let payload: SubscribePayload;
+      if (typeof idOrMessage === 'string') {
+        // >=v6
+        payload = payloadOrUndefined;
+      } else {
+        // <=v5
+        payload = (idOrMessage as SubscribeMessage).payload;
+      }
+
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         gwRuntime.getEnveloped({
           connectionParams: ctx.connectionParams,
@@ -31,9 +46,9 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
         });
       const args: EnvelopedExecutionArgs = {
         schema: schema || (await gwRuntime.getSchema()),
-        operationName: msg.payload.operationName,
-        document: parse(msg.payload.query),
-        variableValues: msg.payload.variables,
+        operationName: payload.operationName,
+        document: parse(payload.query),
+        variableValues: payload.variables,
         contextValue: await contextFactory(),
         rootValue: {
           execute,

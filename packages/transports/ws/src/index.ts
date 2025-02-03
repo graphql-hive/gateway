@@ -10,7 +10,9 @@ import {
   makeAsyncDisposable,
 } from '@graphql-mesh/utils';
 import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
-import type { ClientOptions } from 'graphql-ws';
+import { DisposableAsyncExecutor } from '@graphql-tools/utils';
+import { Client, createClient } from 'graphql-ws';
+import WebSocket from 'isomorphic-ws';
 
 function switchProtocols(url: string) {
   if (url.startsWith('https://')) {
@@ -22,17 +24,21 @@ function switchProtocols(url: string) {
   return url;
 }
 
-export type WSTransportOptions = Omit<
-  ClientOptions,
-  'url' | 'on' | 'connectionParams'
-> & {
+export interface WSTransportOptions {
+  /**
+   * Interpolated additional parameters, passed through the `payload` field with the `ConnectionInit` message,
+   * that the client specifies when establishing a connection with the server. You can use this
+   * for securely passing arguments for authentication.
+   */
   connectionParams?: Record<string, string>;
-};
+}
 
 export default {
   getSubgraphExecutor(
     { transportEntry, logger },
-    buildExecutor = buildGraphQLWSExecutor,
+    buildExecutor: (
+      client: Client,
+    ) => DisposableAsyncExecutor = buildGraphQLWSExecutor,
   ) {
     const wsExecutorMap = new Map<string, DisposableExecutor>();
     if (!transportEntry.location) {
@@ -71,42 +77,50 @@ export default {
       let wsExecutor = wsExecutorMap.get(hash);
       if (!wsExecutor) {
         const executorLogger = logger?.child('GraphQL WS').child(hash);
-        wsExecutor = buildExecutor({
-          url: wsUrl,
-          lazy: true,
-          lazyCloseTimeout: 3_000,
-          ...transportEntry.options,
-          headers,
-          connectionParams,
-          on: {
-            connecting(isRetry) {
-              executorLogger?.debug('connecting', { isRetry });
+        wsExecutor = buildExecutor(
+          createClient({
+            webSocketImpl: headers
+              ? class WebSocketWithHeaders extends WebSocket {
+                  constructor(url: string, protocol: string) {
+                    super(url, protocol, { headers });
+                  }
+                }
+              : WebSocket,
+            url: wsUrl,
+            lazy: true,
+            lazyCloseTimeout: 3_000,
+            ...transportEntry.options,
+            connectionParams,
+            on: {
+              connecting(isRetry) {
+                executorLogger?.debug('connecting', { isRetry });
+              },
+              opened(socket) {
+                executorLogger?.debug('opened', { socket });
+              },
+              connected(socket, payload) {
+                executorLogger?.debug('connected', { socket, payload });
+              },
+              ping(received, payload) {
+                executorLogger?.debug('ping', { received, payload });
+              },
+              pong(received, payload) {
+                executorLogger?.debug('pong', { received, payload });
+              },
+              message(message) {
+                executorLogger?.debug('message', { message });
+              },
+              closed(event) {
+                executorLogger?.debug('closed', { event });
+                // no subscriptions and the lazy close timeout has passed - remove the client
+                wsExecutorMap.delete(hash);
+              },
+              error(error) {
+                executorLogger?.debug('error', { error });
+              },
             },
-            opened(socket) {
-              executorLogger?.debug('opened', { socket });
-            },
-            connected(socket, payload) {
-              executorLogger?.debug('connected', { socket, payload });
-            },
-            ping(received, payload) {
-              executorLogger?.debug('ping', { received, payload });
-            },
-            pong(received, payload) {
-              executorLogger?.debug('pong', { received, payload });
-            },
-            message(message) {
-              executorLogger?.debug('message', { message });
-            },
-            closed(event) {
-              executorLogger?.debug('closed', { event });
-              // no subscriptions and the lazy close timeout has passed - remove the client
-              wsExecutorMap.delete(hash);
-            },
-            error(error) {
-              executorLogger?.debug('error', { error });
-            },
-          },
-        });
+          }),
+        );
         wsExecutorMap.set(hash, wsExecutor);
       }
       return wsExecutor(execReq);
