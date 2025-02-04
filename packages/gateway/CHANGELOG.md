@@ -1,5 +1,28 @@
 # @graphql-hive/gateway
 
+## 1.9.2
+
+### Patch Changes
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`graphql-ws@^6.0.3` ↗︎](https://www.npmjs.com/package/graphql-ws/v/6.0.3) (from `^5.16.0`, in `dependencies`)
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - WebSocket transport options allow configuring only `connectionParams`
+
+  In most of the cases you won't need to configure the underlying graphql-ws client any further.
+
+- [#481](https://github.com/graphql-hive/gateway/pull/481) [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Upgrade graphql-ws to v6
+
+  If you have a custom graphql-ws configuration when using the transport, you will have to migrate the graphql-ws side to v6. [Please consult the changelog of graphql-ws.](https://github.com/enisdenjo/graphql-ws/releases/tag/v6.0.0)
+
+- Updated dependencies [[`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e), [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e), [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e), [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e), [`0b13cb4`](https://github.com/graphql-hive/gateway/commit/0b13cb472305edd01cdbd964a71995831797305e)]:
+  - @graphql-hive/gateway-runtime@1.4.11
+  - @graphql-mesh/transport-ws@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-mesh/plugin-opentelemetry@1.3.39
+  - @graphql-mesh/plugin-prometheus@1.3.27
+
 ## 1.9.1
 
 ### Patch Changes
