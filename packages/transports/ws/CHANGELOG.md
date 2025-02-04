@@ -1,5 +1,18 @@
 # @graphql-mesh/transport-ws
 
+## 1.0.1
+
+### Patch Changes
+
+- [#591](https://github.com/graphql-hive/gateway/pull/591) [`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`isomorphic-ws@^5.0.0` ↗︎](https://www.npmjs.com/package/isomorphic-ws/v/5.0.0) (from `dependencies`)
+
+- [#591](https://github.com/graphql-hive/gateway/pull/591) [`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c) Thanks [@ardatan](https://github.com/ardatan)! - Avoid having an extra Client instantiation in the transport, and use the one in the executor
+
+- Updated dependencies [[`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c)]:
+  - @graphql-tools/executor-graphql-ws@2.0.1
+
 ## 1.0.0
 
 ### Major Changes
