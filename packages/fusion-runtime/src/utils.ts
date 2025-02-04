@@ -19,10 +19,12 @@ import {
   Subschema,
 } from '@graphql-tools/delegate';
 import {
+  getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
   mapAsyncIterator,
   mapMaybePromise,
+  mergeDeep,
   printSchemaWithDirectives,
   type ExecutionRequest,
   type Executor,
@@ -33,6 +35,7 @@ import { constantCase } from 'constant-case';
 import {
   FragmentDefinitionNode,
   GraphQLError,
+  isEnumType,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,
@@ -40,6 +43,8 @@ import {
   type GraphQLSchema,
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
+import { restoreExtraDirectives } from './federation/supergraph';
+import { TransportEntryAdditions } from './unifiedGraphManager';
 
 export type {
   TransportEntry,
@@ -619,4 +624,66 @@ export function millisecondsToStr(milliseconds: number): string {
     return seconds + ' second' + numberEnding(seconds);
   }
   return 'less than a second'; //'just now' //or other string you like;
+}
+
+export function getTransportEntryMapUsingFusionAndFederationDirectives(
+  unifiedGraph: GraphQLSchema,
+  transportEntryAdditions?: TransportEntryAdditions,
+) {
+  unifiedGraph = restoreExtraDirectives(unifiedGraph);
+  const transportEntryMap: Record<string, TransportEntry> = {};
+  const joinGraph = unifiedGraph.getType('join__Graph');
+  const schemaDirectives = getDirectiveExtensions<{
+    transport: TransportEntry;
+  }>(unifiedGraph);
+  if (isEnumType(joinGraph)) {
+    for (const enumValue of joinGraph.getValues()) {
+      const enumValueDirectives = getDirectiveExtensions<{
+        join__graph: {
+          name: string;
+          url?: string;
+        };
+      }>(enumValue);
+      if (enumValueDirectives?.join__graph?.length) {
+        for (const joinGraphDirective of enumValueDirectives.join__graph) {
+          if (joinGraphDirective.url) {
+            transportEntryMap[joinGraphDirective.name] = {
+              subgraph: joinGraphDirective.name,
+              kind: 'http',
+              location: joinGraphDirective.url,
+            };
+          }
+        }
+      }
+    }
+  }
+  if (schemaDirectives?.transport?.length) {
+    for (const transportDirective of schemaDirectives.transport) {
+      transportEntryMap[transportDirective.subgraph] = transportDirective;
+    }
+  }
+  if (transportEntryAdditions) {
+    const wildcardTransportOptions = transportEntryAdditions['*'];
+    for (const subgraphName in transportEntryMap) {
+      const toBeMerged: Partial<TransportEntry>[] = [];
+      const transportEntry = transportEntryMap[subgraphName];
+      if (transportEntry) {
+        toBeMerged.push(transportEntry);
+      }
+      const transportOptionBySubgraph = transportEntryAdditions[subgraphName];
+      if (transportOptionBySubgraph) {
+        toBeMerged.push(transportOptionBySubgraph);
+      }
+      const transportOptionByKind =
+        transportEntryAdditions['*.' + transportEntry?.kind];
+      if (transportOptionByKind) {
+        toBeMerged.push(transportOptionByKind);
+      }
+      if (wildcardTransportOptions) {
+        toBeMerged.push(wildcardTransportOptions);
+      }
+      transportEntryMap[subgraphName] = mergeDeep(toBeMerged);
+    }
+  }
+  return transportEntryMap;
 }

@@ -1,4 +1,3 @@
-import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type { YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
@@ -164,13 +163,9 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
-  const transportEntryMap: Record<string, TransportEntry> = {};
   let subschemas: SubschemaConfig[] = [];
   const stitchingDirectivesTransformer =
     getStitchingDirectivesTransformerForSubschema();
-  unifiedGraph = restoreExtraDirectives(unifiedGraph);
-  // Get Transport Information from Schema Directives
-  const schemaDirectives = getDirectiveExtensions(unifiedGraph);
   // Workaround to get the real name of the subschema
   const realSubgraphNameMap = new Map<string, string>();
   const joinGraphType = unifiedGraph.getType('join__Graph');
@@ -202,8 +197,6 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       handleFederationSubschema({
         subschemaConfig,
         realSubgraphNameMap,
-        schemaDirectives,
-        transportEntryMap,
         additionalTypeDefs,
         stitchingDirectivesTransformer,
         onSubgraphExecute,
@@ -369,7 +362,6 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   }
   return {
     unifiedGraph: executableUnifiedGraph,
-    transportEntryMap,
     inContextSDK,
     getSubgraphSchema(subgraphName) {
       const subgraph = subschemas.find(

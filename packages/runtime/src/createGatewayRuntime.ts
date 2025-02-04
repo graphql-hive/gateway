@@ -13,6 +13,7 @@ import type {
 import {
   getOnSubgraphExecute,
   getStitchingDirectivesTransformerForSubschema,
+  getTransportEntryMapUsingFusionAndFederationDirectives,
   handleFederationSubschema,
   handleResolveToDirectives,
   restoreExtraDirectives,
@@ -432,7 +433,11 @@ export function createGatewayRuntime<
               ],
               schema: unifiedGraph,
             };
-            const transportEntryMap: Record<string, TransportEntry> = {};
+            const transportEntryMap: Record<string, TransportEntry> =
+              getTransportEntryMapUsingFusionAndFederationDirectives(
+                unifiedGraph,
+                config.transportEntries,
+              );
             const additionalTypeDefs: TypeSource[] = [];
 
             const stitchingDirectivesTransformer =
@@ -449,7 +454,6 @@ export function createGatewayRuntime<
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
-              transportEntryMap,
               additionalTypeDefs,
               stitchingDirectivesTransformer,
               onSubgraphExecute,

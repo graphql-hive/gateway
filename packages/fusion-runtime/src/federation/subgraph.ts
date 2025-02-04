@@ -1,4 +1,3 @@
-import type { TransportEntry } from '@graphql-mesh/transport-common';
 import { YamlConfig } from '@graphql-mesh/types';
 import type {
   MergedTypeConfig,
@@ -45,8 +44,6 @@ import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils';
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };
   realSubgraphNameMap?: Map<string, string>;
-  schemaDirectives?: Record<string, any>;
-  transportEntryMap: Record<string, TransportEntry>;
   additionalTypeDefs: TypeSource[];
   stitchingDirectivesTransformer: (
     subschemaConfig: SubschemaConfig,
@@ -57,8 +54,6 @@ export interface HandleFederationSubschemaOpts {
 export function handleFederationSubschema({
   subschemaConfig,
   realSubgraphNameMap,
-  schemaDirectives,
-  transportEntryMap,
   additionalTypeDefs,
   stitchingDirectivesTransformer,
   onSubgraphExecute,
@@ -68,40 +63,6 @@ export function handleFederationSubschema({
     (subschemaConfig.name =
       realSubgraphNameMap?.get(subschemaConfig.name || '') ||
       subschemaConfig.name) || '';
-  const subgraphDirectives = getDirectiveExtensions<{
-    transport: TransportEntry;
-    [key: string]: any;
-  }>(subschemaConfig.schema);
-  const directivesToLook = schemaDirectives || subgraphDirectives;
-  for (const directiveName in directivesToLook) {
-    if (
-      !subgraphDirectives[directiveName]?.length &&
-      schemaDirectives?.[directiveName]?.length
-    ) {
-      const directives = schemaDirectives[directiveName];
-      for (const directive of directives) {
-        if (directive.subgraph && directive.subgraph !== subgraphName) {
-          continue;
-        }
-        subgraphDirectives[directiveName] ||= [];
-        subgraphDirectives[directiveName].push(directive);
-      }
-    }
-  }
-  const subgraphExtensions: Record<string, unknown> =
-    (subschemaConfig.schema.extensions ||= {});
-  subgraphExtensions['directives'] = subgraphDirectives;
-  const transportDirectives = (subgraphDirectives.transport ||= []);
-  const transportDirective = transportDirectives[0];
-  if (transportDirective) {
-    transportEntryMap[subgraphName] = transportDirective;
-  } else {
-    transportEntryMap[subgraphName] = {
-      kind: 'http',
-      subgraph: subgraphName,
-      location: subschemaConfig.endpoint,
-    };
-  }
   interface TypeDirectives {
     source: SourceDirective;
     [key: string]: any;

@@ -13,7 +13,6 @@ import {
   isDocumentNode,
   isPromise,
   mapMaybePromise,
-  mergeDeep,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
 import {
@@ -26,6 +25,7 @@ import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
+  getTransportEntryMapUsingFusionAndFederationDirectives,
   millisecondsToStr,
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -73,7 +73,6 @@ export interface UnifiedGraphHandlerOpts {
 
 export interface UnifiedGraphHandlerResult {
   unifiedGraph: GraphQLSchema;
-  transportEntryMap: Record<string, TransportEntry>;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   inContextSDK: any;
 }
@@ -293,9 +292,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         });
         this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
         this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
+        const transportEntryMap =
+          getTransportEntryMapUsingFusionAndFederationDirectives(
+            this.unifiedGraph,
+            this.opts.transportEntryAdditions,
+          );
         const {
           unifiedGraph: newUnifiedGraph,
-          transportEntryMap,
           inContextSDK,
           getSubgraphSchema,
         } = this.handleUnifiedGraph({
@@ -311,31 +314,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           batch: this.batch,
           logger: this.opts.transportContext?.logger,
         });
-        if (this.opts.transportEntryAdditions) {
-          const wildcardTransportOptions =
-            this.opts.transportEntryAdditions['*'];
-          for (const subgraphName in transportEntryMap) {
-            const toBeMerged: Partial<TransportEntry>[] = [];
-            const transportEntry = transportEntryMap[subgraphName];
-            if (transportEntry) {
-              toBeMerged.push(transportEntry);
-            }
-            const transportOptionBySubgraph =
-              this.opts.transportEntryAdditions[subgraphName];
-            if (transportOptionBySubgraph) {
-              toBeMerged.push(transportOptionBySubgraph);
-            }
-            const transportOptionByKind =
-              this.opts.transportEntryAdditions['*.' + transportEntry?.kind];
-            if (transportOptionByKind) {
-              toBeMerged.push(transportOptionByKind);
-            }
-            if (wildcardTransportOptions) {
-              toBeMerged.push(wildcardTransportOptions);
-            }
-            transportEntryMap[subgraphName] = mergeDeep(toBeMerged);
-          }
-        }
         this.unifiedGraph = newUnifiedGraph;
         const onSubgraphExecute = getOnSubgraphExecute({
           onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
