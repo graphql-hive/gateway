@@ -160,8 +160,9 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@v5
+        uses: docker/bake-action@v6
         with:
+          source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
