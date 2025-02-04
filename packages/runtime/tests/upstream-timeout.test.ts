@@ -102,8 +102,6 @@ describe('Upstream Timeout', () => {
         },
       ]),
       upstreamTimeout: 10_000,
-      executionCancellation: true,
-      upstreamCancellation: true,
     });
     const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
