@@ -1,65 +1,28 @@
-import { registerAbortSignalListener } from '@graphql-tools/utils';
+export function abortSignalAny(iterable: Iterable<AbortSignal>) {
+  const signals = Array.from(iterable);
 
-export type AbortSignalFromAny = AbortSignal & {
-  signals: Set<AbortSignal>;
-  addSignals(signals: Iterable<AbortSignal>): void;
-};
+  const aborted = signals.find((s) => s.aborted);
+  if (aborted) {
+    // some signal is already aborted, immediately abort
+    return aborted;
+  }
 
-export function isAbortSignalFromAny(
-  signal?: AbortSignal | null,
-): signal is AbortSignalFromAny {
-  return signal != null && 'signals' in signal && 'addSignals' in signal;
-}
+  // if the native "any" is available, use it
+  if ('any' in AbortSignal) {
+    return AbortSignal.any(signals);
+  }
 
-export function abortSignalAny(givenSignals: Iterable<AbortSignal>) {
-  const signals = new Set<AbortSignal>();
-  let singleSignal: AbortSignal | undefined;
-  for (const signal of givenSignals) {
-    if (isAbortSignalFromAny(signal)) {
-      for (const childSignal of signal.signals) {
-        singleSignal = childSignal;
-        signals.add(childSignal);
-      }
-    } else {
-      singleSignal = signal;
-      signals.add(signal);
+  // otherwise ready a controller and listen for abort signals
+  const ctrl = new AbortController();
+  function abort(this: AbortSignal) {
+    ctrl.abort(this.reason);
+    // do cleanup
+    for (const signal of signals) {
+      signal.removeEventListener('abort', abort);
     }
   }
-  if (signals.size < 2) {
-    return singleSignal;
-  }
-  if (signals.size === 0) {
-    return undefined;
-  }
-  const ctrl = new AbortController();
-  function onAbort(this: AbortSignal, ev?: Event) {
-    const signal = this || (ev?.target as AbortSignal);
-    ctrl.abort(signal?.reason);
-  }
   for (const signal of signals) {
-    registerAbortSignalListener(signal, onAbort);
+    signal.addEventListener('abort', abort);
   }
-  Object.defineProperties(ctrl.signal, {
-    signals: { value: signals },
-    addSignals: {
-      value(newSignals: Iterable<AbortSignal>) {
-        for (const signal of newSignals) {
-          if (isAbortSignalFromAny(signal)) {
-            for (const childSignal of signal.signals) {
-              if (!signals.has(childSignal)) {
-                signals.add(childSignal);
-                registerAbortSignalListener(childSignal, onAbort);
-              }
-            }
-          } else {
-            if (!signals.has(signal)) {
-              signals.add(signal);
-              registerAbortSignalListener(signal, onAbort);
-            }
-          }
-        }
-      },
-    },
-  });
-  return ctrl.signal as AbortSignalFromAny;
+  return ctrl.signal;
 }
