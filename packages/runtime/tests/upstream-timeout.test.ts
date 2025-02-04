@@ -5,6 +5,7 @@ import {
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
 import { createDeferred } from '@graphql-tools/utils';
+import { createDisposableServer } from '@internal/testing';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
@@ -73,6 +74,55 @@ describe('Upstream Timeout', () => {
           path: ['hello'],
         }),
       ],
+    });
+  });
+  it('issue #303 - does not leak when it does not time out', async () => {
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          hello: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          hello: () => 'Hello, World!',
+        },
+      },
+    });
+    await using upstreamYoga = createYoga({
+      schema: upstreamSchema,
+    });
+    await using upstreamHttpServer = await createDisposableServer(upstreamYoga);
+    await using gateway = createGatewayRuntime({
+      supergraph: getUnifiedGraphGracefully([
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+          url: `${upstreamHttpServer.url}/graphql`,
+        },
+      ]),
+      upstreamTimeout: 10_000,
+      executionCancellation: true,
+      upstreamCancellation: true,
+    });
+    const res = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            hello
+          }
+        `,
+      }),
+    });
+    const resJson = await res.json();
+    expect(resJson).toEqual({
+      data: {
+        hello: 'Hello, World!',
+      },
     });
   });
 });
