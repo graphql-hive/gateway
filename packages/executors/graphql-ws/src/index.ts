@@ -10,7 +10,7 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { DocumentNode } from 'graphql';
-import { type Client, type ClientOptions, createClient } from 'graphql-ws';
+import { createClient, type Client, type ClientOptions } from 'graphql-ws';
 import WebSocket from 'isomorphic-ws';
 
 export interface GraphQLWSExecutorOptions {
@@ -85,7 +85,7 @@ export function buildGraphQLWSExecutor(
             : clientOptionsOrClient.connectionParams) || {};
         return Object.assign(optionsConnectionParams, executorConnectionParams);
       },
-    }
+    };
     graphqlWSClient = createClient(clientOptions);
     if (clientOptionsOrClient.onClient) {
       clientOptionsOrClient.onClient(graphqlWSClient);
