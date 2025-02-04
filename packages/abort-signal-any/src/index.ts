@@ -14,11 +14,12 @@ export function abortSignalAny(iterable: Iterable<AbortSignal>) {
 
   // otherwise ready a controller and listen for abort signals
   const ctrl = new AbortController();
-  function abort(this: AbortSignal) {
-    ctrl.abort(
-      // TODO: we use Object(this) because `this` is undefined for signals coming from whatwg-node (ServerAdapterRequestAbortSignal)
-      Object(this).reason,
-    );
+  function abort(this: AbortSignal, event: Event) {
+    if (this instanceof AbortSignal) {
+      ctrl.abort(this.reason);
+    } else {
+      ctrl.abort((event.target as AbortSignal).reason);
+    }
     // do cleanup
     for (const signal of signals) {
       signal.removeEventListener('abort', abort);
