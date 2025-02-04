@@ -10,11 +10,21 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { DocumentNode } from 'graphql';
-import { createClient, type Client, type ClientOptions } from 'graphql-ws';
+import {
+  createClient,
+  EventClosedListener,
+  EventConnectedListener,
+  EventConnectingListener,
+  EventErrorListener,
+  EventMessageListener,
+  EventOpenedListener,
+  EventPingListener,
+  EventPongListener,
+  type Client,
+} from 'graphql-ws';
 import WebSocket from 'isomorphic-ws';
 
 export interface GraphQLWSExecutorOptions {
-  onClient?: (client: Client) => void;
   print?(doc: DocumentNode): string;
   /** The URL of the WebSocket server to connect to. */
   url: string;
@@ -45,6 +55,29 @@ export interface GraphQLWSExecutorOptions {
    * @default 0
    */
   lazyCloseTimeout?: number;
+
+  /**
+   * Do not use this option unless you know what you are doing.
+   * @internal
+   */
+  on?:
+    | Partial<{
+        error: EventErrorListener;
+        message: EventMessageListener;
+        connecting: EventConnectingListener;
+        opened: EventOpenedListener;
+        connected: EventConnectedListener;
+        ping: EventPingListener;
+        pong: EventPongListener;
+        closed: EventClosedListener;
+      }>
+    | undefined;
+
+  /**
+   * Do not use this option unless you know what you are doing.
+   * @internal
+   */
+  onClient?: (client: Client) => void;
 }
 
 function isClient(client: Client | GraphQLWSExecutorOptions): client is Client {
@@ -73,10 +106,10 @@ export function buildGraphQLWSExecutor(
         }
       : WebSocket;
 
-    const clientOptions: ClientOptions = {
+    graphqlWSClient = createClient({
       url: clientOptionsOrClient.url,
       webSocketImpl,
-      lazy: clientOptionsOrClient.lazy === false ? false : true,
+      lazy: clientOptionsOrClient.lazy !== false,
       lazyCloseTimeout: clientOptionsOrClient.lazyCloseTimeout || 0,
       connectionParams: () => {
         const optionsConnectionParams =
@@ -85,8 +118,8 @@ export function buildGraphQLWSExecutor(
             : clientOptionsOrClient.connectionParams) || {};
         return Object.assign(optionsConnectionParams, executorConnectionParams);
       },
-    };
-    graphqlWSClient = createClient(clientOptions);
+      on: clientOptionsOrClient.on,
+    });
     if (clientOptionsOrClient.onClient) {
       clientOptionsOrClient.onClient(graphqlWSClient);
     }
