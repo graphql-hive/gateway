@@ -1,7 +1,15 @@
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type { YamlConfig } from '@graphql-mesh/types';
-import { resolveAdditionalResolversWithoutImport } from '@graphql-mesh/utils';
-import type { SubschemaConfig } from '@graphql-tools/delegate';
+import {
+  getInContextSDK,
+  requestIdByRequest,
+  resolveAdditionalResolversWithoutImport,
+} from '@graphql-mesh/utils';
+import type {
+  DelegationPlanBuilder,
+  StitchingInfo,
+  SubschemaConfig,
+} from '@graphql-tools/delegate';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
 import { mergeTypeDefs } from '@graphql-tools/merge';
 import { createMergedTypeResolver } from '@graphql-tools/stitch';
@@ -14,7 +22,6 @@ import {
   MapperKind,
   mapSchema,
   memoize1,
-  mergeDeep,
   TypeSource,
 } from '@graphql-tools/utils';
 import {
@@ -24,8 +31,16 @@ import {
   type GraphQLSchema,
   type ObjectTypeDefinitionNode,
 } from 'graphql';
-import type { UnifiedGraphHandler } from '../unifiedGraphManager';
-import { wrapMergedTypeResolver } from '../utils';
+import type {
+  UnifiedGraphHandler,
+  UnifiedGraphHandlerOpts,
+  UnifiedGraphHandlerResult,
+} from '../unifiedGraphManager';
+import {
+  compareSubgraphNames,
+  OnDelegationPlanDoneHook,
+  wrapMergedTypeResolver,
+} from '../utils';
 import { handleFederationSubschema } from './subgraph';
 
 // Memoize to avoid re-parsing the same schema AST
@@ -139,13 +154,14 @@ export function handleResolveToDirectives(
 export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   unifiedGraph,
   onSubgraphExecute,
+  onDelegationPlanHooks,
   onDelegationStageExecuteHooks,
+  onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  transportEntryAdditions,
   batch = true,
   logger,
-}) {
+}: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
   const transportEntryMap: Record<string, TransportEntry> = {};
@@ -264,34 +280,105 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       });
     },
   });
-
-  if (transportEntryAdditions) {
-    const wildcardTransportOptions = transportEntryAdditions['*'];
-    for (const subgraphName in transportEntryMap) {
-      const toBeMerged: Partial<TransportEntry>[] = [];
-      const transportEntry = transportEntryMap[subgraphName];
-      if (transportEntry) {
-        toBeMerged.push(transportEntry);
+  const inContextSDK = getInContextSDK(
+    executableUnifiedGraph,
+    // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
+    subschemas,
+    logger,
+    onDelegateHooks || [],
+  );
+  const stitchingInfo = executableUnifiedGraph.extensions?.[
+    'stitchingInfo'
+  ] as StitchingInfo;
+  if (stitchingInfo && onDelegationPlanHooks?.length) {
+    for (const typeName in stitchingInfo.mergedTypes) {
+      const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
+      if (mergedTypeInfo) {
+        const originalDelegationPlanBuilder =
+          mergedTypeInfo.nonMemoizedDelegationPlanBuilder;
+        mergedTypeInfo.nonMemoizedDelegationPlanBuilder = (
+          supergraph,
+          sourceSubschema,
+          variables,
+          fragments,
+          fieldNodes,
+          context,
+          info,
+        ) => {
+          let delegationPlanBuilder = originalDelegationPlanBuilder;
+          function setDelegationPlanBuilder(
+            newDelegationPlanBuilder: DelegationPlanBuilder,
+          ) {
+            delegationPlanBuilder = newDelegationPlanBuilder;
+          }
+          const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] = [];
+          let currentLogger = logger;
+          let requestId: string | undefined;
+          if (context?.request) {
+            requestId = requestIdByRequest.get(context.request);
+            if (requestId) {
+              currentLogger = currentLogger?.child(requestId);
+            }
+          }
+          if (sourceSubschema.name) {
+            currentLogger = currentLogger?.child(sourceSubschema.name);
+          }
+          for (const onDelegationPlan of onDelegationPlanHooks) {
+            const onDelegationPlanDone = onDelegationPlan({
+              supergraph,
+              subgraph: sourceSubschema.name!,
+              sourceSubschema,
+              typeName: mergedTypeInfo.typeName,
+              variables,
+              fragments,
+              fieldNodes,
+              logger: currentLogger,
+              context,
+              info,
+              delegationPlanBuilder,
+              setDelegationPlanBuilder,
+            });
+            if (onDelegationPlanDone) {
+              onDelegationPlanDoneHooks.push(onDelegationPlanDone);
+            }
+          }
+          let delegationPlan = delegationPlanBuilder(
+            supergraph,
+            sourceSubschema,
+            variables,
+            fragments,
+            fieldNodes,
+            context,
+            info,
+          );
+          function setDelegationPlan(
+            newDelegationPlan: ReturnType<DelegationPlanBuilder>,
+          ) {
+            delegationPlan = newDelegationPlan;
+          }
+          for (const onDelegationPlanDone of onDelegationPlanDoneHooks) {
+            onDelegationPlanDone({
+              delegationPlan,
+              setDelegationPlan,
+            });
+          }
+          return delegationPlan;
+        };
       }
-      const transportOptionBySubgraph = transportEntryAdditions[subgraphName];
-      if (transportOptionBySubgraph) {
-        toBeMerged.push(transportOptionBySubgraph);
-      }
-      const transportOptionByKind =
-        transportEntryAdditions['*.' + transportEntry?.kind];
-      if (transportOptionByKind) {
-        toBeMerged.push(transportOptionByKind);
-      }
-      if (wildcardTransportOptions) {
-        toBeMerged.push(wildcardTransportOptions);
-      }
-      transportEntryMap[subgraphName] = mergeDeep(toBeMerged);
     }
   }
   return {
     unifiedGraph: executableUnifiedGraph,
-    subschemas,
     transportEntryMap,
-    additionalResolvers,
+    inContextSDK,
+    getSubgraphSchema(subgraphName) {
+      const subgraph = subschemas.find(
+        (s) => s.name && compareSubgraphNames(s.name, subgraphName),
+      );
+      if (!subgraph) {
+        throw new Error(`Subgraph ${subgraphName} not found`);
+      }
+      return subgraph.schema;
+    },
   };
 };
