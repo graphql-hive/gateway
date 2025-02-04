@@ -116,6 +116,7 @@ jobs:
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
+          source: .
           targets: gateway${{ matrix.runtime == 'Bun' && '_bun' || '' }}
           set: |
             *.cache-from=type=gha
