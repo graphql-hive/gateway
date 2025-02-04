@@ -7,15 +7,18 @@ export function abortSignalAny(iterable: Iterable<AbortSignal>) {
     return aborted;
   }
 
-  // if the native "any" is available, use it
-  if ('any' in AbortSignal) {
-    return AbortSignal.any(signals);
-  }
+  // TODO: we cant use the native abortsignal.any because it doesnt work with signals coming from whatwg-node (ServerAdapterRequestAbortSignal)
+  // if ('any' in AbortSignal) {
+  //   return AbortSignal.any(signals);
+  // }
 
   // otherwise ready a controller and listen for abort signals
   const ctrl = new AbortController();
   function abort(this: AbortSignal) {
-    ctrl.abort(this.reason);
+    ctrl.abort(
+      // TODO: we use Object(this) because `this` is undefined for signals coming from whatwg-node (ServerAdapterRequestAbortSignal)
+      Object(this).reason,
+    );
     // do cleanup
     for (const signal of signals) {
       signal.removeEventListener('abort', abort);
