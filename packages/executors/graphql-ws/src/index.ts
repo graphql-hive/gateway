@@ -9,13 +9,13 @@ import {
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { print } from 'graphql';
-import { Client, createClient } from 'graphql-ws';
+import type { DocumentNode } from 'graphql';
+import { type Client, type ClientOptions, createClient } from 'graphql-ws';
 import WebSocket from 'isomorphic-ws';
 
 export interface GraphQLWSExecutorOptions {
   onClient?: (client: Client) => void;
-  print?: typeof print;
+  print?(doc: DocumentNode): string;
   /** The URL of the WebSocket server to connect to. */
   url: string;
   /**
@@ -73,10 +73,11 @@ export function buildGraphQLWSExecutor(
         }
       : WebSocket;
 
-    graphqlWSClient = createClient({
+    const clientOptions: ClientOptions = {
       url: clientOptionsOrClient.url,
       webSocketImpl,
-      lazy: true,
+      lazy: clientOptionsOrClient.lazy === false ? false : true,
+      lazyCloseTimeout: clientOptionsOrClient.lazyCloseTimeout || 0,
       connectionParams: () => {
         const optionsConnectionParams =
           (typeof clientOptionsOrClient.connectionParams === 'function'
@@ -84,7 +85,8 @@ export function buildGraphQLWSExecutor(
             : clientOptionsOrClient.connectionParams) || {};
         return Object.assign(optionsConnectionParams, executorConnectionParams);
       },
-    });
+    }
+    graphqlWSClient = createClient(clientOptions);
     if (clientOptionsOrClient.onClient) {
       clientOptionsOrClient.onClient(graphqlWSClient);
     }
