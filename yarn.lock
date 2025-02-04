@@ -6935,6 +6935,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.0.5#~/.yarn/patches/@vitest-snapshot-npm-3.0.0-d5b381862b.patch":
+  version: 3.0.5
+  resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.0.5#~/.yarn/patches/@vitest-snapshot-npm-3.0.0-d5b381862b.patch::version=3.0.5&hash=e717fb"
+  dependencies:
+    "@vitest/pretty-format": "npm:3.0.5"
+    magic-string: "npm:^0.30.17"
+    pathe: "npm:^2.0.2"
+  checksum: 10c0/83d8738ca23168fc826ddbb117eab11823a91a4376444cfec1f0f26eccb580a36b597ee70298c4330283a63c58425d555b1596fcc4a809d3f82981575b67c0ee
+  languageName: node
+  linkType: hard
+
 "@vitest/spy@npm:3.0.5":
   version: 3.0.5
   resolution: "@vitest/spy@npm:3.0.5"
