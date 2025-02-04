@@ -3,9 +3,8 @@ import type {
   TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
 import { DefaultLogger, dispose } from '@graphql-mesh/utils';
-import { buildGraphQLWSExecutor } from '@graphql-tools/executor-graphql-ws';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { createDeferred, DisposableAsyncExecutor } from '@graphql-tools/utils';
+import { createDeferred } from '@graphql-tools/utils';
 import { createDisposableWebSocketServer } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
@@ -19,7 +18,7 @@ type TServerOptions = ServerOptions<{}, WSExtra | BunExtra>;
 
 async function createTServer(
   transportEntry?: Partial<TransportEntry<WSTransportOptions>>,
-  buildExecutor?: (client: Client) => DisposableAsyncExecutor,
+  onClient?: (client: Client) => void,
 ) {
   const schema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
@@ -81,7 +80,7 @@ async function createTServer(
       },
       logger: new DefaultLogger(),
     } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
-    buildExecutor,
+    onClient,
   );
 
   return {
@@ -222,28 +221,27 @@ describe('WS Transport', () => {
     let close!: () => void;
     const { promise: waitForClosed, resolve: closed } = createDeferred<void>();
 
-    const buildGraphQLWSExecutorFn = vi.fn((client: Client) => {
+    const onClient = vi.fn((client: Client) => {
       client.on('opened', (socket) => {
         close = () => (socket as WebSocket).close();
       });
       client.on('closed', () => {
         closed();
       });
-      return buildGraphQLWSExecutor(client);
     });
 
-    await using serv = await createTServer({}, buildGraphQLWSExecutorFn);
+    await using serv = await createTServer({}, onClient);
 
     await serv.executeHelloQuery();
 
-    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(1);
+    expect(onClient).toBeCalledTimes(1);
 
     close();
     await waitForClosed;
 
     await serv.executeHelloQuery();
 
-    expect(buildGraphQLWSExecutorFn).toBeCalledTimes(2);
+    expect(onClient).toBeCalledTimes(2);
   });
 
   it.skipIf(
