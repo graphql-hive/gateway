@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 1.9.3
+
+### Patch Changes
+
+- Updated dependencies [[`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c), [`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c)]:
+  - @graphql-mesh/transport-ws@1.0.1
+
 ## 1.9.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @graphql-tools/executor-graphql-ws
 
+## 2.0.1
+
+### Patch Changes
+
+- [#591](https://github.com/graphql-hive/gateway/pull/591) [`7d42160`](https://github.com/graphql-hive/gateway/commit/7d42160c31a10efbc680826704410fc1a33fb97c) Thanks [@ardatan](https://github.com/ardatan)! - Fix the regression preventing users from passing custom `lazy` and `lazyCloseTimeout` options
+
 ## 2.0.0
 
 ### Major Changes
