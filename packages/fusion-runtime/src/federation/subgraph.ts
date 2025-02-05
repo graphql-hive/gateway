@@ -39,7 +39,11 @@ import {
   typeFromAST,
   visit,
 } from 'graphql';
-import { compareSubgraphNames, TransportEntry, type getOnSubgraphExecute } from '../utils';
+import {
+  compareSubgraphNames,
+  TransportEntry,
+  type getOnSubgraphExecute,
+} from '../utils';
 
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };
@@ -64,10 +68,11 @@ export function handleFederationSubschema({
   const subgraphName =
     (subschemaConfig.name =
       realSubgraphNameMap?.get(subschemaConfig.name || '') ||
-      subschemaConfig.name) || ''; const subgraphDirectives = getDirectiveExtensions<{
-        transport: TransportEntry;
-        [key: string]: any;
-      }>(subschemaConfig.schema);
+      subschemaConfig.name) || '';
+  const subgraphDirectives = getDirectiveExtensions<{
+    transport: TransportEntry;
+    [key: string]: any;
+  }>(subschemaConfig.schema);
 
   // We need to add subgraph specific directives from supergraph to the subgraph schema
   // So the executor can use it
