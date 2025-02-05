@@ -45,9 +45,6 @@ describe('Upstream Timeout', () => {
         throw new Error('Unexpected subgraph');
       },
     });
-    setTimeout(() => {
-      greetingsDeferred.resolve('Hello, World!');
-    }, 1500);
     const res = await gateway.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
@@ -75,6 +72,7 @@ describe('Upstream Timeout', () => {
         }),
       ],
     });
+    greetingsDeferred.resolve('Hello, World!');
   });
   it('issue #303 - does not leak when it does not time out', async () => {
     const upstreamSchema = createSchema({
