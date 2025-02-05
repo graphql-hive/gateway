@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:22-slim AS install
+FROM node:23-slim AS install
 
 WORKDIR /install
 
@@ -8,7 +8,7 @@ RUN npm i graphql@^16.9.0
 
 #
 
-FROM node:22-slim
+FROM node:23-slim
 
 RUN apt-get update && apt-get install -y \
   # for healthchecks
