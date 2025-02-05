@@ -1,5 +1,6 @@
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import {
+  Executor,
   isAsyncIterable,
   mapAsyncIterator,
   mapMaybePromise,
@@ -30,17 +31,33 @@ export function getExecutorForUnifiedGraph<TContext>(
     return mapMaybePromise(
       unifiedGraphManager.getContext(execReq.context),
       (context) => {
+        function handleExecutor(executor: Executor) {
+          opts?.transportContext?.logger?.debug(
+            'Executing request on unified graph',
+            print(execReq.document),
+          );
+          return executor({
+            ...execReq,
+            context,
+          });
+        }
         return mapMaybePromise(
-          unifiedGraphManager.getUnifiedGraph(),
-          (unifiedGraph) => {
-            opts?.transportContext?.logger?.debug(
-              'Executing request on unified graph',
-              print(execReq.document),
-            );
-            return createDefaultExecutor(unifiedGraph)({
-              ...execReq,
-              context,
-            });
+          unifiedGraphManager.getExecutor(),
+          (executor) => {
+            if (!executor) {
+              return mapMaybePromise(
+                unifiedGraphManager.getUnifiedGraph(),
+                (unifiedGraph) => {
+                  opts?.transportContext?.logger?.debug(
+                    'Executing request on unified graph',
+                    print(execReq.document),
+                  );
+                  executor = createDefaultExecutor(unifiedGraph);
+                  return handleExecutor(executor);
+                },
+              );
+            }
+            return handleExecutor(executor);
           },
         );
       },

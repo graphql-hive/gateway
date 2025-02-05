@@ -3,13 +3,9 @@ import type {
   TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
-import { getInContextSDK, requestIdByRequest } from '@graphql-mesh/utils';
+import { dispose, isDisposable } from '@graphql-mesh/utils';
 import type {
-  DelegationPlanBuilder,
-  StitchingInfo,
-  SubschemaConfig,
-} from '@graphql-tools/delegate';
-import type {
+  Executor,
   IResolvers,
   MaybePromise,
   TypeSource,
@@ -30,10 +26,9 @@ import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
-  compareSubgraphNames,
   getOnSubgraphExecute,
+  getTransportEntryMapUsingFusionAndFederationDirectives,
   millisecondsToStr,
-  OnDelegationPlanDoneHook,
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
   type OnSubgraphExecuteHook,
@@ -66,8 +61,9 @@ export interface UnifiedGraphHandlerOpts {
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
+  onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
-  transportEntryAdditions?: TransportEntryAdditions;
+  onDelegateHooks?: OnDelegateHook<unknown>[];
   /**
    * Whether to batch the subgraph executions.
    * @default true
@@ -79,9 +75,9 @@ export interface UnifiedGraphHandlerOpts {
 
 export interface UnifiedGraphHandlerResult {
   unifiedGraph: GraphQLSchema;
-  transportEntryMap: Record<string, TransportEntry>;
-  subschemas: SubschemaConfig[];
-  additionalResolvers: IResolvers[];
+  executor?: Executor;
+  getSubgraphSchema(subgraphName: string): GraphQLSchema;
+  inContextSDK: any;
 }
 
 export interface UnifiedGraphManagerOptions<TContext> {
@@ -127,6 +123,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportEntryMap?: Record<string, TransportEntry>;
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
+  private executor?: Executor;
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
@@ -149,6 +146,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.initialUnifiedGraph$ = undefined;
     this.lastLoadTime = undefined;
     this.polling$ = undefined;
+    this.executor = undefined;
   }
 
   private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -289,8 +287,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         }
       }
     }
+    const transportExecutorStackDisposal =
+      this._transportExecutorStack?.disposeAsync?.();
+    const unifiedgraphExecutorDisposal = isDisposable(this.executor)
+      ? dispose(this.executor)
+      : undefined;
+
+    const disposalJobs = [
+      transportExecutorStackDisposal,
+      unifiedgraphExecutorDisposal,
+    ].filter(isPromise);
     return mapMaybePromise(
-      this._transportExecutorStack?.disposeAsync?.(),
+      disposalJobs.length > 0 ? Promise.all(disposalJobs) : disposalJobs,
       () => {
         this.disposeReason = undefined;
         this._transportExecutorStack = new AsyncDisposableStack();
@@ -299,11 +307,16 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         });
         this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
         this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
+        const transportEntryMap =
+          getTransportEntryMapUsingFusionAndFederationDirectives(
+            this.unifiedGraph,
+            this.opts.transportEntryAdditions,
+          );
         const {
           unifiedGraph: newUnifiedGraph,
-          transportEntryMap,
-          subschemas,
-          additionalResolvers,
+          inContextSDK,
+          getSubgraphSchema,
+          executor,
         } = this.handleUnifiedGraph({
           unifiedGraph: this.unifiedGraph,
           additionalTypeDefs: this.opts.additionalTypeDefs,
@@ -311,121 +324,26 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           onSubgraphExecute(subgraphName, execReq) {
             return onSubgraphExecute(subgraphName, execReq);
           },
+          onDelegationPlanHooks: this.onDelegationPlanHooks,
           onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
-          transportEntryAdditions: this.opts.transportEntryAdditions,
+          onDelegateHooks: this.opts.onDelegateHooks,
           batch: this.batch,
           logger: this.opts.transportContext?.logger,
         });
         this.unifiedGraph = newUnifiedGraph;
+        this.executor = executor;
         const onSubgraphExecute = getOnSubgraphExecute({
           onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
           transports: this.opts.transports,
           transportContext: this.opts.transportContext,
           transportEntryMap,
-          getSubgraphSchema(subgraphName) {
-            const subgraph = subschemas.find(
-              (s) => s.name && compareSubgraphNames(s.name, subgraphName),
-            );
-            if (!subgraph) {
-              throw new Error(`Subgraph ${subgraphName} not found`);
-            }
-            return subgraph.schema;
-          },
+          getSubgraphSchema,
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
         });
-        if (this.opts.additionalResolvers || additionalResolvers.length) {
-          this.inContextSDK = getInContextSDK(
-            this.unifiedGraph,
-            // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
-            subschemas,
-            this.opts.transportContext?.logger,
-            this.opts.onDelegateHooks || [],
-          );
-        }
+        this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();
         this._transportEntryMap = transportEntryMap;
-        const stitchingInfo = this.unifiedGraph?.extensions?.[
-          'stitchingInfo'
-        ] as StitchingInfo;
-        if (stitchingInfo && this.onDelegationPlanHooks?.length) {
-          for (const typeName in stitchingInfo.mergedTypes) {
-            const mergedTypeInfo = stitchingInfo.mergedTypes[typeName];
-            if (mergedTypeInfo) {
-              const originalDelegationPlanBuilder =
-                mergedTypeInfo.nonMemoizedDelegationPlanBuilder;
-              mergedTypeInfo.nonMemoizedDelegationPlanBuilder = (
-                supergraph,
-                sourceSubschema,
-                variables,
-                fragments,
-                fieldNodes,
-                context,
-                info,
-              ) => {
-                let delegationPlanBuilder = originalDelegationPlanBuilder;
-                function setDelegationPlanBuilder(
-                  newDelegationPlanBuilder: DelegationPlanBuilder,
-                ) {
-                  delegationPlanBuilder = newDelegationPlanBuilder;
-                }
-                const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] =
-                  [];
-                let logger = this.opts.transportContext?.logger;
-                let requestId: string | undefined;
-                if (context?.request) {
-                  requestId = requestIdByRequest.get(context.request);
-                  if (requestId) {
-                    logger = logger?.child(requestId);
-                  }
-                }
-                if (sourceSubschema.name) {
-                  logger = logger?.child(sourceSubschema.name);
-                }
-                for (const onDelegationPlan of this.onDelegationPlanHooks) {
-                  const onDelegationPlanDone = onDelegationPlan({
-                    supergraph,
-                    subgraph: sourceSubschema.name!,
-                    sourceSubschema,
-                    typeName: mergedTypeInfo.typeName,
-                    variables,
-                    fragments,
-                    fieldNodes,
-                    logger,
-                    context,
-                    info,
-                    delegationPlanBuilder,
-                    setDelegationPlanBuilder,
-                  });
-                  if (onDelegationPlanDone) {
-                    onDelegationPlanDoneHooks.push(onDelegationPlanDone);
-                  }
-                }
-                let delegationPlan = delegationPlanBuilder(
-                  supergraph,
-                  sourceSubschema,
-                  variables,
-                  fragments,
-                  fieldNodes,
-                  context,
-                  info,
-                );
-                function setDelegationPlan(
-                  newDelegationPlan: ReturnType<DelegationPlanBuilder>,
-                ) {
-                  delegationPlan = newDelegationPlan;
-                }
-                for (const onDelegationPlanDone of onDelegationPlanDoneHooks) {
-                  onDelegationPlanDone({
-                    delegationPlan,
-                    setDelegationPlan,
-                  });
-                }
-                return delegationPlan;
-              };
-            }
-          }
-        }
         return this.unifiedGraph;
       },
     );
@@ -466,6 +384,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       }
       return this.unifiedGraph;
     });
+  }
+
+  public getExecutor(): MaybePromise<Executor | undefined> {
+    return mapMaybePromise(this.ensureUnifiedGraph(), () => this.executor);
   }
 
   public getContext<T extends {} = {}>(base: T = {} as T) {

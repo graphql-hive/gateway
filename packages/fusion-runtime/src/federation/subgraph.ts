@@ -1,4 +1,3 @@
-import type { TransportEntry } from '@graphql-mesh/transport-common';
 import { YamlConfig } from '@graphql-mesh/types';
 import type {
   MergedTypeConfig,
@@ -40,13 +39,16 @@ import {
   typeFromAST,
   visit,
 } from 'graphql';
-import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils';
+import {
+  compareSubgraphNames,
+  TransportEntry,
+  type getOnSubgraphExecute,
+} from '../utils';
 
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };
+  unifiedGraphDirectives?: Record<string, any>;
   realSubgraphNameMap?: Map<string, string>;
-  schemaDirectives?: Record<string, any>;
-  transportEntryMap: Record<string, TransportEntry>;
   additionalTypeDefs: TypeSource[];
   stitchingDirectivesTransformer: (
     subschemaConfig: SubschemaConfig,
@@ -56,9 +58,8 @@ export interface HandleFederationSubschemaOpts {
 
 export function handleFederationSubschema({
   subschemaConfig,
+  unifiedGraphDirectives,
   realSubgraphNameMap,
-  schemaDirectives,
-  transportEntryMap,
   additionalTypeDefs,
   stitchingDirectivesTransformer,
   onSubgraphExecute,
@@ -72,13 +73,16 @@ export function handleFederationSubschema({
     transport: TransportEntry;
     [key: string]: any;
   }>(subschemaConfig.schema);
-  const directivesToLook = schemaDirectives || subgraphDirectives;
+
+  // We need to add subgraph specific directives from supergraph to the subgraph schema
+  // So the executor can use it
+  const directivesToLook = unifiedGraphDirectives || subgraphDirectives;
   for (const directiveName in directivesToLook) {
     if (
       !subgraphDirectives[directiveName]?.length &&
-      schemaDirectives?.[directiveName]?.length
+      unifiedGraphDirectives?.[directiveName]?.length
     ) {
-      const directives = schemaDirectives[directiveName];
+      const directives = unifiedGraphDirectives[directiveName];
       for (const directive of directives) {
         if (directive.subgraph && directive.subgraph !== subgraphName) {
           continue;
@@ -91,17 +95,7 @@ export function handleFederationSubschema({
   const subgraphExtensions: Record<string, unknown> =
     (subschemaConfig.schema.extensions ||= {});
   subgraphExtensions['directives'] = subgraphDirectives;
-  const transportDirectives = (subgraphDirectives.transport ||= []);
-  const transportDirective = transportDirectives[0];
-  if (transportDirective) {
-    transportEntryMap[subgraphName] = transportDirective;
-  } else {
-    transportEntryMap[subgraphName] = {
-      kind: 'http',
-      subgraph: subgraphName,
-      location: subschemaConfig.endpoint,
-    };
-  }
+
   interface TypeDirectives {
     source: SourceDirective;
     [key: string]: any;

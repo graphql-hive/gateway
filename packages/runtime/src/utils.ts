@@ -1,3 +1,5 @@
+import type { ExecutionArgs } from '@graphql-tools/executor';
+import { Executor, memoize1 } from '@graphql-tools/utils';
 import type { SelectionSetNode } from 'graphql';
 
 export function checkIfDataSatisfiesSelectionSet(
@@ -75,3 +77,18 @@ export function delayInMs(ms: number, signal?: AbortSignal) {
     );
   });
 }
+
+export const getExecuteFnFromExecutor = memoize1(
+  function getExecuteFnFromExecutor(executor: Executor) {
+    return function executeFn(args: ExecutionArgs) {
+      return executor({
+        document: args.document,
+        variables: args.variableValues,
+        operationName: args.operationName ?? undefined,
+        rootValue: args.rootValue,
+        context: args.contextValue,
+        signal: args.signal,
+      });
+    };
+  },
+);
