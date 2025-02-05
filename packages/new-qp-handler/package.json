@@ -1,0 +1,57 @@
+{
+  "name": "@graphql-hive/new-qp-handler",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "New Unified Graph Handler based on the Query Planner approach",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/qp-runtime"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist && node scripts/replace-import-with-require.mjs",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
+  },
+  "dependencies": {
+    "@apollo/federation-internals": "^2.9.3",
+    "@apollo/query-planner": "^2.9.3",
+    "@graphql-hive/query-plan-executor": "workspace:^",
+    "@graphql-tools/utils": "^10.7.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "graphql": "^16.9.0",
+    "pkgroll": "2.8.0"
+  },
+  "sideEffects": false
+}

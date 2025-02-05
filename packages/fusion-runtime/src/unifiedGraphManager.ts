@@ -1,3 +1,4 @@
+import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 import type {
   TransportContext,
   TransportEntry,
@@ -141,7 +142,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph || handleSupergraphWithQueryPlanner;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
