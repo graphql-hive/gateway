@@ -1,3 +1,4 @@
+import { OnExecuteEventPayload, OnSubscribeEventPayload } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import {
@@ -66,7 +67,6 @@ import {
   GraphQLSchema,
   isSchema,
   parse,
-  type ExecutionArgs,
 } from 'graphql';
 import {
   createYoga,
@@ -106,7 +106,11 @@ import type {
   GatewayPlugin,
   UnifiedGraphConfig,
 } from './types';
-import { checkIfDataSatisfiesSelectionSet, defaultQueryText } from './utils';
+import {
+  checkIfDataSatisfiesSelectionSet,
+  defaultQueryText,
+  getExecuteFnFromExecutor,
+} from './utils';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -171,6 +175,7 @@ export function createGatewayRuntime<
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
+  let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
     config,
     configContext,
@@ -216,18 +221,8 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks,
       transportExecutorStack,
     });
-    function createExecuteFnFromExecutor(executor: Executor) {
-      return function executeFn(args: ExecutionArgs) {
-        return executor({
-          rootValue: args.rootValue,
-          document: args.document,
-          ...(args.operationName ? { operationName: args.operationName } : {}),
-          ...(args.variableValues ? { variables: args.variableValues } : {}),
-          ...(args.contextValue ? { context: args.contextValue } : {}),
-        });
-      };
-    }
-    const executeFn = createExecuteFnFromExecutor(proxyExecutor);
+
+    getExecutor = () => proxyExecutor;
 
     let currentTimeout: ReturnType<typeof setTimeout>;
     const pollingInterval = config.pollingInterval;
@@ -343,12 +338,6 @@ export function createGatewayRuntime<
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
     const executorPlugin: GatewayPlugin = {
-      onExecute({ setExecuteFn }) {
-        setExecuteFn(executeFn);
-      },
-      onSubscribe({ setSubscribeFn }) {
-        setSubscribeFn(executeFn);
-      },
       onValidate({ params, setResult }) {
         if (shouldSkipValidation || !params.schema) {
           setResult([]);
@@ -705,6 +694,7 @@ export function createGatewayRuntime<
       );
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
+    getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
       [DisposableSymbols.asyncDispose]() {
         return unifiedGraphManager[DisposableSymbols.asyncDispose]();
@@ -817,6 +807,31 @@ export function createGatewayRuntime<
       }
     },
   };
+
+  if (getExecutor) {
+    const onExecute = ({
+      setExecuteFn,
+    }: OnExecuteEventPayload<GatewayContext>) =>
+      mapMaybePromise(getExecutor?.(), (executor) => {
+        if (executor) {
+          const executeFn = getExecuteFnFromExecutor(executor);
+          setExecuteFn(executeFn);
+        }
+      });
+    const onSubscribe = ({
+      setSubscribeFn,
+    }: OnSubscribeEventPayload<GatewayContext>) =>
+      mapMaybePromise(getExecutor?.(), (executor) => {
+        if (executor) {
+          const subscribeFn = getExecuteFnFromExecutor(executor);
+          setSubscribeFn(subscribeFn);
+        }
+      });
+    //@ts-expect-error - MaybePromise is not compatible with PromiseOrValue
+    defaultGatewayPlugin.onExecute = onExecute;
+    //@ts-expect-error - MaybePromise is not compatible with PromiseOrValue
+    defaultGatewayPlugin.onSubscribe = onSubscribe;
+  }
 
   const productName = config.productName || 'Hive Gateway';
   const productDescription =

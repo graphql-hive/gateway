@@ -4,6 +4,7 @@ import type {
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import type {
+  Executor,
   IResolvers,
   MaybePromise,
   TypeSource,
@@ -73,6 +74,7 @@ export interface UnifiedGraphHandlerOpts {
 
 export interface UnifiedGraphHandlerResult {
   unifiedGraph: GraphQLSchema;
+  executor?: Executor;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   inContextSDK: any;
 }
@@ -120,6 +122,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportEntryMap?: Record<string, TransportEntry>;
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
+  private executor?: Executor;
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
@@ -301,6 +304,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           unifiedGraph: newUnifiedGraph,
           inContextSDK,
           getSubgraphSchema,
+          executor,
         } = this.handleUnifiedGraph({
           unifiedGraph: this.unifiedGraph,
           additionalTypeDefs: this.opts.additionalTypeDefs,
@@ -315,6 +319,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           logger: this.opts.transportContext?.logger,
         });
         this.unifiedGraph = newUnifiedGraph;
+        this.executor = executor;
         const onSubgraphExecute = getOnSubgraphExecute({
           onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
           transports: this.opts.transports,
@@ -367,6 +372,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       }
       return this.unifiedGraph;
     });
+  }
+
+  public getExecutor(): MaybePromise<Executor | undefined> {
+    return mapMaybePromise(this.ensureUnifiedGraph(), () => this.executor);
   }
 
   public getContext<T extends {} = {}>(base: T = {} as T) {
