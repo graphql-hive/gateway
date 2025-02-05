@@ -3,6 +3,7 @@ import type {
   TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
+import { dispose, isDisposable } from '@graphql-mesh/utils';
 import type {
   Executor,
   IResolvers,
@@ -145,6 +146,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.initialUnifiedGraph$ = undefined;
     this.lastLoadTime = undefined;
     this.polling$ = undefined;
+    this.executor = undefined;
   }
 
   private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -285,8 +287,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         }
       }
     }
+    const transportExecutorStackDisposal =
+      this._transportExecutorStack?.disposeAsync?.();
+    const unifiedgraphExecutorDisposal = isDisposable(this.executor)
+      ? dispose(this.executor)
+      : undefined;
+
+    const disposalJobs = [
+      transportExecutorStackDisposal,
+      unifiedgraphExecutorDisposal,
+    ].filter(isPromise);
     return mapMaybePromise(
-      this._transportExecutorStack?.disposeAsync?.(),
+      disposalJobs.length > 0 ? Promise.all(disposalJobs) : disposalJobs,
       () => {
         this.disposeReason = undefined;
         this._transportExecutorStack = new AsyncDisposableStack();
