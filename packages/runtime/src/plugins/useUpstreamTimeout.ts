@@ -50,9 +50,6 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             timeoutSignalsByExecutionRequest.get(executionRequest);
           if (!timeoutSignal) {
             timeoutSignal = AbortSignal.timeout(timeout);
-            // Comment the line above
-            // And uncomment the line below to see that statement leaks specificaly
-            // timeoutSignal = { addEventListener() {} } as AbortSignal;
             timeoutSignalsByExecutionRequest.set(
               executionRequest,
               timeoutSignal,
