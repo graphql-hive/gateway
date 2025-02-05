@@ -34,6 +34,7 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
+import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
@@ -127,7 +128,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph || handleSupergraphWithQueryPlanner;
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =

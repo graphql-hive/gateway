@@ -58,7 +58,13 @@
         "./packages/stitching-directives/src/index.ts"
       ],
       "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
-      "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"]
+      "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
+      "@graphql-hive/new-qp-handler": [
+        "./packages/new-qp-handler/src/index.ts"
+      ],
+      "@graphql-hive/query-plan-executor": [
+        "./packages/query-plan-executor/src/index.ts"
+      ],
     }
   },
   "include": [
