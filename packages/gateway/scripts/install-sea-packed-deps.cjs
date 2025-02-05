@@ -34,7 +34,7 @@
   // NOTE that the path is stable for modules hash and system,
   // we should NEVER install modules in multiple places to avoid
   // spamming user's devices
-  globalThis.__PACKED_DEPS_PATH__ = `${os.tmpdir()}${path.sep}mesh-serve_${
+  globalThis.__PACKED_DEPS_PATH__ = `${os.tmpdir()}${path.sep}graphql-hive__gateway_${
     // @ts-expect-error INJECTED DURING BUNDLE (check rollup.binary.config.js)
     __MODULES_HASH__
   }_node_modules`;
