@@ -1,5 +1,15 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.10.32
+
+### Patch Changes
+
+- [#590](https://github.com/graphql-hive/gateway/pull/590) [`203172c`](https://github.com/graphql-hive/gateway/commit/203172c479f764bf09f447512f8904277bff0b20) Thanks [@ardatan](https://github.com/ardatan)! - Refactor to make it easier to replace the supergraph execution
+
+- Updated dependencies [[`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7)]:
+  - @graphql-mesh/transport-common@0.7.28
+  - @graphql-tools/federation@3.1.1
+
 ## 0.10.31
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @graphql-mesh/transport-http-callback
 
+## 0.5.19
+
+### Patch Changes
+
+- [#598](https://github.com/graphql-hive/gateway/pull/598) [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7) Thanks [@ardatan](https://github.com/ardatan)! - Use native AbortSignal, AbortController APIs instead of custom ones
+
+- Updated dependencies [[`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7)]:
+  - @graphql-mesh/transport-common@0.7.28
+
 ## 0.5.18
 
 ### Patch Changes

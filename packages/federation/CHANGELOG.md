@@ -1,5 +1,12 @@
 # @graphql-tools/federation
 
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7), [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7)]:
+  - @graphql-tools/executor-http@1.2.6
+
 ## 3.1.0
 
 ### Minor Changes
