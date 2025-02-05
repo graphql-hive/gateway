@@ -30,7 +30,7 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          node-version: 23
+          node-version-file: .node-version
       - name: Bench
         run: ${{matrix.e2e_runner == 'bun' && 'yarn bun' || 'yarn'}} bench
         env:

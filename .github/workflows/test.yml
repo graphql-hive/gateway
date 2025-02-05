@@ -44,7 +44,7 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          node-version: 23
+          node-version-file: .node-version
       - name: Test
         run: yarn test:bun
 
@@ -99,37 +99,30 @@ jobs:
           - workflow-name: Node Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: docker
-            node-version: 23
 
           # Node Binary
           - workflow-name: Node Binary on Ubuntu
             os: ubuntu-latest
             gateway-runner: bin
-            node-version: 23
           - workflow-name: Node Binary on Windows
             os: windows-latest
             gateway-runner: bin
-            node-version: 23
 
           # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
           #   os: macos-14 # MacOS Arm64
           #   gateway-runner: bin
-          #   node-version: 23
           # - workflow-name: Node Binary on MacOS x86_64
           #   os: macos-13 # MacOS x86_64
           #   gateway-runner: bin
-          #   node-version: 23
 
           # Bun
           - workflow-name: Bun on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun
-            node-version: 23
           - workflow-name: Bun Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun-docker
-            node-version: 23
 
     name: E2E / ${{matrix.setup.workflow-name}}
     steps:
@@ -144,6 +137,7 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
+          node-version-file: .node-version # if matrix.setup.node-version is not provided, the version from the file will be used
           node-version: ${{matrix.setup.node-version}}
       - if: runner.os == 'Linux'
         name: Hash Docker Images
