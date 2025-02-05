@@ -39,10 +39,11 @@ import {
   typeFromAST,
   visit,
 } from 'graphql';
-import { compareSubgraphNames, type getOnSubgraphExecute } from '../utils';
+import { compareSubgraphNames, TransportEntry, type getOnSubgraphExecute } from '../utils';
 
 export interface HandleFederationSubschemaOpts {
   subschemaConfig: SubschemaConfig & { endpoint?: string };
+  unifiedGraphDirectives?: Record<string, any>;
   realSubgraphNameMap?: Map<string, string>;
   additionalTypeDefs: TypeSource[];
   stitchingDirectivesTransformer: (
@@ -53,6 +54,7 @@ export interface HandleFederationSubschemaOpts {
 
 export function handleFederationSubschema({
   subschemaConfig,
+  unifiedGraphDirectives,
   realSubgraphNameMap,
   additionalTypeDefs,
   stitchingDirectivesTransformer,
@@ -62,7 +64,33 @@ export function handleFederationSubschema({
   const subgraphName =
     (subschemaConfig.name =
       realSubgraphNameMap?.get(subschemaConfig.name || '') ||
-      subschemaConfig.name) || '';
+      subschemaConfig.name) || ''; const subgraphDirectives = getDirectiveExtensions<{
+        transport: TransportEntry;
+        [key: string]: any;
+      }>(subschemaConfig.schema);
+
+  // We need to add subgraph specific directives from supergraph to the subgraph schema
+  // So the executor can use it
+  const directivesToLook = unifiedGraphDirectives || subgraphDirectives;
+  for (const directiveName in directivesToLook) {
+    if (
+      !subgraphDirectives[directiveName]?.length &&
+      unifiedGraphDirectives?.[directiveName]?.length
+    ) {
+      const directives = unifiedGraphDirectives[directiveName];
+      for (const directive of directives) {
+        if (directive.subgraph && directive.subgraph !== subgraphName) {
+          continue;
+        }
+        subgraphDirectives[directiveName] ||= [];
+        subgraphDirectives[directiveName].push(directive);
+      }
+    }
+  }
+  const subgraphExtensions: Record<string, unknown> =
+    (subschemaConfig.schema.extensions ||= {});
+  subgraphExtensions['directives'] = subgraphDirectives;
+
   interface TypeDirectives {
     source: SourceDirective;
     [key: string]: any;

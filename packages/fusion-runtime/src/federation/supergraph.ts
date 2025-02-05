@@ -184,6 +184,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     }
   }
 
+  const unifiedGraphDirectives = getDirectiveExtensions(unifiedGraph);
+
   let executableUnifiedGraph = getStitchedSchemaFromSupergraphSdl({
     supergraphSdl: getDocumentNodeFromSchema(unifiedGraph),
     /**
@@ -196,6 +198,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     onSubschemaConfig: (subschemaConfig) =>
       handleFederationSubschema({
         subschemaConfig,
+        unifiedGraphDirectives,
         realSubgraphNameMap,
         additionalTypeDefs,
         stitchingDirectivesTransformer,
