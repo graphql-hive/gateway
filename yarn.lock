@@ -7013,14 +7013,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:0.7.8-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8":
-  version: 0.7.8-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8
-  resolution: "@whatwg-node/node-fetch@npm:0.7.8-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8"
+"@whatwg-node/node-fetch@npm:0.7.8-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f":
+  version: 0.7.8-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f
+  resolution: "@whatwg-node/node-fetch@npm:0.7.8-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/ceac8adad72cfbc98fe6b16265defaaa7b31bea8853663b230076b81bd473ee69ae5deb94844dc9ac57842a862c38634f802d3f77231b4f5a1582f0536941122
+  checksum: 10c0/c3fd295febf66d2f13c70a1ffa58eb10a61287d3d0beecbf8355f70167a962db64b88aba0dce553c94bd78c7564c755f278829612a4a7752f08e246ac24f49d6
   languageName: node
   linkType: hard
 
@@ -7036,14 +7036,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.10.0-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8":
-  version: 0.10.0-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8
-  resolution: "@whatwg-node/server@npm:0.10.0-alpha-20250205002109-e61c2d65aed8aa582581368511e66b20e33632b8"
+"@whatwg-node/server@npm:0.10.0-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f":
+  version: 0.10.0-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f
+  resolution: "@whatwg-node/server@npm:0.10.0-alpha-20250205010234-c9a7e9a3e2e8b8de7e4519f3119e6b874c5b996f"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     "@whatwg-node/fetch": "npm:^0.10.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/97992d4070541692a184f8722ae1fc908bc9737cfefffeb2f14133f162c0ee95d373bcf0bef6469a8a6a68f26ae1725b3b141a2fd3a3e40c47de381c00a768e2
+  checksum: 10c0/4ff12a0973668e947abfa68ff6e069fc66e0f22c52cfdf7eab6acc7c376618246433951e02d30aba41eb0b41186164e41ac0ae7510da23c3d70aaa08a45145a5
   languageName: node
   linkType: hard
 
