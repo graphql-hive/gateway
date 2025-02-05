@@ -41,11 +41,12 @@ console.log('Bundling...');
 const deps = {
   'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
-  'node_modules/@graphql-mesh/fusion-runtime/index':
-    '../fusion-runtime/src/index.ts',
+  // the hooks are dynamically registered on startup, we need to bundle them at path
   'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',
-
-  // default transports should be in the container
+  // include envelop core for ease of usage in the config files
+  'node_modules/@envelop/core/index':
+    '../../node_modules/@envelop/core/esm/index.js',
+  // default transports should be in the container because they're dynamically imported
   'node_modules/@graphql-mesh/transport-common/index':
     '../transports/common/src/index.ts',
   'node_modules/@graphql-mesh/transport-http/index':
@@ -54,14 +55,7 @@ const deps = {
     '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
     '../transports/http-callback/src/index.ts',
-  // include envelop core
-  'node_modules/@envelop/core/index':
-    '../../node_modules/@envelop/core/esm/index.js',
-  // extras for docker only
-  'node_modules/@graphql-mesh/plugin-http-cache/index':
-    '../../node_modules/@graphql-mesh/plugin-http-cache/esm/index.js',
-  'node_modules/@graphql-mesh/hmac-upstream-signature/index':
-    '../plugins/hmac-upstream-signature/src/index.ts',
+  // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
 };
@@ -74,14 +68,8 @@ if (
   console.warn('⚠️ Bundling extra modules for e2e tests!');
   deps['node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
-  deps['node_modules/@graphql-mesh/utils/index'] =
-    '../../node_modules/@graphql-mesh/utils/esm/index.js';
-  deps['node_modules/@omnigraph/openapi/index'] =
-    '../../node_modules/@omnigraph/openapi/esm/index.js';
   deps['node_modules/@graphql-mesh/transport-rest/index'] =
     '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
-  deps['node_modules/@omnigraph/json-schema/index'] =
-    '../../node_modules/@omnigraph/json-schema/esm/index.js';
   deps['node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }
