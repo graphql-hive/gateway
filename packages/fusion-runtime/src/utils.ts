@@ -712,19 +712,19 @@ export function getTransportEntryMapUsingFusionAndFederationDirectives(
       transportEntryMap[subgraphName] = mergeDeep(toBeMerged);
     }
   }
-  const schemaExtensions: {
-    directives?: {
-      transport?: TransportEntry[];
-    };
-  } = (unifiedGraph.extensions ||= {});
-  const directivesInExtensions = (schemaExtensions.directives ||= {});
-  const transportEntriesInExtensions: TransportEntry[] =
-    (directivesInExtensions.transport = []);
-  for (const subgraphName in transportEntryMap) {
-    const transportEntry = transportEntryMap[subgraphName];
-    if (transportEntry) {
-      transportEntriesInExtensions.push(transportEntry);
-    }
-  }
+  // const schemaExtensions: {
+  //   directives?: {
+  //     transport?: TransportEntry[];
+  //   };
+  // } = (unifiedGraph.extensions ||= {});
+  // const directivesInExtensions = (schemaExtensions.directives ||= {});
+  // const transportEntriesInExtensions: TransportEntry[] =
+  //   (directivesInExtensions.transport = []);
+  // for (const subgraphName in transportEntryMap) {
+  //   const transportEntry = transportEntryMap[subgraphName];
+  //   if (transportEntry) {
+  //     transportEntriesInExtensions.push(transportEntry);
+  //   }
+  // }
   return transportEntryMap;
 }

@@ -1,4 +1,5 @@
 import type { Logger } from '@graphql-hive/logger';
+import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 import type {
   TransportContext,
   TransportEntry,
@@ -29,7 +30,6 @@ import {
 } from '@whatwg-node/promise-helpers';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -173,7 +173,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph || handleSupergraphWithQueryPlanner;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
