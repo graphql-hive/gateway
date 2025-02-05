@@ -1,7 +1,6 @@
 import { process } from '@graphql-mesh/cross-helpers';
 import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
 import {
-  abortSignalAny,
   type DisposableExecutor,
   type Transport,
 } from '@graphql-mesh/transport-common';
@@ -158,7 +157,7 @@ export default {
       }
       let signal = executionRequest.signal || executionRequest.info?.signal;
       if (signal) {
-        signal = abortSignalAny([reqAbortCtrl.signal, signal]);
+        signal = AbortSignal.any([reqAbortCtrl.signal, signal]);
       }
       const subFetchCall$ = mapMaybePromise(
         fetch(

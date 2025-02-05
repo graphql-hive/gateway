@@ -1,12 +1,11 @@
-import { abortSignalAny } from '@graphql-hive/gateway-abort-signal-any';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
+  createDeferred,
   createGraphQLError,
   ExecutionRequest,
   ExecutionResult,
-  getAbortPromise,
   isAsyncIterable,
   MaybeAsyncIterable,
   MaybePromise,
@@ -51,21 +50,28 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
             timeoutSignalsByExecutionRequest.get(executionRequest);
           if (!timeoutSignal) {
             timeoutSignal = AbortSignal.timeout(timeout);
+            timeoutSignalsByExecutionRequest.set(
+              executionRequest,
+              timeoutSignal,
+            );
           }
-          timeoutSignalsByExecutionRequest.set(executionRequest, timeoutSignal);
-          const timeout$ = getAbortPromise(timeoutSignal);
-          let finalSignal: AbortSignal | undefined = timeoutSignal;
-          const signals = new Set<AbortSignal>();
-          signals.add(timeoutSignal);
+          const timeoutDeferred = createDeferred<void>();
+          function rejectDeferred() {
+            timeoutDeferred.reject(timeoutSignal?.reason);
+          }
+          timeoutSignal.addEventListener('abort', rejectDeferred, {
+            once: true,
+          });
+          const signals: AbortSignal[] = [];
+          signals.push(timeoutSignal);
           if (executionRequest.signal) {
-            signals.add(executionRequest.signal);
-            finalSignal = abortSignalAny(signals);
+            signals.push(executionRequest.signal);
           }
           return Promise.race([
-            timeout$,
+            timeoutDeferred.promise,
             executor({
               ...executionRequest,
-              signal: finalSignal,
+              signal: AbortSignal.any(signals),
             }),
           ])
             .then((result) => {
@@ -96,6 +102,8 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
+              timeoutDeferred.resolve();
+              timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again
               errorExtensionsByExecRequest.delete(executionRequest);
               timeoutSignalsByExecutionRequest.delete(executionRequest);
@@ -128,15 +136,15 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           } else {
             timeoutSignal = AbortSignal.timeout(timeout);
           }
-          const signals = new Set<AbortSignal>();
-          signals.add(timeoutSignal);
+          const signals: AbortSignal[] = [];
+          signals.push(timeoutSignal);
           if (options.signal) {
-            signals.add(options.signal);
-            setOptions({
-              ...options,
-              signal: abortSignalAny(signals),
-            });
+            signals.push(options.signal);
           }
+          setOptions({
+            ...options,
+            signal: AbortSignal.any(signals),
+          });
         }
       }
       if (executionRequest) {
