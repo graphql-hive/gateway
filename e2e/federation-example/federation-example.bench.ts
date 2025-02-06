@@ -1,7 +1,7 @@
 import { ApolloGateway } from '@apollo/gateway';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
+import { createExampleSetup, createTenv } from '@internal/e2e';
 import { benchConfig } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
@@ -13,9 +13,16 @@ describe('Gateway', async () => {
   const supergraph = await example.supergraph();
   const supergraphSdl = await fs.read(supergraph);
 
-  let apolloGw: ApolloServer;
-  let apolloGwUrl: string;
-  let ctrl: AbortController;
+  const ctrl = new AbortController();
+  const apolloGw = new ApolloServer({
+    gateway: new ApolloGateway({
+      supergraphSdl,
+    }),
+  });
+  const { url } = await startStandaloneServer(apolloGw, {
+    listen: { port: 0 },
+  });
+  const apolloGwUrl = url;
   bench(
     'Apollo Gateway',
     async () => {
@@ -29,33 +36,20 @@ describe('Gateway', async () => {
         }),
         signal: ctrl.signal,
       });
-      const data = await res.json();
-      expect(data).toEqual({
-        data: expect.any(Object),
-      });
+      const resJson = await res.json();
+      expect(resJson).toEqual(example.result);
     },
-    {
-      async setup() {
-        ctrl = new AbortController();
-        apolloGw = new ApolloServer({
-          gateway: new ApolloGateway({
-            supergraphSdl,
-          }),
-        });
-        const { url } = await startStandaloneServer(apolloGw, {
-          listen: { port: 0 },
-        });
-        apolloGwUrl = url;
-      },
-      teardown() {
-        ctrl.abort();
-        return apolloGw.stop();
-      },
-      ...benchConfig,
-    },
+    benchConfig,
   );
 
-  let hiveGw: Gateway;
+  const hiveGw = await gateway({
+    supergraph,
+    env: {
+      NODE_ENV: 'production'
+    },
+    pipeLogs: true,
+  });
+
   bench(
     'Hive Gateway',
     async () => {
@@ -64,21 +58,7 @@ describe('Gateway', async () => {
       });
       expect(res).toEqual(example.result);
     },
-    {
-      async setup() {
-        hiveGw = await gateway({
-          supergraph,
-          args: ['--jit'],
-          env: {
-            NODE_ENV: 'production',
-            JIT: 'true',
-          },
-        });
-      },
-      async teardown() {
-        return hiveGw[Symbol.asyncDispose]();
-      },
-      ...benchConfig,
-    },
+    benchConfig,
   );
+  
 });

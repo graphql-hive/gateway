@@ -2,7 +2,7 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
+import type { KeyValueCache, Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import type {
   Executor,
@@ -23,7 +23,6 @@ import {
 } from '@whatwg-node/disposablestack';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -72,6 +71,7 @@ export interface UnifiedGraphHandlerOpts {
   batch?: boolean;
 
   logger?: Logger;
+  cache?: KeyValueCache;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -330,6 +330,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           onDelegateHooks: this.opts.onDelegateHooks,
           batch: this.batch,
           logger: this.opts.transportContext?.logger,
+          cache: this.opts.transportContext?.cache,
         });
         this.unifiedGraph = newUnifiedGraph;
         this.executor = executor;

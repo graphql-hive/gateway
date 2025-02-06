@@ -1,3 +1,5 @@
+import type { DocumentNode } from "graphql";
+
 export interface FetchNode {
     kind: 'Fetch';
     serviceName: string;
@@ -5,6 +7,7 @@ export interface FetchNode {
     operationKind?: 'query' | 'mutation' | 'subscription';
     operationName?: string;
     operation: string;
+    operationDocumentNode: DocumentNode;
     requires?: InlineFragmentRequiresNode[];
     inputRewrites?: InputRewrite[];
     outputRewrites?: OutputRewrite[];

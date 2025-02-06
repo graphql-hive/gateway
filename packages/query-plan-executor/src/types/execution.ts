@@ -1,5 +1,5 @@
-import type { Executor } from "@graphql-tools/utils";
-import type { GraphQLSchema, OperationDefinitionNode, FragmentDefinitionNode, GraphQLError, DocumentNode } from "graphql";
+import type { ExecutionRequest, MaybeAsyncIterable, MaybePromise, ExecutionResult } from "@graphql-tools/utils";
+import type { GraphQLSchema, OperationDefinitionNode, FragmentDefinitionNode, GraphQLError } from "graphql";
 
 export interface QueryPlanExecutionContext {
   /**
@@ -27,17 +27,15 @@ export interface QueryPlanExecutionContext {
    */
   errors: GraphQLError[];
 
+  /**
+   * The context object
+   */
+  context?: any;
 
   /**
    * The factory function that returns an executor for a subgraph
    */
-  getSubgraphExecutor: (subgraphName: string) => Executor;
-
-  /**
-   * The function that parses a document node
-   * Allows user to modify this in order to have a server-side memoization
-   */
-  parseDocumentNode: (document: string) => DocumentNode;
+  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 }
 
 export interface EntityRepresentation {
