@@ -62,7 +62,7 @@ export async function loadtest(opts: LoadtestOptions) {
     'run',
     `--vus=${vus}`,
     `--duration=${duration}`,
-    `--env=URL=${server.url + '/graphql'}`,
+    `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
     `--env=QUERY=${query}`,
     path.join(__dirname, 'loadtest-script.ts'),
   );
@@ -102,7 +102,7 @@ export async function loadtest(opts: LoadtestOptions) {
 /**
  * Detects a memory increase trend in an array of memory snapshots over time using linear regression.
  *
- * @param snapshots - An array of memory snapshots in MB.
+ * @param snapshots - An array of memory snapshots in MB distanced by 1 second.
  * @param threshold - The minimum slope to consider as a significant increase.
  *
  * @throws Error if there is an increase trend, with details about the slope.
@@ -124,7 +124,7 @@ function checkMemTrend(snapshots: number[], threshold: number): void {
 
   if (slope > threshold) {
     throw new Error(
-      `Memory increase trend detected with slope of ${slope}MB (exceding threshold of ${threshold}MB)`,
+      `Memory increase trend detected with slope of ${slope}MB over ${snapshots.length}s (exceding threshold of ${threshold}MB)`,
     );
   }
 }

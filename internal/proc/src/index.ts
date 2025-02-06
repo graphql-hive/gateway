@@ -21,7 +21,6 @@ export interface Proc extends AsyncDisposable {
 export interface Server extends Proc {
   port: number;
   protocol: string;
-  url: string;
 }
 
 export interface ProcOptions {
