@@ -23,7 +23,8 @@
     "test": "vitest --project unit",
     "test:bun": "bun test --bail",
     "test:e2e": "vitest --project e2e",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks"
+    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks",
+    "test:memtest": "vitest --project memtest"
   },
   "devDependencies": {
     "@babel/core": "7.26.10",

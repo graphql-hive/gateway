@@ -14,7 +14,7 @@ import {
   fakePromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
-import { Proc, ProcOptions, spawn, waitForPort } from '@internal/proc';
+import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   boolEnv,
   createOpt,
@@ -81,11 +81,6 @@ yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway
   }
   return runner as ServeRunner;
 })();
-
-export interface Server extends Proc {
-  port: number;
-  protocol: string;
-}
 
 export interface GatewayOptions extends ProcOptions {
   port?: number;
@@ -552,6 +547,7 @@ export function createTenv(cwd: string): Tenv {
         ...proc,
         port,
         protocol,
+        url: `${protocol}://0.0.0.0:${port}`, // TODO: don't depend on localhost/0.0.0.0
         async execute({ headers, ...args }) {
           try {
             const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
@@ -713,7 +709,13 @@ export function createTenv(cwd: string): Tenv {
         gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
-      const service: Service = { ...proc, name, port, protocol };
+      const service: Service = {
+        ...proc,
+        name,
+        port,
+        protocol,
+        url: `${protocol}://0.0.0.0:${port}`, // TODO: don't depend on localhost/0.0.0.0
+      };
       await Promise.race([
         waitForExit
           .then(() => {
@@ -876,6 +878,7 @@ export function createTenv(cwd: string): Tenv {
         name,
         port: hostPort,
         protocol,
+        url: `${protocol}://0.0.0.0:${hostPort}`, // TODO: don't depend on localhost/0.0.0.0
         additionalPorts,
         getStd() {
           // TODO: distinguish stdout and stderr

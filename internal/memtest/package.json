@@ -1,0 +1,14 @@
+{
+  "name": "@internal/memtest",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "parse-duration": "^2.0.0",
+    "regression": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.54.2",
+    "@types/regression": "^2"
+  }
+}

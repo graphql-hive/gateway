@@ -18,6 +18,12 @@ export interface Proc extends AsyncDisposable {
   }>;
 }
 
+export interface Server extends Proc {
+  port: number;
+  protocol: string;
+  url: string;
+}
+
 export interface ProcOptions {
   /**
    * Pipe the logs from the spawned process to the current process, or to a file

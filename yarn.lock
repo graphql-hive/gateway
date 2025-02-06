@@ -5560,6 +5560,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/memtest@workspace:internal/memtest":
+  version: 0.0.0-use.local
+  resolution: "@internal/memtest@workspace:internal/memtest"
+  dependencies:
+    "@types/k6": "npm:^0.54.2"
+    "@types/regression": "npm:^2"
+    parse-duration: "npm:^2.0.0"
+    regression: "npm:^2.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@internal/proc@workspace:internal/proc":
   version: 0.0.0-use.local
   resolution: "@internal/proc@workspace:internal/proc"
@@ -8117,6 +8128,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/k6@npm:^0.54.2":
+  version: 0.54.2
+  resolution: "@types/k6@npm:0.54.2"
+  checksum: 10c0/8d44dbd11ac53cf426abed3dd3bba0a35b355b3ad18b9d220ec5295259d6a4ee5bb97d0b2c38ff6896b085a1ad151678498df137c66aafae6b760b746bb84be8
+  languageName: node
+  linkType: hard
+
 "@types/keyv@npm:^3.1.4":
   version: 3.1.4
   resolution: "@types/keyv@npm:3.1.4"
@@ -8207,6 +8225,13 @@ __metadata:
   version: 1.2.7
   resolution: "@types/range-parser@npm:1.2.7"
   checksum: 10c0/361bb3e964ec5133fa40644a0b942279ed5df1949f21321d77de79f48b728d39253e5ce0408c9c17e4e0fd95ca7899da36841686393b9f7a1e209916e9381a3c
+  languageName: node
+  linkType: hard
+
+"@types/regression@npm:^2":
+  version: 2.0.6
+  resolution: "@types/regression@npm:2.0.6"
+  checksum: 10c0/c188d7cb023c9c77436b3522eb2ffd0f92e92c36230e591e13b0c45dc69c77d820498ecd6a2b4208ea3cb81df5771e24101732c6b69a5e30d7897406c5f92c18
   languageName: node
   linkType: hard
 
@@ -17452,6 +17477,13 @@ __metadata:
   bin:
     regjsparser: bin/parser
   checksum: 10c0/99d3e4e10c8c7732eb7aa843b8da2fd8b647fe144d3711b480e4647dc3bff4b1e96691ccf17f3ace24aa866a50b064236177cb25e6e4fbbb18285d99edaed83b
+  languageName: node
+  linkType: hard
+
+"regression@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "regression@npm:2.0.1"
+  checksum: 10c0/ad3ca209409ed6e3ce1da64ff9779f616c1ef5cfdfc0785681aa670a046d674c8dcdaeac2a7c41f9cb3c22374051246d675e79c2ba3885deb6c9f9aadc756cd8
   languageName: node
   linkType: hard
 
