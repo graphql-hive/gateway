@@ -547,7 +547,6 @@ export function createTenv(cwd: string): Tenv {
         ...proc,
         port,
         protocol,
-        url: `${protocol}://0.0.0.0:${port}`, // TODO: don't depend on localhost/0.0.0.0
         async execute({ headers, ...args }) {
           try {
             const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
@@ -714,7 +713,6 @@ export function createTenv(cwd: string): Tenv {
         name,
         port,
         protocol,
-        url: `${protocol}://0.0.0.0:${port}`, // TODO: don't depend on localhost/0.0.0.0
       };
       await Promise.race([
         waitForExit
@@ -878,7 +876,6 @@ export function createTenv(cwd: string): Tenv {
         name,
         port: hostPort,
         protocol,
-        url: `${protocol}://0.0.0.0:${hostPort}`, // TODO: don't depend on localhost/0.0.0.0
         additionalPorts,
         getStd() {
           // TODO: distinguish stdout and stderr
