@@ -241,7 +241,10 @@ export function getOnSubgraphExecute({
       subgraphExecutorMap.set(subgraphName, executor);
     }
     if (batch) {
-      executor = getBatchingExecutor(executionRequest.context || subgraphExecutorMap, executor);
+      executor = getBatchingExecutor(
+        executionRequest.context || subgraphExecutorMap,
+        executor,
+      );
     }
     return executor(executionRequest);
   };
