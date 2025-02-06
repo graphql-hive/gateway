@@ -4732,7 +4732,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler":
+"@graphql-hive/new-qp-handler@workspace:^, @graphql-hive/new-qp-handler@workspace:packages/new-qp-handler":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler"
   dependencies:
@@ -5085,6 +5085,7 @@ __metadata:
     "@envelop/core": "npm:^5.3.2"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/logger": "workspace:^"
+    "@graphql-hive/new-qp-handler": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.14"
