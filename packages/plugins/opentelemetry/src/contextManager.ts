@@ -5,7 +5,7 @@ type Node = {
   previous?: Node;
 };
 
-export class OtelGraphqlContext {
+export class OtelContextStack {
   #root: Node;
   #current: Node;
 

@@ -60,6 +60,7 @@
     "vitest": "^3.0.1"
   },
   "resolutions": {
+    "@envelop/core": "5.1.0-alpha-20250206123608-cd323a08c43c066eb34cba698d61b4f059ab5ee5",
     "@graphql-tools/delegate": "workspace:^",
     "@opentelemetry/exporter-trace-otlp-http": "patch:@opentelemetry/exporter-trace-otlp-http@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch",
     "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch",
