@@ -35,9 +35,12 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       await test.waitForComplete;
 
-      expect(() =>
-        checkMemTrend(test.memoryInMBSnapshots, memoryThresholdInMB),
-      ).not.toThrow();
+      const slope = calculateRegressionSlope(test.memoryInMBSnapshots);
+
+      expect(
+        slope,
+        `Memory increase trend detected with slope of ${slope}MB (exceding threshold of ${memoryThresholdInMB}MB)`,
+      ).toBeLessThan(memoryThresholdInMB);
     },
     {
       timeout: duration + 5_000, // allow 5s for the test to finish
@@ -49,13 +52,12 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
  * Detects a memory increase trend in an array of memory snapshots over time using linear regression.
  *
  * @param snapshots - An array of memory snapshots in MB.
- * @param threshold - The minimum slope to consider as a significant increase.
  *
- * @throws Error if there is an increase trend, with details about the slope.
+ * @returns The slope of the linear regression line.
  */
-function checkMemTrend(snapshots: number[], threshold: number): void {
+function calculateRegressionSlope(snapshots: number[]) {
   if (snapshots.length < 2) {
-    throw new Error('Not enough memory snapshots to determine trend');
+    throw new Error('Not enough snapshots to determine trend');
   }
 
   const data: [x: number, y: number][] = snapshots.map((memInMB, timestamp) => [
@@ -68,9 +70,5 @@ function checkMemTrend(snapshots: number[], threshold: number): void {
     throw new Error('Regression slope is zero');
   }
 
-  if (slope > threshold) {
-    throw new Error(
-      `Memory increase trend detected with slope of ${slope}MB (exceding threshold of ${threshold}MB)`,
-    );
-  }
+  return slope;
 }
