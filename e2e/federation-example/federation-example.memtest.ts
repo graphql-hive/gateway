@@ -1,22 +1,19 @@
 import { createExampleSetup, createTenv } from '@internal/e2e';
-import { loadtest } from '@internal/perf';
-import { expect, it } from 'vitest';
+import { memtest } from '@internal/perf/memtest';
 
-const { gateway } = createTenv(__dirname);
-const { supergraph, query } = createExampleSetup(__dirname);
+const cwd = __dirname;
 
-it('should not leak', async () => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-  });
+const { gateway } = createTenv(cwd);
+const { supergraph, query } = createExampleSetup(cwd);
 
-  using test = await loadtest({
-    cwd: __dirname,
-    server: gw,
+memtest(
+  {
+    cwd,
     query,
-  });
-
-  await test.waitForComplete;
-
-  expect(() => test.checkMemTrend()).not.toThrow();
-});
+    pipeLogs: 'loadtest.out',
+  },
+  async () =>
+    gateway({
+      supergraph: await supergraph(),
+    }),
+);

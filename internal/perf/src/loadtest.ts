@@ -1,20 +1,19 @@
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
-import parseDuration from 'parse-duration';
-import * as regression from 'regression';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
   /** @default 100 */
   vus?: number;
-  /** @default 30s */
-  duration?: string;
+  /** Duration of the loadtest in milliseconds. */
+  duration: number;
   /**
-   * Linear regression line slope threshold of the memory snapshots.
-   * @default 10
+   * The snapshotting window of the GraphQL server memory in milliseconds.
+   *
+   * @default 1_000
    */
-  memoryThresholdInMB?: number;
+  memorySnapshotWindow?: number;
   /** The GraphQL server on which the loadtest is running. */
   server: Server;
   /**
@@ -27,18 +26,14 @@ export async function loadtest(opts: LoadtestOptions) {
   const {
     cwd,
     vus = 100,
-    duration = '30s',
-    memoryThresholdInMB = 10,
+    duration,
+    memorySnapshotWindow = 1_000,
     server,
     query,
     ...procOptions
   } = opts;
 
-  const durationInMs = parseDuration(duration);
-  if (!durationInMs) {
-    throw new Error(`Cannot parse duration "${duration}" to milliseconds`);
-  }
-  if (durationInMs < 3_000) {
+  if (duration < 3_000) {
     throw new Error(`Duration has to be at least 3s, got "${duration}"`);
   }
 
@@ -46,7 +41,7 @@ export async function loadtest(opts: LoadtestOptions) {
   const signal = AbortSignal.any([
     ctrl.signal,
     AbortSignal.timeout(
-      durationInMs +
+      duration +
         // allow 1s for the k6 process to exit gracefully
         1_000,
     ),
@@ -61,13 +56,13 @@ export async function loadtest(opts: LoadtestOptions) {
     'k6',
     'run',
     `--vus=${vus}`,
-    `--duration=${duration}`,
+    `--duration=${duration}ms`,
     `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
     `--env=QUERY=${query}`,
     path.join(__dirname, 'loadtest-script.ts'),
   );
 
-  const memInMbSnapshots: number[] = [];
+  const memoryInMBSnapshots: number[] = [];
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   (async () => {
@@ -75,10 +70,10 @@ export async function loadtest(opts: LoadtestOptions) {
     waitForExit.finally(() => ctrl.abort());
 
     while (!signal.aborted) {
-      await setTimeout(1_000); // get memory snapshot every second
+      await setTimeout(memorySnapshotWindow);
       try {
         const { mem } = await server.getStats();
-        memInMbSnapshots.push(mem);
+        memoryInMBSnapshots.push(mem);
       } catch (err) {
         if (!signal.aborted) {
           throw err;
@@ -90,40 +85,9 @@ export async function loadtest(opts: LoadtestOptions) {
 
   return {
     waitForComplete: waitForExit,
-    memInMbSnapshots,
-    checkMemTrend: () => checkMemTrend(memInMbSnapshots, memoryThresholdInMB),
+    memoryInMBSnapshots,
     [Symbol.dispose]() {
       ctrl.abort();
     },
   };
-}
-
-/**
- * Detects a memory increase trend in an array of memory snapshots over time using linear regression.
- *
- * @param snapshots - An array of memory snapshots in MB distanced by 1 second.
- * @param threshold - The minimum slope to consider as a significant increase.
- *
- * @throws Error if there is an increase trend, with details about the slope.
- */
-function checkMemTrend(snapshots: number[], threshold: number): void {
-  if (snapshots.length < 2) {
-    throw new Error('Not enough memory snapshots to determine trend');
-  }
-
-  const data: [x: number, y: number][] = snapshots.map((memInMB, timestamp) => [
-    timestamp,
-    memInMB,
-  ]);
-  const result = regression.linear(data);
-  const slope = result.equation[0];
-  if (!slope) {
-    throw new Error('Regression slope is zero');
-  }
-
-  if (slope > threshold) {
-    throw new Error(
-      `Memory increase trend detected with slope of ${slope}MB over ${snapshots.length}s (exceding threshold of ${threshold}MB)`,
-    );
-  }
 }
