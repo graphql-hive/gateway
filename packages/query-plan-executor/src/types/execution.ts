@@ -17,7 +17,7 @@ export interface QueryPlanExecutionContext {
   /**
    * The coerced variable values
    */
-  variableValues: Record<string, any>;
+  variableValues?: Record<string, any>;
   /**
    * The final data
    */

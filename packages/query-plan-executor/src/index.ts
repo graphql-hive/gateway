@@ -2,17 +2,21 @@ import {
   asArray,
   createGraphQLError,
   ExecutionRequest,
+  inspect,
   isAsyncIterable,
   isPromise,
+  mapAsyncIterator,
   mapMaybePromise,
   MaybeAsyncIterable,
   MaybePromise,
   mergeDeep,
+  relocatedError,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
   ExecutionResult,
   getNamedType,
+  getOperationAST,
   getVariableValues,
   GraphQLOutputType,
   GraphQLSchema,
@@ -57,11 +61,14 @@ export interface QueryPlanExecutorOptions {
   /**
    * Raw variables parsed from the GraphQL params
    */
-  variables: Record<string, any>;
+  variables?: Record<string, any>;
   /**
    * The factory function that returns an executor for a subgraph
    */
-  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  onSubgraphExecute(
+    subgraphName: string,
+    executionRequest: ExecutionRequest,
+  ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
   /**
    * The context object to pass to the executor
@@ -79,9 +86,7 @@ export function executeQueryPlan({
   context,
 }: QueryPlanExecutorOptions) {
   if (!queryPlan.node) {
-    return {
-      errors: [createGraphQLError('Query plan node is required')],
-    };
+    throw new Error('Query plan is empty');
   }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
@@ -91,17 +96,23 @@ export function executeQueryPlan({
     onSubgraphExecute,
     context,
   });
+  function handleResp() {
+    const executionResult = {} as ExecutionResult;
+    if (Object.keys(executionContext.data).length > 0) {
+      executionResult.data = projectDataByOperation(executionContext);
+    }
+    if (executionContext.errors.length > 0) {
+      executionResult.errors = executionContext.errors;
+    }
+    return executionResult;
+  }
   return mapMaybePromise(
     executePlanNode(queryPlan.node, executionContext),
-    () => {
-      const executionResult = {} as ExecutionResult;
-      if (Object.keys(executionContext.data).length > 0) {
-        executionResult.data = projectDataByOperation(executionContext);
+    res => {
+      if (isAsyncIterable(res)) {
+        return mapAsyncIterator(res, handleResp);
       }
-      if (executionContext.errors.length > 0) {
-        executionResult.errors = executionContext.errors;
-      }
-      return executionResult;
+      return handleResp();
     },
   );
 }
@@ -124,17 +135,22 @@ interface CreateExecutionContextOpts {
   /**
    * Raw variables parsed from the GraphQL params
    */
-  variables: Record<string, any>;
+  variables?: Record<string, any>;
   /**
    * The factory function that returns an executor for a subgraph
    */
-  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  onSubgraphExecute(
+    subgraphName: string,
+    executionRequest: ExecutionRequest,
+  ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
   /**
    * The context object to pass to the executor
    */
   context?: any;
 }
+
+const globalEmpty = {};
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
@@ -172,12 +188,12 @@ function createQueryPlanExecutionContext({
     throw createGraphQLError('Should not happen');
   }
 
-  let variableValues: Record<string, any> = variables;
+  let variableValues = variables;
   if (operation.variableDefinitions) {
     const variableValuesResult = getVariableValues(
       supergraphSchema,
       operation.variableDefinitions,
-      variableValues,
+      variableValues || globalEmpty,
     );
     if (variableValuesResult.errors?.length) {
       if (variableValuesResult.errors.length === 1) {
@@ -214,6 +230,7 @@ function executePlanNode(
   planNode: PlanNode,
   executionContext: QueryPlanExecutionContext,
   representations?: EntityRepresentation[],
+  path?: string[],
 ): MaybePromise<any> {
   switch (planNode.kind) {
     case 'Sequence': {
@@ -279,6 +296,7 @@ function executePlanNode(
         flattenNode.node,
         executionContext,
         representations,
+        flattenNode.path,
       );
     }
     case 'Fetch': {
@@ -331,8 +349,78 @@ function executePlanNode(
       if (fetchNode.variableUsages) {
         for (const variableName of fetchNode.variableUsages) {
           variablesForFetch[variableName] =
-            executionContext.variableValues[variableName];
+            executionContext.variableValues?.[variableName];
         }
+      }
+      const handleFetchResult = (fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>): MaybeAsyncIterable<unknown> | void => {
+        if (isAsyncIterable(fetchResult)) {
+          return mapAsyncIterator(fetchResult, handleFetchResult);
+        }
+
+        if (fetchResult.errors) {
+          let errors = fetchResult.errors;
+          if (!path) {
+            const operationAst = getOperationAST(
+              fetchNode.operationDocumentNode,
+              fetchNode.operationName,
+            );
+            if (operationAst) {
+              const rootSelection = operationAst.selectionSet.selections.find(
+                (selection) => selection.kind === 'Field',
+              );
+              const responseKey = rootSelection?.alias?.value || rootSelection?.name.value;
+              if (responseKey) {
+                path = [responseKey];
+              }
+            }
+          }
+          if (path) {
+            errors = errors.map((error) =>
+              relocatedError(error, path),
+            );
+          }
+          executionContext.errors.push(...errors);
+        }
+        if (fetchNode.outputRewrites) {
+          for (const outputRewrite of fetchNode.outputRewrites) {
+            switch (outputRewrite.kind) {
+              case 'KeyRenamer': {
+                applyKeyRenamer(
+                  fetchResult.data,
+                  outputRewrite.path,
+                  outputRewrite.renameKeyTo,
+                  executionContext.supergraphSchema,
+                );
+                break;
+              }
+            }
+          }
+        }
+        if (representations && fetchResult.data?._entities) {
+          const returnedEntities: EntityRepresentation[] =
+            fetchResult.data._entities;
+          for (const entityIndex in returnedEntities) {
+            const entity = returnedEntities[entityIndex];
+            const representation = representations[entityIndex];
+            if (representation && entity) {
+              Object.assign(
+                representation,
+                mergeDeep([representation, entity], undefined, true, true),
+              );
+            }
+          }
+        } else {
+          Object.assign(
+            executionContext.data,
+            mergeDeep(
+              [executionContext.data, fetchResult.data],
+              undefined,
+              true,
+              true,
+            ),
+          );
+        }
+        return;
       }
       return mapMaybePromise(
         executionContext.onSubgraphExecute(fetchNode.serviceName, {
@@ -342,58 +430,12 @@ function executePlanNode(
           operationName: fetchNode.operationName,
           operationType: fetchNode.operationKind as OperationTypeNode,
         }),
-        (fetchResult) => {
-          if (isAsyncIterable(fetchResult)) {
-            throw new Error('AsyncIterable not supported');
-          }
-          if (fetchResult.errors) {
-            executionContext.errors.push(...fetchResult.errors);
-          }
-          if (fetchNode.outputRewrites) {
-            for (const outputRewrite of fetchNode.outputRewrites) {
-              switch (outputRewrite.kind) {
-                case 'KeyRenamer': {
-                  applyKeyRenamer(
-                    fetchResult.data,
-                    outputRewrite.path,
-                    outputRewrite.renameKeyTo,
-                    executionContext.supergraphSchema,
-                  );
-                  break;
-                }
-              }
-            }
-          }
-          if (representations && fetchResult.data?._entities) {
-            const returnedEntities: EntityRepresentation[] =
-              fetchResult.data._entities;
-            for (const entityIndex in returnedEntities) {
-              const entity = returnedEntities[entityIndex];
-              const representation = representations[entityIndex];
-              if (representation && entity) {
-                Object.assign(
-                  representation,
-                  mergeDeep([representation, entity], undefined, true, true),
-                );
-              }
-            }
-          } else {
-            Object.assign(
-              executionContext.data,
-              mergeDeep(
-                [executionContext.data, fetchResult.data],
-                undefined,
-                true,
-                true,
-              ),
-            );
-          }
-        },
+        handleFetchResult
       );
     }
     case 'Condition': {
       const conditionValue =
-        executionContext.variableValues[planNode.condition];
+        executionContext.variableValues?.[planNode.condition];
       if (conditionValue) {
         if (planNode.ifClause) {
           return executePlanNode(planNode.ifClause, executionContext);
@@ -403,6 +445,12 @@ function executePlanNode(
       }
       break;
     }
+    case 'Subscription': {
+      return executePlanNode(planNode.primary, executionContext);
+    }
+    default:
+      console.error('Invalid plan node:', planNode);
+      throw new Error(`Invalid plan node: ${inspect(planNode)}`);
   }
 }
 
@@ -571,7 +619,7 @@ function projectSelectionSet(
             const ifValueNode = ifArg.value;
             if (ifValueNode.kind === Kind.VARIABLE) {
               const variableName = ifValueNode.name.value;
-              if (executionContext.variableValues[variableName]) {
+              if (executionContext.variableValues?.[variableName]) {
                 continue selectionLoop;
               }
             } else if (ifValueNode.kind === Kind.BOOLEAN) {
@@ -588,7 +636,7 @@ function projectSelectionSet(
             const ifValueNode = ifArg.value;
             if (ifValueNode.kind === Kind.VARIABLE) {
               const variableName = ifValueNode.name.value;
-              if (!executionContext.variableValues[variableName]) {
+              if (!executionContext.variableValues?.[variableName]) {
                 continue selectionLoop;
               }
             } else if (ifValueNode.kind === Kind.BOOLEAN) {
@@ -749,12 +797,12 @@ function projectRequires(
   requiresSelections: RequiresSelection[],
   entity: EntityRepresentation[],
   supergraphSchema: GraphQLSchema,
-): EntityRepresentation[]
+): EntityRepresentation[];
 function projectRequires(
   requiresSelections: RequiresSelection[],
   entity: EntityRepresentation,
   supergraphSchema: GraphQLSchema,
-): EntityRepresentation
+): EntityRepresentation;
 function projectRequires(
   requiresSelections: RequiresSelection[],
   entity: EntityRepresentation | EntityRepresentation[],
