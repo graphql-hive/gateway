@@ -13,7 +13,7 @@ import {
   loggerForExecutionRequest,
   requestIdByRequest,
 } from '@graphql-mesh/utils';
-import { createBatchingExecutor } from '@graphql-tools/batch-execute';
+import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   DelegationPlanBuilder,
   MergedTypeResolver,
@@ -222,9 +222,6 @@ export function getOnSubgraphExecute({
             if (isDisposable(executor_)) {
               transportExecutorStack.use(executor_);
             }
-            if (batch) {
-              executor = createBatchingExecutor(executor_);
-            }
             // Wraps the transport executor with hooks
             executor = wrapExecutorWithHooks({
               executor: executor_,
@@ -242,6 +239,9 @@ export function getOnSubgraphExecute({
       };
       // Caches the lazy executor to prevent race conditions
       subgraphExecutorMap.set(subgraphName, executor);
+    }
+    if (batch) {
+      executor = getBatchingExecutor(executionRequest.context || subgraphExecutorMap, executor);
     }
     return executor(executionRequest);
   };
