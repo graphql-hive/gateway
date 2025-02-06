@@ -1,5 +1,22 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.12
+
+### Patch Changes
+
+- [#598](https://github.com/graphql-hive/gateway/pull/598) [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`@graphql-hive/gateway-abort-signal-any@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/gateway-abort-signal-any/v/workspace:^) (from `dependencies`)
+
+- [#598](https://github.com/graphql-hive/gateway/pull/598) [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7) Thanks [@ardatan](https://github.com/ardatan)! - Use native AbortSignal, AbortController APIs instead of custom ones
+
+- Updated dependencies [[`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7), [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7), [`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7), [`203172c`](https://github.com/graphql-hive/gateway/commit/203172c479f764bf09f447512f8904277bff0b20)]:
+  - @graphql-mesh/transport-common@0.7.28
+  - @graphql-tools/executor-http@1.2.6
+  - @graphql-mesh/fusion-runtime@0.10.32
+  - @graphql-mesh/hmac-upstream-signature@1.2.19
+  - @graphql-tools/federation@3.1.1
+
 ## 1.4.11
 
 ### Patch Changes

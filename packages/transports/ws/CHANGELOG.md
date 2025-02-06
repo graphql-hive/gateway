@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-ws
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`8c80ac9`](https://github.com/graphql-hive/gateway/commit/8c80ac98cd5afd7c063945f4704fe4866622c5d7)]:
+  - @graphql-mesh/transport-common@0.7.28
+
 ## 1.0.1
 
 ### Patch Changes
