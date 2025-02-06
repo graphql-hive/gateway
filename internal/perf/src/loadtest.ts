@@ -85,7 +85,7 @@ export async function loadtest(opts: LoadtestOptions) {
     }
   })();
 
-  await waitForExit;
+  await Promise.race([waitForExit, server.waitForExit]);
 
   return { memoryInMBSnapshots };
 }
