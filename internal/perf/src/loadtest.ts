@@ -1,6 +1,7 @@
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
+import { trimError } from '@internal/testing';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -85,7 +86,14 @@ export async function loadtest(opts: LoadtestOptions) {
     }
   })();
 
-  await Promise.race([waitForExit, server.waitForExit]);
+  await Promise.race([
+    waitForExit,
+    server.waitForExit.then(() => {
+      throw new Error(
+        `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
+      );
+    }),
+  ]);
 
   return { memoryInMBSnapshots };
 }
