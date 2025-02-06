@@ -13,20 +13,10 @@ export default function () {
     return test.abort('Environment variable "QUERY" not provided');
   }
 
-  check(
-    http.post(
-      url,
-      { query },
-      {
-        headers: {
-          'content-type': 'application/json',
-        },
-      },
-    ),
-    {
-      'status is 200': (res) => res.status === 200,
-      'body contains data': (res) =>
-        !!res.body?.toString().includes('"data":{'),
-    },
-  );
+  const res = http.post(url, { query });
+
+  check(res, {
+    'status is 200': (res) => res.status === 200,
+    'body contains data': (res) => !!res.body?.toString().includes('"data":{'),
+  });
 }
