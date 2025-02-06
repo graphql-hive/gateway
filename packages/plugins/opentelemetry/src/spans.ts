@@ -1,3 +1,4 @@
+import type { OnExecuteDoneEventPayload } from '@envelop/core';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
@@ -10,10 +11,10 @@ import {
   SpanStatusCode,
   trace,
   type Context,
-  type Span,
   type Tracer,
 } from '@opentelemetry/api';
 import type { ExecutionArgs } from 'graphql';
+import type { GraphQLParams } from 'graphql-yoga';
 import {
   SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
   SEMATTRS_GRAPHQL_DOCUMENT,
@@ -31,7 +32,6 @@ import {
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
-const httpSpansByRequest = new WeakMap<Request, Span>();
 export function createHttpSpan(input: {
   ctx: Context;
   tracer: Tracer;
@@ -66,14 +66,13 @@ export function createHttpSpan(input: {
     input.ctx,
   );
 
-  httpSpansByRequest.set(request, span);
   return {
     ctx: trace.setSpan(input.ctx, span),
   };
 }
 
-export function endHttpSpan(request: Request, response: Response) {
-  const span = httpSpansByRequest.get(request);
+export function endHttpSpan(ctx: Context, response: Response) {
+  const span = trace.getSpan(ctx);
   if (span) {
     span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
     span.setStatus({
@@ -81,6 +80,52 @@ export function endHttpSpan(request: Request, response: Response) {
       message: response.ok ? undefined : response.statusText,
     });
     span.end();
+    console.log('HTTP: span end');
+  }
+}
+
+export function startGraphQLSpan(input: {
+  ctx: Context;
+  tracer: Tracer;
+  gqlContext?: { params?: GraphQLParams } | null;
+}): { ctx: Context } {
+  const operationName = input.gqlContext?.params?.operationName ?? 'unknown';
+  const span = input.tracer.startSpan(
+    `graphql.operation ${operationName}`,
+    {
+      attributes: {
+        [SEMATTRS_GRAPHQL_DOCUMENT]: input.gqlContext?.params?.query,
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operationName,
+      },
+      kind: SpanKind.INTERNAL,
+    },
+    input.ctx,
+  );
+
+  return {
+    ctx: trace.setSpan(input.ctx, span),
+  };
+}
+
+export function endGraphQLSpan(
+  ctx: Context,
+  payload: OnExecuteDoneEventPayload<unknown>,
+) {
+  //FIXME: handle async iterable results.
+  const span = trace.getSpan(ctx);
+  if (span) {
+    const operation = getOperationASTFromDocument(
+      payload.args.document,
+      payload.args.operationName || undefined,
+    );
+    const operationName = operation.name?.value ?? 'Anonymous';
+    const document = defaultPrintFn(payload.args.document);
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
+    span.updateName(`graphql.operation ${operationName}`);
+    span.end();
+    console.log('ENVELOPED: span end');
   }
 }
 
@@ -114,6 +159,7 @@ export function startGraphQLParseSpan(input: {
         });
       }
       span.end();
+      console.log('PARSE: span end');
     },
   };
 }
@@ -154,6 +200,7 @@ export function startGraphQLValidateSpan(input: {
           span.recordException(error);
         }
       }
+      console.log('VALIDATE: span end');
       span.end();
     },
   };
@@ -173,14 +220,15 @@ export function startGraphQLExecuteSpan(input: {
     input.args.document,
     input.args.operationName || undefined,
   );
+  const operationName = operation.name?.value ?? 'Anonymous';
+  const document = defaultPrintFn(input.args.document);
   const span = input.tracer.startSpan(
     'graphql.execute',
     {
       attributes: {
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]:
-          input.args.operationName || undefined,
-        [SEMATTRS_GRAPHQL_DOCUMENT]: defaultPrintFn(input.args.document),
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operationName,
+        [SEMATTRS_GRAPHQL_DOCUMENT]: document,
       },
       kind: SpanKind.INTERNAL,
     },
@@ -206,6 +254,7 @@ export function startGraphQLExecuteSpan(input: {
         }
       }
       span.end();
+      console.log('EXECUTE: span end');
     },
   };
 }
@@ -240,7 +289,10 @@ export function startSubgraphExecuteFetchSpan(input: {
 
   return {
     ctx: trace.setSpan(input.ctx, span),
-    done: () => span.end(),
+    done: () => {
+      console.log('SUBGRAPH: span end');
+      return span.end();
+    },
   };
 }
 
@@ -277,6 +329,7 @@ export function startUpstreamHttpFetchSpan(input: {
         message: response.ok ? undefined : response.statusText,
       });
       span.end();
+      console.log('FETCH: span end');
     },
   };
 }
