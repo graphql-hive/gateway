@@ -14,7 +14,8 @@
       "@internal/testing": ["./internal/testing/src/index.ts"],
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@internal/proc": ["./internal/proc/src/index.ts"],
-      "@internal/perf": ["./internal/loadtest/src/index.ts"],
+      "@internal/perf": ["./internal/perf/src/index.ts"],
+      "@internal/perf/memtest": ["./internal/perf/src/memtest.ts"],
       "@internal/testing/to-be-similar-string": [
         "./internal/testing/src/to-be-similar-string.ts"
       ],
