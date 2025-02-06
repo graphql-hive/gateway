@@ -10,7 +10,6 @@ memtest(
   {
     cwd,
     query,
-    pipeLogs: 'loadtest.out',
   },
   async () =>
     gateway({
