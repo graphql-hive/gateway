@@ -1,5 +1,5 @@
 {
-  "name": "@internal/memtest",
+  "name": "@internal/perf",
   "type": "module",
   "private": true,
   "main": "./src/index.ts",
