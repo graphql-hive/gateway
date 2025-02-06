@@ -11,10 +11,10 @@ export interface LoadtestOptions extends ProcOptions {
   /** @default 30s */
   duration?: string;
   /**
-   * The memory increase threshold for the slope in the regression line of the memory snapshots.
+   * Linear regression line slope threshold of the memory snapshots.
    * @default 10
    */
-  memoryIncreaseTrendThresholdInMB?: number;
+  memoryThresholdInMB?: number;
   /** The GraphQL server on which the loadtest is running. */
   server: Server;
   /**
@@ -28,7 +28,7 @@ export async function loadtest(opts: LoadtestOptions) {
     cwd,
     vus = 100,
     duration = '30s',
-    memoryIncreaseTrendThresholdInMB = 10,
+    memoryThresholdInMB = 10,
     server,
     query,
     ...procOptions
@@ -91,8 +91,7 @@ export async function loadtest(opts: LoadtestOptions) {
   return {
     waitForComplete: waitForExit,
     memInMbSnapshots,
-    checkMemTrend: () =>
-      checkMemTrend(memInMbSnapshots, memoryIncreaseTrendThresholdInMB),
+    checkMemTrend: () => checkMemTrend(memInMbSnapshots, memoryThresholdInMB),
     [Symbol.dispose]() {
       ctrl.abort();
     },
