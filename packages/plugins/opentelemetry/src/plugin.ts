@@ -1,5 +1,4 @@
 import {
-  type OnEnvelopedHookEventPayload,
   type OnExecuteEventPayload,
   type OnParseEventPayload,
   type OnValidateEventPayload,
@@ -36,11 +35,12 @@ import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
+import type { OnParamsEventPayload, YogaInitialContext } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import { OtelGraphqlContext } from './contextManager';
 import {
+  addExecutionArgsToGraphqlSpan,
   createHttpSpan,
-  endGraphQLSpan,
   endHttpSpan,
   startGraphQLExecuteSpan,
   startGraphQLParseSpan,
@@ -137,7 +137,7 @@ export type OpenTelemetryGatewayPluginOptions =
       /**
        * Enable/disable GraphQL operation spans (default: true).
        */
-      graphql?: BooleanOrPredicate<OnEnvelopedHookEventPayload<unknown>>;
+      graphql?: BooleanOrPredicate<OnParamsEventPayload<any>>;
       /**
        * Enable/disable GraphQL parse spans (default: true).
        */
@@ -338,37 +338,44 @@ export function useOpenTelemetry(
         pluginLogger.error('Failed to end http span', { error });
       }
     },
-    onEnveloped(onEnvelopedPayload) {
-      const { extendContext, context: gqlCtx } = onEnvelopedPayload;
-      if (!isParentEnabled({ request: gqlCtx?.request })) {
+    onParams(onParamsPayload) {
+      const { setParamsHandler, paramsHandler, request, params } =
+        onParamsPayload;
+      const gqlCtx = onParamsPayload.context as YogaInitialContext &
+        OpenTelemetryContextExtension;
+      if (!isParentEnabled({ request })) {
         return;
       }
 
-
-      if (shouldTrace(options.spans?.graphql, onEnvelopedPayload)) {
-        const { ctx } = startGraphQLSpan({
+      if (shouldTrace(options.spans?.graphql, onParamsPayload)) {
+        const { ctx, done } = startGraphQLSpan({
           tracer,
-          gqlContext: gqlCtx,
-          ctx: getContext(gqlCtx),
+          params,
+          ctx: getContext({ request }),
         });
 
         otelContextFor.operation.set(gqlCtx, new OtelGraphqlContext(ctx));
+        if (useContextManager) {
+          setParamsHandler((...args) => {
+            const result$ = context.with(ctx, () => paramsHandler(...args));
+            done(result$);
+            return result$;
+          });
+        }
       }
 
-      extendContext({
-        opentelemetry: {
-          tracer,
-          activeContext: (): Context => getContext(gqlCtx),
-        },
-      });
+      gqlCtx.opentelemetry = {
+        tracer,
+        activeContext: (): Context => getContext(gqlCtx),
+      };
     },
+
     onParse(onParsePayload) {
       const { context: gqlCtx } = onParsePayload;
 
       if (!isParentEnabled({ request: gqlCtx.request, gqlCtx })) {
         return;
       }
-
 
       if (shouldTrace(options.spans?.graphqlParse, onParsePayload)) {
         const otelCtx = otelContextFor.operation.get(onParsePayload.context)!;
@@ -397,7 +404,6 @@ export function useOpenTelemetry(
       if (!isParentEnabled({ request: gqlCtx.request, gqlCtx })) {
         return;
       }
-
 
       if (shouldTrace(options.spans?.graphqlValidate, onValidatePayload)) {
         const otelCtx = otelContextFor.operation.get(gqlCtx)!;
@@ -429,6 +435,8 @@ export function useOpenTelemetry(
 
       const otelCtx = otelContextFor.operation.get(gqlCtx)!;
 
+      addExecutionArgsToGraphqlSpan(otelCtx.root, onExecuteArgs.args);
+
       if (shouldTrace(options.spans?.graphqlExecute, onExecuteArgs)) {
         const { setExecuteFn, executeFn } = onExecuteArgs;
         const { ctx, done } = startGraphQLExecuteSpan({
@@ -443,15 +451,12 @@ export function useOpenTelemetry(
         return {
           onExecuteDone(payload) {
             done(payload.result);
-            endGraphQLSpan(otelCtx.root, payload);
             otelCtx.pop();
           },
         };
       }
 
-      return {
-        onExecuteDone: (payload) => endGraphQLSpan(otelCtx.root, payload),
-      };
+      return;
     },
     onSubgraphExecute(onSubgraphPayload) {
       const { context: gqlCtx } = onSubgraphPayload.executionRequest;

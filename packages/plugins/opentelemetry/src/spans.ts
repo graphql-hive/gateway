@@ -3,8 +3,10 @@ import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
   isAsyncIterable,
+  mapMaybePromise,
   type ExecutionRequest,
   type ExecutionResult,
+  type MaybePromise,
 } from '@graphql-tools/utils';
 import {
   SpanKind,
@@ -87,14 +89,19 @@ export function endHttpSpan(ctx: Context, response: Response) {
 export function startGraphQLSpan(input: {
   ctx: Context;
   tracer: Tracer;
-  gqlContext?: { params?: GraphQLParams } | null;
-}): { ctx: Context } {
-  const operationName = input.gqlContext?.params?.operationName ?? 'unknown';
+  params: GraphQLParams;
+}): {
+  ctx: Context;
+  done: (
+    result: MaybePromise<ExecutionResult | AsyncIterable<ExecutionResult>>,
+  ) => void;
+} {
+  const operationName = input.params.operationName ?? 'unknown';
   const span = input.tracer.startSpan(
     `graphql.operation ${operationName}`,
     {
       attributes: {
-        [SEMATTRS_GRAPHQL_DOCUMENT]: input.gqlContext?.params?.query,
+        [SEMATTRS_GRAPHQL_DOCUMENT]: input.params.query,
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: operationName,
       },
       kind: SpanKind.INTERNAL,
@@ -104,28 +111,43 @@ export function startGraphQLSpan(input: {
 
   return {
     ctx: trace.setSpan(input.ctx, span),
+    done: (result$) => {
+      return mapMaybePromise(
+        result$,
+        () => {
+          //FIXME: handle async iterable results.
+          span.end();
+        },
+        (err) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: err.message,
+          });
+          span.recordException(err);
+          span.end();
+          throw err;
+        },
+      );
+    },
   };
 }
 
-export function endGraphQLSpan(
+export function addExecutionArgsToGraphqlSpan(
   ctx: Context,
-  payload: OnExecuteDoneEventPayload<unknown>,
+  args: ExecutionArgs,
 ) {
-  //FIXME: handle async iterable results.
   const span = trace.getSpan(ctx);
   if (span) {
     const operation = getOperationASTFromDocument(
-      payload.args.document,
-      payload.args.operationName || undefined,
+      args.document,
+      args.operationName || undefined,
     );
     const operationName = operation.name?.value ?? 'Anonymous';
-    const document = defaultPrintFn(payload.args.document);
+    const document = defaultPrintFn(args.document);
     span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
     span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
     span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
     span.updateName(`graphql.operation ${operationName}`);
-    span.end();
-    console.log('ENVELOPED: span end');
   }
 }
 
