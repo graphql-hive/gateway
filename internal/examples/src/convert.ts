@@ -180,6 +180,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       !path.basename(extraDirOrFile).includes('.e2e.') &&
       // not a bench
       !path.basename(extraDirOrFile).includes('.bench.') &&
+      // not a memtest
+      !path.basename(extraDirOrFile).includes('.memtest.') &&
       // not a dockerile
       !path.basename(extraDirOrFile).includes('Dockerfile') &&
       // not test snapshots
