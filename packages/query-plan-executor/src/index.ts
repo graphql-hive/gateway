@@ -1,10 +1,11 @@
 import {
   asArray,
   createGraphQLError,
-  Executor,
+  ExecutionRequest,
   isAsyncIterable,
   isPromise,
   mapMaybePromise,
+  MaybeAsyncIterable,
   MaybePromise,
   mergeDeep,
 } from '@graphql-tools/utils';
@@ -22,6 +23,7 @@ import {
   isOutputType,
   Kind,
   OperationDefinitionNode,
+  OperationTypeNode,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -59,12 +61,12 @@ export interface QueryPlanExecutorOptions {
   /**
    * The factory function that returns an executor for a subgraph
    */
-  getSubgraphExecutor(subgraphName: string): Executor;
+  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
   /**
-   * The parser function that parses the document string
+   * The context object to pass to the executor
    */
-  parseDocumentNode(str: string): DocumentNode;
+  context?: any;
 }
 
 export function executeQueryPlan({
@@ -72,9 +74,9 @@ export function executeQueryPlan({
   document,
   operationName,
   variables,
-  getSubgraphExecutor,
+  onSubgraphExecute,
   supergraphSchema,
-  parseDocumentNode,
+  context,
 }: QueryPlanExecutorOptions) {
   if (!queryPlan.node) {
     return {
@@ -86,8 +88,8 @@ export function executeQueryPlan({
     document,
     operationName,
     variables,
-    getSubgraphExecutor,
-    parseDocumentNode,
+    onSubgraphExecute,
+    context,
   });
   return mapMaybePromise(
     executePlanNode(queryPlan.node, executionContext),
@@ -126,12 +128,12 @@ interface CreateExecutionContextOpts {
   /**
    * The factory function that returns an executor for a subgraph
    */
-  getSubgraphExecutor(subgraphName: string): Executor;
+  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
   /**
-   * The parser function that parses the document string
+   * The context object to pass to the executor
    */
-  parseDocumentNode(str: string): DocumentNode;
+  context?: any;
 }
 
 function createQueryPlanExecutionContext({
@@ -139,8 +141,8 @@ function createQueryPlanExecutionContext({
   document,
   operationName,
   variables,
-  getSubgraphExecutor,
-  parseDocumentNode,
+  onSubgraphExecute,
+  context,
 }: CreateExecutionContextOpts): QueryPlanExecutionContext {
   const { operations, operationCnt, singleOperation, fragments } =
     getOperationsAndFragments(document);
@@ -200,8 +202,8 @@ function createQueryPlanExecutionContext({
     variableValues,
     data: {},
     errors: [],
-    getSubgraphExecutor,
-    parseDocumentNode,
+    onSubgraphExecute,
+    context,
   };
 }
 
@@ -281,40 +283,6 @@ function executePlanNode(
     }
     case 'Fetch': {
       const fetchNode = planNode;
-      const serviceExecutor = executionContext.getSubgraphExecutor(
-        fetchNode.serviceName,
-      );
-      if (!serviceExecutor) {
-        throw new Error(
-          `Executor not found for service: ${fetchNode.serviceName}! Make sure you return an 'Executor' in 'getSubgraphExecutor'`,
-        );
-      }
-      const document = executionContext.parseDocumentNode(fetchNode.operation);
-      const operationAst = document.definitions.find(
-        (def) => def.kind === 'OperationDefinition',
-      );
-      if (!operationAst) {
-        throw new Error(
-          "Operation not found! Check the 'operation' field in 'Fetch' node",
-        );
-      }
-      if (
-        fetchNode.operationKind &&
-        fetchNode.operationKind !== operationAst.operation
-      ) {
-        // @ts-expect-error - operation is a private field
-        operationAst.operation = fetchNode.operationKind;
-      }
-      if (
-        fetchNode.operationName &&
-        fetchNode.operationName !== operationAst.name?.value
-      ) {
-        // @ts-expect-error - operation is a private field
-        operationAst.name = {
-          kind: 'Name',
-          value: fetchNode.operationName,
-        };
-      }
       const requires = fetchNode.requires;
       if (requires && representations) {
         representations = representations.filter((entity) =>
@@ -367,9 +335,12 @@ function executePlanNode(
         }
       }
       return mapMaybePromise(
-        serviceExecutor({
-          document,
+        executionContext.onSubgraphExecute(fetchNode.serviceName, {
+          document: fetchNode.operationDocumentNode,
           variables: variablesForFetch,
+          context: executionContext.context,
+          operationName: fetchNode.operationName,
+          operationType: fetchNode.operationKind as OperationTypeNode,
         }),
         (fetchResult) => {
           if (isAsyncIterable(fetchResult)) {
@@ -718,10 +689,8 @@ function projectSelectionSet(
         throw new Error(`Fragment "${selection.name.value}" not found`);
       }
       const typeCondition = fragment.typeCondition?.name.value;
-      if (!isEntityRepresentation(data)) {
-        throw new Error('Invalid entity');
-      }
       if (
+        isEntityRepresentation(data) &&
         typeCondition &&
         !entitySatisfiesTypeCondition(
           executionContext.supergraphSchema,
@@ -732,7 +701,7 @@ function projectSelectionSet(
         continue;
       }
       const typeByTypename = executionContext.supergraphSchema.getType(
-        data.__typename,
+        data.__typename || typeCondition,
       );
       if (!isOutputType(typeByTypename)) {
         throw new Error('Invalid type');

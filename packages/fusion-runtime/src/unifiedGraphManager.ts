@@ -4,7 +4,7 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { OnDelegateHook } from '@graphql-mesh/types';
+import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
@@ -87,6 +87,7 @@ export interface UnifiedGraphHandlerOpts {
   batchDelegateOptions?: BatchDelegateOptions;
 
   log?: Logger;
+  cache?: KeyValueCache;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -348,6 +349,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
         handleProgressiveOverride: this.opts.handleProgressiveOverride,
+        cache: this.opts.transportContext?.cache,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
