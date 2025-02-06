@@ -11,6 +11,7 @@ concurrency:
 
 env:
   NODE_NO_WARNINGS: 1
+  K6_VERSION: v0.56.0
 
 jobs:
   memtest:
@@ -22,6 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install k6
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cd "$HOME/.local/bin"
+          curl https://github.com/grafana/k6/releases/download/${{ env.K6_VERSION }}/k6-${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          echo "$PWD" >> $GITHUB_PATH
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
