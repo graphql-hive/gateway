@@ -24,26 +24,24 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const { memoryThresholdInMB = 10, duration = 30_000, ...loadtestOpts } = opts;
   it(
     'should not have a memory increase trend',
+    {
+      timeout: duration + 5_000, // allow 5s for the test to finish
+    },
     async ({ expect }) => {
       const server = await setup();
 
-      using test = await loadtest({
+      const { memoryInMBSnapshots } = await loadtest({
         ...loadtestOpts,
         duration,
         server,
       });
 
-      await test.waitForComplete;
-
-      const slope = calculateRegressionSlope(test.memoryInMBSnapshots);
+      const slope = calculateRegressionSlope(memoryInMBSnapshots);
 
       expect(
         slope,
         `Memory increase trend detected with slope of ${slope}MB (exceding threshold of ${memoryThresholdInMB}MB)`,
       ).toBeLessThan(memoryThresholdInMB);
-    },
-    {
-      timeout: duration + 5_000, // allow 5s for the test to finish
     },
   );
 }
