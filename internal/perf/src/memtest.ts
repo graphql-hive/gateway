@@ -8,7 +8,7 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest in milliseconds.
    *
-   * @default 30_000
+   * @default 60_000
    */
   duration?: number;
   /**
@@ -21,7 +21,7 @@ export interface MemtestOptions
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
-  const { memoryThresholdInMB = 10, duration = 30_000, ...loadtestOpts } = opts;
+  const { memoryThresholdInMB = 10, duration = 60_000, ...loadtestOpts } = opts;
   it(
     'should not have a memory increase trend',
     {
