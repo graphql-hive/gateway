@@ -1,5 +1,15 @@
-import type { ExecutionRequest, MaybeAsyncIterable, MaybePromise, ExecutionResult } from "@graphql-tools/utils";
-import type { GraphQLSchema, OperationDefinitionNode, FragmentDefinitionNode, GraphQLError } from "graphql";
+import type {
+  ExecutionRequest,
+  ExecutionResult,
+  MaybeAsyncIterable,
+  MaybePromise,
+} from '@graphql-tools/utils';
+import type {
+  FragmentDefinitionNode,
+  GraphQLError,
+  GraphQLSchema,
+  OperationDefinitionNode,
+} from 'graphql';
 
 export interface QueryPlanExecutionContext {
   /**
@@ -35,12 +45,15 @@ export interface QueryPlanExecutionContext {
   /**
    * The factory function that returns an executor for a subgraph
    */
-  onSubgraphExecute(subgraphName: string, executionRequest: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+  onSubgraphExecute(
+    subgraphName: string,
+    executionRequest: ExecutionRequest,
+  ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 }
 
 export interface EntityRepresentation {
-    __typename: string;
-    [key: string]: any;
+  __typename: string;
+  [key: string]: any;
 }
 
 export function isEntityRepresentation(obj: any): obj is EntityRepresentation {

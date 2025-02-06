@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@envelop/core": "^5.0.3",
+    "@graphql-hive/new-qp-handler": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.9",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.103.6",

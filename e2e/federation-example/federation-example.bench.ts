@@ -45,7 +45,7 @@ describe('Gateway', async () => {
   const hiveGw = await gateway({
     supergraph,
     env: {
-      NODE_ENV: 'production'
+      NODE_ENV: 'production',
     },
     pipeLogs: true,
   });
@@ -60,5 +60,4 @@ describe('Gateway', async () => {
     },
     benchConfig,
   );
-  
 });

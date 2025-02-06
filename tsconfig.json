@@ -64,7 +64,7 @@
       ],
       "@graphql-hive/query-plan-executor": [
         "./packages/query-plan-executor/src/index.ts"
-      ],
+      ]
     }
   },
   "include": [

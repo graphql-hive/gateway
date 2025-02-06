@@ -1,8 +1,13 @@
+import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { KeyValueCache, Logger, OnDelegateHook } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  OnDelegateHook,
+} from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import type {
   Executor,
@@ -33,7 +38,6 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
-import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
