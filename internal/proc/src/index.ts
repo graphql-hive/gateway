@@ -9,6 +9,7 @@ import { fetch } from '@whatwg-node/fetch';
 import terminate from 'terminate/promise';
 
 export interface Proc extends AsyncDisposable {
+  waitForExit: Promise<void>;
   getStd(o: 'out' | 'err' | 'both'): string;
   getStats(): Promise<{
     // Total CPU utilization (of all cores) as a percentage.
@@ -84,6 +85,7 @@ export function spawn(
   let stderr = '';
   let stdboth = '';
   const proc: Proc = {
+    waitForExit,
     getStd(o) {
       switch (o) {
         case 'out':
