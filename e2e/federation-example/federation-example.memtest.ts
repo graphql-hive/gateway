@@ -1,5 +1,5 @@
 import { createExampleSetup, createTenv } from '@internal/e2e';
-import { loadtest } from '@internal/memtest';
+import { loadtest } from '@internal/perf';
 import { expect, it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
