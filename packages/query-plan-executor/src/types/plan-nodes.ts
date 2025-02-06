@@ -13,6 +13,11 @@ export interface FetchNode {
     outputRewrites?: OutputRewrite[];
 }
 
+export interface SubscriptionNode {
+    kind: 'Subscription';
+    primary: PlanNode;
+}
+
 export type OutputRewrite = KeyRenamer;
 
 export interface KeyRenamer {
@@ -66,7 +71,7 @@ export interface ConditionNode {
     elseClause?: PlanNode;
 }
 
-export type PlanNode = FetchNode | SequenceNode | ParallelNode | FlattenNode | ConditionNode;
+export type PlanNode = FetchNode | SequenceNode | ParallelNode | FlattenNode | ConditionNode | SubscriptionNode;
 
 export interface QueryPlan {
     kind: 'QueryPlan';

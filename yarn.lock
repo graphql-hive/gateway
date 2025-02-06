@@ -4739,6 +4739,7 @@ __metadata:
     "@apollo/federation-internals": "npm:^2.9.3"
     "@apollo/query-planner": "npm:^2.9.3"
     "@graphql-hive/query-plan-executor": "workspace:^"
+    "@graphql-tools/batch-execute": "workspace:^"
     "@graphql-tools/utils": "npm:^10.7.2"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.8.0"
