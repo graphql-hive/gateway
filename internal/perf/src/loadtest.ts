@@ -61,14 +61,16 @@ export async function loadtest(opts: LoadtestOptions) {
     `--env=QUERY=${query}`,
     path.join(__dirname, 'loadtest-script.ts'),
   );
+  using _ = {
+    [Symbol.dispose]() {
+      ctrl.abort();
+    },
+  };
 
   const memoryInMBSnapshots: number[] = [];
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   (async () => {
-    // abort as soon as the loadtest exits breaking the mem snapshot loop
-    waitForExit.finally(() => ctrl.abort());
-
     while (!signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
@@ -83,11 +85,7 @@ export async function loadtest(opts: LoadtestOptions) {
     }
   })();
 
-  return {
-    waitForComplete: waitForExit,
-    memoryInMBSnapshots,
-    [Symbol.dispose]() {
-      ctrl.abort();
-    },
-  };
+  await waitForExit;
+
+  return { memoryInMBSnapshots };
 }
