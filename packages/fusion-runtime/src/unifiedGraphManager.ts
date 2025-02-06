@@ -64,11 +64,6 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
-  /**
-   * Whether to batch the subgraph executions.
-   * @default true
-   */
-  batch?: boolean;
 
   logger?: Logger;
 }
@@ -327,7 +322,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           onDelegationPlanHooks: this.onDelegationPlanHooks,
           onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
           onDelegateHooks: this.opts.onDelegateHooks,
-          batch: this.batch,
           logger: this.opts.transportContext?.logger,
         });
         this.unifiedGraph = newUnifiedGraph;
@@ -340,6 +334,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           getSubgraphSchema,
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
+          batch: this.batch,
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();
