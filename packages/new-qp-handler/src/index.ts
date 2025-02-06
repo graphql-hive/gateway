@@ -2,10 +2,8 @@ import { Supergraph, buildSchemaFromAST, operationFromDocument } from "@apollo/f
 import { QueryPlanner } from "@apollo/query-planner";
 import { executeQueryPlan } from "@graphql-hive/query-plan-executor";
 import type { UnifiedGraphHandlerOpts, UnifiedGraphHandlerResult } from "@graphql-mesh/fusion-runtime";
-import { ExecutionRequest, ExecutionResult, getDocumentNodeFromSchema, MaybePromise, memoize1 } from "@graphql-tools/utils";
+import { ExecutionRequest, ExecutionResult, getDocumentNodeFromSchema, MaybeAsyncIterable, MaybePromise, memoize1 } from "@graphql-tools/utils";
 import { DocumentNode } from "graphql";
-
-const EMPTY_VARIABLES = {};
 
 export function handleSupergraphWithQueryPlanner(opts: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
     const queryPlanner = new QueryPlanner(new Supergraph(buildSchemaFromAST(getDocumentNodeFromSchema(opts.unifiedGraph))), {
@@ -36,10 +34,10 @@ export function handleSupergraphWithQueryPlanner(opts: UnifiedGraphHandlerOpts):
         },
         executor({
             document,
-            variables = EMPTY_VARIABLES,
+            variables,
             operationName,
             context,
-        }: ExecutionRequest): MaybePromise<ExecutionResult> {
+        }: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
             const queryPlan = buildQueryPlan(document);
             return executeQueryPlan({
                 supergraphSchema: unifiedGraph,

@@ -7,6 +7,7 @@ import { createSchema, createYoga, Repeater } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
+import { buildSchema } from 'graphql';
 
 describe('Subscriptions', () => {
   const leftovers: (() => MaybePromise<void>)[] = [];
@@ -101,13 +102,24 @@ describe('Subscriptions', () => {
     await using serve = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
+      maskedErrors: false,
       async supergraph() {
         if (changeSchema) {
-          return /* GraphQL */ `
-            type Query {
-              foo: String!
-            }
-          `;
+          return getUnifiedGraphGracefully([
+            {
+              name: 'upstream',
+              schema: buildSchema(/* GraphQL */ `
+                type Query {
+                  foo: String
+                  anotherFoo: String
+                }
+                type Subscription {
+                  neverEmits: String
+                }
+              `),
+              url: 'http://upstream/graphql',
+            },
+          ]);
         }
         changeSchema = true;
         return getUnifiedGraphGracefully([
@@ -149,14 +161,14 @@ describe('Subscriptions', () => {
         body: JSON.stringify({
           query: /* GraphQL */ `
             query {
-              __typename
+              foo
             }
           `,
         }),
       });
       expect(await res.json()).toMatchObject({
         data: {
-          __typename: 'Query',
+          foo: 'bar',
         },
       });
     }, 1000);
