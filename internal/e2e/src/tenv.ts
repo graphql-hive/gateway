@@ -872,6 +872,7 @@ export function createTenv(cwd: string): Tenv {
       await ctr.start();
 
       const container: Container = {
+        waitForExit: ctr.wait(),
         containerName,
         name,
         port: hostPort,
