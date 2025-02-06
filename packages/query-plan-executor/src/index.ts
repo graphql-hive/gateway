@@ -108,7 +108,7 @@ export function executeQueryPlan({
   }
   return mapMaybePromise(
     executePlanNode(queryPlan.node, executionContext),
-    res => {
+    (res) => {
       if (isAsyncIterable(res)) {
         return mapAsyncIterator(res, handleResp);
       }
@@ -352,7 +352,9 @@ function executePlanNode(
             executionContext.variableValues?.[variableName];
         }
       }
-      const handleFetchResult = (fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>): MaybeAsyncIterable<unknown> | void => {
+      const handleFetchResult = (
+        fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
+      ): MaybeAsyncIterable<unknown> | void => {
         if (isAsyncIterable(fetchResult)) {
           return mapAsyncIterator(fetchResult, handleFetchResult);
         }
@@ -368,16 +370,15 @@ function executePlanNode(
               const rootSelection = operationAst.selectionSet.selections.find(
                 (selection) => selection.kind === 'Field',
               );
-              const responseKey = rootSelection?.alias?.value || rootSelection?.name.value;
+              const responseKey =
+                rootSelection?.alias?.value || rootSelection?.name.value;
               if (responseKey) {
                 path = [responseKey];
               }
             }
           }
           if (path) {
-            errors = errors.map((error) =>
-              relocatedError(error, path),
-            );
+            errors = errors.map((error) => relocatedError(error, path));
           }
           executionContext.errors.push(...errors);
         }
@@ -421,7 +422,7 @@ function executePlanNode(
           );
         }
         return;
-      }
+      };
       return mapMaybePromise(
         executionContext.onSubgraphExecute(fetchNode.serviceName, {
           document: fetchNode.operationDocumentNode,
@@ -430,7 +431,7 @@ function executePlanNode(
           operationName: fetchNode.operationName,
           operationType: fetchNode.operationKind as OperationTypeNode,
         }),
-        handleFetchResult
+        handleFetchResult,
       );
     }
     case 'Condition': {

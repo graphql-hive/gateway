@@ -2,12 +2,12 @@ import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { type MaybePromise } from '@graphql-tools/utils';
 import { isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { buildSchema } from 'graphql';
 import { createClient as createSSEClient } from 'graphql-sse';
 import { createSchema, createYoga, Repeater } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
-import { buildSchema } from 'graphql';
 
 describe('Subscriptions', () => {
   const leftovers: (() => MaybePromise<void>)[] = [];
