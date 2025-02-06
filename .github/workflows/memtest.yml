@@ -1,0 +1,32 @@
+name: Memtest
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_NO_WARNINGS: 1
+
+jobs:
+  memtest:
+    strategy:
+      matrix:
+        e2e_runner: [node, bun]
+    name: ${{matrix.e2e_runner}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Test
+        run: yarn test:mem
+        env:
+          E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
