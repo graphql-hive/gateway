@@ -2,20 +2,28 @@ import { Supergraph, buildSchemaFromAST, operationFromDocument } from "@apollo/f
 import { QueryPlanner } from "@apollo/query-planner";
 import { executeQueryPlan } from "@graphql-hive/query-plan-executor";
 import type { UnifiedGraphHandlerOpts, UnifiedGraphHandlerResult } from "@graphql-mesh/fusion-runtime";
-import { ExecutionRequest, ExecutionResult, getDocumentNodeFromSchema, MaybePromise } from "@graphql-tools/utils";
-import { parseWithCache } from '@graphql-mesh/utils';
+import { ExecutionRequest, ExecutionResult, getDocumentNodeFromSchema, MaybePromise, memoize1 } from "@graphql-tools/utils";
+import { DocumentNode } from "graphql";
+
+const EMPTY_VARIABLES = {};
 
 export function handleSupergraphWithQueryPlanner(opts: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
-    const queryPlanner = new QueryPlanner(
-        new Supergraph(
-            buildSchemaFromAST(
-                getDocumentNodeFromSchema(opts.unifiedGraph),
-                { validate: false }
-            )
-        )
-    );
+    const queryPlanner = new QueryPlanner(new Supergraph(buildSchemaFromAST(getDocumentNodeFromSchema(opts.unifiedGraph))), {
+        // Query Planner handles AST parsing
+        exposeDocumentNodeInFetchNode: true,
+        // Query Plan caching
+        // @ts-expect-error - Promise typings...
+        cache: opts.cache,
+    });
 
     const unifiedGraph = queryPlanner.supergraph.apiSchema().toGraphQLJSSchema();
+
+    // Memoization that would work with parse caching
+    const buildQueryPlan = memoize1(function buildQueryPlan(document: DocumentNode) {
+        const operationForQp = operationFromDocument(queryPlanner.supergraph.schema, document);
+        const queryPlan = queryPlanner.buildQueryPlan(operationForQp);
+        return queryPlan;
+    });
 
     return {
         unifiedGraph,
@@ -28,22 +36,18 @@ export function handleSupergraphWithQueryPlanner(opts: UnifiedGraphHandlerOpts):
         },
         executor({
             document,
-            variables = {},
+            variables = EMPTY_VARIABLES,
             operationName,
+            context,
         }: ExecutionRequest): MaybePromise<ExecutionResult> {
-            const operationForQp = operationFromDocument(queryPlanner.supergraph.schema, document, { operationName });
-            const queryPlan = queryPlanner.buildQueryPlan(operationForQp);
+            const queryPlan = buildQueryPlan(document);
             return executeQueryPlan({
                 supergraphSchema: unifiedGraph,
                 document,
                 operationName,
                 variables,
-                getSubgraphExecutor(subgraphName) {
-                    return function subgraphExecutor(executionRequest) {
-                        return opts.onSubgraphExecute(subgraphName, executionRequest);
-                    };
-                },
-                parseDocumentNode: parseWithCache,
+                context,
+                onSubgraphExecute: opts.onSubgraphExecute,
                 queryPlan: queryPlan as any,
             })
         },

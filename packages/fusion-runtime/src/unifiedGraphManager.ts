@@ -3,7 +3,11 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  OnDelegateHook,
+} from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
@@ -28,7 +32,6 @@ import {
 } from '@whatwg-node/promise-helpers';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -71,6 +74,7 @@ export interface UnifiedGraphHandlerOpts {
   onDelegateHooks?: OnDelegateHook<unknown>[];
 
   logger?: Logger;
+  cache?: KeyValueCache;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -311,6 +315,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
         logger: this.opts.transportContext?.logger,
+        cache: this.opts.transportContext?.cache,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
