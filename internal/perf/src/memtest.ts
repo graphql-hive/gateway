@@ -25,7 +25,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   it(
     'should not have a memory increase trend',
     {
-      timeout: duration + 5_000, // allow 5s for the test to finish
+      timeout: duration + 10_000, // allow 10s for the test teardown
     },
     async ({ expect }) => {
       const server = await setup();
