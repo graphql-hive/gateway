@@ -102,15 +102,20 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               if (e === timeoutSignal.reason) {
                 const upstreamErrorExtensions =
                   errorExtensionsByExecRequest.get(executionRequest);
-                throw createGraphQLError(e.message, {
-                  extensions: {
-                    ...upstreamErrorExtensions,
-                    code: 'TIMEOUT_ERROR',
-                    http: {
-                      status: 504,
-                    },
-                  },
-                });
+                return {
+                  errors: [
+                    createGraphQLError(e.message, {
+                      originalError: e,
+                      extensions: {
+                        ...upstreamErrorExtensions,
+                        code: 'TIMEOUT_ERROR',
+                        http: {
+                          status: 504,
+                        },
+                      },
+                    }),
+                  ],
+                };
               }
               throw e;
             })

@@ -82,9 +82,6 @@ describe('Upstream Retry', () => {
     });
     const resJson = await res.json();
     expect(resJson).toEqual({
-      data: {
-        hello: null,
-      },
       errors: [
         {
           message: 'Error in attempt 3',
@@ -183,9 +180,6 @@ describe('Upstream Retry', () => {
     });
     const resJson = await res.json();
     expect(resJson).toEqual({
-      data: {
-        hello: null,
-      },
       errors: [
         {
           message: 'Rate limited',
