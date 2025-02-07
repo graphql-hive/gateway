@@ -46,14 +46,36 @@ describe('Gateway', async () => {
     supergraph,
     env: {
       NODE_ENV: 'production',
+      FORK: 0,
     },
-    pipeLogs: true,
   });
 
   bench(
-    'Hive Gateway',
+    'Hive Gateway w/ QP',
     async () => {
       const res = await hiveGw.execute({
+        query: example.query,
+      });
+      expect(res).toEqual(example.result);
+    },
+    benchConfig,
+  );
+
+  const hiveGwWithTools = await gateway({
+    supergraph,
+    env: {
+      NODE_ENV: 'production',
+      FORK: 0,
+      JIT: 1,
+      TOOLS_FEDERATION: 1,
+    },
+    args: ['--jit'],
+  });
+
+  bench(
+    'Hive Gateway w/ Tools',
+    async () => {
+      const res = await hiveGwWithTools.execute({
         query: example.query,
       });
       expect(res).toEqual(example.result);

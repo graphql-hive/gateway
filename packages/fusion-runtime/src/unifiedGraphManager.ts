@@ -38,6 +38,7 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
+import { handleFederationSupergraph } from './federation/supergraph';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
@@ -131,8 +132,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private executor?: Executor;
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
+    const defaultHandler = process.env['TOOLS_FEDERATION'] ? handleFederationSupergraph : handleSupergraphWithQueryPlanner;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleSupergraphWithQueryPlanner;
+      opts.handleUnifiedGraph || defaultHandler;
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
