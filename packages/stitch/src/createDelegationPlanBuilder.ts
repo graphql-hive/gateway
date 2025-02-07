@@ -449,7 +449,7 @@ export function createDelegationPlanBuilder(
   });
 }
 
-function optimizeDelegationMap(
+export function optimizeDelegationMap(
   delegationMap: Map<Subschema, SelectionSetNode>,
   typeName: string,
   fragments: Record<string, FragmentDefinitionNode>,
