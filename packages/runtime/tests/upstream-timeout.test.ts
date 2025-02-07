@@ -60,9 +60,6 @@ describe('Upstream Timeout', () => {
     });
     const resJson = await res.json();
     expect(resJson).toEqual({
-      data: {
-        hello: null,
-      },
       errors: [
         expect.objectContaining({
           message: expect.stringMatching(

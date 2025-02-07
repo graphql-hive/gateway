@@ -94,10 +94,17 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               if (e === timeoutSignal.reason) {
                 const upstreamErrorExtensions =
                   errorExtensionsByExecRequest.get(executionRequest);
-                throw createGraphQLError(e.message, {
-                  originalError: e,
-                  extensions: upstreamErrorExtensions,
-                });
+                return {
+                  errors: [
+                    createGraphQLError(
+                      e.message,
+                      {
+                        originalError: e,
+                        extensions: upstreamErrorExtensions,
+                      },
+                    ),
+                  ],
+                };
               }
               throw e;
             })
