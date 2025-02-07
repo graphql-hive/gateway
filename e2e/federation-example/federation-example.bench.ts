@@ -20,12 +20,22 @@ describe('Gateway', async () => {
         SUPERGRAPH: supergraph,
       },
     }),
-    'Hive Gateway': await gateway({
+    'Hive Gateway w/ Tools': await gateway({
       supergraph,
       args: ['--jit'],
       env: {
         JIT: 'true',
         NODE_ENV: 'production',
+        TOOLS_FEDERATION: 1,
+      },
+    }),
+    'Hive Gateway w/ Query Planner': await gateway({
+      supergraph,
+      args: ['--jit'],
+      env: {
+        JIT: 'true',
+        NODE_ENV: 'production',
+        TOOLS_FEDERATION: 0,
       },
     }),
   };
