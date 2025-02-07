@@ -671,9 +671,6 @@ function projectSelectionSet(
             executionContext,
           )
         : data[responseKey];
-      if (!projectedValue && field.name === '__typename') {
-        projectedValue = type.name;
-      }
       if (projectedValue !== undefined) {
         if (isEnumType(fieldType) && !fieldType.getValue(projectedValue)) {
           projectedValue = null;
@@ -696,6 +693,8 @@ function projectSelectionSet(
         } else {
           result[responseKey] = projectedValue;
         }
+      } else if (field.name === '__typename') {
+        result[responseKey] = type.name;
       } else {
         result[responseKey] = null;
       }
