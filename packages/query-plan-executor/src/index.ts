@@ -18,7 +18,7 @@ import {
   getNamedType,
   getOperationAST,
   getVariableValues,
-  GraphQLOutputType,
+  GraphQLNamedOutputType,
   GraphQLSchema,
   isAbstractType,
   isEnumType,
@@ -86,7 +86,7 @@ export function executeQueryPlan({
   context,
 }: QueryPlanExecutorOptions) {
   if (!queryPlan.node) {
-    throw new Error('Query plan is empty');
+    return;
   }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
@@ -591,7 +591,7 @@ function entitySatisfiesTypeCondition(
 function projectSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  type: GraphQLOutputType,
+  type: GraphQLNamedOutputType,
   executionContext: QueryPlanExecutionContext,
 ): any {
   if (data == null) {
@@ -671,6 +671,9 @@ function projectSelectionSet(
             executionContext,
           )
         : data[responseKey];
+      if (!projectedValue && field.name === '__typename') {
+        projectedValue = type.name;
+      }
       if (projectedValue !== undefined) {
         if (isEnumType(fieldType) && !fieldType.getValue(projectedValue)) {
           projectedValue = null;

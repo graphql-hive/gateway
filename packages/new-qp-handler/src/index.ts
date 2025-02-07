@@ -27,6 +27,9 @@ export function handleSupergraphWithQueryPlanner(
       buildSchemaFromAST(getDocumentNodeFromSchema(opts.unifiedGraph)),
     ),
     {
+      incrementalDelivery: {
+        enableDefer: true,
+      },
       // Query Planner handles AST parsing
       exposeDocumentNodeInFetchNode: true,
       // Query Plan caching
