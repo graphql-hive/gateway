@@ -158,7 +158,6 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  batch = true,
   logger,
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
@@ -204,7 +203,6 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         stitchingDirectivesTransformer,
         onSubgraphExecute,
       }),
-    batch,
     onStitchingOptions(opts) {
       subschemas = opts.subschemas;
       opts.typeDefs = handleResolveToDirectives(

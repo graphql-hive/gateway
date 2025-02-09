@@ -13,6 +13,7 @@ import {
   loggerForExecutionRequest,
   requestIdByRequest,
 } from '@graphql-mesh/utils';
+import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   DelegationPlanBuilder,
   MergedTypeResolver,
@@ -168,6 +169,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack,
   transports,
   getDisposeReason,
+  batch = true,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -176,6 +178,7 @@ export function getOnSubgraphExecute({
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
+  batch?: boolean;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -236,6 +239,12 @@ export function getOnSubgraphExecute({
       };
       // Caches the lazy executor to prevent race conditions
       subgraphExecutorMap.set(subgraphName, executor);
+    }
+    if (batch) {
+      executor = getBatchingExecutor(
+        executionRequest.context || subgraphExecutorMap,
+        executor,
+      );
     }
     return executor(executionRequest);
   };
