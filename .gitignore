@@ -14,3 +14,4 @@ hive-gateway
 /examples/**/*/supergraph.graphql
 .helix/config.toml
 .helix/languages.toml
+/e2e/**/*/loadtest-memory-snapshots.svg
