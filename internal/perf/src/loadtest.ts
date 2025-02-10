@@ -102,15 +102,13 @@ export async function loadtest(opts: LoadtestOptions) {
 
   if (isDebug('loadtest')) {
     const chart = createLineChart(
-      [
-        {
-          label: 'Memory usage',
-          x: memoryInMBSnapshots.map(
-            (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
-          ),
-          y: memoryInMBSnapshots,
-        },
-      ],
+      {
+        label: 'Memory usage',
+        x: memoryInMBSnapshots.map(
+          (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
+        ),
+        y: memoryInMBSnapshots,
+      },
       {
         yTicksCallback: (tickValue) => `${tickValue} MB`,
       },

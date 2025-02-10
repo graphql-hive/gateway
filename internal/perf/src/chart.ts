@@ -20,7 +20,7 @@ export interface LineChartOptions {
 }
 
 export function createLineChart(
-  datasets: LineChartDataset[],
+  { label, x, y }: LineChartDataset,
   options: LineChartOptions = {},
 ): Canvas {
   const canvas = createCanvas(800, 400, 'svg');
@@ -28,11 +28,13 @@ export function createLineChart(
   const chartConfig: ChartConfiguration = {
     type: 'line',
     data: {
-      labels: datasets.map(({ x }) => x),
-      datasets: datasets.map(({ label, y }) => ({
-        label,
-        data: y,
-      })),
+      labels: x,
+      datasets: [
+        {
+          label,
+          data: y,
+        },
+      ],
     },
     options: {
       responsive: false, // because we're rendering the chart statically
