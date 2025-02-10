@@ -49,7 +49,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         server,
       });
 
-      const slope = calculateRegressionSlope(memoryInMBSnapshots);
+      const slope = calculateRegressionSlope(memoryInMBSnapshots.total);
       if (isDebug('memtest')) {
         console.log(`[memtest] server memory regression slope: ${slope}`);
       }

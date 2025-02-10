@@ -75,7 +75,12 @@ export async function loadtest(opts: LoadtestOptions) {
     },
   };
 
-  const memoryInMBSnapshots: number[] = [];
+  let loadtesting = true;
+  const memoryInMBSnapshots = {
+    loadtest: [] as number[],
+    calmdown: [] as number[],
+    total: [] as number[],
+  };
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   (async () => {
@@ -83,8 +88,14 @@ export async function loadtest(opts: LoadtestOptions) {
       await setTimeout(memorySnapshotWindow);
       try {
         const { mem } = await server.getStats();
-        memoryInMBSnapshots.push(mem);
-        debugLog(`[loadtest] server memory: ${mem}MB`);
+        if (loadtesting) {
+          memoryInMBSnapshots.loadtest.push(mem);
+          debugLog(`[loadtest] server memory during loadtest: ${mem}MB`);
+        } else {
+          memoryInMBSnapshots.calmdown.push(mem);
+          debugLog(`[loadtest] server memory during calmdown: ${mem}MB`);
+        }
+        memoryInMBSnapshots.total.push(mem);
       } catch (err) {
         if (!signal.aborted) {
           throw err;
@@ -103,6 +114,7 @@ export async function loadtest(opts: LoadtestOptions) {
   // loadtest
   await Promise.race([waitForExit, serverWaitForExit]);
 
+  loadtesting = false;
   debugLog(`Loadtest completed, waiting for calmdown...`);
 
   // calmdown
@@ -110,13 +122,22 @@ export async function loadtest(opts: LoadtestOptions) {
 
   if (isDebug('loadtest')) {
     const chart = createLineChart(
-      {
-        label: 'Memory usage',
-        x: memoryInMBSnapshots.map(
-          (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
-        ),
-        y: memoryInMBSnapshots,
-      },
+      memoryInMBSnapshots.total.map(
+        (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
+      ),
+      [
+        {
+          label: 'Loadtest',
+          data: memoryInMBSnapshots.loadtest,
+        },
+        {
+          label: 'Calmdown',
+          data: [
+            ...memoryInMBSnapshots.loadtest.map(() => null), // skip loadtest data
+            ...memoryInMBSnapshots.calmdown,
+          ],
+        },
+      ],
       {
         yTicksCallback: (tickValue) => `${tickValue} MB`,
       },
