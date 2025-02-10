@@ -11,6 +11,8 @@ export interface LoadtestOptions extends ProcOptions {
   vus?: number;
   /** Duration of the loadtest in milliseconds. */
   duration: number;
+  /** Calmdown duration of the loadtest in milliseconds. This should be enough allowing the GC to kick in. */
+  calmdown: number;
   /**
    * The snapshotting window of the GraphQL server memory in milliseconds.
    *
@@ -30,6 +32,7 @@ export async function loadtest(opts: LoadtestOptions) {
     cwd,
     vus = 100,
     duration,
+    calmdown,
     memorySnapshotWindow = 1_000,
     server,
     query,
@@ -49,6 +52,8 @@ export async function loadtest(opts: LoadtestOptions) {
         1_000,
     ),
   ]);
+
+  debugLog(`Starting loadtest...`);
 
   const [, waitForExit] = await spawn(
     {
@@ -79,9 +84,7 @@ export async function loadtest(opts: LoadtestOptions) {
       try {
         const { mem } = await server.getStats();
         memoryInMBSnapshots.push(mem);
-        if (isDebug('loadtest')) {
-          console.log(`[loadtest] server memory: ${mem}MB`);
-        }
+        debugLog(`[loadtest] server memory: ${mem}MB`);
       } catch (err) {
         if (!signal.aborted) {
           throw err;
@@ -91,14 +94,19 @@ export async function loadtest(opts: LoadtestOptions) {
     }
   })();
 
-  await Promise.race([
-    waitForExit,
-    server.waitForExit.then(() => {
-      throw new Error(
-        `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
-      );
-    }),
-  ]);
+  const serverWaitForExit = server.waitForExit.then(() => {
+    throw new Error(
+      `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
+    );
+  });
+
+  // loadtest
+  await Promise.race([waitForExit, serverWaitForExit]);
+
+  debugLog(`Loadtest completed, waiting for calmdown...`);
+
+  // calmdown
+  await Promise.race([setTimeout(calmdown), serverWaitForExit]);
 
   if (isDebug('loadtest')) {
     const chart = createLineChart(
@@ -120,4 +128,10 @@ export async function loadtest(opts: LoadtestOptions) {
   }
 
   return { memoryInMBSnapshots };
+}
+
+function debugLog(msg: string) {
+  if (isDebug('loadtest')) {
+    console.log(`[loadtest] ${msg}`);
+  }
 }

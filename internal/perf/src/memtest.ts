@@ -5,13 +5,19 @@ import { it } from 'vitest';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 export interface MemtestOptions
-  extends Omit<LoadtestOptions, 'duration' | 'server'> {
+  extends Omit<LoadtestOptions, 'duration' | 'calmdown' | 'server'> {
   /**
    * Duration of the loadtest in milliseconds.
    *
    * @default 60_000
    */
   duration?: number;
+  /**
+   * Calmdown duration after loadtesting in milliseconds.
+   *
+   * @default 30_000
+   */
+  calmdown?: number;
   /**
    * Linear regression line slope threshold of the memory snapshots.
    * If the slope is greater than this value, the test will fail.
@@ -22,11 +28,16 @@ export interface MemtestOptions
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
-  const { slopeThreshold = 3, duration = 60_000, ...loadtestOpts } = opts;
+  const {
+    slopeThreshold = 3,
+    duration = 60_000,
+    calmdown = 30_000,
+    ...loadtestOpts
+  } = opts;
   it(
     'should not have a memory increase trend',
     {
-      timeout: duration + 10_000, // allow 10s for the test teardown
+      timeout: duration + calmdown + 10_000, // allow 10s for the test teardown
     },
     async ({ expect }) => {
       const server = await setup();
@@ -34,6 +45,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       const { memoryInMBSnapshots } = await loadtest({
         ...loadtestOpts,
         duration,
+        calmdown,
         server,
       });
 
