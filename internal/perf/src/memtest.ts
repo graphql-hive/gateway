@@ -34,7 +34,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     ...loadtestOpts
   } = opts;
   it(
-    'should not have a memory increase trend',
+    'should have stable memory usage',
     {
       timeout: idle + duration + calmdown + 10_000, // allow 10s for the test teardown
     },
