@@ -25,7 +25,7 @@ export function createLineChart(
   datasets: LineChartDataset[],
   options: LineChartOptions = {},
 ): Canvas {
-  const canvas = createCanvas(800, 400, 'svg');
+  const canvas = createCanvas(1366, 768, 'svg');
 
   const chartConfig: ChartConfiguration = {
     type: 'line',
