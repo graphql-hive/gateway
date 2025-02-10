@@ -7,6 +7,7 @@
 Now you can integrate [Winston](https://github.com/winstonjs/winston) into Hive Gateway on Node.js
 
 ```ts
+import { defineConfig } from '@graphql-hive/gateway'
 import { createLogger, format, transports } from 'winston'
 import { createLoggerFromWinston } from '@graphql-hive/winston'
 

@@ -1,11 +1,11 @@
-import { Writable } from 'stream';
+import { Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
 import * as winston from 'winston';
 import { createLoggerFromWinston } from '../src';
 
 describe('Winston', () => {
-  let log: string = '';
-  let lastCallback: () => void = () => {};
+  let log = '';
+  let lastCallback = () => {};
   const stream = new Writable({
     write(chunk, _encoding, callback) {
       log = chunk.toString('utf-8');
