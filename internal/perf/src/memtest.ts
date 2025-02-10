@@ -18,11 +18,11 @@ export interface MemtestOptions
    *
    * @default 5
    */
-  memoryThresholdInMB?: number;
+  slopeThreshold?: number;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
-  const { memoryThresholdInMB = 5, duration = 60_000, ...loadtestOpts } = opts;
+  const { slopeThreshold = 5, duration = 60_000, ...loadtestOpts } = opts;
   it(
     'should not have a memory increase trend',
     {
@@ -39,13 +39,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       const slope = calculateRegressionSlope(memoryInMBSnapshots);
       if (isDebug('memtest')) {
-        console.log(`[memtest] server memory regression slope: ${slope}MB`);
+        console.log(`[memtest] server memory regression slope: ${slope}`);
       }
 
       expect(
         slope,
-        `Memory increase trend detected with slope of ${slope}MB (exceding threshold of ${memoryThresholdInMB}MB)`,
-      ).toBeLessThan(memoryThresholdInMB);
+        `Memory increase trend detected with slope of ${slope} (exceding threshold of ${slopeThreshold})`,
+      ).toBeLessThan(slopeThreshold);
     },
   );
 }
