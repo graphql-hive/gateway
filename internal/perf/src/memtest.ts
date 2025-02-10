@@ -24,18 +24,10 @@ export interface MemtestOptions
    * @default 30_000
    */
   calmdown?: number;
-  /**
-   * Linear regression line slope threshold of the memory snapshots.
-   * If the slope is greater than this value, the test will fail.
-   *
-   * @default 3
-   */
-  loadtestSlopeThreshold?: number;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
-    loadtestSlopeThreshold = 3,
     idle = 10_000,
     duration = 180_000,
     calmdown = 30_000,
@@ -64,7 +56,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         );
       }
       expect
-        .soft(idleSlope, `Memory increase detected while idling`)
+        .soft(idleSlope, 'Memory increase detected while idling')
         .toBeLessThanOrEqual(0);
 
       const loadtestSlope = calculateRegressionSlope(
@@ -76,11 +68,8 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         );
       }
       expect
-        .soft(
-          loadtestSlope,
-          `Significant memory increase detected during loadtest`,
-        )
-        .toBeLessThanOrEqual(loadtestSlopeThreshold);
+        .soft(loadtestSlope, 'Memory never stopped growing during loadtest')
+        .toBeLessThanOrEqual(1);
 
       const calmdownSlope = calculateRegressionSlope(
         memoryInMBSnapshots.calmdown,
@@ -91,7 +80,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         );
       }
       expect
-        .soft(calmdownSlope, `No memory decrease detected during calmdown`)
+        .soft(calmdownSlope, 'No memory decrease detected during calmdown')
         .toBeLessThanOrEqual(-10);
     },
   );
