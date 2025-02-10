@@ -60,7 +60,7 @@ describe('fragment handling in delegation optimization', () => {
    * Tests that the delegation map optimization correctly handles fragments
    * by merging fragment fields into the appropriate subschema selections.
    */
-  it('should optimize delegation map considering fragments', async () => {
+  it('should optimize delegation map considering fragments', () => {
     // Define a fragment that selects basic User fields
     const fragments: Record<string, FragmentDefinitionNode> = {
       UserFields: {
