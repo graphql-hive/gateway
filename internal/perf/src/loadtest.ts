@@ -77,7 +77,7 @@ export async function loadtest(opts: LoadtestOptions) {
       try {
         const { mem } = await server.getStats();
         memoryInMBSnapshots.push(mem);
-        if (isDebug()) {
+        if (isDebug('loadtest')) {
           console.log(`[loadtest] server memory: ${mem}MB`);
         }
       } catch (err) {
