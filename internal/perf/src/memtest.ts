@@ -1,4 +1,5 @@
 import { Server } from '@internal/proc';
+import { isDebug } from '@internal/testing';
 import regression from 'regression';
 import { it } from 'vitest';
 import { loadtest, LoadtestOptions } from './loadtest';
@@ -37,6 +38,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       });
 
       const slope = calculateRegressionSlope(memoryInMBSnapshots);
+      if (isDebug('memtest')) {
+        console.log(`[memtest] server memory regression slope: ${slope}MB`);
+      }
 
       expect(
         slope,
