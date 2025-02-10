@@ -16,13 +16,13 @@ export interface MemtestOptions
    * Linear regression line slope threshold of the memory snapshots.
    * If the slope is greater than this value, the test will fail.
    *
-   * @default 5
+   * @default 3
    */
   slopeThreshold?: number;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
-  const { slopeThreshold = 5, duration = 60_000, ...loadtestOpts } = opts;
+  const { slopeThreshold = 3, duration = 60_000, ...loadtestOpts } = opts;
   it(
     'should not have a memory increase trend',
     {
