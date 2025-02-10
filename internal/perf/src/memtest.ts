@@ -30,12 +30,12 @@ export interface MemtestOptions
    *
    * @default 3
    */
-  slopeThreshold?: number;
+  loadtestSlopeThreshold?: number;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
-    slopeThreshold = 3,
+    loadtestSlopeThreshold = 3,
     idle = 10_000,
     duration = 60_000,
     calmdown = 20_000,
@@ -57,15 +57,42 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         server,
       });
 
-      const slope = calculateRegressionSlope(memoryInMBSnapshots.total);
+      const idleSlope = calculateRegressionSlope(memoryInMBSnapshots.idle);
       if (isDebug('memtest')) {
-        console.log(`[memtest] server memory total regression slope: ${slope}`);
+        console.log(
+          `[memtest] server memory idle regression slope: ${idleSlope}`,
+        );
       }
-
       expect(
-        slope,
-        `Memory increase trend detected with slope of ${slope} (exceding threshold of ${slopeThreshold})`,
-      ).toBeLessThan(slopeThreshold);
+        idleSlope,
+        `Memory increase detected while idling`,
+      ).toBeLessThanOrEqual(0);
+
+      const loadtestSlope = calculateRegressionSlope(
+        memoryInMBSnapshots.loadtest,
+      );
+      if (isDebug('memtest')) {
+        console.log(
+          `[memtest] server memory loadtest regression slope: ${loadtestSlope}`,
+        );
+      }
+      expect(
+        loadtestSlope,
+        `Significant memory increase detected during loadtest`,
+      ).toBeLessThanOrEqual(loadtestSlopeThreshold);
+
+      const calmdownSlope = calculateRegressionSlope(
+        memoryInMBSnapshots.calmdown,
+      );
+      if (isDebug('memtest')) {
+        console.log(
+          `[memtest] server memory calmdown regression slope: ${calmdownSlope}`,
+        );
+      }
+      expect(
+        calmdownSlope,
+        `No memory decrease detected during calmdown`,
+      ).toBeLessThanOrEqual(-2);
     },
   );
 }
