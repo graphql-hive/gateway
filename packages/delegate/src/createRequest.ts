@@ -1,7 +1,4 @@
-import {
-  ExecutionRequest,
-  serializeInputValue,
-} from '@graphql-tools/utils';
+import { ExecutionRequest, serializeInputValue } from '@graphql-tools/utils';
 import {
   ArgumentNode,
   DefinitionNode,
@@ -21,7 +18,10 @@ import {
   VariableDefinitionNode,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
-import { createVariableNameGenerator, updateArgument } from './updateArguments.js';
+import {
+  createVariableNameGenerator,
+  updateArgument,
+} from './updateArguments.js';
 
 export function getDelegatingOperation(
   parentType: GraphQLObjectType,

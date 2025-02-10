@@ -36,7 +36,10 @@ import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { Subschema } from './Subschema.js';
 import { DelegationContext, StitchingInfo } from './types.js';
-import { createVariableNameGenerator, updateArgument } from './updateArguments.js';
+import {
+  createVariableNameGenerator,
+  updateArgument,
+} from './updateArguments.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
