@@ -1,7 +1,9 @@
+import fs from 'fs/promises';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { isDebug, trimError } from '@internal/testing';
+import { createLineChart } from './chart';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -97,6 +99,27 @@ export async function loadtest(opts: LoadtestOptions) {
       );
     }),
   ]);
+
+  if (isDebug('loadtest')) {
+    const chart = createLineChart(
+      [
+        {
+          label: 'Memory usage',
+          x: memoryInMBSnapshots.map(
+            (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
+          ),
+          y: memoryInMBSnapshots,
+        },
+      ],
+      {
+        yTicksCallback: (tickValue) => `${tickValue} MB`,
+      },
+    );
+    await fs.writeFile(
+      path.join(cwd, 'loadtest-memory-snapshots.svg'),
+      chart.toBuffer(),
+    );
+  }
 
   return { memoryInMBSnapshots };
 }
