@@ -6,6 +6,7 @@
   "dependencies": {
     "canvas": "^3.1.0",
     "chart.js": "^4.4.7",
+    "chartjs-plugin-trendline": "^2.1.6",
     "parse-duration": "^2.0.0",
     "regression": "^2.0.1"
   },
