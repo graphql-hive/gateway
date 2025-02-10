@@ -9,6 +9,8 @@ export interface LoadtestOptions extends ProcOptions {
   cwd: string;
   /** @default 100 */
   vus?: number;
+  /** Idling duration before loadtest in milliseconds. */
+  idle: number;
   /** Duration of the loadtest in milliseconds. */
   duration: number;
   /** Calmdown duration of the loadtest in milliseconds. This should be enough allowing the GC to kick in. */
@@ -31,6 +33,7 @@ export async function loadtest(opts: LoadtestOptions) {
   const {
     cwd,
     vus = 100,
+    idle,
     duration,
     calmdown,
     memorySnapshotWindow = 1_000,
@@ -43,6 +46,11 @@ export async function loadtest(opts: LoadtestOptions) {
     throw new Error(`Duration has to be at least 3s, got "${duration}"`);
   }
 
+  const serverWaitForExit = server.waitForExit.then(() => {
+    throw new Error(
+      `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
+    );
+  });
   const ctrl = new AbortController();
   const signal = AbortSignal.any([
     ctrl.signal,
@@ -53,8 +61,37 @@ export async function loadtest(opts: LoadtestOptions) {
     ),
   ]);
 
-  debugLog(`Starting loadtest...`);
+  let state: 'idle' | 'loadtest' | 'calmdown' = 'idle';
+  const memoryInMBSnapshots = {
+    loadtest: [] as number[],
+    idle: [] as number[],
+    calmdown: [] as number[],
+    total: [] as number[],
+  };
 
+  // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
+  (async () => {
+    while (!signal.aborted) {
+      await setTimeout(memorySnapshotWindow);
+      try {
+        const { mem } = await server.getStats();
+        memoryInMBSnapshots[state].push(mem);
+        memoryInMBSnapshots.total.push(mem);
+        debugLog(`[loadtest] server memory during ${state}: ${mem}MB`);
+      } catch (err) {
+        if (!signal.aborted) {
+          throw err;
+        }
+        return; // couldve been aborted after timeout or while waiting for stats
+      }
+    }
+  })();
+
+  debugLog(`Idling...`);
+  await Promise.race([setTimeout(idle), serverWaitForExit]);
+
+  debugLog(`Loadtesting...`);
+  state = 'loadtest';
   const [, waitForExit] = await spawn(
     {
       cwd,
@@ -74,50 +111,10 @@ export async function loadtest(opts: LoadtestOptions) {
       ctrl.abort();
     },
   };
-
-  let loadtesting = true;
-  const memoryInMBSnapshots = {
-    loadtest: [] as number[],
-    calmdown: [] as number[],
-    total: [] as number[],
-  };
-
-  // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
-  (async () => {
-    while (!signal.aborted) {
-      await setTimeout(memorySnapshotWindow);
-      try {
-        const { mem } = await server.getStats();
-        if (loadtesting) {
-          memoryInMBSnapshots.loadtest.push(mem);
-          debugLog(`[loadtest] server memory during loadtest: ${mem}MB`);
-        } else {
-          memoryInMBSnapshots.calmdown.push(mem);
-          debugLog(`[loadtest] server memory during calmdown: ${mem}MB`);
-        }
-        memoryInMBSnapshots.total.push(mem);
-      } catch (err) {
-        if (!signal.aborted) {
-          throw err;
-        }
-        return; // couldve been aborted after timeout or while waiting for stats
-      }
-    }
-  })();
-
-  const serverWaitForExit = server.waitForExit.then(() => {
-    throw new Error(
-      `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
-    );
-  });
-
-  // loadtest
   await Promise.race([waitForExit, serverWaitForExit]);
 
-  loadtesting = false;
   debugLog(`Loadtest completed, waiting for calmdown...`);
-
-  // calmdown
+  state = 'calmdown';
   await Promise.race([setTimeout(calmdown), serverWaitForExit]);
 
   if (isDebug('loadtest')) {
@@ -127,12 +124,20 @@ export async function loadtest(opts: LoadtestOptions) {
       ),
       [
         {
+          label: 'Idle',
+          data: memoryInMBSnapshots.idle,
+        },
+        {
           label: 'Loadtest',
-          data: memoryInMBSnapshots.loadtest,
+          data: [
+            ...memoryInMBSnapshots.idle.map(() => null), // skip idle data
+            ...memoryInMBSnapshots.loadtest,
+          ],
         },
         {
           label: 'Calmdown',
           data: [
+            ...memoryInMBSnapshots.idle.map(() => null), // skip idle data
             ...memoryInMBSnapshots.loadtest.map(() => null), // skip loadtest data
             ...memoryInMBSnapshots.calmdown,
           ],
