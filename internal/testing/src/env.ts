@@ -1,7 +1,17 @@
 import os from 'node:os';
 
-/** Checks whether the `DEBUG` environment variable is truthy. */
-export function isDebug() {
+/**
+ * Checks whether the `DEBUG` environment variable is truthy.
+ * If the {@link module} is provided, then the debug will only
+ * be activated for the specific module in code.
+ *
+ * For example, `isDebug('loadtest')` will only activate when the enviorment
+ * variable `DEBUG_loadtest` is set to a truthy value.
+ */
+export function isDebug(module?: string) {
+  if (module) {
+    return boolEnv(`DEBUG_${module}`);
+  }
   return boolEnv('DEBUG');
 }
 
