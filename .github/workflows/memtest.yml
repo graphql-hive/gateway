@@ -17,7 +17,9 @@ jobs:
   memtest:
     strategy:
       matrix:
-        e2e_runner: [node, bun]
+        e2e_runner:
+          - node
+          # - bun TODO: fix getting memory snaps for bun
     name: ${{matrix.e2e_runner}}
     runs-on: ubuntu-latest
     steps:
