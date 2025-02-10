@@ -21,7 +21,7 @@ export interface MemtestOptions
   /**
    * Calmdown duration after loadtesting in milliseconds.
    *
-   * @default 15_000
+   * @default 20_000
    */
   calmdown?: number;
   /**
@@ -38,13 +38,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     slopeThreshold = 3,
     idle = 10_000,
     duration = 60_000,
-    calmdown = 15_000,
+    calmdown = 20_000,
     ...loadtestOpts
   } = opts;
   it(
     'should not have a memory increase trend',
     {
-      timeout: duration + calmdown + 10_000, // allow 10s for the test teardown
+      timeout: idle + duration + calmdown + 10_000, // allow 10s for the test teardown
     },
     async ({ expect }) => {
       const server = await setup();
