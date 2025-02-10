@@ -69,7 +69,7 @@ export async function loadtest(opts: LoadtestOptions) {
         const { mem } = await server.getStats();
         memoryInMBSnapshots[state].push(mem);
         memoryInMBSnapshots.total.push(mem);
-        debugLog(`[loadtest] server memory during ${state}: ${mem}MB`);
+        debugLog(`server memory during ${state}: ${mem}MB`);
       } catch (err) {
         if (!ctrl.signal.aborted) {
           throw err;
