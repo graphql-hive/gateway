@@ -46,20 +46,12 @@ export async function loadtest(opts: LoadtestOptions) {
     throw new Error(`Duration has to be at least 3s, got "${duration}"`);
   }
 
-  const serverWaitForExit = server.waitForExit.then(() => {
-    throw new Error(
-      `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
-    );
-  });
   const ctrl = new AbortController();
-  const signal = AbortSignal.any([
-    ctrl.signal,
-    AbortSignal.timeout(
-      duration +
-        // allow 1s for the k6 process to exit gracefully
-        1_000,
-    ),
-  ]);
+  using _ = {
+    [Symbol.dispose]() {
+      ctrl.abort();
+    },
+  };
 
   let state: 'idle' | 'loadtest' | 'calmdown' = 'idle';
   const memoryInMBSnapshots = {
@@ -71,7 +63,7 @@ export async function loadtest(opts: LoadtestOptions) {
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   (async () => {
-    while (!signal.aborted) {
+    while (!ctrl.signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
         const { mem } = await server.getStats();
@@ -79,7 +71,7 @@ export async function loadtest(opts: LoadtestOptions) {
         memoryInMBSnapshots.total.push(mem);
         debugLog(`[loadtest] server memory during ${state}: ${mem}MB`);
       } catch (err) {
-        if (!signal.aborted) {
+        if (!ctrl.signal.aborted) {
           throw err;
         }
         return; // couldve been aborted after timeout or while waiting for stats
@@ -87,8 +79,14 @@ export async function loadtest(opts: LoadtestOptions) {
     }
   })();
 
+  const serverThrowOnExit = server.waitForExit.then(() => {
+    throw new Error(
+      `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
+    );
+  });
+
   debugLog(`Idling...`);
-  await Promise.race([setTimeout(idle), serverWaitForExit]);
+  await Promise.race([setTimeout(idle), serverThrowOnExit]);
 
   debugLog(`Loadtesting...`);
   state = 'loadtest';
@@ -96,7 +94,14 @@ export async function loadtest(opts: LoadtestOptions) {
     {
       cwd,
       ...procOptions,
-      signal,
+      signal: AbortSignal.any([
+        ctrl.signal,
+        AbortSignal.timeout(
+          duration +
+            // allow 1s for the k6 process to exit gracefully
+            1_000,
+        ),
+      ]),
     },
     'k6',
     'run',
@@ -106,16 +111,11 @@ export async function loadtest(opts: LoadtestOptions) {
     `--env=QUERY=${query}`,
     path.join(__dirname, 'loadtest-script.ts'),
   );
-  using _ = {
-    [Symbol.dispose]() {
-      ctrl.abort();
-    },
-  };
-  await Promise.race([waitForExit, serverWaitForExit]);
+  await Promise.race([waitForExit, serverThrowOnExit]);
 
   debugLog(`Loadtest completed, waiting for calmdown...`);
   state = 'calmdown';
-  await Promise.race([setTimeout(calmdown), serverWaitForExit]);
+  await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
 
   if (isDebug('loadtest')) {
     const chart = createLineChart(
