@@ -6,15 +6,13 @@ import chartTrendline from // @ts-expect-error no type definitions
 export interface LineChartDataset {
   /** The label of the line in the line chart. */
   label: string;
-  /** The X data points in the line chart, which are the labels. */
-  x: (number | string)[];
   /** The Y data points in the line chart. */
-  y: number[];
+  data: (number | null)[];
 }
 
 export interface LineChartOptions {
   /**
-   * The tick label callbacks of {@link LineChartDataset.y y} entries.
+   * The tick label callbacks of {@link LineChartDataset.data y} entries.
    *
    * TODO: separate the tick callback for each data.
    */
@@ -22,7 +20,9 @@ export interface LineChartOptions {
 }
 
 export function createLineChart(
-  { label, x, y }: LineChartDataset,
+  /** The X data points in the line chart, which are the labels. */
+  labels: (number | string | null)[],
+  datasets: LineChartDataset[],
   options: LineChartOptions = {},
 ): Canvas {
   const canvas = createCanvas(800, 400, 'svg');
@@ -30,18 +30,15 @@ export function createLineChart(
   const chartConfig: ChartConfiguration = {
     type: 'line',
     data: {
-      labels: x,
-      datasets: [
-        {
-          label,
-          data: y,
-          // @ts-expect-error no type definitions
-          trendlineLinear: {
-            width: 1,
-            lineStyle: 'dashed',
-          },
+      labels,
+      datasets: datasets.map(({ label, data }) => ({
+        label,
+        data,
+        trendlineLinear: {
+          width: 1,
+          lineStyle: 'dashed',
         },
-      ],
+      })),
     },
     options: {
       responsive: false, // because we're rendering the chart statically
