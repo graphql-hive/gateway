@@ -5847,6 +5847,7 @@ __metadata:
     "@types/regression": "npm:^2"
     canvas: "npm:^3.1.0"
     chart.js: "npm:^4.4.7"
+    chartjs-plugin-trendline: "npm:^2.1.6"
     parse-duration: "npm:^2.0.0"
     regression: "npm:^2.0.1"
   languageName: unknown
@@ -10835,6 +10836,13 @@ __metadata:
   dependencies:
     "@kurkle/color": "npm:^0.3.0"
   checksum: 10c0/9db499993c561f11184112003956ba96cf00513e025f58846be36e75ebddc6cbab2f93626c3734c305bc801e9362a9ef193b9591e679c59903b2ecb48cfcb317
+  languageName: node
+  linkType: hard
+
+"chartjs-plugin-trendline@npm:^2.1.6":
+  version: 2.1.6
+  resolution: "chartjs-plugin-trendline@npm:2.1.6"
+  checksum: 10c0/26a8a6cb7d28a64a282afb2a1eed019f58086c7b789b9ba4de014a641086dfd9dd5d41b54fbfd003eae7741294683166ab214b0c62d5d82d96656ab6e32b03c2
   languageName: node
   linkType: hard
 
