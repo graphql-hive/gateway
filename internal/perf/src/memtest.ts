@@ -15,7 +15,7 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest in milliseconds.
    *
-   * @default 60_000
+   * @default 180_000
    */
   duration?: number;
   /**
@@ -37,7 +37,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
     loadtestSlopeThreshold = 3,
     idle = 10_000,
-    duration = 60_000,
+    duration = 180_000,
     calmdown = 20_000,
     ...loadtestOpts
   } = opts;
