@@ -1,5 +1,7 @@
 import { Canvas, createCanvas } from 'canvas';
 import { Chart, ChartConfiguration } from 'chart.js/auto';
+import chartTrendline from // @ts-expect-error no type definitions
+'chartjs-plugin-trendline';
 
 export interface LineChartDataset {
   /** The label of the line in the line chart. */
@@ -33,6 +35,11 @@ export function createLineChart(
         {
           label,
           data: y,
+          // @ts-expect-error no type definitions
+          trendlineLinear: {
+            width: 1,
+            lineStyle: 'dashed',
+          },
         },
       ],
     },
@@ -47,6 +54,7 @@ export function createLineChart(
       },
     },
     plugins: [
+      chartTrendline,
       {
         id: 'set-white-background',
         beforeDraw: (chart) => {
