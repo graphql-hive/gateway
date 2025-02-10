@@ -5,7 +5,13 @@ import { it } from 'vitest';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 export interface MemtestOptions
-  extends Omit<LoadtestOptions, 'duration' | 'calmdown' | 'server'> {
+  extends Omit<LoadtestOptions, 'idle' | 'duration' | 'calmdown' | 'server'> {
+  /**
+   * Idling duration before loadtest in milliseconds.
+   *
+   * @default 10_000
+   */
+  idle?: number;
   /**
    * Duration of the loadtest in milliseconds.
    *
@@ -15,7 +21,7 @@ export interface MemtestOptions
   /**
    * Calmdown duration after loadtesting in milliseconds.
    *
-   * @default 30_000
+   * @default 15_000
    */
   calmdown?: number;
   /**
@@ -30,8 +36,9 @@ export interface MemtestOptions
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
     slopeThreshold = 3,
+    idle = 10_000,
     duration = 60_000,
-    calmdown = 30_000,
+    calmdown = 15_000,
     ...loadtestOpts
   } = opts;
   it(
@@ -44,6 +51,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       const { memoryInMBSnapshots } = await loadtest({
         ...loadtestOpts,
+        idle,
         duration,
         calmdown,
         server,
@@ -51,7 +59,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       const slope = calculateRegressionSlope(memoryInMBSnapshots.total);
       if (isDebug('memtest')) {
-        console.log(`[memtest] server memory regression slope: ${slope}`);
+        console.log(`[memtest] server memory total regression slope: ${slope}`);
       }
 
       expect(
