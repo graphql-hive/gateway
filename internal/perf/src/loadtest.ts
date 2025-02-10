@@ -1,7 +1,7 @@
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
-import { trimError } from '@internal/testing';
+import { isDebug, trimError } from '@internal/testing';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -77,6 +77,9 @@ export async function loadtest(opts: LoadtestOptions) {
       try {
         const { mem } = await server.getStats();
         memoryInMBSnapshots.push(mem);
+        if (isDebug()) {
+          console.log(`[loadtest] server memory: ${mem}MB`);
+        }
       } catch (err) {
         if (!signal.aborted) {
           throw err;
