@@ -92,7 +92,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       }
       expect
         .soft(calmdownSlope, `No memory decrease detected during calmdown`)
-        .toBeLessThanOrEqual(-2);
+        .toBeLessThanOrEqual(-10);
     },
   );
 }
