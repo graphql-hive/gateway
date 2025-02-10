@@ -3264,7 +3264,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.8.4, @graphql-hive/core@npm:^0.8.1, @graphql-hive/core@npm:^0.8.3":
+"@graphql-hive/core@npm:0.8.4, @graphql-hive/core@npm:^0.8.3":
   version: 0.8.4
   resolution: "@graphql-hive/core@npm:0.8.4"
   dependencies:
@@ -3279,6 +3279,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/core@npm:^0.9.0":
+  version: 0.9.1
+  resolution: "@graphql-hive/core@npm:0.9.1"
+  dependencies:
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:0.10.1"
+    async-retry: "npm:1.3.3"
+    lodash.sortby: "npm:4.7.0"
+    tiny-lru: "npm:8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/78e22d3c2810197e5e2331ff0fef7dbb7231aa34995f59be27232a735ccc87ccd783b632e6d01d231aed47b381d12ad10a110d5c0443a446fa1917f87e3625ff
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/gateway-runtime@workspace:*, @graphql-hive/gateway-runtime@workspace:^, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
@@ -3286,7 +3301,7 @@ __metadata:
     "@envelop/core": "npm:^5.0.0"
     "@envelop/disable-introspection": "npm:^6.0.0"
     "@envelop/generic-auth": "npm:^8.0.0"
-    "@graphql-hive/core": "npm:^0.8.1"
+    "@graphql-hive/core": "npm:^0.9.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
     "@graphql-mesh/fusion-composition": "npm:^0.7.0"
     "@graphql-mesh/fusion-runtime": "workspace:^"
