@@ -492,17 +492,17 @@ it('should consistently explain the query plan', async () => {
             "variables": {},
           },
           {
-            "query": "query TestQuery($_0__v0_representations: [_Any!]!, $_1__v0_representations: [_Any!]!) {
-      _0___typename: __typename
-      _0__entities: _entities(representations: $_0__v0_representations) {
+            "query": "query TestQuery($_v0_representations: [_Any!]!, $_v1_representations: [_Any!]!) {
+      _v0___typename: __typename
+      _v0__entities: _entities(representations: $_v0_representations) {
         __typename
         ... on Product {
           upc
           inStock
         }
       }
-      _1___typename: __typename
-      _1__entities: _entities(representations: $_1__v0_representations) {
+      _v1___typename: __typename
+      _v1__entities: _entities(representations: $_v1_representations) {
         __typename
         ... on Product {
           upc
@@ -512,7 +512,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "inventory",
             "variables": {
-              "_0__v0_representations": [
+              "_v0_representations": [
                 {
                   "__typename": "Product",
                   "price": 899,
@@ -532,7 +532,7 @@ it('should consistently explain the query plan', async () => {
                   "weight": 50,
                 },
               ],
-              "_1__v0_representations": [
+              "_v1_representations": [
                 {
                   "__typename": "Product",
                   "price": 899,
@@ -555,9 +555,9 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($_v0_first: Int) {
+            "query": "query TestQuery($first: Int) {
       __typename
-      topProducts(first: $_v0_first) {
+      topProducts(first: $first) {
         __typename
         ...Product
         upc
@@ -576,13 +576,13 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "products",
             "variables": {
-              "_v0_first": 5,
+              "first": 5,
             },
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!) {
+            "query": "query TestQuery($representations: [_Any!]!) {
       __typename
-      _entities(representations: $_v0_representations) {
+      _entities(representations: $representations) {
         __typename
         ... on Product {
           upc
@@ -596,7 +596,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "products",
             "variables": {
-              "_v0_representations": [
+              "representations": [
                 {
                   "__typename": "Product",
                   "upc": "1",
@@ -613,9 +613,9 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!) {
+            "query": "query TestQuery($representations: [_Any!]!) {
       __typename
-      _entities(representations: $_v0_representations) {
+      _entities(representations: $representations) {
         __typename
         ... on Product {
           upc
@@ -662,7 +662,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "reviews",
             "variables": {
-              "_v0_representations": [
+              "representations": [
                 {
                   "__typename": "Product",
                   "upc": "1",
@@ -679,9 +679,9 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!) {
+            "query": "query TestQuery($representations: [_Any!]!) {
       __typename
-      _entities(representations: $_v0_representations) {
+      _entities(representations: $representations) {
         __typename
         ... on User {
           id
@@ -738,7 +738,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "reviews",
             "variables": {
-              "_v0_representations": [
+              "representations": [
                 {
                   "__typename": "User",
                   "id": "1",
@@ -751,9 +751,9 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!) {
+            "query": "query TestQuery($representations: [_Any!]!) {
       __typename
-      _entities(representations: $_v0_representations) {
+      _entities(representations: $representations) {
         __typename
         ... on User {
           id
@@ -764,7 +764,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "accounts",
             "variables": {
-              "_v0_representations": [
+              "representations": [
                 {
                   "__typename": "User",
                   "id": "1",

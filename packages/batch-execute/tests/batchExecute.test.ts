@@ -128,7 +128,7 @@ describe('batch execution', () => {
 
     expect(first?.data).toEqual({ field3: '1' });
     expect(second?.data).toEqual({ field3: '2' });
-    expect(executorVariables).toEqual({ _0_a: '1', _1_a: '2' });
+    expect(executorVariables).toEqual({ _v0_a: '1', _v1_a: '2' });
     expect(executorCalls).toEqual(1);
   });
 
@@ -155,8 +155,8 @@ describe('batch execution', () => {
     ])) as ExecutionResult[];
 
     const squishedDoc = executorDocument?.replace(/\s+/g, ' ');
-    expect(squishedDoc).toMatch('... on Query { _0_field1: field1 }');
-    expect(squishedDoc).toMatch('... on Query { _1_field2: field2 }');
+    expect(squishedDoc).toMatch('... on Query { _v0_field1: field1 }');
+    expect(squishedDoc).toMatch('... on Query { _v1_field2: field2 }');
     expect(first?.data).toEqual({ field1: '1' });
     expect(second?.data).toEqual({ field2: '2' });
     expect(executorCalls).toEqual(1);
@@ -177,10 +177,10 @@ describe('batch execution', () => {
     ])) as ExecutionResult[];
 
     const squishedDoc = executorDocument?.replace(/\s+/g, ' ');
-    expect(squishedDoc).toMatch('_0_widget: widget { ..._0_A }');
-    expect(squishedDoc).toMatch('_1_widget: widget { ..._1_A }');
-    expect(squishedDoc).toMatch('fragment _0_A on Widget');
-    expect(squishedDoc).toMatch('fragment _1_A on Widget');
+    expect(squishedDoc).toMatch('_v0_widget: widget { ..._v0_A }');
+    expect(squishedDoc).toMatch('_v1_widget: widget { ..._v1_A }');
+    expect(squishedDoc).toMatch('fragment _v0_A on Widget');
+    expect(squishedDoc).toMatch('fragment _v1_A on Widget');
     expect(first?.data).toEqual({ widget: { name: 'wingnut' } });
     expect(second?.data).toEqual({ widget: { name: 'wingnut' } });
     expect(executorCalls).toEqual(1);
@@ -261,12 +261,12 @@ describe('batch execution', () => {
     const [first, second] = (await Promise.all([
       batchExec({
         document: parse(
-          '{ boomWithPath(message: "unexpected error", path: ["some-prefix", "_0_boomWithPath", "foo"]) }',
+          '{ boomWithPath(message: "unexpected error", path: ["some-prefix", "_v0_boomWithPath", "foo"]) }',
         ),
       }),
       batchExec({
         document: parse(
-          '{ boomWithPath(message: "another unexpected error", path: ["some", "other", "prefix", "_1_boomWithPath", "bar"]) }',
+          '{ boomWithPath(message: "another unexpected error", path: ["some", "other", "prefix", "_v1_boomWithPath", "bar"]) }',
         ),
       }),
     ])) as ExecutionResult[];
