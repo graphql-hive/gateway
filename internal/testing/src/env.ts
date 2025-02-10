@@ -5,12 +5,15 @@ import os from 'node:os';
  * If the {@link module} is provided, then the debug will only
  * be activated for the specific module in code.
  *
- * For example, `isDebug('loadtest')` will only activate when the enviorment
- * variable `DEBUG_loadtest` is set to a truthy value.
+ * For example, `isDebug('loadtest')` will only activate when the
+ * variable `loadtest` is listed in the `DEBUG` enviorment variable.
  */
 export function isDebug(module?: string) {
   if (module) {
-    return boolEnv(`DEBUG_${module}`);
+    const modules = String(process.env['DEBUG'])
+      .split(',')
+      .map((m) => m.trim());
+    return modules.includes(module);
   }
   return boolEnv('DEBUG');
 }
