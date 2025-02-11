@@ -286,7 +286,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         `Adding "tsx@${version}" dev dependency because there are services...`,
       );
       packageJson.devDependencies ||= {};
-      packageJson.devDependencies['tsx'] = version;
+      packageJson.devDependencies['tsx'] = `^${version}`;
     }
 
     if (composesWithApollo) {
@@ -295,7 +295,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
         `Adding "@apollo/rover@${version}" dev dependency because composition is done with Apollo...`,
       );
       packageJson.devDependencies ||= {};
-      packageJson.devDependencies['@apollo/rover'] = version;
+      packageJson.devDependencies['@apollo/rover'] = `^${version}`;
     }
 
     {
