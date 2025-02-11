@@ -56,7 +56,12 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     async ({ expect }) => {
       const server = await setup();
 
-      const startTime = Date.now();
+      const startTime = new Date()
+        .toISOString()
+        // replace time colons with dashes to make it a valid filename
+        .replaceAll(':', '-')
+        // remove milliseconds
+        .split('.')[0];
 
       const snapshots = await loadtest({
         ...loadtestOpts,
