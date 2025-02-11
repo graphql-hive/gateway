@@ -15,6 +15,7 @@ import type {
   GatewayGraphOSReportingOptions,
   GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
@@ -143,7 +144,8 @@ export interface GatewayCLIBuiltinPluginConfig {
     | KeyValueCacheFactoryFn
     | GatewayCLILocalforageCacheConfig
     | GatewayCLIRedisCacheConfig
-    | GatewayCLICloudflareKVCacheConfig;
+    | GatewayCLICloudflareKVCacheConfig
+    | GatewayCLIUpstashRedisCacheConfig;
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
@@ -158,6 +160,10 @@ export type GatewayCLICloudflareKVCacheConfig =
   YamlConfig.CFWorkersKVCacheConfig & {
     type: 'cfw-kv';
   };
+
+export type GatewayCLIUpstashRedisCacheConfig = {
+  type: 'upstash-redis';
+} & ConstructorParameters<typeof UpstashRedisCache>[0];
 
 /**
  * Type helper for defining the config.

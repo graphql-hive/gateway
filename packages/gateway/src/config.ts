@@ -176,6 +176,15 @@ export async function getCacheInstanceFromConfig(
           ...config.cache,
         });
       }
+      case 'upstash-redis': {
+        const { default: UpstashRedisCache } = await import(
+          '@graphql-mesh/cache-upstash-redis'
+        );
+        return new UpstashRedisCache({
+          ...ctx,
+          ...config.cache,
+        });
+      }
     }
     if (config.cache.type !== 'localforage') {
       ctx.logger.warn(
