@@ -98,8 +98,8 @@ export async function loadtest(opts: LoadtestOptions) {
         ctrl.signal,
         AbortSignal.timeout(
           duration +
-            // allow 1s for the k6 process to exit gracefully
-            1_000,
+            // allow 5s for the k6 process to exit gracefully
+            5_000,
         ),
       ]),
     },
