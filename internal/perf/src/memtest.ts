@@ -72,7 +72,6 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         calmdown,
         server,
         async onMemorySnapshot(memoryUsageInMB, phase, snapshots) {
-          debugLog(`server memory during ${phase}: ${memoryUsageInMB}MB`);
           if (isDebug('memtest')) {
             const chart = createLineChart(
               snapshots.total.map(
