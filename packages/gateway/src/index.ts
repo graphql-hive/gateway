@@ -12,6 +12,7 @@ export { default as useSnapshot } from '@graphql-mesh/plugin-snapshot';
 export { default as CloudflareKVCacheStorage } from '@graphql-mesh/cache-cfw-kv';
 export { default as RedisCacheStorage } from '@graphql-mesh/cache-redis';
 export { default as LocalForageCacheStorage } from '@graphql-mesh/cache-localforage';
+export { default as UpstashRedisCache } from '@graphql-mesh/cache-upstash-redis';
 export { default as usePrometheus } from '@graphql-mesh/plugin-prometheus';
 export {
   type WSTransportOptions,
