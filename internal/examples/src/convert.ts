@@ -281,7 +281,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
 
     if (Object.keys(eenv.services).length) {
-      const version = '^4.19.2'; // TODO: use the version from root package.json
+      const { version } = await import('tsx/package.json');
       console.log(
         `Adding "tsx@${version}" dev dependency because there are services...`,
       );
@@ -290,7 +290,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     }
 
     if (composesWithApollo) {
-      const version = '^0.26.3'; // TODO: use the latest version
+      const { version } = await import('@apollo/rover/package.json');
       console.log(
         `Adding "@apollo/rover@${version}" dev dependency because composition is done with Apollo...`,
       );
