@@ -152,7 +152,7 @@ export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
   type: 'localforage';
 };
 
-export type GatewayCLIRedisCacheConfig = YamlConfig.RedisConfig & {
+export type GatewayCLIRedisCacheConfig = (YamlConfig.RedisConfigSingle | YamlConfig.RedisConfigSentinel) & {
   type: 'redis';
 };
 
