@@ -33,7 +33,7 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import type { OnParamsEventPayload, YogaInitialContext } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
-import { OtelContextStack } from './contextManager';
+import { OtelContextStack } from './context-stack';
 import {
   getMostSpecificState,
   withState,
@@ -471,7 +471,7 @@ export function useOpenTelemetry(
         return;
       }
 
-      // Here it is possible that otelCtx is not present, because this hook can be triggered by
+      // Here it is possible that context is not present, because this hook can be triggered by
       // internal introspection queries, which are not linked to any client request, but should
       // still be traced and monitored.
 
@@ -502,15 +502,18 @@ export function useOpenTelemetry(
         return;
       }
 
-      // Here it is possible that otelCtx is not present, because this hook can be triggered by
-      // internal introspection queries, which are not linked to any client request, but should
-      // still be traced and monitored.
+      // Here it is possible that request, context and executionRequest are not present, because
+      // this hook can be triggered by any fetch call, which are not linked to any client request,
+      // but should still be traced and monitored.
 
       let { fetchFn } = onFetchPayload;
       const originalFetch = fetchFn;
       let onDone: OnFetchHookDone | undefined = void 0;
 
       if (propagateContext) {
+        // We need to set the fetcher function instead of using `setOptions` because `getContext`
+        // because we want to use the otel context at fetch time, in case a custom span has been
+        // started by user.
         fetchFn = (url, options, ...args) => {
           const reqHeaders = getHeadersObj(options?.headers || {});
           propagation.inject(getContext(state), reqHeaders);
