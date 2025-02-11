@@ -1,11 +1,23 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { Server } from '@internal/proc';
 import { isDebug } from '@internal/testing';
 import regression from 'regression';
 import { it } from 'vitest';
+import { createLineChart } from './chart';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 export interface MemtestOptions
-  extends Omit<LoadtestOptions, 'idle' | 'duration' | 'calmdown' | 'server'> {
+  extends Omit<
+    LoadtestOptions,
+    'memorySnapshotWindow' | 'idle' | 'duration' | 'calmdown' | 'server'
+  > {
+  /**
+   * The snapshotting window of the GraphQL server memory in milliseconds.
+   *
+   * @default 1_000
+   */
+  memorySnapshotWindow?: number;
   /**
    * Idling duration before loadtest in milliseconds.
    *
@@ -28,9 +40,12 @@ export interface MemtestOptions
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
+    cwd,
+    memorySnapshotWindow = 1_000,
     idle = 10_000,
     duration = 180_000,
     calmdown = 30_000,
+    onMemorySnapshot,
     ...loadtestOpts
   } = opts;
   it(
@@ -41,44 +56,71 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     async ({ expect }) => {
       const server = await setup();
 
-      const { memoryInMBSnapshots } = await loadtest({
+      const startTime = Date.now();
+
+      const snapshots = await loadtest({
         ...loadtestOpts,
+        cwd,
+        memorySnapshotWindow,
         idle,
         duration,
         calmdown,
         server,
+        async onMemorySnapshot(memoryUsageInMB, phase, snapshots) {
+          debugLog(`server memory during ${phase}: ${memoryUsageInMB}MB`);
+          if (isDebug('memtest')) {
+            const chart = createLineChart(
+              snapshots.total.map(
+                (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
+              ),
+              [
+                {
+                  label: 'Idle',
+                  data: snapshots.idle,
+                },
+                {
+                  label: 'Loadtest',
+                  data: [
+                    ...snapshots.idle.map(() => null), // skip idle data
+                    ...snapshots.loadtest,
+                  ],
+                },
+                {
+                  label: 'Calmdown',
+                  data: [
+                    ...snapshots.idle.map(() => null), // skip idle data
+                    ...snapshots.loadtest.map(() => null), // skip loadtest data
+                    ...snapshots.calmdown,
+                  ],
+                },
+              ],
+              {
+                yTicksCallback: (tickValue) => `${tickValue} MB`,
+              },
+            );
+            await fs.writeFile(
+              path.join(cwd, `memtest-memory-snapshots_${startTime}.svg`),
+              chart.toBuffer(),
+            );
+          }
+          return onMemorySnapshot?.(memoryUsageInMB, phase, snapshots);
+        },
       });
 
-      const idleSlope = calculateRegressionSlope(memoryInMBSnapshots.idle);
-      if (isDebug('memtest')) {
-        console.log(
-          `[memtest] server memory idle regression slope: ${idleSlope}`,
-        );
-      }
+      const idleSlope = calculateRegressionSlope(snapshots.idle);
+      debugLog(`server memory idle regression slope: ${idleSlope}`);
       expect
         .soft(idleSlope, 'Memory increase detected while idling')
         .toBeLessThanOrEqual(0);
 
-      const loadtestSlope = calculateRegressionSlope(
-        memoryInMBSnapshots.loadtest,
-      );
-      if (isDebug('memtest')) {
-        console.log(
-          `[memtest] server memory loadtest regression slope: ${loadtestSlope}`,
-        );
-      }
+      const loadtestSlope = calculateRegressionSlope(snapshots.loadtest);
+      debugLog(`server memory loadtest regression slope: ${loadtestSlope}`);
       expect
         .soft(loadtestSlope, 'Memory never stopped growing during loadtest')
         .toBeLessThanOrEqual(1);
 
-      const calmdownSlope = calculateRegressionSlope(
-        memoryInMBSnapshots.calmdown,
-      );
-      if (isDebug('memtest')) {
-        console.log(
-          `[memtest] server memory calmdown regression slope: ${calmdownSlope}`,
-        );
-      }
+      const calmdownSlope = calculateRegressionSlope(snapshots.calmdown);
+      debugLog(`server memory calmdown regression slope: ${calmdownSlope}`);
       expect
         .soft(calmdownSlope, 'No memory decrease detected during calmdown')
         .toBeLessThanOrEqual(-10);
@@ -106,4 +148,10 @@ function calculateRegressionSlope(snapshots: number[]) {
   const slope = result.equation[0];
 
   return slope;
+}
+
+function debugLog(msg: string) {
+  if (isDebug('memtest')) {
+    console.log(`[memtest] ${msg}`);
+  }
 }
