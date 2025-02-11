@@ -13,7 +13,8 @@
   },
   "devDependencies": {
     "tsx": "^4.19.2",
-    "@apollo/rover": "^0.27.0"
+    "@apollo/rover": "^0.27.0",
+    "esbuild": "^0.25.0"
   },
   "scripts": {
     "service:accounts": "tsx services/accounts/index.ts",
