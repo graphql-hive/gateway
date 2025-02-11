@@ -1,9 +1,7 @@
-import fs from 'fs/promises';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
-import { isDebug, trimError } from '@internal/testing';
-import { createLineChart } from './chart';
+import { trimError } from '@internal/testing';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -15,30 +13,46 @@ export interface LoadtestOptions extends ProcOptions {
   duration: number;
   /** Calmdown duration of the loadtest in milliseconds. This should be enough allowing the GC to kick in. */
   calmdown: number;
-  /**
-   * The snapshotting window of the GraphQL server memory in milliseconds.
-   *
-   * @default 1_000
-   */
-  memorySnapshotWindow?: number;
+  /** The snapshotting window of the GraphQL server memory in milliseconds. */
+  memorySnapshotWindow: number;
   /** The GraphQL server on which the loadtest is running. */
   server: Server;
   /**
    * The GraphQL query to execute for the loadtest.
    */
   query: string;
+  /** Callback for memory snapshots during the loadtest. */
+  onMemorySnapshot?(
+    memoryUsageInMB: number,
+    phase: LoadtestPhase,
+    snapshots: LoadtestMemorySnapshots,
+  ): Promise<void> | void;
 }
 
-export async function loadtest(opts: LoadtestOptions) {
+export type LoadtestPhase = 'idle' | 'loadtest' | 'calmdown';
+
+/** Memory usage snapshots in MB of the {@link LoadtestOptions.server GraphQL server}.*/
+export type LoadtestMemorySnapshots = {
+  /** Memory usage snapshots in MB during the given loadtest phase.*/
+  [phase in LoadtestPhase]: number[];
+} & {
+  /** All memory snapshots in MB of all the loadtest phases. */
+  total: number[];
+};
+
+export async function loadtest(
+  opts: LoadtestOptions,
+): Promise<LoadtestMemorySnapshots> {
   const {
     cwd,
     vus = 100,
     idle,
     duration,
     calmdown,
-    memorySnapshotWindow = 1_000,
+    memorySnapshotWindow,
     server,
     query,
+    onMemorySnapshot,
     ...procOptions
   } = opts;
 
@@ -53,12 +67,12 @@ export async function loadtest(opts: LoadtestOptions) {
     },
   };
 
-  let state: 'idle' | 'loadtest' | 'calmdown' = 'idle';
-  const memoryInMBSnapshots = {
-    loadtest: [] as number[],
-    idle: [] as number[],
-    calmdown: [] as number[],
-    total: [] as number[],
+  let phase: LoadtestPhase = 'idle';
+  const snapshots: LoadtestMemorySnapshots = {
+    loadtest: [],
+    idle: [],
+    calmdown: [],
+    total: [],
   };
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
@@ -67,9 +81,9 @@ export async function loadtest(opts: LoadtestOptions) {
       await setTimeout(memorySnapshotWindow);
       try {
         const { mem } = await server.getStats();
-        memoryInMBSnapshots[state].push(mem);
-        memoryInMBSnapshots.total.push(mem);
-        debugLog(`server memory during ${state}: ${mem}MB`);
+        snapshots[phase].push(mem);
+        snapshots.total.push(mem);
+        await onMemorySnapshot?.(mem, phase, snapshots);
       } catch (err) {
         if (!ctrl.signal.aborted) {
           throw err;
@@ -85,11 +99,9 @@ export async function loadtest(opts: LoadtestOptions) {
     );
   });
 
-  debugLog(`Idling...`);
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
 
-  debugLog(`Loadtesting...`);
-  state = 'loadtest';
+  phase = 'loadtest';
   const [, waitForExit] = await spawn(
     {
       cwd,
@@ -113,51 +125,8 @@ export async function loadtest(opts: LoadtestOptions) {
   );
   await Promise.race([waitForExit, serverThrowOnExit]);
 
-  debugLog(`Loadtest completed, waiting for calmdown...`);
-  state = 'calmdown';
+  phase = 'calmdown';
   await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
 
-  if (isDebug('loadtest')) {
-    const chart = createLineChart(
-      memoryInMBSnapshots.total.map(
-        (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
-      ),
-      [
-        {
-          label: 'Idle',
-          data: memoryInMBSnapshots.idle,
-        },
-        {
-          label: 'Loadtest',
-          data: [
-            ...memoryInMBSnapshots.idle.map(() => null), // skip idle data
-            ...memoryInMBSnapshots.loadtest,
-          ],
-        },
-        {
-          label: 'Calmdown',
-          data: [
-            ...memoryInMBSnapshots.idle.map(() => null), // skip idle data
-            ...memoryInMBSnapshots.loadtest.map(() => null), // skip loadtest data
-            ...memoryInMBSnapshots.calmdown,
-          ],
-        },
-      ],
-      {
-        yTicksCallback: (tickValue) => `${tickValue} MB`,
-      },
-    );
-    await fs.writeFile(
-      path.join(cwd, `loadtest-memory-snapshots_${Date.now()}.svg`),
-      chart.toBuffer(),
-    );
-  }
-
-  return { memoryInMBSnapshots };
-}
-
-function debugLog(msg: string) {
-  if (isDebug('loadtest')) {
-    console.log(`[loadtest] ${msg}`);
-  }
+  return snapshots;
 }
