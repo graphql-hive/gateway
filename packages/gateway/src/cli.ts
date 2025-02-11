@@ -139,6 +139,11 @@ export interface GatewayCLIBuiltinPluginConfig {
    * [Learn more](https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks)
    */
   jit?: boolean;
+  /**
+   * Provide a cache instance or a factory function to create a cache instance.
+   *
+   * [Learn more](https://the-guild.dev/graphql/hive/docs/gateway/other-features/performance#providing-cache-storage)
+   */
   cache?:
     | KeyValueCache
     | KeyValueCacheFactoryFn
