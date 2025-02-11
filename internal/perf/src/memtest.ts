@@ -78,21 +78,29 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
                   label: 'Idle',
                   data: snapshots.idle,
                 },
-                {
-                  label: 'Loadtest',
-                  data: [
-                    ...snapshots.idle.map(() => null), // skip idle data
-                    ...snapshots.loadtest,
-                  ],
-                },
-                {
-                  label: 'Calmdown',
-                  data: [
-                    ...snapshots.idle.map(() => null), // skip idle data
-                    ...snapshots.loadtest.map(() => null), // skip loadtest data
-                    ...snapshots.calmdown,
-                  ],
-                },
+                ...(snapshots.loadtest.length
+                  ? [
+                      {
+                        label: 'Loadtest',
+                        data: [
+                          ...snapshots.idle.map(() => null), // skip idle data
+                          ...snapshots.loadtest,
+                        ],
+                      },
+                    ]
+                  : []),
+                ...(snapshots.calmdown.length
+                  ? [
+                      {
+                        label: 'Calmdown',
+                        data: [
+                          ...snapshots.idle.map(() => null), // skip idle data
+                          ...snapshots.loadtest.map(() => null), // skip loadtest data
+                          ...snapshots.calmdown,
+                        ],
+                      },
+                    ]
+                  : []),
               ],
               {
                 yTicksCallback: (tickValue) => `${tickValue} MB`,
