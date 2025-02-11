@@ -21,6 +21,9 @@
     "tsx": "^4.19.2",
     "@apollo/rover": "^0.27.0"
   },
+  "overrides": {
+    "esbuild": "^0.25.0"
+  },
   "scripts": {
     "service:products": "tsx services/products/index.ts",
     "service:reviews": "tsx services/reviews/index.ts",

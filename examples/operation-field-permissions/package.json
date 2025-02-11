@@ -11,6 +11,9 @@
   "devDependencies": {
     "tsx": "^4.19.2"
   },
+  "overrides": {
+    "esbuild": "^0.25.0"
+  },
   "scripts": {
     "service:users": "tsx services/users.ts",
     "compose": "mesh-compose -o supergraph.graphql",
