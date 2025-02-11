@@ -12,4 +12,4 @@ hive-gateway
 .cache/
 *.pem
 /examples/**/*/supergraph.graphql
-/e2e/**/*/memory-snapshots_*.svg
+/e2e/**/*/memtest-memory-snapshots_*.svg
