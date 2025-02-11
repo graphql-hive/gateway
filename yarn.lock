@@ -4757,6 +4757,7 @@ __metadata:
     "@types/jscodeshift": "npm:^0.12.0"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     dedent: "npm:^1.5.3"
+    esbuild: "npm:^0.25.0"
     glob: "npm:^11.0.0"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"

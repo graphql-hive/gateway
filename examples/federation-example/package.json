@@ -11,6 +11,9 @@
     "graphql": "^16.9.0",
     "@graphql-hive/gateway": "^1.9.4"
   },
+  "overrides": {
+    "esbuild": "^0.25.0"
+  },
   "scripts": {
     "service:accounts": "tsx services/accounts/index.ts",
     "service:inventory": "tsx services/inventory/index.ts",

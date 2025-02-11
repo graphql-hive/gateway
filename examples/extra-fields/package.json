@@ -11,6 +11,9 @@
   "devDependencies": {
     "tsx": "^4.19.2"
   },
+  "overrides": {
+    "esbuild": "^0.25.0"
+  },
   "scripts": {
     "service:foo": "tsx services/foo.ts",
     "service:bar": "tsx services/bar.ts",
