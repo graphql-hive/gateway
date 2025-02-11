@@ -289,7 +289,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies['tsx'] = `^${version}`;
       packageJson.overrides ||= {};
       const { version: esbuildVersion } = await import('esbuild/package.json');
-      packageJson.overrides['esbuild'] =  `^${esbuildVersion}`;
+      packageJson.overrides['esbuild'] = `^${esbuildVersion}`;
     }
 
     if (composesWithApollo) {
