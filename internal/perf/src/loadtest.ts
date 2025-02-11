@@ -148,7 +148,7 @@ export async function loadtest(opts: LoadtestOptions) {
       },
     );
     await fs.writeFile(
-      path.join(cwd, 'loadtest-memory-snapshots.svg'),
+      path.join(cwd, `loadtest-memory-snapshots_${Date.now()}.svg`),
       chart.toBuffer(),
     );
   }
