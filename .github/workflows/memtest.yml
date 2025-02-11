@@ -36,6 +36,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Test
-        run: yarn test:mem
+        # we want to run all tests in sequence to avoid memory capping and proper isolation
+        run: yarn test:mem --no-file-parallelism
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
