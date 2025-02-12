@@ -3,8 +3,8 @@ import 'dotenv/config'; // inject dotenv options to process.env
 
 import module from 'node:module';
 import type { InitializeData } from '@graphql-hive/importer/hooks';
-import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
+import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // @inject-version globalThis.__VERSION__ here
 

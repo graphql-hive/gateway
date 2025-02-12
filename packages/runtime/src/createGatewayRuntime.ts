@@ -78,6 +78,7 @@ import {
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { createGraphOSFetcher } from './fetchers/graphos';
+import { getDefaultLogger } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -110,7 +111,6 @@ import {
   defaultQueryText,
   getExecuteFnFromExecutor,
 } from './utils';
-import { getDefaultLogger } from './getDefaultLogger';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path

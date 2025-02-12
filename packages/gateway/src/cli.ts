@@ -14,7 +14,6 @@ import {
   type GatewayConfigSupergraph,
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
-  JSONLogger,
 } from '@graphql-hive/gateway-runtime';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
@@ -28,11 +27,11 @@ import type {
   YamlConfig,
 } from '@graphql-mesh/types';
 import parseDuration from 'parse-duration';
+import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './servers/types';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig

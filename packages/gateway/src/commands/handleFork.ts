@@ -13,13 +13,10 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
         const workerLogger = log.child({ worker: worker.id });
         worker.once('exit', (code, signal) => {
           if (expectedToExit) {
-            workerLogger.debug(
-              'exited',
-              {
-                code,
-                signal,
-              },
-            );
+            workerLogger.debug('exited', {
+              code,
+              signal,
+            });
           } else {
             workerLogger.error(
               'exited unexpectedly. A restart is recommended to ensure the stability of the service',

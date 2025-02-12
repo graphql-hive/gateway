@@ -14,7 +14,7 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
       const fetchId = fetchAPI.crypto.randomUUID();
       const loggerMeta: Record<string, string> = {
         fetchId,
-      }
+      };
       if (requestId) {
         loggerMeta['requestId'] = requestId;
       }

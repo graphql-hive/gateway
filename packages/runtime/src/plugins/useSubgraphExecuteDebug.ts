@@ -15,7 +15,7 @@ export function useSubgraphExecuteDebug<
       const subgraphExecuteId = fetchAPI.crypto.randomUUID();
       const loggerMeta: Record<string, string> = {
         subgraphExecuteId,
-      }
+      };
       if (requestId) {
         loggerMeta['requestId'] = requestId;
       }

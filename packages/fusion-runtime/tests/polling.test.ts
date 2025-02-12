@@ -17,8 +17,8 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
-import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
+import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
   const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
