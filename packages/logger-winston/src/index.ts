@@ -77,15 +77,18 @@ class WinstonLoggerAdapter implements MeshLogger, Disposable {
   }
   child(nameOrMeta: string | Record<string, string | number>) {
     if (typeof nameOrMeta === 'string') {
-      nameOrMeta = { name: this.name ? this.name.includes(nameOrMeta) ? this.name : `${this.name}, ${nameOrMeta}` : nameOrMeta };
+      nameOrMeta = {
+        name: this.name
+          ? this.name.includes(nameOrMeta)
+            ? this.name
+            : `${this.name}, ${nameOrMeta}`
+          : nameOrMeta,
+      };
     }
-    return new WinstonLoggerAdapter(
-      this.winstonLogger.child(nameOrMeta),
-      {
-        ...this.meta,
-        ...nameOrMeta,
-      }
-    );
+    return new WinstonLoggerAdapter(this.winstonLogger.child(nameOrMeta), {
+      ...this.meta,
+      ...nameOrMeta,
+    });
   }
   [DisposableSymbols.dispose]() {
     return this.winstonLogger.close();
