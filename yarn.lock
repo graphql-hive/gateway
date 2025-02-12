@@ -3372,9 +3372,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger-json@workspace:packages/logger-json"
   dependencies:
-    "@graphql-mesh/cross-helpers": "npm:^0.4.9"
-    "@graphql-mesh/types": "npm:^0.103.6"
-    "@graphql-mesh/utils": "npm:^0.103.6"
+    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
+    "@graphql-mesh/types": "npm:^0.103.16"
+    "@graphql-mesh/utils": "npm:^0.103.16"
+    cross-inspect: "npm:^1.0.1"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.8.2"
     tslib: "npm:^2.8.1"

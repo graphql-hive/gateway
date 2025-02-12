@@ -1,6 +1,7 @@
 import { process } from '@graphql-mesh/cross-helpers';
 import type { LazyLoggerMessage, Logger } from '@graphql-mesh/types';
 import { LogLevel } from '@graphql-mesh/utils';
+import { inspect } from 'cross-inspect';
 
 export interface JSONLoggerOptions {
   name?: string;
@@ -174,9 +175,9 @@ export class JSONLogger implements Logger {
     }
     if (extras.length) {
       if (extras.length === 1) {
-        finalMessage['extras'] = extras[0];
+        finalMessage['extras'] = inspect(extras[0]);
       } else {
-        finalMessage['extras'] = extras;
+        finalMessage['extras'] = extras.map((extra) => inspect(extra));
       }
     }
     return JSON.stringify(finalMessage);
