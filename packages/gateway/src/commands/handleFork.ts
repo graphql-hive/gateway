@@ -10,14 +10,24 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
       log.debug(`Forking ${config.fork} workers`);
       for (let i = 0; i < config.fork; i++) {
         const worker = cluster.fork();
+        const workerLogger = log.child({ worker: worker.id });
         worker.once('exit', (code, signal) => {
           if (expectedToExit) {
-            log.debug(
-              `Worker ${worker.process.pid} exited with code ${code} and signal ${signal}`,
+            workerLogger.debug(
+              'exited',
+              {
+                code,
+                signal,
+              },
             );
           } else {
-            log.warn(`Worker ${worker.process.pid} exited unexpectedly with code ${code} and signal ${signal}\n
-A restart is recommended to ensure the stability of the service`);
+            workerLogger.error(
+              'exited unexpectedly. A restart is recommended to ensure the stability of the service',
+              {
+                code,
+                signal,
+              },
+            );
           }
           workers.delete(worker);
           if (!expectedToExit && workers.size === 0) {

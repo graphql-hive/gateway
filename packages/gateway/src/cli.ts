@@ -7,15 +7,15 @@ import {
   InvalidArgumentError,
   Option,
 } from '@commander-js/extra-typings';
-import type {
-  GatewayConfigContext,
-  GatewayConfigProxy,
-  GatewayConfigSubgraph,
-  GatewayConfigSupergraph,
-  GatewayGraphOSReportingOptions,
-  GatewayHiveReportingOptions,
+import {
+  type GatewayConfigContext,
+  type GatewayConfigProxy,
+  type GatewayConfigSubgraph,
+  type GatewayConfigSupergraph,
+  type GatewayGraphOSReportingOptions,
+  type GatewayHiveReportingOptions,
+  JSONLogger,
 } from '@graphql-hive/gateway-runtime';
-import { JSONLogger } from '@graphql-hive/logger-json';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -32,6 +32,7 @@ import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './servers/types';
+import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 
 export type GatewayCLIConfig = (
   | GatewayCLISupergraphConfig
@@ -177,7 +178,7 @@ export function defineConfig(config: GatewayCLIConfig) {
 
 /** The context of the running program. */
 export interface CLIContext {
-  /** @default new JSONLogger() */
+  /** @default new DefaultLogger() */
   log: Logger;
   /** @default 'Mesh Serve' */
   productName: string;
@@ -347,7 +348,7 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || new JSONLogger(),
+    log: userCtx.log || getDefaultLogger(),
     productName: 'Hive Gateway',
     productDescription: 'Federated GraphQL Gateway',
     productPackageName: '@graphql-hive/gateway',

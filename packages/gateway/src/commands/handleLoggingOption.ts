@@ -1,6 +1,6 @@
-import { JSONLogger } from '@graphql-hive/logger-json';
 import { Logger } from '@graphql-mesh/types';
 import { CLIContext, LogLevel } from '..';
+import { getDefaultLogger } from '../../../runtime/src/getDefaultLogger';
 
 export function handleLoggingConfig(
   loggingConfig: boolean | Logger | LogLevel | undefined,
@@ -13,7 +13,7 @@ export function handleLoggingConfig(
       if ('logLevel' in ctx.log) {
         ctx.log.logLevel = LogLevel.silent;
       } else {
-        ctx.log = new JSONLogger({
+        ctx.log = getDefaultLogger({
           name: ctx.log.name,
           level: LogLevel.silent,
         });
@@ -23,7 +23,7 @@ export function handleLoggingConfig(
     if ('logLevel' in ctx.log) {
       ctx.log.logLevel = loggingConfig;
     } else {
-      ctx.log = new JSONLogger({
+      ctx.log = getDefaultLogger({
         name: ctx.log.name,
         level: loggingConfig,
       });

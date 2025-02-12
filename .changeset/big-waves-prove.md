@@ -9,3 +9,6 @@
 ---
 
 New JSON-based logger
+
+By default, it prints pretty still to the console unless NODE_ENV is production.
+For JSON output, set the `LOG_FORMAT` environment variable to `json`.

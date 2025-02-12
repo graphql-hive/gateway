@@ -1,5 +1,4 @@
 import { setTimeout } from 'timers/promises';
-import { JSONLogger } from '@graphql-hive/logger-json';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
@@ -19,6 +18,7 @@ import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
+import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 
 describe('Polling', () => {
   const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
@@ -335,7 +335,7 @@ describe('Polling', () => {
     const unifiedGraphFetcher = vi.fn(() => {
       return graphDeferred ? graphDeferred.promise : unifiedGraph;
     });
-    const logger = new JSONLogger();
+    const logger = getDefaultLogger();
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,

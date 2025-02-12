@@ -5,7 +5,6 @@ import {
   createSchemaFetcher,
   createSupergraphSDLFetcher,
 } from '@graphql-hive/core';
-import { JSONLogger } from '@graphql-hive/logger-json';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -111,6 +110,7 @@ import {
   defaultQueryText,
   getExecuteFnFromExecutor,
 } from './utils';
+import { getDefaultLogger } from './getDefaultLogger';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -137,15 +137,15 @@ export function createGatewayRuntime<
   let fetchAPI = config.fetchAPI;
   let logger: Logger;
   if (config.logging == null) {
-    logger = new JSONLogger();
+    logger = getDefaultLogger();
   } else if (typeof config.logging === 'boolean') {
     logger = config.logging
-      ? new JSONLogger()
-      : new JSONLogger({
+      ? getDefaultLogger()
+      : getDefaultLogger({
           level: LogLevel.silent,
         });
   } else if (typeof config.logging === 'number') {
-    logger = new JSONLogger({
+    logger = getDefaultLogger({
       level: config.logging,
     });
   } /*  if (typeof config.logging === 'object') */ else {

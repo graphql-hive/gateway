@@ -13,10 +13,13 @@ export function useSubgraphExecuteDebug<
     },
     onSubgraphExecute({ executionRequest, logger = opts.logger, requestId }) {
       const subgraphExecuteId = fetchAPI.crypto.randomUUID();
-      const subgraphExecuteHookLogger = logger.child({
+      const loggerMeta: Record<string, string> = {
         subgraphExecuteId,
-        requestId: requestId!,
-      });
+      }
+      if (requestId) {
+        loggerMeta['requestId'] = requestId;
+      }
+      const subgraphExecuteHookLogger = logger.child(loggerMeta);
       if (executionRequest) {
         const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
           'subgraph-execute-start',

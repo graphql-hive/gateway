@@ -12,7 +12,13 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
     },
     onFetch({ url, options, logger = opts.logger, requestId }) {
       const fetchId = fetchAPI.crypto.randomUUID();
-      const fetchLogger = logger.child({ fetchId, requestId: requestId! });
+      const loggerMeta: Record<string, string> = {
+        fetchId,
+      }
+      if (requestId) {
+        loggerMeta['requestId'] = requestId;
+      }
+      const fetchLogger = logger.child(loggerMeta);
       const httpFetchRequestLogger = fetchLogger.child('http-fetch-request');
       httpFetchRequestLogger.debug(() => ({
         url,
