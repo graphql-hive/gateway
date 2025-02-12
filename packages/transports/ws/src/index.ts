@@ -76,7 +76,12 @@ export default {
 
       let wsExecutor = wsExecutorMap.get(hash);
       if (!wsExecutor) {
-        const executorLogger = logger?.child('GraphQL WS').child(hash);
+        const executorLogger = logger?.child({
+          executor: 'GraphQL WS',
+          wsUrl,
+          connectionParams,
+          headers,
+        } as Record<string, any>);
         wsExecutor = buildGraphQLWSExecutor({
           headers,
           url: wsUrl,

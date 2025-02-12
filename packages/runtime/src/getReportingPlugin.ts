@@ -18,7 +18,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       name: 'Hive',
       plugin: useMeshHive({
         ...configContext,
-        logger: configContext.logger.child('Hive'),
+        logger: configContext.logger.child({ reporting: 'Hive' }),
         ...config.reporting,
         ...(config.persistedDocuments &&
         'type' in config.persistedDocuments &&

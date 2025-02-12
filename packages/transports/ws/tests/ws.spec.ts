@@ -1,8 +1,9 @@
+import { JSONLogger } from '@graphql-hive/logger-json';
 import type {
   TransportEntry,
   TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
-import { DefaultLogger, dispose } from '@graphql-mesh/utils';
+import { dispose } from '@graphql-mesh/utils';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { createDeferred } from '@graphql-tools/utils';
 import { createDisposableWebSocketServer } from '@internal/testing';
@@ -78,7 +79,7 @@ async function createTServer(
         ...transportEntry,
         options,
       },
-      logger: new DefaultLogger(),
+      logger: new JSONLogger(),
     } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
     onClient,
   );

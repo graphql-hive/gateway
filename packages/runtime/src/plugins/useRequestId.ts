@@ -15,7 +15,7 @@ export function useRequestId<
         const requestId = requestIdByRequest.get(context.request);
         if (requestId && context.logger) {
           // @ts-expect-error - Logger is somehow read-only
-          context.logger = context.logger.child(requestId);
+          context.logger = context.logger.child({ requestId });
         }
       }
     },

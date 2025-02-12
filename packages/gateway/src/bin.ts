@@ -2,8 +2,8 @@
 import 'dotenv/config'; // inject dotenv options to process.env
 
 import module from 'node:module';
+import { JSONLogger } from '@graphql-hive/gateway-runtime';
 import type { InitializeData } from '@graphql-hive/importer/hooks';
-import { DefaultLogger } from '@graphql-mesh/utils';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // @inject-version globalThis.__VERSION__ here
@@ -20,7 +20,7 @@ module.register('@graphql-hive/importer/hooks', {
 enableModuleCachingIfPossible();
 handleNodeWarnings();
 
-const log = new DefaultLogger();
+const log = new JSONLogger();
 
 run({ log }).catch((err) => {
   log.error(err);

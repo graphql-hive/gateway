@@ -1,11 +1,12 @@
 import { setTimeout } from 'timers/promises';
+import { JSONLogger } from '@graphql-hive/logger-json';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
   createDefaultExecutor,
   type DisposableExecutor,
 } from '@graphql-mesh/transport-common';
-import { DefaultLogger, makeDisposable } from '@graphql-mesh/utils';
+import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   createDeferred,
@@ -334,7 +335,7 @@ describe('Polling', () => {
     const unifiedGraphFetcher = vi.fn(() => {
       return graphDeferred ? graphDeferred.promise : unifiedGraph;
     });
-    const logger = new DefaultLogger();
+    const logger = new JSONLogger();
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,

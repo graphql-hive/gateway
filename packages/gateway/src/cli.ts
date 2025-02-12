@@ -15,6 +15,7 @@ import type {
   GatewayGraphOSReportingOptions,
   GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import { JSONLogger } from '@graphql-hive/logger-json';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -26,7 +27,6 @@ import type {
   MeshPubSub,
   YamlConfig,
 } from '@graphql-mesh/types';
-import { DefaultLogger } from '@graphql-mesh/utils';
 import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
@@ -177,7 +177,7 @@ export function defineConfig(config: GatewayCLIConfig) {
 
 /** The context of the running program. */
 export interface CLIContext {
-  /** @default new DefaultLogger() */
+  /** @default new JSONLogger() */
   log: Logger;
   /** @default 'Mesh Serve' */
   productName: string;
@@ -347,7 +347,7 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || new DefaultLogger(),
+    log: userCtx.log || new JSONLogger(),
     productName: 'Hive Gateway',
     productDescription: 'Federated GraphQL Gateway',
     productPackageName: '@graphql-hive/gateway',
@@ -362,7 +362,7 @@ export async function run(userCtx: Partial<CLIContext>) {
   cli = cli.name(binName).description(productDescription).version(version);
 
   if (cluster.worker?.id) {
-    ctx.log = ctx.log.child(`Worker #${cluster.worker.id}`);
+    ctx.log = ctx.log.child({ worker: cluster.worker.id });
   }
 
   addCommands(ctx, cli);

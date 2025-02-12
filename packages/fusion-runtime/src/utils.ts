@@ -102,7 +102,7 @@ function getTransportExecutor({
   let logger = transportContext?.logger;
   if (logger) {
     if (subgraphName) {
-      logger = logger.child(subgraphName);
+      logger = logger.child({ subgraph: subgraphName });
     }
     logger?.debug(`Loading transport "${kind}"`);
   }
@@ -195,10 +195,10 @@ export function getOnSubgraphExecute({
           executionRequest.context?.request,
         );
         if (requestId) {
-          logger = logger.child(requestId);
+          logger = logger.child({ requestId });
         }
         if (subgraphName) {
-          logger = logger.child(subgraphName);
+          logger = logger.child({ subgraph: subgraphName });
         }
         logger.debug(`Initializing executor`);
       }
@@ -287,7 +287,7 @@ export function wrapExecutorWithHooks({
     let execReqLogger = transportContext?.logger;
     if (execReqLogger) {
       if (requestId) {
-        execReqLogger = execReqLogger.child(requestId);
+        execReqLogger = execReqLogger.child({ requestId });
       }
       loggerForExecutionRequest.set(baseExecutionRequest, execReqLogger);
     }
@@ -548,11 +548,11 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
     if (logger && context['request']) {
       requestId = requestIdByRequest.get(context['request']);
       if (requestId) {
-        logger = logger.child(requestId);
+        logger = logger.child({ requestId });
       }
     }
     if (subschema.name) {
-      logger = logger?.child(subschema.name);
+      logger = logger?.child({ subgraph: subschema.name });
     }
     let resolver = originalResolver as MergedTypeResolver<TContext>;
     function setResolver(newResolver: MergedTypeResolver<TContext>) {

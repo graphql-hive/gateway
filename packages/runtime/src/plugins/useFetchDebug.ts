@@ -10,24 +10,25 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onFetch({ url, options, logger = opts.logger }) {
-      logger = logger.child('fetch');
+    onFetch({ url, options, logger = opts.logger, requestId }) {
       const fetchId = fetchAPI.crypto.randomUUID();
-      logger.debug('request', () => ({
-        fetchId,
+      const fetchLogger = logger.child({ fetchId, requestId: requestId! });
+      const httpFetchRequestLogger = fetchLogger.child('http-fetch-request');
+      httpFetchRequestLogger.debug(() => ({
         url,
         ...(options || {}),
-        body: options?.body && JSON.stringify(options.body),
-        headers: options?.headers && JSON.stringify(options.headers, null, 2),
+        body: options?.body,
+        headers: options?.headers,
+        signal: options?.signal?.aborted ? options?.signal?.reason : false,
       }));
       const start = performance.now();
       return function onFetchDone({ response }) {
-        logger.debug('response', () => ({
-          fetchId,
+        const httpFetchResponseLogger = fetchLogger.child(
+          'http-fetch-response',
+        );
+        httpFetchResponseLogger.debug(() => ({
           status: response.status,
-          headers: JSON.stringify(
-            Object.fromEntries(response.headers.entries()),
-          ),
+          headers: Object.fromEntries(response.headers.entries()),
           duration: performance.now() - start,
         }));
       };

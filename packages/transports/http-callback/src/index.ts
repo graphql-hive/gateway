@@ -107,7 +107,10 @@ export default {
       executionRequest: ExecutionRequest,
     ) {
       const subscriptionId = crypto.randomUUID();
-      const subscriptionLogger = logger?.child(subscriptionId);
+      const subscriptionLogger = logger?.child({
+        executor: 'http-callback',
+        subscription: subscriptionId,
+      });
       const callbackUrl = `${publicUrl}${callbackPath}/${subscriptionId}`;
       const subscriptionCallbackPath = `${callbackPath}/${subscriptionId}`;
       const serializedParams = serializeExecutionRequest({

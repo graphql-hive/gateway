@@ -27,7 +27,7 @@ export function createGraphOSFetcher({
     graphosOpts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
   const uplinks =
     uplinksParam?.split(',').map((uplink) => uplink.trim()) || DEFAULT_UPLINKS;
-  const graphosLogger = configContext.logger.child('GraphOS');
+  const graphosLogger = configContext.logger.child({ source: 'GraphOS' });
   graphosLogger.info('Using Managed Federation with uplinks: ', ...uplinks);
   const maxRetries = graphosOpts.maxRetries || Math.max(3, uplinks.length);
   let supergraphLoadedPlace = defaultLoadedPlacePrefix;
@@ -57,9 +57,10 @@ export function createGraphOSFetcher({
         }
         retries--;
         const uplinkToUse = uplinksToUse.pop();
-        const attemptLogger = graphosLogger.child(
-          `Attempt ${maxRetries - retries} - UpLink: ${uplinkToUse}`,
-        );
+        const attemptLogger = graphosLogger.child({
+          attempt: maxRetries - retries,
+          uplink: uplinkToUse || 'none',
+        });
         attemptLogger.debug(`Fetching supergraph`);
         return fetchSupergraphSdlFromManagedFederation({
           graphRef: graphosOpts.graphRef,
