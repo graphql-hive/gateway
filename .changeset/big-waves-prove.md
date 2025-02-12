@@ -6,6 +6,7 @@
 '@graphql-hive/importer': patch
 '@graphql-hive/gateway': patch
 '@graphql-hive/gateway-runtime': patch
+'@graphql-hive/logger-json': patch
 ---
 
 New JSON-based logger
