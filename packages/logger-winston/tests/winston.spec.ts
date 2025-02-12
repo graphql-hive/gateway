@@ -25,7 +25,7 @@ describe('Winston', () => {
             }),
           ],
         });
-        const loggerAdapter = createLoggerFromWinston(logger);
+        using loggerAdapter = createLoggerFromWinston(logger);
         const testData = [
           'Hello',
           ['World'],

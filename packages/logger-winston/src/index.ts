@@ -1,3 +1,4 @@
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type {
   LazyLoggerMessage,
   Logger as MeshLogger,
@@ -24,7 +25,7 @@ function prepareArgs(lazyArgs: LazyLoggerMessage[]) {
   return flattenedArgs;
 }
 
-class LoggerAdapter implements MeshLogger {
+class WinstonLoggerAdapter implements MeshLogger, Disposable {
   constructor(
     private winstonLogger: WinstonLogger,
     public names: string[] = [],
@@ -60,12 +61,15 @@ class LoggerAdapter implements MeshLogger {
   child(name: string) {
     const newName = [...new Set([...this.names, name])];
     const childWinston = this.winstonLogger.child({ name: newName });
-    return new LoggerAdapter(childWinston, newName);
+    return new WinstonLoggerAdapter(childWinston, newName);
+  }
+  [DisposableSymbols.dispose]() {
+    return this.winstonLogger.close();
   }
 }
 
 export function createLoggerFromWinston(
   winstonLogger: WinstonLogger,
-): MeshLogger {
-  return new LoggerAdapter(winstonLogger);
+): WinstonLoggerAdapter {
+  return new WinstonLoggerAdapter(winstonLogger);
 }
