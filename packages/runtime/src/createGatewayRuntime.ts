@@ -26,7 +26,6 @@ import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
 import {
-  DefaultLogger,
   getHeadersObj,
   getInContextSDK,
   isUrl,
@@ -79,6 +78,7 @@ import {
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { createGraphOSFetcher } from './fetchers/graphos';
+import { getDefaultLogger } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -137,13 +137,17 @@ export function createGatewayRuntime<
   let fetchAPI = config.fetchAPI;
   let logger: Logger;
   if (config.logging == null) {
-    logger = new DefaultLogger();
+    logger = getDefaultLogger();
   } else if (typeof config.logging === 'boolean') {
     logger = config.logging
-      ? new DefaultLogger()
-      : new DefaultLogger('', LogLevel.silent);
+      ? getDefaultLogger()
+      : getDefaultLogger({
+          level: LogLevel.silent,
+        });
   } else if (typeof config.logging === 'number') {
-    logger = new DefaultLogger(undefined, config.logging);
+    logger = getDefaultLogger({
+      level: config.logging,
+    });
   } /*  if (typeof config.logging === 'object') */ else {
     logger = config.logging;
   }
@@ -189,7 +193,9 @@ export function createGatewayRuntime<
   ) {
     persistedDocumentsPlugin = useMeshHive({
       ...configContext,
-      logger: configContext.logger.child('Hive'),
+      logger: configContext.logger.child({
+        plugin: 'Hive Persisted Documents',
+      }),
       experimental__persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
@@ -253,7 +259,7 @@ export function createGatewayRuntime<
       const fetcher = createSchemaFetcher({
         endpoint,
         key,
-        logger: configContext.logger.child('Hive CDN'),
+        logger: configContext.logger.child({ source: 'Hive CDN' }),
       });
       schemaFetcher = function fetchSchemaFromCDN() {
         pausePolling();
@@ -611,7 +617,7 @@ export function createGatewayRuntime<
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
-          logger: configContext.logger.child('Hive CDN'),
+          logger: configContext.logger.child({ source: 'Hive CDN' }),
         });
         unifiedGraphFetcher = () =>
           fetcher().then(({ supergraphSdl }) => supergraphSdl);

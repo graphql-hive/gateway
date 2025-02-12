@@ -11,41 +11,56 @@ export function useSubgraphExecuteDebug<
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onSubgraphExecute({ executionRequest, logger = opts.logger }) {
+    onSubgraphExecute({ executionRequest, logger = opts.logger, requestId }) {
       const subgraphExecuteId = fetchAPI.crypto.randomUUID();
-      logger = logger.child('subgraph-execute');
+      const loggerMeta: Record<string, string> = {
+        subgraphExecuteId,
+      };
+      if (requestId) {
+        loggerMeta['requestId'] = requestId;
+      }
+      const subgraphExecuteHookLogger = logger.child(loggerMeta);
       if (executionRequest) {
-        logger.debug('start', () => ({
-          subgraphExecuteId,
-          query:
-            executionRequest.document &&
-            defaultPrintFn(executionRequest.document),
-          variables:
+        const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
+          'subgraph-execute-start',
+        );
+        subgraphExecuteStartLogger.debug(() => {
+          const logData: Record<string, any> = {};
+          if (executionRequest.document) {
+            logData['query'] = defaultPrintFn(executionRequest.document);
+          }
+          if (
             executionRequest.variables &&
-            JSON.stringify(executionRequest.variables),
-        }));
+            Object.keys(executionRequest.variables).length
+          ) {
+            logData['variables'] = executionRequest.variables;
+          }
+          return logData;
+        });
       }
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
+        const subgraphExecuteEndLogger = subgraphExecuteHookLogger.child(
+          'subgraph-execute-end',
+        );
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              logger.debug('next', () => ({
-                subgraphExecuteId,
-                result: JSON.stringify(result),
-              }));
+              const subgraphExecuteNextLogger = subgraphExecuteHookLogger.child(
+                'subgraph-execute-next',
+              );
+              subgraphExecuteNextLogger.debug(result);
             },
             onEnd() {
-              logger.debug('end', () => ({
-                subgraphExecuteId,
+              subgraphExecuteEndLogger.debug(() => ({
                 duration: performance.now() - start,
               }));
             },
           };
         }
-        logger.debug('result', () => ({
-          subgraphExecuteId,
-          result: JSON.stringify(result),
+        subgraphExecuteEndLogger.debug(() => ({
+          result,
+          duration: performance.now() - start,
         }));
         return void 0;
       };

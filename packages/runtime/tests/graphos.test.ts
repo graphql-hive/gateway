@@ -1,6 +1,6 @@
 import { setTimeout } from 'timers/promises';
 import {
-  DefaultLogger,
+  JSONLogger,
   type GatewayConfigContext,
   type GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway-runtime';
@@ -131,7 +131,7 @@ function createTestFetcher(
   return createGraphOSFetcher({
     configContext: {
       logger: process.env['DEBUG']
-        ? new DefaultLogger()
+        ? new JSONLogger()
         : {
             child() {
               return this;

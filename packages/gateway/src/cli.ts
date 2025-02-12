@@ -7,13 +7,13 @@ import {
   InvalidArgumentError,
   Option,
 } from '@commander-js/extra-typings';
-import type {
-  GatewayConfigContext,
-  GatewayConfigProxy,
-  GatewayConfigSubgraph,
-  GatewayConfigSupergraph,
-  GatewayGraphOSReportingOptions,
-  GatewayHiveReportingOptions,
+import {
+  type GatewayConfigContext,
+  type GatewayConfigProxy,
+  type GatewayConfigSubgraph,
+  type GatewayConfigSupergraph,
+  type GatewayGraphOSReportingOptions,
+  type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
@@ -26,8 +26,8 @@ import type {
   MeshPubSub,
   YamlConfig,
 } from '@graphql-mesh/types';
-import { DefaultLogger } from '@graphql-mesh/utils';
 import parseDuration from 'parse-duration';
+import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
@@ -347,7 +347,7 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || new DefaultLogger(),
+    log: userCtx.log || getDefaultLogger(),
     productName: 'Hive Gateway',
     productDescription: 'Federated GraphQL Gateway',
     productPackageName: '@graphql-hive/gateway',
@@ -362,7 +362,7 @@ export async function run(userCtx: Partial<CLIContext>) {
   cli = cli.name(binName).description(productDescription).version(version);
 
   if (cluster.worker?.id) {
-    ctx.log = ctx.log.child(`Worker #${cluster.worker.id}`);
+    ctx.log = ctx.log.child({ worker: cluster.worker.id });
   }
 
   addCommands(ctx, cli);

@@ -5,7 +5,7 @@ import {
   createDefaultExecutor,
   type DisposableExecutor,
 } from '@graphql-mesh/transport-common';
-import { DefaultLogger, makeDisposable } from '@graphql-mesh/utils';
+import { makeDisposable } from '@graphql-mesh/utils';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   createDeferred,
@@ -17,6 +17,7 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
+import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
@@ -334,7 +335,7 @@ describe('Polling', () => {
     const unifiedGraphFetcher = vi.fn(() => {
       return graphDeferred ? graphDeferred.promise : unifiedGraph;
     });
-    const logger = new DefaultLogger();
+    const logger = getDefaultLogger();
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,

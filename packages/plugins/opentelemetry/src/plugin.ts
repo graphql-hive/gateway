@@ -194,7 +194,7 @@ export function useOpenTelemetry(
           webProvider.register();
           provider = webProvider;
         }
-        const pluginLogger = options.logger.child('OpenTelemetry');
+        const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
         diag.setLogger(
           {
             error: (message, ...args) => pluginLogger.error(message, ...args),

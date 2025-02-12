@@ -1,9 +1,13 @@
-export const isDebug = ['1', 'y', 'yes', 't', 'true'].includes(
-  String(process.env['DEBUG']),
-);
+export const isDebug = ['importer'].includes(String(process.env['DEBUG']));
 
-export function debug(msg: string) {
+export function debug(message: string) {
   if (isDebug) {
-    process.stderr.write(`[${new Date().toISOString()}] HOOKS ${msg}\n`);
+    process.stderr.write(
+      `${JSON.stringify({
+        name: 'importer',
+        level: 'debug',
+        message,
+      })}\n`,
+    );
   }
 }

@@ -10,25 +10,34 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
       log.debug(`Forking ${config.fork} workers`);
       for (let i = 0; i < config.fork; i++) {
         const worker = cluster.fork();
+        const workerLogger = log.child({ worker: worker.id });
         worker.once('exit', (code, signal) => {
+          const logData: Record<string, string | number> = {
+            signal,
+          };
+          if (code != null) {
+            logData['code'] = code;
+          }
           if (expectedToExit) {
-            log.debug(
-              `Worker ${worker.process.pid} exited with code ${code} and signal ${signal}`,
-            );
+            workerLogger.debug('exited', logData);
           } else {
-            log.warn(`Worker ${worker.process.pid} exited unexpectedly with code ${code} and signal ${signal}\n
-A restart is recommended to ensure the stability of the service`);
+            workerLogger.error(
+              'exited unexpectedly. A restart is recommended to ensure the stability of the service',
+              logData,
+            );
           }
           workers.delete(worker);
           if (!expectedToExit && workers.size === 0) {
-            log.error(`All workers exited unexpectedly. Exiting`);
+            log.error(`All workers exited unexpectedly. Exiting`, logData);
             process.exit(1);
           }
         });
         workers.add(worker);
       }
       registerTerminateHandler((signal) => {
-        log.info(`Killing workers with ${signal}`);
+        log.info('Killing workers', {
+          signal,
+        });
         expectedToExit = true;
         workers.forEach((w) => {
           w.kill(signal);

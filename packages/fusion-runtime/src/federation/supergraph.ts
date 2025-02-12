@@ -311,11 +311,13 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
           if (context?.request) {
             requestId = requestIdByRequest.get(context.request);
             if (requestId) {
-              currentLogger = currentLogger?.child(requestId);
+              currentLogger = currentLogger?.child({ requestId });
             }
           }
           if (sourceSubschema.name) {
-            currentLogger = currentLogger?.child(sourceSubschema.name);
+            currentLogger = currentLogger?.child({
+              subgraph: sourceSubschema.name,
+            });
           }
           for (const onDelegationPlan of onDelegationPlanHooks) {
             const onDelegationPlanDone = onDelegationPlan({

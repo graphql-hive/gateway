@@ -22,16 +22,16 @@ export function useDelegationPlanDebug<
       info,
       logger = opts.logger,
     }) {
-      logger = logger.child('delegation-plan');
       const planId = fetchAPI.crypto.randomUUID();
-      logger.debug('start', () => {
+      const delegationPlanStartLogger = logger.child('delegation-plan-start');
+      delegationPlanStartLogger.debug(() => {
         const logObj: Record<string, any> = {
           planId,
           subgraph,
           typeName,
         };
         if (variables && Object.keys(variables).length) {
-          logObj['variables'] = JSON.stringify(variables);
+          logObj['variables'] = variables;
         }
         if (fragments && Object.keys(fragments).length) {
           logObj['fragments'] = Object.fromEntries(
@@ -53,7 +53,8 @@ export function useDelegationPlanDebug<
       });
       const start = performance.now();
       return ({ delegationPlan }) => {
-        logger.debug('done', () => ({
+        const delegationPlanDoneLogger = logger.child('delegation-plan-done');
+        delegationPlanDoneLogger.debug(() => ({
           planId,
           plan: delegationPlan.map((plan) => {
             const planObj: Record<string, string> = {};
@@ -78,13 +79,13 @@ export function useDelegationPlanDebug<
       typeName,
       logger = opts.logger,
     }) {
-      logger = logger.child('delegation-stage-execute');
       let stageId: string;
       let contextLog = stageExecuteLogById.get(context);
       if (!contextLog) {
         contextLog = new Set();
         stageExecuteLogById.set(context, contextLog);
       }
+      const delegationStageLogger = logger.child('delegation-stage-execute');
       const log = {
         subgraph,
         typeName,
@@ -98,7 +99,7 @@ export function useDelegationPlanDebug<
       }
       contextLog.add(logStr);
       stageId = fetchAPI.crypto.randomUUID();
-      logger.debug('start', () => {
+      delegationStageLogger.debug('start', () => {
         return {
           stageId,
           ...log,
@@ -107,7 +108,10 @@ export function useDelegationPlanDebug<
       });
       const start = performance.now();
       return ({ result }) => {
-        logger.debug('result', () => ({
+        const delegationStageExecuteDoneLogger = logger.child(
+          'delegation-stage-execute-done',
+        );
+        delegationStageExecuteDoneLogger.debug(() => ({
           stageId,
           result: JSON.stringify(result, null),
           duration: performance.now() - start,
