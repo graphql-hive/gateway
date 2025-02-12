@@ -112,7 +112,7 @@ export class JSONLogger implements Logger {
     });
   }
 
-  addPrefix(prefix: string | Record<string, string>) {
+  addPrefix(prefix: string | Record<string, string | number>) {
     if (typeof prefix === 'string') {
       this.name = this.name ? `${this.name}, ${prefix}` : prefix;
     } else if (typeof prefix === 'object') {
