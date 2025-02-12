@@ -291,7 +291,7 @@ export function wrapExecutorWithHooks({
       }
       loggerForExecutionRequest.set(baseExecutionRequest, execReqLogger);
     }
-    execReqLogger = execReqLogger?.child?.(subgraphName);
+    execReqLogger = execReqLogger?.child?.({ subgraph: subgraphName });
     if (onSubgraphExecuteHooks.length === 0) {
       return baseExecutor(baseExecutionRequest);
     }

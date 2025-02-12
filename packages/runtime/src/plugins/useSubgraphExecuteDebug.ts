@@ -11,15 +11,11 @@ export function useSubgraphExecuteDebug<
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onSubgraphExecute({ executionRequest, logger = opts.logger, requestId }) {
+    onSubgraphExecute({ executionRequest, logger = opts.logger }) {
       const subgraphExecuteId = fetchAPI.crypto.randomUUID();
-      const loggerMeta: Record<string, string> = {
+      const subgraphExecuteHookLogger = logger.child({
         subgraphExecuteId,
-      };
-      if (requestId) {
-        loggerMeta['requestId'] = requestId;
-      }
-      const subgraphExecuteHookLogger = logger.child(loggerMeta);
+      });
       if (executionRequest) {
         const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
           'subgraph-execute-start',
