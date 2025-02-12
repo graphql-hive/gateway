@@ -17944,8 +17944,8 @@ __metadata:
   linkType: hard
 
 "wrangler@npm:^3.88.0":
-  version: 3.108.0
-  resolution: "wrangler@npm:3.108.0"
+  version: 3.108.1
+  resolution: "wrangler@npm:3.108.1"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.3.4"
     "@esbuild-plugins/node-globals-polyfill": "npm:0.2.3"
@@ -17971,7 +17971,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/901f996baedfbb85799329ec74519fd95fedaee46c34b73d3cc3b16795ca70c57c7b6af9fb0df687d4656c11ac74e62ce6db8259a8cd88f645527615c080b133
+  checksum: 10c0/a8e2623e96ea0f024b699103d37022156036500367652b353b634e5ad6c16e7cdef408f1e2268153d9dcb0e80048f8671bb5d6188a0061c402d8324a6b1e478d
   languageName: node
   linkType: hard
 
@@ -18172,8 +18172,8 @@ __metadata:
   linkType: hard
 
 "zod@npm:^3.24.1":
-  version: 3.24.1
-  resolution: "zod@npm:3.24.1"
-  checksum: 10c0/0223d21dbaa15d8928fe0da3b54696391d8e3e1e2d0283a1a070b5980a1dbba945ce631c2d1eccc088fdbad0f2dfa40155590bf83732d3ac4fcca2cc9237591b
+  version: 3.24.2
+  resolution: "zod@npm:3.24.2"
+  checksum: 10c0/c638c7220150847f13ad90635b3e7d0321b36cce36f3fc6050ed960689594c949c326dfe2c6fa87c14b126ee5d370ccdebd6efb304f41ef5557a4aaca2824565
   languageName: node
   linkType: hard
