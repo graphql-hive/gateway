@@ -41,16 +41,8 @@ describe('Winston', () => {
         const logJson = JSON.parse(log);
         expect(logJson).toEqual({
           level,
-          message: [
-            'Hello',
-            'World',
-            { foo: 'bar' },
-            42,
-            true,
-            null,
-            null,
-            'Expensive',
-          ],
+          foo: 'bar',
+          message: 'Hello, World, 42, true, Expensive',
         });
       });
       it('child', () => {
@@ -80,17 +72,9 @@ describe('Winston', () => {
         const logJson = JSON.parse(log);
         expect(logJson).toEqual({
           level,
-          message: [
-            'Hello',
-            'World',
-            { foo: 'bar' },
-            42,
-            true,
-            null,
-            null,
-            'Expensive',
-          ],
-          name: ['child'],
+          foo: 'bar',
+          message: 'Hello, World, 42, true, Expensive',
+          name: 'child',
         });
       });
       it('deduplicate names', () => {
@@ -120,17 +104,9 @@ describe('Winston', () => {
         const logJson = JSON.parse(log);
         expect(logJson).toEqual({
           level,
-          message: [
-            'Hello',
-            'World',
-            { foo: 'bar' },
-            42,
-            true,
-            null,
-            null,
-            'Expensive',
-          ],
-          name: ['child'],
+          foo: 'bar',
+          message: 'Hello, World, 42, true, Expensive',
+          name: 'child',
         });
       });
       it('nested', () => {
@@ -161,17 +137,9 @@ describe('Winston', () => {
         const logJson = JSON.parse(log);
         expect(logJson).toEqual({
           level,
-          message: [
-            'Hello',
-            'World',
-            { foo: 'bar' },
-            42,
-            true,
-            null,
-            null,
-            'Expensive',
-          ],
-          name: ['child', 'nested'],
+          foo: 'bar',
+          message: 'Hello, World, 42, true, Expensive',
+          name: 'child, nested',
         });
       });
     });
