@@ -23,7 +23,9 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
     }
   }
 
-  const ws = new WebSocket(debuggerUrl);
+  const ws = new WebSocket(debuggerUrl, {
+    maxPayload: 10000000000, // messages can be huge, increase max buffer size like here https://nodejs.org/en/learn/diagnostics/memory/using-heap-snapshot#4-trigger-heap-snapshot-using-inspector-protocol
+  });
   await new Promise((resolve, reject) => {
     ws.once('open', resolve);
     ws.once('close', reject);
