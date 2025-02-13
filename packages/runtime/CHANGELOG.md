@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.14
+
+### Patch Changes
+
+- [#654](https://github.com/graphql-hive/gateway/pull/654) [`36b1baf`](https://github.com/graphql-hive/gateway/commit/36b1bafdcded06dc3d7a2166b7a39988d07af817) Thanks [@ardatan](https://github.com/ardatan)! - Expose `agentVersion`, `clientName` and `clientVersion` options for GraphOS reporting
+
+  And set `hive-gateway@VERSION` by default for `agentVersion`
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.20
+
 ## 1.4.13
 
 ### Patch Changes
