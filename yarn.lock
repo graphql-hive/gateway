@@ -3409,7 +3409,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.103.6"
     "@whatwg-node/disposablestack": "npm:^0.0.5"
     graphql: "npm:16.10.0"
-    pkgroll: "npm:2.8.2"
+    pkgroll: "npm:2.10.0"
     tslib: "npm:^2.8.1"
     winston: "npm:^3.17.0"
   peerDependencies:
