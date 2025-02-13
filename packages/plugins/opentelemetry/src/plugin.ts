@@ -33,7 +33,7 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import type { OnParamsEventPayload, YogaInitialContext } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
-import { OtelContextStack } from './context-stack';
+import { getContextManager, OtelContextStack } from './context';
 import {
   getMostSpecificState,
   withState,
@@ -246,12 +246,11 @@ export function useOpenTelemetry(
       asyncAttributes,
     );
 
-    const contextManager$ =
-      options.contextManager != undefined
-        ? options.contextManager
-        : import('@opentelemetry/context-async-hooks').then(
-            (module) => new module.AsyncLocalStorageContextManager(),
-          );
+    let contextManager$ = getContextManager(
+      pluginLogger,
+      useContextManager,
+      options.contextManager,
+    );
 
     preparation$ = mapMaybePromise(exporters$, (exporters) => {
       spanProcessors = exporters;
