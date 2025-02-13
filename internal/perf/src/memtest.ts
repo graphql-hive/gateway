@@ -87,7 +87,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
                       {
                         label: 'Loadtest',
                         data: [
-                          ...snapshots.idle.map(() => null), // skip idle data
+                          ...snapshots.idle.map((val, i, arr) =>
+                            i === arr.length - 1 ? val : null,
+                          ), // skip idle data except for the last point to make a connection in the chart
                           ...snapshots.loadtest,
                         ],
                       },
@@ -99,7 +101,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
                         label: 'Calmdown',
                         data: [
                           ...snapshots.idle.map(() => null), // skip idle data
-                          ...snapshots.loadtest.map(() => null), // skip loadtest data
+                          ...snapshots.loadtest.map((val, i, arr) =>
+                            i === arr.length - 1 ? val : null,
+                          ), // skip loadtest data except for the last point to make a connection in the chart
                           ...snapshots.calmdown,
                         ],
                       },
