@@ -1,5 +1,37 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.0
+
+### Minor Changes
+
+- [#605](https://github.com/graphql-hive/gateway/pull/605) [`e5d77f3`](https://github.com/graphql-hive/gateway/commit/e5d77f3aa177b50ea0ba2f37e02e3f87794f512e) Thanks [@ardatan](https://github.com/ardatan)! - Extract subgraph execution batching logic outside, so batching is handled by the Gateway not Stitching
+
+  **BREAKING**; `UnifiedGraphHandlerOpts` no longer takes `batch` option, it is handled by the runtime itself
+
+### Patch Changes
+
+- [#605](https://github.com/graphql-hive/gateway/pull/605) [`e5d77f3`](https://github.com/graphql-hive/gateway/commit/e5d77f3aa177b50ea0ba2f37e02e3f87794f512e) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-tools/batch-execute@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-tools/batch-execute/v/workspace:^) (to `dependencies`)
+
+- [#620](https://github.com/graphql-hive/gateway/pull/620) [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.8.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.8.1) (from `^10.7.0`, in `dependencies`)
+
+- [#642](https://github.com/graphql-hive/gateway/pull/642) [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f) Thanks [@ardatan](https://github.com/ardatan)! - New JSON-based logger
+
+  By default, it prints pretty still to the console unless NODE_ENV is production.
+  For JSON output, set the `LOG_FORMAT` environment variable to `json`.
+
+- Updated dependencies [[`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87), [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87)]:
+  - @graphql-mesh/transport-common@0.7.29
+  - @graphql-tools/batch-execute@9.0.12
+  - @graphql-tools/delegate@10.2.12
+  - @graphql-tools/federation@3.1.2
+  - @graphql-tools/stitch@9.4.17
+  - @graphql-tools/stitching-directives@3.1.27
+  - @graphql-tools/wrap@10.0.30
+
 ## 0.10.32
 
 ### Patch Changes

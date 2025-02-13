@@ -1,5 +1,43 @@
 # @graphql-hive/gateway-runtime
 
+## 1.4.13
+
+### Patch Changes
+
+- [#610](https://github.com/graphql-hive/gateway/pull/610) [`260faaf`](https://github.com/graphql-hive/gateway/commit/260faafa26598066ee95ee501858998483d46e1f) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.6.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.6.0) (from `^0.5.9`, in `dependencies`)
+
+- [#620](https://github.com/graphql-hive/gateway/pull/620) [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.8.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.8.1) (from `^10.7.0`, in `dependencies`)
+
+- [#623](https://github.com/graphql-hive/gateway/pull/623) [`4c82bb1`](https://github.com/graphql-hive/gateway/commit/4c82bb176c230d46fd69747c1b83a0d0a400eddb) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-hive/core@^0.9.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.9.0) (from `^0.8.1`, in `dependencies`)
+
+- [#642](https://github.com/graphql-hive/gateway/pull/642) [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/logger-json@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger-json/v/workspace:^) (to `dependencies`)
+
+- [#642](https://github.com/graphql-hive/gateway/pull/642) [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f) Thanks [@ardatan](https://github.com/ardatan)! - New JSON-based logger
+
+  By default, it prints pretty still to the console unless NODE_ENV is production.
+  For JSON output, set the `LOG_FORMAT` environment variable to `json`.
+
+- Updated dependencies [[`e5d77f3`](https://github.com/graphql-hive/gateway/commit/e5d77f3aa177b50ea0ba2f37e02e3f87794f512e), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f), [`e5d77f3`](https://github.com/graphql-hive/gateway/commit/e5d77f3aa177b50ea0ba2f37e02e3f87794f512e), [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87), [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87)]:
+  - @graphql-mesh/fusion-runtime@0.11.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.20
+  - @graphql-mesh/transport-common@0.7.29
+  - @graphql-tools/batch-delegate@9.0.30
+  - @graphql-tools/delegate@10.2.12
+  - @graphql-tools/executor-common@0.0.2
+  - @graphql-tools/executor-http@1.2.7
+  - @graphql-tools/federation@3.1.2
+  - @graphql-tools/stitch@9.4.17
+  - @graphql-tools/wrap@10.0.30
+  - @graphql-hive/logger-json@0.0.1
+
 ## 1.4.12
 
 ### Patch Changes
