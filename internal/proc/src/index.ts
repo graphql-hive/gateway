@@ -10,6 +10,8 @@ import terminate from 'terminate/promise';
 
 export interface Proc extends AsyncDisposable {
   waitForExit: Promise<void>;
+  /** Sends a signal to the process. */
+  kill(signal?: NodeJS.Signals): void;
   getStd(o: 'out' | 'err' | 'both'): string;
   getStats(): Promise<{
     // Total CPU utilization (of all cores) as a percentage.
@@ -86,6 +88,9 @@ export function spawn(
   let stdboth = '';
   const proc: Proc = {
     waitForExit,
+    kill(signal) {
+      child.kill(signal);
+    },
     getStd(o) {
       switch (o) {
         case 'out':
