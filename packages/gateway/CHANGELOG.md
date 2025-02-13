@@ -1,5 +1,50 @@
 # @graphql-hive/gateway
 
+## 1.10.0
+
+### Minor Changes
+
+- [#634](https://github.com/graphql-hive/gateway/pull/634) [`2292a33`](https://github.com/graphql-hive/gateway/commit/2292a335181b06bbf1004d9d6ec422d1453afcdc) Thanks [@ardatan](https://github.com/ardatan)! - Redis Sentinel Support
+
+  See the relevant doc section; [Providing Cache Storage](https://the-guild.dev/graphql/hive/docs/gateway/other-features/performance#providing-cache-storage)
+
+- [#634](https://github.com/graphql-hive/gateway/pull/634) [`2292a33`](https://github.com/graphql-hive/gateway/commit/2292a335181b06bbf1004d9d6ec422d1453afcdc) Thanks [@ardatan](https://github.com/ardatan)! - New Upstash Redis Cache support;
+
+  See the relevant doc section; [Providing Cache Storage](https://the-guild.dev/graphql/hive/docs/gateway/other-features/performance#providing-cache-storage)
+
+### Patch Changes
+
+- [#620](https://github.com/graphql-hive/gateway/pull/620) [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.8.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.8.1) (from `^10.7.0`, in `dependencies`)
+
+- [#634](https://github.com/graphql-hive/gateway/pull/634) [`2292a33`](https://github.com/graphql-hive/gateway/commit/2292a335181b06bbf1004d9d6ec422d1453afcdc) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-mesh/cache-upstash-redis@^0.0.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.1) (to `dependencies`)
+
+- [#638](https://github.com/graphql-hive/gateway/pull/638) [`e618b1c`](https://github.com/graphql-hive/gateway/commit/e618b1c476fbe5d538c6f3f4e49393ab4cb9b849) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.2) (from `^0.0.1`, in `dependencies`)
+
+- [#643](https://github.com/graphql-hive/gateway/pull/643) [`e279884`](https://github.com/graphql-hive/gateway/commit/e279884fda28318a74fb2ffec2053ea74ca6e422) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.3` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.3) (from `^0.0.2`, in `dependencies`)
+
+- [#642](https://github.com/graphql-hive/gateway/pull/642) [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f) Thanks [@ardatan](https://github.com/ardatan)! - New JSON-based logger
+
+  By default, it prints pretty still to the console unless NODE_ENV is production.
+  For JSON output, set the `LOG_FORMAT` environment variable to `json`.
+
+- Updated dependencies [[`260faaf`](https://github.com/graphql-hive/gateway/commit/260faafa26598066ee95ee501858998483d46e1f), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`4c82bb1`](https://github.com/graphql-hive/gateway/commit/4c82bb176c230d46fd69747c1b83a0d0a400eddb), [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`30e41a6`](https://github.com/graphql-hive/gateway/commit/30e41a6f5b97c42ae548564bce3f6e4a92b1225f)]:
+  - @graphql-hive/gateway-runtime@1.4.13
+  - @graphql-mesh/hmac-upstream-signature@1.2.20
+  - @graphql-mesh/plugin-opentelemetry@1.3.41
+  - @graphql-mesh/plugin-prometheus@1.3.29
+  - @graphql-mesh/transport-http@0.6.33
+  - @graphql-mesh/transport-http-callback@0.5.20
+  - @graphql-mesh/transport-ws@1.0.3
+  - @graphql-hive/importer@1.0.1
+
 ## 1.9.4
 
 ### Patch Changes

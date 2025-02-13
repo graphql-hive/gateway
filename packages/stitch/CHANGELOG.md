@@ -1,5 +1,25 @@
 # @graphql-tools/stitch
 
+## 9.4.17
+
+### Patch Changes
+
+- [#620](https://github.com/graphql-hive/gateway/pull/620) [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-tools/utils@^10.8.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.8.1) (from `^10.7.0`, in `dependencies`)
+
+- [#614](https://github.com/graphql-hive/gateway/pull/614) [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87) Thanks [@ardatan](https://github.com/ardatan)! - Fix a bug while isolating computed abstract type fields
+
+  When a field in an interface needs to be isolated,
+  it should not remove the field from the base subschema if it is used by other members of the base subschema.
+
+- [#614](https://github.com/graphql-hive/gateway/pull/614) [`7146f8d`](https://github.com/graphql-hive/gateway/commit/7146f8decca808ab2c68f4971ba9b64ca27a9b87) Thanks [@ardatan](https://github.com/ardatan)! - While calculating the best subschema for a selection set, respect fragments
+
+- Updated dependencies [[`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9), [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9)]:
+  - @graphql-tools/batch-delegate@9.0.30
+  - @graphql-tools/delegate@10.2.12
+  - @graphql-tools/wrap@10.0.30
+
 ## 9.4.16
 
 ### Patch Changes
