@@ -3584,7 +3584,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.103.6"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/utils": "npm:^10.8.1"
-    "@types/json-stable-stringify": "npm:^1.1.0"
+    "@types/json-stable-stringify": "npm:^1.2.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.10.11"
     json-stable-stringify: "npm:^1.1.1"
@@ -6780,10 +6780,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-stable-stringify@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@types/json-stable-stringify@npm:1.1.0"
-  checksum: 10c0/8f69944701510243cd3a83aa44363a8a4d366f11a659b258f69fb3ad0f94ab1e2533206a2c929ac7fd18784d201b663b3f02a45934f545c926f051d8cb4df095
+"@types/json-stable-stringify@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/json-stable-stringify@npm:1.2.0"
+  dependencies:
+    json-stable-stringify: "npm:*"
+  checksum: 10c0/0ef08aaa468aeac8d632cb6cf0985ae1b091d0a0d662511a5830548704d50523b9246a5b353e31efe1a3b9d72f3b7317b38e0fd3e935ef84e2608b254642a73f
   languageName: node
   linkType: hard
 
@@ -13186,7 +13188,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stable-stringify@npm:^1.1.1":
+"json-stable-stringify@npm:*, json-stable-stringify@npm:^1.1.1":
   version: 1.2.1
   resolution: "json-stable-stringify@npm:1.2.1"
   dependencies:
