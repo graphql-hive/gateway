@@ -523,6 +523,7 @@ export function createTenv(cwd: string): Tenv {
               replaceStderr: (str) => str.replaceAll(__project, ''),
             },
             'node',
+            '--inspect-port=0', // use next available port when starting inspector (note that this does not start inspect, this still needs to be done manually)
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),

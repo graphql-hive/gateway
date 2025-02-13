@@ -13,3 +13,4 @@ hive-gateway
 *.pem
 /examples/**/*/supergraph.graphql
 /e2e/**/*/memtest-memory-snapshots_*.svg
+/e2e/**/*/*.heapsnapshot
