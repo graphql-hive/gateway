@@ -9,7 +9,7 @@
     "@apollo/server": "^4.10.3",
     "@apollo/subgraph": "^2.7.2",
     "fets": "^0.8.4",
-    "@graphql-hive/gateway": "^1.10.0"
+    "@graphql-hive/gateway": "^1.10.1"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
