@@ -10,15 +10,11 @@ export function useFetchDebug<TContext extends Record<string, any>>(opts: {
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onFetch({ url, options, logger = opts.logger, requestId }) {
+    onFetch({ url, options, logger = opts.logger }) {
       const fetchId = fetchAPI.crypto.randomUUID();
-      const loggerMeta: Record<string, string> = {
+      const fetchLogger = logger.child({
         fetchId,
-      };
-      if (requestId) {
-        loggerMeta['requestId'] = requestId;
-      }
-      const fetchLogger = logger.child(loggerMeta);
+      });
       const httpFetchRequestLogger = fetchLogger.child('http-fetch-request');
       httpFetchRequestLogger.debug(() => ({
         url,
