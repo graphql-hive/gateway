@@ -42,8 +42,6 @@ export interface ProcOptions {
    * They will be merged with `process.env` overriding any existing value.
    */
   env?: Record<string, string | number>;
-  /** Extra args to pass to the process. */
-  args?: (string | number | boolean)[];
   /** Custom replacer of stderr coming from he process. */
   replaceStderr?: (str: string) => string;
 }

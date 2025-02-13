@@ -78,18 +78,18 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     OTLP_SERVICE_NAME: string;
   }) {
     const port = await getAvailablePort();
-    await spawn('yarn wrangler', {
-      args: [
-        'dev',
-        '--port',
-        port.toString(),
-        '--var',
-        'OTLP_EXPORTER_URL:' + env.OTLP_EXPORTER_URL,
-        '--var',
-        'OTLP_SERVICE_NAME:' + env.OTLP_SERVICE_NAME,
-        ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
-      ],
-    });
+    await spawn([
+      'yarn',
+      'wrangler',
+      'dev',
+      '--port',
+      port.toString(),
+      '--var',
+      'OTLP_EXPORTER_URL:' + env.OTLP_EXPORTER_URL,
+      '--var',
+      'OTLP_SERVICE_NAME:' + env.OTLP_SERVICE_NAME,
+      ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
+    ]);
     const hostname = await getLocalhost(port);
     return {
       url: `${hostname}:${port}`,
