@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import { setTimeout } from 'timers/promises';
 import { createDeferred } from '@graphql-tools/delegate';
 import { Proc } from '@internal/proc';
@@ -36,30 +36,31 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
 
   return {
     async writeHeapSnapshot(path: string) {
-      fs.rmSync(path, { force: true }); // replace existing snapshot
+      await fs.rm(path, { force: true }); // replace existing snapshot
 
-      const fd = fs.openSync(path, 'w');
-      using _ = {
-        [Symbol.dispose]() {
-          fs.closeSync(fd);
+      const fd = await fs.open(path, 'w');
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await fd.close();
         },
       };
 
       const id = Math.floor(Math.random() * 1000);
 
+      const writes: Promise<unknown>[] = [];
       const { promise: waitForHeapSnapshotDone, resolve: heapSnapshotDone } =
         createDeferred<void>();
       function onMessage(m: WebSocket.Data) {
         const data = JSON.parse(m.toString());
+        if (data.params?.chunk) {
+          // write chunks to file asyncronously
+          writes.push(fd.write(data.params.chunk));
+        }
         if (data.id === id) {
           // receiving a message with the id of the takeHeapSnapshot means the snapshotting is done
           heapSnapshotDone();
           ws.off('message', onMessage);
           return;
-        }
-        if (data.params?.chunk) {
-          // write chunks to file
-          fs.writeSync(fd, data.params.chunk);
         }
       }
       ws.on('message', onMessage);
@@ -68,6 +69,9 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       ws.send(`{"id":${id},"method":"HeapProfiler.takeHeapSnapshot"}`);
 
       await Promise.race([throwOnClosed, waitForHeapSnapshotDone]);
+
+      // wait for all writes to complete
+      await Promise.all(writes);
     },
     [Symbol.dispose]() {
       ws.close();
