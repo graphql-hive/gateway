@@ -211,7 +211,7 @@ function calculateDelegationStage(
   }
 
   if (delegationMap.size > 1) {
-    optimizeDelegationMap(delegationMap, mergedTypeInfo.typeName);
+    optimizeDelegationMap(delegationMap, mergedTypeInfo.typeName, fragments);
   }
 
   return {
@@ -449,9 +449,10 @@ export function createDelegationPlanBuilder(
   });
 }
 
-function optimizeDelegationMap(
+export function optimizeDelegationMap(
   delegationMap: Map<Subschema, SelectionSetNode>,
   typeName: string,
+  fragments: Record<string, FragmentDefinitionNode>,
 ): Map<Subschema, SelectionSetNode> {
   for (const [subschema, selectionSet] of delegationMap) {
     for (const [subschema2, selectionSet2] of delegationMap) {
@@ -464,6 +465,7 @@ function optimizeDelegationMap(
         subschema2.transformedSchema.getType(typeName) as GraphQLObjectType,
         selectionSet,
         () => true,
+        fragments,
       );
       if (!unavailableFields.length) {
         delegationMap.set(subschema2, {

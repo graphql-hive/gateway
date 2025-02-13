@@ -82,6 +82,7 @@ export function isolateComputedFieldsTransformer(
           if (mergedTypeConfig.selectionSet) {
             const parsedSelectionSet = parseSelectionSet(
               mergedTypeConfig.selectionSet,
+              { noLocation: true },
             );
             const keyFields = collectFields(
               subschemaConfig.schema,
@@ -96,6 +97,7 @@ export function isolateComputedFieldsTransformer(
             if (entryPoint.selectionSet) {
               const parsedSelectionSet = parseSelectionSet(
                 entryPoint.selectionSet,
+                { noLocation: true },
               );
               const keyFields = collectFields(
                 subschemaConfig.schema,
@@ -168,6 +170,7 @@ export function isolateComputedFieldsTransformer(
                 const keyFieldNames: string[] = [];
                 const parsedSelectionSet = parseSelectionSet(
                   returnTypeSelectionSet,
+                  { noLocation: true },
                 );
                 const keyFields = collectFields(
                   subschemaConfig.schema,
@@ -182,6 +185,7 @@ export function isolateComputedFieldsTransformer(
                   if (entryPoint.selectionSet) {
                     const parsedSelectionSet = parseSelectionSet(
                       entryPoint.selectionSet,
+                      { noLocation: true },
                     );
                     const keyFields = collectFields(
                       subschemaConfig.schema,
@@ -244,10 +248,7 @@ export function isolateComputedFieldsTransformer(
 
   if (Object.keys(isolatedSchemaTypes).length) {
     return [
-      filterIsolatedSubschema({
-        ...subschemaConfig,
-        merge: isolatedSchemaTypes,
-      }),
+      filterIsolatedSubschema(subschemaConfig, isolatedSchemaTypes),
       filterBaseSubschema(
         { ...subschemaConfig, merge: baseSchemaTypes },
         isolatedSchemaTypes,
@@ -322,7 +323,7 @@ function filterBaseSubschema(
         }
       }
       const allTypes = [typeName, ...iFacesForType];
-      const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
+      const isIsolatedFieldName = allTypes.every((implementingTypeName) =>
         isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
       );
       const isKeyFieldName = allTypes.some((implementingTypeName) =>
@@ -356,7 +357,7 @@ function filterBaseSubschema(
         ...iFacesForType,
         ...typesForInterface[typeName],
       ];
-      const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
+      const isIsolatedFieldName = allTypes.every((implementingTypeName) =>
         isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
       );
       const isKeyFieldName = allTypes.some((implementingTypeName) =>
@@ -409,14 +410,11 @@ function filterBaseSubschema(
   return filteredSubschema;
 }
 
-type IsolatedSubschemaInput = Exclude<SubschemaConfig, 'merge'> & {
-  merge: Record<string, ComputedTypeConfig>;
-};
-
 function filterIsolatedSubschema(
-  subschemaConfig: IsolatedSubschemaInput,
-  computedFieldTypes: Record<string, boolean> = {}, // contains types of computed fields that have no root field
+  subschemaConfig: SubschemaConfig,
+  isolatedSchemaTypes: Record<string, ComputedTypeConfig>,
 ): SubschemaConfig {
+  const computedFieldTypes: Record<string, boolean> = {};
   const queryRootFields: Record<string, boolean> = {};
   function listReachableTypesToIsolate(
     subschemaConfig: SubschemaConfig,
@@ -427,7 +425,7 @@ function filterIsolatedSubschema(
       return typeNames;
     } else if (
       (isObjectType(type) || isInterfaceType(type)) &&
-      subschemaConfig.merge?.[type.name]?.selectionSet
+      subschemaConfig.merge?.[type.name]
     ) {
       // this is a merged type, no need to descend further
       typeNames.add(type.name);
@@ -562,11 +560,9 @@ function filterIsolatedSubschema(
         return true;
       }
       return (
-        subschemaConfig.merge[typeName] == null ||
+        subschemaConfig.merge?.[typeName] == null ||
         subschemaConfig.merge[typeName]?.fields?.[fieldName] != null ||
-        (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
-          fieldName,
-        )
+        (isolatedSchemaTypes[typeName]?.keyFieldNames ?? []).includes(fieldName)
       );
     },
     interfaceFieldFilter: (typeName, fieldName, config) => {
@@ -588,12 +584,8 @@ function filterIsolatedSubschema(
       }
       const isIsolatedFieldName =
         typesForInterface[typeName].some((implementingTypeName) =>
-          isIsolatedField(
-            implementingTypeName,
-            fieldName,
-            subschemaConfig.merge,
-          ),
-        ) || subschemaConfig.merge[typeName]?.fields?.[fieldName] != null;
+          isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
+        ) || subschemaConfig.merge?.[typeName]?.fields?.[fieldName] != null;
       const isComputedFieldType = typesForInterface[typeName].some(
         (implementingTypeName) => {
           if (computedFieldTypes[implementingTypeName]) {
@@ -615,19 +607,16 @@ function filterIsolatedSubschema(
         isComputedFieldType ||
         typesForInterface[typeName].some((implementingTypeName) =>
           (
-            subschemaConfig.merge[implementingTypeName]?.keyFieldNames ?? []
+            isolatedSchemaTypes?.[implementingTypeName]?.keyFieldNames ?? []
           ).includes(fieldName),
         ) ||
-        (subschemaConfig.merge[typeName]?.keyFieldNames ?? []).includes(
-          fieldName,
-        )
+        (isolatedSchemaTypes[typeName]?.keyFieldNames ?? []).includes(fieldName)
       );
     },
   });
-
   const merge = Object.fromEntries(
     // get rid of keyFieldNames again
-    Object.entries(subschemaConfig.merge).map(
+    Object.entries(isolatedSchemaTypes).map(
       ([typeName, { keyFieldNames, ...config }]) => [typeName, config],
     ),
   );
