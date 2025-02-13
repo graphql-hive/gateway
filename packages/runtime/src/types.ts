@@ -19,6 +19,7 @@ import type { LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   IResolvers,
+  MaybePromise,
   TypeSource,
   ValidationRule,
 } from '@graphql-tools/utils';
@@ -234,6 +235,24 @@ export interface GatewayGraphOSManagedFederationOptions
    * Alternative: 'https://aws.uplink.api.apollographql.com/' (Apollo's managed federation up link on AWS)
    */
   upLink?: string;
+  /**
+   * Agent Version to report to the usage reporting API
+   *
+   * @default "hive-gateway@VERSION_OF_GW"
+   */
+  agentVersion?: string;
+  /**
+   * Client name to report to the usage reporting API
+   *
+   * @default incoming `apollo-graphql-client-name` HTTP header
+   */
+  clientName?(req: Request): MaybePromise<string>;
+  /**
+   * Client version to report to the usage reporting API
+   *
+   * @default incoming `apollo-graphql-client-version` HTTP header
+   */
+  clientVersion?(req: Request): MaybePromise<string>;
 }
 
 export interface GatewayGraphOSReportingOptions extends GatewayGraphOSOptions {
