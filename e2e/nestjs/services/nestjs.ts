@@ -20,6 +20,14 @@ const supergraph = opts.get('supergraph', true);
 })
 class AppModule {}
 
-const app = await NestFactory.create(AppModule);
 const port = opts.getServicePort('nestjs', true);
-await app.listen(port);
+
+async function main() {
+  const app = await NestFactory.create(AppModule);
+  await app.listen(port);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
