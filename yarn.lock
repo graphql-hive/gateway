@@ -5128,6 +5128,7 @@ __metadata:
   resolution: "@internal/perf@workspace:internal/perf"
   dependencies:
     "@graphql-tools/delegate": "workspace:^"
+    "@memlab/core": "patch:@memlab/core@npm%3A1.1.39#~/.yarn/patches/@memlab-core-npm-1.1.39-34d29dabbd.patch"
     "@types/k6": "npm:^0.54.2"
     "@types/regression": "npm:^2"
     "@types/ws": "npm:^8.5.12"
@@ -5610,7 +5611,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@memlab/core@npm:^1.1.39":
+"@memlab/core@npm:1.1.39, @memlab/core@npm:^1.1.39":
   version: 1.1.39
   resolution: "@memlab/core@npm:1.1.39"
   dependencies:
@@ -5625,6 +5626,24 @@ __metadata:
     util.promisify: "npm:^1.1.1"
     xvfb: "npm:^0.4.0"
   checksum: 10c0/2a02a4f137e846e60541eccc735a3f34238df9d93bb35a98aa9d0f0065a8d812c8a1db13d3fca3d9ec2f279cff356fac9c8ca3df903613dfd35004c904bf239d
+  languageName: node
+  linkType: hard
+
+"@memlab/core@patch:@memlab/core@npm%3A1.1.39#~/.yarn/patches/@memlab-core-npm-1.1.39-34d29dabbd.patch":
+  version: 1.1.39
+  resolution: "@memlab/core@patch:@memlab/core@npm%3A1.1.39#~/.yarn/patches/@memlab-core-npm-1.1.39-34d29dabbd.patch::version=1.1.39&hash=c71f41"
+  dependencies:
+    ansi: "npm:^0.3.1"
+    babar: "npm:^0.2.0"
+    chalk: "npm:^4.0.0"
+    fs-extra: "npm:^4.0.2"
+    minimist: "npm:^1.2.8"
+    puppeteer: "npm:^22.12.1"
+    puppeteer-core: "npm:^22.12.1"
+    string-width: "npm:^4.2.0"
+    util.promisify: "npm:^1.1.1"
+    xvfb: "npm:^0.4.0"
+  checksum: 10c0/eb385a224e709dc79aa03a6aa197c51771d72f3b8d594bed7e1bf60c437598aa67046f55425dbc7b8042d4ef6d214bdb4945735e41a016fbff0b1b2a801d9474
   languageName: node
   linkType: hard
 
