@@ -1,0 +1,22 @@
+{
+  "name": "@internal/perf",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@graphql-tools/delegate": "workspace:^",
+    "@memlab/core": "patch:@memlab/core@npm%3A1.1.39#~/.yarn/patches/@memlab-core-npm-1.1.39-34d29dabbd.patch",
+    "canvas": "^3.1.0",
+    "chart.js": "^4.4.7",
+    "chartjs-plugin-trendline": "^2.1.6",
+    "memlab": "^1.1.56",
+    "parse-duration": "^2.0.0",
+    "regression": "^2.0.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.54.2",
+    "@types/regression": "^2",
+    "@types/ws": "^8.5.12"
+  }
+}

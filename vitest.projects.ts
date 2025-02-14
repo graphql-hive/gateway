@@ -44,4 +44,13 @@ export default defineWorkspace([
       },
     },
   },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'memtest',
+      include: ['**/*.memtest.ts'],
+      hookTimeout: testTimeout,
+      testTimeout,
+    },
+  },
 ]);

@@ -1,0 +1,15 @@
+diff --git a/package.json b/package.json
+index 18d87fcd08c7d0e66bef869ec55372e7218fc3b8..14dd1702a8657292f298deb6c9a64bc6c48ac368 100644
+--- a/package.json
++++ b/package.json
+@@ -20,6 +20,10 @@
+       "types": "./dist/index.d.ts",
+       "default": "./dist/index.js"
+     },
++    "./HeapParser": {
++      "types": "./dist/lib/HeapParser.d.ts",
++      "default": "./dist/lib/HeapParser.js"
++    },
+     "./package.json": "./package.json"
+   },
+   "files": [
