@@ -187,134 +187,146 @@ describe('useOpenTelemetry', () => {
       ...Object.values(expected).flatMap(({ children }) => children),
     ];
 
-    it('should register a complete span tree', async () => {
-      await using gateway = await buildTestGateway();
-      await gateway.query();
+    describe('span parenting', () => {
+      it.each([
+        { name: 'with context manager', contextManager: undefined },
+        { name: 'without context manager', contextManager: false as const },
+      ])(
+        'should register a complete span tree $name',
+        async ({ contextManager }) => {
+          await using gateway = await buildTestGateway({ contextManager });
+          await gateway.query();
 
-      for (const { root, children } of Object.values(expected)) {
-        const spanTree = spanExporter.assertRoot(root);
-        children.forEach(spanTree.expectChild);
-      }
+          for (const { root, children } of Object.values(expected)) {
+            const spanTree = spanExporter.assertRoot(root);
+            children.forEach(spanTree.expectChild);
+          }
+        },
+      );
     });
 
-    it('should not trace http requests if disabled', async () => {
-      await using gateway = await buildTestGateway({ spans: { http: false } });
-      await gateway.query();
+    describe('span configuration', () => {
+      it('should not trace http requests if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { http: false },
+        });
+        await gateway.query();
 
-      allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
-    });
-
-    it('should not trace graphql operation if disable', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { graphql: false },
+        allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
       });
-      await gateway.query();
 
-      const httpSpan = spanExporter.assertRoot(expected.http.root);
-      expected.http.children
-        .filter((name) => name != expected.graphql.root)
-        .forEach(httpSpan.expectChild);
+      it('should not trace graphql operation if disable', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { graphql: false },
+        });
+        await gateway.query();
 
-      [
-        expected.graphql.root,
-        ...expected.graphql.children,
-        ...expected.execute.children,
-        ...expected.subgraphExecute.children,
-      ].forEach(spanExporter.assertNoSpanWithName);
-    });
+        const httpSpan = spanExporter.assertRoot(expected.http.root);
+        expected.http.children
+          .filter((name) => name != expected.graphql.root)
+          .forEach(httpSpan.expectChild);
 
-    it('should not trace parse if disable', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { graphqlParse: false },
+        [
+          expected.graphql.root,
+          ...expected.graphql.children,
+          ...expected.execute.children,
+          ...expected.subgraphExecute.children,
+        ].forEach(spanExporter.assertNoSpanWithName);
       });
-      await gateway.query();
 
-      spanExporter.assertNoSpanWithName('graphql.parse');
+      it('should not trace parse if disable', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { graphqlParse: false },
+        });
+        await gateway.query();
 
-      allExpectedSpans
-        .filter((name) => name != 'graphql.parse')
-        .forEach(spanExporter.assertSpanWithName);
-    });
+        spanExporter.assertNoSpanWithName('graphql.parse');
 
-    it('should not trace validate if disabled', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { graphqlValidate: false },
+        allExpectedSpans
+          .filter((name) => name != 'graphql.parse')
+          .forEach(spanExporter.assertSpanWithName);
       });
-      await gateway.query();
 
-      spanExporter.assertNoSpanWithName('graphql.validate');
+      it('should not trace validate if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { graphqlValidate: false },
+        });
+        await gateway.query();
 
-      allExpectedSpans
-        .filter((name) => name != 'graphql.validate')
-        .forEach(spanExporter.assertSpanWithName);
-    });
+        spanExporter.assertNoSpanWithName('graphql.validate');
 
-    it('should not trace context building if disabled', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { graphqlContextBuilding: false },
+        allExpectedSpans
+          .filter((name) => name != 'graphql.validate')
+          .forEach(spanExporter.assertSpanWithName);
       });
-      await gateway.query();
 
-      spanExporter.assertNoSpanWithName('graphql.context');
+      it('should not trace context building if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { graphqlContextBuilding: false },
+        });
+        await gateway.query();
 
-      allExpectedSpans
-        .filter((name) => name != 'graphql.context')
-        .forEach(spanExporter.assertSpanWithName);
-    });
+        spanExporter.assertNoSpanWithName('graphql.context');
 
-    it('should not trace execute if disabled', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { graphqlExecute: false },
+        allExpectedSpans
+          .filter((name) => name != 'graphql.context')
+          .forEach(spanExporter.assertSpanWithName);
       });
-      await gateway.query();
 
-      [
-        expected.execute.root,
-        ...expected.execute.children,
-        ...expected.subgraphExecute.children,
-      ].forEach(spanExporter.assertNoSpanWithName);
+      it('should not trace execute if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { graphqlExecute: false },
+        });
+        await gateway.query();
 
-      [
-        expected.http.root,
-        ...expected.http.children,
-        ...expected.graphql.children,
-      ]
-        .filter((name) => name != 'graphql.execute')
-        .forEach(spanExporter.assertSpanWithName);
-    });
+        [
+          expected.execute.root,
+          ...expected.execute.children,
+          ...expected.subgraphExecute.children,
+        ].forEach(spanExporter.assertNoSpanWithName);
 
-    it('should not trace subgraph execute if disabled', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { subgraphExecute: false },
+        [
+          expected.http.root,
+          ...expected.http.children,
+          ...expected.graphql.children,
+        ]
+          .filter((name) => name != 'graphql.execute')
+          .forEach(spanExporter.assertSpanWithName);
       });
-      await gateway.query();
 
-      [
-        expected.subgraphExecute.root,
-        ...expected.subgraphExecute.children,
-      ].forEach(spanExporter.assertNoSpanWithName);
+      it('should not trace subgraph execute if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { subgraphExecute: false },
+        });
+        await gateway.query();
 
-      [
-        expected.http.root,
-        ...expected.http.children,
-        ...expected.graphql.children,
-        ...expected.execute.children,
-      ]
-        .filter((name) => name !== 'subgraph.execute (upstream)')
-        .forEach(spanExporter.assertSpanWithName);
-    });
+        [
+          expected.subgraphExecute.root,
+          ...expected.subgraphExecute.children,
+        ].forEach(spanExporter.assertNoSpanWithName);
 
-    it('should not trace fetch if disabled', async () => {
-      await using gateway = await buildTestGateway({
-        spans: { upstreamFetch: false },
+        [
+          expected.http.root,
+          ...expected.http.children,
+          ...expected.graphql.children,
+          ...expected.execute.children,
+        ]
+          .filter((name) => name !== 'subgraph.execute (upstream)')
+          .forEach(spanExporter.assertSpanWithName);
       });
-      await gateway.query();
 
-      spanExporter.assertNoSpanWithName('http.fetch');
+      it('should not trace fetch if disabled', async () => {
+        await using gateway = await buildTestGateway({
+          spans: { upstreamFetch: false },
+        });
+        await gateway.query();
 
-      allExpectedSpans
-        .filter((name) => name !== 'http.fetch')
-        .forEach(spanExporter.assertSpanWithName);
+        spanExporter.assertNoSpanWithName('http.fetch');
+
+        allExpectedSpans
+          .filter((name) => name !== 'http.fetch')
+          .forEach(spanExporter.assertSpanWithName);
+      });
     });
 
     async function buildTestGateway(
