@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build:prod": "nest build",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
     "start:dev": "nest start --watch",
