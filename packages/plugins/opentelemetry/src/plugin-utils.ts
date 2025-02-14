@@ -2,8 +2,8 @@ import type { ExecutionRequest } from '@graphql-tools/utils';
 
 export function withState<
   P,
-  GraphqlState = object,
   HttpState = object,
+  GraphqlState = object,
   SubExecState = object,
 >(plugin: WithState<P, HttpState, GraphqlState, SubExecState>): P {
   const states: {

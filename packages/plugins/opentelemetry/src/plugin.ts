@@ -140,6 +140,8 @@ export type OpenTelemetryGatewayPluginOptions =
       http?: BooleanOrPredicate<OnRequestEventPayload<any>>;
       /**
        * Enable/disable GraphQL operation spans (default: true).
+       *
+       * Disabling the GraphQL operation spa will also disable all other child spans.
        */
       graphql?: BooleanOrPredicate<OnParamsEventPayload<any>>;
       /**
@@ -158,10 +160,14 @@ export type OpenTelemetryGatewayPluginOptions =
       graphqlValidate?: BooleanOrPredicate<OnValidateEventPayload<any>>;
       /**
        * Enable/disable GraphQL execute spans (default: true).
+       *
+       * Disabling the GraphQL execute spans will also disable all other child spans.
        */
       graphqlExecute?: BooleanOrPredicate<OnExecuteEventPayload<any>>;
       /**
        * Enable/disable subgraph execute spans (default: true).
+       *
+       * Disabling the subgraph execute spans will also disable all other child spans.
        */
       subgraphExecute?: BooleanOrPredicate<OnSubgraphExecutePayload<any>>;
       /**
@@ -270,7 +276,7 @@ export function useOpenTelemetry(
   return withState<
     GatewayPlugin<OpenTelemetryContextExtension>,
     OtelState,
-    OtelState,
+    OtelState & { skipExecuteSpan?: true },
     OtelState
   >({
     onYogaInit({ yoga }) {
@@ -458,6 +464,10 @@ export function useOpenTelemetry(
             state.forOperation.otel!.pop();
           },
         };
+      } else {
+        // Other parenting skipping are marked by the fact that `otel` is undefined in the state
+        // For execute, there is no specific state, so we keep track of it here.
+        state.forOperation.skipExecuteSpan = true;
       }
 
       return;
@@ -466,7 +476,10 @@ export function useOpenTelemetry(
       const { state } = onSubgraphPayload;
       const { forSubgraphExecution, ...parentState } = state;
 
-      if (!isParentEnabled(parentState)) {
+      if (
+        !isParentEnabled(parentState) ||
+        parentState.forOperation?.skipExecuteSpan
+      ) {
         return;
       }
 
