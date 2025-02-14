@@ -13,7 +13,7 @@ const { supergraph, query, result } = createExampleSetup(__dirname);
 it('executes the query', async () => {
   const SUPERGRAPH = await supergraph();
   const PORT = await getAvailablePort();
-  const [nest, waitForExit] = await spawn('yarn nest', {
+  await spawn('yarn nest', {
     args: ['start'],
     env: {
       SUPERGRAPH,

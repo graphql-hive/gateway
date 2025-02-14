@@ -25,18 +25,19 @@ import {
 } from '@nestjs/graphql';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-export type HiveGatewayDriverConfig<TContext extends Record<string, any> = {}> =
-  GatewayConfig<TContext> &
-    GqlModuleOptions & {
-      /**
-       * If enabled, "subscriptions-transport-ws" will be automatically registered.
-       */
-      installSubscriptionHandlers?: boolean;
-      /**
-       * Subscriptions configuration.
-       */
-      subscriptions?: SubscriptionConfig;
-    };
+export type HiveGatewayDriverConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> = GatewayConfig<TContext> &
+  GqlModuleOptions & {
+    /**
+     * If enabled, "subscriptions-transport-ws" will be automatically registered.
+     */
+    installSubscriptionHandlers?: boolean;
+    /**
+     * Subscriptions configuration.
+     */
+    subscriptions?: SubscriptionConfig;
+  };
 
 @Injectable()
 export class HiveGatewayDriver<
@@ -44,10 +45,6 @@ export class HiveGatewayDriver<
 > extends AbstractGraphQLDriver<HiveGatewayDriverConfig<TContext>> {
   private _gatewayRuntime: GatewayRuntime<TContext> | undefined;
   private _subscriptionService?: GqlSubscriptionService;
-
-  constructor() {
-    super();
-  }
 
   public async start({
     schema,
@@ -82,7 +79,7 @@ export class HiveGatewayDriver<
         'Hive Gateway',
         {},
         new NestLogger('Hive Gateway'),
-        options.debug,
+        options.debug ?? truthy(process.env['DEBUG']),
       ),
       graphqlEndpoint: options.path,
       additionalTypeDefs,
@@ -240,10 +237,10 @@ class NestJSLoggerAdapter implements GatewayLogger {
       ...(this.meta || {}),
     };
     const strs: string[] = [];
-    args = args
+    const flattenedArgs = args
       .flatMap((arg) => (typeof arg === 'function' ? arg() : arg))
-      .flat(Infinity);
-    for (const arg of args) {
+      .flat(Number.POSITIVE_INFINITY);
+    for (const arg of flattenedArgs) {
       if (typeof arg === 'string' || typeof arg === 'number') {
         strs.push(arg.toString());
       } else {
@@ -315,4 +312,12 @@ class NestJSLoggerAdapter implements GatewayLogger {
       this.isDebug,
     );
   }
+}
+
+function truthy(val: unknown) {
+  return (
+    val === true ||
+    val === 1 ||
+    ['1', 't', 'true', 'y', 'yes'].includes(String(val))
+  );
 }
