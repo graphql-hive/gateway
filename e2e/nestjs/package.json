@@ -2,13 +2,6 @@
   "name": "@e2e/nestjs",
   "version": "0.0.1",
   "private": true,
-  "scripts": {
-    "build:prod": "nest build",
-    "start": "nest start",
-    "start:debug": "nest start --debug --watch",
-    "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
-  },
   "dependencies": {
     "@graphql-hive/nestjs": "workspace:^",
     "@nestjs/common": "^11.0.1",

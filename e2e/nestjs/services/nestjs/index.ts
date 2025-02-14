@@ -1,5 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Opts } from '@internal/testing';
+
+const opts = Opts(process.argv);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,7 +12,8 @@ async function bootstrap() {
       process.exit(1);
     });
   });
-  await app.listen(process.env['PORT'] ?? 3000);
+  const port = opts.getServicePort('nestjs', true);
+  await app.listen(port);
 }
 
 bootstrap().catch((e) => {
