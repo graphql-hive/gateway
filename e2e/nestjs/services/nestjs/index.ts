@@ -1,6 +1,6 @@
+import { Opts } from '@internal/testing';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Opts } from '@internal/testing';
 
 const opts = Opts(process.argv);
 
