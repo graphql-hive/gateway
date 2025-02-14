@@ -4,6 +4,7 @@ import {
 } from '@graphql-hive/nestjs';
 import { Opts } from '@internal/testing';
 import { Module } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 
 const opts = Opts(process.argv);
@@ -17,4 +18,8 @@ const supergraph = opts.get('supergraph', true);
     }),
   ],
 })
-export class AppModule {}
+class AppModule {}
+
+const app = await NestFactory.create(AppModule);
+const port = opts.getServicePort('nestjs', true);
+await app.listen(port);
