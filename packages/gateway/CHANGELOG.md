@@ -1,5 +1,13 @@
 # @graphql-hive/gateway
 
+## 1.10.3
+
+### Patch Changes
+
+- [#664](https://github.com/graphql-hive/gateway/pull/664) [`b4d4760`](https://github.com/graphql-hive/gateway/commit/b4d4760861f360bed0e1566a50833164678fe3d5) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.4) (from `^0.0.3`, in `dependencies`)
+
 ## 1.10.2
 
 ### Patch Changes
