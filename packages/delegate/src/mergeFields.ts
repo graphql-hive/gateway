@@ -139,8 +139,8 @@ export function handleResolverResult(
     const type = schema.getType(object.__typename) as GraphQLObjectType;
     const { fields } = collectFields(
       schema,
-      EMPTY_OBJECT,
-      EMPTY_OBJECT,
+      info.fragments,
+      info.variableValues,
       type,
       selectionSet,
     );
