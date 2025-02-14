@@ -1,7 +1,10 @@
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  createGraphQLError,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import { buildSchema, GraphQLObjectType, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { stitchingDirectives } from '../src';
@@ -343,6 +346,124 @@ describe('Reproductions for issues', () => {
           age: 25,
         },
       },
+    });
+  });
+
+  it('issue tools#6039', async () => {
+    const users = [
+      { id: '1', name: 'Ada Lovelace', username: '@ada' },
+      { id: '2', name: 'Alan Turing', username: '@complete' },
+    ];
+    const reviews = [
+      { id: '1', authorId: '1', body: 'Love it!' },
+      { id: '2', authorId: '1', body: 'Too expensive.' },
+      { id: '3', authorId: '2', body: 'Could be better.' },
+      { id: '4', authorId: '2', body: 'Prefer something else.' },
+    ];
+    const { stitchingDirectivesTypeDefs, stitchingDirectivesTransformer } =
+      stitchingDirectives();
+    const accountsSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        ${stitchingDirectivesTypeDefs}
+        type User {
+          id: ID!
+          name: String!
+          username: String!
+        }
+
+        type Query {
+          me: User
+          user(id: ID!): User @merge(keyField: "id")
+        }
+      `,
+      resolvers: {
+        Query: {
+          me: () => users[0],
+          user: (_root, { id }) =>
+            users.find((user) => user.id === id) ||
+            createGraphQLError('Record not found', {
+              extensions: {
+                code: 'NOT_FOUND',
+              },
+            }),
+        },
+      },
+    });
+    const reviewsSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        ${stitchingDirectivesTypeDefs}
+        type Review {
+          id: ID!
+          body: String
+          author: User
+        }
+
+        type User @key(selectionSet: "{ id }") {
+          id: ID!
+          totalReviews: Int!
+          reviews: [Review]
+        }
+
+        input UserKey {
+          id: ID!
+        }
+
+        type Query {
+          review(id: ID!): Review
+          _users(keys: [UserKey!]!): [User]! @merge
+        }
+      `,
+      resolvers: {
+        Review: {
+          author: (review) => ({ id: review.authorId }),
+        },
+        User: {
+          reviews: (user) =>
+            reviews.filter((review) => review.authorId === user.id),
+          totalReviews: () => createGraphQLError('RANDOM ERROR'),
+        },
+        Query: {
+          review: (_root, { id }) =>
+            reviews.find((review) => review.id === id) ||
+            createGraphQLError('Record not found', {
+              extensions: {
+                code: 'NOT_FOUND',
+              },
+            }),
+          _users: (_root, { keys }) => keys,
+        },
+      },
+    });
+    const stitchedSchema = stitchSchemas({
+      subschemas: [accountsSchema, reviewsSchema],
+      subschemaConfigTransforms: [stitchingDirectivesTransformer],
+    });
+    const result = await normalizedExecutor({
+      schema: stitchedSchema,
+      document: parse(/* GraphQL */ `
+        query myQuery($toInclude: Boolean! = false) {
+          user(id: 1) {
+            id
+            name
+            username
+            totalReviews @include(if: $toInclude)
+          }
+        }
+      `),
+      variableValues: {
+        toInclude: true,
+      },
+    });
+    expect(result).toMatchObject({
+      data: {
+        user: null,
+      },
+      errors: [
+        {
+          message: 'RANDOM ERROR',
+          path: ['user', 'totalReviews'],
+        },
+      ],
     });
   });
 });
