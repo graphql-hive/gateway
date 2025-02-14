@@ -65,6 +65,7 @@
     "@graphql-mesh/types": "^0.104.0",
     "@graphql-mesh/utils": "^0.104.1",
     "@graphql-tools/delegate": "workspace:^",
+    "@memlab/core@npm:^1.1.39": "patch:@memlab/core@npm%3A1.1.39#~/.yarn/patches/@memlab-core-npm-1.1.39-34d29dabbd.patch",
     "@opentelemetry/exporter-trace-otlp-http": "patch:@opentelemetry/exporter-trace-otlp-http@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch",
     "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch",
