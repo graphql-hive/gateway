@@ -7585,18 +7585,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.7.1":
-  version: 0.7.10
-  resolution: "@whatwg-node/node-fetch@npm:0.7.10"
-  dependencies:
-    "@whatwg-node/disposablestack": "npm:^0.0.5"
-    busboy: "npm:^1.6.0"
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/00c037763489af7ce215368b506e9067b71856a4f1a99c8cace68903f31d1fdc3083d50105cd3978a9556516c2f4f24a223ca9e45c250634294a938fdde716ea
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/node-fetch@npm:^0.7.11":
+"@whatwg-node/node-fetch@npm:^0.7.1, @whatwg-node/node-fetch@npm:^0.7.11":
   version: 0.7.11
   resolution: "@whatwg-node/node-fetch@npm:0.7.11"
   dependencies:
