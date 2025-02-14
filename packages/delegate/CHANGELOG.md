@@ -1,5 +1,29 @@
 # @graphql-tools/delegate
 
+## 10.2.13
+
+### Patch Changes
+
+- [#662](https://github.com/graphql-hive/gateway/pull/662) [`2318393`](https://github.com/graphql-hive/gateway/commit/2318393bc7b3aca7f53806a44b59277cd176702d) Thanks [@ardatan](https://github.com/ardatan)! - When a field with `@skip` and `@include` directives in a selection set throws, show the correct error
+
+  ```
+  // Query
+  query myQuery($toInclude: Boolean! = false) {
+      user(id: 1) {
+          id
+          name
+          username
+          totalReviews @include(if: $toInclude)
+          # If this throws, show the actual error instead of `Argument \"if\" of required type \"Boolean!\" was provided the variable` error
+      }
+  }
+
+  // Variables
+  {
+      "toInclude": true
+  }
+  ```
+
 ## 10.2.12
 
 ### Patch Changes

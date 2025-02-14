@@ -1,5 +1,14 @@
 # @graphql-tools/stitch
 
+## 9.4.18
+
+### Patch Changes
+
+- Updated dependencies [[`2318393`](https://github.com/graphql-hive/gateway/commit/2318393bc7b3aca7f53806a44b59277cd176702d)]:
+  - @graphql-tools/delegate@10.2.13
+  - @graphql-tools/batch-delegate@9.0.31
+  - @graphql-tools/wrap@10.0.31
+
 ## 9.4.17
 
 ### Patch Changes
