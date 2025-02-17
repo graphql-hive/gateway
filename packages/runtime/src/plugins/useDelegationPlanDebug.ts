@@ -23,7 +23,9 @@ export function useDelegationPlanDebug<
     }) {
       const planId = fetchAPI.crypto.randomUUID();
       const planLogger = logger.child({ planId, typeName });
-      const delegationPlanStartLogger = planLogger.child('delegation-plan-start');
+      const delegationPlanStartLogger = planLogger.child(
+        'delegation-plan-start',
+      );
       delegationPlanStartLogger.debug(() => {
         const logObj: Record<string, any> = {};
         if (variables && Object.keys(variables).length) {
@@ -49,15 +51,17 @@ export function useDelegationPlanDebug<
       });
       return ({ delegationPlan }) => {
         const delegationPlanDoneLogger = logger.child('delegation-plan-done');
-        delegationPlanDoneLogger.debug(() => delegationPlan.map((plan) => {
-          const planObj: Record<string, string> = {};
-          for (const [subschema, selectionSet] of plan) {
-            if (subschema.name) {
-              planObj[subschema.name] = print(selectionSet);
+        delegationPlanDoneLogger.debug(() =>
+          delegationPlan.map((plan) => {
+            const planObj: Record<string, string> = {};
+            for (const [subschema, selectionSet] of plan) {
+              if (subschema.name) {
+                planObj[subschema.name] = print(selectionSet);
+              }
             }
-          }
-          return planObj;
-        }));
+            return planObj;
+          }),
+        );
       };
     },
     onDelegationStageExecute({
