@@ -11,29 +11,29 @@ export function useSubgraphExecuteDebug<
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onSubgraphExecute({ executionRequest, logger = opts.logger }) {
-      const subgraphExecuteId = fetchAPI.crypto.randomUUID();
+    onSubgraphExecute({
+      executionRequest,
+      logger = opts.logger,
+    }) {
       const subgraphExecuteHookLogger = logger.child({
-        subgraphExecuteId,
+        subgraphExecuteId: fetchAPI.crypto.randomUUID(),
       });
-      if (executionRequest) {
-        const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
-          'subgraph-execute-start',
-        );
-        subgraphExecuteStartLogger.debug(() => {
-          const logData: Record<string, any> = {};
-          if (executionRequest.document) {
-            logData['query'] = defaultPrintFn(executionRequest.document);
-          }
-          if (
-            executionRequest.variables &&
-            Object.keys(executionRequest.variables).length
-          ) {
-            logData['variables'] = executionRequest.variables;
-          }
-          return logData;
-        });
-      }
+      const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
+        'subgraph-execute-start',
+      );
+      subgraphExecuteStartLogger.debug(() => {
+        const logData: Record<string, any> = {};
+        if (executionRequest.document) {
+          logData['query'] = defaultPrintFn(executionRequest.document);
+        }
+        if (
+          executionRequest.variables &&
+          Object.keys(executionRequest.variables).length
+        ) {
+          logData['variables'] = executionRequest.variables;
+        }
+        return logData;
+      });
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
         const subgraphExecuteEndLogger = subgraphExecuteHookLogger.child(
@@ -54,10 +54,7 @@ export function useSubgraphExecuteDebug<
             },
           };
         }
-        subgraphExecuteEndLogger.debug(() => ({
-          result,
-          duration: performance.now() - start,
-        }));
+        subgraphExecuteEndLogger.debug(result);
         return void 0;
       };
     },

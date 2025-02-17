@@ -14,7 +14,6 @@ export function useDelegationPlanDebug<
       fetchAPI = yoga.fetchAPI;
     },
     onDelegationPlan({
-      subgraph,
       typeName,
       variables,
       fragments,
@@ -23,13 +22,10 @@ export function useDelegationPlanDebug<
       logger = opts.logger,
     }) {
       const planId = fetchAPI.crypto.randomUUID();
-      const delegationPlanStartLogger = logger.child('delegation-plan-start');
+      const planLogger = logger.child({ planId, typeName });
+      const delegationPlanStartLogger = planLogger.child('delegation-plan-start');
       delegationPlanStartLogger.debug(() => {
-        const logObj: Record<string, any> = {
-          planId,
-          subgraph,
-          typeName,
-        };
+        const logObj: Record<string, any> = {};
         if (variables && Object.keys(variables).length) {
           logObj['variables'] = variables;
         }
@@ -51,21 +47,16 @@ export function useDelegationPlanDebug<
         }
         return logObj;
       });
-      const start = performance.now();
       return ({ delegationPlan }) => {
         const delegationPlanDoneLogger = logger.child('delegation-plan-done');
-        delegationPlanDoneLogger.debug(() => ({
-          planId,
-          plan: delegationPlan.map((plan) => {
-            const planObj: Record<string, string> = {};
-            for (const [subschema, selectionSet] of plan) {
-              if (subschema.name) {
-                planObj[subschema.name] = print(selectionSet);
-              }
+        delegationPlanDoneLogger.debug(() => delegationPlan.map((plan) => {
+          const planObj: Record<string, string> = {};
+          for (const [subschema, selectionSet] of plan) {
+            if (subschema.name) {
+              planObj[subschema.name] = print(selectionSet);
             }
-            return planObj;
-          }),
-          duration: performance.now() - start,
+          }
+          return planObj;
         }));
       };
     },
@@ -79,16 +70,12 @@ export function useDelegationPlanDebug<
       typeName,
       logger = opts.logger,
     }) {
-      let stageId: string;
       let contextLog = stageExecuteLogById.get(context);
       if (!contextLog) {
         contextLog = new Set();
         stageExecuteLogById.set(context, contextLog);
       }
-      const delegationStageLogger = logger.child('delegation-stage-execute');
       const log = {
-        subgraph,
-        typeName,
         key: JSON.stringify(key),
         object: JSON.stringify(object),
         selectionSet: print(selectionSet),
@@ -98,24 +85,23 @@ export function useDelegationPlanDebug<
         return;
       }
       contextLog.add(logStr);
-      stageId = fetchAPI.crypto.randomUUID();
-      delegationStageLogger.debug('start', () => {
+      const logMeta: Record<string, string> = {
+        stageId: fetchAPI.crypto.randomUUID(),
+        subgraph,
+        typeName,
+      };
+      const delegationStageLogger = logger.child(logMeta);
+      delegationStageLogger.debug('delegation-plan-start', () => {
         return {
-          stageId,
           ...log,
           path: pathToArray(info.path).join(' | '),
         };
       });
-      const start = performance.now();
       return ({ result }) => {
         const delegationStageExecuteDoneLogger = logger.child(
           'delegation-stage-execute-done',
         );
-        delegationStageExecuteDoneLogger.debug(() => ({
-          stageId,
-          result: JSON.stringify(result, null),
-          duration: performance.now() - start,
-        }));
+        delegationStageExecuteDoneLogger.debug(() => result);
       };
     },
   };
