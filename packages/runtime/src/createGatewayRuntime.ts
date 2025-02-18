@@ -926,15 +926,6 @@ export function createGatewayRuntime<
     useRequestId(),
   ];
 
-  logger.debug(() => {
-    basePlugins.push(
-      useSubgraphExecuteDebug(configContext),
-      useFetchDebug(configContext),
-      useDelegationPlanDebug(configContext),
-    );
-    return 'Debug mode enabled';
-  });
-
   const extraPlugins = [];
 
   if (config.webhooks) {
@@ -1015,6 +1006,15 @@ export function createGatewayRuntime<
   if (config.upstreamRetry) {
     extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
   }
+
+  logger.debug(() => {
+    extraPlugins.push(
+      useSubgraphExecuteDebug(configContext),
+      useFetchDebug(configContext),
+      useDelegationPlanDebug(configContext),
+    );
+    return 'Debug mode enabled';
+  });
 
   const yoga = createYoga<any, GatewayContext & TContext>({
     // @ts-expect-error Types???
