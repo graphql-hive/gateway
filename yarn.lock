@@ -3901,8 +3901,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-response-cache@npm:^0.103.13":
-  version: 0.103.18
-  resolution: "@graphql-mesh/plugin-response-cache@npm:0.103.18"
+  version: 0.103.19
+  resolution: "@graphql-mesh/plugin-response-cache@npm:0.103.19"
   dependencies:
     "@envelop/core": "npm:^5.0.0"
     "@envelop/response-cache": "npm:^6.1.1"
@@ -3911,13 +3911,13 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.103.17"
     "@graphql-mesh/utils": "npm:^0.103.17"
     "@graphql-tools/utils": "npm:^10.6.2"
-    "@graphql-yoga/plugin-response-cache": "npm:^3.1.1"
+    "@graphql-yoga/plugin-response-cache": "npm:^3.13.1"
     cache-control-parser: "npm:^2.0.6"
     graphql-yoga: "npm:^5.7.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/8effc0ea6c45bcf75f8706932f4a4f96a29c0482e212c55b2e8b78a3e72a17eb14a4860c9c226386ee22a5f32f64ace7ff91e992d8c7766735d41221b70bfa07
+  checksum: 10c0/38dcdb74d34a664fcc8d6a7c0d323178477bec1d0e9747c8aec0c15eddef9a2f281e7264819d09872b3c1c3ce8597e4a5553c1cfbc6944eee339fb8ce1e7ee6b
   languageName: node
   linkType: hard
 
@@ -4664,7 +4664,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-response-cache@npm:^3.1.1":
+"@graphql-yoga/plugin-response-cache@npm:^3.13.1":
   version: 3.13.1
   resolution: "@graphql-yoga/plugin-response-cache@npm:3.13.1"
   dependencies:
