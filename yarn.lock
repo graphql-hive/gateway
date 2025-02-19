@@ -2735,7 +2735,7 @@ __metadata:
   resolution: "@e2e/operation-field-permissions@workspace:e2e/operation-field-permissions"
   dependencies:
     "@envelop/core": "npm:^5.0.2"
-    "@envelop/operation-field-permissions": "npm:^6.0.0"
+    "@envelop/operation-field-permissions": "npm:^7.0.0"
     "@graphql-mesh/compose-cli": "npm:^1.2.13"
     graphql: "npm:^16.10.0"
   languageName: unknown
@@ -2855,43 +2855,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/disable-introspection@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@envelop/disable-introspection@npm:6.0.0"
+"@envelop/disable-introspection@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@envelop/disable-introspection@npm:7.0.0"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.0.0
+    "@envelop/core": ^5.1.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/48b3a2c98514cd629eadc09f741a1a21cb363a6ebf940a40e39c69054cd61b3d73b37575c1c3573fdc57685b76d58694b14dfae63d357d015040e69f4363ad98
+  checksum: 10c0/260fc7e433f3a6d7b7a764e92563a949f56a0502347233ddf1eea6efd8d69f4b547de061bef35f7ff58e20fa4e0e9b6254728a8dfe9de9531fe4306f29d6278c
   languageName: node
   linkType: hard
 
-"@envelop/extended-validation@npm:^4.0.0, @envelop/extended-validation@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "@envelop/extended-validation@npm:4.1.0"
+"@envelop/extended-validation@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "@envelop/extended-validation@npm:5.0.0"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.0"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.0.2
+    "@envelop/core": ^5.1.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/9b65b4c7040b024ab95aaf901d79cea9a7e61406fe0c7660cde91b7fbfbbae74516d3940b2df3e639e359bb96185df8769c2842367f70e78317cefe8cae12ddf
+  checksum: 10c0/0abf6226cbe39d736c7d2bb1373a1f4415695db8c7b203e2205db270100929d4356050227b58e105103a0d7e6e270643fe0bd956448bb86e6d6920b924e742bc
   languageName: node
   linkType: hard
 
-"@envelop/generic-auth@npm:^8.0.0":
-  version: 8.0.1
-  resolution: "@envelop/generic-auth@npm:8.0.1"
+"@envelop/generic-auth@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@envelop/generic-auth@npm:9.0.0"
   dependencies:
-    "@envelop/extended-validation": "npm:^4.1.0"
+    "@envelop/extended-validation": "npm:^5.0.0"
     "@graphql-tools/executor": "npm:^1.3.6"
     "@graphql-tools/utils": "npm:^10.5.1"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.0.2
+    "@envelop/core": ^5.1.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/55866a2be000a28842f1b85c80c8e1df6764e7b366bfe4bef26a535fbdf16947b449d7b81116524f5fbeb31137358c3b5a6de0f4c01b146e44af7d3df5bddee3
+  checksum: 10c0/f14b072421ba8d7c9de1de2da6e675f66acb54779e449d6b99ef83a4ac925bb56c60ad9610bff63b39f9cec9dbef6f9b50219630ece2888253e37aecafda7da4
   languageName: node
   linkType: hard
 
@@ -2921,16 +2921,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/operation-field-permissions@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@envelop/operation-field-permissions@npm:6.0.0"
+"@envelop/operation-field-permissions@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@envelop/operation-field-permissions@npm:7.0.0"
   dependencies:
-    "@envelop/extended-validation": "npm:^4.0.0"
+    "@envelop/extended-validation": "npm:^5.0.0"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.0.0
+    "@envelop/core": ^5.1.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/1504191235fa13421399048df231fa1721a71a5d25c5a72ede3f50bd3ca4ca37eb79c77a2bed3277078ddaf729dee56f13152079a0dc328edc377de90c3bed2d
+  checksum: 10c0/41307dd9d0bab90cdd5dd4cbb9cdbacc39d24d2320511eb5b1ba8e57db4ac4494a5324d4d0a279a42bd11fb838dbb5022822030598aafac2952433bb1428acb6
   languageName: node
   linkType: hard
 
@@ -3325,8 +3325,8 @@ __metadata:
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
   dependencies:
     "@envelop/core": "npm:^5.0.0"
-    "@envelop/disable-introspection": "npm:^6.0.0"
-    "@envelop/generic-auth": "npm:^8.0.0"
+    "@envelop/disable-introspection": "npm:^7.0.0"
+    "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.9.0"
     "@graphql-hive/logger-json": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.9"
