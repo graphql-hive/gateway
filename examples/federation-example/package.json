@@ -2,7 +2,7 @@
   "name": "@example/federation-example",
   "private": true,
   "devDependencies": {
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.3",
     "@apollo/rover": "^0.27.1"
   },
   "dependencies": {
