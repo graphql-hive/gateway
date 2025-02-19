@@ -81,7 +81,9 @@ for (const [name, createConfig] of Object.entries(cases)) {
         expect(await response.json()).toEqual({
           errors: [
             {
-              extensions: {},
+              extensions: {
+                code: 'INTERNAL_SERVER_ERROR',
+              },
               message: 'Unexpected error.',
             },
           ],
@@ -102,7 +104,9 @@ for (const [name, createConfig] of Object.entries(cases)) {
         expect(await response.json()).toEqual({
           errors: [
             {
-              extensions: {},
+              extensions: {
+                code: 'INTERNAL_SERVER_ERROR',
+              },
               message: 'Unexpected error.',
             },
           ],
