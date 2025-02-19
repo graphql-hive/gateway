@@ -2287,14 +2287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/types@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "@changesets/types@npm:6.0.0"
-  checksum: 10c0/e755f208792547e3b9ece15ce4da22466267da810c6fd87d927a1b8cec4d7fb7f0eea0d1a7585747676238e3e4ba1ffdabe016ccb05cfa537b4e4b03ec399f41
-  languageName: node
-  linkType: hard
-
-"@changesets/types@npm:^6.1.0":
+"@changesets/types@npm:^6.0.0, @changesets/types@npm:^6.1.0":
   version: 6.1.0
   resolution: "@changesets/types@npm:6.1.0"
   checksum: 10c0/b4cea3a4465d1eaf0bbd7be1e404aca5a055a61d4cc72aadcb73bbbda1670b4022736b8d3052616cbf1f451afa0637545d077697f4b923236539af9cd5abce6c
@@ -2962,22 +2955,6 @@ __metadata:
     "@envelop/core": ^5.1.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/1265c32ebf4cf93d7d9abefb09f89ce554e788287cb81c1c04ff18c26c6e2908fa0ae27153f1cef2cbe4de0f4213dff1a63165c04a259f986e00a94713b5b13a
-  languageName: node
-  linkType: hard
-
-"@envelop/response-cache@npm:^6.1.2":
-  version: 6.3.0
-  resolution: "@envelop/response-cache@npm:6.3.0"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.0.3"
-    "@whatwg-node/fetch": "npm:^0.10.0"
-    fast-json-stable-stringify: "npm:^2.1.0"
-    lru-cache: "npm:^10.0.0"
-    tslib: "npm:^2.5.0"
-  peerDependencies:
-    "@envelop/core": ^5.0.3
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/daaf1eb5cd30de04d9e32dbb97c4f484860e4cb82a8f14f069b0810bd9c86679b53cbc4a517ca50776bb163b21cf89d159aa03943ea4bb87b0e7ac76eab0e74c
   languageName: node
   linkType: hard
 
@@ -4681,15 +4658,15 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-response-cache@npm:^3.13.1":
-  version: 3.13.1
-  resolution: "@graphql-yoga/plugin-response-cache@npm:3.13.1"
+  version: 3.14.0
+  resolution: "@graphql-yoga/plugin-response-cache@npm:3.14.0"
   dependencies:
     "@envelop/core": "npm:^5.0.2"
-    "@envelop/response-cache": "npm:^6.1.2"
+    "@envelop/response-cache": "npm:^7.0.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.11.0
-  checksum: 10c0/0f5658087484d87f6dcac12881f907180c7ed8f69e5b5537cd954ca42457999c96f23eed385e781ff9770a35cfb1f6056ab216aacadc37e4aed48af2f0558b77
+    graphql-yoga: ^5.12.0
+  checksum: 10c0/320fcc95c86914faea71b3ff213258b4b00e90409686277c43cce9f121dfc84dc62ed6bff6ed9ab9442fe423ab08b7a81e7d745d2420fb393302fac8c7554f92
   languageName: node
   linkType: hard
 
