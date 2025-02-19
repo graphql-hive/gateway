@@ -12,7 +12,7 @@
     "@graphql-hive/gateway": "^1.10.3"
   },
   "devDependencies": {
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.3"
   },
   "overrides": {
     "esbuild": "^0.25.0"
