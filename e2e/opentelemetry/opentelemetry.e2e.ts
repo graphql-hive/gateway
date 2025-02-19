@@ -669,7 +669,7 @@ describe('OpenTelemetry', () => {
         await expect(
           execute({ query: 'query { nonExistentField }' }),
         ).rejects.toThrow(
-          '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}]}]}',
+          '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}]}',
         );
         await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
