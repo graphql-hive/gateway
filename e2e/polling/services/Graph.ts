@@ -17,13 +17,15 @@ app.use(
     schema: createSchema({
       typeDefs: schemaContent,
       resolvers: {
-        hello: () => {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve('Hello world!');
-            }, 20_000);
-          });
-        },
+        Query: {
+          hello: () => {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve('Hello world!');
+              }, 20_000);
+            });
+          },
+        }
       },
     }),
   }),
