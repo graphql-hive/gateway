@@ -1,5 +1,20 @@
 # @graphql-mesh/transport-http-callback
 
+## 0.5.21
+
+### Patch Changes
+
+- [#696](https://github.com/graphql-hive/gateway/pull/696) [`a289faa`](https://github.com/graphql-hive/gateway/commit/a289faae1469eb46f1458be341d21909fe5f8f8f) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cross-helpers@^0.4.10` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cross-helpers/v/0.4.10) (from `^0.4.9`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.103.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.18) (from `^0.103.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.18) (from `^0.103.6`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/fetch@^0.10.4` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.4) (from `^0.10.1`, in `dependencies`)
+
+- Updated dependencies [[`a289faa`](https://github.com/graphql-hive/gateway/commit/a289faae1469eb46f1458be341d21909fe5f8f8f), [`a289faa`](https://github.com/graphql-hive/gateway/commit/a289faae1469eb46f1458be341d21909fe5f8f8f)]:
+  - @graphql-mesh/transport-common@0.7.30
+  - @graphql-tools/executor-common@0.0.3
+
 ## 0.5.20
 
 ### Patch Changes
