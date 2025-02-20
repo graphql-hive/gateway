@@ -43,11 +43,6 @@
     "graphql": "^15.9.0 || ^16.9.0",
     "winston": "^3.17.0"
   },
-  "peerDependenciesMeta": {
-    "@parcel/watcher": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "@graphql-mesh/types": "^0.103.18",
     "@whatwg-node/disposablestack": "^0.0.5",
