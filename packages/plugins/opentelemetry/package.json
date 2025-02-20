@@ -44,10 +44,10 @@
   "dependencies": {
     "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.27",
     "@graphql-hive/gateway-runtime": "workspace:^",
-    "@graphql-mesh/cross-helpers": "^0.4.9",
+    "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/types": "^0.103.6",
-    "@graphql-mesh/utils": "^0.103.6",
+    "@graphql-mesh/types": "^0.103.18",
+    "@graphql-mesh/utils": "^0.103.18",
     "@graphql-tools/utils": "^10.8.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.57.0",
@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "graphql": "^16.9.0",
-    "graphql-yoga": "^5.10.11",
+    "graphql-yoga": "^5.12.0",
     "pkgroll": "2.10.0"
   },
   "sideEffects": false

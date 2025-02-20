@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { Opts } from '@internal/testing';
-import { createYoga, createSchema } from 'graphql-yoga';
 import express from 'express';
+import { createSchema, createYoga } from 'graphql-yoga';
 
 const app = express();
 const opts = Opts(process.argv);
@@ -24,9 +24,9 @@ app.use(
             }, 20_000);
           });
         },
-      }
-    })
-  })
+      },
+    }),
+  }),
 );
 
 app.listen(port, () => {
