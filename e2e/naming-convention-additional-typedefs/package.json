@@ -2,8 +2,8 @@
   "name": "@e2e/naming-convention-additional-typedefs",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.3.5",
-    "@omnigraph/openapi": "^0.108.14",
+    "@graphql-mesh/compose-cli": "^1.3.12",
+    "@omnigraph/openapi": "^0.108.22",
     "fets": "^0.8.4",
     "graphql": "16.10.0"
   }
