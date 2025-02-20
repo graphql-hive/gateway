@@ -3299,11 +3299,7 @@ __metadata:
     tslib: "npm:^2.8.1"
     tsx: "npm:4.19.3"
   peerDependencies:
-    "@parcel/watcher": ^2.1.0
     graphql: ^15.9.0 || ^16.9.0
-  peerDependenciesMeta:
-    "@parcel/watcher":
-      optional: true
   languageName: unknown
   linkType: soft
 
@@ -3810,7 +3806,6 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
-    graphql-yoga: ^5.10.11
     prom-client: ^13 || ^14.0.0 || ^15.0.0
   languageName: unknown
   linkType: soft

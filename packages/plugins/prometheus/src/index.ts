@@ -13,7 +13,11 @@ import {
   getHeadersObj,
   loadFromModuleExportExpression,
 } from '@graphql-mesh/utils';
-import type { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
+import {
+  isAsyncIterable,
+  type ExecutionRequest,
+  type ExecutionResult,
+} from '@graphql-tools/utils';
 import type {
   CounterAndLabels,
   CounterMetricOption,
@@ -32,7 +36,7 @@ import {
   usePrometheus as useYogaPrometheus,
 } from '@graphql-yoga/plugin-prometheus';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { isAsyncIterable, type Plugin as YogaPlugin } from 'graphql-yoga';
+import { type Plugin as YogaPlugin } from 'graphql-yoga';
 import { register as defaultRegistry, Registry } from 'prom-client';
 
 export { createCounter, createHistogram, createSummary };
