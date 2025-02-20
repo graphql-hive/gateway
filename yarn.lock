@@ -3407,9 +3407,6 @@ __metadata:
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
     winston: ^3.17.0
-  peerDependenciesMeta:
-    "@parcel/watcher":
-      optional: true
   languageName: unknown
   linkType: soft
 
