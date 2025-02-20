@@ -54,7 +54,7 @@
     }
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^13.0.0",
+    "@commander-js/extra-typings": "^13.1.0",
     "@envelop/core": "^5.0.2",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/importer": "workspace:^",
@@ -71,7 +71,7 @@
     "@graphql-mesh/plugin-mock": "^0.103.0",
     "@graphql-mesh/plugin-opentelemetry": "workspace:^",
     "@graphql-mesh/plugin-prometheus": "workspace:^",
-    "@graphql-mesh/plugin-rate-limit": "^0.103.0",
+    "@graphql-mesh/plugin-rate-limit": "^0.103.19",
     "@graphql-mesh/plugin-snapshot": "^0.103.0",
     "@graphql-mesh/transport-http": "workspace:^",
     "@graphql-mesh/transport-http-callback": "workspace:^",
@@ -82,7 +82,7 @@
     "@graphql-tools/graphql-file-loader": "^8.0.6",
     "@graphql-tools/load": "^8.0.7",
     "@graphql-tools/utils": "^10.8.1",
-    "commander": "^13.0.0",
+    "commander": "^13.1.0",
     "dotenv": "^16.3.1",
     "graphql-ws": "^6.0.3",
     "graphql-yoga": "^5.10.11",
