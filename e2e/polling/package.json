@@ -3,7 +3,8 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.2.13",
-    "express-graphql": "^0.12.0",
-    "graphql": "^16.10.0"
+    "express": "^4.21.2",
+    "graphql": "^16.10.0",
+    "graphql-yoga": "^5.12.0"
   }
 }
