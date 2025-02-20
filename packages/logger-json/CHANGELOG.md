@@ -1,5 +1,14 @@
 # @graphql-hive/logger-json
 
+## 0.0.2
+
+### Patch Changes
+
+- [#697](https://github.com/graphql-hive/gateway/pull/697) [`6cc87c6`](https://github.com/graphql-hive/gateway/commit/6cc87c6e9aa0cbb9eff517eeec92d57b9c96d39e) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/types@^0.103.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.103.18) (from `^0.103.16`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.103.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.103.18) (from `^0.103.16`, in `dependencies`)
+
 ## 0.0.1
 
 ### Patch Changes
