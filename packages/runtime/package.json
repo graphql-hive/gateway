@@ -41,13 +41,7 @@
     "prepack": "yarn generate-landing-page && yarn build"
   },
   "peerDependencies": {
-    "@parcel/watcher": "^2.1.0",
     "graphql": "^15.9.0 || ^16.9.0"
-  },
-  "peerDependenciesMeta": {
-    "@parcel/watcher": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@envelop/core": "^5.0.0",
