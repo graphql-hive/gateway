@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.2.2 AS install
+FROM oven/bun:1.2.2-debian AS install
 
 WORKDIR /install
 
@@ -8,7 +8,15 @@ RUN bun i graphql@^16.9.0
 
 #
 
-FROM oven/bun:1.2.2
+FROM oven/bun:1.2.2-debian
+
+RUN apt-get update && apt-get install -y \
+    # for healthchecks
+    wget curl \
+    # for proper signal propagation
+    dumb-init && \
+    # clean
+    apt-get clean
 
 WORKDIR /gateway
 
@@ -28,4 +36,4 @@ RUN chown bun . && \
 RUN echo "omit=peer" > .npmrc && chown bun .npmrc
 
 USER bun
-ENTRYPOINT ["bun", "bin.mjs"]
+ENTRYPOINT ["dumb-init", "bun", "bin.mjs"]
