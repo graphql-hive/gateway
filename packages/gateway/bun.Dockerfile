@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.2.2-debian AS install
+FROM oven/bun:1.2.2 AS install
 
 WORKDIR /install
 
@@ -8,11 +8,11 @@ RUN bun i graphql@^16.9.0
 
 #
 
-FROM oven/bun:1.2.2-debian
+FROM oven/bun:1.2.2
 
 RUN apt-get update && apt-get install -y \
     # for healthchecks
-    wget curl \
+    wget \
     # for proper signal propagation
     dumb-init && \
     # clean
