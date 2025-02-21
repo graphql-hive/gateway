@@ -23,8 +23,10 @@ import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
+  isPromise,
   mapAsyncIterator,
   mapMaybePromise,
+  MaybeAsyncIterable,
   mergeDeep,
   printSchemaWithDirectives,
   type ExecutionRequest,
@@ -45,7 +47,7 @@ import {
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
-import { TransportEntryAdditions } from './unifiedGraphManager';
+import { Tracer, TransportEntryAdditions } from './unifiedGraphManager';
 
 export type {
   TransportEntry,
@@ -170,6 +172,7 @@ export function getOnSubgraphExecute({
   transports,
   getDisposeReason,
   batch = true,
+  tracer,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -179,6 +182,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
   batch?: boolean;
+  tracer?: Tracer;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -186,7 +190,7 @@ export function getOnSubgraphExecute({
     executionRequest: ExecutionRequest,
   ) {
     subgraphNameByExecutionRequest.set(executionRequest, subgraphName);
-    let executor = subgraphExecutorMap.get(subgraphName);
+    let executor: Executor | undefined = subgraphExecutorMap.get(subgraphName);
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
       let logger = transportContext?.logger;
@@ -245,6 +249,17 @@ export function getOnSubgraphExecute({
         executionRequest.context || subgraphExecutorMap,
         executor,
       );
+    }
+    if (tracer?.subgraphExecute) {
+      const originalExecutor = executor;
+      executor = (executionRequest) => {
+        let result: MaybePromise<MaybeAsyncIterable<ExecutionResult<any, any>>>;
+        const traced$ = tracer.subgraphExecute({executionRequest}, () => {
+          result = originalExecutor(executionRequest);
+          return isPromise(result) ? result.then(() => undefined): undefined;
+        })
+        return isPromise(traced$) ? traced$.then(() => result) : result!;
+      };
     }
     return executor(executionRequest);
   };

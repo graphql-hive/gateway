@@ -5,6 +5,7 @@ import type {
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import type {
+  ExecutionRequest,
   Executor,
   IResolvers,
   MaybePromise,
@@ -100,7 +101,15 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
+  tracer?: Tracer;
 }
+
+export type Tracer = {
+  subgraphExecute(
+    payload: { executionRequest: ExecutionRequest },
+    wrapped: () => MaybePromise<void>,
+  ): MaybePromise<void>;
+};
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 
@@ -119,10 +128,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
   private executor?: Executor;
+  private tracer?: Tracer;
+
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
+    this.tracer = opts.tracer;
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
@@ -335,6 +347,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
           batch: this.batch,
+          tracer: this.tracer,
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();
