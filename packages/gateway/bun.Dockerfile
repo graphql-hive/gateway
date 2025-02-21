@@ -13,8 +13,6 @@ FROM oven/bun:1.2.2
 RUN apt-get update && apt-get install -y \
     # for healthchecks
     wget curl \
-    # for proper signal propagation
-    dumb-init && \
     # clean
     apt-get clean
 
@@ -36,4 +34,4 @@ RUN chown bun . && \
 RUN echo "omit=peer" > .npmrc && chown bun .npmrc
 
 USER bun
-ENTRYPOINT ["dumb-init", "bun", "bin.mjs"]
+ENTRYPOINT ["bun", "bin.mjs"]
