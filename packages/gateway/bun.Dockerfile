@@ -12,7 +12,7 @@ FROM oven/bun:1.2.2
 
 RUN apt-get update && apt-get install -y \
     # for healthchecks
-    wget curl \
+    wget \
     # for proper signal propagation
     dumb-init && \
     # clean
