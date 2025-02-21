@@ -3974,7 +3974,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/nestjs@workspace:packages/nestjs"
   dependencies:
-    "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/gateway": "workspace:^"
     "@graphql-mesh/types": "npm:^0.103.18"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@nestjs/common": "npm:11.0.9"

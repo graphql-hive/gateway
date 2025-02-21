@@ -1,10 +1,14 @@
 import {
   createGatewayRuntime,
+  GatewayCLIBuiltinPluginConfig,
   GatewayPlugin,
+  getBuiltinPluginsFromConfig,
+  getCacheInstanceFromConfig,
   getGraphQLWSOptions,
+  PubSub,
   type GatewayConfig,
   type GatewayRuntime,
-} from '@graphql-hive/gateway-runtime';
+} from '@graphql-hive/gateway';
 import {
   Logger as GatewayLogger,
   type LazyLoggerMessage,
@@ -28,6 +32,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
 > = GatewayConfig<TContext> &
+  GatewayCLIBuiltinPluginConfig &
   GqlModuleOptions & {
     /**
      * If enabled, "subscriptions-transport-ws" will be automatically registered.
@@ -74,13 +79,25 @@ export class HiveGatewayDriver<
         extendContext(newContext);
       },
     };
+    const logger = new NestJSLoggerAdapter(
+      'Hive Gateway',
+      {},
+      new NestLogger('Hive Gateway'),
+      options.debug ?? truthy(process.env['DEBUG']),
+    );
+    const configCtx = {
+      logger,
+      cwd: process.cwd(),
+      pubsub: options.pubsub || new PubSub(),
+    };
+    const cache = await getCacheInstanceFromConfig(options, configCtx);
+    const builtinPlugins = await getBuiltinPluginsFromConfig(options, {
+      ...configCtx,
+      cache,
+    });
     this._gatewayRuntime = createGatewayRuntime({
-      logging: new NestJSLoggerAdapter(
-        'Hive Gateway',
-        {},
-        new NestLogger('Hive Gateway'),
-        options.debug ?? truthy(process.env['DEBUG']),
-      ),
+      logging: configCtx.logger,
+      cache,
       graphqlEndpoint: options.path,
       additionalTypeDefs,
       additionalResolvers,
@@ -93,7 +110,7 @@ export class HiveGatewayDriver<
         ? {
             plugins: (ctx) => {
               const existingPlugins = options.plugins?.(ctx) || [];
-              return [...existingPlugins, contextPlugin];
+              return [...builtinPlugins, ...existingPlugins, contextPlugin];
             },
           }
         : {}),
