@@ -10,12 +10,6 @@ RUN bun i graphql@^16.9.0
 
 FROM oven/bun:1.2.2
 
-RUN apt-get update && apt-get install -y \
-    # for healthchecks
-    wget curl \
-    # clean
-    apt-get clean
-
 WORKDIR /gateway
 
 # DEPRECATED: the /serve mount point has been deprecated in favour of /gateway
