@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/gateway': patch
+'@graphql-hive/gateway': minor
 ---
 
 Expose internal methods `getCacheInstanceFromConfig` and `getBuiltinPluginsFromConfig`
