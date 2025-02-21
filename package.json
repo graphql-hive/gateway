@@ -73,6 +73,7 @@
     "esbuild": "0.25.0",
     "graphql": "16.10.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
+    "graphql-yoga": "5.13.0-alpha-20250221161011-2a41f6a3b66fd9850d356e6c07cf9392344bc1ed",
     "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
     "jest-leak-detector": "patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
