@@ -59,6 +59,7 @@ jobs:
   ghcr:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         runtime: [Node, Bun]
     name: ${{ matrix.runtime }} Docker image
