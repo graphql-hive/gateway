@@ -9,6 +9,7 @@ RUN bun i graphql@^16.9.0
 #
 
 FROM oven/bun:1.2.2
+
 RUN rm /var/lib/dpkg/info/libc-bin.*
 RUN apt-get clean
 RUN apt-get update
