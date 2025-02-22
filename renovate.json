@@ -23,6 +23,7 @@
         "!/graphql-jit/",
         "!/opentelemetry/",
         "!/graphql-mesh/",
+        "!/bun/",
         "*"
       ]
     },
