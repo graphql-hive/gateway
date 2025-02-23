@@ -346,7 +346,11 @@ export function buildHTTPExecutor(
 
           const contentType = fetchResult.headers.get('content-type');
           if (contentType?.includes('text/event-stream')) {
-            return handleEventStreamResponse(fetchResult, subscriptionCtrl, signal);
+            return handleEventStreamResponse(
+              fetchResult,
+              subscriptionCtrl,
+              signal,
+            );
           } else if (contentType?.includes('multipart/mixed')) {
             return handleMultipartMixedResponse(fetchResult);
           }
