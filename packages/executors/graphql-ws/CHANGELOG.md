@@ -1,5 +1,12 @@
 # @graphql-tools/executor-graphql-ws
 
+## 2.0.3
+
+### Patch Changes
+
+- Updated dependencies [[`a289faa`](https://github.com/graphql-hive/gateway/commit/a289faae1469eb46f1458be341d21909fe5f8f8f)]:
+  - @graphql-tools/executor-common@0.0.3
+
 ## 2.0.2
 
 ### Patch Changes
