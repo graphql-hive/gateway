@@ -11,6 +11,7 @@ export function isReadableStream(value: any): value is ReadableStream {
 
 export function handleEventStreamResponse(
   response: Response,
+  subscriptionCtrl?: AbortController,
   signal?: AbortSignal,
 ) {
   // node-fetch returns body as a promise so we need to resolve it
@@ -28,7 +29,12 @@ export function handleEventStreamResponse(
     const reader = body.getReader();
     reader.closed.then(stop).catch(stop); // we dont use `finally` because we want to catch errors
     stop
-      .then(() => reader.releaseLock())
+      .then(() => {
+        subscriptionCtrl?.abort();
+        if (body.locked) {
+          reader.releaseLock();
+        }
+      })
       .catch((err) => {
         reader.cancel(err);
       });

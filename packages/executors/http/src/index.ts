@@ -180,12 +180,14 @@ export function buildHTTPExecutor(
 
     let accept =
       'application/graphql-response+json, application/json, multipart/mixed';
+    let subscriptionCtrl: AbortController | undefined;
     if (
       operationType === 'subscription' ||
       isLiveQueryOperationDefinitionNode(operationAst)
     ) {
       method ||= 'GET';
       accept = 'text/event-stream';
+      subscriptionCtrl = new AbortController();
     } else {
       method ||= 'POST';
     }
@@ -220,6 +222,9 @@ export function buildHTTPExecutor(
     }
     if (options?.timeout) {
       signals.push(AbortSignal.timeout(options.timeout));
+    }
+    if (subscriptionCtrl) {
+      signals.push(subscriptionCtrl.signal);
     }
 
     const signal = AbortSignal.any(signals);
@@ -341,7 +346,7 @@ export function buildHTTPExecutor(
 
           const contentType = fetchResult.headers.get('content-type');
           if (contentType?.includes('text/event-stream')) {
-            return handleEventStreamResponse(fetchResult, signal);
+            return handleEventStreamResponse(fetchResult, subscriptionCtrl, signal);
           } else if (contentType?.includes('multipart/mixed')) {
             return handleMultipartMixedResponse(fetchResult);
           }
