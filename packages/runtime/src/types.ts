@@ -1,6 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
+  Tracer as GatewayRuntimeTracer,
   TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
@@ -33,6 +34,7 @@ import type {
   YogaMaskedErrorOpts,
   Plugin as YogaPlugin,
   YogaServerOptions,
+  Tracer as YogaTracer,
 } from 'graphql-yoga';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
@@ -92,7 +94,11 @@ export type GatewayPlugin<
 > = YogaPlugin<Partial<TPluginContext> & GatewayContext & TContext> &
   UnifiedGraphPlugin<Partial<TPluginContext> & GatewayContext & TContext> & {
     onFetch?: OnFetchHook<Partial<TPluginContext> & GatewayContext & TContext>;
+    tracer?: Tracer<TPluginContext & TContext & GatewayContext>;
   } & Partial<Disposable | AsyncDisposable>;
+
+export type Tracer<TContext extends Record<string, any>> =
+  YogaTracer<TContext> & GatewayRuntimeTracer;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,
