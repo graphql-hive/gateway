@@ -17918,8 +17918,8 @@ __metadata:
   linkType: hard
 
 "wrangler@npm:^3.108.1":
-  version: 3.109.2
-  resolution: "wrangler@npm:3.109.2"
+  version: 3.109.3
+  resolution: "wrangler@npm:3.109.3"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.3.4"
     "@esbuild-plugins/node-globals-polyfill": "npm:0.2.3"
@@ -17945,7 +17945,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/dbaaf1ec11ac53b0456785680d753f9934ec83572d934dcda3d051f6eb9688d583c86dcd3df37143c9aeb9da6edc91079d4371493c2f0a2c7ba10c270c722f11
+  checksum: 10c0/41440cd7c11c19628e9e865fb0eac5611b2ee75aa3f7d20b91e161555f54af1a96c143ea17945646c7c8e774206552a3d302a9f1904d6af653e55421c3de4d99
   languageName: node
   linkType: hard
 
