@@ -3214,22 +3214,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.8.4, @graphql-hive/core@npm:^0.8.3":
-  version: 0.8.4
-  resolution: "@graphql-hive/core@npm:0.8.4"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:0.10.1"
-    async-retry: "npm:1.3.3"
-    lodash.sortby: "npm:4.7.0"
-    tiny-lru: "npm:8.0.2"
-  peerDependencies:
-    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/fb1da2c3a3017f56440567aa5b6dab16edf7b4b01b3cd1a5d27e515e0aca37f89a72709ab9586703ab82989b1139eff16a2e365389bcb7f991eb5d48848dce24
-  languageName: node
-  linkType: hard
-
-"@graphql-hive/core@npm:^0.9.0":
+"@graphql-hive/core@npm:0.9.1, @graphql-hive/core@npm:^0.9.0":
   version: 0.9.1
   resolution: "@graphql-hive/core@npm:0.9.1"
   dependencies:
@@ -3410,16 +3395,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:^0.39.2":
-  version: 0.39.4
-  resolution: "@graphql-hive/yoga@npm:0.39.4"
+"@graphql-hive/yoga@npm:^0.40.0":
+  version: 0.40.1
+  resolution: "@graphql-hive/yoga@npm:0.40.1"
   dependencies:
-    "@graphql-hive/core": "npm:0.8.4"
+    "@graphql-hive/core": "npm:0.9.1"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/98fa05290fd3d14d94c7f893cfd95b36e1b071b7ad4c27f20bbd993d4572b7469e5b47db16b5af46e6ca5ec3ea4e37dbf9ee899a2d154268346c7cd59408fac1
+  checksum: 10c0/22eb19596aa846aaee494a77bb0ba8ed239194611e111835c0a12ea19504805a551563b1d34dd730007a483e364612baf7b06cf0d53d271c102deeed38c7bb28
   languageName: node
   linkType: hard
 
@@ -3651,11 +3636,11 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-hive@npm:^0.103.19":
-  version: 0.103.20
-  resolution: "@graphql-mesh/plugin-hive@npm:0.103.20"
+  version: 0.103.21
+  resolution: "@graphql-mesh/plugin-hive@npm:0.103.21"
   dependencies:
-    "@graphql-hive/core": "npm:^0.8.3"
-    "@graphql-hive/yoga": "npm:^0.39.2"
+    "@graphql-hive/core": "npm:^0.9.0"
+    "@graphql-hive/yoga": "npm:^0.40.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.103.19"
@@ -3663,7 +3648,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/fc9581eee8c2dbff8eba2cc45af2ea97a1a18f5e252ee9688fa0469bb0ba51da42e5df59009d712ee14c8b82f515d4f1563826d09cb9f623f79f9bac7b9a47ae
+  checksum: 10c0/3791e1e4dddf0fc28257f338177bb2d8ac9f71d70feab6e368c273ebc59e0c122aab42d73e696a08b4fd126a0e656153739e1acf8c9def801c5fcd406bab2f9c
   languageName: node
   linkType: hard
 
