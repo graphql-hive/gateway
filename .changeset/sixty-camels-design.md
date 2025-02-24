@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/nestjs': patch
+'@graphql-hive/nestjs': major
 ---
 
 Hive Gateway Driver for NestJS;
