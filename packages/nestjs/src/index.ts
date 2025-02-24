@@ -16,6 +16,7 @@ import {
 import {
   asArray,
   getResolversFromSchema,
+  mapMaybePromise,
   type IResolvers,
   type TypeSource,
 } from '@graphql-tools/utils';
@@ -71,13 +72,14 @@ export class HiveGatewayDriver<
       additionalResolvers.push(resolversFromSchema);
     }
     const contextPlugin: GatewayPlugin = {
-      async onContextBuilding({ context, extendContext }) {
-        const newContext =
+      // @ts-expect-error - MaybePromise and PromiseOrValue are incompatible
+      onContextBuilding: ({ context, extendContext }) =>
+        mapMaybePromise(
           typeof options.context === 'function'
-            ? await options.context(context)
-            : options.context;
-        extendContext(newContext);
-      },
+            ? options.context(context)
+            : options.context,
+          (newContext) => extendContext(newContext),
+        ),
     };
     const logger = new NestJSLoggerAdapter(
       'Hive Gateway',
@@ -115,8 +117,7 @@ export class HiveGatewayDriver<
           }
         : {}),
     });
-    const httpAdapter = this.httpAdapterHost.httpAdapter;
-    const platformName = httpAdapter.getType();
+    const platformName = this.httpAdapterHost.httpAdapter.getType();
     if (platformName === 'express') {
       this.registerExpress();
     } else if (platformName === 'fastify') {
