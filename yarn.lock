@@ -3319,15 +3319,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.2, @envelop/core@npm:^5.1.0, @envelop/core@npm:^5.2.1":
-  version: 5.2.2
-  resolution: "@envelop/core@npm:5.2.2"
+"@envelop/core@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852":
+  version: 5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852
+  resolution: "@envelop/core@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
   dependencies:
-    "@envelop/instruments": "npm:^1.0.0"
-    "@envelop/types": "npm:^5.2.0"
-    "@whatwg-node/promise-helpers": "npm:^1.2.4"
+    "@envelop/types": "npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/e9a934ee3f83b1f827954ab691f1d26daa329c81e6debe89721ae9a6755aaf4578eaf815c2cc693ad3f5bc8c4c5e4a7e5a0ca381c54bfbc293feff6a60f28cf8
+  checksum: 10c0/8ab6ef5964bc684ea6e17d569021e17eaea9528a2d8ce188d862a6858880bc2605d7575f9bad53bd3b83e30a93b13f1590f3f69ef906d075bd5f387fa56a05ab
   languageName: node
   linkType: hard
 
@@ -3482,13 +3480,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "@envelop/types@npm:5.2.0"
+"@envelop/types@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852":
+  version: 5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852
+  resolution: "@envelop/types@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
   dependencies:
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/a0b83d46f422f04bbef1c98945bc48e56329eb5cedfdd57dbd1cdf66b8f377511c4972815ab4a94478ba77e1dde053d743e4e8e99b874f588f4c4106e268ce27
+  checksum: 10c0/1ba2e74b6a121c43e93cb14a71c82d98ed40d8e5b4347b6991566be39ace662b3b493a36f79b8afa9066d9c84cb731b642f3ba992dee81818201bc88c161bf1a
   languageName: node
   linkType: hard
 
