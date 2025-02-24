@@ -2778,13 +2778,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.2, @envelop/core@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@envelop/core@npm:5.1.0"
+"@envelop/core@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852":
+  version: 5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852
+  resolution: "@envelop/core@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
   dependencies:
-    "@envelop/types": "npm:^5.1.0"
+    "@envelop/types": "npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/b3aa8b3c58d85daa99629f2d379a9a47f14585d36429f929db67f97e4954df96d1fa4a518723392811be4f79b111dc2f4c79a43eb8c6c2d532970055ec76c5aa
+  checksum: 10c0/8ab6ef5964bc684ea6e17d569021e17eaea9528a2d8ce188d862a6858880bc2605d7575f9bad53bd3b83e30a93b13f1590f3f69ef906d075bd5f387fa56a05ab
   languageName: node
   linkType: hard
 
@@ -2914,12 +2914,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@envelop/types@npm:5.1.0"
+"@envelop/types@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852":
+  version: 5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852
+  resolution: "@envelop/types@npm:5.1.0-alpha-20250221160025-4035aee544c5d6343c568fa53cc56398e047b852"
   dependencies:
     tslib: "npm:^2.5.0"
-  checksum: 10c0/db9f33756b6c7299dfd33fc02023f45a686e0d43b37977fd92073d69edffeb0619627dde818fc8061c9aaa2a17fab46092eb1eff1998ec897bc20a2355f78e34
+  checksum: 10c0/1ba2e74b6a121c43e93cb14a71c82d98ed40d8e5b4347b6991566be39ace662b3b493a36f79b8afa9066d9c84cb731b642f3ba992dee81818201bc88c161bf1a
   languageName: node
   linkType: hard
 
@@ -3297,6 +3297,7 @@ __metadata:
     graphql-yoga: "npm:^5.12.0"
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.10.0"
+    prettier: "npm:^3.3.3"
     tslib: "npm:^2.8.1"
     tsx: "npm:4.19.3"
   peerDependencies:
