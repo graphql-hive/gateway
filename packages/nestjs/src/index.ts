@@ -48,8 +48,8 @@ export type HiveGatewayDriverConfig<
 export class HiveGatewayDriver<
   TContext extends Record<string, any>,
 > extends AbstractGraphQLDriver<HiveGatewayDriverConfig<TContext>> {
-  private _gatewayRuntime: GatewayRuntime<TContext> | undefined;
-  private _subscriptionService?: GqlSubscriptionService;
+  #gatewayRuntime: GatewayRuntime<TContext> | undefined;
+  #subscriptionService?: GqlSubscriptionService;
 
   public async start({
     schema,
