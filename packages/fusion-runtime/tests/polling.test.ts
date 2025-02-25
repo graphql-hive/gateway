@@ -19,6 +19,7 @@ import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
+import { DeferredPromise } from '@whatwg-node/promise-helpers';
 
 describe('Polling', () => {
   const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
@@ -308,7 +309,7 @@ describe('Polling', () => {
     }
     let schema: GraphQLSchema;
     let unifiedGraph: string;
-    let graphDeferred: PromiseWithResolvers<string> | undefined;
+    let graphDeferred: DeferredPromise<string> | undefined;
     function updateGraph() {
       const createdTime = new Date().toISOString();
       schema = createSchema({
