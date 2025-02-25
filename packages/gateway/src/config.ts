@@ -165,7 +165,7 @@ export async function getCacheInstanceFromConfig(
         return new RedisCache({
           ...ctx,
           ...config.cache,
-        });
+        }) as KeyValueCache;
       }
       case 'cfw-kv': {
         const { default: CloudflareKVCacheStorage } = await import(

@@ -67,7 +67,6 @@ export function createGraphOSFetcher({
           apiKey: graphosOpts.apiKey,
           upLink: uplinkToUse,
           lastSeenId,
-          // @ts-expect-error TODO: Fetch types mismatch
           fetch: transportContext.fetch || configContext.fetch,
           loggerByMessageLevel: {
             ERROR(message) {
