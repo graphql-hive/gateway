@@ -476,7 +476,7 @@ export function buildHTTPExecutor(
       let result: ExecutionResult<any> | undefined;
       let attempt = 0;
       function retryAttempt():
-        | PromiseLike<ExecutionResult<any>>
+        | Promise<ExecutionResult<any>>
         | ExecutionResult<any> {
         if (disposeCtrl.signal.aborted) {
           return createResultForAbort(disposeCtrl.signal.reason);

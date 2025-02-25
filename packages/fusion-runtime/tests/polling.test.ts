@@ -14,6 +14,7 @@ import {
 } from '@graphql-tools/utils';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { DeferredPromise } from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
@@ -308,7 +309,7 @@ describe('Polling', () => {
     }
     let schema: GraphQLSchema;
     let unifiedGraph: string;
-    let graphDeferred: PromiseWithResolvers<string> | undefined;
+    let graphDeferred: DeferredPromise<string> | undefined;
     function updateGraph() {
       const createdTime = new Date().toISOString();
       schema = createSchema({
