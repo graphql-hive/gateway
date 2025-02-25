@@ -27,8 +27,8 @@ import {
   type GqlModuleOptions,
   type SubscriptionConfig,
 } from '@nestjs/graphql';
-import type { FastifyReply, FastifyRequest } from 'fastify';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -71,7 +71,6 @@ export class HiveGatewayDriver<
       const resolversFromSchema = getResolversFromSchema(schema);
       additionalResolvers.push(resolversFromSchema);
     }
-    ;
     const logger = new NestJSLoggerAdapter(
       'Hive Gateway',
       {},
@@ -107,12 +106,13 @@ export class HiveGatewayDriver<
                 const contextPlugin: GatewayPlugin = {
                   onContextBuilding: ({ context, extendContext }) =>
                     handleMaybePromise(
-                      () => typeof options.context === 'function'
-                        ? options.context(context)
-                        : options.context,
+                      () =>
+                        typeof options.context === 'function'
+                          ? options.context(context)
+                          : options.context,
                       extendContext,
                     ),
-                }
+                };
                 existingPlugins.push(contextPlugin);
               }
               return [...builtinPlugins, ...existingPlugins];
