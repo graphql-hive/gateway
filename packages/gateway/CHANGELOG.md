@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 1.10.5
+
+### Patch Changes
+
+- [#730](https://github.com/graphql-hive/gateway/pull/730) [`c47322a`](https://github.com/graphql-hive/gateway/commit/c47322a1a1385f24f7649f396fd2fbc632a9256c) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.7) (from `^0.0.6`, in `dependencies`)
+
+- Updated dependencies [[`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1)]:
+  - @graphql-hive/gateway-runtime@1.4.18
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+  - @graphql-mesh/plugin-opentelemetry@1.3.45
+  - @graphql-mesh/plugin-prometheus@1.3.33
+  - @graphql-mesh/transport-http@0.6.35
+  - @graphql-mesh/transport-http-callback@0.5.22
+  - @graphql-mesh/transport-ws@1.0.5
+
 ## 1.10.4
 
 ### Patch Changes
