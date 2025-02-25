@@ -26,13 +26,12 @@ import {
 import {
   ASTVisitorKeyMap,
   createGraphQLError,
-  isPromise,
-  mapMaybePromise,
   memoize1,
   mergeDeep,
   parseSelectionSet,
   type Executor,
 } from '@graphql-tools/utils';
+import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import {
   buildASTSchema,
   DefinitionNode,
@@ -1063,8 +1062,8 @@ export function getStitchingOptionsFromSupergraphSdl(
           document: memoizedASTPrint(execReq.document),
           variables: JSON.stringify(execReq.variables),
         });
-        return mapMaybePromise(
-          origExecutor(execReq),
+        return handleMaybePromise(
+          () => origExecutor(execReq),
           (res) => {
             console.debug(
               `[${new Date().toISOString()}] ${subgraphName} - subgraph-execute-done`,

@@ -12,11 +12,10 @@ import {
   ExecutionResult,
   Executor,
   getOperationASTFromRequest,
-  mapMaybePromise,
-  MaybePromise,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { ValueOrPromise } from 'value-or-promise';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
@@ -249,202 +248,209 @@ export function buildHTTPExecutor(
     if (options?.apq) {
       serializeFn =
         function serializeWithAPQ(): MaybePromise<SerializedExecutionRequest> {
-          return mapMaybePromise(hashSHA256(query), (sha256Hash) => {
-            const extensions: Record<string, any> = request.extensions || {};
-            extensions['persistedQuery'] = {
-              version: 1,
-              sha256Hash,
-            };
-            return serializeExecutionRequest({
-              executionRequest: {
-                ...request,
-                extensions,
-              },
-              excludeQuery,
-              printFn,
-            });
-          });
+          return handleMaybePromise(
+            () => hashSHA256(query),
+            (sha256Hash) => {
+              const extensions: Record<string, any> = request.extensions || {};
+              extensions['persistedQuery'] = {
+                version: 1,
+                sha256Hash,
+              };
+              return serializeExecutionRequest({
+                executionRequest: {
+                  ...request,
+                  extensions,
+                },
+                excludeQuery,
+                printFn,
+              });
+            },
+          );
         };
     }
 
-    return mapMaybePromise(serializeFn(), (body: SerializedExecutionRequest) =>
-      new ValueOrPromise(() => {
-        switch (method) {
-          case 'GET': {
-            const finalUrl = prepareGETUrl({
-              baseUrl: endpoint,
-              body,
-            });
-            const fetchOptions: RequestInit = {
-              method: 'GET',
-              headers,
-              signal,
-            };
-            if (options?.credentials != null) {
-              fetchOptions.credentials = options.credentials;
+    return handleMaybePromise(
+      () => serializeFn(),
+      (body: SerializedExecutionRequest) =>
+        new ValueOrPromise(() => {
+          switch (method) {
+            case 'GET': {
+              const finalUrl = prepareGETUrl({
+                baseUrl: endpoint,
+                body,
+              });
+              const fetchOptions: RequestInit = {
+                method: 'GET',
+                headers,
+                signal,
+              };
+              if (options?.credentials != null) {
+                fetchOptions.credentials = options.credentials;
+              }
+              upstreamErrorExtensions.request.url = finalUrl;
+              return fetchFn(
+                finalUrl,
+                fetchOptions,
+                request.context,
+                request.info,
+              );
             }
-            upstreamErrorExtensions.request.url = finalUrl;
-            return fetchFn(
-              finalUrl,
-              fetchOptions,
-              request.context,
-              request.info,
-            );
+            case 'POST': {
+              upstreamErrorExtensions.request.body = body;
+              return handleMaybePromise(
+                () =>
+                  createFormDataFromVariables(body, {
+                    File: options?.File,
+                    FormData: options?.FormData,
+                  }),
+                (body) => {
+                  if (typeof body === 'string' && !headers['content-type']) {
+                    upstreamErrorExtensions.request.body = body;
+                    headers['content-type'] = 'application/json';
+                  }
+                  const fetchOptions: RequestInit = {
+                    method: 'POST',
+                    body,
+                    headers,
+                    signal,
+                  };
+                  if (options?.credentials != null) {
+                    fetchOptions.credentials = options.credentials;
+                  }
+                  return fetchFn(
+                    endpoint,
+                    fetchOptions,
+                    request.context,
+                    request.info,
+                  ) as any;
+                },
+              );
+            }
           }
-          case 'POST': {
-            upstreamErrorExtensions.request.body = body;
-            return mapMaybePromise(
-              createFormDataFromVariables(body, {
-                File: options?.File,
-                FormData: options?.FormData,
-              }),
-              (body) => {
-                if (typeof body === 'string' && !headers['content-type']) {
-                  upstreamErrorExtensions.request.body = body;
-                  headers['content-type'] = 'application/json';
-                }
-                const fetchOptions: RequestInit = {
-                  method: 'POST',
-                  body,
-                  headers,
-                  signal,
-                };
-                if (options?.credentials != null) {
-                  fetchOptions.credentials = options.credentials;
-                }
-                return fetchFn(
-                  endpoint,
-                  fetchOptions,
-                  request.context,
-                  request.info,
-                ) as any;
-              },
-            );
-          }
-        }
-      })
-        .then((fetchResult: Response): any => {
-          upstreamErrorExtensions.response ||= {};
-          upstreamErrorExtensions.response.status = fetchResult.status;
-          upstreamErrorExtensions.response.statusText = fetchResult.statusText;
-          Object.defineProperty(upstreamErrorExtensions.response, 'headers', {
-            get() {
-              return Object.fromEntries(fetchResult.headers.entries());
-            },
-          });
-
-          // Retry should respect HTTP Errors
-          if (
-            options?.retry != null &&
-            !fetchResult.status.toString().startsWith('2')
-          ) {
-            throw new Error(
-              fetchResult.statusText ||
-                `Upstream HTTP Error: ${fetchResult.status}`,
-            );
-          }
-
-          const contentType = fetchResult.headers.get('content-type');
-          if (contentType?.includes('text/event-stream')) {
-            return handleEventStreamResponse(
-              fetchResult,
-              subscriptionCtrl,
-              signal,
-            );
-          } else if (contentType?.includes('multipart/mixed')) {
-            return handleMultipartMixedResponse(fetchResult);
-          }
-
-          return fetchResult.text();
         })
-        .then((result) => {
-          if (typeof result === 'string') {
+          .then((fetchResult: Response): any => {
             upstreamErrorExtensions.response ||= {};
-            upstreamErrorExtensions.response.body = result;
-            if (result) {
-              try {
-                const parsedResult = JSON.parse(result);
-                upstreamErrorExtensions.response.body = parsedResult;
-                if (
-                  parsedResult.data == null &&
-                  (parsedResult.errors == null ||
-                    parsedResult.errors.length === 0)
-                ) {
+            upstreamErrorExtensions.response.status = fetchResult.status;
+            upstreamErrorExtensions.response.statusText =
+              fetchResult.statusText;
+            Object.defineProperty(upstreamErrorExtensions.response, 'headers', {
+              get() {
+                return Object.fromEntries(fetchResult.headers.entries());
+              },
+            });
+
+            // Retry should respect HTTP Errors
+            if (
+              options?.retry != null &&
+              !fetchResult.status.toString().startsWith('2')
+            ) {
+              throw new Error(
+                fetchResult.statusText ||
+                  `Upstream HTTP Error: ${fetchResult.status}`,
+              );
+            }
+
+            const contentType = fetchResult.headers.get('content-type');
+            if (contentType?.includes('text/event-stream')) {
+              return handleEventStreamResponse(
+                fetchResult,
+                subscriptionCtrl,
+                signal,
+              );
+            } else if (contentType?.includes('multipart/mixed')) {
+              return handleMultipartMixedResponse(fetchResult);
+            }
+
+            return fetchResult.text();
+          })
+          .then((result) => {
+            if (typeof result === 'string') {
+              upstreamErrorExtensions.response ||= {};
+              upstreamErrorExtensions.response.body = result;
+              if (result) {
+                try {
+                  const parsedResult = JSON.parse(result);
+                  upstreamErrorExtensions.response.body = parsedResult;
+                  if (
+                    parsedResult.data == null &&
+                    (parsedResult.errors == null ||
+                      parsedResult.errors.length === 0)
+                  ) {
+                    return {
+                      errors: [
+                        createGraphQLError(
+                          'Unexpected empty "data" and "errors" fields in result: ' +
+                            result,
+                          {
+                            extensions: upstreamErrorExtensions,
+                          },
+                        ),
+                      ],
+                    };
+                  }
+                  if (Array.isArray(parsedResult.errors)) {
+                    return {
+                      ...parsedResult,
+                      errors: parsedResult.errors.map(
+                        ({
+                          message,
+                          ...options
+                        }: {
+                          message: string;
+                          extensions: Record<string, unknown>;
+                        }) =>
+                          createGraphQLError(message, {
+                            ...options,
+                            extensions: {
+                              code: 'DOWNSTREAM_SERVICE_ERROR',
+                              ...(options.extensions || {}),
+                            },
+                          }),
+                      ),
+                    };
+                  }
+                  return parsedResult;
+                } catch (e: any) {
                   return {
                     errors: [
                       createGraphQLError(
-                        'Unexpected empty "data" and "errors" fields in result: ' +
-                          result,
+                        `Unexpected response: ${JSON.stringify(result)}`,
                         {
                           extensions: upstreamErrorExtensions,
+                          originalError: e,
                         },
                       ),
                     ],
                   };
                 }
-                if (Array.isArray(parsedResult.errors)) {
-                  return {
-                    ...parsedResult,
-                    errors: parsedResult.errors.map(
-                      ({
-                        message,
-                        ...options
-                      }: {
-                        message: string;
-                        extensions: Record<string, unknown>;
-                      }) =>
-                        createGraphQLError(message, {
-                          ...options,
-                          extensions: {
-                            code: 'DOWNSTREAM_SERVICE_ERROR',
-                            ...(options.extensions || {}),
-                          },
-                        }),
-                    ),
-                  };
-                }
-                return parsedResult;
-              } catch (e: any) {
-                return {
-                  errors: [
-                    createGraphQLError(
-                      `Unexpected response: ${JSON.stringify(result)}`,
-                      {
-                        extensions: upstreamErrorExtensions,
-                        originalError: e,
-                      },
-                    ),
-                  ],
-                };
               }
+            } else {
+              return result;
             }
-          } else {
-            return result;
-          }
-        })
-        .catch((e: any) => {
-          if (e.name === 'AggregateError') {
+          })
+          .catch((e: any) => {
+            if (e.name === 'AggregateError') {
+              return {
+                errors: e.errors.map((e: any) =>
+                  coerceFetchError(e, {
+                    signal,
+                    endpoint,
+                    upstreamErrorExtensions,
+                  }),
+                ),
+              };
+            }
             return {
-              errors: e.errors.map((e: any) =>
+              errors: [
                 coerceFetchError(e, {
                   signal,
                   endpoint,
                   upstreamErrorExtensions,
                 }),
-              ),
+              ],
             };
-          }
-          return {
-            errors: [
-              coerceFetchError(e, {
-                signal,
-                endpoint,
-                upstreamErrorExtensions,
-              }),
-            ],
-          };
-        })
-        .resolve(),
+          })
+          .resolve(),
     );
   };
 
@@ -452,8 +458,8 @@ export function buildHTTPExecutor(
 
   if (options?.apq != null) {
     executor = function apqExecutor(request: ExecutionRequest) {
-      return mapMaybePromise(
-        baseExecutor(request, true),
+      return handleMaybePromise(
+        () => baseExecutor(request, true),
         (res: ExecutionResult) => {
           if (
             res.errors?.some(
@@ -490,13 +496,16 @@ export function buildHTTPExecutor(
             errors: [createGraphQLError('No response returned from fetch')],
           };
         }
-        return mapMaybePromise(prevExecutor(request), (res) => {
-          result = res;
-          if (result?.errors?.length) {
-            return retryAttempt();
-          }
-          return result;
-        });
+        return handleMaybePromise(
+          () => prevExecutor(request),
+          (res) => {
+            result = res;
+            if (result?.errors?.length) {
+              return retryAttempt();
+            }
+            return result;
+          },
+        );
       }
       return retryAttempt();
     };

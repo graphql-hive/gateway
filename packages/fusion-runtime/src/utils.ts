@@ -23,8 +23,6 @@ import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
-  mapAsyncIterator,
-  mapMaybePromise,
   mergeDeep,
   printSchemaWithDirectives,
   type ExecutionRequest,
@@ -32,6 +30,10 @@ import {
   type Maybe,
   type MaybePromise,
 } from '@graphql-tools/utils';
+import {
+  handleMaybePromise,
+  mapAsyncIterator,
+} from '@whatwg-node/promise-helpers';
 import { constantCase } from 'constant-case';
 import {
   FragmentDefinitionNode,
@@ -61,25 +63,28 @@ export type Transports =
 
 function defaultTransportsGetter(kind: string): Promise<Transport> {
   const moduleName = `@graphql-mesh/transport-${kind}`;
-  return mapMaybePromise(import(moduleName), (transport) => {
-    if (typeof transport !== 'object') {
-      throw new Error(`${moduleName} module does not export an object`);
-    }
-    if (transport?.default?.getSubgraphExecutor) {
-      transport = transport.default;
-    }
-    if (!transport?.getSubgraphExecutor) {
-      throw new Error(
-        `${moduleName} module does not export "getSubgraphExecutor"`,
-      );
-    }
-    if (typeof transport?.getSubgraphExecutor !== 'function') {
-      throw new Error(
-        `${moduleName} module's export "getSubgraphExecutor" is not a function`,
-      );
-    }
-    return transport;
-  });
+  return handleMaybePromise(
+    () => import(moduleName),
+    (transport) => {
+      if (typeof transport !== 'object') {
+        throw new Error(`${moduleName} module does not export an object`);
+      }
+      if (transport?.default?.getSubgraphExecutor) {
+        transport = transport.default;
+      }
+      if (!transport?.getSubgraphExecutor) {
+        throw new Error(
+          `${moduleName} module does not export "getSubgraphExecutor"`,
+        );
+      }
+      if (typeof transport?.getSubgraphExecutor !== 'function') {
+        throw new Error(
+          `${moduleName} module's export "getSubgraphExecutor" is not a function`,
+        );
+      }
+      return transport;
+    },
+  );
 }
 
 function getTransportExecutor({
@@ -106,8 +111,9 @@ function getTransportExecutor({
     }
     logger?.debug(`Loading transport "${kind}"`);
   }
-  return mapMaybePromise(
-    typeof transports === 'function' ? transports(kind) : transports[kind],
+  return handleMaybePromise(
+    () =>
+      typeof transports === 'function' ? transports(kind) : transports[kind],
     (transport) => {
       if (!transport) {
         throw new Error(`Transport "${kind}" is empty`);
@@ -204,20 +210,21 @@ export function getOnSubgraphExecute({
       }
       // Lazy executor that loads transport executor on demand
       executor = function lazyExecutor(subgraphExecReq: ExecutionRequest) {
-        return mapMaybePromise(
-          // Gets the transport executor for the given subgraph
-          getTransportExecutor({
-            transportContext,
-            subgraphName,
-            get subgraph() {
-              return getSubgraphSchema(subgraphName);
-            },
-            get transportEntry() {
-              return transportEntryMap[subgraphName]!;
-            },
-            transports,
-            getDisposeReason,
-          }),
+        return handleMaybePromise(
+          () =>
+            // Gets the transport executor for the given subgraph
+            getTransportExecutor({
+              transportContext,
+              subgraphName,
+              get subgraph() {
+                return getSubgraphSchema(subgraphName);
+              },
+              get transportEntry() {
+                return transportEntryMap[subgraphName]!;
+              },
+              transports,
+              getDisposeReason,
+            }),
           (executor_) => {
             if (isDisposable(executor_)) {
               transportExecutorStack.use(executor_);
@@ -298,101 +305,113 @@ export function wrapExecutorWithHooks({
     let executor = baseExecutor;
     let executionRequest = baseExecutionRequest;
     const onSubgraphExecuteDoneHooks: OnSubgraphExecuteDoneHook[] = [];
-    return mapMaybePromise(
-      iterateAsync(
-        onSubgraphExecuteHooks,
-        (onSubgraphExecuteHook) =>
-          onSubgraphExecuteHook({
-            get subgraph() {
-              return getSubgraphSchema(subgraphName);
-            },
-            subgraphName,
-            get transportEntry() {
-              return transportEntryMap?.[subgraphName];
-            },
-            executionRequest,
-            setExecutionRequest(newExecutionRequest) {
-              executionRequest = newExecutionRequest;
-            },
-            executor,
-            setExecutor(newExecutor) {
-              execReqLogger?.debug('executor has been updated');
-              executor = newExecutor;
-            },
-            requestId,
-            logger: execReqLogger,
-          }),
-        onSubgraphExecuteDoneHooks,
-      ),
+    return handleMaybePromise(
+      () =>
+        iterateAsync(
+          onSubgraphExecuteHooks,
+          (onSubgraphExecuteHook) =>
+            onSubgraphExecuteHook({
+              get subgraph() {
+                return getSubgraphSchema(subgraphName);
+              },
+              subgraphName,
+              get transportEntry() {
+                return transportEntryMap?.[subgraphName];
+              },
+              executionRequest,
+              setExecutionRequest(newExecutionRequest) {
+                executionRequest = newExecutionRequest;
+              },
+              executor,
+              setExecutor(newExecutor) {
+                execReqLogger?.debug('executor has been updated');
+                executor = newExecutor;
+              },
+              requestId,
+              logger: execReqLogger,
+            }),
+          onSubgraphExecuteDoneHooks,
+        ),
       () => {
         if (onSubgraphExecuteDoneHooks.length === 0) {
           return executor(executionRequest);
         }
-        return mapMaybePromise(executor(executionRequest), (currentResult) => {
-          const executeDoneResults: OnSubgraphExecuteDoneResult[] = [];
-          return mapMaybePromise(
-            iterateAsync(
-              onSubgraphExecuteDoneHooks,
-              (onSubgraphExecuteDoneHook) =>
-                onSubgraphExecuteDoneHook({
-                  result: currentResult,
-                  setResult(newResult: ExecutionResult) {
-                    execReqLogger?.debug('overriding result with: ', newResult);
-                    currentResult = newResult;
-                  },
-                }),
-              executeDoneResults,
-            ),
-            () => {
-              if (!isAsyncIterable(currentResult)) {
-                return currentResult;
-              }
-
-              if (executeDoneResults.length === 0) {
-                return currentResult;
-              }
-
-              const onNextHooks: OnSubgraphExecuteDoneResultOnNext[] = [];
-              const onEndHooks: OnSubgraphExecuteDoneResultOnEnd[] = [];
-
-              for (const executeDoneResult of executeDoneResults) {
-                if (executeDoneResult.onNext) {
-                  onNextHooks.push(executeDoneResult.onNext);
+        return handleMaybePromise(
+          () => executor(executionRequest),
+          (currentResult) => {
+            const executeDoneResults: OnSubgraphExecuteDoneResult[] = [];
+            return handleMaybePromise(
+              () =>
+                iterateAsync(
+                  onSubgraphExecuteDoneHooks,
+                  (onSubgraphExecuteDoneHook) =>
+                    onSubgraphExecuteDoneHook({
+                      result: currentResult,
+                      setResult(newResult: ExecutionResult) {
+                        execReqLogger?.debug(
+                          'overriding result with: ',
+                          newResult,
+                        );
+                        currentResult = newResult;
+                      },
+                    }),
+                  executeDoneResults,
+                ),
+              () => {
+                if (!isAsyncIterable(currentResult)) {
+                  return currentResult;
                 }
-                if (executeDoneResult.onEnd) {
-                  onEndHooks.push(executeDoneResult.onEnd);
+
+                if (executeDoneResults.length === 0) {
+                  return currentResult;
                 }
-              }
 
-              if (onNextHooks.length === 0 && onEndHooks.length === 0) {
-                return currentResult;
-              }
+                const onNextHooks: OnSubgraphExecuteDoneResultOnNext[] = [];
+                const onEndHooks: OnSubgraphExecuteDoneResultOnEnd[] = [];
 
-              return mapAsyncIterator(
-                currentResult,
-                (currentResult) =>
-                  mapMaybePromise(
-                    iterateAsync(onNextHooks, (onNext) =>
-                      onNext({
-                        result: currentResult,
-                        setResult: (res) => {
-                          execReqLogger?.debug('overriding result with: ', res);
+                for (const executeDoneResult of executeDoneResults) {
+                  if (executeDoneResult.onNext) {
+                    onNextHooks.push(executeDoneResult.onNext);
+                  }
+                  if (executeDoneResult.onEnd) {
+                    onEndHooks.push(executeDoneResult.onEnd);
+                  }
+                }
 
-                          currentResult = res;
-                        },
-                      }),
+                if (onNextHooks.length === 0 && onEndHooks.length === 0) {
+                  return currentResult;
+                }
+
+                return mapAsyncIterator(
+                  currentResult,
+                  (currentResult) =>
+                    handleMaybePromise(
+                      () =>
+                        iterateAsync(onNextHooks, (onNext) =>
+                          onNext({
+                            result: currentResult,
+                            setResult: (res) => {
+                              execReqLogger?.debug(
+                                'overriding result with: ',
+                                res,
+                              );
+
+                              currentResult = res;
+                            },
+                          }),
+                        ),
+                      () => currentResult,
                     ),
-                    () => currentResult,
-                  ),
-                undefined,
-                () =>
-                  onEndHooks.length === 0
-                    ? undefined
-                    : iterateAsync(onEndHooks, (onEnd) => onEnd()),
-              );
-            },
-          );
-        });
+                  undefined,
+                  () =>
+                    onEndHooks.length === 0
+                      ? undefined
+                      : iterateAsync(onEndHooks, (onEnd) => onEnd()),
+                );
+              },
+            );
+          },
+        );
       },
     );
   };
@@ -580,16 +599,17 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
         onDelegationStageExecuteDoneHooks.push(onDelegationStageExecuteDone);
       }
     }
-    return mapMaybePromise(
-      resolver(
-        object,
-        context as TContext,
-        info,
-        subschema as Subschema<any, any, any, TContext>,
-        selectionSet,
-        key,
-        type,
-      ),
+    return handleMaybePromise(
+      () =>
+        resolver(
+          object,
+          context as TContext,
+          info,
+          subschema as Subschema<any, any, any, TContext>,
+          selectionSet,
+          key,
+          type,
+        ),
       (result) => {
         function setResult(newResult: any) {
           result = newResult;

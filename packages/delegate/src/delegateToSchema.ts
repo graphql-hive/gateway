@@ -6,12 +6,14 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
   isAsyncIterable,
-  mapAsyncIterator,
-  mapMaybePromise,
   Maybe,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
+import {
+  handleMaybePromise,
+  mapAsyncIterator,
+} from '@whatwg-node/promise-helpers';
 import { dset } from 'dset/merge';
 import {
   DocumentNode,
@@ -102,10 +104,8 @@ export function delegateRequest<
     validateRequest(delegationContext, processedRequest.document);
   }
 
-  const executor = getExecutor(delegationContext);
-
-  return mapMaybePromise(
-    executor(processedRequest),
+  return handleMaybePromise(
+    () => getExecutor(delegationContext)(processedRequest),
     function handleExecutorResult(
       executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
     ) {

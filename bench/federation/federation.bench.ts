@@ -2,7 +2,6 @@ import { ApolloGateway, LocalGraphQLDataSource } from '@apollo/gateway';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-import { fakePromise, mapMaybePromise } from '@graphql-tools/utils';
 import {
   accounts,
   createExampleSetup,
@@ -12,6 +11,7 @@ import {
   reviews,
 } from '@internal/e2e';
 import { benchConfig } from '@internal/testing';
+import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getOperationAST, GraphQLSchema, parse } from 'graphql';
 import { bench, describe, expect, vi } from 'vitest';
 import monolith from './monolith';
@@ -87,24 +87,25 @@ describe('Federation', async () => {
   bench(
     'Apollo Gateway',
     () => {
-      return mapMaybePromise(
-        apolloGWExecutor({
-          document: parsedQuery,
-          operationName,
-          request: {
-            query: query,
-          },
-          operation: operationAST,
-          metrics: {},
-          overallCachePolicy: {},
-          schemaHash,
-          queryHash: query,
-          source: query,
-          cache: dummyCache,
-          schema: apolloGWSchema,
-          logger: dummyLogger,
-          context: {},
-        }),
+      return handleMaybePromise(
+        () =>
+          apolloGWExecutor({
+            document: parsedQuery,
+            operationName,
+            request: {
+              query: query,
+            },
+            operation: operationAST,
+            metrics: {},
+            overallCachePolicy: {},
+            schemaHash,
+            queryHash: query,
+            source: query,
+            cache: dummyCache,
+            schema: apolloGWSchema,
+            logger: dummyLogger,
+            context: {},
+          }),
         (response) => {
           expect(response).toEqual(result);
         },
@@ -140,13 +141,14 @@ describe('Federation', async () => {
   bench(
     'Stitching',
     () =>
-      mapMaybePromise(
-        normalizedExecutor({
-          schema: stitchedSchema,
-          document: parsedQuery,
-          operationName: operationName,
-          contextValue: {},
-        }),
+      handleMaybePromise(
+        () =>
+          normalizedExecutor({
+            schema: stitchedSchema,
+            document: parsedQuery,
+            operationName: operationName,
+            contextValue: {},
+          }),
         (response) => {
           expect(response).toEqual(result);
         },

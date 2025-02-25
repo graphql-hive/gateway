@@ -1,4 +1,5 @@
-import { mapMaybePromise, Maybe } from '@graphql-tools/utils';
+import { Maybe } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   getNullableType,
   GraphQLCompositeType,
@@ -49,19 +50,19 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
       return null;
     }
   } else if (isCompositeType(type)) {
-    const result$ = resolveExternalObject(
-      type,
-      result,
-      unpathedErrors,
-      subschema,
-      context,
-      info,
-      skipTypeMerging,
-    );
-    if (info && isAbstractType(type)) {
-      return mapMaybePromise(
-        result$,
-        function checkAbstractResolvedCorrectly(result) {
+    return handleMaybePromise(
+      () =>
+        resolveExternalObject(
+          type,
+          result,
+          unpathedErrors,
+          subschema,
+          context,
+          info,
+          skipTypeMerging,
+        ),
+      (result) => {
+        if (info && isAbstractType(type)) {
           if (result.__typename != null) {
             const resolvedType = info!.schema.getType(result.__typename);
             if (!resolvedType) {
@@ -69,10 +70,10 @@ export function resolveExternalValue<TContext extends Record<string, any>>(
             }
           }
           return result;
-        },
-      );
-    }
-    return result$;
+        }
+        return result;
+      },
+    );
   } else if (isListType(type)) {
     if (Array.isArray(result)) {
       return resolveExternalList(

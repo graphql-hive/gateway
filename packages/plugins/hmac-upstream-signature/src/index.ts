@@ -1,8 +1,8 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
-import { mapMaybePromise } from '@graphql-tools/utils';
-import type { ExecutionRequest, MaybePromise } from '@graphql-tools/utils';
+import type { ExecutionRequest } from '@graphql-tools/utils';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import type {
   FetchAPI,
   GraphQLParams,
@@ -103,37 +103,42 @@ export function useHmacUpstreamSignature(
           `shouldSign is true for subgraph ${subgraphName}, signing request`,
         );
         textEncoder ||= new fetchAPI.TextEncoder();
-        key$ ||= createCryptoKey({
-          textEncoder,
-          crypto: fetchAPI.crypto,
-          secret: options.secret,
-          usages: ['sign'],
-        });
-        return mapMaybePromise(key$, async (key) => {
-          key$ = key;
-          const serializedExecutionRequest =
-            serializeExecutionRequest(executionRequest);
-          const encodedContent = textEncoder.encode(serializedExecutionRequest);
-          const signature = await fetchAPI.crypto.subtle.sign(
-            'HMAC',
-            key,
-            encodedContent,
-          );
-          const extensionValue = btoa(
-            String.fromCharCode(...new Uint8Array(signature)),
-          );
-          logger?.debug(
-            `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
-          );
+        return handleMaybePromise(
+          () =>
+            (key$ ||= createCryptoKey({
+              textEncoder,
+              crypto: fetchAPI.crypto,
+              secret: options.secret,
+              usages: ['sign'],
+            })),
+          async (key) => {
+            key$ = key;
+            const serializedExecutionRequest =
+              serializeExecutionRequest(executionRequest);
+            const encodedContent = textEncoder.encode(
+              serializedExecutionRequest,
+            );
+            const signature = await fetchAPI.crypto.subtle.sign(
+              'HMAC',
+              key,
+              encodedContent,
+            );
+            const extensionValue = btoa(
+              String.fromCharCode(...new Uint8Array(signature)),
+            );
+            logger?.debug(
+              `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
+            );
 
-          setExecutionRequest({
-            ...executionRequest,
-            extensions: {
-              ...executionRequest.extensions,
-              [extensionName]: extensionValue,
-            },
-          });
-        });
+            setExecutionRequest({
+              ...executionRequest,
+              extensions: {
+                ...executionRequest.extensions,
+                [extensionName]: extensionValue,
+              },
+            });
+          },
+        );
       } else {
         logger?.debug(
           `shouldSign is false for subgraph ${subgraphName}, skipping hmac signature`,

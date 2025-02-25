@@ -3,11 +3,10 @@ import {
   ExecutionRequest,
   ExecutionResult,
   isAsyncIterable,
-  mapMaybePromise,
   MaybeAsyncIterable,
-  MaybePromise,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 
 export interface UpstreamRetryOptions {
@@ -106,8 +105,11 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                 }
                 const requestTime = Date.now();
                 attemptsLeft--;
-                return mapMaybePromise(
-                  executor(executionRequest),
+                return handleMaybePromise(
+                  () =>
+                    executor(
+                      executionRequest,
+                    ) as MaybeAsyncIterable<ExecutionResult>,
                   (currRes) => {
                     executionResult = currRes;
                     let retryAfterSecondsFromHeader: number | undefined;

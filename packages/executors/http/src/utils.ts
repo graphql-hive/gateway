@@ -1,5 +1,6 @@
-import { createGraphQLError, mapMaybePromise } from '@graphql-tools/utils';
+import { createGraphQLError } from '@graphql-tools/utils';
 import { crypto, TextEncoder } from '@whatwg-node/fetch';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GraphQLError } from 'graphql';
 
 export function createAbortErrorReason() {
@@ -44,8 +45,8 @@ export function createResultForAbort(
 export function hashSHA256(str: string) {
   const textEncoder = new TextEncoder();
   const utf8 = textEncoder.encode(str);
-  return mapMaybePromise(
-    crypto.subtle.digest('SHA-256', utf8),
+  return handleMaybePromise(
+    () => crypto.subtle.digest('SHA-256', utf8),
     (hashBuffer) => {
       let hashHex = '';
       for (const bytes of new Uint8Array(hashBuffer)) {

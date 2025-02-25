@@ -8,13 +8,13 @@ import {
   dispose,
   isDisposable,
   makeAsyncDisposable,
-  mapMaybePromise,
 } from '@graphql-mesh/utils';
 import {
   buildHTTPExecutor,
   type HTTPExecutorOptions,
 } from '@graphql-tools/executor-http';
 import { type ExecutionRequest, type Executor } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 
 export type HTTPTransportOptions<
   TSubscriptionTransportOptions extends Record<string, any> = Record<
@@ -76,23 +76,24 @@ export default {
               payload.transportEntry.location,
             ).toString()
           : payload.transportEntry.location;
-        return mapMaybePromise(
-          payload.getTransportExecutor({
-            ...payload.transportEntry,
-            kind: subscriptionsKind,
-            headers:
-              // WebSocket transport should not have any headers by default,
-              // `connectionParams` should be preferred.
-              subscriptionsKind === 'ws'
-                ? payload.transportEntry.options?.subscriptions?.headers
-                : (payload.transportEntry.options?.subscriptions?.headers ??
-                  payload.transportEntry.headers),
-            location: subscriptionsLocation,
-            options: {
-              ...payload.transportEntry.options,
-              ...payload.transportEntry.options?.subscriptions?.options,
-            },
-          }),
+        return handleMaybePromise(
+          () =>
+            payload.getTransportExecutor({
+              ...payload.transportEntry,
+              kind: subscriptionsKind,
+              headers:
+                // WebSocket transport should not have any headers by default,
+                // `connectionParams` should be preferred.
+                subscriptionsKind === 'ws'
+                  ? payload.transportEntry.options?.subscriptions?.headers
+                  : (payload.transportEntry.options?.subscriptions?.headers ??
+                    payload.transportEntry.headers),
+              location: subscriptionsLocation,
+              options: {
+                ...payload.transportEntry.options,
+                ...payload.transportEntry.options?.subscriptions?.options,
+              },
+            }),
           (resolvedSubscriptionsExecutor) => {
             subscriptionsExecutor = resolvedSubscriptionsExecutor;
             return subscriptionsExecutor(execReq);

@@ -2,13 +2,15 @@ import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import {
   Executor,
   isAsyncIterable,
-  mapAsyncIterator,
-  mapMaybePromise,
   type DisposableExecutor,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import {
+  handleMaybePromise,
+  mapAsyncIterator,
+} from '@whatwg-node/promise-helpers';
 import { print, type DocumentNode } from 'graphql';
 import {
   UnifiedGraphManager,
@@ -28,8 +30,8 @@ export function getExecutorForUnifiedGraph<TContext>(
   const unifiedGraphExecutor = function unifiedGraphExecutor(
     execReq: ExecutionRequest,
   ) {
-    return mapMaybePromise(
-      unifiedGraphManager.getContext(execReq.context),
+    return handleMaybePromise(
+      () => unifiedGraphManager.getContext(execReq.context),
       (context) => {
         function handleExecutor(executor: Executor) {
           opts?.transportContext?.logger?.debug(
@@ -41,12 +43,12 @@ export function getExecutorForUnifiedGraph<TContext>(
             context,
           });
         }
-        return mapMaybePromise(
-          unifiedGraphManager.getExecutor(),
+        return handleMaybePromise(
+          () => unifiedGraphManager.getExecutor(),
           (executor) => {
             if (!executor) {
-              return mapMaybePromise(
-                unifiedGraphManager.getUnifiedGraph(),
+              return handleMaybePromise(
+                () => unifiedGraphManager.getUnifiedGraph(),
                 (unifiedGraph) => {
                   opts?.transportContext?.logger?.debug(
                     'Executing request on unified graph',
@@ -87,12 +89,13 @@ export function getSdkRequesterForUnifiedGraph(
     variables?: any,
     operationContext?: any,
   ) {
-    return mapMaybePromise(
-      unifiedGraphExecutor({
-        document,
-        variables,
-        context: operationContext,
-      }),
+    return handleMaybePromise(
+      () =>
+        unifiedGraphExecutor({
+          document,
+          variables,
+          context: operationContext,
+        }),
       (result) => {
         if (isAsyncIterable(result)) {
           return mapAsyncIterator(result, extractDataOrThrowErrors);

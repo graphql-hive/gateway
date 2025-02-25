@@ -3,10 +3,10 @@ import {
   ExecutionRequest,
   ExecutionResult,
   getDocumentNodeFromSchema,
-  mapMaybePromise,
 } from '@graphql-tools/utils';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { composeServices } from '@theguild/federation-composition';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
@@ -62,14 +62,13 @@ export async function getStitchedSchemaFromLocalSchemas({
   function createTracedExecutor(name: string, schema: GraphQLSchema) {
     const executor = createDefaultExecutor(schema);
     return function tracedExecutor(request: ExecutionRequest) {
-      const result = executor(request);
-      if (onSubgraphExecute) {
-        return mapMaybePromise(result, (result) => {
-          onSubgraphExecute(name, request, result);
+      return handleMaybePromise(
+        () => executor(request),
+        (result) => {
+          onSubgraphExecute?.(name, request, result);
           return result;
-        });
-      }
-      return result;
+        },
+      );
     };
   }
   return getStitchedSchemaFromSupergraphSdl({
