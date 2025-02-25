@@ -3980,6 +3980,7 @@ __metadata:
     "@nestjs/common": "npm:11.0.9"
     "@nestjs/core": "npm:11.0.9"
     "@nestjs/graphql": "npm:13.0.2"
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
     fastify: "npm:5.2.1"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.10.0"

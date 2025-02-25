@@ -16,7 +16,6 @@ import {
 import {
   asArray,
   getResolversFromSchema,
-  mapMaybePromise,
   type IResolvers,
   type TypeSource,
 } from '@graphql-tools/utils';
@@ -29,6 +28,7 @@ import {
   type SubscriptionConfig,
 } from '@nestjs/graphql';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -71,16 +71,7 @@ export class HiveGatewayDriver<
       const resolversFromSchema = getResolversFromSchema(schema);
       additionalResolvers.push(resolversFromSchema);
     }
-    const contextPlugin: GatewayPlugin = {
-      // @ts-expect-error - MaybePromise and PromiseOrValue are incompatible
-      onContextBuilding: ({ context, extendContext }) =>
-        mapMaybePromise(
-          typeof options.context === 'function'
-            ? options.context(context)
-            : options.context,
-          (newContext) => extendContext(newContext),
-        ),
-    };
+    ;
     const logger = new NestJSLoggerAdapter(
       'Hive Gateway',
       {},
@@ -112,7 +103,19 @@ export class HiveGatewayDriver<
         ? {
             plugins: (ctx) => {
               const existingPlugins = options.plugins?.(ctx) || [];
-              return [...builtinPlugins, ...existingPlugins, contextPlugin];
+              if (options.context) {
+                const contextPlugin: GatewayPlugin = {
+                  onContextBuilding: ({ context, extendContext }) =>
+                    handleMaybePromise(
+                      () => typeof options.context === 'function'
+                        ? options.context(context)
+                        : options.context,
+                      extendContext,
+                    ),
+                }
+                existingPlugins.push(contextPlugin);
+              }
+              return [...builtinPlugins, ...existingPlugins];
             },
           }
         : {}),
