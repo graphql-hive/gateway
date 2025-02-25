@@ -83,7 +83,7 @@ export function defaultMergedResolver(
           missingDeferredFields,
         );
       }
-      const deferred = createDeferred();
+      const deferred = createDeferred<unknown>();
       missingDeferredFields.set(responseKey, deferred);
       const stitchingInfo = info.schema.extensions?.[
         'stitchingInfo'

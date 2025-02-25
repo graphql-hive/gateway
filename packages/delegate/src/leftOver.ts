@@ -1,4 +1,4 @@
-import { createDeferred, PromiseWithResolvers } from '@graphql-tools/utils';
+import { createDeferred } from '@graphql-tools/utils';
 import { FieldNode } from 'graphql';
 import { Subschema } from './Subschema.js';
 import { DelegationPlanBuilder, ExternalObject } from './types.js';

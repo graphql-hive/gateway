@@ -245,7 +245,7 @@ function executeDelegationStage(
 
   const combinedFieldSubschemaMap = object[FIELD_SUBSCHEMA_MAP_SYMBOL];
 
-  const jobs: PromiseLike<any>[] = [];
+  const jobs: Promise<any>[] = [];
   for (const [subschema, selectionSet] of delegationMap) {
     const schema = subschema.transformedSchema || info.schema;
     const type = schema.getType(object.__typename) as GraphQLObjectType;

@@ -781,7 +781,6 @@ export function createGatewayRuntime<
         setFetchFn(fetchAPI.fetch);
       }
     },
-    // @ts-expect-error TODO: what's up with type narrowing
     onRequestParse() {
       return mapMaybePromise(getSchema(), (schema) => {
         replaceSchema(schema);
@@ -833,9 +832,7 @@ export function createGatewayRuntime<
           setSubscribeFn(subscribeFn);
         }
       });
-    //@ts-expect-error - MaybePromise is not compatible with PromiseOrValue
     defaultGatewayPlugin.onExecute = onExecute;
-    //@ts-expect-error - MaybePromise is not compatible with PromiseOrValue
     defaultGatewayPlugin.onSubscribe = onSubscribe;
   }
 
@@ -865,7 +862,6 @@ export function createGatewayRuntime<
     };
   } else if (typeof config.graphiql === 'function') {
     const userGraphiqlFactory = config.graphiql;
-    // @ts-expect-error PromiseLike is not compatible with Promise
     graphiqlOptionsOrFactory = function graphiqlOptionsFactoryForMesh(...args) {
       const options = userGraphiqlFactory(...args);
       return mapMaybePromise(options, (resolvedOpts) => {
