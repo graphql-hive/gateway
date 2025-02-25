@@ -21,6 +21,9 @@ it('executes the query', async () => {
       query,
     }),
   });
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status}: ${await response.text()}`);
+  }
   const received = await response.json();
   expect(received).toEqual(result);
 });

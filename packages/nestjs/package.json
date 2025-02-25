@@ -40,8 +40,8 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "@nestjs/common": "^11.0.9",
-    "@nestjs/graphql": "^13.0.2",
+    "@nestjs/common": "^11.0.10",
+    "@nestjs/graphql": "^13.0.3",
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
