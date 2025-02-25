@@ -10,9 +10,9 @@ import {
   IFieldResolverOptions,
   IResolvers,
   isSome,
-  mapMaybePromise,
   parseSelectionSet,
 } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   FieldNode,
   getNamedType,
@@ -229,16 +229,18 @@ function createMergedTypes<
                   selectionSet,
                   type,
                 ) {
-                  return mapMaybePromise(keyFn(originalResult), (key) =>
-                    resolver(
-                      originalResult,
-                      context,
-                      info,
-                      subschema,
-                      selectionSet,
-                      key,
-                      type,
-                    ),
+                  return handleMaybePromise(
+                    () => keyFn(originalResult),
+                    (key) =>
+                      resolver(
+                        originalResult,
+                        context,
+                        info,
+                        subschema,
+                        selectionSet,
+                        key,
+                        type,
+                      ),
                   );
                 }
               : resolver,

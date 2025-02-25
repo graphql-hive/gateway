@@ -44,12 +44,10 @@ import {
   IResolvers,
   isDocumentNode,
   isValidPath,
-  mapMaybePromise,
   mergeDeep,
   parseSelectionSet,
   printSchemaWithDirectives,
   type Executor,
-  type MaybePromise,
   type TypeSource,
 } from '@graphql-tools/utils';
 import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
@@ -60,6 +58,7 @@ import {
   AsyncDisposableStack,
   DisposableSymbols,
 } from '@whatwg-node/disposablestack';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   buildASTSchema,
   buildSchema,
@@ -263,7 +262,7 @@ export function createGatewayRuntime<
       });
       schemaFetcher = function fetchSchemaFromCDN() {
         pausePolling();
-        initialFetch$ = mapMaybePromise(fetcher(), ({ sdl }) => {
+        initialFetch$ = handleMaybePromise(fetcher, ({ sdl }) => {
           if (lastFetchedSdl == null || lastFetchedSdl !== sdl) {
             unifiedGraph = buildSchema(sdl, {
               assumeValid: true,
@@ -285,12 +284,13 @@ export function createGatewayRuntime<
 
       schemaFetcher = function fetchSchema() {
         pausePolling();
-        initialFetch$ = mapMaybePromise(
-          handleUnifiedGraphConfig(
-            // @ts-expect-error TODO: what's up with type narrowing
-            config.schema,
-            configContext,
-          ),
+        initialFetch$ = handleMaybePromise(
+          () =>
+            handleUnifiedGraphConfig(
+              // @ts-expect-error TODO: what's up with type narrowing
+              config.schema,
+              configContext,
+            ),
           (schema) => {
             if (isSchema(schema)) {
               unifiedGraph = schema;
@@ -316,10 +316,11 @@ export function createGatewayRuntime<
       // introspect endpoint
       schemaFetcher = function fetchSchemaWithExecutor() {
         pausePolling();
-        return mapMaybePromise(
-          schemaFromExecutor(proxyExecutor, configContext, {
-            assumeValid: true,
-          }),
+        return handleMaybePromise(
+          () =>
+            schemaFromExecutor(proxyExecutor, configContext, {
+              assumeValid: true,
+            }),
           (schema) => {
             unifiedGraph = schema;
             continuePolling();
@@ -337,9 +338,12 @@ export function createGatewayRuntime<
         return unifiedGraph;
       }
       if (initialFetch$ != null) {
-        return mapMaybePromise(initialFetch$, () => unifiedGraph);
+        return handleMaybePromise(
+          () => initialFetch$,
+          () => unifiedGraph,
+        );
       }
-      return mapMaybePromise(schemaFetcher(), () => unifiedGraph);
+      return handleMaybePromise(schemaFetcher, () => unifiedGraph);
     };
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
@@ -355,15 +359,14 @@ export function createGatewayRuntime<
       },
     };
     unifiedGraphPlugin = executorPlugin;
-    readinessChecker = () => {
-      const res$ = proxyExecutor({
-        document: parse(`query ReadinessCheck { __typename }`),
-      });
-      return mapMaybePromise(
-        res$,
+    readinessChecker = () =>
+      handleMaybePromise(
+        () =>
+          proxyExecutor({
+            document: parse(`query ReadinessCheck { __typename }`),
+          }),
         (res) => !isAsyncIterable(res) && !!res.data?.__typename,
-      );
-    };
+      ) as MaybePromise<boolean>;
     schemaInvalidator = () => {
       // @ts-expect-error TODO: this is illegal but somehow we want it
       unifiedGraph = undefined;
@@ -404,8 +407,8 @@ export function createGatewayRuntime<
     const transportExecutorStack = new AsyncDisposableStack();
     function getSubschemaConfig() {
       if (getSubschemaConfig$ == null) {
-        getSubschemaConfig$ = mapMaybePromise(
-          handleUnifiedGraphConfig(subgraphInConfig, configContext),
+        getSubschemaConfig$ = handleMaybePromise(
+          () => handleUnifiedGraphConfig(subgraphInConfig, configContext),
           (newUnifiedGraph) => {
             if (isSchema(newUnifiedGraph)) {
               unifiedGraph = newUnifiedGraph;
@@ -508,42 +511,44 @@ export function createGatewayRuntime<
                       );
                       if (satisfiedEntryPoint) {
                         if (satisfiedEntryPoint.key) {
-                          return mapMaybePromise(
-                            batchDelegateToSchema({
-                              schema: subschemaConfig,
-                              ...(satisfiedEntryPoint.fieldName
-                                ? { fieldName: satisfiedEntryPoint.fieldName }
-                                : {}),
-                              key: satisfiedEntryPoint.key(representation),
-                              ...(satisfiedEntryPoint.argsFromKeys
-                                ? {
-                                    argsFromKeys:
-                                      satisfiedEntryPoint.argsFromKeys,
-                                  }
-                                : {}),
-                              ...(satisfiedEntryPoint.valuesFromResults
-                                ? {
-                                    valuesFromResults:
-                                      satisfiedEntryPoint.valuesFromResults,
-                                  }
-                                : {}),
-                              context,
-                              info,
-                            }),
+                          return handleMaybePromise(
+                            () =>
+                              batchDelegateToSchema({
+                                schema: subschemaConfig,
+                                ...(satisfiedEntryPoint.fieldName
+                                  ? { fieldName: satisfiedEntryPoint.fieldName }
+                                  : {}),
+                                key: satisfiedEntryPoint.key!(representation),
+                                ...(satisfiedEntryPoint.argsFromKeys
+                                  ? {
+                                      argsFromKeys:
+                                        satisfiedEntryPoint.argsFromKeys,
+                                    }
+                                  : {}),
+                                ...(satisfiedEntryPoint.valuesFromResults
+                                  ? {
+                                      valuesFromResults:
+                                        satisfiedEntryPoint.valuesFromResults,
+                                    }
+                                  : {}),
+                                context,
+                                info,
+                              }),
                             (res) => mergeDeep([representation, res]),
                           );
                         }
                         if (satisfiedEntryPoint.args) {
-                          return mapMaybePromise(
-                            delegateToSchema({
-                              schema: subschemaConfig,
-                              ...(satisfiedEntryPoint.fieldName
-                                ? { fieldName: satisfiedEntryPoint.fieldName }
-                                : {}),
-                              args: satisfiedEntryPoint.args(representation),
-                              context,
-                              info,
-                            }),
+                          return handleMaybePromise(
+                            () =>
+                              delegateToSchema({
+                                schema: subschemaConfig,
+                                ...(satisfiedEntryPoint.fieldName
+                                  ? { fieldName: satisfiedEntryPoint.fieldName }
+                                  : {}),
+                                args: satisfiedEntryPoint.args!(representation),
+                                context,
+                                info,
+                              }),
                             (res) => mergeDeep([representation, res]),
                           );
                         }
@@ -594,7 +599,8 @@ export function createGatewayRuntime<
       }
       return getSubschemaConfig$;
     }
-    getSchema = () => mapMaybePromise(getSubschemaConfig(), () => unifiedGraph);
+    getSchema = () =>
+      handleMaybePromise(getSubschemaConfig, () => unifiedGraph);
     schemaInvalidator = () => {
       getSubschemaConfig$ = undefined;
     };
@@ -676,8 +682,8 @@ export function createGatewayRuntime<
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
-      mapMaybePromise(
-        unifiedGraphManager.getUnifiedGraph(),
+      handleMaybePromise(
+        () => unifiedGraphManager.getUnifiedGraph(),
         (schema) => {
           if (!schema) {
             logger.debug(
@@ -782,7 +788,7 @@ export function createGatewayRuntime<
       }
     },
     onRequestParse() {
-      return mapMaybePromise(getSchema(), (schema) => {
+      return handleMaybePromise(getSchema, (schema) => {
         replaceSchema(schema);
       });
     },
@@ -817,21 +823,27 @@ export function createGatewayRuntime<
     const onExecute = ({
       setExecuteFn,
     }: OnExecuteEventPayload<GatewayContext>) =>
-      mapMaybePromise(getExecutor?.(), (executor) => {
-        if (executor) {
-          const executeFn = getExecuteFnFromExecutor(executor);
-          setExecuteFn(executeFn);
-        }
-      });
+      handleMaybePromise(
+        () => getExecutor?.(),
+        (executor) => {
+          if (executor) {
+            const executeFn = getExecuteFnFromExecutor(executor);
+            setExecuteFn(executeFn);
+          }
+        },
+      );
     const onSubscribe = ({
       setSubscribeFn,
     }: OnSubscribeEventPayload<GatewayContext>) =>
-      mapMaybePromise(getExecutor?.(), (executor) => {
-        if (executor) {
-          const subscribeFn = getExecuteFnFromExecutor(executor);
-          setSubscribeFn(subscribeFn);
-        }
-      });
+      handleMaybePromise(
+        () => getExecutor?.(),
+        (executor) => {
+          if (executor) {
+            const subscribeFn = getExecuteFnFromExecutor(executor);
+            setSubscribeFn(subscribeFn);
+          }
+        },
+      );
     defaultGatewayPlugin.onExecute = onExecute;
     defaultGatewayPlugin.onSubscribe = onSubscribe;
   }
@@ -863,23 +875,25 @@ export function createGatewayRuntime<
   } else if (typeof config.graphiql === 'function') {
     const userGraphiqlFactory = config.graphiql;
     graphiqlOptionsOrFactory = function graphiqlOptionsFactoryForMesh(...args) {
-      const options = userGraphiqlFactory(...args);
-      return mapMaybePromise(options, (resolvedOpts) => {
-        if (resolvedOpts === false) {
-          return false;
-        }
-        if (resolvedOpts === true) {
+      return handleMaybePromise(
+        () => userGraphiqlFactory(...args),
+        (resolvedOpts) => {
+          if (resolvedOpts === false) {
+            return false;
+          }
+          if (resolvedOpts === true) {
+            return {
+              title: productName,
+              defaultQuery: defaultQueryText,
+            };
+          }
           return {
             title: productName,
             defaultQuery: defaultQueryText,
+            ...resolvedOpts,
           };
-        }
-        return {
-          title: productName,
-          defaultQuery: defaultQueryText,
-          ...resolvedOpts,
-        };
-      });
+        },
+      );
     };
   }
 

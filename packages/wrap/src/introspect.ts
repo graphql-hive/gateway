@@ -5,10 +5,9 @@ import {
   Executor,
   inspect,
   isAsyncIterable,
-  mapMaybePromise,
-  MaybePromise,
   SyncExecutor,
 } from '@graphql-tools/utils';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   buildClientSchema,
   getIntrospectionQuery,
@@ -74,20 +73,22 @@ export function schemaFromExecutor(
     getIntrospectionQuery(options as any),
     options,
   );
-  return mapMaybePromise(
-    mapMaybePromise(
-      executor({
-        document: parsedIntrospectionQuery,
-        context,
-      }),
-      (introspection) => {
-        if (isAsyncIterable(introspection)) {
-          const iterator = introspection[Symbol.asyncIterator]();
-          return iterator.next().then(({ value }) => value);
-        }
-        return introspection;
-      },
-    ),
+  return handleMaybePromise(
+    () =>
+      handleMaybePromise(
+        () =>
+          executor({
+            document: parsedIntrospectionQuery,
+            context,
+          }),
+        (introspection) => {
+          if (isAsyncIterable(introspection)) {
+            const iterator = introspection[Symbol.asyncIterator]();
+            return iterator.next().then(({ value }) => value);
+          }
+          return introspection;
+        },
+      ),
     (introspection) => getSchemaFromIntrospection(introspection, options),
   );
 }

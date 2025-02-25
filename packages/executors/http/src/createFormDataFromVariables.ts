@@ -1,14 +1,14 @@
 import { SerializedExecutionRequest } from '@graphql-tools/executor-common';
-import {
-  isAsyncIterable,
-  isPromise,
-  mapMaybePromise,
-  MaybePromise,
-} from '@graphql-tools/utils';
+import { isAsyncIterable } from '@graphql-tools/utils';
 import {
   File as DefaultFile,
   FormData as DefaultFormData,
 } from '@whatwg-node/fetch';
+import {
+  handleMaybePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { extractFiles, isExtractableFile } from 'extract-files';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
 
@@ -18,15 +18,18 @@ function collectAsyncIterableValues<T>(
   const values: T[] = [];
   const iterator = asyncIterable[Symbol.asyncIterator]();
   function iterate(): MaybePromise<T[]> {
-    return mapMaybePromise(iterator.next(), ({ value, done }) => {
-      if (value != null) {
-        values.push(value);
-      }
-      if (done) {
-        return values;
-      }
-      return iterate();
-    });
+    return handleMaybePromise(
+      () => iterator.next(),
+      ({ value, done }) => {
+        if (value != null) {
+          values.push(value);
+        }
+        if (done) {
+          return values;
+        }
+        return iterate();
+      },
+    );
   }
   return iterate();
 }
@@ -78,16 +81,16 @@ export function createFormDataFromVariables(
   function handleUpload(upload: any, i: number): void | PromiseLike<void> {
     const indexStr = i.toString();
     if (upload != null) {
-      return mapMaybePromise(
-        upload?.promise || upload,
+      return handleMaybePromise(
+        () => upload?.promise || upload,
         (upload): MaybePromise<void> => {
           const filename =
             upload.filename || upload.name || upload.path || `blob-${indexStr}`;
           if (isBlob(upload)) {
             form.append(indexStr, upload, filename);
           } else if (isAsyncIterable(upload)) {
-            return mapMaybePromise(
-              collectAsyncIterableValues<any>(upload),
+            return handleMaybePromise(
+              () => collectAsyncIterableValues<any>(upload),
               (chunks) => {
                 const blobPart = new Uint8Array(chunks);
                 form.append(
@@ -98,8 +101,8 @@ export function createFormDataFromVariables(
               },
             );
           } else if (isGraphQLUpload(upload)) {
-            return mapMaybePromise(
-              collectAsyncIterableValues(upload.createReadStream()),
+            return handleMaybePromise(
+              () => collectAsyncIterableValues(upload.createReadStream()),
               (chunks) => {
                 const blobPart = new Uint8Array(chunks);
                 form.append(

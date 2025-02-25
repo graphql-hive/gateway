@@ -1,13 +1,16 @@
 import {
   collectFields,
-  isPromise,
-  mapMaybePromise,
-  MaybePromise,
   memoize1,
   mergeDeep,
   pathToArray,
+  promiseReduce,
   relocatedError,
 } from '@graphql-tools/utils';
+import {
+  handleMaybePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import {
   FieldNode,
   GraphQLError,
@@ -103,10 +106,11 @@ export function mergeFields<TContext>(
     object[PLAN_LEFT_OVER] = leftOver;
   }
 
-  return mapMaybePromise(
-    delegationMaps.reduce<MaybePromise<void>>(
-      (prev, delegationMap) =>
-        mapMaybePromise(prev, () =>
+  return handleMaybePromise(
+    () =>
+      promiseReduce<any, any>(
+        delegationMaps,
+        (_, delegationMap) =>
           executeDelegationStage(
             mergedTypeInfo,
             delegationMap,
@@ -114,9 +118,8 @@ export function mergeFields<TContext>(
             context,
             info,
           ),
-        ),
-      undefined,
-    ),
+        undefined,
+      ),
     () => object,
   );
 }

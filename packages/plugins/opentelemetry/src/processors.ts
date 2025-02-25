@@ -1,5 +1,4 @@
 import type { AzureMonitorExporterOptions } from '@azure/monitor-opentelemetry-exporter';
-import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
 import { OTLPTraceExporter as OtlpHttpExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   ZipkinExporter,
@@ -15,6 +14,7 @@ import {
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 
 export type BatchingConfig = boolean | BufferConfig;
 
@@ -66,16 +66,19 @@ function loadExporterLazily<
   exportNameInModule: string,
 ): MaybePromise<TSpanExporterCtor> {
   try {
-    return mapMaybePromise(import(exporterModuleName), (mod) => {
-      const ExportCtor =
-        mod?.default?.[exportNameInModule] || mod?.[exportNameInModule];
-      if (!ExportCtor) {
-        throw new Error(
-          `${exporterName} exporter is not available in the current environment`,
-        );
-      }
-      return ExportCtor;
-    });
+    return handleMaybePromise(
+      () => import(exporterModuleName),
+      (mod) => {
+        const ExportCtor =
+          mod?.default?.[exportNameInModule] || mod?.[exportNameInModule];
+        if (!ExportCtor) {
+          throw new Error(
+            `${exporterName} exporter is not available in the current environment`,
+          );
+        }
+        return ExportCtor;
+      },
+    );
   } catch (err) {
     throw new Error(
       `${exporterName} exporter is not available in the current environment`,
@@ -87,12 +90,13 @@ export function createOtlpGrpcExporter(
   config: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
-  return mapMaybePromise(
-    loadExporterLazily(
-      'OTLP gRPC',
-      '@opentelemetry/exporter-trace-otlp-grpc',
-      'OTLPTraceExporter',
-    ),
+  return handleMaybePromise(
+    () =>
+      loadExporterLazily(
+        'OTLP gRPC',
+        '@opentelemetry/exporter-trace-otlp-grpc',
+        'OTLPTraceExporter',
+      ),
     (OTLPTraceExporter) => {
       return resolveBatchingConfig(
         new OTLPTraceExporter(config),
@@ -106,12 +110,13 @@ export function createAzureMonitorExporter(
   config: AzureMonitorExporterOptions,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
-  return mapMaybePromise(
-    loadExporterLazily(
-      'Azure Monitor',
-      '@azure/monitor-opentelemetry-exporter',
-      'AzureMonitorTraceExporter',
-    ),
+  return handleMaybePromise(
+    () =>
+      loadExporterLazily(
+        'Azure Monitor',
+        '@azure/monitor-opentelemetry-exporter',
+        'AzureMonitorTraceExporter',
+      ),
     (AzureMonitorTraceExporter) => {
       return resolveBatchingConfig(
         new AzureMonitorTraceExporter(config),

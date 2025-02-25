@@ -8,12 +8,12 @@ import { makeDisposable } from '@graphql-mesh/utils';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
-  mapMaybePromise,
   registerAbortSignalListener,
   type ExecutionRequest,
 } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
 import { crypto } from '@whatwg-node/fetch';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { ExecutionResult, GraphQLError } from 'graphql';
 
 export interface HTTPCallbackTransportOptions {
@@ -162,64 +162,68 @@ export default {
       if (signal) {
         signal = AbortSignal.any([reqAbortCtrl.signal, signal]);
       }
-      const subFetchCall$ = mapMaybePromise(
-        fetch(
-          transportEntry.location,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...headersFactory({
-                env: process.env as Record<string, string>,
-                root: executionRequest.rootValue,
-                context: executionRequest.context,
-                info: executionRequest.info,
-              }),
-              Accept: 'application/json;callbackSpec=1.0; charset=utf-8',
+      const subFetchCall$ = handleMaybePromise(
+        () =>
+          fetch(
+            transportEntry.location!,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...headersFactory({
+                  env: process.env as Record<string, string>,
+                  root: executionRequest.rootValue,
+                  context: executionRequest.context,
+                  info: executionRequest.info,
+                }),
+                Accept: 'application/json;callbackSpec=1.0; charset=utf-8',
+              },
+              body: fetchBody,
+              signal,
             },
-            body: fetchBody,
-            signal,
-          },
-          executionRequest.context,
-          executionRequest.info,
-        ),
+            executionRequest.context,
+            executionRequest.info,
+          ),
         (res) =>
-          mapMaybePromise(res.text(), (resText) => {
-            let resJson: ExecutionResult;
-            try {
-              resJson = JSON.parse(resText);
-            } catch (e) {
-              if (!res.ok) {
-                stopSubscription(
-                  new Error(
-                    `Subscription request failed with an HTTP Error: ${res.status} ${resText}`,
-                  ),
-                );
-              } else {
-                stopSubscription(e as Error);
-              }
-              return;
-            }
-            logger?.debug(`Subscription request received`, resJson);
-            if (resJson.errors) {
-              if (resJson.errors.length === 1 && resJson.errors[0]) {
-                const error = resJson.errors[0];
-                stopSubscription(createGraphQLError(error.message, error));
-              } else {
-                stopSubscription(
-                  new AggregateError(
-                    resJson.errors.map((err) =>
-                      createGraphQLError(err.message, err),
+          handleMaybePromise(
+            () => res.text(),
+            (resText) => {
+              let resJson: ExecutionResult;
+              try {
+                resJson = JSON.parse(resText);
+              } catch (e) {
+                if (!res.ok) {
+                  stopSubscription(
+                    new Error(
+                      `Subscription request failed with an HTTP Error: ${res.status} ${resText}`,
                     ),
-                    resJson.errors.map((err) => err.message).join('\n'),
-                  ),
-                );
+                  );
+                } else {
+                  stopSubscription(e as Error);
+                }
+                return;
               }
-            } else if (resJson.data != null) {
-              pushFn(resJson.data);
-              stopSubscription();
-            }
-          }),
+              logger?.debug(`Subscription request received`, resJson);
+              if (resJson.errors) {
+                if (resJson.errors.length === 1 && resJson.errors[0]) {
+                  const error = resJson.errors[0];
+                  stopSubscription(createGraphQLError(error.message, error));
+                } else {
+                  stopSubscription(
+                    new AggregateError(
+                      resJson.errors.map((err) =>
+                        createGraphQLError(err.message, err),
+                      ),
+                      resJson.errors.map((err) => err.message).join('\n'),
+                    ),
+                  );
+                }
+              } else if (resJson.data != null) {
+                pushFn(resJson.data);
+                stopSubscription();
+              }
+            },
+          ),
         (e) => {
           logger?.debug(`Subscription request failed`, e);
           stopSubscription(e);

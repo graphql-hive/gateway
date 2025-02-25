@@ -1,6 +1,6 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import type { OnFetchHookDone } from '@graphql-mesh/types';
-import { mapMaybePromise, MaybePromise } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { GatewayPlugin } from '../types';
 
 interface FromClientToSubgraphsPayload {
@@ -38,60 +38,62 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
       if (request) {
         const subgraphName = (executionRequest &&
           subgraphNameByExecutionRequest.get(executionRequest))!;
-        let job!: MaybePromise<void>;
-        if (opts.fromClientToSubgraphs) {
-          job = mapMaybePromise(
-            opts.fromClientToSubgraphs({
-              request,
-              subgraphName,
-            }),
-            (headers) =>
-              setOptions({
-                ...options,
-                // @ts-expect-error TODO: headers can contain null and undefined values. the types are incorrect
-                headers: {
-                  ...headers,
-                  ...options.headers,
-                },
-              }),
-          );
-        }
-        return mapMaybePromise(job, (): OnFetchHookDone | void => {
-          if (opts.fromSubgraphsToClient) {
-            return function onFetchDone({ response }) {
-              return mapMaybePromise(
-                opts.fromSubgraphsToClient?.({
-                  response,
+        return handleMaybePromise(
+          () =>
+            handleMaybePromise(
+              () =>
+                opts.fromClientToSubgraphs?.({
+                  request,
                   subgraphName,
                 }),
-                (headers) => {
-                  if (headers && request) {
-                    let existingHeaders = resHeadersByRequest.get(request);
-                    if (!existingHeaders) {
-                      existingHeaders = {};
-                      resHeadersByRequest.set(request, existingHeaders);
-                    }
+              (headers) =>
+                setOptions({
+                  ...options,
+                  // @ts-expect-error TODO: headers can contain null and undefined values. the types are incorrect
+                  headers: {
+                    ...headers,
+                    ...options.headers,
+                  },
+                }),
+            ),
+          (): OnFetchHookDone | void => {
+            if (opts.fromSubgraphsToClient) {
+              return function onFetchDone({ response }) {
+                return handleMaybePromise(
+                  () =>
+                    opts.fromSubgraphsToClient?.({
+                      response,
+                      subgraphName,
+                    }),
+                  (headers) => {
+                    if (headers && request) {
+                      let existingHeaders = resHeadersByRequest.get(request);
+                      if (!existingHeaders) {
+                        existingHeaders = {};
+                        resHeadersByRequest.set(request, existingHeaders);
+                      }
 
-                    // Merge headers across multiple subgraph calls
-                    for (const key in headers) {
-                      const value = headers[key];
-                      if (value) {
-                        const headerAsArray = Array.isArray(value)
-                          ? value
-                          : [value];
-                        if (existingHeaders[key]) {
-                          existingHeaders[key].push(...headerAsArray);
-                        } else {
-                          existingHeaders[key] = headerAsArray;
+                      // Merge headers across multiple subgraph calls
+                      for (const key in headers) {
+                        const value = headers[key];
+                        if (value) {
+                          const headerAsArray = Array.isArray(value)
+                            ? value
+                            : [value];
+                          if (existingHeaders[key]) {
+                            existingHeaders[key].push(...headerAsArray);
+                          } else {
+                            existingHeaders[key] = headerAsArray;
+                          }
                         }
                       }
                     }
-                  }
-                },
-              );
-            };
-          }
-        });
+                  },
+                );
+              };
+            }
+          },
+        );
       }
     },
     onResponse({ response, request }) {

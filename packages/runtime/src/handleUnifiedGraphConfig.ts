@@ -1,13 +1,12 @@
 import { UnifiedGraphManagerOptions } from '@graphql-mesh/fusion-runtime';
 import { defaultImportFn, isUrl, readFileOrUrl } from '@graphql-mesh/utils';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
-import type { MaybePromise } from '@graphql-tools/utils';
 import {
   isDocumentNode,
   isValidPath,
-  mapMaybePromise,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { isSchema } from 'graphql';
 import type { GatewayConfigContext } from './types';
 
@@ -26,8 +25,8 @@ export function handleUnifiedGraphConfig(
   config: UnifiedGraphConfig,
   configContext: GatewayConfigContext,
 ): MaybePromise<UnifiedGraphSchema> {
-  return mapMaybePromise(
-    typeof config === 'function' ? config(configContext) : config,
+  return handleMaybePromise(
+    () => (typeof config === 'function' ? config(configContext) : config),
     (schema) => handleUnifiedGraphSchema(schema, configContext),
   );
 }

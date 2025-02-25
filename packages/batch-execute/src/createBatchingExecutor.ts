@@ -2,11 +2,10 @@ import {
   ExecutionRequest,
   ExecutionResult,
   Executor,
-  fakePromise,
   getOperationASTFromRequest,
   isAsyncIterable,
-  mapMaybePromise,
 } from '@graphql-tools/utils';
+import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
 import { mergeRequests } from './mergeRequests.js';
 import { splitResult } from './splitResult.js';
@@ -51,8 +50,8 @@ function createLoadFn(
     if (requests.length === 1 && requests[0]) {
       const request = requests[0];
       return fakePromise<any>(
-        mapMaybePromise(
-          executor(request),
+        handleMaybePromise(
+          () => executor(request),
           (result) => [result],
           (err) => [err],
         ),
@@ -60,14 +59,17 @@ function createLoadFn(
     }
     const mergedRequests = mergeRequests(requests, extensionsReducer);
     return fakePromise<any>(
-      mapMaybePromise(executor(mergedRequests), (resultBatches) => {
-        if (isAsyncIterable(resultBatches)) {
-          throw new Error(
-            'Executor must not return incremental results for batching',
-          );
-        }
-        return splitResult(resultBatches, requests.length);
-      }),
+      handleMaybePromise(
+        () => executor(mergedRequests),
+        (resultBatches) => {
+          if (isAsyncIterable(resultBatches)) {
+            throw new Error(
+              'Executor must not return incremental results for batching',
+            );
+          }
+          return splitResult(resultBatches, requests.length);
+        },
+      ),
     );
   };
 }
