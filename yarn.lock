@@ -2779,52 +2779,53 @@ __metadata:
   linkType: hard
 
 "@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.0.2, @envelop/core@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@envelop/core@npm:5.1.0"
+  version: 5.1.1
+  resolution: "@envelop/core@npm:5.1.1"
   dependencies:
-    "@envelop/types": "npm:^5.1.0"
+    "@envelop/types": "npm:^5.1.1"
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/b3aa8b3c58d85daa99629f2d379a9a47f14585d36429f929db67f97e4954df96d1fa4a518723392811be4f79b111dc2f4c79a43eb8c6c2d532970055ec76c5aa
+  checksum: 10c0/04841f3c705bb80e11be765a6f9dfaa15e78ae24064490522a21fbda9e59b1b9c0baa50681abdbd72e38c162ce336079f6d6ad8578ccdb4a4d741f702419517c
   languageName: node
   linkType: hard
 
 "@envelop/disable-introspection@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "@envelop/disable-introspection@npm:7.0.0"
+  version: 7.0.1
+  resolution: "@envelop/disable-introspection@npm:7.0.1"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.1.0
+    "@envelop/core": ^5.1.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/260fc7e433f3a6d7b7a764e92563a949f56a0502347233ddf1eea6efd8d69f4b547de061bef35f7ff58e20fa4e0e9b6254728a8dfe9de9531fe4306f29d6278c
+  checksum: 10c0/9cc98cffd5ba7296fe9c08032e83c9b49832f5e3845fa7e4ce86057bb1eb88614d0038e34fe798ffebc7b3eed32523a4c9337c5e0001a82695220c530d4a33f1
   languageName: node
   linkType: hard
 
-"@envelop/extended-validation@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@envelop/extended-validation@npm:5.0.0"
+"@envelop/extended-validation@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "@envelop/extended-validation@npm:5.0.1"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.0"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.1.0
+    "@envelop/core": ^5.1.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/0abf6226cbe39d736c7d2bb1373a1f4415695db8c7b203e2205db270100929d4356050227b58e105103a0d7e6e270643fe0bd956448bb86e6d6920b924e742bc
+  checksum: 10c0/8ae51448a899b0c10348cd9b6a51f715d0ab3a751b5b9412db65a20230f966d5ca5aa2eb3b32a6916658b73b873a25aab5c1cf7105f5b3182d04cbfa64498e63
   languageName: node
   linkType: hard
 
 "@envelop/generic-auth@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@envelop/generic-auth@npm:9.0.0"
+  version: 9.0.1
+  resolution: "@envelop/generic-auth@npm:9.0.1"
   dependencies:
-    "@envelop/extended-validation": "npm:^5.0.0"
+    "@envelop/extended-validation": "npm:^5.0.1"
     "@graphql-tools/executor": "npm:^1.3.6"
     "@graphql-tools/utils": "npm:^10.5.1"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.1.0
+    "@envelop/core": ^5.1.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/f14b072421ba8d7c9de1de2da6e675f66acb54779e449d6b99ef83a4ac925bb56c60ad9610bff63b39f9cec9dbef6f9b50219630ece2888253e37aecafda7da4
+  checksum: 10c0/6ddff3c624b1642eb46dd9986c580e7107171ff91847ea19b8715d634cd92b5f8e8b7d09098edac81a0bb7c137f8bb2843adc943c6b07a91af708704e811ba94
   languageName: node
   linkType: hard
 
@@ -2855,15 +2856,15 @@ __metadata:
   linkType: hard
 
 "@envelop/operation-field-permissions@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "@envelop/operation-field-permissions@npm:7.0.0"
+  version: 7.0.1
+  resolution: "@envelop/operation-field-permissions@npm:7.0.1"
   dependencies:
-    "@envelop/extended-validation": "npm:^5.0.0"
+    "@envelop/extended-validation": "npm:^5.0.1"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.1.0
+    "@envelop/core": ^5.1.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/41307dd9d0bab90cdd5dd4cbb9cdbacc39d24d2320511eb5b1ba8e57db4ac4494a5324d4d0a279a42bd11fb838dbb5022822030598aafac2952433bb1428acb6
+  checksum: 10c0/580345372f8dc222aa4271cb9a9a783a74e36081839cb3dd345dff7642329270d3d9fc718b11f784bea40476c14ca8f43b3e7f2560b43caa592258ff4e488a57
   languageName: node
   linkType: hard
 
@@ -2914,12 +2915,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/types@npm:^5.1.0":
-  version: 5.1.0
-  resolution: "@envelop/types@npm:5.1.0"
+"@envelop/types@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "@envelop/types@npm:5.1.1"
   dependencies:
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
     tslib: "npm:^2.5.0"
-  checksum: 10c0/db9f33756b6c7299dfd33fc02023f45a686e0d43b37977fd92073d69edffeb0619627dde818fc8061c9aaa2a17fab46092eb1eff1998ec897bc20a2355f78e34
+  checksum: 10c0/7e695e0e2de6e9e86c3b2e8130c7ab38d013267f246c911e34123aeadb31225eaf21cd3a8cc4476238a64c086f058a77468ff0ead5effc09adcb10f555c95321
   languageName: node
   linkType: hard
 
