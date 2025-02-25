@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@graphql-mesh/types": "^0.103.18",
-    "@whatwg-node/disposablestack": "^0.0.5",
+    "@whatwg-node/disposablestack": "^0.0.6",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

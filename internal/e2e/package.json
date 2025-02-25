@@ -6,7 +6,7 @@
     "@apollo/gateway": "^2.8.3",
     "@types/dockerode": "^3.3.28",
     "@types/node": "^22.7.6",
-    "@whatwg-node/disposablestack": "^0.0.5",
+    "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.4",
     "dockerode": "^4.0.2",
     "glob": "^11.0.0",
