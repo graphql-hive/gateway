@@ -10,7 +10,7 @@
     "@apollo/rover": "^0.27.0",
     "@babel/parser": "^7.26.3",
     "@types/jscodeshift": "^0.12.0",
-    "@whatwg-node/disposablestack": "^0.0.5",
+    "@whatwg-node/disposablestack": "^0.0.6",
     "dedent": "^1.5.3",
     "esbuild": "^0.25.0",
     "glob": "^11.0.0",
