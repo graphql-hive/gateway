@@ -55,12 +55,12 @@ describe('Supergraph handles stitched field with different name correctly', () =
             subschemas:  [{
                 schema: bookDetailsSubschema,
                 merge: {
-                Book: {
-                    fieldName: 'books',
-                    selectionSet: '{ id }',
-                    key: ({ id }) => id,
-                    argsFromKeys: (ids) => ({ ids }),
-                },
+                    Book: {
+                        fieldName: 'books',
+                        selectionSet: '{ id }',
+                        key: ({ id }) => id,
+                        argsFromKeys: (ids) => ({ ids }),
+                    },
                 },
             },
             {
