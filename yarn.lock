@@ -5882,12 +5882,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/perf@workspace:internal/perf"
   dependencies:
-    "@graphql-tools/delegate": "workspace:^"
     "@memlab/core": "npm:^1.1.39"
     "@memlab/heap-analysis": "npm:^1.0.36"
     "@types/k6": "npm:^0.54.2"
     "@types/regression": "npm:^2"
     "@types/ws": "npm:^8.5.12"
+    "@whatwg-node/promise-helpers": "npm:^1.2.1"
     canvas: "npm:^3.1.0"
     chart.js: "npm:^4.4.7"
     chartjs-plugin-trendline: "npm:^2.1.6"
