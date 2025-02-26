@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { setTimeout } from 'timers/promises';
-import { createDeferred } from '@graphql-tools/delegate';
 import { Proc } from '@internal/proc';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { WebSocket } from 'ws';
 
 export interface Inspector {
@@ -31,7 +31,7 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
     ws.once('close', reject);
   });
 
-  const { promise: throwOnClosed, reject: closed } = createDeferred();
+  const { promise: throwOnClosed, reject: closed } = createDeferredPromise();
   ws.once('close', closed);
 
   ws.send('{"id":1,"method":"HeapProfiler.enable"}');
@@ -51,7 +51,7 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
 
       const writes: Promise<unknown>[] = [];
       const { promise: waitForHeapSnapshotDone, resolve: heapSnapshotDone } =
-        createDeferred<void>();
+        createDeferredPromise();
       function onMessage(m: WebSocket.Data) {
         const data = JSON.parse(m.toString());
         if (data.params?.chunk) {
