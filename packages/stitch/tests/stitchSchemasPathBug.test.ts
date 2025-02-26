@@ -1,12 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { graphql, OperationTypeNode } from 'graphql';
-import { delegateToSchema } from '@graphql-tools/delegate';
+import { graphql } from 'graphql';
 
 describe('Supergraph handles stitched field with different name correctly', () => {
     test('ensures correct error path in response', async () => {
-        const subschema = makeExecutableSchema({
+        const bookDetailsSubschema = makeExecutableSchema({
             typeDefs: /* GraphQL */ `
             type Query {
                 books(ids: [ID!]!): [Book!]!
@@ -20,67 +19,75 @@ describe('Supergraph handles stitched field with different name correctly', () =
             `,
             resolvers: {
                 Query: {
-                    books: (_parent, args) => ([{
-                        id: args.id,
+                    books: (_parent, { ids }) => ids.map(id => ({
+                        id,
                         title: () => {
                             throw new Error('Title - Forced error for testing purposes');
                         },
                         summary: () => {
                             throw new Error('Summary - Forced error for testing purposes');
                         },
-                    }]),
+                    })),
                 },
             },
         });
 
-        // Stitch the subschema into the supergraph
-        const supergraphSchema = stitchSchemas({
-            subschemas: [subschema],
-            typeDefs: /* GraphQL */ `
-                type Query {
-                    book(id: ID!): Book
-                }
+        const bookIdSubschema = makeExecutableSchema({
+            typeDefs: `
+            type Query {
+              book(id: ID!): Book
+            }
 
-                type Book {
-                    id: ID!
-                    title: String
-                    summary: String
-                }
-            `,
-            resolvers: {
-                Query: {
-                    book: {
-                        selectionSet: '{ id }',
-                        resolve: (_parent, args, context, info) => {
-                            const test =  delegateToSchema({
-                                schema: subschema,
-                                operation: 'query' as OperationTypeNode,
-                                fieldName: 'books',
-                                args: {
-                                    ids: [args.id],
-                                },
-                                context,
-                                info,
-                            });
-                            return test[0];
-                        },
+            type Book {
+                id: ID!
+            }
+          `,
+          resolvers: {
+            Query: {
+              book: (_, { id }: { id: string }) => {
+                return { id };
+              },
+            },
+          },
+        });
+
+        const supergraphSchema = stitchSchemas({
+            subschemas:  [{
+                schema: bookDetailsSubschema,
+                merge: {
+                Book: {
+                    fieldName: 'books',
+                    selectionSet: '{ id }',
+                    key: ({ id }) => id,
+                    argsFromKeys: (ids) => ({ ids }),
+                },
+                },
+            },
+            {
+                schema: bookIdSubschema,
+                merge: {
+                    Book: {
+                    fieldName: 'book',
+                    selectionSet: '{ id }',
+                    args: ({ id }) => ({ id }),
                     },
                 },
-            },
+            }],
         });
 
-        // Execute a query against the supergraph
+        const query = `
+        query Book($id: ID!) {
+            book(id: $id) {
+                title
+                summary
+            }
+        }
+        `;
         const result = await graphql({
             schema: supergraphSchema,
-            source: /* GraphQL */ `
-            query {
-                book(id: "1") {
-                    title
-                    summary
-                }
-            }
-        `,
-        });
+            source: query,
+            variableValues: { id: '1' },
+          });
 
         expect(result.errors).toBeDefined();
         expect(result.errors.length).toEqual(2);
