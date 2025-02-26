@@ -12,36 +12,37 @@ export function useCacheDebug<TContext extends Record<string, any>>(opts: {
           cacheGetErrorLogger.error({ key, error });
         },
         onCacheHit({ value }) {
-            const cacheHitLogger = opts.logger.child('cache-hit');
-            cacheHitLogger.debug({ key, value });
+          const cacheHitLogger = opts.logger.child('cache-hit');
+          cacheHitLogger.debug({ key, value });
         },
         onCacheMiss() {
-            const cacheMissLogger = opts.logger.child('cache-miss');
-            cacheMissLogger.debug({ key });
+          const cacheMissLogger = opts.logger.child('cache-miss');
+          cacheMissLogger.debug({ key });
         },
       };
     },
     onCacheSet({ key, value, ttl }) {
       return {
         onCacheSetError({ error }) {
-            const cacheSetErrorLogger = opts.logger.child('cache-set-error');
-            cacheSetErrorLogger.error({ key, value, ttl, error });
+          const cacheSetErrorLogger = opts.logger.child('cache-set-error');
+          cacheSetErrorLogger.error({ key, value, ttl, error });
         },
         onCacheSetDone() {
-            const cacheSetDoneLogger = opts.logger.child('cache-set-done');
-            cacheSetDoneLogger.debug({ key, value, ttl });
+          const cacheSetDoneLogger = opts.logger.child('cache-set-done');
+          cacheSetDoneLogger.debug({ key, value, ttl });
         },
       };
     },
     onCacheDelete({ key }) {
       return {
         onCacheDeleteError({ error }) {
-            const cacheDeleteErrorLogger = opts.logger.child('cache-delete-error');
-            cacheDeleteErrorLogger.error({ key, error });
+          const cacheDeleteErrorLogger =
+            opts.logger.child('cache-delete-error');
+          cacheDeleteErrorLogger.error({ key, error });
         },
         onCacheDeleteDone() {
-            const cacheDeleteDoneLogger = opts.logger.child('cache-delete-done');
-            cacheDeleteDoneLogger.debug({ key });
+          const cacheDeleteDoneLogger = opts.logger.child('cache-delete-done');
+          cacheDeleteDoneLogger.debug({ key });
         },
       };
     },
