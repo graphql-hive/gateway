@@ -24,7 +24,12 @@ import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature'
 import useMeshHive from '@graphql-mesh/plugin-hive';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
-import type { Logger, OnDelegateHook, OnFetchHook } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  OnDelegateHook,
+  OnFetchHook,
+} from '@graphql-mesh/types';
 import {
   getHeadersObj,
   getInContextSDK,
@@ -85,6 +90,7 @@ import {
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
+import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -103,12 +109,16 @@ import type {
   GatewayContext,
   GatewayHiveCDNOptions,
   GatewayPlugin,
+  OnCacheDeleteHook,
+  OnCacheGetHook,
+  OnCacheSetHook,
   UnifiedGraphConfig,
 } from './types';
 import {
   checkIfDataSatisfiesSelectionSet,
   defaultQueryText,
   getExecuteFnFromExecutor,
+  wrapCacheWithHooks,
 } from './utils';
 
 // TODO: this type export is not properly accessible from graphql-yoga
@@ -152,13 +162,24 @@ export function createGatewayRuntime<
   }
 
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
+  const onCacheGetHooks: OnCacheGetHook[] = [];
+  const onCacheSetHooks: OnCacheSetHook[] = [];
+  const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks);
+  const wrappedCache: KeyValueCache | undefined = config.cache
+    ? wrapCacheWithHooks({
+        cache: config.cache,
+        onCacheGet: onCacheGetHooks,
+        onCacheSet: onCacheSetHooks,
+        onCacheDelete: onCacheDeleteHooks,
+      })
+    : undefined;
 
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
     logger,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
-    cache: config.cache,
+    cache: wrappedCache,
     pubsub: config.pubsub,
   };
 
@@ -815,6 +836,15 @@ export function createGatewayRuntime<
         if (plugin.onDelegationStageExecute) {
           onDelegationStageExecuteHooks.push(plugin.onDelegationStageExecute);
         }
+        if (plugin.onCacheGet) {
+          onCacheGetHooks.push(plugin.onCacheGet);
+        }
+        if (plugin.onCacheSet) {
+          onCacheSetHooks.push(plugin.onCacheSet);
+        }
+        if (plugin.onCacheDelete) {
+          onCacheDeleteHooks.push(plugin.onCacheDelete);
+        }
       }
     },
   };
@@ -1022,6 +1052,7 @@ export function createGatewayRuntime<
       useSubgraphExecuteDebug(configContext),
       useFetchDebug(configContext),
       useDelegationPlanDebug(configContext),
+      useCacheDebug(configContext),
     );
     return 'Debug mode enabled';
   });
