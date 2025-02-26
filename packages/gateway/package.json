@@ -107,7 +107,7 @@
     "bun": "^1.1.34",
     "graphql": "^16.9.0",
     "parse-duration": "^2.0.0",
-    "pkgroll": "2.11.1",
+    "pkgroll": "2.11.2",
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.0.1",
     "rollup": "^4.18.1",
