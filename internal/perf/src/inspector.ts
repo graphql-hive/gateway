@@ -5,13 +5,19 @@ import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { WebSocket } from 'ws';
 
 export interface Inspector {
+  collectGarbage(): Promise<void>;
   writeHeapSnapshot(path: string): Promise<void>;
   [Symbol.dispose](): void;
 }
 
+/**
+ * Activates the inspector protocol on the provided Node process, waits for
+ * it to become available and connects.
+ */
 export async function connectInspector(proc: Proc): Promise<Inspector> {
   proc.kill('SIGUSR1'); // activate inspector protocol
 
+  // wait for the debugger to start
   let debuggerUrl = '';
   while (!debuggerUrl) {
     await setTimeout(100);
@@ -34,20 +40,35 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
   const { promise: throwOnClosed, reject: closed } = createDeferredPromise();
   ws.once('close', closed);
 
-  ws.send('{"id":1,"method":"HeapProfiler.enable"}');
+  // enables the heap profiler and disables it on dispose
+  function heapProfiler() {
+    ws.send(`{"id":${genId()},"method":"HeapProfiler.enable"}`);
+    return {
+      [Symbol.dispose]() {
+        ws.send(`{"id":${genId()},"method":"HeapProfiler.disable"}`);
+      },
+    };
+  }
 
   return {
+    async collectGarbage() {
+      using _ = heapProfiler();
+      ws.send(`{"id":${genId()},"method":"HeapProfiler.collectGarbage"}`);
+    },
     async writeHeapSnapshot(path: string) {
-      await fs.rm(path, { force: true }); // replace existing snapshot
+      using _0 = heapProfiler();
+
+      // replace existing snapshot
+      await fs.rm(path, { force: true });
 
       const fd = await fs.open(path, 'w');
-      await using _ = {
+      await using _1 = {
         async [Symbol.asyncDispose]() {
           await fd.close();
         },
       };
 
-      const id = Math.floor(Math.random() * 1000);
+      const id = genId();
 
       const writes: Promise<unknown>[] = [];
       const { promise: waitForHeapSnapshotDone, resolve: heapSnapshotDone } =
@@ -79,4 +100,8 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       ws.close();
     },
   };
+}
+
+function genId() {
+  return Math.floor(Math.random() * 1000);
 }
