@@ -92,7 +92,68 @@ export type GatewayPlugin<
 > = YogaPlugin<Partial<TPluginContext> & GatewayContext & TContext> &
   UnifiedGraphPlugin<Partial<TPluginContext> & GatewayContext & TContext> & {
     onFetch?: OnFetchHook<Partial<TPluginContext> & GatewayContext & TContext>;
+    onCacheGet?: OnCacheGetHook;
+    onCacheSet?: OnCacheSetHook;
+    onCacheDelete?: OnCacheDeleteHook;
   } & Partial<Disposable | AsyncDisposable>;
+
+export type OnCacheGetHook = (
+  payload: OnCacheGetHookEventPayload,
+) => MaybePromise<OnCacheGetHookResult | void>;
+
+export interface OnCacheGetHookEventPayload {
+  cache: KeyValueCache;
+  key: string;
+  ttl?: number;
+}
+
+export interface OnCacheGetHookResult {
+  onCacheHit?: OnCacheHitHook;
+  onCacheMiss?: OnCacheMissHook;
+  onCacheGetError?: OnCacheErrorHook;
+}
+
+export type OnCacheErrorHook = (payload: OnCacheErrorHookPayload) => void;
+
+export interface OnCacheErrorHookPayload {
+  error: Error;
+}
+
+export type OnCacheHitHook = (payload: OnCacheHitHookEventPayload) => void;
+export interface OnCacheHitHookEventPayload {
+  value: any;
+}
+export type OnCacheMissHook = () => void;
+
+export type OnCacheSetHook = (
+  payload: OnCacheSetHookEventPayload,
+) => MaybePromise<OnCacheSetHookResult | void>;
+
+export interface OnCacheSetHookResult {
+  onCacheSetDone?: () => void;
+  onCacheSetError?: OnCacheErrorHook;
+}
+
+export interface OnCacheSetHookEventPayload {
+  cache: KeyValueCache;
+  key: string;
+  value: any;
+  ttl?: number;
+}
+
+export type OnCacheDeleteHook = (
+  payload: OnCacheDeleteHookEventPayload,
+) => MaybePromise<OnCacheDeleteHookResult | void>;
+
+export interface OnCacheDeleteHookResult {
+  onCacheDeleteDone?: () => void;
+  onCacheDeleteError?: OnCacheErrorHook;
+}
+
+export interface OnCacheDeleteHookEventPayload {
+  cache: KeyValueCache;
+  key: string;
+}
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,

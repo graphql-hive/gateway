@@ -1,6 +1,16 @@
+import { KeyValueCache } from '@graphql-mesh/types';
 import type { ExecutionArgs } from '@graphql-tools/executor';
 import { Executor, memoize1 } from '@graphql-tools/utils';
+import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
 import type { SelectionSetNode } from 'graphql';
+import {
+  OnCacheDeleteHook,
+  OnCacheDeleteHookResult,
+  OnCacheGetHook,
+  OnCacheGetHookResult,
+  OnCacheSetHook,
+  OnCacheSetHookResult,
+} from './types';
 
 export function checkIfDataSatisfiesSelectionSet(
   selectionSet: SelectionSetNode,
@@ -92,3 +102,166 @@ export const getExecuteFnFromExecutor = memoize1(
     };
   },
 );
+
+export function wrapCacheWithHooks({
+  cache,
+  onCacheGet,
+  onCacheSet,
+  onCacheDelete,
+}: {
+  cache: KeyValueCache;
+  onCacheGet: OnCacheGetHook[];
+  onCacheSet: OnCacheSetHook[];
+  onCacheDelete: OnCacheDeleteHook[];
+}) {
+  return new Proxy(cache, {
+    get(target, prop: keyof KeyValueCache, receiver) {
+      switch (prop) {
+        case 'get': {
+          if (onCacheGet.length === 0) {
+            break;
+          }
+          return function cacheGet(key: string) {
+            const onCacheGetResults: OnCacheGetHookResult[] = [];
+            return handleMaybePromise(
+              () =>
+                iterateAsync(
+                  onCacheGet,
+                  (onCacheGet) =>
+                    onCacheGet({
+                      key,
+                      cache,
+                    }),
+                  onCacheGetResults,
+                ),
+              () =>
+                handleMaybePromise(
+                  () => target.get(key),
+                  (value) =>
+                    value == null
+                      ? handleMaybePromise(
+                          () =>
+                            iterateAsync(
+                              onCacheGetResults,
+                              (onCacheGetResult) =>
+                                onCacheGetResult?.onCacheMiss?.(),
+                            ),
+                          () => value,
+                        )
+                      : handleMaybePromise(
+                          () =>
+                            iterateAsync(
+                              onCacheGetResults,
+                              (onCacheGetResult) =>
+                                onCacheGetResult?.onCacheHit?.({ value }),
+                            ),
+                          () => value,
+                        ),
+                  (error) =>
+                    handleMaybePromise(
+                      () =>
+                        iterateAsync(onCacheGetResults, (onCacheGetResult) =>
+                          onCacheGetResult?.onCacheGetError?.({ error }),
+                        ),
+                      () => {
+                        throw error;
+                      },
+                    ),
+                ),
+            );
+          };
+        }
+        case 'set': {
+          if (onCacheSet.length === 0) {
+            break;
+          }
+          return function cacheSet(
+            key: string,
+            value: string,
+            opts?: { ttl?: number },
+          ) {
+            const onCacheSetResults: OnCacheSetHookResult[] = [];
+            return handleMaybePromise(
+              () =>
+                iterateAsync(
+                  onCacheSet,
+                  (onCacheSet) =>
+                    onCacheSet({
+                      key,
+                      value,
+                      ttl: opts?.ttl,
+                      cache,
+                    }),
+                  onCacheSetResults,
+                ),
+              () =>
+                handleMaybePromise(
+                  () => target.set(key, value, opts),
+                  (result) =>
+                    handleMaybePromise(
+                      () =>
+                        iterateAsync(onCacheSetResults, (onCacheSetResult) =>
+                          onCacheSetResult?.onCacheSetDone?.(),
+                        ),
+                      () => result,
+                    ),
+                  (err) =>
+                    handleMaybePromise(
+                      () =>
+                        iterateAsync(onCacheSetResults, (onCacheSetResult) =>
+                          onCacheSetResult?.onCacheSetError?.({ error: err }),
+                        ),
+                      () => {
+                        throw err;
+                      },
+                    ),
+                ),
+            );
+          };
+        }
+        case 'delete': {
+          if (onCacheDelete.length === 0) {
+            break;
+          }
+          return function cacheDelete(key: string) {
+            const onCacheDeleteResults: OnCacheDeleteHookResult[] = [];
+            return handleMaybePromise(
+              () =>
+                iterateAsync(onCacheDelete, (onCacheDelete) =>
+                  onCacheDelete({
+                    key,
+                    cache,
+                  }),
+                ),
+              () =>
+                handleMaybePromise(
+                  () => target.delete(key),
+                  (result) =>
+                    handleMaybePromise(
+                      () =>
+                        iterateAsync(
+                          onCacheDeleteResults,
+                          (onCacheDeleteResult) =>
+                            onCacheDeleteResult?.onCacheDeleteDone?.(),
+                        ),
+                      () => result,
+                    ),
+                ),
+              (err) =>
+                handleMaybePromise(
+                  () =>
+                    iterateAsync(onCacheDeleteResults, (onCacheDeleteResult) =>
+                      onCacheDeleteResult?.onCacheDeleteError?.({ error: err }),
+                    ),
+                  () => {
+                    throw err;
+                  },
+                ),
+            );
+          };
+        }
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
