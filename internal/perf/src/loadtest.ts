@@ -22,28 +22,34 @@ export interface LoadtestOptions extends ProcOptions {
    * The GraphQL query to execute for the loadtest.
    */
   query: string;
-  /** Callback for memory snapshots during the loadtest. */
-  onMemorySnapshot?(
-    memoryUsageInMB: number,
-    phase: LoadtestPhase,
-    snapshots: LoadtestMemorySnapshots,
-  ): Promise<void> | void;
+  /** Callback for memory sampling during the loadtest. */
+  onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
 }
 
-export type LoadtestPhase = 'idle' | 'loadtest' | 'calmdown';
+export type LoadtestPhase =
+  | 'idle'
+  | 'loadtest'
+  | 'calmdown'
+  | 'gc'
+  | 'heapsnapshot';
 
-/** Memory usage snapshots in MB of the {@link LoadtestOptions.server GraphQL server}.*/
-export type LoadtestMemorySnapshots = {
-  /** Memory usage snapshots in MB during the given loadtest phase.*/
-  [phase in LoadtestPhase]: number[];
-} & {
-  /** All memory snapshots in MB of all the loadtest phases. */
-  total: number[];
-};
+/** Memory usage snapshot in MB of the {@link LoadtestOptions.server GraphQL server} during the given {@link phase}.*/
+export interface LoadtestMemorySample {
+  phase: LoadtestPhase;
+  /** Moment in time when the sample was taken. */
+  time: Date;
+  /**
+   * CPU usage as a percentage. The percentage accompanies all cores: if the CPU
+   * has 2 cores, 100% means 100% of 1 core; and 200% means 100% of both cores.
+   */
+  cpu: number;
+  /** Memory usage in MB. */
+  mem: number;
+}
 
 export async function loadtest(
   opts: LoadtestOptions,
-): Promise<LoadtestMemorySnapshots> {
+): Promise<{ samples: LoadtestMemorySample[] }> {
   const {
     cwd,
     vus = 100,
@@ -53,7 +59,7 @@ export async function loadtest(
     memorySnapshotWindow,
     server,
     query,
-    onMemorySnapshot,
+    onMemorySample: onMemorySnapshot,
     ...procOptions
   } = opts;
 
@@ -70,27 +76,22 @@ export async function loadtest(
 
   using inspector = await connectInspector(server);
 
-  let haltSnapshots = false;
   let phase: LoadtestPhase = 'idle';
-  const snapshots: LoadtestMemorySnapshots = {
-    loadtest: [],
-    idle: [],
-    calmdown: [],
-    total: [],
-  };
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
+  const samples: LoadtestMemorySample[] = [];
   (async () => {
     while (!ctrl.signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
-        const { mem } = await server.getStats();
-        if (haltSnapshots) {
-          continue; // ignore memory spikes while writing heap snapshots
-        }
-        snapshots[phase].push(mem);
-        snapshots.total.push(mem);
-        await onMemorySnapshot?.(mem, phase, snapshots);
+        const stats = await server.getStats();
+        const sample: LoadtestMemorySample = {
+          phase,
+          time: new Date(),
+          ...stats,
+        };
+        samples.push(sample);
+        await onMemorySnapshot?.(samples);
       } catch (err) {
         if (!ctrl.signal.aborted) {
           throw err;
@@ -107,9 +108,8 @@ export async function loadtest(
   });
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
-  haltSnapshots = true;
+  phase = 'heapsnapshot';
   await inspector.writeHeapSnapshot(path.join(cwd, 'baseline.heapsnapshot'));
-  haltSnapshots = false;
 
   phase = 'loadtest';
   const [, waitForExit] = await spawn(
@@ -134,18 +134,15 @@ export async function loadtest(
     path.join(__dirname, 'loadtest-script.ts'),
   );
   await Promise.race([waitForExit, serverThrowOnExit]);
-  haltSnapshots = true;
+  phase = 'heapsnapshot';
   await inspector.writeHeapSnapshot(path.join(cwd, 'target.heapsnapshot'));
-  haltSnapshots = false;
 
-  phase = 'calmdown';
-  haltSnapshots = true;
+  phase = 'gc';
   await inspector.collectGarbage();
-  haltSnapshots = false;
+  phase = 'calmdown';
   await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
-  haltSnapshots = true;
+  phase = 'heapsnapshot';
   await inspector.writeHeapSnapshot(path.join(cwd, 'final.heapsnapshot'));
-  haltSnapshots = false;
 
-  return snapshots;
+  return { samples };
 }

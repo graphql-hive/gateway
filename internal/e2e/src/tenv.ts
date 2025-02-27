@@ -134,6 +134,12 @@ export interface Gateway extends Server {
     operationName?: string;
     headers?: Record<string, string>;
   }): Promise<ExecutionResult<any>>;
+  /**
+   * Checks whether the gateway is "ready" to receive reuqests.
+   * The readiness check also prepares the GraphQL Schema in the gateway
+   * and makes sure it is assembled as expected.
+   */
+  readiness(): Promise<boolean>;
 }
 
 export interface ServiceOptions extends ProcOptions {
@@ -591,6 +597,11 @@ export function createTenv(cwd: string): Tenv {
               `Failed to execute query on gateway\n${proc.getStd('both')}\n${err}`,
             );
           }
+        },
+        readiness() {
+          return fetch(`${protocol}://0.0.0.0:${port}/readiness`).then(
+            (res) => res.ok,
+          );
         },
       };
       const ctrl = new AbortController();

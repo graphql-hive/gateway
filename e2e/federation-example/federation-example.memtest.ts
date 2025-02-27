@@ -11,8 +11,14 @@ memtest(
     cwd,
     query,
   },
-  async () =>
-    gateway({
+  async () => {
+    const gw = await gateway({
       supergraph: await supergraph(),
-    }),
+    });
+    const ready = await gw.readiness(); // load the graphql schema reflecting accurate memory size during idle phase
+    if (!ready) {
+      throw new Error('Gateway is not ready');
+    }
+    return gw;
+  },
 );
