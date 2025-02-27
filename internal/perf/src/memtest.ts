@@ -46,6 +46,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     duration = 180_000,
     calmdown = 30_000,
     onMemorySample,
+    onHeapSnapshot,
     ...loadtestOpts
   } = opts;
   it(
@@ -136,6 +137,15 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
             );
           }
           return onMemorySample?.(samples);
+        },
+        async onHeapSnapshot(type, file) {
+          if (isDebug('memtest')) {
+            await fs.copyFile(
+              file,
+              path.join(cwd, `memtest-${type}_${startTime}.heapsnapshot`),
+            );
+          }
+          return onHeapSnapshot?.(type, file);
         },
       });
 

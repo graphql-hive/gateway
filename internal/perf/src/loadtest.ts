@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
@@ -24,6 +26,11 @@ export interface LoadtestOptions extends ProcOptions {
   query: string;
   /** Callback for memory sampling during the loadtest. */
   onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
+  /** Callback when the heapsnapshot has been written on disk. */
+  onHeapSnapshot?(
+    type: 'baseline' | 'final',
+    file: string,
+  ): Promise<void> | void;
 }
 
 export type LoadtestPhase =
@@ -47,9 +54,10 @@ export interface LoadtestMemorySample {
   mem: number;
 }
 
-export async function loadtest(
-  opts: LoadtestOptions,
-): Promise<{ samples: LoadtestMemorySample[] }> {
+export async function loadtest(opts: LoadtestOptions): Promise<{
+  samples: LoadtestMemorySample[];
+  heapsnapshots: { baseline: string; final: string };
+}> {
   const {
     cwd,
     vus = 100,
@@ -59,7 +67,8 @@ export async function loadtest(
     memorySnapshotWindow,
     server,
     query,
-    onMemorySample: onMemorySnapshot,
+    onMemorySample,
+    onHeapSnapshot,
     ...procOptions
   } = opts;
 
@@ -76,6 +85,10 @@ export async function loadtest(
 
   using inspector = await connectInspector(server);
 
+  const heapsnapshotDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
+  );
+
   let phase: LoadtestPhase = 'idle';
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
@@ -91,7 +104,7 @@ export async function loadtest(
           ...stats,
         };
         samples.push(sample);
-        await onMemorySnapshot?.(samples);
+        await onMemorySample?.(samples);
       } catch (err) {
         if (!ctrl.signal.aborted) {
           throw err;
@@ -108,8 +121,14 @@ export async function loadtest(
   });
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
+
   phase = 'heapsnapshot';
-  await inspector.writeHeapSnapshot(path.join(cwd, 'baseline.heapsnapshot'));
+  const baselineSnapshotFile = path.join(
+    heapsnapshotDir,
+    `baseline_${Date.now()}.heapsnapshot`,
+  );
+  await inspector.writeHeapSnapshot(baselineSnapshotFile);
+  await onHeapSnapshot?.('baseline', baselineSnapshotFile);
 
   phase = 'loadtest';
   const [, waitForExit] = await spawn(
@@ -140,8 +159,17 @@ export async function loadtest(
   await inspector.collectGarbage();
   phase = 'calmdown';
   await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
-  phase = 'heapsnapshot';
-  await inspector.writeHeapSnapshot(path.join(cwd, 'final.heapsnapshot'));
 
-  return { samples };
+  phase = 'heapsnapshot';
+  const finalSnapshotFile = path.join(
+    heapsnapshotDir,
+    `final_${Date.now()}.heapsnapshot`,
+  );
+  await inspector.writeHeapSnapshot(finalSnapshotFile);
+  await onHeapSnapshot?.('final', finalSnapshotFile);
+
+  return {
+    samples,
+    heapsnapshots: { baseline: baselineSnapshotFile, final: finalSnapshotFile },
+  };
 }
