@@ -73,62 +73,55 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         server,
         async onMemorySample(samples) {
           if (isDebug('memtest')) {
+            // TODO: this assumes that each of the phases happen one after each other
+            const idle = samples
+              .filter(({ phase }) => phase === 'idle')
+              .map(({ mem }) => mem);
+            const loadtest = samples
+              .filter(({ phase }) => phase === 'loadtest')
+              .map(({ mem }) => mem);
+            const calmdown = samples
+              .filter(({ phase }) => phase === 'calmdown')
+              .map(({ mem }) => mem);
+
             const chart = createLineChart(
-              samples.map((_, i) => `${i + memorySnapshotWindow / 1000}. sec`),
+              samples
+                .filter(
+                  ({ phase }) =>
+                    phase === 'idle' ||
+                    phase === 'loadtest' ||
+                    phase === 'calmdown',
+                )
+                .map(({ time }) => toTimeString(time)),
               [
                 {
                   label: 'Idle',
-                  trendline: true,
-                  color: 'blue',
-                  data: samples.map(({ phase, mem }) =>
-                    phase === 'idle' ? mem : null,
-                  ),
+                  data: idle,
                 },
-                ...(samples.some(({ phase }) => phase === 'loadtest')
+                ...(loadtest.length
                   ? [
                       {
                         label: 'Loadtest',
-                        trendline: true,
-                        color: 'red',
-                        data: samples.map(({ phase, mem }) =>
-                          phase === 'loadtest' ? mem : null,
-                        ),
+                        data: [
+                          ...idle.map((val, i, arr) =>
+                            i === arr.length - 1 ? val : null,
+                          ), // skip idle data except for the last point to make a connection in the chart
+                          ...loadtest,
+                        ],
                       },
                     ]
                   : []),
-                ...(samples.some(({ phase }) => phase === 'calmdown')
+                ...(calmdown.length
                   ? [
                       {
                         label: 'Calmdown',
-                        trendline: true,
-                        color: 'orange',
-                        data: samples.map(({ phase, mem }) =>
-                          phase === 'calmdown' ? mem : null,
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(samples.some(({ phase }) => phase === 'heapsnapshot')
-                  ? [
-                      {
-                        label: 'Heapsnapshot',
-                        color: 'gray',
-                        dashed: true,
-                        data: samples.map(({ phase, mem }) =>
-                          phase === 'heapsnapshot' ? mem : null,
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(samples.some(({ phase }) => phase === 'gc')
-                  ? [
-                      {
-                        label: 'GC',
-                        color: 'green',
-                        dashed: true,
-                        data: samples.map(({ phase, mem }) =>
-                          phase === 'gc' ? mem : null,
-                        ),
+                        data: [
+                          ...idle.map(() => null), // skip idle data
+                          ...loadtest.map((val, i, arr) =>
+                            i === arr.length - 1 ? val : null,
+                          ), // skip loadtest data except for the last point to make a connection in the chart
+                          ...calmdown,
+                        ],
                       },
                     ]
                   : []),
@@ -197,6 +190,25 @@ function calculateRegressionSlope(snapshots: number[]) {
   const slope = result.equation[0];
 
   return slope;
+}
+
+function toTimeString(date: Date) {
+  let hours = date.getUTCHours().toString();
+  if (hours.length === 1) {
+    hours = `0${hours}`;
+  }
+
+  let minutes = date.getUTCMinutes().toString();
+  if (minutes.length === 1) {
+    minutes = `0${minutes}`;
+  }
+
+  let seconds = date.getUTCSeconds().toString();
+  if (seconds.length === 1) {
+    seconds = `0${seconds}`;
+  }
+
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 function debugLog(msg: string) {
