@@ -37,6 +37,7 @@ import type {
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
+import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
@@ -614,6 +615,13 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @default true
    */
   requestId?: boolean;
+
+  /**
+   * Demand Control
+   *
+   * Configure the demand control for upstream requests.
+   */
+  demandControl?: DemandControlPluginOptions;
 }
 
 interface DisableIntrospectionOptions {
