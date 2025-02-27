@@ -41,22 +41,22 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
   ws.once('close', closed);
 
   // enables the heap profiler and disables it on dispose
-  function heapProfiler() {
-    ws.send(`{"id":${genId()},"method":"HeapProfiler.enable"}`);
+  async function heapProfiler() {
+    await call(ws, 'HeapProfiler.enable');
     return {
-      [Symbol.dispose]() {
-        ws.send(`{"id":${genId()},"method":"HeapProfiler.disable"}`);
+      [Symbol.asyncDispose]() {
+        return call(ws, 'HeapProfiler.disable');
       },
     };
   }
 
   return {
     async collectGarbage() {
-      using _ = heapProfiler();
-      ws.send(`{"id":${genId()},"method":"HeapProfiler.collectGarbage"}`);
+      await using _ = await heapProfiler();
+      await call(ws, 'HeapProfiler.collectGarbage');
     },
     async writeHeapSnapshot(path: string) {
-      using _0 = heapProfiler();
+      await using _0 = await heapProfiler();
 
       // replace existing snapshot
       await fs.rm(path, { force: true });
@@ -104,4 +104,41 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
 
 function genId() {
   return Math.floor(Math.random() * 1000);
+}
+
+/** Calls/invokes a method on the inspector protocol and waits for confirmation. */
+function call(
+  ws: WebSocket,
+  method:
+    | 'HeapProfiler.enable'
+    | 'HeapProfiler.disable'
+    | 'HeapProfiler.collectGarbage',
+) {
+  const id = genId();
+  ws.send(`{"id":${id},"method":"${method}"}`);
+  return waitForImmediateMessage(ws, (m) =>
+    m.toString().includes(`"id":${id}`),
+  );
+}
+
+function waitForImmediateMessage(
+  ws: WebSocket,
+  check: (m: WebSocket.Data) => boolean,
+) {
+  const { promise, resolve, reject } = createDeferredPromise();
+  function onMessage(m: WebSocket.Data) {
+    if (check(m)) {
+      resolve();
+    } else {
+      reject(new Error(`Unexpected immediate message\n${m.toString()}`));
+    }
+  }
+  ws.once('message', onMessage);
+  return Promise.race([
+    promise,
+    setTimeout(1_000).then(() => {
+      ws.off('message', onMessage);
+      throw new Error('Timeout waiting for immediate message');
+    }),
+  ]);
 }
