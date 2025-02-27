@@ -8,6 +8,12 @@ export interface LineChartDataset {
   label: string;
   /** The Y data points in the line chart. */
   data: (number | null)[];
+  /** The color of the line. */
+  color?: string;
+  /** Whether the line is dashed. */
+  dashed?: boolean;
+  /** Whether to show the linear regression trend line. */
+  trendline?: boolean;
 }
 
 export interface LineChartOptions {
@@ -31,13 +37,19 @@ export function createLineChart(
     type: 'line',
     data: {
       labels,
-      datasets: datasets.map(({ label, data }) => ({
+      datasets: datasets.map(({ label, data, color, dashed, trendline }) => ({
         label,
         data,
-        trendlineLinear: {
-          width: 1,
-          lineStyle: 'dashed',
-        },
+        borderColor: color,
+        borderDash: dashed ? [5, 5] : [],
+        ...(trendline
+          ? {
+              trendlineLinear: {
+                width: 1,
+                lineStyle: 'dashed',
+              },
+            }
+          : {}),
       })),
     },
     options: {

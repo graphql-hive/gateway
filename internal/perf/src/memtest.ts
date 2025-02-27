@@ -45,7 +45,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     idle = 10_000,
     duration = 180_000,
     calmdown = 30_000,
-    onMemorySnapshot,
+    onMemorySample,
     ...loadtestOpts
   } = opts;
   it(
@@ -63,7 +63,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         // remove milliseconds
         .split('.')[0];
 
-      const snapshots = await loadtest({
+      const { samples } = await loadtest({
         ...loadtestOpts,
         cwd,
         memorySnapshotWindow,
@@ -71,41 +71,64 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         duration,
         calmdown,
         server,
-        async onMemorySnapshot(memoryUsageInMB, phase, snapshots) {
+        async onMemorySample(samples) {
           if (isDebug('memtest')) {
             const chart = createLineChart(
-              snapshots.total.map(
-                (_, i) => `${i + memorySnapshotWindow / 1000}. sec`,
-              ),
+              samples.map((_, i) => `${i + memorySnapshotWindow / 1000}. sec`),
               [
                 {
                   label: 'Idle',
-                  data: snapshots.idle,
+                  trendline: true,
+                  color: 'blue',
+                  data: samples.map(({ phase, mem }) =>
+                    phase === 'idle' ? mem : null,
+                  ),
                 },
-                ...(snapshots.loadtest.length
+                ...(samples.some(({ phase }) => phase === 'loadtest')
                   ? [
                       {
                         label: 'Loadtest',
-                        data: [
-                          ...snapshots.idle.map((val, i, arr) =>
-                            i === arr.length - 1 ? val : null,
-                          ), // skip idle data except for the last point to make a connection in the chart
-                          ...snapshots.loadtest,
-                        ],
+                        trendline: true,
+                        color: 'red',
+                        data: samples.map(({ phase, mem }) =>
+                          phase === 'loadtest' ? mem : null,
+                        ),
                       },
                     ]
                   : []),
-                ...(snapshots.calmdown.length
+                ...(samples.some(({ phase }) => phase === 'calmdown')
                   ? [
                       {
                         label: 'Calmdown',
-                        data: [
-                          ...snapshots.idle.map(() => null), // skip idle data
-                          ...snapshots.loadtest.map((val, i, arr) =>
-                            i === arr.length - 1 ? val : null,
-                          ), // skip loadtest data except for the last point to make a connection in the chart
-                          ...snapshots.calmdown,
-                        ],
+                        trendline: true,
+                        color: 'orange',
+                        data: samples.map(({ phase, mem }) =>
+                          phase === 'calmdown' ? mem : null,
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(samples.some(({ phase }) => phase === 'heapsnapshot')
+                  ? [
+                      {
+                        label: 'Heapsnapshot',
+                        color: 'gray',
+                        dashed: true,
+                        data: samples.map(({ phase, mem }) =>
+                          phase === 'heapsnapshot' ? mem : null,
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(samples.some(({ phase }) => phase === 'gc')
+                  ? [
+                      {
+                        label: 'GC',
+                        color: 'green',
+                        dashed: true,
+                        data: samples.map(({ phase, mem }) =>
+                          phase === 'gc' ? mem : null,
+                        ),
                       },
                     ]
                   : []),
@@ -115,27 +138,37 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
               },
             );
             await fs.writeFile(
-              path.join(cwd, `memtest-memory-snapshots_${startTime}.svg`),
+              path.join(cwd, `memtest-memory-samples_${startTime}.svg`),
               chart.toBuffer(),
             );
           }
-          return onMemorySnapshot?.(memoryUsageInMB, phase, snapshots);
+          return onMemorySample?.(samples);
         },
       });
 
-      const idleSlope = calculateRegressionSlope(snapshots.idle);
+      const idleSlope = calculateRegressionSlope(
+        samples.filter(({ phase }) => phase === 'idle').map(({ mem }) => mem),
+      );
       debugLog(`server memory idle regression slope: ${idleSlope}`);
       expect
         .soft(idleSlope, 'Memory increase detected while idling')
         .toBeLessThanOrEqual(0);
 
-      const loadtestSlope = calculateRegressionSlope(snapshots.loadtest);
+      const loadtestSlope = calculateRegressionSlope(
+        samples
+          .filter(({ phase }) => phase === 'loadtest')
+          .map(({ mem }) => mem),
+      );
       debugLog(`server memory loadtest regression slope: ${loadtestSlope}`);
       expect
         .soft(loadtestSlope, 'Memory never stopped growing during loadtest')
         .toBeLessThanOrEqual(1);
 
-      const calmdownSlope = calculateRegressionSlope(snapshots.calmdown);
+      const calmdownSlope = calculateRegressionSlope(
+        samples
+          .filter(({ phase }) => phase === 'calmdown')
+          .map(({ mem }) => mem),
+      );
       debugLog(`server memory calmdown regression slope: ${calmdownSlope}`);
       expect
         .soft(calmdownSlope, 'No memory decrease detected during calmdown')
