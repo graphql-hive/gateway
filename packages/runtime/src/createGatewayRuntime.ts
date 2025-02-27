@@ -72,6 +72,7 @@ import {
   parse,
 } from 'graphql';
 import {
+  chain,
   createYoga,
   isAsyncIterable,
   mergeSchemas,
@@ -825,10 +826,9 @@ export function createGatewayRuntime<
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
         if (plugin.instruments) {
-          if (instruments) {
-            throw new Error('Only one tracing plugin is allowed.');
-          }
-          instruments = plugin.instruments;
+          instruments = instruments
+            ? chain(instruments, plugin.instruments)
+            : instruments;
         }
         if (plugin.onFetch) {
           onFetchHooks.push(plugin.onFetch);
