@@ -139,6 +139,7 @@ export async function loadtest(
   writingHeapSnapshot = false;
 
   phase = 'calmdown';
+  await inspector.collectGarbage();
   await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
   writingHeapSnapshot = true;
   await inspector.writeHeapSnapshot(path.join(cwd, 'final.heapsnapshot'));
