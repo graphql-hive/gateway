@@ -133,9 +133,8 @@ export async function loadtest(
     `--env=QUERY=${query}`,
     path.join(__dirname, 'loadtest-script.ts'),
   );
+  phase = 'loadtest';
   await Promise.race([waitForExit, serverThrowOnExit]);
-  phase = 'heapsnapshot';
-  await inspector.writeHeapSnapshot(path.join(cwd, 'target.heapsnapshot'));
 
   phase = 'gc';
   await inspector.collectGarbage();
