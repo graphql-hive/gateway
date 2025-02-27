@@ -70,7 +70,7 @@ export async function loadtest(
 
   using inspector = await connectInspector(server);
 
-  let writingHeapSnapshot = false;
+  let haltSnapshots = false;
   let phase: LoadtestPhase = 'idle';
   const snapshots: LoadtestMemorySnapshots = {
     loadtest: [],
@@ -85,7 +85,7 @@ export async function loadtest(
       await setTimeout(memorySnapshotWindow);
       try {
         const { mem } = await server.getStats();
-        if (writingHeapSnapshot) {
+        if (haltSnapshots) {
           continue; // ignore memory spikes while writing heap snapshots
         }
         snapshots[phase].push(mem);
@@ -107,9 +107,9 @@ export async function loadtest(
   });
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
-  writingHeapSnapshot = true;
+  haltSnapshots = true;
   await inspector.writeHeapSnapshot(path.join(cwd, 'baseline.heapsnapshot'));
-  writingHeapSnapshot = false;
+  haltSnapshots = false;
 
   phase = 'loadtest';
   const [, waitForExit] = await spawn(
@@ -134,16 +134,18 @@ export async function loadtest(
     path.join(__dirname, 'loadtest-script.ts'),
   );
   await Promise.race([waitForExit, serverThrowOnExit]);
-  writingHeapSnapshot = true;
+  haltSnapshots = true;
   await inspector.writeHeapSnapshot(path.join(cwd, 'target.heapsnapshot'));
-  writingHeapSnapshot = false;
+  haltSnapshots = false;
 
   phase = 'calmdown';
+  haltSnapshots = true;
   await inspector.collectGarbage();
+  haltSnapshots = false;
   await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
-  writingHeapSnapshot = true;
+  haltSnapshots = true;
   await inspector.writeHeapSnapshot(path.join(cwd, 'final.heapsnapshot'));
-  writingHeapSnapshot = false;
+  haltSnapshots = false;
 
   return snapshots;
 }
