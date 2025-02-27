@@ -187,7 +187,7 @@ export function createGatewayRuntime<
   let unifiedGraphPlugin: GatewayPlugin;
 
   const readinessCheckEndpoint = config.readinessCheckEndpoint || '/readiness';
-  let tracer: GatewayPlugin['tracer'];
+  let instruments: GatewayPlugin['instruments'];
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
   // TODO: Will be deleted after v0
   const onDelegateHooks: OnDelegateHook<unknown>[] = [];
@@ -248,7 +248,7 @@ export function createGatewayRuntime<
       },
       onSubgraphExecuteHooks,
       transportExecutorStack,
-      tracer,
+      instruments: instruments,
     });
 
     getExecutor = () => proxyExecutor;
@@ -473,7 +473,7 @@ export function createGatewayRuntime<
                 return unifiedGraph;
               },
               transportExecutorStack,
-              tracer,
+              instruments: instruments,
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
@@ -704,7 +704,7 @@ export function createGatewayRuntime<
       onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
-      tracer,
+      instruments: instruments,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -824,11 +824,11 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
-        if (plugin.tracer) {
-          if (tracer) {
+        if (plugin.instruments) {
+          if (instruments) {
             throw new Error('Only one tracing plugin is allowed.');
           }
-          tracer = plugin.tracer;
+          instruments = plugin.instruments;
         }
         if (plugin.onFetch) {
           onFetchHooks.push(plugin.onFetch);

@@ -103,10 +103,10 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
-  tracer?: Tracer;
+  instruments?: Instruments;
 }
 
-export type Tracer = {
+export type Instruments = {
   subgraphExecute(
     payload: { executionRequest: ExecutionRequest },
     wrapped: () => MaybePromise<void>,
@@ -130,13 +130,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
   private executor?: Executor;
-  private tracer?: Tracer;
+  private instruments?: Instruments;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
-    this.tracer = opts.tracer;
+    this.instruments = opts.instruments;
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
@@ -354,7 +354,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
           batch: this.batch,
-          tracer: this.tracer,
+          instruments: this.instruments,
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();

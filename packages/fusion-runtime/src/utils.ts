@@ -1,3 +1,4 @@
+import { chain, getInstrumented } from '@envelop/instruments';
 import {
   defaultPrintFn,
   type Transport,
@@ -49,7 +50,7 @@ import {
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
-import { Tracer, TransportEntryAdditions } from './unifiedGraphManager';
+import { Instruments, TransportEntryAdditions } from './unifiedGraphManager';
 
 export type {
   TransportEntry,
@@ -178,7 +179,7 @@ export function getOnSubgraphExecute({
   transports,
   getDisposeReason,
   batch = true,
-  tracer,
+  instruments,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -188,7 +189,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
   batch?: boolean;
-  tracer?: Tracer;
+  instruments?: Instruments;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -257,15 +258,13 @@ export function getOnSubgraphExecute({
         executor,
       );
     }
-    if (tracer?.subgraphExecute) {
+    if (instruments?.subgraphExecute) {
       const originalExecutor = executor;
       executor = (executionRequest) => {
-        let result: MaybePromise<MaybeAsyncIterable<ExecutionResult<any, any>>>;
-        const traced$ = tracer.subgraphExecute({executionRequest}, () => {
-          result = originalExecutor(executionRequest);
-          return isPromise(result) ? result.then(() => undefined): undefined;
-        })
-        return isPromise(traced$) ? traced$.then(() => result) : result!;
+        return getInstrumented({ executionRequest }).asyncFn(
+          instruments.subgraphExecute,
+          originalExecutor,
+        )(executionRequest);
       };
     }
     return executor(executionRequest);

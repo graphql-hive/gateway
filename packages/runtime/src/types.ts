@@ -1,7 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
-  Tracer as GatewayRuntimeTracer,
+  Instruments as GatewayRuntimeInstruments,
   TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
@@ -31,10 +31,10 @@ import type {
   BatchingOptions,
   FetchAPI,
   YogaInitialContext,
+  Instruments as YogaInstruments,
   YogaMaskedErrorOpts,
   Plugin as YogaPlugin,
   YogaServerOptions,
-  Tracer as YogaTracer,
 } from 'graphql-yoga';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
@@ -98,7 +98,7 @@ export type GatewayPlugin<
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
-    tracer?: Tracer<TPluginContext & TContext & GatewayContext>;
+    instruments?: Instruments<TPluginContext & TContext & GatewayContext>;
   };
 
 export type OnCacheGetHook = (
@@ -159,8 +159,8 @@ export interface OnCacheDeleteHookEventPayload {
   key: string;
 }
 
-export type Tracer<TContext extends Record<string, any>> =
-  YogaTracer<TContext> & GatewayRuntimeTracer;
+export type Instruments<TContext extends Record<string, any>> =
+  YogaInstruments<TContext> & GatewayRuntimeInstruments;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,
