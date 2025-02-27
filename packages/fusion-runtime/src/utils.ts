@@ -1,4 +1,4 @@
-import { chain, getInstrumented } from '@envelop/instruments';
+import { getInstrumented } from '@envelop/instruments';
 import {
   defaultPrintFn,
   type Transport,
@@ -24,7 +24,6 @@ import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
-  MaybeAsyncIterable,
   mergeDeep,
   printSchemaWithDirectives,
   type ExecutionRequest,
@@ -34,7 +33,6 @@ import {
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
-  isPromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
 import { constantCase } from 'change-case';
