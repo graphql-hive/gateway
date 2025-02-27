@@ -63,10 +63,10 @@ export async function analyzeHeapSnapshot(file: string) {
   const largestSummedObjects: SummedObject[] = [];
 
   for (const object of Object.values(summedObjects)) {
-    // only the top 5 nodes with the highest retained size
+    // only the top 10 nodes with the highest retained size
     largestSummedObjects.push(object);
     largestSummedObjects.sort((n1, n2) => n2.retainedSize - n1.retainedSize);
-    if (largestSummedObjects.length > 5) {
+    if (largestSummedObjects.length > 10) {
       largestSummedObjects.pop();
     }
   }
