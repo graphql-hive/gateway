@@ -35,6 +35,10 @@ import type {
   YogaServerOptions,
 } from 'graphql-yoga';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
+import {
+  AWSSignv4PluginOptions,
+  AWSSignv4PluginOptionsFactory,
+} from './plugins/useAWSSigv4';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
@@ -607,6 +611,18 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Configure the retry for upstream requests.
    */
   upstreamRetry?: UpstreamRetryPluginOptions;
+
+  /**
+   * Enable and configure AWS Sigv4 signing
+   */
+  awsSigv4?: AWSSignv4PluginOptions | AWSSignv4PluginOptionsFactory | true;
+
+  /**
+   * Add and handle `x-request-id` header
+   *
+   * @default true
+   */
+  requestId?: boolean;
 }
 
 interface DisableIntrospectionOptions {
