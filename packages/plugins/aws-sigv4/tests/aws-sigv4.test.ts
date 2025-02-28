@@ -3,6 +3,7 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
+import { useAWSSigv4 } from '@graphql-hive/plugin-aws-sigv4';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -48,12 +49,12 @@ describe('AWS Sigv4', () => {
           headers: [['Date', 'Mon, 29 Dec 2015 00:00:00 GMT']],
         },
       },
-      awsSigv4: {
-        accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-        secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
-      },
       requestId: false,
       plugins: () => [
+        useAWSSigv4({
+          accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        }),
         useCustomFetch(
           // @ts-expect-error - MeshFetch is not compatible with Yoga.fetch
           subgraphServer.fetch,

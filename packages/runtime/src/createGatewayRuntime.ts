@@ -90,7 +90,6 @@ import {
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
 import landingPageHtml from './landing-page-html';
-import { useAWSSigv4 } from './plugins/useAWSSigv4';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
@@ -1037,12 +1036,6 @@ export function createGatewayRuntime<
 
   if (config.hmacSignature) {
     extraPlugins.push(useHmacUpstreamSignature(config.hmacSignature));
-  }
-
-  if (config.awsSigv4) {
-    extraPlugins.push(
-      useAWSSigv4(typeof config.awsSigv4 === 'object' ? config.awsSigv4 : {}),
-    );
   }
 
   if (config.propagateHeaders) {

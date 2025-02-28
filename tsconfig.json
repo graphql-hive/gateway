@@ -64,7 +64,7 @@
         "./packages/logger-winston/src/index.ts"
       ],
       "@graphql-hive/plugin-aws-sigv4": [
-        "./packages/plugin-aws-sigv4/src/index.ts"
+        "./packages/plugins/aws-sigv4/src/index.ts"
       ]
     }
   },
@@ -81,7 +81,8 @@
     "./packages/**/scripts",
     "./packages/**/rollup.config.*",
     "./e2e",
-    "./bench"
+    "./bench",
+    "packages/plugins/aws-sigv4/aws-sigv4.test.ts"
   ],
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",

@@ -3266,14 +3266,12 @@ __metadata:
     "@graphql-yoga/plugin-defer-stream": "npm:^3.12.0"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.12.0"
     "@omnigraph/openapi": "npm:^0.108.22"
-    "@types/aws4": "npm:1.11.6"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
     "@whatwg-node/server": "npm:^0.9.68"
-    aws4: "npm:1.13.2"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3400,6 +3398,24 @@ __metadata:
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
     winston: ^3.17.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.7.2"
+    "@graphql-hive/gateway-runtime": "workspace:*"
+    "@graphql-mesh/fusion-runtime": "workspace:^"
+    "@types/aws4": "npm:^1.11.6"
+    aws4: "npm:1.13.2"
+    graphql: "npm:^16.9.0"
+    graphql-yoga: "npm:^5.12.0"
+    pkgroll: "npm:2.11.2"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
   linkType: soft
 
@@ -6520,7 +6536,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/aws4@npm:1.11.6":
+"@types/aws4@npm:^1.11.6":
   version: 1.11.6
   resolution: "@types/aws4@npm:1.11.6"
   dependencies:

@@ -1,6 +1,6 @@
+import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import aws4, { type Request as AWS4Request } from 'aws4';
-import { GatewayPlugin } from '../types';
 
 function isBufferOrString(body: unknown): body is Buffer | string {
   return typeof body === 'string' || globalThis.Buffer?.isBuffer(body);
