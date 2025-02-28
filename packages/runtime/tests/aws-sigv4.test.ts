@@ -32,6 +32,8 @@ describe('AWS Sigv4', () => {
           },
         },
       ],
+      landingPage: false,
+      graphqlEndpoint: '/',
     });
     vitest.setSystemTime(new Date('2015-12-29T00:00:00Z'));
     await using gw = createGatewayRuntime({
@@ -39,11 +41,10 @@ describe('AWS Sigv4', () => {
         {
           name: 'subgraph',
           schema: subgraphSchema,
-          url: 'http://localhost:4001/graphql',
+          url: 'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
         },
       ]),
       awsSigv4: {
-        service: 's3',
         accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
         secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
       },
@@ -78,9 +79,10 @@ describe('AWS Sigv4', () => {
     expect(authHeader).toBe(
       'AWS4-HMAC-SHA256 ' +
         [
-          'Credential=AKIAIOSFODNN7EXAMPLE/20151229/us-east-1/s3/aws4_request',
+          // s3 and eu-central-1 extracted from the URL
+          'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
           'SignedHeaders=accept;content-length;content-type;host;x-amz-content-sha256;x-amz-date',
-          'Signature=a6d3bd60591837efe08e405a94340ccecad1c15ece87f0a681d2caa22c07fc39',
+          'Signature=522563dea1ab1687a1f0bc8a2cbe51182368f1f7553ae939b10eea779d7a459a',
         ].join(', '),
     );
   });
