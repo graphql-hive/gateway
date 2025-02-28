@@ -6,7 +6,7 @@ import {
 import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { describe, expect, it, vitest } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('AWS Sigv4', () => {
   it('signs the request correctly', async () => {
@@ -35,7 +35,6 @@ describe('AWS Sigv4', () => {
       landingPage: false,
       graphqlEndpoint: '/',
     });
-    vitest.setSystemTime(new Date('2015-12-29T00:00:00Z'));
     await using gw = createGatewayRuntime({
       supergraph: await composeLocalSchemasWithApollo([
         {
@@ -44,6 +43,11 @@ describe('AWS Sigv4', () => {
           url: 'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
         },
       ]),
+      transportEntries: {
+        subgraph: {
+          headers: [['Date', 'Mon, 29 Dec 2015 00:00:00 GMT']],
+        },
+      },
       awsSigv4: {
         accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
         secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
@@ -81,8 +85,8 @@ describe('AWS Sigv4', () => {
         [
           // s3 and eu-central-1 extracted from the URL
           'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
-          'SignedHeaders=accept;content-length;content-type;host;x-amz-content-sha256;x-amz-date',
-          'Signature=522563dea1ab1687a1f0bc8a2cbe51182368f1f7553ae939b10eea779d7a459a',
+          'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
+          'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
         ].join(', '),
     );
   });
