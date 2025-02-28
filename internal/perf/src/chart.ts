@@ -93,6 +93,7 @@ export async function createMemorySampleLineChart(
             label: {
               color: 'black',
               text: 'Memory trend',
+              displayValue: false,
             },
           },
           segment: {
