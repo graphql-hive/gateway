@@ -24,25 +24,26 @@ export interface MemtestOptions
    */
   memorySnapshotWindow?: number;
   /**
-   * Idling duration before loadtest in milliseconds.
+   * Idling duration before loadtests {@link runs run} in milliseconds.
    *
    * @default 10_000
    */
   idle?: number;
   /**
-   * Duration of the loadtest in milliseconds.
+   * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
    * @default 180_000
    */
   duration?: number;
   /**
-   * Calmdown duration after loadtesting in milliseconds.
+   * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
    * @default 30_000
    */
   calmdown?: number;
   /**
    * How many times to run the loadtests?
+   *
    * @default 2
    */
   runs?: number;
@@ -108,33 +109,10 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         },
       });
 
-      // const idleSlope = calculateRegressionSlope(
-      //   samples.filter(({ phase }) => phase === 'idle').map(({ mem }) => mem),
-      // );
-      // debugLog(`server memory idle regression slope: ${idleSlope}`);
-      // expect
-      //   .soft(idleSlope, 'Memory increase detected while idling')
-      //   .toBeLessThanOrEqual(0);
-
-      // const loadtestSlope = calculateRegressionSlope(
-      //   samples
-      //     .filter(({ phase }) => phase === 'loadtest')
-      //     .map(({ mem }) => mem),
-      // );
-      // debugLog(`server memory loadtest regression slope: ${loadtestSlope}`);
-      // expect
-      //   .soft(loadtestSlope, 'Memory never stopped growing during loadtest')
-      //   .toBeLessThanOrEqual(1);
-
-      // const calmdownSlope = calculateRegressionSlope(
-      //   samples
-      //     .filter(({ phase }) => phase === 'calmdown')
-      //     .map(({ mem }) => mem),
-      // );
-      // debugLog(`server memory calmdown regression slope: ${calmdownSlope}`);
-      // expect
-      //   .soft(calmdownSlope, 'No memory decrease detected during calmdown')
-      //   .toBeLessThanOrEqual(-10);
+      const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
+      expect
+        .soft(slope, 'Consistent memory increase detected')
+        .toBeLessThanOrEqual(0.2);
     },
   );
 }
@@ -150,19 +128,12 @@ function calculateRegressionSlope(snapshots: number[]) {
   if (snapshots.length < 2) {
     throw new Error('Not enough snapshots to determine trend');
   }
-
   const data: [x: number, y: number][] = snapshots.map((memInMB, timestamp) => [
     timestamp,
     memInMB,
   ]);
   const result = regression.linear(data);
-  const slope = result.equation[0];
-
-  return slope;
-}
-
-function debugLog(msg: string) {
-  if (isDebug('memtest')) {
-    console.log(`[memtest] ${msg}`);
-  }
+  const slope = result.equation[0] || 0;
+  // slope is a percentage, convert it to a decimal point (matching what chartjs-plugin-trendline shows)
+  return (slope * 0.01).toFixed(2);
 }
