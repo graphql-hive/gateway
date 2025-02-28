@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Server } from '@internal/proc';
 import { isDebug } from '@internal/testing';
+import { color } from 'bun';
 import regression from 'regression';
 import { it } from 'vitest';
 import { createLineChart } from './chart';
@@ -97,12 +98,16 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
               [
                 {
                   label: 'Idle',
+                  trendline: true,
+                  color: 'blue',
                   data: idle,
                 },
                 ...(loadtest.length
                   ? [
                       {
                         label: 'Loadtest',
+                        trendline: true,
+                        color: 'red',
                         data: [
                           ...idle.map((val, i, arr) =>
                             i === arr.length - 1 ? val : null,
@@ -116,6 +121,8 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
                   ? [
                       {
                         label: 'Calmdown',
+                        trendline: true,
+                        color: 'orange',
                         data: [
                           ...idle.map(() => null), // skip idle data
                           ...loadtest.map((val, i, arr) =>
