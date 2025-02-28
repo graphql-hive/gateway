@@ -112,7 +112,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
       expect
         .soft(slope, 'Consistent memory increase detected')
-        .toBeLessThanOrEqual(0.2);
+        .toBeLessThanOrEqual(3);
     },
   );
 }
@@ -133,7 +133,6 @@ function calculateRegressionSlope(snapshots: number[]) {
     memInMB,
   ]);
   const result = regression.linear(data);
-  const slope = result.equation[0] || 0;
-  // slope is a percentage, convert it to a decimal point (matching what chartjs-plugin-trendline shows)
-  return (slope * 0.01).toFixed(2);
+  const slope = result.equation[0];
+  return slope;
 }
