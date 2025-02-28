@@ -84,7 +84,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     throw new Error(`Duration has to be at least 3s, got "${duration}"`);
   }
 
-  if (runs <= 1) {
+  if (runs < 1) {
     throw new Error(`At least one run is necessary, got "${runs}"`);
   }
 
