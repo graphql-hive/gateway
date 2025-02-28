@@ -4,7 +4,7 @@ import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { trimError } from '@internal/testing';
-import { connectInspector } from './inspector';
+import { connectInspector, Inspector } from './inspector';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -16,6 +16,8 @@ export interface LoadtestOptions extends ProcOptions {
   duration: number;
   /** Calmdown duration of the loadtest in milliseconds. This should be enough allowing the GC to kick in. */
   calmdown: number;
+  /** How many times to run the loadtests? */
+  runs: number;
   /** The snapshotting window of the GraphQL server memory in milliseconds. */
   memorySnapshotWindow: number;
   /** The GraphQL server on which the loadtest is running. */
@@ -27,22 +29,16 @@ export interface LoadtestOptions extends ProcOptions {
   /** Callback for memory sampling during the loadtest. */
   onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
   /** Callback when the heapsnapshot has been written on disk. */
-  onHeapSnapshot?(
-    type: 'baseline' | 'final',
-    file: string,
-  ): Promise<void> | void;
+  onHeapSnapshot?(snapshot: LoadtestHeapSnapshot): Promise<void> | void;
 }
 
-export type LoadtestPhase =
-  | 'idle'
-  | 'loadtest'
-  | 'calmdown'
-  | 'gc'
-  | 'heapsnapshot';
+export type LoadtestPhase = 'idle' | 'loadtest' | 'calmdown';
 
 /** Memory usage snapshot in MB of the {@link LoadtestOptions.server GraphQL server} during the given {@link phase}.*/
 export interface LoadtestMemorySample {
   phase: LoadtestPhase;
+  /** The {@link LoadtestOptions.runs run} number, starts with 1. */
+  run: number;
   /** Moment in time when the sample was taken. */
   time: Date;
   /**
@@ -54,9 +50,20 @@ export interface LoadtestMemorySample {
   mem: number;
 }
 
+/** Memory heap snapshot in MB of the {@link LoadtestOptions.server GraphQL server} during the given {@link phase}.*/
+export interface LoadtestHeapSnapshot {
+  phase: LoadtestPhase;
+  /** The {@link LoadtestOptions.runs run} number, starts with 1. */
+  run: number;
+  /** Moment in time when the sample was taken. */
+  time: Date;
+  /** Path to the file where the .heapsnapshot is located. */
+  file: string;
+}
+
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
-  heapsnapshots: { baseline: string; final: string };
+  heapsnapshots: LoadtestHeapSnapshot[];
 }> {
   const {
     cwd,
@@ -64,6 +71,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     idle,
     duration,
     calmdown,
+    runs,
     memorySnapshotWindow,
     server,
     query,
@@ -76,6 +84,10 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     throw new Error(`Duration has to be at least 3s, got "${duration}"`);
   }
 
+  if (runs <= 1) {
+    throw new Error(`At least one run is necessary, got "${runs}"`);
+  }
+
   const ctrl = new AbortController();
   using _ = {
     [Symbol.dispose]() {
@@ -85,21 +97,25 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   using inspector = await connectInspector(server);
 
-  const heapsnapshotDir = await fs.mkdtemp(
+  const heapsnapshotCwd = await fs.mkdtemp(
     path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
   );
 
   let phase: LoadtestPhase = 'idle';
+  let run = 1;
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   const samples: LoadtestMemorySample[] = [];
+  let skipSampling = false;
   (async () => {
     while (!ctrl.signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
         const stats = await server.getStats();
+        if (skipSampling) continue;
         const sample: LoadtestMemorySample = {
           phase,
+          run,
           time: new Date(),
           ...stats,
         };
@@ -114,6 +130,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     }
   })();
 
+  const heapsnapshots: LoadtestHeapSnapshot[] = [];
+
   const serverThrowOnExit = server.waitForExit.then(() => {
     throw new Error(
       `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
@@ -122,54 +140,74 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
 
-  phase = 'heapsnapshot';
-  const baselineSnapshotFile = path.join(
-    heapsnapshotDir,
-    `baseline_${Date.now()}.heapsnapshot`,
+  skipSampling = true;
+  let heapsnapshot = await createHeapSnapshot(
+    heapsnapshotCwd,
+    inspector,
+    phase,
+    run,
   );
-  await inspector.writeHeapSnapshot(baselineSnapshotFile);
-  await onHeapSnapshot?.('baseline', baselineSnapshotFile);
+  skipSampling = false;
+  heapsnapshots.push(heapsnapshot);
+  await onHeapSnapshot?.(heapsnapshot);
 
-  phase = 'loadtest';
-  const [, waitForExit] = await spawn(
-    {
-      cwd,
-      ...procOptions,
-      signal: AbortSignal.any([
-        ctrl.signal,
-        AbortSignal.timeout(
-          duration +
-            // allow 5s for the k6 process to exit gracefully
-            5_000,
-        ),
-      ]),
-    },
-    'k6',
-    'run',
-    `--vus=${vus}`,
-    `--duration=${duration}ms`,
-    `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
-    `--env=QUERY=${query}`,
-    path.join(__dirname, 'loadtest-script.ts'),
-  );
-  phase = 'loadtest';
-  await Promise.race([waitForExit, serverThrowOnExit]);
+  for (; run <= runs; run++) {
+    phase = 'loadtest';
+    const [, waitForExit] = await spawn(
+      {
+        cwd,
+        ...procOptions,
+        signal: AbortSignal.any([
+          ctrl.signal,
+          AbortSignal.timeout(
+            duration +
+              // allow 5s for the k6 process to exit gracefully
+              5_000,
+          ),
+        ]),
+      },
+      'k6',
+      'run',
+      `--vus=${vus}`,
+      `--duration=${duration}ms`,
+      `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
+      `--env=QUERY=${query}`,
+      path.join(__dirname, 'loadtest-script.ts'),
+    );
+    await Promise.race([waitForExit, serverThrowOnExit]);
 
-  phase = 'gc';
-  await inspector.collectGarbage();
-  phase = 'calmdown';
-  await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
+    phase = 'calmdown';
+    skipSampling = true;
+    await inspector.collectGarbage();
+    skipSampling = false;
+    await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
 
-  phase = 'heapsnapshot';
-  const finalSnapshotFile = path.join(
-    heapsnapshotDir,
-    `final_${Date.now()}.heapsnapshot`,
-  );
-  await inspector.writeHeapSnapshot(finalSnapshotFile);
-  await onHeapSnapshot?.('final', finalSnapshotFile);
+    skipSampling = true;
+    heapsnapshot = await createHeapSnapshot(
+      heapsnapshotCwd,
+      inspector,
+      phase,
+      run,
+    );
+    skipSampling = false;
+    heapsnapshots.push(heapsnapshot);
+    await onHeapSnapshot?.(heapsnapshot);
+  }
 
   return {
     samples,
-    heapsnapshots: { baseline: baselineSnapshotFile, final: finalSnapshotFile },
+    heapsnapshots,
   };
+}
+
+async function createHeapSnapshot(
+  cwd: string,
+  inspector: Inspector,
+  phase: LoadtestPhase,
+  run: number,
+): Promise<LoadtestHeapSnapshot> {
+  const time = new Date();
+  const file = path.join(cwd, `${phase}-run-${run}-${Date.now()}.heapsnapshot`);
+  await inspector.writeHeapSnapshot(file);
+  return { phase, run, time, file };
 }
