@@ -77,7 +77,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -178,7 +178,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -280,7 +280,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -388,7 +388,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -632,8 +632,8 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
-          defaultAssumedListSize: 5,
+          includeExtensionMetadata: true,
+          listSize: 5,
         }),
       ],
     });
@@ -714,7 +714,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(itemsServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -799,7 +799,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(itemsServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });
@@ -878,7 +878,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(itemsServer.fetch),
         useDemandControl({
-          showInformationInExtensions: true,
+          includeExtensionMetadata: true,
         }),
       ],
     });

@@ -1,43 +1,54 @@
+import { process } from '@graphql-mesh/cross-helpers';
 import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   isAsyncIterable,
   mapAsyncIterator,
 } from '@graphql-tools/utils';
+import { OperationTypeNode } from 'graphql';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 
 export interface DemandControlPluginOptions {
   /**
-   * The assumed maximum size of a list for fields that return lists.
-   */
-  defaultAssumedListSize?: number;
-  /**
    * 	The maximum cost of an accepted operation. An operation with a higher cost than this is rejected.
    *  If not provided, no maximum cost is enforced.
+   *  @default Infinity
    */
   max?: number;
   /**
-   * Whether to show the estimated cost in the extensions of the response.
-   * @default false
+   * The assumed maximum size of a list for fields that return lists.
+   * @default 0
    */
-  showInformationInExtensions?: boolean;
+  listSize?: number;
   /**
-   * Cost of the mutations
-   * @default 10
+   * Cost based on the operation type.
+   * By default, mutations have a cost of 10, queries and subscriptions have a cost of 0.
+   * @default ((operationType) => operationType === 'mutation' ? 10 : 0)
    */
-  mutationCost?: number;
+  operationTypeCost(operationType: OperationTypeNode): number;
+  /**
+   * Include extension values that provide useful information, such as the estimated cost of the operation.
+   * Defaults to `true` if `process.env["NODE_ENV"]` is set to `"development"`, otherwise `false`.
+   */
+  includeExtensionMetadata?: boolean;
+}
+
+export function defaultOperationTypeCost(
+  operationType: OperationTypeNode,
+): number {
+  return operationType === 'mutation' ? 10 : 0;
 }
 
 export function useDemandControl<TContext extends Record<string, any>>({
-  defaultAssumedListSize,
+  listSize = 0,
   max,
-  showInformationInExtensions = false,
-  mutationCost = 10,
+  includeExtensionMetadata = process.env.NODE_ENV === 'development',
+  operationTypeCost = defaultOperationTypeCost,
 }: DemandControlPluginOptions): GatewayPlugin<TContext> {
   const calculateCost = createCalculateCost({
-    defaultAssumedListSize,
-    mutationCost,
+    listSize,
+    operationTypeCost,
   });
   const costByContextMap = new WeakMap<any, number>();
   return {
@@ -75,7 +86,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
       }
     },
     onExecutionResult({ result, setResult, context }) {
-      if (showInformationInExtensions) {
+      if (includeExtensionMetadata) {
         const costByContext = costByContextMap.get(context);
         if (costByContext) {
           if (isAsyncIterable(result)) {

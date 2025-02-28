@@ -13,6 +13,7 @@ import {
   GraphQLSchema,
   isCompositeType,
   isListType,
+  OperationTypeNode,
   visit,
   visitWithTypeInfo,
 } from 'graphql';
@@ -46,11 +47,11 @@ function getDepthOfListType(type: GraphQLOutputType) {
 }
 
 export function createCalculateCost({
-  defaultAssumedListSize,
-  mutationCost = 10,
+  listSize,
+  operationTypeCost,
 }: {
-  defaultAssumedListSize?: number;
-  mutationCost?: number;
+  listSize: number;
+  operationTypeCost(operationType: OperationTypeNode): number;
 }) {
   return memoize3(function calculateCost(
     schema: GraphQLSchema,
@@ -71,9 +72,7 @@ export function createCalculateCost({
       document,
       visitWithTypeInfo(typeInfo, {
         OperationTypeDefinition(node) {
-          if (node.operation === 'mutation') {
-            cost += mutationCost;
-          }
+          cost += operationTypeCost(node.operation) || 0;
         },
         Field: {
           enter(node) {
@@ -154,10 +153,10 @@ export function createCalculateCost({
                     }
                   }
                 }
-              } else if (defaultAssumedListSize && returnType) {
+              } else if (listSize && returnType) {
                 const depth = getDepthOfListType(returnType);
                 if (depth > 0) {
-                  factor = defaultAssumedListSize * depth;
+                  factor = listSize * depth;
                 }
               }
               factorQueue.push(factor);
