@@ -21,7 +21,7 @@ export interface DemandControlPluginOptions {
    *  If not provided, no maximum cost is enforced.
    *  @default Infinity
    */
-  max?: number;
+  maxCost?: number;
   /**
    * The assumed maximum size of a list for fields that return lists.
    * @default 0
@@ -54,7 +54,7 @@ export interface DemandControlPluginOptions {
 
 export function useDemandControl<TContext extends Record<string, any>>({
   listSize = 0,
-  max,
+  maxCost,
   includeExtensionMetadata = process.env.NODE_ENV === 'development',
   operationTypeCost = (operationType) =>
     operationType === 'mutation' ? 10 : 0,
@@ -87,15 +87,15 @@ export function useDemandControl<TContext extends Record<string, any>>({
         operationCost,
         totalCost: costByContext,
       });
-      if (max != null && costByContext > max) {
+      if (maxCost != null && costByContext > maxCost) {
         throw createGraphQLError(
-          `Operation estimated cost ${costByContext} exceeded configured maximum ${max}`,
+          `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,
           {
             extensions: {
               code: 'COST_ESTIMATED_TOO_EXPENSIVE',
               cost: {
                 estimated: costByContext,
-                max,
+                max: maxCost,
               },
             },
           },
@@ -114,7 +114,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
                   ...(value.extensions || {}),
                   cost: {
                     estimated: costByContext,
-                    max,
+                    max: maxCost,
                   },
                 },
               })),
@@ -126,7 +126,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
                 ...(result?.extensions || {}),
                 cost: {
                   estimated: costByContext,
-                  max,
+                  max: maxCost,
                 },
               },
             });

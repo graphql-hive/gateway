@@ -518,7 +518,7 @@ describe('Demand Control', () => {
         // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
         useCustomFetch(booksServer.fetch),
         useDemandControl({
-          max: 3,
+          maxCost: 3,
         }),
       ],
     });
