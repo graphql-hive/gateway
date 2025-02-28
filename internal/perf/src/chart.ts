@@ -20,6 +20,14 @@ export function createLineChart(
     data,
     options: {
       responsive: false, // because we're rendering the chart statically
+      plugins: {
+        legend: {
+          labels: {
+            // hide legend labels that have no text
+            filter: ({ text }) => !!text,
+          },
+        },
+      },
       scales: {
         y: {
           ticks: {
@@ -58,9 +66,53 @@ export async function createMemorySampleLineChart(
       labels: samples.map(({ time }) => toTimeString(time)),
       datasets: [
         {
-          label: 'Memory',
+          label: 'Idle',
           borderColor: 'blue',
+          data: [],
+        },
+        {
+          label: 'Loadtest',
+          borderColor: 'red',
+          data: [],
+        },
+        {
+          label: 'Calmdown',
+          borderColor: 'orange',
+          data: [],
+        },
+        {
+          pointStyle: false,
+          cubicInterpolationMode: 'monotone',
           data: samples.map(({ mem }) => mem),
+          // @ts-expect-error plugin is provided but the options are not typed
+          trendlineLinear: {
+            colorMin: 'black',
+            colorMax: 'black',
+            width: 1,
+            lineStyle: 'dashed',
+            label: {
+              color: 'black',
+              text: 'Memory trend',
+            },
+          },
+          segment: {
+            // color the diffrent phase segments
+            borderColor: (ctx) => {
+              // already if the second point is in the phase,
+              // we want to color from the first point
+              const p1 = samples[ctx.p1DataIndex];
+              switch (p1?.phase) {
+                case 'idle':
+                  return 'blue';
+                case 'loadtest':
+                  return 'red';
+                case 'calmdown':
+                  return 'orange';
+                default:
+                  throw new Error(`Unexpected phase ${p1?.phase}`);
+              }
+            },
+          },
         },
       ],
     },
