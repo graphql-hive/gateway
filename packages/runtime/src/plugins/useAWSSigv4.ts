@@ -1,5 +1,5 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import { sign, type Request as AWS4Request } from 'aws4';
+import aws4, { type Request as AWS4Request } from 'aws4';
 import { GatewayPlugin } from '../types';
 
 function isBufferOrString(body: unknown): body is Buffer | string {
@@ -77,7 +77,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
         headers: options.headers,
         ...(factoryResultObject || {}),
       };
-      const modifiedAws4Request = sign(aws4Request, factoryResultObject);
+      const modifiedAws4Request = aws4.sign(aws4Request, factoryResultObject);
       setURL(
         `${parsedUrl.protocol}//${modifiedAws4Request.host}${modifiedAws4Request.path}`,
       );
