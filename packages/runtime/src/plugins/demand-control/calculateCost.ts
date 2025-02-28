@@ -1,5 +1,6 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
+  createGraphQLError,
   getDirective,
   getDirectiveExtensions,
   memoize3,
@@ -19,6 +20,8 @@ import {
 type ListSizeAnnotation =
   | {
       slicingArguments: string[];
+      requireOneSlicingArgument: boolean;
+      sizedFields?: string[];
     }
   | {
       assumedSize: number;
@@ -42,7 +45,13 @@ function getDepthOfListType(type: GraphQLOutputType) {
   return depth;
 }
 
-export function createCalculateCost(defaultAssumedListSize?: number) {
+export function createCalculateCost({
+  defaultAssumedListSize,
+  mutationCost = 10,
+}: {
+  defaultAssumedListSize?: number;
+  mutationCost?: number;
+}) {
   return memoize3(function calculateCost(
     schema: GraphQLSchema,
     document: DocumentNode,
@@ -56,13 +65,14 @@ export function createCalculateCost(defaultAssumedListSize?: number) {
       }
       return c;
     }
+    const fieldFactorMap = new Map<string, number>();
     const typeInfo = getTypeInfo(schema);
     visit(
       document,
       visitWithTypeInfo(typeInfo, {
         OperationTypeDefinition(node) {
           if (node.operation === 'mutation') {
-            cost += 10;
+            cost += mutationCost;
           }
         },
         Field: {
@@ -86,7 +96,11 @@ export function createCalculateCost(defaultAssumedListSize?: number) {
 
               /** Calculate factor start */
               let factor = 1;
-              if (fieldAnnotations?.listSize) {
+              const sizedFieldFactor = fieldFactorMap.get(field.name);
+              if (sizedFieldFactor) {
+                factor = sizedFieldFactor;
+                fieldFactorMap.delete(field.name);
+              } else if (fieldAnnotations?.listSize) {
                 for (const listSizeAnnotation of fieldAnnotations.listSize) {
                   if (listSizeAnnotation) {
                     if ('slicingArguments' in listSizeAnnotation) {
@@ -97,12 +111,39 @@ export function createCalculateCost(defaultAssumedListSize?: number) {
                         node,
                         variables,
                       );
+                      let factorSet = false;
+                      let slicingArgumentFactor: number = 1;
                       for (const slicingArgument of slicingArguments) {
                         const value = argValues[slicingArgument];
                         const numValue = Number(value);
                         if (numValue && !isNaN(numValue)) {
-                          factor = numValue;
+                          slicingArgumentFactor = Math.max(
+                            slicingArgumentFactor,
+                            numValue,
+                          );
+                          if (
+                            factorSet &&
+                            listSizeAnnotation.requireOneSlicingArgument !==
+                              false
+                          ) {
+                            throw createGraphQLError(
+                              `Only one slicing argument is allowed on field "${field.name}"; found multiple slicing arguments "${slicingArguments.join(', ')}"`,
+                              {
+                                extensions: {
+                                  code: 'COST_QUERY_PARSE_FAILURE',
+                                },
+                              },
+                            );
+                          }
+                          factorSet = true;
                         }
+                      }
+                      if (listSizeAnnotation.sizedFields?.length) {
+                        for (const sizedField of listSizeAnnotation.sizedFields) {
+                          fieldFactorMap.set(sizedField, slicingArgumentFactor);
+                        }
+                      } else {
+                        factor = slicingArgumentFactor;
                       }
                     } else if ('assumedSize' in listSizeAnnotation) {
                       const assumedSizeVal = listSizeAnnotation.assumedSize;

@@ -672,4 +672,246 @@ describe('Demand Control', () => {
       },
     });
   });
+
+  it('@listSize(slicingArguments:, requireOneSlicingArgument:true)', async () => {
+    const itemsSubgraph = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.9"
+            import: ["@listSize"]
+          ) {
+          query: Query
+        }
+
+        type Query {
+          items(first: Int, last: Int): [Item!]
+            @listSize(slicingArguments: ["first", "last"])
+        }
+
+        type Item {
+          id: ID
+        }
+      `),
+      resolvers: {
+        Query: {
+          items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+        },
+      },
+    });
+    await using itemsServer = createYoga({
+      schema: itemsSubgraph,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: await composeLocalSchemasWithApollo([
+        {
+          name: 'items',
+          schema: itemsSubgraph,
+          url: 'http://items/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        useCustomFetch(itemsServer.fetch),
+        useDemandControl({
+          showInformationInExtensions: true,
+        }),
+      ],
+    });
+    const query = /* GraphQL */ `
+      query ItemsQuery {
+        items(first: 2, last: 3) {
+          id
+        }
+      }
+    `;
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        items: null,
+      },
+      errors: [
+        {
+          message:
+            'Only one slicing argument is allowed on field "items"; found multiple slicing arguments "first, last"',
+          extensions: {
+            code: 'COST_QUERY_PARSE_FAILURE',
+          },
+          locations: [
+            {
+              line: 3,
+              column: 9,
+            },
+          ],
+          path: ['items'],
+        },
+      ],
+    });
+  });
+  it('@listSize(slicingArguments:, requireOneSlicingArgument:false)', async () => {
+    const itemsSubgraph = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.9"
+            import: ["@listSize"]
+          ) {
+          query: Query
+        }
+
+        type Query {
+          items(first: Int, last: Int): [Item!]
+            @listSize(
+              slicingArguments: ["first", "last"]
+              requireOneSlicingArgument: false
+            )
+        }
+
+        type Item {
+          id: ID
+        }
+      `),
+      resolvers: {
+        Query: {
+          items: () => [{ id: 'Item 1' }, { id: 'Item 2' }],
+        },
+      },
+    });
+    await using itemsServer = createYoga({
+      schema: itemsSubgraph,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: await composeLocalSchemasWithApollo([
+        {
+          name: 'items',
+          schema: itemsSubgraph,
+          url: 'http://items/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        useCustomFetch(itemsServer.fetch),
+        useDemandControl({
+          showInformationInExtensions: true,
+        }),
+      ],
+    });
+    const query = /* GraphQL */ `
+      query ItemsQuery {
+        items(first: 2, last: 3) {
+          id
+        }
+      }
+    `;
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        items: [{ id: 'Item 1' }, { id: 'Item 2' }],
+      },
+      extensions: {
+        cost: {
+          estimated: 3,
+        },
+      },
+    });
+  });
+  it('@listSize(sizedFields:)', async () => {
+    const itemsSubgraph = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.9"
+            import: ["@listSize"]
+          ) {
+          query: Query
+        }
+
+        type Query {
+          items(first: Int): Cursor!
+            @listSize(slicingArguments: ["first"], sizedFields: ["page"])
+        }
+
+        type Cursor {
+          page: [Item!]
+          nextPageToken: String
+        }
+
+        type Item {
+          id: ID
+        }
+      `),
+      resolvers: {
+        Query: {
+          items: () => ({
+            page: [{ id: 'Item 1' }, { id: 'Item 2' }],
+            nextPageToken: 'token',
+          }),
+        },
+      },
+    });
+    await using itemsServer = createYoga({
+      schema: itemsSubgraph,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: await composeLocalSchemasWithApollo([
+        {
+          name: 'items',
+          schema: itemsSubgraph,
+          url: 'http://items/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        useCustomFetch(itemsServer.fetch),
+        useDemandControl({
+          showInformationInExtensions: true,
+        }),
+      ],
+    });
+    const query = /* GraphQL */ `
+      query ItemsQuery {
+        items(first: 5) {
+          page {
+            id
+          }
+          nextPageToken
+        }
+      }
+    `;
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        items: {
+          page: [{ id: 'Item 1' }, { id: 'Item 2' }],
+          nextPageToken: 'token',
+        },
+      },
+      extensions: {
+        cost: {
+          estimated: 6,
+        },
+      },
+    });
+  });
 });

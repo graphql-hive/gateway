@@ -22,14 +22,23 @@ export interface DemandControlPluginOptions {
    * @default false
    */
   showInformationInExtensions?: boolean;
+  /**
+   * Cost of the mutations
+   * @default 10
+   */
+  mutationCost?: number;
 }
 
 export function useDemandControl<TContext extends Record<string, any>>({
   defaultAssumedListSize,
   max,
-  showInformationInExtensions,
+  showInformationInExtensions = false,
+  mutationCost = 10,
 }: DemandControlPluginOptions): GatewayPlugin<TContext> {
-  const calculateCost = createCalculateCost(defaultAssumedListSize);
+  const calculateCost = createCalculateCost({
+    defaultAssumedListSize,
+    mutationCost,
+  });
   const costByContextMap = new WeakMap<any, number>();
   return {
     onSubgraphExecute({ subgraph, executionRequest, logger }) {
@@ -94,7 +103,6 @@ export function useDemandControl<TContext extends Record<string, any>>({
               },
             });
           }
-          costByContextMap.delete(context);
         }
       }
     },
