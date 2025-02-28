@@ -7,14 +7,16 @@ import {
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
+  FieldNode,
   getArgumentValues,
   getNamedType,
+  GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
-  isCompositeType,
   isIntrospectionType,
   isListType,
   OperationTypeNode,
+  TypeInfo,
   visit,
   visitWithTypeInfo,
 } from 'graphql';
@@ -50,9 +52,13 @@ function getDepthOfListType(type: GraphQLOutputType) {
 export function createCalculateCost({
   listSize,
   operationTypeCost,
+  typeCost,
+  fieldCost,
 }: {
   listSize: number;
   operationTypeCost(operationType: OperationTypeNode): number;
+  typeCost(type: GraphQLNamedOutputType): number;
+  fieldCost?(fieldNode: FieldNode, typeInfo: TypeInfo): number;
 }) {
   return memoize3(function calculateCost(
     schema: GraphQLSchema,
@@ -77,17 +83,20 @@ export function createCalculateCost({
         },
         Field: {
           enter(node) {
-            let fieldCost: number = 0;
+            let currentFieldCost: number = 0;
             const field = typeInfo.getFieldDef();
             if (field) {
               const fieldAnnotations =
                 getDirectiveExtensions<DemandControlDirectives>(field, schema);
-              if (fieldAnnotations?.cost) {
+              const factoryResult = fieldCost?.(node, typeInfo);
+              if (factoryResult) {
+                currentFieldCost += factoryResult;
+              } else if (fieldAnnotations?.cost) {
                 for (const costAnnotation of fieldAnnotations.cost) {
                   if (costAnnotation?.weight) {
                     const weight = Number(costAnnotation.weight);
                     if (weight && !isNaN(weight)) {
-                      fieldCost += weight;
+                      currentFieldCost += weight;
                     }
                   }
                 }
@@ -163,8 +172,8 @@ export function createCalculateCost({
               factorQueue.push(factor);
               /** Calculate factor end */
 
-              const namedReturnType = getNamedType(returnType);
-              if (namedReturnType) {
+              if (returnType) {
+                const namedReturnType = getNamedType(returnType);
                 if (isIntrospectionType(namedReturnType)) {
                   return;
                 }
@@ -178,16 +187,16 @@ export function createCalculateCost({
                     if (costAnnotation?.weight) {
                       const weight = Number(costAnnotation?.weight);
                       if (weight && !isNaN(weight)) {
-                        fieldCost += weight;
+                        currentFieldCost += weight;
                       }
                     }
                   }
-                } else if (isCompositeType(namedReturnType)) {
-                  fieldCost += 1;
+                } else {
+                  currentFieldCost += typeCost(namedReturnType);
                 }
               }
-              if (fieldCost) {
-                cost += timesFactor(fieldCost);
+              if (currentFieldCost) {
+                cost += timesFactor(currentFieldCost);
               }
             }
           },

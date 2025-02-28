@@ -5,7 +5,13 @@ import {
   isAsyncIterable,
   mapAsyncIterator,
 } from '@graphql-tools/utils';
-import { OperationTypeNode } from 'graphql';
+import {
+  FieldNode,
+  GraphQLNamedOutputType,
+  isCompositeType,
+  OperationTypeNode,
+  TypeInfo,
+} from 'graphql';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 
@@ -28,6 +34,18 @@ export interface DemandControlPluginOptions {
    */
   operationTypeCost?(operationType: OperationTypeNode): number;
   /**
+   * Cost based on a field
+   * It is called for each field in the operation, and overrides the `@cost` directive.
+   */
+  fieldCost?(fieldNode: FieldNode, typeInfo: TypeInfo): number;
+  /**
+   * Cost based on a type
+   * It is called for return types of fields in the operation, and overrides the `@cost` directive.
+   *
+   * @default ((type) => isCompositeType(type) ? 1 : 0)
+   */
+  typeCost?(type: GraphQLNamedOutputType): number;
+  /**
    * Include extension values that provide useful information, such as the estimated cost of the operation.
    * Defaults to `true` if `process.env["NODE_ENV"]` is set to `"development"`, otherwise `false`.
    */
@@ -40,10 +58,14 @@ export function useDemandControl<TContext extends Record<string, any>>({
   includeExtensionMetadata = process.env.NODE_ENV === 'development',
   operationTypeCost = (operationType) =>
     operationType === 'mutation' ? 10 : 0,
+  fieldCost,
+  typeCost = (type) => (isCompositeType(type) ? 1 : 0),
 }: DemandControlPluginOptions): GatewayPlugin<TContext> {
   const calculateCost = createCalculateCost({
     listSize,
     operationTypeCost,
+    fieldCost,
+    typeCost,
   });
   const costByContextMap = new WeakMap<any, number>();
   return {
