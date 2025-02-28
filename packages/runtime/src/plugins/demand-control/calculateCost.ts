@@ -12,6 +12,7 @@ import {
   GraphQLOutputType,
   GraphQLSchema,
   isCompositeType,
+  isIntrospectionType,
   isListType,
   OperationTypeNode,
   visit,
@@ -95,7 +96,7 @@ export function createCalculateCost({
 
               /** Calculate factor start */
               let factor = 1;
-              const sizedFieldFactor = fieldFactorMap.get(field.name);
+              const sizedFieldFactor = fieldFactorMap.get(node.name.value);
               if (sizedFieldFactor) {
                 factor = sizedFieldFactor;
                 fieldFactorMap.delete(field.name);
@@ -164,6 +165,9 @@ export function createCalculateCost({
 
               const namedReturnType = getNamedType(returnType);
               if (namedReturnType) {
+                if (isIntrospectionType(namedReturnType)) {
+                  return;
+                }
                 const namedReturnTypeAnnotations =
                   getDirectiveExtensions<DemandControlDirectives>(
                     namedReturnType,

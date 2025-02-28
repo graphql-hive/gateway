@@ -26,7 +26,7 @@ export interface DemandControlPluginOptions {
    * By default, mutations have a cost of 10, queries and subscriptions have a cost of 0.
    * @default ((operationType) => operationType === 'mutation' ? 10 : 0)
    */
-  operationTypeCost(operationType: OperationTypeNode): number;
+  operationTypeCost?(operationType: OperationTypeNode): number;
   /**
    * Include extension values that provide useful information, such as the estimated cost of the operation.
    * Defaults to `true` if `process.env["NODE_ENV"]` is set to `"development"`, otherwise `false`.
@@ -34,17 +34,12 @@ export interface DemandControlPluginOptions {
   includeExtensionMetadata?: boolean;
 }
 
-export function defaultOperationTypeCost(
-  operationType: OperationTypeNode,
-): number {
-  return operationType === 'mutation' ? 10 : 0;
-}
-
 export function useDemandControl<TContext extends Record<string, any>>({
   listSize = 0,
   max,
   includeExtensionMetadata = process.env.NODE_ENV === 'development',
-  operationTypeCost = defaultOperationTypeCost,
+  operationTypeCost = (operationType) =>
+    operationType === 'mutation' ? 10 : 0,
 }: DemandControlPluginOptions): GatewayPlugin<TContext> {
   const calculateCost = createCalculateCost({
     listSize,
