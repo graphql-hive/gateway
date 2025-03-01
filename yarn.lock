@@ -3295,6 +3295,7 @@ __metadata:
     "@envelop/core": "npm:^5.1.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
+    "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.104.18"
     "@graphql-mesh/cache-localforage": "npm:^0.104.0"
     "@graphql-mesh/cache-redis": "npm:^0.103.19"
