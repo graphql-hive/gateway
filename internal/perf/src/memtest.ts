@@ -87,7 +87,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         server,
         async onMemorySample(samples) {
           if (isDebug('memtest')) {
-            const chart = await createMemorySampleLineChart(samples);
+            const chart = createMemorySampleLineChart(samples);
             await fs.writeFile(
               path.join(cwd, `memtest-memory-samples_${startTime}.svg`),
               chart.toBuffer(),

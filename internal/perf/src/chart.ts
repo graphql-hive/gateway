@@ -58,9 +58,7 @@ export function createLineChart(
   return canvas;
 }
 
-export async function createMemorySampleLineChart(
-  samples: LoadtestMemorySample[],
-) {
+export function createMemorySampleLineChart(samples: LoadtestMemorySample[]) {
   const chart = createLineChart(
     {
       labels: samples.map(({ time }) => toTimeString(time)),
