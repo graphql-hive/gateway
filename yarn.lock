@@ -3243,6 +3243,7 @@ __metadata:
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.9.0"
     "@graphql-hive/logger-json": "workspace:^"
+    "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.7.24"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -3401,7 +3402,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4":
+"@graphql-hive/plugin-aws-sigv4@workspace:^, @graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4"
   dependencies:

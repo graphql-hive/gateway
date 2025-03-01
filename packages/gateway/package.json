@@ -58,6 +58,7 @@
     "@envelop/core": "^5.1.0",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/importer": "workspace:^",
+    "@graphql-hive/plugin-aws-sigv4": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.104.18",
     "@graphql-mesh/cache-localforage": "^0.104.0",
     "@graphql-mesh/cache-redis": "^0.103.19",
