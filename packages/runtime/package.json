@@ -49,7 +49,6 @@
     "@envelop/generic-auth": "^9.0.0",
     "@graphql-hive/core": "^0.9.0",
     "@graphql-hive/logger-json": "workspace:^",
-    "@graphql-hive/plugin-aws-sigv4": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
