@@ -2849,6 +2849,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/demand-control@workspace:e2e/demand-control":
+  version: 0.0.0-use.local
+  resolution: "@e2e/demand-control@workspace:e2e/demand-control"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
+    graphql: "npm:^16.9.0"
+    graphql-yoga: "npm:^5.12.2"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
@@ -12634,7 +12645,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:^5.12.0, graphql-yoga@npm:^5.12.1":
+"graphql-yoga@npm:^5.12.0, graphql-yoga@npm:^5.12.1, graphql-yoga@npm:^5.12.2":
   version: 5.12.2
   resolution: "graphql-yoga@npm:5.12.2"
   dependencies:
