@@ -345,7 +345,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.10.0, @apollo/subgraph@npm:^2.5.4, @apollo/subgraph@npm:^2.7.2, @apollo/subgraph@npm:^2.9.3":
+"@apollo/subgraph@npm:2.10.0, @apollo/subgraph@npm:^2.10.0, @apollo/subgraph@npm:^2.5.4, @apollo/subgraph@npm:^2.7.2, @apollo/subgraph@npm:^2.9.3":
   version: 2.10.0
   resolution: "@apollo/subgraph@npm:2.10.0"
   dependencies:
@@ -2359,6 +2359,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/aws-sigv4@workspace:e2e/aws-sigv4"
   dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
     aws4-express: "npm:^0.10.2"
     express: "npm:^4.21.2"
     graphql: "npm:^16.9.0"
