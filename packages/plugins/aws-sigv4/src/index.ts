@@ -70,14 +70,25 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
       }
       const parsedUrl = new URL(url);
       const aws4Request: AWS4Request = {
-        host: parsedUrl.hostname,
+        host: parsedUrl.host,
         method: options.method,
         path: `${parsedUrl.pathname}${parsedUrl.search}`,
         body: options.body,
         headers: options.headers,
         ...(factoryResultObject || {}),
       };
-      const modifiedAws4Request = aws4.sign(aws4Request, factoryResultObject);
+      const modifiedAws4Request = aws4.sign(aws4Request, {
+        accessKeyId:
+          factoryResultObject?.accessKeyId ||
+          process.env['AWS_ACCESS_KEY_ID'] ||
+          process.env['AWS_ACCESS_KEY'],
+        secretAccessKey:
+          factoryResultObject?.secretAccessKey ||
+          process.env['AWS_SECRET_ACCESS_KEY'] ||
+          process.env['AWS_SECRET_KEY'],
+        sessionToken:
+          factoryResultObject?.sessionToken || process.env['AWS_SESSION_TOKEN'],
+      });
       setURL(
         `${parsedUrl.protocol}//${modifiedAws4Request.host}${modifiedAws4Request.path}`,
       );

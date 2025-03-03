@@ -2355,6 +2355,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/aws-sigv4@workspace:e2e/aws-sigv4":
+  version: 0.0.0-use.local
+  resolution: "@e2e/aws-sigv4@workspace:e2e/aws-sigv4"
+  dependencies:
+    aws4-express: "npm:^0.10.2"
+    express: "npm:^4.21.2"
+    graphql: "npm:^16.9.0"
+    graphql-yoga: "npm:^5.12.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers":
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
@@ -8349,6 +8361,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws4-express@npm:^0.10.2":
+  version: 0.10.2
+  resolution: "aws4-express@npm:0.10.2"
+  dependencies:
+    express: "npm:^4.21.1"
+  checksum: 10c0/bca4bb58cb09298eb2ac4945f48edd909b3903e1a58ef08ab93d44b0de7c9711c4b967cae82effea4460088fca4c8aff5e17edaf1cb2b1d35a9981c5d5c3bae0
+  languageName: node
+  linkType: hard
+
 "aws4@npm:1.13.2":
   version: 1.13.2
   resolution: "aws4@npm:1.13.2"
@@ -11595,7 +11616,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-yoga@npm:^5.12.0":
+"graphql-yoga@npm:^5.12.0, graphql-yoga@npm:^5.12.1":
   version: 5.12.1
   resolution: "graphql-yoga@npm:5.12.1"
   dependencies:
