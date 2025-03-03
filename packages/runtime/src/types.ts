@@ -16,7 +16,7 @@ import type {
   OnFetchHook,
   YamlConfig,
 } from '@graphql-mesh/types';
-import type { LogLevel } from '@graphql-mesh/utils';
+import type { FetchInstruments, LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   IResolvers,
@@ -160,7 +160,7 @@ export interface OnCacheDeleteHookEventPayload {
 }
 
 export type Instruments<TContext extends Record<string, any>> =
-  YogaInstruments<TContext> & GatewayRuntimeInstruments;
+  YogaInstruments<TContext> & GatewayRuntimeInstruments & FetchInstruments;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,

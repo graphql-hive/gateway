@@ -163,11 +163,13 @@ export function createGatewayRuntime<
     logger = config.logging;
   }
 
+  let instruments: GatewayPlugin['instruments'];
+
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
   const onCacheGetHooks: OnCacheGetHook[] = [];
   const onCacheSetHooks: OnCacheSetHook[] = [];
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
-  const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks);
+  const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks, () => instruments);
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
         cache: config.cache,
@@ -188,7 +190,6 @@ export function createGatewayRuntime<
   let unifiedGraphPlugin: GatewayPlugin;
 
   const readinessCheckEndpoint = config.readinessCheckEndpoint || '/readiness';
-  let instruments: GatewayPlugin['instruments'];
   const onSubgraphExecuteHooks: OnSubgraphExecuteHook[] = [];
   // TODO: Will be deleted after v0
   const onDelegateHooks: OnDelegateHook<unknown>[] = [];
@@ -474,7 +475,7 @@ export function createGatewayRuntime<
                 return unifiedGraph;
               },
               transportExecutorStack,
-              instruments: instruments,
+              instruments,
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
@@ -705,7 +706,7 @@ export function createGatewayRuntime<
       onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
-      instruments: instruments,
+      instruments,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>

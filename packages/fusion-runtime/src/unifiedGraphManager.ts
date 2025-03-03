@@ -107,10 +107,10 @@ export interface UnifiedGraphManagerOptions<TContext> {
 }
 
 export type Instruments = {
-  subgraphExecute(
+  subgraphExecute?: (
     payload: { executionRequest: ExecutionRequest },
     wrapped: () => MaybePromise<void>,
-  ): MaybePromise<void>;
+  ) => MaybePromise<void>;
 };
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
