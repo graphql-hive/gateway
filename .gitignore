@@ -13,5 +13,4 @@ hive-gateway
 *.pem
 /examples/**/*/supergraph.graphql
 .helix/config.toml
-.helix/config.toml
 .helix/languages.toml
