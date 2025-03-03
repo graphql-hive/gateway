@@ -1,4 +1,3 @@
-import { error } from 'console';
 import { createTenv } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
