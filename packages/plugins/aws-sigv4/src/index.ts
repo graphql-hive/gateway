@@ -1,7 +1,7 @@
+import { STS } from '@aws-sdk/client-sts';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import aws4, { type Request as AWS4Request } from 'aws4';
-import { STS } from '@aws-sdk/client-sts';
 
 function isBufferOrString(body: unknown): body is Buffer | string {
   return typeof body === 'string' || globalThis.Buffer?.isBuffer(body);
@@ -23,7 +23,7 @@ export interface AWSSignv4PluginOptions {
    * By default, it is inferred from the hostname.
    */
   region?: string;
-  
+
   /**
    * ACCESS_KEY_ID
    * @default process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY
@@ -41,14 +41,14 @@ export interface AWSSignv4PluginOptions {
   sessionToken?: string;
   /**
    * An identifier for the assumed role session.
-   * 
+   *
    * @default process.env.AWS_ROLE_ARN
    */
   roleArn?: string;
   /**
    * The Amazon Resource Names (ARNs) of the IAM managed policies that you want to use as
    * managed session policies. The policies must exist in the same account as the role.
-   * 
+   *
    * @default process.env.AWS_IAM_ROLE_SESSION_NAME
    */
   roleSessionName?: string;
@@ -80,19 +80,28 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
         return;
       }
       let signQuery = false;
-      let accessKeyId: string | undefined = process.env['AWS_ACCESS_KEY_ID'] || process.env['AWS_ACCESS_KEY'];
-      let secretAccessKey: string | undefined = process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'];
+      let accessKeyId: string | undefined =
+        process.env['AWS_ACCESS_KEY_ID'] || process.env['AWS_ACCESS_KEY'];
+      let secretAccessKey: string | undefined =
+        process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'];
       let sessionToken: string | undefined = process.env['AWS_SESSION_TOKEN'];
       let service: string | undefined;
       let region: string | undefined;
       let roleArn: string | undefined = process.env['AWS_ROLE_ARN'];
-      let roleSessionName: string | undefined = process.env['AWS_IAM_ROLE_SESSION_NAME'];
+      let roleSessionName: string | undefined =
+        process.env['AWS_IAM_ROLE_SESSION_NAME'];
       if (typeof factoryResult === 'object' && factoryResult != null) {
         signQuery = factoryResult.signQuery || false;
-        accessKeyId = factoryResult.accessKeyId || process.env['AWS_ACCESS_KEY_ID'] || process.env['AWS_ACCESS_KEY'];
+        accessKeyId =
+          factoryResult.accessKeyId ||
+          process.env['AWS_ACCESS_KEY_ID'] ||
+          process.env['AWS_ACCESS_KEY'];
         secretAccessKey =
-          factoryResult.secretAccessKey || process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'];
-        sessionToken = factoryResult.sessionToken || process.env['AWS_SESSION_TOKEN'];
+          factoryResult.secretAccessKey ||
+          process.env['AWS_SECRET_ACCESS_KEY'] ||
+          process.env['AWS_SECRET_KEY'];
+        sessionToken =
+          factoryResult.sessionToken || process.env['AWS_SESSION_TOKEN'];
         roleArn = factoryResult.roleArn;
         roleSessionName = factoryResult.roleSessionName;
         service = factoryResult.serviceName;
@@ -119,7 +128,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
         headers: options.headers,
         signQuery,
         service,
-        region
+        region,
       };
       const modifiedAws4Request = aws4.sign(aws4Request, {
         accessKeyId,
