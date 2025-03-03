@@ -60,7 +60,12 @@
       "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
       "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
       "@graphql-hive/logger-json": ["./packages/logger-json/src/index.ts"],
-      "@graphql-hive/logger-winston": ["./packages/logger-winston/src/index.ts"]
+      "@graphql-hive/logger-winston": [
+        "./packages/logger-winston/src/index.ts"
+      ],
+      "@graphql-hive/plugin-aws-sigv4": [
+        "./packages/plugins/aws-sigv4/src/index.ts"
+      ]
     }
   },
   "include": [
@@ -76,7 +81,8 @@
     "./packages/**/scripts",
     "./packages/**/rollup.config.*",
     "./e2e",
-    "./bench"
+    "./bench",
+    "packages/plugins/aws-sigv4/aws-sigv4.test.ts"
   ],
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",

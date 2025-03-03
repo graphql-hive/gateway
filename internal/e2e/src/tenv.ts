@@ -691,6 +691,7 @@ export function createTenv(cwd: string): Tenv {
         pipeLogs = isDebug(),
         args = [],
         protocol = 'http',
+        env,
       } = {},
     ) {
       port ||= await getAvailablePort();
@@ -702,6 +703,7 @@ export function createTenv(cwd: string): Tenv {
           signal: ctrl.signal,
           stack: leftoverStack,
           replaceStderr: (str) => str.replaceAll(__project, ''),
+          env,
         },
         'node',
         '--import',

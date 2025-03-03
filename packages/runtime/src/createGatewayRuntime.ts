@@ -963,8 +963,11 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useRequestId(),
   ];
+
+  if (config.requestId !== false) {
+    basePlugins.push(useRequestId());
+  }
 
   const extraPlugins = [];
 

@@ -607,6 +607,13 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Configure the retry for upstream requests.
    */
   upstreamRetry?: UpstreamRetryPluginOptions;
+
+  /**
+   * Add and handle `x-request-id` header
+   *
+   * @default true
+   */
+  requestId?: boolean;
 }
 
 interface DisableIntrospectionOptions {

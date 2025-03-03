@@ -15,6 +15,10 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import type {
+  AWSSignv4PluginOptions,
+  AWSSignv4PluginOptionsFactory,
+} from '@graphql-hive/plugin-aws-sigv4';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -133,6 +137,10 @@ export interface GatewayCLIBuiltinPluginConfig {
     Parameters<typeof useMeshRateLimit>[0],
     GatewayConfigContext
   >;
+  /**
+   * Enable and configure AWS Sigv4 signing
+   */
+  awsSigv4?: AWSSignv4PluginOptions | AWSSignv4PluginOptionsFactory | true;
   /**
    * Enable Just-In-Time compilation of GraphQL documents.
    *
