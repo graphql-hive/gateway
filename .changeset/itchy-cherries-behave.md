@@ -1,4 +1,5 @@
 ---
+'@graphql-hive/gateway': minor
 '@graphql-hive/gateway-runtime': minor
 ---
 
