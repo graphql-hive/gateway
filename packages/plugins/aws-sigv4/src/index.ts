@@ -103,7 +103,9 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
         sessionToken =
           factoryResult.sessionToken || process.env['AWS_SESSION_TOKEN'];
         roleArn = factoryResult.roleArn;
-        roleSessionName = factoryResult.roleSessionName;
+        roleSessionName =
+          factoryResult.roleSessionName ||
+          process.env['AWS_IAM_ROLE_SESSION_NAME'];
         service = factoryResult.serviceName;
         region = factoryResult.region;
       }
