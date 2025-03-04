@@ -37,21 +37,10 @@ export interface LoadtestOptions extends ProcOptions {
    * @default false
    */
   takeHeapSnapshots?: boolean;
-  /**
-   * Whether to perform heap sampling (Allocation Sampling in Chrome DevTools)
-   * during the `loadtest` and `calmdown` {@link LoadtestPhase phases} in each of the {@link runs}.
-   *
-   * @default true
-   */
-  performHeapSampling?: boolean;
   /** Callback for memory sampling during the loadtest. */
   onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
   /** Callback when the heapsnapshot has been written on disk. */
   onHeapSnapshot?(snapshot: LoadtestHeapSnapshot): Promise<void> | void;
-  /** Callback when the heap sampling profile has been taken. */
-  onHeapSamplingProfile?(
-    profile: LoadtestHeapSamplingProfile,
-  ): Promise<void> | void;
 }
 
 export type LoadtestPhase = 'idle' | 'loadtest' | 'calmdown';
@@ -83,21 +72,10 @@ export interface LoadtestHeapSnapshot {
   file: string;
 }
 
-/** Heap sample profile {@link LoadtestOptions.server GraphQL server} at the end of the given {@link phase}. */
-export interface LoadtestHeapSamplingProfile {
-  phase: LoadtestPhase;
-  /** The {@link LoadtestOptions.runs run} number, starts with 1. */
-  run: number;
-  /** Moment in time when the sample was taken. */
-  time: Date;
-  /** The heap sampling profile. */
-  profile: InspectorHeapSamplingProfile;
-}
-
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
   heapsnapshots: LoadtestHeapSnapshot[];
-  profiles: LoadtestHeapSamplingProfile[];
+  profile: InspectorHeapSamplingProfile;
 }> {
   const {
     cwd,
@@ -110,10 +88,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     server,
     query,
     takeHeapSnapshots,
-    performHeapSampling = true,
     onMemorySample,
     onHeapSnapshot,
-    onHeapSamplingProfile,
     ...procOptions
   } = opts;
 
@@ -168,8 +144,6 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   })();
 
   const heapsnapshots: LoadtestHeapSnapshot[] = [];
-  const profiles: LoadtestHeapSamplingProfile[] = [];
-
   const serverThrowOnExit = server.waitForExit.then(() => {
     throw new Error(
       `Server exited before the loadtest finished\n${trimError(server.getStd('both'))}`,
@@ -178,10 +152,10 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
 
-  for (; run <= runs; run++) {
-    const stopHeapSampling =
-      performHeapSampling && (await inspector.startHeapSampling());
+  // start heap sampling after idling (no need to sample anything there)
+  const stopHeapSampling = await inspector.startHeapSampling();
 
+  for (; run <= runs; run++) {
     phase = 'loadtest';
     const [, waitForExit] = await spawn(
       {
@@ -224,22 +198,12 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       heapsnapshots.push(heapsnapshot);
       await onHeapSnapshot?.(heapsnapshot);
     }
-    if (stopHeapSampling) {
-      const profile: LoadtestHeapSamplingProfile = {
-        phase,
-        run,
-        time: new Date(),
-        profile: await stopHeapSampling(),
-      };
-      profiles.push(profile);
-      await onHeapSamplingProfile?.(profile);
-    }
   }
 
   return {
     samples,
     heapsnapshots,
-    profiles,
+    profile: await stopHeapSampling(),
   };
 }
 
