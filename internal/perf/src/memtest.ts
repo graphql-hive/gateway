@@ -109,10 +109,12 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         },
       });
 
-      await fs.writeFile(
-        path.join(cwd, `memtest_${startTime}.heapprofile`),
-        JSON.stringify(profile),
-      );
+      if (isDebug('memtest')) {
+        await fs.writeFile(
+          path.join(cwd, `memtest_${startTime}.heapprofile`),
+          JSON.stringify(profile),
+        );
+      }
 
       // TODO: analyise heap sampling profile?
 
