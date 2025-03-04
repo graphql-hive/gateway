@@ -1,3 +1,4 @@
+import { process } from '@graphql-mesh/cross-helpers';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import {
   DEFAULT_UPLINKS,

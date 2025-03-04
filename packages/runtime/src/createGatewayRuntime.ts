@@ -94,6 +94,7 @@ import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
+import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
@@ -1048,6 +1049,10 @@ export function createGatewayRuntime<
 
   if (config.upstreamRetry) {
     extraPlugins.push(useUpstreamRetry(config.upstreamRetry));
+  }
+
+  if (config.demandControl) {
+    extraPlugins.push(useDemandControl(config.demandControl));
   }
 
   logger.debug(() => {
