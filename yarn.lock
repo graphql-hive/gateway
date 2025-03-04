@@ -3372,6 +3372,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@envelop/instruments@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@envelop/instruments@npm:1.0.0"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^1.2.1"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/dc3ae0df1b0e1dabb0e71f17b50f58b1f60d8dbeaab2eb23e6cc4b73a2a2fba12009d54d4d79bf93c931c3488c66895a4dfb829a82844baa5f2eff6cd029b5bb
+  languageName: node
+  linkType: hard
+
 "@envelop/instruments@npm:1.0.0-alpha-20250227122402-42e2fa806ec3b7c2936e612924b153a20c8662c3":
   version: 1.0.0-alpha-20250227122402-42e2fa806ec3b7c2936e612924b153a20c8662c3
   resolution: "@envelop/instruments@npm:1.0.0-alpha-20250227122402-42e2fa806ec3b7c2936e612924b153a20c8662c3"
@@ -4233,7 +4243,7 @@ __metadata:
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
   dependencies:
     "@envelop/core": "npm:^5.1.0"
-    "@envelop/instruments": "npm:1.0.0-alpha-20250227122402-42e2fa806ec3b7c2936e612924b153a20c8662c3"
+    "@envelop/instruments": "npm:1.0.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.0"

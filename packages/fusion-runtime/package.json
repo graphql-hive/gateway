@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@envelop/core": "^5.1.0",
-    "@envelop/instruments": "1.0.0-alpha-20250227122402-42e2fa806ec3b7c2936e612924b153a20c8662c3",
+    "@envelop/instruments": "1.0.0",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.0",
