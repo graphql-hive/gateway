@@ -18,5 +18,6 @@ hive-gateway
 /e2e/**/*/memory-snapshots_*.svg
 /e2e/**/*/memtest-memory-snapshots_*.svg
 /e2e/**/*/memtest-memory-samples_*.svg
+/e2e/**/*/memtest-memory-usage_*.svg
 /e2e/**/*/*.heapsnapshot
 /e2e/**/*/*.heapprofile
