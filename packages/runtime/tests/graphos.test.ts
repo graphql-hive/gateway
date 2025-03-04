@@ -128,7 +128,17 @@ describe('GraphOS', () => {
           if (tries === 1) {
             return mockSDL();
           }
-          return mockUnchanged();
+          return Response.json({
+            data: {
+              routerConfig: {
+                __typename: 'RouterConfigResult',
+                minDelaySeconds: 0.1,
+                id: 'test-id-1',
+                supergraphSdl: 'NOT SAME SDL',
+                messages: [],
+              },
+            },
+          })
         },
       });
 
