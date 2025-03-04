@@ -4,7 +4,11 @@ import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { trimError } from '@internal/testing';
-import { connectInspector, Inspector } from './inspector';
+import {
+  connectInspector,
+  Inspector,
+  InspectorHeapSamplingProfile,
+} from './inspector';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -26,6 +30,12 @@ export interface LoadtestOptions extends ProcOptions {
    * The GraphQL query to execute for the loadtest.
    */
   query: string;
+  /**
+   * Whether to take heap snapshots on the end of each calmdown phase.
+   *
+   * @default false
+   */
+  takeHeapSnapshots?: boolean;
   /** Callback for memory sampling during the loadtest. */
   onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
   /** Callback when the heapsnapshot has been written on disk. */
@@ -64,6 +74,7 @@ export interface LoadtestHeapSnapshot {
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
   heapsnapshots: LoadtestHeapSnapshot[];
+  profile: InspectorHeapSamplingProfile;
 }> {
   const {
     cwd,
@@ -75,6 +86,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     memorySnapshotWindow,
     server,
     query,
+    takeHeapSnapshots,
     onMemorySample,
     onHeapSnapshot,
     ...procOptions
@@ -95,11 +107,13 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     },
   };
 
-  using inspector = await connectInspector(server);
-
   const heapsnapshotCwd = await fs.mkdtemp(
     path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
   );
+
+  using inspector = await connectInspector(server);
+
+  const stopHeapSampling = await inspector.startHeapSampling();
 
   let phase: LoadtestPhase = 'idle';
   let run = 1;
@@ -140,17 +154,6 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   await Promise.race([setTimeout(idle), serverThrowOnExit]);
 
-  skipSampling = true;
-  let heapsnapshot = await createHeapSnapshot(
-    heapsnapshotCwd,
-    inspector,
-    phase,
-    run,
-  );
-  skipSampling = false;
-  heapsnapshots.push(heapsnapshot);
-  await onHeapSnapshot?.(heapsnapshot);
-
   for (; run <= runs; run++) {
     phase = 'loadtest';
     const [, waitForExit] = await spawn(
@@ -182,21 +185,24 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     skipSampling = false;
     await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
 
-    skipSampling = true;
-    heapsnapshot = await createHeapSnapshot(
-      heapsnapshotCwd,
-      inspector,
-      phase,
-      run,
-    );
-    skipSampling = false;
-    heapsnapshots.push(heapsnapshot);
-    await onHeapSnapshot?.(heapsnapshot);
+    if (takeHeapSnapshots) {
+      skipSampling = true;
+      const heapsnapshot = await createHeapSnapshot(
+        heapsnapshotCwd,
+        inspector,
+        phase,
+        run,
+      );
+      skipSampling = false;
+      heapsnapshots.push(heapsnapshot);
+      await onHeapSnapshot?.(heapsnapshot);
+    }
   }
 
   return {
     samples,
     heapsnapshots,
+    profile: await stopHeapSampling(),
   };
 }
 
