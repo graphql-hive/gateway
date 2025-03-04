@@ -120,7 +120,7 @@ describe('GraphOS', () => {
       expect(await result).toBe(await result2);
     });
 
-    it('should respect even if the SDL is changed', async () => {
+    it('should respect `lastSeenId` even if the SDL is changed', async () => {
       let tries = 0;
       const { unifiedGraphFetcher } = createTestFetcher({
         fetch: () => {
