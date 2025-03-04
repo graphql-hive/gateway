@@ -2935,6 +2935,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/graphos@workspace:e2e/graphos":
+  version: 0.0.0-use.local
+  resolution: "@e2e/graphos@workspace:e2e/graphos"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/header-propagation@workspace:e2e/header-propagation":
   version: 0.0.0-use.local
   resolution: "@e2e/header-propagation@workspace:e2e/header-propagation"

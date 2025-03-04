@@ -119,6 +119,35 @@ describe('GraphOS', () => {
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
     });
+
+    it('should respect `lastSeenId` even if the SDL is changed', async () => {
+      let tries = 0;
+      const { unifiedGraphFetcher } = createTestFetcher({
+        fetch: () => {
+          tries++;
+          if (tries === 1) {
+            return mockSDL();
+          }
+          return Response.json({
+            data: {
+              routerConfig: {
+                __typename: 'RouterConfigResult',
+                minDelaySeconds: 0.1,
+                id: 'test-id-1',
+                supergraphSdl: 'NOT SAME SDL',
+                messages: [],
+              },
+            },
+          });
+        },
+      });
+
+      const result = unifiedGraphFetcher({});
+      await advanceTimersByTimeAsync(1_000);
+      const result2 = unifiedGraphFetcher({});
+      await advanceTimersByTimeAsync(1_000);
+      expect(await result).toBe(await result2);
+    });
   });
 });
 
