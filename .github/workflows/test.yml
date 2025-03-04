@@ -181,6 +181,8 @@ jobs:
         uses: nick-fields/retry@v3
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
+          E2E_TEST_APOLLO_GRAPH_REF: ${{secrets.E2E_TEST_APOLLO_GRAPH_REF}}
+          E2E_TEST_APOLLO_KEY: ${{secrets.E2E_TEST_APOLLO_KEY}}
         with:
           timeout_minutes: 10
           max_attempts: 2
