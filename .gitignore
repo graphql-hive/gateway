@@ -19,3 +19,4 @@ hive-gateway
 /e2e/**/*/memtest-memory-snapshots_*.svg
 /e2e/**/*/memtest-memory-samples_*.svg
 /e2e/**/*/*.heapsnapshot
+/e2e/**/*/*.heapprofile
