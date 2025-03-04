@@ -59,6 +59,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     runs = 2,
     onMemorySample,
     onHeapSnapshot,
+    onHeapSamplingProfile,
     ...loadtestOpts
   } = opts;
   it(
@@ -76,7 +77,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         // remove milliseconds
         .split('.')[0];
 
-      const { samples, profile } = await loadtest({
+      const { samples } = await loadtest({
         ...loadtestOpts,
         cwd,
         memorySnapshotWindow,
@@ -107,16 +108,21 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           }
           return onHeapSnapshot?.(heapsnapshot);
         },
+        async onHeapSamplingProfile(profile) {
+          if (isDebug('memtest')) {
+            await fs.writeFile(
+              path.join(
+                cwd,
+                `memtest-run-${profile.run}-${profile.phase}_${startTime}.heapprofile`,
+              ),
+              JSON.stringify(profile.profile),
+            );
+          }
+          return onHeapSamplingProfile?.(profile);
+        },
       });
 
-      if (isDebug('memtest')) {
-        await fs.writeFile(
-          path.join(cwd, `memtest_${startTime}.heapprofile`),
-          JSON.stringify(profile),
-        );
-      }
-
-      // TODO: analyise heap sampling profile?
+      // TODO: analyse heap sampling profiles?
 
       const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
       expect
