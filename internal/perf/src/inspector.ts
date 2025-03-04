@@ -40,6 +40,16 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
   const { promise: throwOnClosed, reject: closed } = createDeferredPromise();
   ws.once('close', closed);
 
+  let closedError: unknown = null;
+  function throwIfClosed() {
+    if (closedError) {
+      throw closedError;
+    }
+  }
+  throwOnClosed.catch((err) => {
+    closedError = err;
+  });
+
   // enables the heap profiler and disables it on dispose
   async function heapProfiler() {
     await call(ws, 'HeapProfiler.enable');
@@ -52,10 +62,12 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
 
   return {
     async collectGarbage() {
+      throwIfClosed();
       await using _ = await heapProfiler();
       await call(ws, 'HeapProfiler.collectGarbage');
     },
     async writeHeapSnapshot(path: string) {
+      throwIfClosed();
       await using _0 = await heapProfiler();
 
       // replace existing snapshot
@@ -88,6 +100,9 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       }
       ws.on('message', onMessage);
 
+      // make sure socket is still open
+      throwIfClosed();
+
       // initiate heap snapshot taking
       ws.send(`{"id":${id},"method":"HeapProfiler.takeHeapSnapshot"}`);
 
@@ -97,6 +112,7 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       await Promise.all(writes);
     },
     [Symbol.dispose]() {
+      // TODO: should we throw if closed here? we already dont care at this point
       ws.close();
     },
   };
