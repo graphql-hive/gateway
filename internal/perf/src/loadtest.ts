@@ -39,7 +39,7 @@ export interface LoadtestOptions extends ProcOptions {
   takeHeapSnapshots?: boolean;
   /**
    * Whether to perform heap sampling (Allocation Sampling in Chrome DevTools)
-   * during the `loadtest` {@link LoadtestPhase phase} in each of the {@link runs}.
+   * during the `loadtest` and `calmdown` {@link LoadtestPhase phases} in each of the {@link runs}.
    *
    * @default true
    */
