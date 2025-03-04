@@ -92,6 +92,9 @@ export function createGraphOSFetcher({
               attemptLogger.error(result.error.code, result.error.message);
             }
             if ('id' in result) {
+              if (lastSeenId === result.id) {
+                return lastSupergraphSdl;
+              }
               lastSeenId = result.id;
             }
             if ('supergraphSdl' in result) {
