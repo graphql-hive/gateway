@@ -138,7 +138,7 @@ describe('GraphOS', () => {
                 messages: [],
               },
             },
-          })
+          });
         },
       });
 
