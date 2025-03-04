@@ -2938,10 +2938,6 @@ __metadata:
 "@e2e/graphos@workspace:e2e/graphos":
   version: 0.0.0-use.local
   resolution: "@e2e/graphos@workspace:e2e/graphos"
-  dependencies:
-    "@graphql-hive/gateway": "npm:^1.10.4"
-    graphql: "npm:^16.9.0"
-    tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
 
@@ -3790,7 +3786,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway@npm:^1.10.4, @graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
+"@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
