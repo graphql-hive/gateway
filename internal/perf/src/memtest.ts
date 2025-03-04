@@ -89,7 +89,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           if (isDebug('memtest')) {
             const chart = createMemorySampleLineChart(samples);
             await fs.writeFile(
-              path.join(cwd, `memtest-memory-samples_${startTime}.svg`),
+              path.join(cwd, `memtest-memory-usage_${startTime}.svg`),
               chart.toBuffer(),
             );
           }
