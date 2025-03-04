@@ -124,6 +124,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       // TODO: analyse heap sampling profiles?
 
+      // TODO: clamp the regression slope samples between 0 and 1 to get a percentage based slope
       const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
       expect
         .soft(slope, 'Consistent memory increase detected')
