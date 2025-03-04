@@ -21,7 +21,7 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
   getSchema: () => GraphQLSchema;
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transportExecutorStack: AsyncDisposableStack;
-  instruments?: Instruments;
+  instruments: () => Instruments | undefined;
 }): Executor {
   const fakeTransportEntryMap: Record<string, TransportEntry> = {};
   let subgraphName: string = 'upstream';

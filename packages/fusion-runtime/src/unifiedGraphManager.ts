@@ -103,7 +103,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
-  instruments?: Instruments;
+  instruments: () => Instruments | undefined;
 }
 
 export type Instruments = {
@@ -130,13 +130,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
   private executor?: Executor;
-  private instruments?: Instruments;
+  private instruments: () => Instruments | undefined;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
-    this.instruments = opts.instruments;
+    this.instruments = opts.instruments ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
@@ -354,7 +354,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
           batch: this.batch,
-          instruments: this.instruments,
+          instruments: () => this.instruments(),
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();

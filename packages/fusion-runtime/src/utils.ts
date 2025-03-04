@@ -187,7 +187,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
   batch?: boolean;
-  instruments?: Instruments;
+  instruments: () => Instruments | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -256,15 +256,15 @@ export function getOnSubgraphExecute({
         executor,
       );
     }
-    if (instruments?.subgraphExecute) {
-      const originalExecutor = executor;
-      executor = (executionRequest) => {
-        return getInstrumented({ executionRequest }).asyncFn(
-          instruments.subgraphExecute,
-          originalExecutor,
-        )(executionRequest);
-      };
-    }
+    const originalExecutor = executor;
+    executor = (executionRequest) => {
+      const subgraphInstrument = instruments()?.subgraphExecute;
+      console.log('instruments', instruments());
+      return getInstrumented({ executionRequest }).asyncFn(
+        subgraphInstrument,
+        originalExecutor,
+      )(executionRequest);
+    };
     return executor(executionRequest);
   };
 }

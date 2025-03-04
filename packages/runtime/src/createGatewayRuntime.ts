@@ -250,7 +250,7 @@ export function createGatewayRuntime<
       },
       onSubgraphExecuteHooks,
       transportExecutorStack,
-      instruments: instruments,
+      instruments: () => instruments,
     });
 
     getExecutor = () => proxyExecutor;
@@ -475,7 +475,7 @@ export function createGatewayRuntime<
                 return unifiedGraph;
               },
               transportExecutorStack,
-              instruments,
+              instruments: () => instruments,
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
@@ -706,7 +706,7 @@ export function createGatewayRuntime<
       onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
-      instruments,
+      instruments: () => instruments,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -827,9 +827,10 @@ export function createGatewayRuntime<
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
         if (plugin.instruments) {
+          console.log('plugin instruments deteceted');
           instruments = instruments
             ? chain(instruments, plugin.instruments)
-            : instruments;
+            : plugin.instruments;
         }
         if (plugin.onFetch) {
           onFetchHooks.push(plugin.onFetch);
@@ -858,6 +859,7 @@ export function createGatewayRuntime<
           onCacheDeleteHooks.push(plugin.onCacheDelete);
         }
       }
+      console.log('instruments:', instruments);
     },
   };
 
