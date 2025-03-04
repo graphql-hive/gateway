@@ -149,19 +149,19 @@ function call(
     | 'HeapProfiler.disable'
     | 'HeapProfiler.collectGarbage'
     | 'HeapProfiler.startSampling'
-    | 'HeapProfiler.stopSampling',
+    | 'HeapProfiler.stopSampling'
+    | 'HeapProfiler.startTrackingHeapObjects'
+    | 'HeapProfiler.stopTrackingHeapObjects',
 ): Promise<WebSocket.Data> {
   if (ws.readyState !== WebSocket.OPEN) {
     throw new Error('WebSocket is not open');
   }
   const id = genId();
   ws.send(`{"id":${id},"method":"${method}"}`);
-  return waitForImmediateMessage(ws, (m) =>
-    m.toString().includes(`"id":${id}`),
-  );
+  return waitForMessage(ws, (m) => m.toString().includes(`"id":${id}`));
 }
 
-function waitForImmediateMessage(
+function waitForMessage(
   ws: WebSocket,
   check: (m: WebSocket.Data) => boolean,
 ): Promise<WebSocket.Data> {
@@ -170,15 +170,13 @@ function waitForImmediateMessage(
   function onMessage(m: WebSocket.Data) {
     if (check(m)) {
       resolve(m);
-    } else {
-      reject(new Error(`Unexpected immediate message\n${m.toString()}`));
     }
   }
   ws.once('message', onMessage);
   return Promise.race([
     promise,
     setTimeout(1_000).then(() => {
-      throw new Error('Timeout waiting for immediate message');
+      throw new Error('Timeout waiting for message');
     }),
   ]).finally(() => {
     ws.off('close', reject);
