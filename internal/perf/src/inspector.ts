@@ -1,12 +1,24 @@
 import fs from 'fs/promises';
+import { HeapProfiler } from 'inspector';
 import { setTimeout } from 'timers/promises';
 import { Proc } from '@internal/proc';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { WebSocket } from 'ws';
 
+export type InspectorHeapSamplingProfile = HeapProfiler.SamplingHeapProfile;
+
 export interface Inspector {
   collectGarbage(): Promise<void>;
+  /**
+   * Takes and writes the heap snapshot to the provided {@link path}.
+   *
+   * BEWARE: Taking heap snapshots is a blocking operation and often introduces a leak to the process (memory
+   *         is much more stable when no snapshots are taken, can cause false positives). Where possible, consider
+   *         using {@link startHeapSampling heap sampling} instead.
+   */
   writeHeapSnapshot(path: string): Promise<void>;
+  /** @returns Function that stops the heap sampling and returns the {@link InspectorHeapSamplingProfile sampling profile}. */
+  startHeapSampling(): Promise<() => Promise<InspectorHeapSamplingProfile>>;
   [Symbol.dispose](): void;
 }
 
@@ -50,31 +62,23 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
     closedError = err;
   });
 
-  // enables the heap profiler and disables it on dispose
-  async function heapProfiler() {
-    await call(ws, 'HeapProfiler.enable');
-    return {
-      [Symbol.asyncDispose]() {
-        return call(ws, 'HeapProfiler.disable');
-      },
-    };
-  }
+  // enable heap profiler on connect
+  // TODO: do we always need it? does it influence the performance?
+  await call(ws, 'HeapProfiler.enable');
 
   return {
     async collectGarbage() {
       throwIfClosed();
-      await using _ = await heapProfiler();
       await call(ws, 'HeapProfiler.collectGarbage');
     },
     async writeHeapSnapshot(path: string) {
       throwIfClosed();
-      await using _0 = await heapProfiler();
 
       // replace existing snapshot
       await fs.rm(path, { force: true });
 
       const fd = await fs.open(path, 'w');
-      await using _1 = {
+      await using _ = {
         async [Symbol.asyncDispose]() {
           await fd.close();
         },
@@ -111,6 +115,21 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       // wait for all writes to complete
       await Promise.all(writes);
     },
+    async startHeapSampling() {
+      throwIfClosed();
+      await call(ws, 'HeapProfiler.startSampling');
+      return async function stopSampling() {
+        throwIfClosed();
+        const msg = await call(ws, 'HeapProfiler.stopSampling');
+        const data = JSON.parse(msg.toString());
+        if (!data.result?.profile) {
+          throw new Error(
+            'No heap sampling profile found after stopping\n' + msg.toString(),
+          );
+        }
+        return data.result.profile;
+      };
+    },
     [Symbol.dispose]() {
       // TODO: should we throw if closed here? we already dont care at this point
       ws.close();
@@ -128,8 +147,13 @@ function call(
   method:
     | 'HeapProfiler.enable'
     | 'HeapProfiler.disable'
-    | 'HeapProfiler.collectGarbage',
-) {
+    | 'HeapProfiler.collectGarbage'
+    | 'HeapProfiler.startSampling'
+    | 'HeapProfiler.stopSampling',
+): Promise<WebSocket.Data> {
+  if (ws.readyState !== WebSocket.OPEN) {
+    throw new Error('WebSocket is not open');
+  }
   const id = genId();
   ws.send(`{"id":${id},"method":"${method}"}`);
   return waitForImmediateMessage(ws, (m) =>
@@ -140,11 +164,12 @@ function call(
 function waitForImmediateMessage(
   ws: WebSocket,
   check: (m: WebSocket.Data) => boolean,
-) {
-  const { promise, resolve, reject } = createDeferredPromise();
+): Promise<WebSocket.Data> {
+  const { promise, resolve, reject } = createDeferredPromise<WebSocket.Data>();
+  ws.once('close', reject);
   function onMessage(m: WebSocket.Data) {
     if (check(m)) {
-      resolve();
+      resolve(m);
     } else {
       reject(new Error(`Unexpected immediate message\n${m.toString()}`));
     }
@@ -153,8 +178,10 @@ function waitForImmediateMessage(
   return Promise.race([
     promise,
     setTimeout(1_000).then(() => {
-      ws.off('message', onMessage);
       throw new Error('Timeout waiting for immediate message');
     }),
-  ]);
+  ]).finally(() => {
+    ws.off('close', reject);
+    ws.off('message', onMessage);
+  });
 }
