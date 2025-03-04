@@ -56,7 +56,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     idle = 10_000,
     duration = 180_000,
     calmdown = 30_000,
-    runs = 2,
+    runs = 3,
     onMemorySample,
     onHeapSnapshot,
     onHeapSamplingProfile,
