@@ -137,7 +137,7 @@ describe('GraphOS', () => {
       const result2 = unifiedGraphFetcher({});
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
-    })
+    });
   });
 });
 
