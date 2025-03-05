@@ -4804,7 +4804,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    extract-files: "npm:^13.0.0"
+    extract-files: "npm:13.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"
     meros: "npm:^1.2.1"
@@ -12240,7 +12240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"extract-files@npm:^13.0.0":
+"extract-files@npm:13.0.0":
   version: 13.0.0
   resolution: "extract-files@npm:13.0.0"
   dependencies:

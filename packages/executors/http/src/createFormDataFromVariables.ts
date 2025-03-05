@@ -9,8 +9,9 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { extractFiles, isExtractableFile } from 'extract-files';
+import extractFiles from 'extract-files/extractFiles.mjs';
 import { isGraphQLUpload } from './isGraphQLUpload.js';
+import isExtractableFile from 'extract-files/isExtractableFile.mjs';
 
 function collectAsyncIterableValues<T>(
   asyncIterable: AsyncIterable<T>,
@@ -50,13 +51,13 @@ export function createFormDataFromVariables(
   const vars = Object.assign({}, body.variables);
   const { clone, files } = extractFiles(
     vars,
-    'variables',
     ((v: any) =>
       isExtractableFile(v) ||
       v?.promise ||
       isAsyncIterable(v) ||
       v?.then ||
       typeof v?.arrayBuffer === 'function') as any,
+    'variables',
   );
   if (files.size === 0) {
     return JSON.stringify(body);
