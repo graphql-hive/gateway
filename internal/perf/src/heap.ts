@@ -1,5 +1,8 @@
+import { HeapProfiler } from 'inspector';
 import { serializer } from '@memlab/core';
 import { getFullHeapFromFile, PluginUtils } from '@memlab/heap-analysis';
+import { Frame } from 'speedscope/profile';
+import { importFromChromeHeapProfile } from 'speedscope/profile/v8heapalloc';
 
 export async function analyzeHeapSnapshot(file: string) {
   const snap = await getFullHeapFromFile(file);
@@ -85,4 +88,20 @@ export async function analyzeHeapSnapshot(file: string) {
     console.groupEnd();
   }
   console.groupEnd();
+}
+
+export async function analyzeHeapSamplingProfile(
+  v8Profile: HeapProfiler.SamplingHeapProfile,
+) {
+  const profile = importFromChromeHeapProfile(
+    // @ts-expect-error is ok, speedscope will add the id and totalSize properties
+    v8Profile,
+  );
+
+  const frames: Frame[] = [];
+
+  profile.forEachFrame((f) => frames.push(f));
+  frames.sort((a, b) => b.getSelfWeight() - a.getSelfWeight());
+
+  // TODO: analyse the frames for leak detection
 }
