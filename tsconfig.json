@@ -65,7 +65,8 @@
       ],
       "@graphql-hive/plugin-aws-sigv4": [
         "./packages/plugins/aws-sigv4/src/index.ts"
-      ]
+      ],
+      "@graphql-hive/nestjs": ["./packages/nestjs/src/index.ts"]
     }
   },
   "include": [

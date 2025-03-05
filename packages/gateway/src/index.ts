@@ -26,3 +26,7 @@ export {
   type HTTPTransportOptions,
   default as HTTPTransport,
 } from '@graphql-mesh/transport-http';
+export {
+  getCacheInstanceFromConfig,
+  getBuiltinPluginsFromConfig,
+} from './config';

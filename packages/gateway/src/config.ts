@@ -96,6 +96,10 @@ export async function loadConfig<
   return importedConfig || {};
 }
 
+/**
+ * This is an internal API and might have breaking changes in the future.
+ * So use it with caution.
+ */
 export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: {
@@ -157,6 +161,10 @@ export async function getBuiltinPluginsFromConfig(
   return plugins;
 }
 
+/**
+ * This is an internal API and might have breaking changes in the future.
+ * So use it with caution.
+ */
 export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: { logger: Logger; pubsub: MeshPubSub; cwd: string },
