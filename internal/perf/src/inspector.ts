@@ -5,8 +5,6 @@ import { Proc } from '@internal/proc';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { WebSocket } from 'ws';
 
-export type InspectorHeapSamplingProfile = HeapProfiler.SamplingHeapProfile;
-
 export interface Inspector {
   collectGarbage(): Promise<void>;
   /**
@@ -18,7 +16,7 @@ export interface Inspector {
    */
   writeHeapSnapshot(path: string): Promise<void>;
   /** @returns Function that stops the heap sampling and returns the {@link InspectorHeapSamplingProfile sampling profile}. */
-  startHeapSampling(): Promise<() => Promise<InspectorHeapSamplingProfile>>;
+  startHeapSampling(): Promise<() => Promise<HeapProfiler.SamplingHeapProfile>>;
   [Symbol.dispose](): void;
 }
 
