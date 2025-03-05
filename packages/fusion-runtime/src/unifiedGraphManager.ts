@@ -103,7 +103,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
-  instruments: () => Instruments | undefined;
+  instruments?: () => Instruments | undefined;
 }
 
 export type Instruments = {
