@@ -1,13 +1,15 @@
+import { useCustomFetch } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import { MeshFetch } from '@graphql-mesh/types';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { isDebug } from '@internal/testing';
-import { createSchema } from 'graphql-yoga';
+import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { GatewayPlugin } from '../src/types';
 
 describe('instruments', () => {
-  const subgraphSchema = createSchema({
+  const schema = createSchema({
     typeDefs: /* GraphQL */ `
       type Query {
         hello: String
@@ -85,22 +87,29 @@ describe('instruments', () => {
         },
       },
     });
+
+    await using yoga = createYoga({
+      schema,
+    });
+
     await using gateway = createGatewayRuntime({
       supergraph: () =>
         getUnifiedGraphGracefully([
           {
             name: 'TEST_SUBGRAPH',
-            schema: subgraphSchema,
+            schema,
+            url: 'http://yoga/graphql',
           },
         ]),
       transports() {
         return {
           getSubgraphExecutor() {
-            return createDefaultExecutor(subgraphSchema);
+            return createDefaultExecutor(schema);
           },
         };
       },
       plugins: () => [
+        useCustomFetch(yoga.fetch as MeshFetch),
         make('1'),
         make('2'),
         make('3'),
