@@ -26,6 +26,7 @@ import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import {
@@ -37,7 +38,6 @@ import {
   createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
 } from './spans';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 
 type PrimitiveOrEvaluated<TExpectedResult, TInput = never> =
   | TExpectedResult
@@ -220,32 +220,38 @@ export function useOpenTelemetry(
       });
     },
     onRequest(onRequestPayload) {
-      return handleMaybePromise(() => preparation$, () => {
-        const shouldTraceHttp =
-          typeof options.spans?.http === 'function'
-            ? options.spans.http(onRequestPayload)
-            : (options.spans?.http ?? true);
+      return handleMaybePromise(
+        () => preparation$,
+        () => {
+          const shouldTraceHttp =
+            typeof options.spans?.http === 'function'
+              ? options.spans.http(onRequestPayload)
+              : (options.spans?.http ?? true);
 
-        if (shouldTraceHttp) {
-          const { request, url } = onRequestPayload;
-          const otelContext = inheritContext
-            ? propagation.extract(
-              context.active(),
-              request.headers,
-              HeadersTextMapGetter,
-            )
-            : context.active();
+          if (shouldTraceHttp) {
+            const { request, url } = onRequestPayload;
+            const otelContext = inheritContext
+              ? propagation.extract(
+                  context.active(),
+                  request.headers,
+                  HeadersTextMapGetter,
+                )
+              : context.active();
 
-          const httpSpan = createHttpSpan({
-            request,
-            url,
-            tracer,
-            otelContext,
-          });
+            const httpSpan = createHttpSpan({
+              request,
+              url,
+              tracer,
+              otelContext,
+            });
 
-          requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
-        }
-      })
+            requestContextMapping.set(
+              request,
+              trace.setSpan(otelContext, httpSpan),
+            );
+          }
+        },
+      );
     },
     onValidate(onValidatePayload) {
       const shouldTraceValidate =
