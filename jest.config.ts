@@ -14,7 +14,7 @@ const ESM_PACKAGES = [
   'parse-duration',
   'constant-case',
   'extract-files',
-  'is-plain-obj'
+  'is-plain-obj',
 ];
 
 export default {

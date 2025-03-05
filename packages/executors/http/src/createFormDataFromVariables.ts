@@ -10,8 +10,8 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import extractFiles from 'extract-files/extractFiles.mjs';
-import { isGraphQLUpload } from './isGraphQLUpload.js';
 import isExtractableFile from 'extract-files/isExtractableFile.mjs';
+import { isGraphQLUpload } from './isGraphQLUpload.js';
 
 function collectAsyncIterableValues<T>(
   asyncIterable: AsyncIterable<T>,
