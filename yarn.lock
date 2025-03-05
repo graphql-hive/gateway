@@ -3886,7 +3886,6 @@ __metadata:
     graphql-yoga: "npm:^5.12.0"
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.11.2"
-    prettier: "npm:^3.3.3"
     tslib: "npm:^2.8.1"
     tsx: "npm:4.19.3"
   peerDependencies:
