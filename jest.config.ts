@@ -15,6 +15,7 @@ const ESM_PACKAGES = [
   'constant-case',
   'extract-files',
   'is-plain-obj',
+  'no-case',
 ];
 
 export default {
