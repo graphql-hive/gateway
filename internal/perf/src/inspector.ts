@@ -78,7 +78,7 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
       await fs.rm(path, { force: true });
 
       const fd = await fs.open(path, 'w');
-      await using _ = {
+      await using _0 = {
         async [Symbol.asyncDispose]() {
           await fd.close();
         },
@@ -98,11 +98,14 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
         if (data.id === id) {
           // receiving a message with the id of the takeHeapSnapshot means the snapshotting is done
           heapSnapshotDone();
-          ws.off('message', onMessage);
-          return;
         }
       }
       ws.on('message', onMessage);
+      using _1 = {
+        [Symbol.dispose]() {
+          ws.off('message', onMessage);
+        },
+      };
 
       // make sure socket is still open
       throwIfClosed();
