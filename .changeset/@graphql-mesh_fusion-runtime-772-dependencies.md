@@ -4,4 +4,4 @@
 
 dependencies updates: 
 
-- Updated dependency [`constant-case@^4.0.0` ↗︎](https://www.npmjs.com/package/constant-case/v/4.0.0) (from `^3`, in `dependencies`)
+- Removed dependency [`constant-case@^3` ↗︎](https://www.npmjs.com/package/constant-case/v/3.0.0) (from `dependencies`)
