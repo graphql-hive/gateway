@@ -3320,7 +3320,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/instruments@npm:^1.0.0":
+"@envelop/instruments@npm:1.0.0, @envelop/instruments@npm:^1.0.0":
   version: 1.0.0
   resolution: "@envelop/instruments@npm:1.0.0"
   dependencies:
@@ -3772,7 +3772,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    "@whatwg-node/server": "npm:^0.9.68"
+    "@whatwg-node/server": "npm:^0.10.0"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -8292,12 +8292,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/promise-helpers@npm:^1.0.0, @whatwg-node/promise-helpers@npm:^1.2.0, @whatwg-node/promise-helpers@npm:^1.2.1, @whatwg-node/promise-helpers@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "@whatwg-node/promise-helpers@npm:1.2.2"
+"@whatwg-node/promise-helpers@npm:^1.0.0, @whatwg-node/promise-helpers@npm:^1.2.0, @whatwg-node/promise-helpers@npm:^1.2.1, @whatwg-node/promise-helpers@npm:^1.2.2, @whatwg-node/promise-helpers@npm:^1.2.3":
+  version: 1.2.4
+  resolution: "@whatwg-node/promise-helpers@npm:1.2.4"
   dependencies:
     tslib: "npm:^2.6.3"
-  checksum: 10c0/fc06f34a91bbb3bc4200acbf4bbdfc49b4e2f5546c12454650e424ba94a1c06d8436fc5cd9d56e7c529fdca9422d824a8409de4099c2acdb2723046688d4c6a7
+  checksum: 10c0/df62da1c9871506736942d704422436c56d77b0b0110203b8fffffd5750930a8d199eb5d93218a61aeb1f09bf6b315276e7257e19bcebb6f639b4d3a52171870
   languageName: node
   linkType: hard
 
@@ -8309,6 +8309,19 @@ __metadata:
     "@whatwg-node/server": "npm:^0.9.68"
     tslib: "npm:^2.6.3"
   checksum: 10c0/2e946020995ba363ddd05949a1fff77e49c3a8c7a9f1b710abb040bb5f6223c95617e0a763e144318252de703cc9d79f252cdd320291faab518371d3f8130cc1
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/server@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@whatwg-node/server@npm:0.10.0"
+  dependencies:
+    "@envelop/instruments": "npm:1.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/fetch": "npm:^0.10.5"
+    "@whatwg-node/promise-helpers": "npm:^1.2.3"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/2ce25302d90518b8b263c410a011c3b2fd29a3630d3528041c19002a84639efc6b41f299832b0eecca19ad3f6814998b77a512f17fc0317dc81a5ce29000a1ce
   languageName: node
   linkType: hard
 
