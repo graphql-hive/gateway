@@ -13,6 +13,7 @@
     "memlab": "^1.1.56",
     "parse-duration": "^2.0.0",
     "regression": "^2.0.1",
+    "speedscope": "./speedscope-1.23.0-alpha.3.tgz",
     "ws": "^8.18.0"
   },
   "devDependencies": {
