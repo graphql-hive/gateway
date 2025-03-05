@@ -8320,7 +8320,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
+  version: 8.18.0
+  resolution: "@types/ws@npm:8.18.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/a56d2e0d1da7411a1f3548ce02b51a50cbe9e23f025677d03df48f87e4a3c72e1342fbf1d12e487d7eafa8dc670c605152b61bbf9165891ec0e9694b0d3ea8d4
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:~8.5.10":
   version: 8.5.14
   resolution: "@types/ws@npm:8.5.14"
   dependencies:
@@ -12454,7 +12463,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fets@npm:0.8.4, fets@npm:^0.8.4":
+"fets@npm:0.8.4":
   version: 0.8.4
   resolution: "fets@npm:0.8.4"
   dependencies:
@@ -12468,6 +12477,23 @@ __metadata:
     ts-toolbelt: "npm:^9.6.0"
     tslib: "npm:^2.3.1"
   checksum: 10c0/6a044d98e9bb826c16310e7b78a81af6cb18e5aed436d4882239ef5b4ad20b0d01d32898105647eb68c188938b6f73c78f155137b815097561d5ca86686a8972
+  languageName: node
+  linkType: hard
+
+"fets@npm:^0.8.4":
+  version: 0.8.5
+  resolution: "fets@npm:0.8.5"
+  dependencies:
+    "@sinclair/typebox": "npm:^0.34.0"
+    "@whatwg-node/cookie-store": "npm:^0.2.0"
+    "@whatwg-node/fetch": "npm:^0.10.0"
+    "@whatwg-node/server": "npm:^0.10.0"
+    hotscript: "npm:^1.0.11"
+    json-schema-to-ts: "npm:^3.0.0"
+    qs: "npm:^6.13.1"
+    ts-toolbelt: "npm:^9.6.0"
+    tslib: "npm:^2.3.1"
+  checksum: 10c0/c3c7100263845376c92b563ac1a123572b2a267744648e3deb1b0c688abfc674913aff534d13bd716df2e0b03406298777fab4741f86c1cf1670f8b9838c211d
   languageName: node
   linkType: hard
 
@@ -17164,7 +17190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.11.0, qs@npm:^6.11.2, qs@npm:^6.14.0":
+"qs@npm:^6.11.0, qs@npm:^6.11.2, qs@npm:^6.13.1, qs@npm:^6.14.0":
   version: 6.14.0
   resolution: "qs@npm:6.14.0"
   dependencies:
