@@ -13,6 +13,9 @@ const ESM_PACKAGES = [
   'graphql-federation-gateway-audit',
   'parse-duration',
   'constant-case',
+  'extract-files',
+  'is-plain-obj',
+  'no-case',
 ];
 
 export default {

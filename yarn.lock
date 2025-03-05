@@ -4800,11 +4800,11 @@ __metadata:
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@repeaterjs/repeater": "npm:^3.0.4"
-    "@types/extract-files": "npm:8.1.3"
+    "@types/extract-files": "npm:13.0.1"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    extract-files: "npm:^11.0.0"
+    extract-files: "npm:13.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"
     meros: "npm:^1.2.1"
@@ -8021,10 +8021,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/extract-files@npm:8.1.3":
-  version: 8.1.3
-  resolution: "@types/extract-files@npm:8.1.3"
-  checksum: 10c0/febd25c9bbf02a4073ae62815077eaa786633c3594f0d0ab6cc96460ffc6339b270a4e46ba94e22b65cf471e3f65d390a7524ceb23066cbed17209993b993c3c
+"@types/extract-files@npm:13.0.1":
+  version: 13.0.1
+  resolution: "@types/extract-files@npm:13.0.1"
+  checksum: 10c0/4732f875db36498a4bf3deb6965267d515cc7a82be6a3b0346a6b9a6c9eec173ebae774301070de6c7f9b879121d81bc106498cce9cc7bc521b2e75b84710ed2
   languageName: node
   linkType: hard
 
@@ -12240,10 +12240,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"extract-files@npm:^11.0.0":
-  version: 11.0.0
-  resolution: "extract-files@npm:11.0.0"
-  checksum: 10c0/7ac1cd693d081099d7c29f2b36aad199f92c5ea234c2016eb37ba213dddaefe74d54566f0675de5917d35cf98670183c2c9a0d96094727eb2c6dae02be7fc308
+"extract-files@npm:13.0.0":
+  version: 13.0.0
+  resolution: "extract-files@npm:13.0.0"
+  dependencies:
+    is-plain-obj: "npm:^4.1.0"
+  checksum: 10c0/ee1e6e37f24fcb7de5019c0dc054f3e075664f63b5a9bd38c9ba1a32481ed1e77fd237adf826a7f6c7a1db406d9db4428f8ae4395fb2dfb602235b15f8f4bc3e
   languageName: node
   linkType: hard
 
@@ -13989,6 +13991,13 @@ __metadata:
   version: 7.0.0
   resolution: "is-number@npm:7.0.0"
   checksum: 10c0/b4686d0d3053146095ccd45346461bc8e53b80aeb7671cc52a4de02dbbf7dc0d1d2a986e2fe4ae206984b4d34ef37e8b795ebc4f4295c978373e6575e295d811
+  languageName: node
+  linkType: hard
+
+"is-plain-obj@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "is-plain-obj@npm:4.1.0"
+  checksum: 10c0/32130d651d71d9564dc88ba7e6fda0e91a1010a3694648e9f4f47bb6080438140696d3e3e15c741411d712e47ac9edc1a8a9de1fe76f3487b0d90be06ac9975e
   languageName: node
   linkType: hard
 
