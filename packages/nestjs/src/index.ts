@@ -15,7 +15,6 @@ import {
 } from '@graphql-mesh/types';
 import {
   asArray,
-  getResolversFromSchema,
   type IResolvers,
   type TypeSource,
 } from '@graphql-tools/utils';
@@ -29,12 +28,13 @@ import {
 } from '@nestjs/graphql';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { GraphQLSchema, lexicographicSortSchema } from 'graphql';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
 > = GatewayConfig<TContext> &
   GatewayCLIBuiltinPluginConfig &
-  GqlModuleOptions & {
+  Omit<GqlModuleOptions, 'schema'> & {
     /**
      * If enabled, "subscriptions-transport-ws" will be automatically registered.
      */
@@ -52,12 +52,11 @@ export class HiveGatewayDriver<
   private _gatewayRuntime: GatewayRuntime<TContext> | undefined;
   private _subscriptionService?: GqlSubscriptionService;
 
-  public async start({
-    schema,
+  private async ensureGatewayRuntime({
     typeDefs,
     resolvers,
     ...options
-  }: HiveGatewayDriverConfig<TContext>): Promise<void> {
+  }: HiveGatewayDriverConfig<TContext>) {
     const additionalTypeDefs: TypeSource[] = [];
     if (typeDefs) {
       additionalTypeDefs.push(typeDefs);
@@ -65,11 +64,6 @@ export class HiveGatewayDriver<
     const additionalResolvers: IResolvers[] = [];
     if (resolvers) {
       additionalResolvers.push(...asArray(resolvers));
-    }
-    if (schema) {
-      additionalTypeDefs.push(schema);
-      const resolversFromSchema = getResolversFromSchema(schema);
-      additionalResolvers.push(resolversFromSchema);
     }
     const logger = new NestJSLoggerAdapter(
       'Hive Gateway',
@@ -115,11 +109,47 @@ export class HiveGatewayDriver<
                 };
                 existingPlugins.push(contextPlugin);
               }
+              if (options.transformSchema) {
+                const changedSchemas = new WeakSet<GraphQLSchema>();
+                const schemaTransformPlugin: GatewayPlugin = {
+                  onSchemaChange({ schema, replaceSchema }) {
+                    if (changedSchemas.has(schema)) {
+                      return;
+                    }
+                    changedSchemas.add(schema);
+                    return handleMaybePromise(
+                      () => options.transformSchema?.(schema),
+                      replaceSchema,
+                    );
+                  },
+                };
+                existingPlugins.push(schemaTransformPlugin);
+              }
+              if (options.sortSchema) {
+                const sortedSchemas = new WeakSet<GraphQLSchema>();
+                const schemaSortPlugin: GatewayPlugin = {
+                  onSchemaChange({ schema, replaceSchema }) {
+                    if (sortedSchemas.has(schema)) {
+                      return;
+                    }
+                    sortedSchemas.add(schema);
+                    replaceSchema(lexicographicSortSchema(schema));
+                  },
+                };
+                existingPlugins.push(schemaSortPlugin);
+              }
               return [...builtinPlugins, ...existingPlugins];
             },
           }
         : {}),
     });
+
+    return this._gatewayRuntime;
+  }
+  public async start(
+    options: HiveGatewayDriverConfig<TContext>,
+  ): Promise<void> {
+    const _gatewayRuntime = await this.ensureGatewayRuntime(options);
     const platformName = this.httpAdapterHost.httpAdapter.getType();
     if (platformName === 'express') {
       this.registerExpress();
@@ -133,7 +163,7 @@ export class HiveGatewayDriver<
         options.subscriptions || { 'graphql-ws': {} };
       if (subscriptionsOptions['graphql-ws']) {
         const gwOptions = getGraphQLWSOptions<TContext, any>(
-          this._gatewayRuntime,
+          _gatewayRuntime,
           (ctx) => ({
             req: ctx.extra?.request,
             socket: ctx.extra?.socket,
@@ -199,7 +229,7 @@ export class HiveGatewayDriver<
       }
       this._subscriptionService = new GqlSubscriptionService(
         {
-          schema: await this._gatewayRuntime.getSchema(),
+          schema: await _gatewayRuntime!.getSchema(),
           path: options.path,
           // @ts-expect-error - We know that execute and subscribe are defined
           execute: (args) => args.rootValue.execute(args),
@@ -215,6 +245,13 @@ export class HiveGatewayDriver<
   public async stop(): Promise<void> {
     await this._subscriptionService?.stop();
     await this._gatewayRuntime?.dispose();
+  }
+
+  public override async generateSchema(
+    options: HiveGatewayDriverConfig<TContext>,
+  ) {
+    const gatewayRuntime = await this.ensureGatewayRuntime(options);
+    return gatewayRuntime.getSchema();
   }
 
   private registerExpress() {

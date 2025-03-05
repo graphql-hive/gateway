@@ -2,27 +2,29 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
+  getAvailablePort,
 } from '@internal/testing';
 import { INestApplication } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
+import { GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import { parse } from 'graphql';
+import { fetch } from '@whatwg-node/fetch';
+import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import supertest from 'supertest';
-import { afterAll, beforeAll, describe, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
 
 describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
   let app: INestApplication;
   const disposableStack = new AsyncDisposableStack();
+  const schemaSDL = /* GraphQL */ `
+    type Query {
+      hello: String!
+    }
+  `;
   beforeAll(async () => {
     const upstreamSchema = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          hello: String!
-        }
-      `),
+      typeDefs: parse(schemaSDL),
       resolvers: {
         Query: {
           hello: () => 'world',
@@ -55,20 +57,30 @@ describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
     return app.init();
   });
   afterAll(() => disposableStack.disposeAsync());
-  it('works', () => {
-    return supertest(app.getHttpServer())
-      .post('/graphql')
-      .send({
+  it('works', async () => {
+    const port = await getAvailablePort();
+    await app.listen(port);
+    const res = await fetch(`http://localhost:${port}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         query: /* GraphQL */ `
           query {
             hello
           }
         `,
-      })
-      .expect(200, {
-        data: {
-          hello: 'world',
-        },
-      });
+      }),
+    });
+    expect(await res.json()).toEqual({
+      data: {
+        hello: 'world',
+      },
+    });
+    const { schema } = app.get(GraphQLSchemaHost);
+    expect(stripIgnoredCharacters(printSchema(schema))).toBe(
+      stripIgnoredCharacters(schemaSDL),
+    );
   });
 });
