@@ -4222,7 +4222,7 @@ __metadata:
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    constant-case: "npm:^4.0.0"
+    change-case: "npm:^5.4.4"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"
     pkgroll: "npm:2.11.2"
@@ -4242,7 +4242,6 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.103.18"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/utils": "npm:^10.8.1"
-    "@types/json-stable-stringify": "npm:^1.2.0"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"
@@ -8100,15 +8099,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-stable-stringify@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@types/json-stable-stringify@npm:1.2.0"
-  dependencies:
-    json-stable-stringify: "npm:*"
-  checksum: 10c0/0ef08aaa468aeac8d632cb6cf0985ae1b091d0a0d662511a5830548704d50523b9246a5b353e31efe1a3b9d72f3b7317b38e0fd3e935ef84e2608b254642a73f
-  languageName: node
-  linkType: hard
-
 "@types/json5@npm:^0.0.29":
   version: 0.0.29
   resolution: "@types/json5@npm:0.0.29"
@@ -10373,6 +10363,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"change-case@npm:^5.4.4":
+  version: 5.4.4
+  resolution: "change-case@npm:5.4.4"
+  checksum: 10c0/2a9c2b9c9ad6ab2491105aaf506db1a9acaf543a18967798dcce20926c6a173aa63266cb6189f3086e3c14bf7ae1f8ea4f96ecc466fcd582310efa00372f3734
+  languageName: node
+  linkType: hard
+
 "char-regex@npm:^1.0.2":
   version: 1.0.2
   resolution: "char-regex@npm:1.0.2"
@@ -10767,15 +10764,6 @@ __metadata:
     tslib: "npm:^2.0.3"
     upper-case: "npm:^2.0.2"
   checksum: 10c0/91d54f18341fcc491ae66d1086642b0cc564be3e08984d7b7042f8b0a721c8115922f7f11d6a09f13ed96ff326eabae11f9d1eb0335fa9d8b6e39e4df096010e
-  languageName: node
-  linkType: hard
-
-"constant-case@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "constant-case@npm:4.0.0"
-  dependencies:
-    no-case: "npm:^4.0.0"
-  checksum: 10c0/8691a281254b51f8cded330431ea3f232b5dba29da6f04770ab8e0d0273b90af35389a905d20e034a8c7e07765b8e6338c2ca0b1d1a90810754cbf8098bf0434
   languageName: node
   linkType: hard
 
@@ -14974,7 +14962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stable-stringify@npm:*, json-stable-stringify@npm:^1.1.1":
+"json-stable-stringify@npm:^1.1.1":
   version: 1.2.1
   resolution: "json-stable-stringify@npm:1.2.1"
   dependencies:
@@ -16136,13 +16124,6 @@ __metadata:
     lower-case: "npm:^2.0.2"
     tslib: "npm:^2.0.3"
   checksum: 10c0/8ef545f0b3f8677c848f86ecbd42ca0ff3cd9dd71c158527b344c69ba14710d816d8489c746b6ca225e7b615108938a0bda0a54706f8c255933703ac1cf8e703
-  languageName: node
-  linkType: hard
-
-"no-case@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "no-case@npm:4.0.0"
-  checksum: 10c0/619860434dc33e65cec2cb0b57942903bac864dd1efc834f71d04f5e060f5eb2189224c8557aa5ad3dacf5594d26e33882b3fb7f975a9bf3481c7e7867011a2f
   languageName: node
   linkType: hard
 

@@ -34,7 +34,7 @@ import {
   handleMaybePromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
-import { constantCase } from 'constant-case';
+import { constantCase } from 'change-case';
 import {
   FragmentDefinitionNode,
   GraphQLError,
