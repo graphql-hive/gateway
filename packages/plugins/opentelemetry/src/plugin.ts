@@ -37,6 +37,7 @@ import {
   createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
 } from './spans';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 
 type PrimitiveOrEvaluated<TExpectedResult, TInput = never> =
   | TExpectedResult
@@ -219,34 +220,32 @@ export function useOpenTelemetry(
       });
     },
     onRequest(onRequestPayload) {
-      const shouldTraceHttp =
-        typeof options.spans?.http === 'function'
-          ? options.spans.http(onRequestPayload)
-          : (options.spans?.http ?? true);
+      return handleMaybePromise(() => preparation$, () => {
+        const shouldTraceHttp =
+          typeof options.spans?.http === 'function'
+            ? options.spans.http(onRequestPayload)
+            : (options.spans?.http ?? true);
 
-      if (!shouldTraceHttp) {
-        return preparation$;
-      }
+        if (shouldTraceHttp) {
+          const { request, url } = onRequestPayload;
+          const otelContext = inheritContext
+            ? propagation.extract(
+              context.active(),
+              request.headers,
+              HeadersTextMapGetter,
+            )
+            : context.active();
 
-      const { request, url } = onRequestPayload;
-      const otelContext = inheritContext
-        ? propagation.extract(
-            context.active(),
-            request.headers,
-            HeadersTextMapGetter,
-          )
-        : context.active();
+          const httpSpan = createHttpSpan({
+            request,
+            url,
+            tracer,
+            otelContext,
+          });
 
-      const httpSpan = createHttpSpan({
-        request,
-        url,
-        tracer,
-        otelContext,
-      });
-
-      requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
-
-      return preparation$;
+          requestContextMapping.set(request, trace.setSpan(otelContext, httpSpan));
+        }
+      })
     },
     onValidate(onValidatePayload) {
       const shouldTraceValidate =
