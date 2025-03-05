@@ -1,9 +1,4 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import {
-  HiveGatewayDriver,
-  HiveGatewayDriverConfig,
-} from '../src';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -11,10 +6,12 @@ import {
 import { INestApplication } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import supertest from 'supertest';
 import { afterAll, beforeAll, describe, it } from 'vitest';
+import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
 
 describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
   let app: INestApplication;
