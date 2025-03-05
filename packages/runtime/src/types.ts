@@ -96,7 +96,7 @@ export type GatewayPlugin<
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
-  } & Partial<Disposable | AsyncDisposable>;
+  };
 
 export type OnCacheGetHook = (
   payload: OnCacheGetHookEventPayload,
