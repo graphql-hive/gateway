@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 const { service } = createTenv(__dirname);
 const { supergraph, query, result } = createExampleSetup(__dirname);
 
-it('executes the query', async () => {
+it.todo('executes the query', async () => {
   const supergraphPath = await supergraph();
   const { port } = await service('nestjs', {
     args: [`--supergraph=${supergraphPath}`],

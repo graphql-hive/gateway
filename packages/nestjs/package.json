@@ -40,8 +40,8 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "@nestjs/common": "^11.0.10",
-    "@nestjs/graphql": "^13.0.3",
+    "@nestjs/common": "^10 || ^11",
+    "@nestjs/graphql": "^12 || ^13",
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
@@ -55,11 +55,14 @@
     "@nestjs/common": "11.0.10",
     "@nestjs/core": "11.0.10",
     "@nestjs/graphql": "13.0.3",
+    "@nestjs/testing": "11.0.11",
+    "@types/supertest": "6.0.2",
     "fastify": "5.2.1",
     "graphql": "^16.9.0",
     "pkgroll": "2.10.0",
     "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.1"
+    "rxjs": "7.8.1",
+    "supertest": "7.0.0"
   },
   "sideEffects": false
 }

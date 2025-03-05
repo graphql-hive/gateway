@@ -9,7 +9,7 @@ const rootDir = __dirname;
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
 const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
 const tsconfig = JSON5.parse(tsconfigContents);
-const ESM_PACKAGES = ['graphql-federation-gateway-audit'];
+const ESM_PACKAGES = ['graphql-federation-gateway-audit', 'parse-duration'];
 
 export default {
   testEnvironment: 'node',
