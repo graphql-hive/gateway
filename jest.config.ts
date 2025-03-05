@@ -12,10 +12,9 @@ const tsconfig = JSON5.parse(tsconfigContents);
 const ESM_PACKAGES = [
   'graphql-federation-gateway-audit',
   'parse-duration',
-  'constant-case',
+  'change-case',
   'extract-files',
   'is-plain-obj',
-  'no-case',
 ];
 
 export default {
