@@ -3385,19 +3385,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/on-resolve@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@envelop/on-resolve@npm:5.0.1"
-  dependencies:
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
-  peerDependencies:
-    "@envelop/core": ^5.1.1
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/88b1cc4326ad939bffc94fc200d1dbde26ac7633bee912bd19e1d471191c7355c2e56fcb4ab61f4f51c3f29737a48eed97e604c5bad15615e6c18146a354b8e1
-  languageName: node
-  linkType: hard
-
-"@envelop/on-resolve@npm:^5.1.1":
+"@envelop/on-resolve@npm:^5.0.1, @envelop/on-resolve@npm:^5.1.1":
   version: 5.1.1
   resolution: "@envelop/on-resolve@npm:5.1.1"
   dependencies:
@@ -4234,7 +4222,7 @@ __metadata:
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    constant-case: "npm:^3"
+    constant-case: "npm:^4.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"
     pkgroll: "npm:2.11.2"
@@ -4957,7 +4945,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/merge@npm:^9.0.12, @graphql-tools/merge@npm:^9.0.22":
+"@graphql-tools/merge@npm:^9.0.12, @graphql-tools/merge@npm:^9.0.19, @graphql-tools/merge@npm:^9.0.22":
   version: 9.0.22
   resolution: "@graphql-tools/merge@npm:9.0.22"
   dependencies:
@@ -4966,18 +4954,6 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/1c196f33549bd17a420fabe59710ecd5c59edf6879a076ccfe874403063b2b2f1acb394115ff61310357bc0f476ce8400b04788f2ed89ce49a37766f1cb85b04
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/merge@npm:^9.0.19":
-  version: 9.0.21
-  resolution: "@graphql-tools/merge@npm:9.0.21"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.8.3"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/35bbaea2bbc9e86a631019397e3ca1f53705e2fb608c688aed1d162426de826192b74fc7a8f90d95aa91e2d2bef12ded88674c91d5f42a26b6eb9f516c07fbd6
   languageName: node
   linkType: hard
 
@@ -8353,16 +8329,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
-  version: 8.18.0
-  resolution: "@types/ws@npm:8.18.0"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/a56d2e0d1da7411a1f3548ce02b51a50cbe9e23f025677d03df48f87e4a3c72e1342fbf1d12e487d7eafa8dc670c605152b61bbf9165891ec0e9694b0d3ea8d4
-  languageName: node
-  linkType: hard
-
-"@types/ws@npm:~8.5.10":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
   version: 8.5.14
   resolution: "@types/ws@npm:8.5.14"
   dependencies:
@@ -10792,7 +10759,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"constant-case@npm:^3, constant-case@npm:^3.0.0, constant-case@npm:^3.0.4":
+"constant-case@npm:^3.0.0, constant-case@npm:^3.0.4":
   version: 3.0.4
   resolution: "constant-case@npm:3.0.4"
   dependencies:
@@ -10800,6 +10767,15 @@ __metadata:
     tslib: "npm:^2.0.3"
     upper-case: "npm:^2.0.2"
   checksum: 10c0/91d54f18341fcc491ae66d1086642b0cc564be3e08984d7b7042f8b0a721c8115922f7f11d6a09f13ed96ff326eabae11f9d1eb0335fa9d8b6e39e4df096010e
+  languageName: node
+  linkType: hard
+
+"constant-case@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "constant-case@npm:4.0.0"
+  dependencies:
+    no-case: "npm:^4.0.0"
+  checksum: 10c0/8691a281254b51f8cded330431ea3f232b5dba29da6f04770ab8e0d0273b90af35389a905d20e034a8c7e07765b8e6338c2ca0b1d1a90810754cbf8098bf0434
   languageName: node
   linkType: hard
 
@@ -12430,16 +12406,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastq@npm:^1.17.1":
-  version: 1.19.0
-  resolution: "fastq@npm:1.19.0"
-  dependencies:
-    reusify: "npm:^1.0.4"
-  checksum: 10c0/d6a001638f1574a696660fcbba5300d017760432372c801632c325ca7c16819604841c92fd3ccadcdacec0966ca336363a5ff57bc5f0be335d8ea7ac6087b98f
-  languageName: node
-  linkType: hard
-
-"fastq@npm:^1.6.0":
+"fastq@npm:^1.17.1, fastq@npm:^1.6.0":
   version: 1.19.1
   resolution: "fastq@npm:1.19.1"
   dependencies:
@@ -16160,6 +16127,13 @@ __metadata:
     lower-case: "npm:^2.0.2"
     tslib: "npm:^2.0.3"
   checksum: 10c0/8ef545f0b3f8677c848f86ecbd42ca0ff3cd9dd71c158527b344c69ba14710d816d8489c746b6ca225e7b615108938a0bda0a54706f8c255933703ac1cf8e703
+  languageName: node
+  linkType: hard
+
+"no-case@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "no-case@npm:4.0.0"
+  checksum: 10c0/619860434dc33e65cec2cb0b57942903bac864dd1efc834f71d04f5e060f5eb2189224c8557aa5ad3dacf5594d26e33882b3fb7f975a9bf3481c7e7867011a2f
   languageName: node
   linkType: hard
 
