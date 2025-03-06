@@ -1,7 +1,6 @@
 import { useCustomFetch } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
-import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { isDebug } from '@internal/testing';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
