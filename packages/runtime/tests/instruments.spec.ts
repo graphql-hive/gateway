@@ -101,23 +101,11 @@ describe('instruments', () => {
             url: 'http://yoga/graphql',
           },
         ]),
-      transports() {
-        return {
-          getSubgraphExecutor() {
-            return createDefaultExecutor(schema);
-          },
-        };
-      },
       plugins: () => [
         useCustomFetch(yoga.fetch as MeshFetch),
         make('1'),
         make('2'),
         make('3'),
-        {
-          onFetch() {
-            console.log('on fetch');
-          },
-        },
       ],
       logging: isDebug(),
     });

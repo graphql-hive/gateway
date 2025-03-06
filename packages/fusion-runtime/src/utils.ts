@@ -259,7 +259,6 @@ export function getOnSubgraphExecute({
     const originalExecutor = executor;
     executor = (executionRequest) => {
       const subgraphInstrument = instruments()?.subgraphExecute;
-      console.log('instruments', instruments());
       return getInstrumented({ executionRequest }).asyncFn(
         subgraphInstrument,
         originalExecutor,

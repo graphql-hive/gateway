@@ -827,7 +827,6 @@ export function createGatewayRuntime<
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
         if (plugin.instruments) {
-          console.log('plugin instruments deteceted');
           instruments = instruments
             ? chain(instruments, plugin.instruments)
             : plugin.instruments;
@@ -859,7 +858,6 @@ export function createGatewayRuntime<
           onCacheDeleteHooks.push(plugin.onCacheDelete);
         }
       }
-      console.log('instruments:', instruments);
     },
   };
 
