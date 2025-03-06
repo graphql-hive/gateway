@@ -1,4 +1,4 @@
-import { getInstrumented } from '@envelop/instruments';
+import { getInstrumented } from '@envelop/instrumentation';
 import {
   defaultPrintFn,
   type Transport,
@@ -48,7 +48,10 @@ import {
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
-import { Instruments, TransportEntryAdditions } from './unifiedGraphManager';
+import {
+  Instrumentation,
+  TransportEntryAdditions,
+} from './unifiedGraphManager';
 
 export type {
   TransportEntry,
@@ -177,7 +180,7 @@ export function getOnSubgraphExecute({
   transports,
   getDisposeReason,
   batch = true,
-  instruments,
+  instrumentation,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -187,7 +190,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
   batch?: boolean;
-  instruments: () => Instruments | undefined;
+  instrumentation: () => Instrumentation | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -258,9 +261,9 @@ export function getOnSubgraphExecute({
     }
     const originalExecutor = executor;
     executor = (executionRequest) => {
-      const subgraphInstrument = instruments()?.subgraphExecute;
+      const subgraphInstrumentation = instrumentation()?.subgraphExecute;
       return getInstrumented({ executionRequest }).asyncFn(
-        subgraphInstrument,
+        subgraphInstrumentation,
         originalExecutor,
       )(executionRequest);
     };

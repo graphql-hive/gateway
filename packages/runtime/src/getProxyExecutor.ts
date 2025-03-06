@@ -1,5 +1,5 @@
 import type {
-  Instruments,
+  Instrumentation,
   OnSubgraphExecuteHook,
   TransportEntry,
 } from '@graphql-mesh/fusion-runtime';
@@ -14,14 +14,14 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
   getSchema,
   onSubgraphExecuteHooks,
   transportExecutorStack,
-  instruments,
+  instrumentation,
 }: {
   config: GatewayConfigProxy<TContext>;
   configContext: GatewayConfigContext;
   getSchema: () => GraphQLSchema;
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transportExecutorStack: AsyncDisposableStack;
-  instruments: () => Instruments | undefined;
+  instrumentation: () => Instrumentation | undefined;
 }): Executor {
   const fakeTransportEntryMap: Record<string, TransportEntry> = {};
   let subgraphName: string = 'upstream';
@@ -46,7 +46,7 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
     getSubgraphSchema: getSchema,
     transportExecutorStack,
     transports: config.transports,
-    instruments: instruments,
+    instrumentation: instrumentation,
   });
   return function proxyExecutor(executionRequest) {
     return onSubgraphExecute(subgraphName, executionRequest);

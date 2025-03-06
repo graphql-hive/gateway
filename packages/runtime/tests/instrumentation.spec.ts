@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { GatewayPlugin } from '../src/types';
 
-describe('instruments', () => {
+describe('instrumentation', () => {
   const schema = createSchema({
     typeDefs: /* GraphQL */ `
       type Query {
@@ -28,7 +28,7 @@ describe('instruments', () => {
   it('should wrap all phases in the order of the plugin array', async () => {
     const results: string[] = [];
     const make = (name: string): GatewayPlugin => ({
-      instruments: {
+      instrumentation: {
         request: async (_, w) => {
           results.push(`pre-request-${name}`);
           await w();

@@ -163,13 +163,16 @@ export function createGatewayRuntime<
     logger = config.logging;
   }
 
-  let instruments: GatewayPlugin['instruments'];
+  let instrumentation: GatewayPlugin['instrumentation'];
 
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
   const onCacheGetHooks: OnCacheGetHook[] = [];
   const onCacheSetHooks: OnCacheSetHook[] = [];
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
-  const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks, () => instruments);
+  const wrappedFetchFn = wrapFetchWithHooks(
+    onFetchHooks,
+    () => instrumentation,
+  );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
         cache: config.cache,
@@ -250,7 +253,7 @@ export function createGatewayRuntime<
       },
       onSubgraphExecuteHooks,
       transportExecutorStack,
-      instruments: () => instruments,
+      instrumentation: () => instrumentation,
     });
 
     getExecutor = () => proxyExecutor;
@@ -475,7 +478,7 @@ export function createGatewayRuntime<
                 return unifiedGraph;
               },
               transportExecutorStack,
-              instruments: () => instruments,
+              instrumentation: () => instrumentation,
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
@@ -706,7 +709,7 @@ export function createGatewayRuntime<
       onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
-      instruments: () => instruments,
+      instrumentation: () => instrumentation,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -826,10 +829,10 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
-        if (plugin.instruments) {
-          instruments = instruments
-            ? chain(instruments, plugin.instruments)
-            : plugin.instruments;
+        if (plugin.instrumentation) {
+          instrumentation = instrumentation
+            ? chain(instrumentation, plugin.instrumentation)
+            : plugin.instrumentation;
         }
         if (plugin.onFetch) {
           onFetchHooks.push(plugin.onFetch);

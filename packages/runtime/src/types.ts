@@ -1,7 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
-  Instruments as GatewayRuntimeInstruments,
+  Instrumentation as GatewayRuntimeInstruments,
   TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
@@ -31,7 +31,7 @@ import type {
   BatchingOptions,
   FetchAPI,
   YogaInitialContext,
-  Instruments as YogaInstruments,
+  Instrumentation as YogaInstruments,
   YogaMaskedErrorOpts,
   Plugin as YogaPlugin,
   YogaServerOptions,
@@ -99,13 +99,15 @@ export type GatewayPlugin<
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
     /**
-     * An Instruments instance that will wrap each phases of the request pipeline.
+     * An Instrumentation instance that will wrap each phases of the request pipeline.
      * This should be used primarily as an observability tool (for monitoring, tracing, etc...).
      *
-     * Note: The wrapped functions in instruments should always be called. Use hooks to
+     * Note: The wrapped functions in instrumentation should always be called. Use hooks to
      *       conditionally skip a phase.
      */
-    instruments?: Instruments<TPluginContext & TContext & GatewayContext>;
+    instrumentation?: Instrumentation<
+      TPluginContext & TContext & GatewayContext
+    >;
   };
 
 export type OnCacheGetHook = (
@@ -166,7 +168,7 @@ export interface OnCacheDeleteHookEventPayload {
   key: string;
 }
 
-export type Instruments<TContext extends Record<string, any>> =
+export type Instrumentation<TContext extends Record<string, any>> =
   YogaInstruments<TContext> & GatewayRuntimeInstruments & FetchInstruments;
 
 export interface GatewayConfigSupergraph<

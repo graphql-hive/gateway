@@ -103,10 +103,10 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
-  instruments?: () => Instruments | undefined;
+  instrumentation?: () => Instrumentation | undefined;
 }
 
-export type Instruments = {
+export type Instrumentation = {
   /**
    * Wrap each subgraph execution request. This can happen multiple time for the same graphql operation.
    */
@@ -133,13 +133,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
   private executor?: Executor;
-  private instruments: () => Instruments | undefined;
+  private instrumentation: () => Instrumentation | undefined;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
-    this.instruments = opts.instruments ?? (() => undefined);
+    this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
@@ -357,7 +357,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
           batch: this.batch,
-          instruments: () => this.instruments(),
+          instrumentation: () => this.instrumentation(),
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();
