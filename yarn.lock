@@ -4045,6 +4045,7 @@ __metadata:
     "@graphql-hive/gateway-runtime": "workspace:*"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@types/aws4": "npm:^1.11.6"
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
     aws4: "npm:1.13.2"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.12.0"

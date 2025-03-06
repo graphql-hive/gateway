@@ -83,7 +83,6 @@
     "./packages/**/rollup.config.*",
     "./e2e",
     "./bench",
-    "packages/plugins/aws-sigv4/aws-sigv4.test.ts"
   ],
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",

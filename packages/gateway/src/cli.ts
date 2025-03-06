@@ -17,7 +17,6 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import type {
   AWSSignv4PluginOptions,
-  AWSSignv4PluginOptionsFactory,
 } from '@graphql-hive/plugin-aws-sigv4';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
@@ -140,7 +139,7 @@ export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Enable and configure AWS Sigv4 signing
    */
-  awsSigv4?: AWSSignv4PluginOptions | AWSSignv4PluginOptionsFactory | true;
+  awsSigv4?: AWSSignv4PluginOptions;
   /**
    * Enable Just-In-Time compilation of GraphQL documents.
    *
