@@ -40,7 +40,7 @@ describe('AWS Sigv4 Incoming requests', () => {
       plugins: () => [
         useAWSSigv4({
           incoming: {
-            secretKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
           },
         }),
         useCustomFetch(
@@ -105,7 +105,7 @@ describe('AWS Sigv4 Incoming requests', () => {
             enabled: (request, context) =>
               !('jwt' in context) &&
               !request.headers.get('authorization')?.startsWith('Bearer'),
-            secretKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
           },
         }),
         useCustomFetch(

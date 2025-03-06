@@ -72,6 +72,9 @@ export type AWSSignv4PluginOutgoingOptionsFactory = (
 ) => AWSSignv4PluginOutgoingOptions | undefined | false | true;
 
 export interface AWSSignv4PluginIncomingPayload {
+  /**
+   * HTTP request
+   */
   request: Request;
   /**
    * Context
@@ -122,7 +125,28 @@ export interface AWSSignv4PluginIncomingPayload {
    */
   canonicalHeaders: string;
 
-  secretKey?: string;
+  secretAccessKey?: string;
+}
+
+export interface AssumeRolePayload {
+  /**
+   * Region name to use when signing the request.
+   * By default, it is inferred from the hostname.
+   */
+  region?: string;
+  /**
+   * An identifier for the assumed role session.
+   *
+   * @default process.env.AWS_ROLE_ARN
+   */
+  roleArn?: string;
+  /**
+   * The Amazon Resource Names (ARNs) of the IAM managed policies that you want to use as
+   * managed session policies. The policies must exist in the same account as the role.
+   *
+   * @default process.env.AWS_IAM_ROLE_SESSION_NAME
+   */
+  roleSessionName?: string;
 }
 
 export interface AWSSignv4PluginIncomingOptions {
@@ -131,9 +155,20 @@ export interface AWSSignv4PluginIncomingOptions {
    * By default it uses `accessKey` to get secret from `process.env.AWS_SECRET_ACCESS_KEY` or `process.env.AWS_SECRET_KEY`.
    * Should return secretKey on incoming parameters - but if secret is missing which it will be normal case when someone want to guess - you should return undefined;
    */
-  secretKey?: (
+  secretAccessKey?: (
     payload: AWSSignv4PluginIncomingPayload,
-  ) => MaybePromise<string | undefined>;
+  ) => MaybePromise<string | undefined> | string | undefined;
+  /**
+   * An identifier for the assumed role session.
+   *
+   * @default process.env.AWS_ROLE_ARN
+   */
+  assumeRole?: (
+    payload: AWSSignv4PluginIncomingPayload,
+  ) =>
+    | MaybePromise<AssumeRolePayload | undefined>
+    | AssumeRolePayload
+    | undefined;
   /**
    * Callback for changes in incoming headers before it goes through parse process. Help to more sophisticated changes to preserve proper headers.
    */
@@ -146,46 +181,46 @@ export interface AWSSignv4PluginIncomingOptions {
     serverContext: ServerAdapterInitialContext,
   ) => MaybePromise<boolean>;
   /**
-     * Callback on header missing. Validation stops here. Default value `onMissingHeaders: () => {
-            throw new GraphQLError('Headers are missing for auth', {
-              extensions: {
-                http: {
-                  status: 401,
+       * Callback on header missing. Validation stops here. Default value `onMissingHeaders: () => {
+              throw new GraphQLError('Headers are missing for auth', {
+                extensions: {
+                  http: {
+                    status: 401,
+                  }
                 }
-              }
-            });
-          },`
-     */
+              });
+            },`
+       */
   onMissingHeaders?: (
     request: Request,
     serverContext: ServerAdapterInitialContext,
   ) => MaybePromise<void>;
   /**
-     * Custom response on signature mismatch. Validation stops here. Default value `onSignatureMismatch: () => {
-            throw new GraphQLError('The signature does not match', {
-              extensions: {
-                http: {
-                  status: 401,
+       * Custom response on signature mismatch. Validation stops here. Default value `onSignatureMismatch: () => {
+              throw new GraphQLError('The signature does not match', {
+                extensions: {
+                  http: {
+                    status: 401,
+                  }
                 }
-              }
-            });
-          },`
-     */
+              });
+            },`
+       */
   onSignatureMismatch?: (
     request: Request,
     serverContext: ServerAdapterInitialContext,
   ) => MaybePromise<void>;
   /**
-     * Custom response on exired time signature. Validation stops here. Default value `onExpired: () => {
-            throw new GraphQLError('Request is expired', {
-              extensions: {
-                http: {
-                  status: 401,
+       * Custom response on exired time signature. Validation stops here. Default value `onExpired: () => {
+              throw new GraphQLError('Request is expired', {
+                extensions: {
+                  http: {
+                    status: 401,
+                  }
                 }
-              }
-            });
-          },`
-     */
+              });
+            },`
+       */
   onExpired?: (
     request: Request,
     serverContext: ServerAdapterInitialContext,

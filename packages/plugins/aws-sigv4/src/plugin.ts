@@ -19,8 +19,16 @@ function isBufferOrString(body: unknown): body is Buffer | string {
 const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
   enabled: () => true,
   headers: (headers) => headers,
-  secretKey: () =>
+  secretAccessKey: () =>
     process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'],
+  assumeRole: () =>
+    process.env['AWS_ROLE_ARN'] != null &&
+    process.env['AWS_IAM_ROLE_SESSION_NAME'] != null
+      ? {
+          roleArn: process.env['AWS_ROLE_ARN'],
+          roleSessionName: process.env['AWS_IAM_ROLE_SESSION_NAME'],
+        }
+      : undefined,
   onExpired() {
     throw createGraphQLError('Request is expired', {
       extensions: {
@@ -67,7 +75,39 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
     opts.incoming != null && opts.incoming !== false
       ? opts.incoming === true
         ? DEFAULT_INCOMING_OPTIONS
-        : { ...DEFAULT_INCOMING_OPTIONS, ...opts.incoming }
+        : {
+            ...DEFAULT_INCOMING_OPTIONS,
+            secretAccessKey(payload) {
+              const secretFromEnv =
+                process.env['AWS_SECRET_ACCESS_KEY'] ||
+                process.env['AWS_SECRET_KEY'];
+              if (secretFromEnv) {
+                return secretFromEnv;
+              }
+              return handleMaybePromise(
+                () => incomingOptions?.assumeRole?.(payload),
+                (assumeRolePayload) => {
+                  if (
+                    !assumeRolePayload ||
+                    !assumeRolePayload.roleArn ||
+                    !assumeRolePayload.roleSessionName
+                  ) {
+                    return;
+                  }
+                  const sts = new STS({ region: assumeRolePayload.region });
+                  return handleMaybePromise(
+                    () =>
+                      sts.assumeRole({
+                        RoleArn: assumeRolePayload.roleArn,
+                        RoleSessionName: assumeRolePayload.roleSessionName,
+                      }),
+                    (stsResult) => stsResult?.Credentials?.SecretAccessKey,
+                  );
+                },
+              );
+            },
+            ...opts.incoming,
+          }
       : undefined;
   return {
     // Handle incoming requests
@@ -193,7 +233,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                   };
 
                   return handleMaybePromise(
-                    () => incomingOptions.secretKey(payload),
+                    () => incomingOptions.secretAccessKey?.(payload),
                     (secretKey) => {
                       if (!secretKey) {
                         return incomingOptions.onSignatureMismatch?.(
@@ -201,7 +241,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                           serverContext,
                         );
                       }
-                      payload.secretKey = secretKey;
+                      payload.secretAccessKey = secretKey;
                       return handleMaybePromise(
                         () => incomingOptions.onAfterParse(payload),
                         (shouldContinue) => {
@@ -227,7 +267,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 payload?.requestType,
               ].join('/');
 
-              const hmacDate = hmac('AWS4' + payload.secretKey, payload.date);
+              const hmacDate = hmac('AWS4' + payload.secretAccessKey, payload.date);
               const hmacRegion = hmac(hmacDate, payload.region);
               const hmacService = hmac(hmacRegion, payload.service);
               const hmacCredentials = hmac(hmacService, 'aws4_request');
@@ -301,11 +341,6 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 'Signature=' + signature,
               ].join(', ');
               if (calculatedAuthorization !== payload?.authorization) {
-                console.log({
-                  expected: calculatedAuthorization,
-                  received: payload?.authorization,
-                  canonicalString,
-                });
                 return incomingOptions.onSignatureMismatch?.(
                   request,
                   serverContext,
