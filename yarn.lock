@@ -5894,7 +5894,7 @@ __metadata:
     memlab: "npm:^1.1.56"
     parse-duration: "npm:^2.0.0"
     regression: "npm:^2.0.1"
-    speedscope: ./speedscope-1.23.0-alpha.3.tgz
+    speedscope: ./speedscope-1.23.0-alpha.4.tgz
     ws: "npm:^8.18.0"
   languageName: unknown
   linkType: soft
@@ -19586,14 +19586,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"speedscope@file:./speedscope-1.23.0-alpha.3.tgz::locator=%40internal%2Fperf%40workspace%3Ainternal%2Fperf":
-  version: 1.23.0-alpha.3
-  resolution: "speedscope@file:./speedscope-1.23.0-alpha.3.tgz#./speedscope-1.23.0-alpha.3.tgz::hash=f337ac&locator=%40internal%2Fperf%40workspace%3Ainternal%2Fperf"
+"speedscope@file:./speedscope-1.23.0-alpha.4.tgz::locator=%40internal%2Fperf%40workspace%3Ainternal%2Fperf":
+  version: 1.23.0-alpha.4
+  resolution: "speedscope@file:./speedscope-1.23.0-alpha.4.tgz#./speedscope-1.23.0-alpha.4.tgz::hash=0dbd8f&locator=%40internal%2Fperf%40workspace%3Ainternal%2Fperf"
   dependencies:
     open: "npm:10.1.0"
   bin:
     speedscope: ./bin/cli.mjs
-  checksum: 10c0/6a68b78af6de8e7a918e924c5baf16c6bff9f3782300752558a6f0c7fddc2feeb6d23eb10041ea455d964930f4b8a65b55403179d050e85cd4da483fa8c4ad63
+  checksum: 10c0/3b689396e134f2f2bfd62d65462e7bfbd2a84ecb11f038bfc6136f476b30473306ab94bb385b00d0e01beca6b2432151e0a3ffa3ee85ff1a612717a895f4f49f
   languageName: node
   linkType: hard
 
