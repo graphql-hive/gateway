@@ -5213,12 +5213,14 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-persisted-operations@npm:^3.12.0, @graphql-yoga/plugin-persisted-operations@npm:^3.9.0":
-  version: 3.13.0
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.13.0"
+  version: 3.13.1
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.13.1"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.13.0
-  checksum: 10c0/05867b9ee8a8a4b5cf0912e429a257ce793707ae977f36af8413255e6cbdc0c5c870d46eb10c2ea448908900d38dd4b9802ea61a7c4f5ca61481d3010d3c07aa
+  checksum: 10c0/48e7e6800f62260181e876f4d4731e61af36b6d702f28b297b9210e130fd3e90835008c0edb319db83eef4547853d89a3b309445adcd29b2d8787d25009507c9
   languageName: node
   linkType: hard
 
