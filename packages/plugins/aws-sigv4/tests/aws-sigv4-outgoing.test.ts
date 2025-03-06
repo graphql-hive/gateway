@@ -52,8 +52,10 @@ describe('AWS Sigv4', () => {
       requestId: false,
       plugins: () => [
         useAWSSigv4({
-          accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-          secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          outgoing: {
+            accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+            secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+          },
         }),
         useCustomFetch(
           // @ts-expect-error - MeshFetch is not compatible with Yoga.fetch
