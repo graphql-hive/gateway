@@ -169,7 +169,9 @@ export interface OnCacheDeleteHookEventPayload {
 }
 
 export type Instrumentation<TContext extends Record<string, any>> =
-  YogaInstrumentation<TContext> & GatewayRuntimeInstrumentation & FetchInstrumentation;
+  YogaInstrumentation<TContext> &
+    GatewayRuntimeInstrumentation &
+    FetchInstrumentation;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,
