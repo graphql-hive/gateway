@@ -3343,32 +3343,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/extended-validation@npm:^5.1.1":
-  version: 5.1.1
-  resolution: "@envelop/extended-validation@npm:5.1.1"
+"@envelop/extended-validation@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "@envelop/extended-validation@npm:5.1.2"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.0"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.2.1
+    "@envelop/core": ^5.2.2
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/dfe542cfdb5985f43c5b51ae39b5f83a64db9d34a27a1feb01cc2770d3fdda26eda95df14aa9845ff82a4ae099f1b1b7bab640b287308f4a95082ab49a1f0164
+  checksum: 10c0/8db1ba639ef5dbf7ddbe461560a2501997f84ac4f011b64231b5d722dc8985dedcfc1509035c7822bed2aff3a269f83ea4f9da43dc3c83ee9301baf352c96f41
   languageName: node
   linkType: hard
 
 "@envelop/generic-auth@npm:^9.0.0":
-  version: 9.1.1
-  resolution: "@envelop/generic-auth@npm:9.1.1"
+  version: 9.1.2
+  resolution: "@envelop/generic-auth@npm:9.1.2"
   dependencies:
-    "@envelop/extended-validation": "npm:^5.1.1"
+    "@envelop/extended-validation": "npm:^5.1.2"
     "@graphql-tools/executor": "npm:^1.3.6"
     "@graphql-tools/utils": "npm:^10.5.1"
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.2.1
+    "@envelop/core": ^5.2.2
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/bbe78730b208961bec059dbc1a3338c1379a5c80233133d3f317bef2b300aa1c8183c56ed7e02b0454fc5c0b28dfdfb63cece50b5ddb81c7ab6f8348863cf525
+  checksum: 10c0/62f20cab3d763858182d5e3f866db13bd4ebe4950f5e1d0d4d0680771f1724dbbc1f4a54d9d785f13b2805f5cd20914d74fb4f9529d6d31efa0aab7b8e2c2872
   languageName: node
   linkType: hard
 
@@ -3411,15 +3411,16 @@ __metadata:
   linkType: hard
 
 "@envelop/operation-field-permissions@npm:^7.0.0":
-  version: 7.1.1
-  resolution: "@envelop/operation-field-permissions@npm:7.1.1"
+  version: 7.1.2
+  resolution: "@envelop/operation-field-permissions@npm:7.1.2"
   dependencies:
-    "@envelop/extended-validation": "npm:^5.1.1"
+    "@envelop/extended-validation": "npm:^5.1.2"
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.2.1
+    "@envelop/core": ^5.2.2
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/888c4583eaf7b5c1ddb00dbb65254e82e318fdf24f4765a209770a50e452dbed9745e405bba39ff2957a791804cf238169bf7d5bac4d558777cb5b7a12fe0e4d
+  checksum: 10c0/2cf16cd7e649e36744746b37c5b7d0bc4fb920251e35882ff231ad82b141b71496e52b1aa8567244731c3d5a4ca61ae0ff95cbf03cf4ec9829c8df4c3ea5e0a6
   languageName: node
   linkType: hard
 
@@ -5161,16 +5162,17 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-apollo-usage-report@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@graphql-yoga/plugin-apollo-usage-report@npm:0.8.0"
+  version: 0.8.1
+  resolution: "@graphql-yoga/plugin-apollo-usage-report@npm:0.8.1"
   dependencies:
     "@apollo/usage-reporting-protobuf": "npm:^4.1.1"
     "@graphql-yoga/plugin-apollo-inline-trace": "npm:^3.13.0"
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.13.0
-  checksum: 10c0/5c23f1a2442de0a6c96889c4ddc808700fa04bf650769082478972f1d1fe763708eceb9c40a3ce928178af89ceb9c69c10826358ba87177a718adc80319b32b0
+  checksum: 10c0/a33fba2f1c4690238badf115d35e4f4557826358d7d3b1e5a37a9aab5a643f4420f8df4849ef5f5db62ad43dcdd9f285ddb0d69f3ae4df932db81616427a8fb7
   languageName: node
   linkType: hard
 
