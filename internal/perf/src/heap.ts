@@ -125,7 +125,7 @@ export interface HeapSamplingProfileFrame extends HeapSamplingProfileNode {
  *
  * @returns The heaviest leaf frames.
  */
-export function analyzeHeapSamplingProfile(
+export function getHeaviestFramesFromHeapSamplingProfile(
   v8Profile: HeapProfiler.SamplingHeapProfile,
 ): HeapSamplingProfileFrame[] {
   const profile = importFromChromeHeapProfile(
