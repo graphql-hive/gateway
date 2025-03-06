@@ -1,6 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
+  Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
@@ -15,7 +16,7 @@ import type {
   OnFetchHook,
   YamlConfig,
 } from '@graphql-mesh/types';
-import type { LogLevel } from '@graphql-mesh/utils';
+import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   IResolvers,
@@ -30,6 +31,7 @@ import type {
   BatchingOptions,
   FetchAPI,
   YogaInitialContext,
+  Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
   Plugin as YogaPlugin,
   YogaServerOptions,
@@ -96,6 +98,16 @@ export type GatewayPlugin<
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
+    /**
+     * An Instrumentation instance that will wrap each phases of the request pipeline.
+     * This should be used primarily as an observability tool (for monitoring, tracing, etc...).
+     *
+     * Note: The wrapped functions in instrumentation should always be called. Use hooks to
+     *       conditionally skip a phase.
+     */
+    instrumentation?: Instrumentation<
+      TPluginContext & TContext & GatewayContext
+    >;
   };
 
 export type OnCacheGetHook = (
@@ -155,6 +167,11 @@ export interface OnCacheDeleteHookEventPayload {
   cache: KeyValueCache;
   key: string;
 }
+
+export type Instrumentation<TContext extends Record<string, any>> =
+  YogaInstrumentation<TContext> &
+    GatewayRuntimeInstrumentation &
+    FetchInstrumentation;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,

@@ -4,7 +4,12 @@ import type {
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
-import type { Executor, IResolvers, TypeSource } from '@graphql-tools/utils';
+import type {
+  ExecutionRequest,
+  Executor,
+  IResolvers,
+  TypeSource,
+} from '@graphql-tools/utils';
 import {
   createGraphQLError,
   isDocumentNode,
@@ -98,7 +103,18 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
+  instrumentation?: () => Instrumentation | undefined;
 }
+
+export type Instrumentation = {
+  /**
+   * Wrap each subgraph execution request. This can happen multiple time for the same graphql operation.
+   */
+  subgraphExecute?: (
+    payload: { executionRequest: ExecutionRequest },
+    wrapped: () => MaybePromise<void>,
+  ) => MaybePromise<void>;
+};
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 
@@ -117,10 +133,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private _transportExecutorStack?: AsyncDisposableStack;
   private lastLoadTime?: number;
   private executor?: Executor;
+  private instrumentation: () => Instrumentation | undefined;
+
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
       opts.handleUnifiedGraph || handleFederationSupergraph;
+    this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
@@ -338,6 +357,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           transportExecutorStack: this._transportExecutorStack,
           getDisposeReason: () => this.disposeReason,
           batch: this.batch,
+          instrumentation: () => this.instrumentation(),
         });
         this.inContextSDK = inContextSDK;
         this.lastLoadTime = Date.now();

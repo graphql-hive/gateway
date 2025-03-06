@@ -1,3 +1,4 @@
+import { getInstrumented } from '@envelop/instrumentation';
 import {
   defaultPrintFn,
   type Transport,
@@ -47,7 +48,10 @@ import {
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
 import { restoreExtraDirectives } from './federation/supergraph';
-import { TransportEntryAdditions } from './unifiedGraphManager';
+import {
+  Instrumentation,
+  TransportEntryAdditions,
+} from './unifiedGraphManager';
 
 export type {
   TransportEntry,
@@ -176,6 +180,7 @@ export function getOnSubgraphExecute({
   transports,
   getDisposeReason,
   batch = true,
+  instrumentation,
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
@@ -185,6 +190,7 @@ export function getOnSubgraphExecute({
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
   batch?: boolean;
+  instrumentation: () => Instrumentation | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
   return function onSubgraphExecute(
@@ -192,7 +198,7 @@ export function getOnSubgraphExecute({
     executionRequest: ExecutionRequest,
   ) {
     subgraphNameByExecutionRequest.set(executionRequest, subgraphName);
-    let executor = subgraphExecutorMap.get(subgraphName);
+    let executor: Executor | undefined = subgraphExecutorMap.get(subgraphName);
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
       let logger = transportContext?.logger;
@@ -253,6 +259,14 @@ export function getOnSubgraphExecute({
         executor,
       );
     }
+    const originalExecutor = executor;
+    executor = (executionRequest) => {
+      const subgraphInstrumentation = instrumentation()?.subgraphExecute;
+      return getInstrumented({ executionRequest }).asyncFn(
+        subgraphInstrumentation,
+        originalExecutor,
+      )(executionRequest);
+    };
     return executor(executionRequest);
   };
 }

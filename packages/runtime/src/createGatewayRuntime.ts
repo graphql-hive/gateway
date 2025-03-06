@@ -72,6 +72,7 @@ import {
   parse,
 } from 'graphql';
 import {
+  chain,
   createYoga,
   isAsyncIterable,
   mergeSchemas,
@@ -162,11 +163,16 @@ export function createGatewayRuntime<
     logger = config.logging;
   }
 
+  let instrumentation: GatewayPlugin['instrumentation'];
+
   const onFetchHooks: OnFetchHook<GatewayContext>[] = [];
   const onCacheGetHooks: OnCacheGetHook[] = [];
   const onCacheSetHooks: OnCacheSetHook[] = [];
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
-  const wrappedFetchFn = wrapFetchWithHooks(onFetchHooks);
+  const wrappedFetchFn = wrapFetchWithHooks(
+    onFetchHooks,
+    () => instrumentation,
+  );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
         cache: config.cache,
@@ -247,6 +253,7 @@ export function createGatewayRuntime<
       },
       onSubgraphExecuteHooks,
       transportExecutorStack,
+      instrumentation: () => instrumentation,
     });
 
     getExecutor = () => proxyExecutor;
@@ -471,6 +478,7 @@ export function createGatewayRuntime<
                 return unifiedGraph;
               },
               transportExecutorStack,
+              instrumentation: () => instrumentation,
             });
             subschemaConfig = handleFederationSubschema({
               subschemaConfig,
@@ -701,6 +709,7 @@ export function createGatewayRuntime<
       onDelegationStageExecuteHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
+      instrumentation: () => instrumentation,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () =>
@@ -820,6 +829,11 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks.splice(0, onSubgraphExecuteHooks.length);
       onDelegateHooks.splice(0, onDelegateHooks.length);
       for (const plugin of plugins as GatewayPlugin[]) {
+        if (plugin.instrumentation) {
+          instrumentation = instrumentation
+            ? chain(instrumentation, plugin.instrumentation)
+            : plugin.instrumentation;
+        }
         if (plugin.onFetch) {
           onFetchHooks.push(plugin.onFetch);
         }

@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^13.1.0",
-    "@envelop/core": "^5.1.0",
+    "@envelop/core": "^5.2.3",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/importer": "workspace:^",
     "@graphql-hive/plugin-aws-sigv4": "workspace:^",
@@ -78,7 +78,7 @@
     "@graphql-mesh/transport-http-callback": "workspace:^",
     "@graphql-mesh/transport-ws": "workspace:^",
     "@graphql-mesh/types": "^0.104.0",
-    "@graphql-mesh/utils": "^0.104.0",
+    "@graphql-mesh/utils": "^0.104.1",
     "@graphql-tools/code-file-loader": "^8.1.15",
     "@graphql-tools/graphql-file-loader": "^8.0.14",
     "@graphql-tools/load": "^8.0.14",
@@ -86,7 +86,7 @@
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "graphql-ws": "^6.0.4",
-    "graphql-yoga": "^5.12.0",
+    "graphql-yoga": "^5.13.1",
     "tslib": "^2.8.1",
     "ws": "^8.18.0"
   },
