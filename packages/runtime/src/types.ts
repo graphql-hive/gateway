@@ -1,7 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type {
-  Instrumentation as GatewayRuntimeInstruments,
+  Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
   Transports,
   UnifiedGraphPlugin,
@@ -16,7 +16,7 @@ import type {
   OnFetchHook,
   YamlConfig,
 } from '@graphql-mesh/types';
-import type { FetchInstruments, LogLevel } from '@graphql-mesh/utils';
+import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   IResolvers,
@@ -31,7 +31,7 @@ import type {
   BatchingOptions,
   FetchAPI,
   YogaInitialContext,
-  Instrumentation as YogaInstruments,
+  Instrumentation as YogaInstrumentation,
   YogaMaskedErrorOpts,
   Plugin as YogaPlugin,
   YogaServerOptions,
@@ -169,7 +169,7 @@ export interface OnCacheDeleteHookEventPayload {
 }
 
 export type Instrumentation<TContext extends Record<string, any>> =
-  YogaInstruments<TContext> & GatewayRuntimeInstruments & FetchInstruments;
+  YogaInstrumentation<TContext> & GatewayRuntimeInstrumentation & FetchInstrumentation;
 
 export interface GatewayConfigSupergraph<
   TContext extends Record<string, any> = Record<string, any>,
