@@ -1,9 +1,17 @@
 import { HeapProfiler } from 'inspector';
+import path from 'path';
 import { serializer } from '@memlab/core';
 import { getFullHeapFromFile, PluginUtils } from '@memlab/heap-analysis';
 import { CallTreeNode, Frame } from 'speedscope/profile';
 import { importFromChromeHeapProfile } from 'speedscope/profile/v8heapalloc';
 
+const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
+
+/**
+ * Analyses the {@link file heap snapshot file} logging the largest single objects and summed objects.
+ *
+ * TODO: Leak detection and return something.
+ */
 export async function analyzeHeapSnapshot(file: string) {
   const snap = await getFullHeapFromFile(file);
 
@@ -92,6 +100,10 @@ export async function analyzeHeapSnapshot(file: string) {
 
 export interface HeapSamplingProfileNode {
   name: string;
+  /**
+   * The project relative path to the file with the node.
+   * Optionally suffixed with a line number if available.
+   */
   file: string | null;
   /** The size in memory the frame itself allocated in bytes. */
   selfSize: number;
@@ -135,6 +147,24 @@ export function analyzeHeapSamplingProfile(
 
   const heaviestFrames: HeapSamplingProfileFrame[] = [];
 
+  function toHeapSamplingProfileNode(frame: Frame): HeapSamplingProfileNode {
+    let file = frame.file?.split(__project)[1] || null;
+    if (file && frame.line) {
+      file += `:${frame.line + 1}`; // we increment because the line is weirdly off by one
+    }
+    return {
+      name: frame.name,
+      // we split then take the first element to remove the project path even if it has file:/// prefix
+      file,
+      selfSize: frame.getSelfWeight(),
+      selfSizeInMB: Number((frame.getSelfWeight() / (1024 * 1024)).toFixed(2)),
+      totalSize: frame.getTotalWeight(),
+      totalSizeInMB: Number(
+        (frame.getTotalWeight() / (1024 * 1024)).toFixed(2),
+      ),
+    };
+  }
+
   for (const frame of highSelfSizeFrames) {
     // get the callers of this frame (this frame is the leaf node)
     const callers = profile.getInvertedProfileForCallersOf(frame);
@@ -153,26 +183,8 @@ export function analyzeHeapSamplingProfile(
     biggestWeightStack.reverse();
 
     heaviestFrames.push({
-      name: frame.name,
-      file: frame.file || null,
-      selfSize: frame.getSelfWeight(),
-      selfSizeInMB: Number((frame.getSelfWeight() / (1024 * 1024)).toFixed(2)),
-      totalSize: frame.getTotalWeight(),
-      totalSizeInMB: Number(
-        (frame.getTotalWeight() / (1024 * 1024)).toFixed(2),
-      ),
-      callstack: biggestWeightStack.map((frame) => ({
-        name: frame.name,
-        file: frame.file || null,
-        selfSize: frame.getSelfWeight(),
-        selfSizeInMB: Number(
-          (frame.getSelfWeight() / (1024 * 1024)).toFixed(2),
-        ),
-        totalSize: frame.getTotalWeight(),
-        totalSizeInMB: Number(
-          (frame.getTotalWeight() / (1024 * 1024)).toFixed(2),
-        ),
-      })),
+      ...toHeapSamplingProfileNode(frame),
+      callstack: biggestWeightStack.map(toHeapSamplingProfileNode),
     });
   }
 
