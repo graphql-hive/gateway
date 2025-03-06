@@ -116,7 +116,10 @@ export interface HeapSamplingProfileNode {
 }
 
 export interface HeapSamplingProfileFrame extends HeapSamplingProfileNode {
-  /** Callstack of heaviest frames ordered from root the leaf (this frame). */
+  /**
+   * Callstack of heaviest frames ordered from the leaf (this frame) to the root.
+   * The leaf node is not included.
+   */
   callstack: HeapSamplingProfileNode[];
 }
 
@@ -138,8 +141,8 @@ export function getHeaviestFramesFromHeapSamplingProfile(
   const highSelfSizeFrames: Frame[] = [];
   profile.forEachFrame((frame) => {
     const selfPerc = frame.getSelfWeight() / totalSize;
-    if (selfPerc > 0.1) {
-      // self sizes taking up higher than 10% of the whole profile are considered big
+    if (selfPerc > 0.05) {
+      // self sizes taking up higher than 5% of the whole profile are considered big
       highSelfSizeFrames.push(frame);
     }
   });
@@ -175,12 +178,13 @@ export function getHeaviestFramesFromHeapSamplingProfile(
 
     // the call stack with the biggest size from the root to the leaf node (this frame)
     const biggestWeightStack: Frame[] = [];
-    let node: CallTreeNode | undefined = calltree.children[0];
+    let node: CallTreeNode | undefined =
+      // we want to omit this frame from the callstack, so we take the first child of first child
+      calltree.children[0]?.children[0];
     while (node) {
       biggestWeightStack.push(node.frame);
       node = node.children[0];
     }
-    biggestWeightStack.reverse();
 
     heaviestFrames.push({
       ...toHeapSamplingProfileNode(frame),
