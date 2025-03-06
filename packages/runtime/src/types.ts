@@ -98,6 +98,13 @@ export type GatewayPlugin<
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
+    /**
+     * An Instruments instance that will wrap each phases of the request pipeline.
+     * This should be used primarily as an observability tool (for monitoring, tracing, etc...).
+     *
+     * Note: The wrapped functions in instruments should always be called. Use hooks to
+     *       conditionally skip a phase.
+     */
     instruments?: Instruments<TPluginContext & TContext & GatewayContext>;
   };
 
