@@ -267,7 +267,10 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 payload?.requestType,
               ].join('/');
 
-              const hmacDate = hmac('AWS4' + payload.secretAccessKey, payload.date);
+              const hmacDate = hmac(
+                'AWS4' + payload.secretAccessKey,
+                payload.date,
+              );
               const hmacRegion = hmac(hmacDate, payload.region);
               const hmacService = hmac(hmacRegion, payload.service);
               const hmacCredentials = hmac(hmacService, 'aws4_request');
