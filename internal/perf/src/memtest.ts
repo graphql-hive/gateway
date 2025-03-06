@@ -5,6 +5,7 @@ import { isDebug } from '@internal/testing';
 import regression from 'regression';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
+import { getHeaviestFramesFromHeapSamplingProfile } from './heap';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 export interface MemtestOptions
@@ -116,13 +117,35 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         );
       }
 
-      // TODO: analyise heap sampling profile?
-
       // TODO: clamp the regression slope samples between 0 and 1 to get a percentage based slope
       const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
       expect
         .soft(slope, 'Consistent memory increase detected')
         .toBeLessThanOrEqual(3);
+
+      const unexpectedHeavyFrames = getHeaviestFramesFromHeapSamplingProfile(
+        profile,
+      ).filter(
+        (frame) =>
+          // these frames are expected to be big
+          // TODO: inspect the callstack making sure we're filtering out precisely the right frames
+          // TODO: allow the memtest user to specify the expected heavy frames
+          !['register', 'WeakRef', 'any', 'set'].includes(frame.name),
+      );
+
+      if (unexpectedHeavyFrames.length) {
+        let msg = `Unexpected heavy frames detected! In total ${unexpectedHeavyFrames.length} and they are:\n\n`;
+        let i = 1;
+        for (const frame of unexpectedHeavyFrames) {
+          msg += `${i++}. ${frame.name} (${frame.file || '<anonymous>'})\n`;
+          for (const stack of frame.callstack) {
+            msg += `  ${stack.name} (${stack.file || '<anonymous>'})\n`;
+          }
+          msg += '\n';
+        }
+        expect.fail(msg);
+        // TODO: write the heap sampling profile to disk for the user to inspect
+      }
     },
   );
 }
