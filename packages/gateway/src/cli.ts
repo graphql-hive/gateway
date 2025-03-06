@@ -15,9 +15,7 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
-import type {
-  AWSSignv4PluginOptions,
-} from '@graphql-hive/plugin-aws-sigv4';
+import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';

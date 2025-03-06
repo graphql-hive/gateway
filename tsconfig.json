@@ -82,7 +82,7 @@
     "./packages/**/scripts",
     "./packages/**/rollup.config.*",
     "./e2e",
-    "./bench",
+    "./bench"
   ],
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",

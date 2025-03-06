@@ -151,9 +151,7 @@ export async function getBuiltinPluginsFromConfig(
 
   if (config.awsSigv4) {
     const { useAWSSigv4 } = await import('@graphql-hive/plugin-aws-sigv4');
-    plugins.push(
-      useAWSSigv4(config.awsSigv4),
-    );
+    plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
   return plugins;

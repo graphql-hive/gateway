@@ -5,6 +5,6 @@ export const gatewayConfig = defineConfig({
     outgoing: {
       region: 'us-east-1',
       serviceName: 'lambda',
-    }
+    },
   },
 });

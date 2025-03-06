@@ -68,7 +68,7 @@
     "@graphql-mesh/plugin-deduplicate-request": "^0.104.0",
     "@graphql-mesh/plugin-http-cache": "^0.105.0",
     "@graphql-mesh/plugin-jit": "^0.2.0",
-    "@graphql-mesh/plugin-jwt-auth": "^1.4.8",
+    "@graphql-mesh/plugin-jwt-auth": "^1.5.0",
     "@graphql-mesh/plugin-mock": "^0.105.0",
     "@graphql-mesh/plugin-opentelemetry": "workspace:^",
     "@graphql-mesh/plugin-prometheus": "workspace:^",
