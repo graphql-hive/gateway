@@ -14,10 +14,6 @@ hive-gateway
 /examples/**/*/supergraph.graphql
 .helix/config.toml
 .helix/languages.toml
-/e2e/**/*/loadtest-memory-snapshots.svg
-/e2e/**/*/memory-snapshots_*.svg
-/e2e/**/*/memtest-memory-snapshots_*.svg
-/e2e/**/*/memtest-memory-samples_*.svg
 /e2e/**/*/memtest-memory-usage_*.svg
 /e2e/**/*/*.heapsnapshot
 /e2e/**/*/*.heapprofile
