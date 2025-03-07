@@ -31,11 +31,10 @@ describe('buildHTTPExecutor', () => {
       }
     `);
 
-    await expect(
-      executor({
-        document: mutation,
-      }),
-    ).resolves.toMatchObject({
+    const res = await executor({
+      document: mutation,
+    });
+    expect(res).toMatchObject({
       data: { method: 'POST' },
     });
   });
@@ -43,15 +42,14 @@ describe('buildHTTPExecutor', () => {
     await using executor = buildHTTPExecutor({
       fetch: () => new Response('NOT JSON'),
     });
-    await expect(
-      executor({
-        document: parse(/* GraphQL */ `
-          query {
-            hello
-          }
-        `),
-      }),
-    ).resolves.toMatchObject({
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          hello
+        }
+      `),
+    });
+    expect(res).toMatchObject({
       errors: [
         {
           message: 'Unexpected response: "NOT JSON"',
@@ -71,15 +69,14 @@ describe('buildHTTPExecutor', () => {
       await using executor = buildHTTPExecutor({
         fetch: () => Response.json(body),
       });
-      await expect(
-        executor({
-          document: parse(/* GraphQL */ `
-            query {
-              hello
-            }
-          `),
-        }),
-      ).resolves.toMatchObject({
+      const res = await executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      });
+      expect(res).toMatchObject({
         errors: [
           {
             message: expect.stringContaining(
@@ -181,20 +178,19 @@ describe('buildHTTPExecutor', () => {
         });
       },
     });
-    await expect(
-      executor({
-        document: parse(/* GraphQL */ `
-          query {
-            hello
-          }
-        `),
-        extensions: {
-          headers: {
-            Authorization: 'Token',
-          },
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          hello
+        }
+      `),
+      extensions: {
+        headers: {
+          Authorization: 'Token',
         },
-      }),
-    ).resolves.toEqual({
+      },
+    });
+    expect(res).toEqual({
       data: { hello: 'world!' },
     });
   });
@@ -212,25 +208,24 @@ describe('buildHTTPExecutor', () => {
       },
       headers: { 'content-type': 'application/vnd.api+json' },
     });
-    await expect(
-      executor({
-        document: parse(/* GraphQL */ `
-          query IntrospectionQuery {
-            __schema {
-              queryType {
-                name
-              }
-              mutationType {
-                name
-              }
-              subscriptionType {
-                name
-              }
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query IntrospectionQuery {
+          __schema {
+            queryType {
+              name
+            }
+            mutationType {
+              name
+            }
+            subscriptionType {
+              name
             }
           }
-        `),
-      }),
-    ).resolves.toEqual({
+        }
+      `),
+    });
+    expect(res).toEqual({
       data: expect.any(Object),
     });
   });
@@ -279,15 +274,14 @@ describe('buildHTTPExecutor', () => {
       },
     });
 
-    await expect(
-      executor({
-        document: parse(/* GraphQL */ `
-          query {
-            hello
-          }
-        `),
-      }),
-    ).resolves.toMatchObject({
+    const res = await executor({
+      document: parse(/* GraphQL */ `
+        query {
+          hello
+        }
+      `),
+    });
+    expect(res).toMatchObject({
       errors: expect.arrayContaining([
         expect.any(GraphQLError),
         expect.objectContaining({
