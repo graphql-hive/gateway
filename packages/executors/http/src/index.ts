@@ -444,7 +444,7 @@ export function buildHTTPExecutor(
                                 ...options,
                                 extensions: {
                                   code: 'DOWNSTREAM_SERVICE_ERROR',
-                                  subgraph: serviceName,
+                                  serviceName,
                                   ...(options.extensions || {}),
                                 },
                               }),

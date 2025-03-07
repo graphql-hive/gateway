@@ -90,7 +90,7 @@ describe('Upstream Retry', () => {
           message: 'Error in attempt 3',
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
-            subgraph: 'upstream',
+            serviceName: 'upstream',
           },
           path: ['hello'],
         },
@@ -191,7 +191,7 @@ describe('Upstream Retry', () => {
           message: 'Rate limited',
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
-            subgraph: 'upstream',
+            serviceName: 'upstream',
           },
           path: ['hello'],
         },
