@@ -56,3 +56,18 @@ export function serializeExecutionRequest({
         : undefined,
   };
 }
+
+export interface UpstreamErrorExtensions {
+  serviceName?: string;
+  request: {
+    url?: string;
+    method?: string;
+    body?: unknown;
+  };
+  response?: {
+    status?: number;
+    statusText?: string;
+    headers?: Record<string, string>;
+    body?: unknown;
+  };
+}
