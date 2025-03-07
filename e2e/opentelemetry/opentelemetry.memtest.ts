@@ -40,6 +40,7 @@ const { supergraph, query } = createExampleSetup(cwd);
         gateway({
           supergraph: await supergraph(),
           env: {
+            MEMTEST: 1,
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: jaegerUrls[OTLP_EXPORTER_TYPE],
             OTLP_SERVICE_NAME: `memtest-${OTLP_EXPORTER_TYPE}`,
