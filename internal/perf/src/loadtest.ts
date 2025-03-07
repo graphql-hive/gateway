@@ -1,14 +1,11 @@
 import fs from 'fs/promises';
+import { HeapProfiler } from 'inspector';
 import os from 'os';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { trimError } from '@internal/testing';
-import {
-  connectInspector,
-  Inspector,
-  InspectorHeapSamplingProfile,
-} from './inspector';
+import { connectInspector, Inspector } from './inspector';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
@@ -75,7 +72,7 @@ export interface LoadtestHeapSnapshot {
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
   heapsnapshots: LoadtestHeapSnapshot[];
-  profile: InspectorHeapSamplingProfile;
+  profile: HeapProfiler.SamplingHeapProfile;
 }> {
   const {
     cwd,
@@ -120,7 +117,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   const samples: LoadtestMemorySample[] = [];
   let skipSampling = false;
-  (async () => {
+  const memorySnapshotting = (async () => {
     while (!ctrl.signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
@@ -150,7 +147,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     );
   });
 
-  await Promise.race([setTimeout(idle), serverThrowOnExit]);
+  await Promise.race([setTimeout(idle), serverThrowOnExit, memorySnapshotting]);
 
   // start heap sampling after idling (no need to sample anything there)
   const stopHeapSampling = await inspector.startHeapSampling();
@@ -178,13 +175,17 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       `--env=QUERY=${query}`,
       path.join(__dirname, 'loadtest-script.ts'),
     );
-    await Promise.race([waitForExit, serverThrowOnExit]);
+    await Promise.race([waitForExit, serverThrowOnExit, memorySnapshotting]);
 
     phase = 'calmdown';
     skipSampling = true;
     await inspector.collectGarbage();
     skipSampling = false;
-    await Promise.race([setTimeout(calmdown), serverThrowOnExit]);
+    await Promise.race([
+      setTimeout(calmdown),
+      serverThrowOnExit,
+      memorySnapshotting,
+    ]);
 
     if (takeHeapSnapshots) {
       skipSampling = true;
