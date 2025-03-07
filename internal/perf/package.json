@@ -12,13 +12,11 @@
     "chartjs-plugin-trendline": "^2.1.6",
     "memlab": "^1.1.56",
     "parse-duration": "^2.0.0",
-    "regression": "^2.0.1",
     "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/k6": "^0.54.2",
-    "@types/regression": "^2",
     "@types/ws": "^8.5.12"
   }
 }
