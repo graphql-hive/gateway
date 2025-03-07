@@ -149,7 +149,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
       }
       if (executionRequest) {
         const upstreamErrorExtensions: UpstreamErrorExtensions = {
-          subgraph: subgraphName,
+          serviceName: subgraphName,
           request: {
             url,
             method: options.method,

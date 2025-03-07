@@ -2,6 +2,7 @@ import {
   defaultPrintFn,
   SerializedExecutionRequest,
   serializeExecutionRequest,
+  UpstreamErrorExtensions,
 } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
@@ -55,6 +56,10 @@ export type AsyncImportFn = (moduleName: string) => PromiseLike<any>;
 export type SyncImportFn = (moduleName: string) => any;
 
 export interface HTTPExecutorOptions {
+  /**
+   * The name of the service
+   */
+  serviceName?: string;
   /**
    * The endpoint to use when querying the upstream API
    * @default '/graphql'
@@ -157,6 +162,7 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   const disposeCtrl = new AbortController();
+  const serviceName = options?.serviceName;
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
@@ -229,6 +235,7 @@ export function buildHTTPExecutor(
     const signal = AbortSignal.any(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
+      serviceName,
       request: {
         method,
       },
@@ -437,6 +444,7 @@ export function buildHTTPExecutor(
                                 ...options,
                                 extensions: {
                                   code: 'DOWNSTREAM_SERVICE_ERROR',
+                                  serviceName,
                                   ...(options.extensions || {}),
                                 },
                               }),
@@ -589,17 +597,3 @@ function coerceFetchError(
 }
 
 export { isLiveQueryOperationDefinitionNode };
-
-interface UpstreamErrorExtensions {
-  request: {
-    url?: string;
-    method: string;
-    body?: unknown;
-  };
-  response?: {
-    status?: number;
-    statusText?: string;
-    headers?: Record<string, string>;
-    body?: unknown;
-  };
-}
