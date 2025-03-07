@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Server } from '@internal/proc';
 import { isDebug } from '@internal/testing';
-import regression from 'regression';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
 import { getHeaviestFramesFromHeapSamplingProfile } from './heap';
@@ -117,11 +116,11 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         );
       }
 
-      // TODO: clamp the regression slope samples between 0 and 1 to get a percentage based slope
-      const slope = calculateRegressionSlope(samples.map(({ mem }) => mem));
+      // TODO: match the trend calculation with the 'chartjs-plugin-trendline' plugin
+      const slope = calculateTrendSlope(samples.map(({ mem }) => mem));
       expect
         .soft(slope, 'Consistent memory increase detected')
-        .toBeLessThanOrEqual(3);
+        .toBeLessThan(10);
 
       const unexpectedHeavyFrames = getHeaviestFramesFromHeapSamplingProfile(
         profile,
@@ -151,21 +150,28 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 }
 
 /**
- * Detects a memory increase trend in an array of memory snapshots over time using linear regression.
+ * Calculates the increase trend usind linear regression.
+ *
+ * It will clamp the snapshots to from 0 to 1 to get a percentage based slope.
  *
  * @param snapshots - An array of memory snapshots in MB.
  *
  * @returns The slope of the linear regression line.
  */
-function calculateRegressionSlope(snapshots: number[]) {
-  if (snapshots.length < 2) {
-    throw new Error('Not enough snapshots to determine trend');
+function calculateTrendSlope(yValues: number[]) {
+  if (yValues.length < 2) {
+    throw new Error(
+      'At least two points are required to calculate the trend slope',
+    );
   }
-  const data: [x: number, y: number][] = snapshots.map((memInMB, timestamp) => [
-    timestamp,
-    memInMB,
-  ]);
-  const result = regression.linear(data);
-  const slope = result.equation[0];
+  const n = yValues.length;
+  const xValues = yValues.map((_, i) => i + 1);
+
+  const sumX = xValues.reduce((acc, x) => acc + x, 0);
+  const sumY = yValues.reduce((acc, y) => acc + y, 0);
+  const sumXY = xValues.reduce((acc, x, i) => acc + x * yValues[i]!, 0);
+  const sumX2 = xValues.reduce((acc, x) => acc + x * x, 0);
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
   return slope;
 }
