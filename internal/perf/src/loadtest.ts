@@ -122,6 +122,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       await setTimeout(memorySnapshotWindow);
       try {
         const stats = await server.getStats();
+        if (ctrl.signal.aborted) return;
         if (skipSampling) continue;
         const sample: LoadtestMemorySample = {
           phase,
