@@ -140,3 +140,32 @@ function toTimeString(date: Date) {
 
   return `${hours}:${minutes}:${seconds}`;
 }
+
+/**
+ * Calculates the increase trend usind linear regression.
+ *
+ * It will clamp the snapshots to from 0 to 1 to get a percentage based slope.
+ *
+ * TODO: match the trend calculation with the 'chartjs-plugin-trendline' plugin
+ *
+ * @param snapshots - An array of memory snapshots in MB.
+ *
+ * @returns The slope of the linear regression line.
+ */
+export function calculateTrendSlope(yValues: number[]) {
+  if (yValues.length < 2) {
+    throw new Error(
+      'At least two points are required to calculate the trend slope',
+    );
+  }
+  const n = yValues.length;
+  const xValues = yValues.map((_, i) => i + 1);
+
+  const sumX = xValues.reduce((acc, x) => acc + x, 0);
+  const sumY = yValues.reduce((acc, y) => acc + y, 0);
+  const sumXY = xValues.reduce((acc, x, i) => acc + x * yValues[i]!, 0);
+  const sumX2 = xValues.reduce((acc, x) => acc + x * x, 0);
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  return slope;
+}
