@@ -35,14 +35,14 @@ describe('Supergraph handles stitched field with different name correctly', () =
 
     const bookIdSubschema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
-            type Query {
-              book(id: ID!): Book
-            }
+        type Query {
+          book(id: ID!): Book
+        }
 
-            type Book {
-                id: ID!
-            }
-          `,
+        type Book {
+          id: ID!
+        }
+      `,
       resolvers: {
         Query: {
           book: (_, { id }: { id: string }) => {

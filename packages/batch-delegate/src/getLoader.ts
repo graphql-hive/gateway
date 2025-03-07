@@ -39,10 +39,7 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
                 return originalError;
               }
 
-              return relocatedError(
-                originalError,
-                [fieldName, ...rest],
-              );
+              return relocatedError(originalError, [fieldName, ...rest]);
             },
             args: argsFromKeys(keys),
             ...(lazyOptionsFn == null ? options : lazyOptionsFn(options, keys)),
