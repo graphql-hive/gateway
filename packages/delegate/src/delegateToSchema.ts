@@ -190,6 +190,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
   transforms = [],
   transformedSchema,
   skipTypeMerging = false,
+  onLocatedError,
 }: IDelegateRequestOptions<TContext>): DelegationContext<TContext> {
   const operationDefinition = getOperationASTFromRequest(request);
   let targetFieldName: string;
@@ -239,6 +240,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
           ? subschemaOrSubschemaConfig.transformedSchema
           : applySchemaTransforms(targetSchema, subschemaOrSubschemaConfig)),
       skipTypeMerging,
+      onLocatedError,
     };
   }
 

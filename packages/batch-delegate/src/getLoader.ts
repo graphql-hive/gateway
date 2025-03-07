@@ -29,7 +29,7 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
                 return originalError;
               }
 
-              const [pathFieldName, pathNumber] = originalError.path;
+              const [pathFieldName, pathNumber, ...rest] = originalError.path;
 
               if (pathFieldName !== fieldName) {
                 return originalError;
@@ -39,12 +39,7 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
                 return originalError;
               }
 
-              return relocatedError(
-                originalError,
-                originalError.path
-                  .slice(0, 0)
-                  .concat(originalError.path.slice(2)),
-              );
+              return relocatedError(originalError, [fieldName, ...rest]);
             },
             args: argsFromKeys(keys),
             ...(lazyOptionsFn == null ? options : lazyOptionsFn(options, keys)),
