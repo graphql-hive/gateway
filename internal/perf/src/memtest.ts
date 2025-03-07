@@ -76,7 +76,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         // remove milliseconds
         .split('.')[0];
 
-      const { samples, profile } = await loadtest({
+      const loadtestResult = await loadtest({
         ...loadtestOpts,
         cwd,
         memorySnapshotWindow,
@@ -112,18 +112,20 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       if (isDebug('memtest')) {
         await fs.writeFile(
           path.join(cwd, `memtest_${startTime}.heapprofile`),
-          JSON.stringify(profile),
+          JSON.stringify(loadtestResult.profile),
         );
       }
 
-      // TODO: match the trend calculation with the 'chartjs-plugin-trendline' plugin
-      const slope = calculateTrendSlope(samples.map(({ mem }) => mem));
-      expect
-        .soft(slope, 'Consistent memory increase detected')
-        .toBeLessThan(10);
+      // NOTE: memory usage slop trend check is disabled allowing us to run the tests in parallel in the CI
+      //       and we dont want to disable it _only_ in the CI because we want consistant tests locally and in the CI
+      // import { calculateTrendSlope } from './chart'
+      // const slope = calculateTrendSlope(loadtestResult.samples.map(({ mem }) => mem));
+      // expect
+      //   .soft(slope, 'Consistent memory increase detected')
+      //   .toBeLessThan(10);
 
       const unexpectedHeavyFrames = getHeaviestFramesFromHeapSamplingProfile(
-        profile,
+        loadtestResult.profile,
       ).filter(
         (frame) =>
           // these frames are expected to be big
@@ -147,31 +149,4 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       }
     },
   );
-}
-
-/**
- * Calculates the increase trend usind linear regression.
- *
- * It will clamp the snapshots to from 0 to 1 to get a percentage based slope.
- *
- * @param snapshots - An array of memory snapshots in MB.
- *
- * @returns The slope of the linear regression line.
- */
-function calculateTrendSlope(yValues: number[]) {
-  if (yValues.length < 2) {
-    throw new Error(
-      'At least two points are required to calculate the trend slope',
-    );
-  }
-  const n = yValues.length;
-  const xValues = yValues.map((_, i) => i + 1);
-
-  const sumX = xValues.reduce((acc, x) => acc + x, 0);
-  const sumY = yValues.reduce((acc, y) => acc + y, 0);
-  const sumXY = xValues.reduce((acc, x, i) => acc + x * yValues[i]!, 0);
-  const sumX2 = xValues.reduce((acc, x) => acc + x * x, 0);
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  return slope;
 }
