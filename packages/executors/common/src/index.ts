@@ -58,6 +58,7 @@ export function serializeExecutionRequest({
 }
 
 export interface UpstreamErrorExtensions {
+  code?: string;
   serviceName?: string;
   request: {
     url?: string;

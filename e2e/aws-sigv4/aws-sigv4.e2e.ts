@@ -71,6 +71,7 @@ describe('AWS Sigv4', () => {
           message: 'Expected access key AKIAIOSFODNN7EXAMPLE, but got invalid',
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
+            serviceName: 'upstream',
           },
           path: ['hello'],
         },
