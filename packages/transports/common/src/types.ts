@@ -54,5 +54,5 @@ export type TransportGetSubgraphExecutor<
 export type DisposableExecutor = Executor &
   Partial<Disposable | AsyncDisposable>;
 
-export { UpstreamErrorExtensions } from '@graphql-tools/executor-common';
+export type { UpstreamErrorExtensions } from '@graphql-tools/executor-common';
 export { type Executor };
