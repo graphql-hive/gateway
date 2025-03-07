@@ -4826,7 +4826,6 @@ __metadata:
     meros: "npm:^1.2.1"
     pkgroll: "npm:2.11.2"
     tslib: "npm:^2.8.1"
-    value-or-promise: "npm:^1.0.12"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
