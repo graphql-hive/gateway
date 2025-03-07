@@ -54,18 +54,5 @@ export type TransportGetSubgraphExecutor<
 export type DisposableExecutor = Executor &
   Partial<Disposable | AsyncDisposable>;
 
-export interface UpstreamErrorExtensions {
-  subgraph?: string;
-  request: {
-    url?: string;
-    method?: string;
-    body?: unknown;
-  };
-  response?: {
-    status?: number;
-    statusText?: string;
-    headers?: Record<string, string>;
-    body?: unknown;
-  };
-}
+export { UpstreamErrorExtensions } from '@graphql-tools/executor-common';
 export { type Executor };
