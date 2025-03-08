@@ -1,5 +1,22 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.32
+
+### Patch Changes
+
+- [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
+
+- [#742](https://github.com/graphql-hive/gateway/pull/742) [`2a54e85`](https://github.com/graphql-hive/gateway/commit/2a54e85f2848aea7525703ea33918a21db96b26b) Thanks [@kathrynkodama](https://github.com/kathrynkodama)! - Remove the index from the batched error;
+
+  In case of batched delegation (for example multiple book entitites fetched from different places from a field), remove the index from the error message, as it is not relevant in this case.
+
+  [See the test](https://github.com/graphql-hive/gateway/blob/ff61b87b5928f065edfd3a6e6c0fd13bc2beac45/packages/stitch/tests/stitchSchemasPathBug.test.ts)
+
+- Updated dependencies [[`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`2a54e85`](https://github.com/graphql-hive/gateway/commit/2a54e85f2848aea7525703ea33918a21db96b26b)]:
+  - @graphql-tools/delegate@10.2.14
+
 ## 9.0.31
 
 ### Patch Changes

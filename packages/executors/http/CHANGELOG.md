@@ -1,5 +1,32 @@
 # @graphql-tools/executor-http
 
+## 1.3.0
+
+### Minor Changes
+
+- [#792](https://github.com/graphql-hive/gateway/pull/792) [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f) Thanks [@ardatan](https://github.com/ardatan)! - Ensure subgraph name is present in the upstream error extensions when HTTP Executor throws
+
+### Patch Changes
+
+- [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
+
+- [#727](https://github.com/graphql-hive/gateway/pull/727) [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/disposablestack@^0.0.6` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+
+- [#773](https://github.com/graphql-hive/gateway/pull/773) [`d949143`](https://github.com/graphql-hive/gateway/commit/d94914302b5b2c71b1c95df5145326fba89b023c) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Removed dependency [`extract-files@^11.0.0` ↗︎](https://www.npmjs.com/package/extract-files/v/11.0.0) (from `dependencies`)
+
+- [#791](https://github.com/graphql-hive/gateway/pull/791) [`661b103`](https://github.com/graphql-hive/gateway/commit/661b103a7b9586641e69b78cbaad516e550e7192) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency [`value-or-promise@^1.0.12` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.12) (from `dependencies`)
+
+- Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7)]:
+  - @graphql-tools/executor-common@0.0.4
+
 ## 1.2.8
 
 ### Patch Changes
