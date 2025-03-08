@@ -460,7 +460,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * @default true
    */
-  logging?: boolean | Logger | LogLevel | undefined;
+  logging?: boolean | Logger | LogLevel | keyof typeof LogLevel | undefined;
   /**
    * Endpoint of the GraphQL API.
    */
