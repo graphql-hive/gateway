@@ -1,5 +1,6 @@
 import { JSONLogger } from '@graphql-hive/logger-json';
 import { process } from '@graphql-mesh/cross-helpers';
+import { Logger } from '@graphql-mesh/types';
 import { DefaultLogger, LogLevel } from '@graphql-mesh/utils';
 
 export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
@@ -16,4 +17,46 @@ export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
     return new JSONLogger(opts);
   }
   return new DefaultLogger(opts?.name, opts?.level);
+}
+
+export function handleLoggingConfig(
+  loggingConfig: boolean | Logger | LogLevel | undefined,
+  existingLogger?: Logger,
+) {
+  if (typeof loggingConfig === 'object') {
+    return loggingConfig;
+  }
+  if (typeof loggingConfig === 'boolean') {
+    if (!loggingConfig) {
+      if (existingLogger && 'logLevel' in existingLogger) {
+        existingLogger.logLevel = LogLevel.silent;
+        return existingLogger;
+      } 
+      return getDefaultLogger({
+        name: existingLogger?.name,
+        level: LogLevel.silent,
+      });
+    }
+  }
+  if (typeof loggingConfig === 'number') {
+    if (existingLogger && 'logLevel' in existingLogger) {
+      existingLogger.logLevel = loggingConfig;
+      return existingLogger;
+    }
+    return getDefaultLogger({
+      name: existingLogger?.name,
+      level: loggingConfig,
+    });
+  }
+  if (typeof loggingConfig === 'string') {
+    if (existingLogger && 'logLevel' in existingLogger) {
+      existingLogger.logLevel = LogLevel[loggingConfig as keyof typeof LogLevel];
+      return existingLogger;
+    }
+    return getDefaultLogger({
+      name: existingLogger?.name,
+      level: LogLevel[loggingConfig as keyof typeof LogLevel],
+    });
+  }
+  return existingLogger || getDefaultLogger();
 }
