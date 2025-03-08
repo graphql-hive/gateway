@@ -1,5 +1,6 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
+  fakePromise,
   getOperationASTFromDocument,
   isAsyncIterable,
   mapMaybePromise,
@@ -14,6 +15,7 @@ import {
   type Context,
   type Tracer,
 } from '@opentelemetry/api';
+import { MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import type { ExecutionArgs } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
@@ -72,7 +74,7 @@ export function createHttpSpan(input: {
   };
 }
 
-export function endHttpSpan(ctx: Context, response: Response) {
+export function setResponseAttributes(ctx: Context, response: Response) {
   const span = trace.getSpan(ctx);
   if (span) {
     span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
@@ -80,20 +82,14 @@ export function endHttpSpan(ctx: Context, response: Response) {
       code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
       message: response.ok ? undefined : response.statusText,
     });
-    span.end();
   }
 }
 
-export function startGraphQLSpan(input: {
+export function createGraphQLSpan(input: {
   ctx: Context;
   tracer: Tracer;
   params: GraphQLParams;
-}): {
-  ctx: Context;
-  done: (
-    result: MaybePromise<ExecutionResult | AsyncIterable<ExecutionResult>>,
-  ) => void;
-} {
+}): Context {
   const operationName = input.params.operationName ?? 'unknown';
   const span = input.tracer.startSpan(
     `graphql.operation ${operationName}`,
@@ -107,30 +103,10 @@ export function startGraphQLSpan(input: {
     input.ctx,
   );
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: (result$) => {
-      return mapMaybePromise(
-        result$,
-        () => {
-          //FIXME: handle async iterable results.
-          span.end();
-        },
-        (err) => {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: err.message,
-          });
-          span.recordException(err);
-          span.end();
-          throw err;
-        },
-      );
-    },
-  };
+  return trace.setSpan(input.ctx, span);
 }
 
-export function addExecutionArgsToGraphqlSpan(
+export function setExecutionAttributesOnOperationSpan(
   ctx: Context,
   args: ExecutionArgs,
 ) {
@@ -152,59 +128,63 @@ export function addExecutionArgsToGraphqlSpan(
 export function createGraphqlContextBuildingSpan(input: {
   ctx: Context;
   tracer: Tracer;
-}): { ctx: Context; done: () => void } {
+}): Context {
   const span = input.tracer.startSpan(
     'graphql.context',
     { kind: SpanKind.INTERNAL },
     input.ctx,
   );
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: () => span.end(),
-  };
+  return trace.setSpan(input.ctx, span);
 }
 
-export function startGraphQLParseSpan(input: {
+export function createGraphQLParseSpan(input: {
   ctx: Context;
   tracer: Tracer;
-  query?: string;
-  operationName?: string;
-}): { ctx: Context; done: (result: unknown) => void } {
+}): Context {
   const span = input.tracer.startSpan(
     'graphql.parse',
     {
-      attributes: {
-        [SEMATTRS_GRAPHQL_DOCUMENT]: input.query,
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: input.operationName,
-      },
       kind: SpanKind.INTERNAL,
     },
     input.ctx,
   );
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: (result) => {
-      if (result instanceof Error) {
-        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
-        span.recordException(result);
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.message,
-        });
-      }
-      span.end();
-    },
-  };
+  return trace.setSpan(input.ctx, span);
 }
 
-export function startGraphQLValidateSpan(input: {
+export function setGraphQLParseAttributes(input: {
+  ctx: Context;
+  query?: string;
+  operationName?: string;
+  result: unknown;
+}) {
+  const span = trace.getSpan(input.ctx);
+  if (!span) {
+    return;
+  }
+  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query ?? '<empty>');
+  span.setAttribute(
+    SEMATTRS_GRAPHQL_OPERATION_NAME,
+    input.operationName ?? 'Anonymous',
+  );
+
+  if (input.result instanceof Error) {
+    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+    span.recordException(input.result);
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: input.result.message,
+    });
+  }
+}
+
+export function createGraphQLValidateSpan(input: {
   ctx: Context;
   tracer: Tracer;
   query?: string;
   operationName?: string;
-}): { ctx: Context; done: (result: any[] | readonly Error[]) => void } {
+}): Context {
   const span = input.tracer.startSpan(
     'graphql.validate',
     {
@@ -216,80 +196,96 @@ export function startGraphQLValidateSpan(input: {
     },
     input.ctx,
   );
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: (result) => {
-      if (result instanceof Error) {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.message,
-        });
-      } else if (Array.isArray(result) && result.length > 0) {
-        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.map((e) => e.message).join(', '),
-        });
-
-        for (const error in result) {
-          span.recordException(error);
-        }
-      }
-      span.end();
-    },
-  };
+  return trace.setSpan(input.ctx, span);
 }
 
-export function startGraphQLExecuteSpan(input: {
+export function setGraphQLValidateAttributes(input: {
   ctx: Context;
-  args: ExecutionArgs;
+  result: any[] | readonly Error[];
+}) {
+  const { result, ctx } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  if (result instanceof Error) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: result.message,
+    });
+  } else if (Array.isArray(result) && result.length > 0) {
+    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: result.map((e) => e.message).join(', '),
+    });
+
+    for (const error in result) {
+      span.recordException(error);
+    }
+  }
+}
+
+export function createGraphQLExecuteSpan(input: {
+  ctx: Context;
   tracer: Tracer;
-}): {
-  ctx: Context;
-  done: (
-    result: ExecutionResult | AsyncIterableIterator<ExecutionResult>,
-  ) => void;
-} {
-  const operation = getOperationASTFromDocument(
-    input.args.document,
-    input.args.operationName || undefined,
-  );
-  const operationName = operation.name?.value ?? 'Anonymous';
-  const document = defaultPrintFn(input.args.document);
+}): Context {
   const span = input.tracer.startSpan(
     'graphql.execute',
-    {
-      attributes: {
-        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operationName,
-        [SEMATTRS_GRAPHQL_DOCUMENT]: document,
-      },
-      kind: SpanKind.INTERNAL,
-    },
+    { kind: SpanKind.INTERNAL },
     input.ctx,
   );
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: (result) => {
-      if (
-        !isAsyncIterable(result) && // FIXME: Handle async iterable too
-        result.errors &&
-        result.errors.length > 0
-      ) {
-        span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: result.errors.map((e) => e.message).join(', '),
-        });
+  return trace.setSpan(input.ctx, span);
+}
 
-        for (const error of result.errors) {
-          span.recordException(error);
-        }
-      }
-      span.end();
-    },
-  };
+export function setGraphQLExecutionAttributes(input: {
+  ctx: Context;
+  args: ExecutionArgs;
+}) {
+  const { ctx, args } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  const operation = getOperationASTFromDocument(
+    args.document,
+    args.operationName || undefined,
+  );
+  const operationName = operation.name?.value ?? 'Anonymous';
+  const document = defaultPrintFn(input.args.document);
+  span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+  span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
+}
+
+export function setGraphQLExecutionResultAttributes(input: {
+  ctx: Context;
+  result: ExecutionResult | AsyncIterableIterator<ExecutionResult>;
+}) {
+  const { ctx, result } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  if (
+    !isAsyncIterable(result) && // FIXME: Handle async iterable too
+    result.errors &&
+    result.errors.length > 0
+  ) {
+    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: result.errors.map((e) => e.message).join(', '),
+    });
+
+    for (const error of result.errors) {
+      span.recordException(error);
+    }
+  }
 }
 
 export function startSubgraphExecuteFetchSpan(input: {
@@ -297,10 +293,7 @@ export function startSubgraphExecuteFetchSpan(input: {
   tracer: Tracer;
   executionRequest: ExecutionRequest;
   subgraphName: string;
-}): {
-  ctx: Context;
-  done: (result: unknown) => void;
-} {
+}): Context {
   const span = input.tracer.startSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
@@ -320,47 +313,68 @@ export function startSubgraphExecuteFetchSpan(input: {
     input.ctx,
   );
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: () => {
-      return span.end();
-    },
-  };
+  return trace.setSpan(input.ctx, span);
 }
 
-export function startUpstreamHttpFetchSpan(input: {
+export function createUpstreamHttpFetchSpan(input: {
   ctx: Context;
   tracer: Tracer;
-  url: string;
-  fetchOptions: RequestInit;
-  executionRequest?: ExecutionRequest;
-}): { ctx: Context; done: (response: Response) => void } {
-  const urlObj = new URL(input.url);
+}): Context {
   const span = input.tracer.startSpan(
     'http.fetch',
     {
-      attributes: {
-        [SEMATTRS_HTTP_METHOD]: input.fetchOptions.method,
-        [SEMATTRS_HTTP_URL]: input.url,
-        [SEMATTRS_NET_HOST_NAME]: urlObj.hostname,
-        [SEMATTRS_HTTP_HOST]: urlObj.host,
-        [SEMATTRS_HTTP_ROUTE]: urlObj.pathname,
-        [SEMATTRS_HTTP_SCHEME]: urlObj.protocol,
-      },
+      attributes: {},
       kind: SpanKind.CLIENT,
     },
     input.ctx,
   );
+  return trace.setSpan(input.ctx, span);
+}
 
-  return {
-    ctx: trace.setSpan(input.ctx, span),
-    done: (response) => {
-      span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
-      span.setStatus({
-        code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
-        message: response.ok ? undefined : response.statusText,
-      });
-      span.end();
-    },
-  };
+export function setUpstreamFetchAttributes(input: {
+  ctx: Context;
+  url: string;
+  options: RequestInit;
+}) {
+  const { ctx, url, options: fetchOptions } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  const urlObj = new URL(input.url);
+  span.setAttribute(SEMATTRS_HTTP_METHOD, fetchOptions.method ?? 'GET');
+  span.setAttribute(SEMATTRS_HTTP_URL, url);
+  span.setAttribute(SEMATTRS_NET_HOST_NAME, urlObj.hostname);
+  span.setAttribute(SEMATTRS_HTTP_HOST, urlObj.host);
+  span.setAttribute(SEMATTRS_HTTP_ROUTE, urlObj.pathname);
+  span.setAttribute(SEMATTRS_HTTP_SCHEME, urlObj.protocol);
+}
+
+export function setUpstreamFetchResponseAttributes(input: {
+  ctx: Context;
+  response: Response;
+}) {
+  const { ctx, response } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+  span.setStatus({
+    code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
+    message: response.ok ? undefined : response.statusText,
+  });
+}
+
+export function registerException(ctx: Context | undefined, error: any) {
+  const span = ctx && trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  const message = error?.message?.toString() ?? error?.toString();
+  span.setStatus({ code: SpanStatusCode.ERROR, message });
+  span.recordException(error);
 }
