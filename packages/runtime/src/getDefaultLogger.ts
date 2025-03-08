@@ -20,7 +20,12 @@ export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
 }
 
 export function handleLoggingConfig(
-  loggingConfig: boolean | Logger | LogLevel | undefined,
+  loggingConfig:
+    | boolean
+    | Logger
+    | LogLevel
+    | keyof typeof LogLevel
+    | undefined,
   existingLogger?: Logger,
 ) {
   if (typeof loggingConfig === 'object') {
@@ -50,13 +55,12 @@ export function handleLoggingConfig(
   }
   if (typeof loggingConfig === 'string') {
     if (existingLogger && 'logLevel' in existingLogger) {
-      existingLogger.logLevel =
-        LogLevel[loggingConfig as keyof typeof LogLevel];
+      existingLogger.logLevel = LogLevel[loggingConfig];
       return existingLogger;
     }
     return getDefaultLogger({
       name: existingLogger?.name,
-      level: LogLevel[loggingConfig as keyof typeof LogLevel],
+      level: LogLevel[loggingConfig],
     });
   }
   return existingLogger || getDefaultLogger();

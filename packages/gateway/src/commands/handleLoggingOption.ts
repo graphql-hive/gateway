@@ -6,7 +6,12 @@ import { Logger } from '@graphql-mesh/types';
 import { CLIContext } from '..';
 
 export function handleLoggingConfig(
-  loggingConfig: boolean | Logger | LogLevel | undefined,
+  loggingConfig:
+    | boolean
+    | Logger
+    | LogLevel
+    | keyof typeof LogLevel
+    | undefined,
   ctx: CLIContext,
 ) {
   ctx.log = handleLoggingConfigRuntime(loggingConfig, ctx.log);
