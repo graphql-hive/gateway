@@ -31,7 +31,7 @@ export function handleLoggingConfig(
       if (existingLogger && 'logLevel' in existingLogger) {
         existingLogger.logLevel = LogLevel.silent;
         return existingLogger;
-      } 
+      }
       return getDefaultLogger({
         name: existingLogger?.name,
         level: LogLevel.silent,
@@ -50,7 +50,8 @@ export function handleLoggingConfig(
   }
   if (typeof loggingConfig === 'string') {
     if (existingLogger && 'logLevel' in existingLogger) {
-      existingLogger.logLevel = LogLevel[loggingConfig as keyof typeof LogLevel];
+      existingLogger.logLevel =
+        LogLevel[loggingConfig as keyof typeof LogLevel];
       return existingLogger;
     }
     return getDefaultLogger({
