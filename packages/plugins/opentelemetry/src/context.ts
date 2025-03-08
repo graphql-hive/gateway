@@ -1,5 +1,6 @@
 import type { Logger } from '@graphql-mesh/types';
 import { trace, type Context, type ContextManager } from '@opentelemetry/api';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import type { PromiseOrValue } from 'graphql-yoga';
 
 type Node = {
@@ -47,9 +48,9 @@ export function getContextManager(
   logger: Logger,
   useContextManager: boolean,
   contextManager?: false | ContextManager,
-): PromiseOrValue<ContextManager | false | undefined> {
+): Promise<ContextManager | false | undefined> {
   if (contextManager != undefined) {
-    return contextManager;
+    return fakePromise(contextManager);
   }
 
   return import('@opentelemetry/context-async-hooks')
