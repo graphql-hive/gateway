@@ -262,7 +262,7 @@ export function getOnSubgraphExecute({
     const originalExecutor = executor;
     executor = (executionRequest) => {
       const subgraphInstrumentation = instrumentation()?.subgraphExecute;
-      return getInstrumented({ executionRequest }).asyncFn(
+      return getInstrumented({ executionRequest, subgraphName }).asyncFn(
         subgraphInstrumentation,
         originalExecutor,
       )(executionRequest);

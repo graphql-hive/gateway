@@ -1,11 +1,12 @@
 import type { ExecutionRequest } from '@graphql-tools/utils';
+import { GenericInstrumentation } from 'graphql-yoga';
 
 export function withState<
-  P,
+  P extends { instrumentation?: GenericInstrumentation },
   HttpState = object,
   GraphqlState = object,
   SubExecState = object,
->(plugin: WithState<P, HttpState, GraphqlState, SubExecState>): P {
+>(plugin: PluginWithState<P, HttpState, GraphqlState, SubExecState>): P {
   const states: {
     forRequest?: WeakMap<Request, Partial<HttpState>>;
     forOperation?: WeakMap<any, Partial<GraphqlState>>;
@@ -24,33 +25,45 @@ export function withState<
     };
   }
 
-  const pluginWithState: Record<string, (payload: any) => unknown> = {};
-  for (const [hookName, hook] of Object.entries(plugin) as any) {
-    pluginWithState[hookName] = (payload) =>
-      hook({
-        ...payload,
-        get state() {
-          let { executionRequest, context, request } = payload;
+  function addStateGetters(src: any) {
+    const result: any = {};
+    for (const [hookName, hook] of Object.entries(src) as any) {
+      result[hookName] = (payload: any, ...args: any[]) =>
+        hook(
+          {
+            ...payload,
+            get state() {
+              let { executionRequest, context, request } = payload;
 
-          const state = {};
-          const defineState = (scope: keyof typeof states, key: any) =>
-            Object.defineProperty(state, scope, getProp(scope, key));
+              const state = {};
+              const defineState = (scope: keyof typeof states, key: any) =>
+                Object.defineProperty(state, scope, getProp(scope, key));
 
-          if (executionRequest) {
-            defineState('forSubgraphExecution', executionRequest);
-            if (executionRequest.context) context = executionRequest.context;
-          }
-          if (context) {
-            defineState('forOperation', context);
-            if (context.request) request = context.request;
-          }
-          if (request) {
-            defineState('forRequest', request);
-          }
-          return state;
-        },
-      });
+              if (executionRequest) {
+                defineState('forSubgraphExecution', executionRequest);
+                if (executionRequest.context)
+                  context = executionRequest.context;
+              }
+              if (context) {
+                defineState('forOperation', context);
+                if (context.request) request = context.request;
+              }
+              if (request) {
+                defineState('forRequest', request);
+              }
+              return state;
+            },
+          },
+          ...args,
+        );
+    }
+    return result;
   }
+
+  const { instrumentation, ...hooks } = plugin;
+
+  const pluginWithState = addStateGetters(hooks);
+  pluginWithState.instrumentation = addStateGetters(instrumentation);
 
   return pluginWithState as P;
 }
@@ -97,8 +110,30 @@ type PayloadWithState<T, Http, GraphQL, Gateway> = T extends {
         ? T & { state: HttpState<Http> }
         : T;
 
-type WithState<P, Http = object, GraphQL = object, Gateway = object> = {
-  [K in keyof P]: P[K] extends ((payload: infer T) => infer R) | undefined
-    ? (payload: PayloadWithState<T, Http, GraphQL, Gateway>) => R | undefined
-    : P[K];
+export type PluginWithState<
+  P,
+  Http = object,
+  GraphQL = object,
+  Gateway = object,
+> = {
+  [K in keyof P]: K extends 'instrumentation'
+    ? P[K] extends infer Instrumentation | undefined
+      ? {
+          [I in keyof Instrumentation]: Instrumentation[I] extends
+            | ((payload: infer IP, ...args: infer Args) => infer IR)
+            | undefined
+            ?
+                | ((
+                    payload: PayloadWithState<IP, Http, GraphQL, Gateway>,
+                    ...args: Args
+                  ) => IR)
+                | undefined
+            : Instrumentation[I];
+        }
+      : P[K]
+    : P[K] extends ((payload: infer T) => infer R) | undefined
+      ?
+          | ((payload: PayloadWithState<T, Http, GraphQL, Gateway>) => R)
+          | undefined
+      : P[K];
 };
