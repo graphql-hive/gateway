@@ -445,6 +445,10 @@ class MockSpanExporter implements SpanExporter {
   assertRoot(rootName: string): TraceTreeNode {
     const root = this.spans.find(({ name }) => name === rootName);
     if (!root) {
+      console.error(
+        `failed to find "${rootName}". Spans are: `,
+        this.toString(),
+      );
       expect.fail(
         `No root span found with name '${rootName}'. Span names are: ${this.spans.map(({ name }) => `\n\t- ${name}`)}`,
       );
@@ -474,6 +478,7 @@ class TraceTreeNode {
   expectChild = (name: string): TraceTreeNode => {
     const child = this.children.find((child) => child.span.name === name);
     if (!child) {
+      console.error(`No child span with name "${name}" in:\n`, this.toString());
       expect.fail(
         `No child span found with name '${name}'. Children names are: ${this.children.map((child) => `\n\t- ${child.span.name}`)}`,
       );
@@ -484,6 +489,10 @@ class TraceTreeNode {
   get length() {
     return this.children.length;
   }
+
+  toString(prefix = '') {
+    return `${prefix}-- ${this.span.name}\n${this.children.map((c): string => c.toString(prefix + '  |')).join('')}`;
+  }
 }
 
 type Span = ReadableSpan & {
@@ -491,7 +500,3 @@ type Span = ReadableSpan & {
   traceState?: TraceState;
   id: string;
 };
-
-function assertExist<T>(value?: T): asserts value is T {
-  expect(value).toBeDefined();
-}

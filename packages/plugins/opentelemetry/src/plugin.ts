@@ -51,6 +51,7 @@ import {
   setGraphQLExecutionResultAttributes,
   setGraphQLParseAttributes,
   setGraphQLValidateAttributes,
+  setParamsAttributes,
   setResponseAttributes,
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
@@ -341,9 +342,8 @@ export function useOpenTelemetry(
         }
 
         const ctx = getContext(parentState);
-        const { params } = gqlCtx;
-        forOperation.otel! = new OtelContextStack(
-          createGraphQLSpan({ tracer, ctx, params }),
+        forOperation.otel = new OtelContextStack(
+          createGraphQLSpan({ tracer, ctx }),
         );
 
         if (useContextManager) {
@@ -563,6 +563,18 @@ export function useOpenTelemetry(
       } catch (error) {
         pluginLogger.error('Failed to end http span', { error });
       }
+    },
+
+    onParams({ state, context: gqlCtx, params }) {
+      if (
+        !isParentEnabled(state) ||
+        !shouldTrace(options.spans?.graphql, gqlCtx)
+      ) {
+        return;
+      }
+
+      const ctx = getContext(state);
+      setParamsAttributes({ ctx, params });
     },
 
     onParse({ state, context: gqlCtx }) {
