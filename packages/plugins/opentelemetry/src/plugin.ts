@@ -26,6 +26,7 @@ import '@opentelemetry/api';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { unfakePromise } from '@whatwg-node/promise-helpers';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import { getContextManager, OtelContextStack } from './context';
 import {
@@ -214,7 +215,9 @@ export type OpenTelemetryPlugin =
   };
 
 export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions & GatewayConfigContext,
+  options: OpenTelemetryGatewayPluginOptions & {
+    logger: GatewayConfigContext['logger'];
+  },
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
@@ -304,34 +307,36 @@ export function useOpenTelemetry(
 
         const url = getURL(request);
 
-        return preparation$
-          .then(() => {
-            const ctx = inheritContext
-              ? propagation.extract(
-                  context.active(),
-                  request.headers,
-                  HeadersTextMapGetter,
-                )
-              : context.active();
+        return unfakePromise(
+          preparation$
+            .then(() => {
+              const ctx = inheritContext
+                ? propagation.extract(
+                    context.active(),
+                    request.headers,
+                    HeadersTextMapGetter,
+                  )
+                : context.active();
 
-            forRequest.otel = new OtelContextStack(
-              createHttpSpan({ ctx, request, tracer, url }).ctx,
-            );
+              forRequest.otel = new OtelContextStack(
+                createHttpSpan({ ctx, request, tracer, url }).ctx,
+              );
 
-            if (useContextManager) {
-              wrapped = context.bind(forRequest.otel.current, wrapped);
-            }
+              if (useContextManager) {
+                wrapped = context.bind(forRequest.otel.current, wrapped);
+              }
 
-            return wrapped();
-          })
-          .catch((error) => {
-            registerException(forRequest.otel?.current, error);
-            throw error;
-          })
-          .finally(() => {
-            const ctx = forRequest.otel?.root;
-            ctx && trace.getSpan(ctx)?.end();
-          });
+              return wrapped();
+            })
+            .catch((error) => {
+              registerException(forRequest.otel?.current, error);
+              throw error;
+            })
+            .finally(() => {
+              const ctx = forRequest.otel?.root;
+              ctx && trace.getSpan(ctx)?.end();
+            }),
+        );
       },
 
       operation(
@@ -354,13 +359,15 @@ export function useOpenTelemetry(
           wrapped = context.bind(forOperation.otel.current, wrapped);
         }
 
-        return fakePromise()
-          .then(wrapped)
-          .catch((err) => {
-            registerException(forOperation.otel?.current, err);
-            throw err;
-          })
-          .finally(() => trace.getSpan(forOperation.otel!.current)?.end());
+        return unfakePromise(
+          fakePromise()
+            .then(wrapped)
+            .catch((err) => {
+              registerException(forOperation.otel?.current, err);
+              throw err;
+            })
+            .finally(() => trace.getSpan(forOperation.otel!.current)?.end()),
+        );
       },
 
       context({ state, context: gqlCtx }, wrapped) {
@@ -471,16 +478,18 @@ export function useOpenTelemetry(
           wrapped = context.bind(forOperation.otel!.current, wrapped);
         }
 
-        return fakePromise()
-          .then(wrapped)
-          .catch((err) => {
-            registerException(forOperation.otel!.current, err);
-            throw err;
-          })
-          .finally(() => {
-            trace.getSpan(forOperation.otel!.current)?.end();
-            forOperation.otel!.pop();
-          });
+        return unfakePromise(
+          fakePromise()
+            .then(wrapped)
+            .catch((err) => {
+              registerException(forOperation.otel!.current, err);
+              throw err;
+            })
+            .finally(() => {
+              trace.getSpan(forOperation.otel!.current)?.end();
+              forOperation.otel!.pop();
+            }),
+        );
       },
 
       subgraphExecute(
@@ -515,16 +524,18 @@ export function useOpenTelemetry(
           wrapped = context.bind(forSubgraphExecution.otel!.current, wrapped);
         }
 
-        return fakePromise()
-          .then(wrapped)
-          .catch((err) => {
-            registerException(forSubgraphExecution.otel!.current, err);
-            throw err;
-          })
-          .finally(() => {
-            trace.getSpan(forSubgraphExecution.otel!.current)?.end();
-            forSubgraphExecution.otel!.pop();
-          });
+        return unfakePromise(
+          fakePromise()
+            .then(wrapped)
+            .catch((err) => {
+              registerException(forSubgraphExecution.otel!.current, err);
+              throw err;
+            })
+            .finally(() => {
+              trace.getSpan(forSubgraphExecution.otel!.current)?.end();
+              forSubgraphExecution.otel!.pop();
+            }),
+        );
       },
 
       fetch({ state, executionRequest }, wrapped) {
@@ -547,16 +558,18 @@ export function useOpenTelemetry(
           wrapped = context.bind(ctx, wrapped);
         }
 
-        return fakePromise()
-          .then(wrapped)
-          .catch((err) => {
-            registerException(ctx, err);
-            throw err;
-          })
-          .finally(() => {
-            trace.getSpan(ctx)?.end();
-            forSubgraphExecution?.otel!.pop();
-          });
+        return unfakePromise(
+          fakePromise()
+            .then(wrapped)
+            .catch((err) => {
+              registerException(ctx, err);
+              throw err;
+            })
+            .finally(() => {
+              trace.getSpan(ctx)?.end();
+              forSubgraphExecution?.otel!.pop();
+            }),
+        );
       },
     },
 

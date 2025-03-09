@@ -1,7 +1,6 @@
 import type { Logger } from '@graphql-mesh/types';
 import { trace, type Context, type ContextManager } from '@opentelemetry/api';
 import { fakePromise } from '@whatwg-node/promise-helpers';
-import type { PromiseOrValue } from 'graphql-yoga';
 
 type Node = {
   ctx: Context;
