@@ -203,9 +203,19 @@ type State = Partial<
   HttpState<OtelState> & GraphQLState<OtelState> & GatewayState<OtelState>
 >;
 
+export type OpenTelemetryPlugin =
+  GatewayPlugin<OpenTelemetryContextExtension> & {
+    getOtelContext: (payload: {
+      request?: Request;
+      context?: any;
+      executionRequest?: ExecutionRequest;
+    }) => Context;
+    getTracer(): Tracer;
+  };
+
 export function useOpenTelemetry(
   options: OpenTelemetryGatewayPluginOptions & GatewayConfigContext,
-): GatewayPlugin<OpenTelemetryContextExtension> {
+): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
   const useContextManager = options.contextManager !== false;
@@ -279,17 +289,12 @@ export function useOpenTelemetry(
   }
 
   return withState<
-    GatewayPlugin<OpenTelemetryContextExtension> & {
-      getOtelContext: (payload: {
-        request?: Request;
-        context: any;
-        executionRequest: ExecutionRequest;
-      }) => Context;
-    },
+    OpenTelemetryPlugin,
     OtelState,
     OtelState & { skipExecuteSpan?: true },
     OtelState
   >({
+    getTracer: () => tracer,
     getOtelContext: ({ state }) => getContext(state),
     instrumentation: {
       request({ state: { forRequest }, request }, wrapped) {
@@ -372,6 +377,10 @@ export function useOpenTelemetry(
           createGraphqlContextBuildingSpan({ ctx, tracer }),
         );
 
+        if (useContextManager) {
+          wrapped = context.bind(forOperation.otel!.current, wrapped);
+        }
+
         try {
           wrapped();
         } catch (err) {
@@ -429,7 +438,7 @@ export function useOpenTelemetry(
         );
 
         if (useContextManager) {
-          context.bind(forOperation.otel!.current, wrapped);
+          wrapped = context.bind(forOperation.otel!.current, wrapped);
         }
 
         try {
@@ -553,6 +562,15 @@ export function useOpenTelemetry(
 
     onYogaInit({ yoga }) {
       resolveAsyncAttributes({ [ATTR_SERVICE_VERSION]: yoga.version });
+    },
+
+    onEnveloped({ state, extendContext }) {
+      extendContext({
+        opentelemetry: {
+          tracer,
+          activeContext: () => getContext(state),
+        },
+      });
     },
 
     onResponse({ response, state }) {

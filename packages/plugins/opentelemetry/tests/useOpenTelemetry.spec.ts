@@ -1,4 +1,4 @@
-import type { TraceState } from '@opentelemetry/api';
+import { GatewayPlugin } from '@graphql-hive/gateway';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import {
@@ -18,7 +18,11 @@ import {
   it,
   vi,
 } from 'vitest';
-import type { OpenTelemetryGatewayPluginOptions } from '../src/plugin';
+import type {
+  OpenTelemetryContextExtension,
+  OpenTelemetryGatewayPluginOptions,
+  OpenTelemetryPlugin,
+} from '../src/plugin';
 
 let mockModule = vi.mock;
 if (globalThis.Bun) {
@@ -157,249 +161,404 @@ describe('useOpenTelemetry', () => {
       expect(mockRegisterProvider).not.toHaveBeenCalled();
     });
   });
+
   describe('tracing', () => {
-    const expected = {
-      http: {
-        root: 'POST /graphql',
-        children: ['graphql.operation Anonymous'],
-      },
-      graphql: {
-        root: 'graphql.operation Anonymous',
-        children: [
-          'graphql.parse',
-          'graphql.validate',
-          'graphql.context',
-          'graphql.execute',
-        ],
-      },
-      execute: {
-        root: 'graphql.execute',
-        children: ['subgraph.execute (upstream)'],
-      },
-      subgraphExecute: {
-        root: 'subgraph.execute (upstream)',
-        children: ['http.fetch'],
-      },
-    };
+    describe.each([
+      { name: 'with context manager', contextManager: undefined },
+      { name: 'without context manager', contextManager: false as const },
+    ])('$name', ({ contextManager }) => {
+      const buildTestGatewayForCtx: typeof buildTestGateway = (
+        options,
+        plugins,
+      ) => buildTestGateway({ contextManager, ...options }, plugins);
 
-    const allExpectedSpans: string[] = [
-      expected.http.root,
-      ...Object.values(expected).flatMap(({ children }) => children),
-    ];
+      const expected = {
+        http: {
+          root: 'POST /graphql',
+          children: ['graphql.operation Anonymous'],
+        },
+        graphql: {
+          root: 'graphql.operation Anonymous',
+          children: [
+            'graphql.parse',
+            'graphql.validate',
+            'graphql.context',
+            'graphql.execute',
+          ],
+        },
+        execute: {
+          root: 'graphql.execute',
+          children: ['subgraph.execute (upstream)'],
+        },
+        subgraphExecute: {
+          root: 'subgraph.execute (upstream)',
+          children: ['http.fetch'],
+        },
+      };
 
-    describe('span parenting', () => {
-      it.each([
-        { name: 'with context manager', contextManager: undefined },
-        { name: 'without context manager', contextManager: false as const },
-      ])(
-        'should register a complete span tree $name',
-        async ({ contextManager }) => {
-          await using gateway = await buildTestGateway({ contextManager });
+      const allExpectedSpans: string[] = [
+        expected.http.root,
+        ...Object.values(expected).flatMap(({ children }) => children),
+      ];
+
+      describe('span parenting', () => {
+        it('should register a complete span tree $name', async () => {
+          await using gateway = await buildTestGatewayForCtx();
           await gateway.query();
 
           for (const { root, children } of Object.values(expected)) {
             const spanTree = spanExporter.assertRoot(root);
             children.forEach(spanTree.expectChild);
           }
-        },
-      );
-    });
-
-    describe('span configuration', () => {
-      it('should not trace http requests if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { http: false },
         });
-        await gateway.query();
 
-        allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
-      });
-
-      it('should not trace graphql operation if disable', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { graphql: false },
-        });
-        await gateway.query();
-
-        const httpSpan = spanExporter.assertRoot(expected.http.root);
-        expected.http.children
-          .filter((name) => name != expected.graphql.root)
-          .forEach(httpSpan.expectChild);
-
-        [
-          expected.graphql.root,
-          ...expected.graphql.children,
-          ...expected.execute.children,
-          ...expected.subgraphExecute.children,
-        ].forEach(spanExporter.assertNoSpanWithName);
-      });
-
-      it('should not trace parse if disable', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { graphqlParse: false },
-        });
-        await gateway.query();
-
-        spanExporter.assertNoSpanWithName('graphql.parse');
-
-        allExpectedSpans
-          .filter((name) => name != 'graphql.parse')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-
-      it('should not trace validate if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { graphqlValidate: false },
-        });
-        await gateway.query();
-
-        spanExporter.assertNoSpanWithName('graphql.validate');
-
-        allExpectedSpans
-          .filter((name) => name != 'graphql.validate')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-
-      it('should not trace context building if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { graphqlContextBuilding: false },
-        });
-        await gateway.query();
-
-        spanExporter.assertNoSpanWithName('graphql.context');
-
-        allExpectedSpans
-          .filter((name) => name != 'graphql.context')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-
-      it('should not trace execute if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { graphqlExecute: false },
-        });
-        await gateway.query();
-
-        [
-          expected.execute.root,
-          ...expected.execute.children,
-          ...expected.subgraphExecute.children,
-        ].forEach(spanExporter.assertNoSpanWithName);
-
-        [
-          expected.http.root,
-          ...expected.http.children,
-          ...expected.graphql.children,
-        ]
-          .filter((name) => name != 'graphql.execute')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-
-      it('should not trace subgraph execute if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { subgraphExecute: false },
-        });
-        await gateway.query();
-
-        [
-          expected.subgraphExecute.root,
-          ...expected.subgraphExecute.children,
-        ].forEach(spanExporter.assertNoSpanWithName);
-
-        [
-          expected.http.root,
-          ...expected.http.children,
-          ...expected.graphql.children,
-          ...expected.execute.children,
-        ]
-          .filter((name) => name !== 'subgraph.execute (upstream)')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-
-      it('should not trace fetch if disabled', async () => {
-        await using gateway = await buildTestGateway({
-          spans: { upstreamFetch: false },
-        });
-        await gateway.query();
-
-        spanExporter.assertNoSpanWithName('http.fetch');
-
-        allExpectedSpans
-          .filter((name) => name !== 'http.fetch')
-          .forEach(spanExporter.assertSpanWithName);
-      });
-    });
-
-    async function buildTestGateway(
-      options: Partial<
-        Extract<OpenTelemetryGatewayPluginOptions, { initializeNodeSDK: false }>
-      > = {},
-    ) {
-      const { useOpenTelemetry } = await import('../src');
-      const stack = new AsyncDisposableStack();
-
-      const upstream = stack.use(
-        createYoga({
-          schema: createSchema({
-            typeDefs: /* GraphQL */ `
-              type Query {
-                hello: String
-              }
-            `,
-            resolvers: {
-              Query: {
-                hello: () => 'World',
-              },
+        it('should allow to report custom spans', async () => {
+          const expectedCustomSpans = {
+            http: { root: 'POST /graphql', children: ['custom.request'] },
+            graphql: {
+              root: 'graphql.operation Anonymous',
+              children: ['custom.operation'],
             },
-          }),
-          logging: false,
-        }),
-      );
+            parse: { root: 'graphql.parse', children: ['custom.parse'] },
+            validate: {
+              root: 'graphql.validate',
+              children: ['custom.validate'],
+            },
+            context: { root: 'graphql.context', children: ['custom.context'] },
+            execute: { root: 'graphql.execute', children: ['custom.execute'] },
+            subgraphExecute: {
+              root: 'subgraph.execute (upstream)',
+              children: ['custom.subgraph'],
+            },
+            fetch: { root: 'http.fetch', children: ['custom.fetch'] },
+          };
 
-      const gateway = stack.use(
-        gw.createGatewayRuntime({
-          proxy: {
-            endpoint: 'https://example.com/graphql',
-          },
-          plugins: (ctx) => [
-            gw.useCustomFetch(
-              // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-              upstream.fetch,
-            ),
-            useOpenTelemetry({ initializeNodeSDK: false, ...ctx, ...options }),
-          ],
-          logging: false,
-        }),
-      );
+          await using gateway = await buildTestGatewayForCtx(
+            {},
+            (otelPlugin) => {
+              const createSpan =
+                (name: string) =>
+                (
+                  matcher: Parameters<(typeof otelPlugin)['getOtelContext']>[0],
+                ) =>
+                  otelPlugin
+                    .getTracer()
+                    .startSpan(name, {}, otelPlugin.getOtelContext(matcher))
+                    .end();
 
-      return {
-        query: async (
-          body: GraphQLParams = {
-            query: /* GraphQL */ `
-              query {
-                hello
-              }
-            `,
-          },
-        ) => {
-          const response = await gateway.fetch(
-            'http://localhost:4000/graphql',
-            {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
-              },
-              body: JSON.stringify(body),
+              return [
+                {
+                  onRequest: createSpan('custom.request'),
+                  onParams: createSpan('custom.operation'),
+                  onParse: createSpan('custom.parse'),
+                  onValidate: createSpan('custom.validate'),
+                  onContextBuilding: createSpan('custom.context'),
+                  onExecute: createSpan('custom.execute'),
+                  onSubgraphExecute: createSpan('custom.subgraph'),
+                  onFetch: createSpan('custom.fetch'),
+                },
+              ];
             },
           );
-          return response.json();
+          await gateway.query();
+
+          for (const { root, children } of Object.values(expectedCustomSpans)) {
+            const spanTree = spanExporter.assertRoot(root);
+            children.forEach(spanTree.expectChild);
+          }
+        });
+        it('should allow to report custom spans using graphql context', async () => {
+          const expectedCustomSpans = {
+            parse: { root: 'graphql.parse', children: ['custom.parse'] },
+            validate: {
+              root: 'graphql.validate',
+              children: ['custom.validate'],
+            },
+            context: { root: 'graphql.context', children: ['custom.context'] },
+            execute: { root: 'graphql.execute', children: ['custom.execute'] },
+          };
+
+          await using gateway = await buildTestGatewayForCtx({}, () => {
+            const createSpan =
+              (name: string) =>
+              ({ context: gqlCtx, executionRequest }: any) => {
+                const ctx: OpenTelemetryContextExtension =
+                  gqlCtx ?? executionRequest?.context;
+                return ctx.opentelemetry.tracer
+                  .startSpan(name, {}, ctx.opentelemetry.activeContext())
+                  .end();
+              };
+
+            return [
+              {
+                onParse: createSpan('custom.parse'),
+                onValidate: createSpan('custom.validate'),
+                onContextBuilding: createSpan('custom.context'),
+                onExecute: createSpan('custom.execute'),
+              },
+            ];
+          });
+          await gateway.query();
+
+          for (const { root, children } of Object.values(expectedCustomSpans)) {
+            const spanTree = spanExporter.assertRoot(root);
+            children.forEach(spanTree.expectChild);
+          }
+        });
+      });
+
+      describe('span configuration', () => {
+        it('should not trace http requests if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { http: false },
+          });
+          await gateway.query();
+
+          allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
+        });
+
+        it('should not trace graphql operation if disable', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { graphql: false },
+          });
+          await gateway.query();
+
+          const httpSpan = spanExporter.assertRoot(expected.http.root);
+          expected.http.children
+            .filter((name) => name != expected.graphql.root)
+            .forEach(httpSpan.expectChild);
+
+          [
+            expected.graphql.root,
+            ...expected.graphql.children,
+            ...expected.execute.children,
+            ...expected.subgraphExecute.children,
+          ].forEach(spanExporter.assertNoSpanWithName);
+        });
+
+        it('should not trace parse if disable', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { graphqlParse: false },
+          });
+          await gateway.query();
+
+          spanExporter.assertNoSpanWithName('graphql.parse');
+
+          allExpectedSpans
+            .filter((name) => name != 'graphql.parse')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+
+        it('should not trace validate if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { graphqlValidate: false },
+          });
+          await gateway.query();
+
+          spanExporter.assertNoSpanWithName('graphql.validate');
+
+          allExpectedSpans
+            .filter((name) => name != 'graphql.validate')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+
+        it('should not trace context building if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { graphqlContextBuilding: false },
+          });
+          await gateway.query();
+
+          spanExporter.assertNoSpanWithName('graphql.context');
+
+          allExpectedSpans
+            .filter((name) => name != 'graphql.context')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+
+        it('should not trace execute if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { graphqlExecute: false },
+          });
+          await gateway.query();
+
+          [
+            expected.execute.root,
+            ...expected.execute.children,
+            ...expected.subgraphExecute.children,
+          ].forEach(spanExporter.assertNoSpanWithName);
+
+          [
+            expected.http.root,
+            ...expected.http.children,
+            ...expected.graphql.children,
+          ]
+            .filter((name) => name != 'graphql.execute')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+
+        it('should not trace subgraph execute if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { subgraphExecute: false },
+          });
+          await gateway.query();
+
+          [
+            expected.subgraphExecute.root,
+            ...expected.subgraphExecute.children,
+          ].forEach(spanExporter.assertNoSpanWithName);
+
+          [
+            expected.http.root,
+            ...expected.http.children,
+            ...expected.graphql.children,
+            ...expected.execute.children,
+          ]
+            .filter((name) => name !== 'subgraph.execute (upstream)')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+
+        it('should not trace fetch if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            spans: { upstreamFetch: false },
+          });
+          await gateway.query();
+
+          spanExporter.assertNoSpanWithName('http.fetch');
+
+          allExpectedSpans
+            .filter((name) => name !== 'http.fetch')
+            .forEach(spanExporter.assertSpanWithName);
+        });
+      });
+    });
+    it('should allow to create custom spans without explicit context passing', async () => {
+      const expectedCustomSpans = {
+        http: { root: 'POST /graphql', children: ['custom.request'] },
+        graphql: {
+          root: 'graphql.operation Anonymous',
+          children: ['custom.operation'],
         },
-        [Symbol.asyncDispose]: () => {
-          return stack.disposeAsync();
+        parse: { root: 'graphql.parse', children: ['custom.parse'] },
+        validate: {
+          root: 'graphql.validate',
+          children: ['custom.validate'],
         },
+        context: { root: 'graphql.context', children: ['custom.context'] },
+        execute: { root: 'graphql.execute', children: ['custom.execute'] },
+        subgraphExecute: {
+          root: 'subgraph.execute (upstream)',
+          children: ['custom.subgraph'],
+        },
+        fetch: { root: 'http.fetch', children: ['custom.fetch'] },
       };
-    }
+
+      await using gateway = await buildTestGateway({}, (otelPlugin) => {
+        const createSpan = (name: string) => () =>
+          otelPlugin.getTracer().startSpan(name).end();
+
+        return [
+          {
+            onRequest: createSpan('custom.request'),
+            onParams: createSpan('custom.operation'),
+            onParse: createSpan('custom.parse'),
+            onValidate: createSpan('custom.validate'),
+            onContextBuilding: createSpan('custom.context'),
+            onExecute: createSpan('custom.execute'),
+            onSubgraphExecute: createSpan('custom.subgraph'),
+            onFetch: createSpan('custom.fetch'),
+          },
+        ];
+      });
+      await gateway.query();
+
+      for (const { root, children } of Object.values(expectedCustomSpans)) {
+        const spanTree = spanExporter.assertRoot(root);
+        children.forEach(spanTree.expectChild);
+      }
+    });
   });
 });
+
+async function buildTestGateway(
+  options: Partial<
+    Extract<OpenTelemetryGatewayPluginOptions, { initializeNodeSDK: false }>
+  > = {},
+  plugins?: (
+    otelPlugin: OpenTelemetryPlugin,
+  ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[],
+) {
+  const { useOpenTelemetry } = await import('../src');
+  const stack = new AsyncDisposableStack();
+
+  const upstream = stack.use(
+    createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Query {
+            hello: String
+          }
+        `,
+        resolvers: {
+          Query: {
+            hello: () => 'World',
+          },
+        },
+      }),
+      logging: false,
+    }),
+  );
+
+  let otelPlugin: ReturnType<typeof useOpenTelemetry>;
+
+  const gateway = stack.use(
+    gw.createGatewayRuntime({
+      proxy: {
+        endpoint: 'https://example.com/graphql',
+      },
+      plugins: (ctx) => {
+        otelPlugin = useOpenTelemetry({
+          initializeNodeSDK: false,
+          ...ctx,
+          ...options,
+        });
+        return [
+          gw.useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+          otelPlugin,
+          ...(plugins?.(otelPlugin) ?? []),
+        ];
+      },
+      logging: false,
+    }),
+  );
+
+  return {
+    otelPlugin: otelPlugin!,
+    query: async (
+      body: GraphQLParams = {
+        query: /* GraphQL */ `
+          query {
+            hello
+          }
+        `,
+      },
+    ) => {
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      return response.json();
+    },
+    [Symbol.asyncDispose]: () => {
+      return stack.disposeAsync();
+    },
+  };
+}
 
 class MockSpanExporter implements SpanExporter {
   spans: Span[];
