@@ -63,6 +63,7 @@
   },
   "resolutions": {
     "@whatwg-node/promise-helpers": "1.3.0-alpha-20250308192050-f577f1502af3cc88d3cbac54250ba87dcc6cde0a",
+    "graphql-yoga": "5.13.2-alpha-20250309141103-2107c2dfe8c9fb7df87cd8eb7812f1bbbe15a817",
     "@graphql-mesh/types": "^0.104.0",
     "@graphql-mesh/utils": "^0.104.1",
     "@graphql-tools/delegate": "workspace:^",

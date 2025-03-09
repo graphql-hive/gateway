@@ -1,12 +1,9 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
-  fakePromise,
   getOperationASTFromDocument,
   isAsyncIterable,
-  mapMaybePromise,
   type ExecutionRequest,
   type ExecutionResult,
-  type MaybePromise,
 } from '@graphql-tools/utils';
 import {
   SpanKind,
@@ -15,7 +12,6 @@ import {
   type Context,
   type Tracer,
 } from '@opentelemetry/api';
-import { MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import type { ExecutionArgs } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
@@ -88,22 +84,31 @@ export function setResponseAttributes(ctx: Context, response: Response) {
 export function createGraphQLSpan(input: {
   ctx: Context;
   tracer: Tracer;
-  params: GraphQLParams;
 }): Context {
-  const operationName = input.params.operationName ?? 'unknown';
   const span = input.tracer.startSpan(
-    `graphql.operation ${operationName}`,
-    {
-      attributes: {
-        [SEMATTRS_GRAPHQL_DOCUMENT]: input.params.query,
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operationName,
-      },
-      kind: SpanKind.INTERNAL,
-    },
+    `graphql.operation`,
+    { kind: SpanKind.INTERNAL },
     input.ctx,
   );
 
   return trace.setSpan(input.ctx, span);
+}
+
+export function setParamsAttributes(input: {
+  ctx: Context;
+  params: GraphQLParams;
+}) {
+  const { ctx, params } = input;
+  const span = trace.getSpan(ctx);
+  if (!span) {
+    return;
+  }
+
+  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, params.query ?? '<undefined>');
+  span.setAttribute(
+    SEMATTRS_GRAPHQL_OPERATION_NAME,
+    params.operationName ?? 'Anonymous',
+  );
 }
 
 export function setExecutionAttributesOnOperationSpan(
