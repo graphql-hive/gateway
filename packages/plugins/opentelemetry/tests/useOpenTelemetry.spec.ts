@@ -1,4 +1,5 @@
 import { GatewayPlugin } from '@graphql-hive/gateway';
+import { TraceState } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import {
