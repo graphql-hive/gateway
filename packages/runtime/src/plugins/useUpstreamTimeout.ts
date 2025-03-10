@@ -66,20 +66,15 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           timeoutSignal.addEventListener('abort', rejectDeferred, {
             once: true,
           });
+          const combinedSignal = AbortSignal.any(signals);
           const res$ = executor({
             ...executionRequest,
-            signal: AbortSignal.any(signals),
+            signal: combinedSignal,
           });
           if (!isPromise(res$)) {
             return res$;
           }
-          return Promise.race([
-            timeoutDeferred.promise,
-            executor({
-              ...executionRequest,
-              signal: AbortSignal.any(signals),
-            }),
-          ])
+          return Promise.race([timeoutDeferred.promise, res$])
             .then((result) => {
               if (isAsyncIterable(result)) {
                 return {
