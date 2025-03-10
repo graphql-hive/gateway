@@ -133,6 +133,8 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         },
       });
 
+      // TODO: track failed requests during the loadtest, if any
+
       const heapSamplingProfileFile = path.join(
         cwd,
         `memtest_${startTime}.heapprofile`,
