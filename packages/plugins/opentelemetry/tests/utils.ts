@@ -57,10 +57,7 @@ export async function buildTestGateway(
           ...options,
         });
         return [
-          gw.useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
+          gw.useCustomFetch(upstream.fetch),
           otelPlugin,
           ...(plugins?.(otelPlugin) ?? []),
         ];
@@ -144,7 +141,7 @@ export class MockSpanExporter implements SpanExporter {
         this.toString(),
       );
       throw new Error(
-        `No root span found with name '${rootName}'. Span names are: ${this.spans.map(({ name }) => `\n\t- ${name}`)}`,
+        `No root span found with name '${rootName}'. Span names are: ${this}`,
       );
     }
     return this.buildSpanNode(root);
