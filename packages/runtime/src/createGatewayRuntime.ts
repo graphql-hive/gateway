@@ -34,7 +34,6 @@ import {
   getHeadersObj,
   getInContextSDK,
   isUrl,
-  LogLevel,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
@@ -83,7 +82,7 @@ import {
 } from 'graphql-yoga';
 import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { createGraphOSFetcher } from './fetchers/graphos';
-import { getDefaultLogger } from './getDefaultLogger';
+import { handleLoggingConfig } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -146,22 +145,7 @@ export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   let fetchAPI = config.fetchAPI;
-  let logger: Logger;
-  if (config.logging == null) {
-    logger = getDefaultLogger();
-  } else if (typeof config.logging === 'boolean') {
-    logger = config.logging
-      ? getDefaultLogger()
-      : getDefaultLogger({
-          level: LogLevel.silent,
-        });
-  } else if (typeof config.logging === 'number') {
-    logger = getDefaultLogger({
-      level: config.logging,
-    });
-  } /*  if (typeof config.logging === 'object') */ else {
-    logger = config.logging;
-  }
+  const logger = handleLoggingConfig(config.logging);
 
   let instrumentation: GatewayPlugin['instrumentation'];
 
