@@ -379,7 +379,7 @@ export function createGatewayRuntime<
             document: parse(`query ReadinessCheck { __typename }`),
           }),
         (res) => !isAsyncIterable(res) && !!res.data?.__typename,
-      ) as MaybePromise<boolean>;
+      );
     schemaInvalidator = () => {
       // @ts-expect-error TODO: this is illegal but somehow we want it
       unifiedGraph = undefined;

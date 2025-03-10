@@ -109,7 +109,7 @@ describe('Federation', async () => {
         (response) => {
           expect(response).toEqual(result);
         },
-      ) as Promise<void>;
+      );
     },
     {
       async setup() {
@@ -152,7 +152,7 @@ describe('Federation', async () => {
         (response) => {
           expect(response).toEqual(result);
         },
-      ) as Promise<void>,
+      ),
     {
       setup() {
         stitchedSchema = getStitchedSchemaFromSupergraphSdl({

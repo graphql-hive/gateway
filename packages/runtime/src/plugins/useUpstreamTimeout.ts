@@ -7,8 +7,7 @@ import {
   ExecutionRequest,
   ExecutionResult,
   isAsyncIterable,
-  MaybeAsyncIterable,
-  MaybePromise,
+  isPromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { GatewayPlugin } from '../types';
@@ -55,17 +54,24 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               timeoutSignal,
             );
           }
-          const timeoutDeferred = createDeferred<void>();
+          const signals: AbortSignal[] = [];
+          signals.push(timeoutSignal);
+          if (executionRequest.signal) {
+            signals.push(executionRequest.signal);
+          }
+          const timeoutDeferred = createDeferred<ExecutionResult>();
           function rejectDeferred() {
             timeoutDeferred.reject(timeoutSignal?.reason);
           }
           timeoutSignal.addEventListener('abort', rejectDeferred, {
             once: true,
           });
-          const signals: AbortSignal[] = [];
-          signals.push(timeoutSignal);
-          if (executionRequest.signal) {
-            signals.push(executionRequest.signal);
+          const res$ = executor({
+            ...executionRequest,
+            signal: AbortSignal.any(signals),
+          });
+          if (!isPromise(res$)) {
+            return res$;
           }
           return Promise.race([
             timeoutDeferred.promise,
@@ -102,12 +108,12 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
-              timeoutDeferred.resolve();
+              timeoutDeferred.resolve(undefined as any);
               timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again
               errorExtensionsByExecRequest.delete(executionRequest);
               timeoutSignalsByExecutionRequest.delete(executionRequest);
-            }) as MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+            });
         });
       }
       return undefined;

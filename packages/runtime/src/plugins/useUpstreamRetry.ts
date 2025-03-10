@@ -106,10 +106,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                 const requestTime = Date.now();
                 attemptsLeft--;
                 return handleMaybePromise(
-                  () =>
-                    executor(
-                      executionRequest,
-                    ) as MaybeAsyncIterable<ExecutionResult>,
+                  () => executor(executionRequest),
                   (currRes) => {
                     executionResult = currRes;
                     let retryAfterSecondsFromHeader: number | undefined;
