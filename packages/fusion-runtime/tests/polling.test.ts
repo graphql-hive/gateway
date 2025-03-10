@@ -26,7 +26,7 @@ describe('Polling', () => {
   it('polls the schema in a certain interval', async () => {
     vi.useFakeTimers?.();
 
-    const pollingInterval = 1000;
+    const pollingInterval = 300;
     let schema: GraphQLSchema;
 
     const unifiedGraphFetcher = () => {

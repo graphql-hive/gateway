@@ -305,7 +305,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       this._transportExecutorStack?.disposeAsync?.();
     if (transportExecutorStackDisposal) {
       this.opts.transportContext?.logger?.debug(
-        'Disposing the existing transports and executors...'
+        'Disposing the existing transports and executors...',
       );
     }
     const unifiedgraphExecutorDisposal = isDisposable(this.executor)
