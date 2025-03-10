@@ -12,7 +12,7 @@ import {
   vi,
 } from 'vitest';
 import type { OpenTelemetryContextExtension } from '../src/plugin';
-import { buildTestGateway, MockSpanExporter } from './utlis';
+import { buildTestGateway, MockSpanExporter } from './utils';
 
 let mockModule = vi.mock;
 if (globalThis.Bun) {
@@ -21,6 +21,8 @@ if (globalThis.Bun) {
 const mockRegisterProvider = vi.fn();
 let gw: typeof import('../../../runtime/src');
 describe('useOpenTelemetry', () => {
+  // WORKAROUND: Bun does replace already imported modules instances. We make a copy to have the real implementation
+  const TracerProvider = WebTracerProvider;
   mockModule('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
   }));
@@ -29,7 +31,7 @@ describe('useOpenTelemetry', () => {
   const spanExporter = new MockSpanExporter();
   beforeAll(async () => {
     gw = await import('../../../runtime/src');
-    traceProvider = new WebTracerProvider({
+    traceProvider = new TracerProvider({
       spanProcessors: [new SimpleSpanProcessor(spanExporter)],
     });
     traceProvider.register({
@@ -37,7 +39,7 @@ describe('useOpenTelemetry', () => {
     });
   });
   afterAll(async () => {
-    traceProvider.shutdown();
+    traceProvider.shutdown?.();
   });
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,10 +69,7 @@ describe('useOpenTelemetry', () => {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          gw.useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
+          gw.useCustomFetch(upstream.fetch),
           useOpenTelemetry({
             exporters: [],
             ...ctx,
@@ -122,10 +121,7 @@ describe('useOpenTelemetry', () => {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          gw.useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
+          gw.useCustomFetch(upstream.fetch),
           useOpenTelemetry({ initializeNodeSDK: false, ...ctx }),
         ],
         logging: false,
