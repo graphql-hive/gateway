@@ -109,9 +109,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         },
       });
 
+      const heapSamplingProfileFile = path.join(
+        cwd,
+        `memtest_${startTime}.heapprofile`,
+      );
       if (isDebug('memtest')) {
         await fs.writeFile(
-          path.join(cwd, `memtest_${startTime}.heapprofile`),
+          heapSamplingProfileFile,
           JSON.stringify(loadtestResult.profile),
         );
       }
@@ -144,8 +148,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           }
           msg += '\n';
         }
+        msg += `Writing heap sampling profile to ${heapSamplingProfileFile}`;
         expect.fail(msg);
-        // TODO: write the heap sampling profile to disk for the user to inspect
+
+        await fs.writeFile(
+          heapSamplingProfileFile,
+          JSON.stringify(loadtestResult.profile),
+        );
       }
     },
   );
