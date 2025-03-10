@@ -479,7 +479,7 @@ function parentSatisfiedSelectionSet(
 
 function flattenPromise<T>(data: T): Promise<T> | T {
   if (isPromise(data)) {
-    return data.then(flattenPromise) as Promise<T>;
+    return data.then(flattenPromise);
   }
   if (Array.isArray(data)) {
     return Promise.all(data.map(flattenPromise)) as Promise<T>;
@@ -509,9 +509,9 @@ function flattenPromise<T>(data: T): Promise<T> | T {
       newData[UNPATHED_ERRORS_SYMBOL] = data[UNPATHED_ERRORS_SYMBOL];
     }
     if (jobs.length) {
-      return Promise.all(jobs).then(() => newData) as Promise<T>;
+      return Promise.all(jobs).then(() => newData);
     }
-    return newData as T;
+    return newData;
   }
   return data;
 }
