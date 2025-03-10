@@ -1,5 +1,13 @@
 # @graphql-tools/batch-execute
 
+## 9.0.13
+
+### Patch Changes
+
+- [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
+
 ## 9.0.12
 
 ### Patch Changes

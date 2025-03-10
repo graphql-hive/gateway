@@ -1,5 +1,44 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.3
+
+### Patch Changes
+
+- [#706](https://github.com/graphql-hive/gateway/pull/706) [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@envelop/core@^5.2.3` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.2.3) (from `^5.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.1) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.1) (from `^5.12.0`, in `dependencies`)
+  - Added dependency [`@envelop/instrumentation@^1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/1.0.0) (to `dependencies`)
+
+- [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
+
+- [#727](https://github.com/graphql-hive/gateway/pull/727) [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/disposablestack@^0.0.6` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+
+- [#772](https://github.com/graphql-hive/gateway/pull/772) [`002fc95`](https://github.com/graphql-hive/gateway/commit/002fc95c446470943de4d0ef1457850277c3d8aa) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Removed dependency [`constant-case@^3` ↗︎](https://www.npmjs.com/package/constant-case/v/3.0.0) (from `dependencies`)
+
+- [#775](https://github.com/graphql-hive/gateway/pull/775) [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/types@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+
+- [#800](https://github.com/graphql-hive/gateway/pull/800) [`0451e82`](https://github.com/graphql-hive/gateway/commit/0451e82446a83a17f9fd4b285da240fb00f1c162) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Handle polling correctly when a transport executor has an async disposal process
+
+- Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f), [`2a54e85`](https://github.com/graphql-hive/gateway/commit/2a54e85f2848aea7525703ea33918a21db96b26b)]:
+  - @graphql-mesh/transport-common@0.7.31
+  - @graphql-tools/batch-execute@9.0.13
+  - @graphql-tools/delegate@10.2.14
+  - @graphql-tools/federation@3.1.5
+  - @graphql-tools/stitch@9.4.19
+  - @graphql-tools/wrap@10.0.32
+  - @graphql-tools/stitching-directives@3.1.29
+
 ## 0.11.2
 
 ### Patch Changes
