@@ -143,7 +143,7 @@ export class MockSpanExporter implements SpanExporter {
         `failed to find "${rootName}". Spans are: `,
         this.toString(),
       );
-      expect.fail(
+      throw new Error(
         `No root span found with name '${rootName}'. Span names are: ${this.spans.map(({ name }) => `\n\t- ${name}`)}`,
       );
     }
@@ -173,7 +173,7 @@ export class TraceTreeNode {
     const child = this.children.find((child) => child.span.name === name);
     if (!child) {
       console.error(`No child span with name "${name}" in:\n`, this.toString());
-      expect.fail(
+      throw new Error(
         `No child span found with name '${name}'. Children names are: ${this.children.map((child) => `\n\t- ${child.span.name}`)}`,
       );
     }
