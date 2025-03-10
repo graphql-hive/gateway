@@ -81,7 +81,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   it(
     'should have stable memory usage',
     {
-      timeout: (idle + duration + calmdown) * runs + 30_000, // allow 30s for the test teardown (compensate for heap snapshots)
+      timeout:
+        (idle +
+          duration +
+          calmdown +
+          // allow 30s for the test teardown in each run
+          30_000) *
+        runs,
     },
     async ({ expect }) => {
       const server = await setup();
