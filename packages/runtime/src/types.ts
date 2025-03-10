@@ -639,6 +639,15 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Configure the demand control for upstream requests.
    */
   demandControl?: DemandControlPluginOptions;
+
+  /**
+   * Enable/disable batching the requests to the subgraphs
+   *
+   * Do not use it unless you know what you are doing.
+   *
+   * @experimental
+   */
+  __experimental__batchDelegation?: boolean;
 }
 
 interface DisableIntrospectionOptions {
