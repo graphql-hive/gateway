@@ -1,0 +1,22 @@
+{
+  "name": "@internal/perf",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@memlab/core": "^1.1.39",
+    "@memlab/heap-analysis": "^1.0.36",
+    "@whatwg-node/promise-helpers": "^1.2.1",
+    "canvas": "^3.1.0",
+    "chart.js": "^4.4.7",
+    "chartjs-plugin-trendline": "^2.1.6",
+    "memlab": "^1.1.56",
+    "parse-duration": "^2.0.0",
+    "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.54.2",
+    "@types/ws": "^8.5.12"
+  }
+}

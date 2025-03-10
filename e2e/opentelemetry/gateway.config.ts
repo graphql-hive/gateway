@@ -51,5 +51,10 @@ export const gatewayConfig = defineConfig({
     ],
     serviceName: process.env['OTLP_SERVICE_NAME'],
   },
-  plugins: () => [useOnFetchTracer()],
+  plugins: () =>
+    process.env['MEMTEST']
+      ? [
+          // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
+        ]
+      : [useOnFetchTracer()],
 });

@@ -9,6 +9,9 @@ import { fetch } from '@whatwg-node/fetch';
 import terminate from 'terminate/promise';
 
 export interface Proc extends AsyncDisposable {
+  waitForExit: Promise<void>;
+  /** Sends a signal to the process. */
+  kill(signal?: NodeJS.Signals): void;
   getStd(o: 'out' | 'err' | 'both'): string;
   getStats(): Promise<{
     // Total CPU utilization (of all cores) as a percentage.
@@ -16,6 +19,11 @@ export interface Proc extends AsyncDisposable {
     // Memory consumption in megabytes (MB).
     mem: number;
   }>;
+}
+
+export interface Server extends Proc {
+  port: number;
+  protocol: string;
 }
 
 export interface ProcOptions {
@@ -34,8 +42,6 @@ export interface ProcOptions {
    * They will be merged with `process.env` overriding any existing value.
    */
   env?: Record<string, string | number>;
-  /** Extra args to pass to the process. */
-  args?: (string | number | boolean)[];
   /** Custom replacer of stderr coming from he process. */
   replaceStderr?: (str: string) => string;
 }
@@ -79,6 +85,10 @@ export function spawn(
   let stderr = '';
   let stdboth = '';
   const proc: Proc = {
+    waitForExit,
+    kill(signal) {
+      child.kill(signal);
+    },
     getStd(o) {
       switch (o) {
         case 'out':
