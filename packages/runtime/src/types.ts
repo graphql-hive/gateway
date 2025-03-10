@@ -542,7 +542,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/compression)
    */
-  contentEncoding?: false | UseContentEncodingOpts;
+  contentEncoding?: boolean | UseContentEncodingOpts;
 
   /**
    * Enable `@defer` and `@stream` support
