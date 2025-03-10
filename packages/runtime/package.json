@@ -47,7 +47,7 @@
     "@envelop/core": "^5.2.3",
     "@envelop/disable-introspection": "^7.0.0",
     "@envelop/generic-auth": "^9.0.0",
-    "@graphql-hive/core": "^0.9.0",
+    "@graphql-hive/core": "^0.10.0",
     "@graphql-hive/logger-json": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/fusion-runtime": "workspace:^",
