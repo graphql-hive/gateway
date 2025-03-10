@@ -25,8 +25,10 @@ describe('Polling', () => {
   const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
   it('polls the schema in a certain interval', async () => {
     vi.useFakeTimers?.();
+
     const pollingInterval = 300;
     let schema: GraphQLSchema;
+
     const unifiedGraphFetcher = () => {
       const time = new Date().toISOString();
       schema = createSchema({
@@ -53,7 +55,9 @@ describe('Polling', () => {
         },
       ]);
     };
-    const disposeFn = vi.fn();
+
+    const disposeFn = vi.fn().mockResolvedValue(undefined);
+
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
@@ -70,6 +74,7 @@ describe('Polling', () => {
         };
       },
     });
+
     async function getFetchedTimeOnComment() {
       const schema = await manager.getUnifiedGraph();
       const queryType = schema.getQueryType();
@@ -81,6 +86,7 @@ describe('Polling', () => {
       const lastFetchedDate = new Date(lastFetchedDateStr);
       return lastFetchedDate;
     }
+
     async function getFetchedTimeFromResolvers() {
       const schema = await manager.getUnifiedGraph();
       const result = await normalizedExecutor({
@@ -96,29 +102,38 @@ describe('Polling', () => {
       }
       return new Date(result.data.time);
     }
+
     async function compareTimes() {
       const timeFromComment = await getFetchedTimeOnComment();
       const timeFromResolvers = await getFetchedTimeFromResolvers();
       expect(timeFromComment).toEqual(timeFromResolvers);
     }
+
     await compareTimes();
     const firstDate = await getFetchedTimeOnComment();
+
     await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     const secondDate = await getFetchedTimeOnComment();
+
     const diffBetweenFirstAndSecond =
       secondDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndSecond).toBeGreaterThanOrEqual(pollingInterval);
+
+    await compareTimes();
     await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     const thirdDate = await getFetchedTimeOnComment();
+
     const diffBetweenSecondAndThird =
       thirdDate.getTime() - secondDate.getTime();
     expect(diffBetweenSecondAndThird).toBeGreaterThanOrEqual(pollingInterval);
+
     const diffBetweenFirstAndThird = thirdDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndThird).toBeGreaterThanOrEqual(
       pollingInterval * 2,
     );
+    await compareTimes();
 
     // Check if transport executor is disposed per schema change
     expect(disposeFn).toHaveBeenCalledTimes(2);
