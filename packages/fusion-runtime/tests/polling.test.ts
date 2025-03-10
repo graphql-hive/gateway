@@ -22,12 +22,11 @@ import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
-  // const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
-  const advanceTimersByTimeAsync = setTimeout;
+  const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
   it('polls the schema in a certain interval', async () => {
-    // vi.useFakeTimers?.();
+    vi.useFakeTimers?.();
 
-    const pollingInterval = 300;
+    const pollingInterval = 1000;
     let schema: GraphQLSchema;
 
     const unifiedGraphFetcher = () => {
@@ -121,6 +120,7 @@ describe('Polling', () => {
       secondDate.getTime() - firstDate.getTime();
     expect(diffBetweenFirstAndSecond).toBeGreaterThanOrEqual(pollingInterval);
 
+    await compareTimes();
     await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     const thirdDate = await getFetchedTimeOnComment();
@@ -133,6 +133,7 @@ describe('Polling', () => {
     expect(diffBetweenFirstAndThird).toBeGreaterThanOrEqual(
       pollingInterval * 2,
     );
+    await compareTimes();
 
     // Check if transport executor is disposed per schema change
     expect(disposeFn).toHaveBeenCalledTimes(2);

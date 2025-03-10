@@ -152,10 +152,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   private cleanup() {
-    this.unifiedGraph = undefined;
     this.lastLoadedUnifiedGraph = undefined;
     this.inContextSDK = undefined;
-    this.initialUnifiedGraph$ = undefined;
     this.lastLoadTime = undefined;
     this.polling$ = undefined;
     this.executor = undefined;
@@ -305,6 +303,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     }
     const transportExecutorStackDisposal =
       this._transportExecutorStack?.disposeAsync?.();
+    if (transportExecutorStackDisposal) {
+      this.opts.transportContext?.logger?.debug(
+        'Disposing the existing transports and executors...'
+      );
+    }
     const unifiedgraphExecutorDisposal = isDisposable(this.executor)
       ? dispose(this.executor)
       : undefined;
@@ -444,6 +447,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   [DisposableSymbols.asyncDispose]() {
+    this.unifiedGraph = undefined;
+    this.initialUnifiedGraph$ = undefined;
     this.cleanup();
     this.disposeReason = createGraphQLError(
       'operation has been aborted because the server is shutting down',
