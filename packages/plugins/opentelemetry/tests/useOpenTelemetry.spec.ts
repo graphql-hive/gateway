@@ -69,7 +69,10 @@ describe('useOpenTelemetry', () => {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          gw.useCustomFetch(upstream.fetch),
+          gw.useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
           useOpenTelemetry({
             exporters: [],
             ...ctx,
@@ -121,7 +124,10 @@ describe('useOpenTelemetry', () => {
           endpoint: 'https://example.com/graphql',
         },
         plugins: (ctx) => [
-          gw.useCustomFetch(upstream.fetch),
+          gw.useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
           useOpenTelemetry({ initializeNodeSDK: false, ...ctx }),
         ],
         logging: false,

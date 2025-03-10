@@ -57,7 +57,10 @@ export async function buildTestGateway(
           ...options,
         });
         return [
-          gw.useCustomFetch(upstream.fetch),
+          gw.useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
           otelPlugin,
           ...(plugins?.(otelPlugin) ?? []),
         ];
