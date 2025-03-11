@@ -1,5 +1,7 @@
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
-import useHiveConsole from './plugins/useHiveConsole';
+import useHiveConsole, {
+  HiveConsolePluginOptions,
+} from './plugins/useHiveConsole';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -14,12 +16,21 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
   plugin: GatewayPlugin<TContext>;
 } {
   if (config.reporting?.type === 'hive') {
+    const { target, ...reporting } = config.reporting;
+    let usage: HiveConsolePluginOptions['usage'] = reporting.usage;
+    if (usage != null && typeof usage === 'object') {
+      usage = {
+        target,
+        ...usage,
+      };
+    }
     return {
       name: 'Hive',
       plugin: useHiveConsole({
         ...configContext,
         logger: configContext.logger.child({ reporting: 'Hive' }),
-        ...config.reporting,
+        ...reporting,
+        usage,
         ...(config.persistedDocuments &&
         'type' in config.persistedDocuments &&
         config.persistedDocuments?.type === 'hive'

@@ -271,6 +271,8 @@ export interface GatewayHiveReportingOptions
   type: 'hive';
   /** GraphQL Hive registry access token. */
   token: string;
+  /** The target to which the usage data should be reported to. */
+  target?: string;
 }
 
 export interface GatewayGraphOSOptions {
