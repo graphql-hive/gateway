@@ -27,10 +27,10 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
     return {
       name: 'Hive',
       plugin: useHiveConsole({
-        ...configContext,
         logger: configContext.logger.child({ reporting: 'Hive' }),
+        enabled: true,
         ...reporting,
-        usage,
+        ...(usage ? { usage } : {}),
         ...(config.persistedDocuments &&
         'type' in config.persistedDocuments &&
         config.persistedDocuments?.type === 'hive'
