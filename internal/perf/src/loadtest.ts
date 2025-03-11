@@ -28,8 +28,8 @@ export interface LoadtestOptions extends ProcOptions {
    */
   query: string;
   /**
-   * Whether to take heap snapshots on the end of the `calmdown` {@link LoadtestPhase phase}
-   * in each of the {@link runs}.
+   * Whether to take heap snapshots on the end of the `idle` phase and then at the end
+   * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
    *
    * @default false
    */
@@ -148,7 +148,18 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   await Promise.race([setTimeout(idle), serverThrowOnExit, memorySnapshotting]);
 
-  // start heap sampling after idling (no need to sample anything there)
+  if (takeHeapSnapshots) {
+    const heapsnapshot = await createHeapSnapshot(
+      heapsnapshotCwd,
+      inspector,
+      phase,
+      run,
+    );
+    heapsnapshots.push(heapsnapshot);
+    await onHeapSnapshot?.(heapsnapshot);
+  }
+
+  // start heap sampling after idling (no need to sample anything during the idling phase)
   const stopHeapSampling = await inspector.startHeapSampling();
 
   for (; run <= runs; run++) {
