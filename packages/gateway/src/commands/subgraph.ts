@@ -63,7 +63,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveRegistryToken,
         hiveUsageTarget,
         hiveUsageAccessToken,
-        // proxy can only do reporting to hive registry
+        // subgraph can only do reporting to hive registry
         apolloGraphRef: undefined,
         apolloKey: undefined,
       });
