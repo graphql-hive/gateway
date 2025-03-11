@@ -1,4 +1,3 @@
-import type { Logger } from '@graphql-mesh/types';
 import { trace, type Context, type ContextManager } from '@opentelemetry/api';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 
@@ -44,26 +43,33 @@ export class OtelContextStack {
 }
 
 export function getContextManager(
-  logger: Logger,
-  useContextManager: boolean,
-  contextManager?: false | ContextManager,
-): Promise<ContextManager | false | undefined> {
-  if (contextManager != undefined) {
-    return fakePromise(contextManager);
+  contextManager?: boolean | ContextManager,
+): Promise<ContextManager | undefined> {
+  if (contextManager === false) {
+    return fakePromise(undefined);
   }
 
-  return import('@opentelemetry/context-async-hooks')
-    .then((module) => new module.AsyncLocalStorageContextManager())
-    .catch((err) => {
-      if ((err as any).code === 'ERR_MODULE_NOT_FOUND') {
-        if (useContextManager) {
-          logger.error(
-            "AsyncLocalContext is not available: can't initialize context manager. Either disable context manager usage by providing `useContextManager: false` option or a context manager in the `contextManager` option.",
-          );
+  if (contextManager === true || contextManager == undefined) {
+    const doNotBundleThisModule = '@opentelemetry';
+    return import(`${doNotBundleThisModule}/context-async-hooks`)
+      .then((module) => new module.AsyncLocalStorageContextManager())
+      .catch((err) => {
+        if ((err as any).code === 'ERR_MODULE_NOT_FOUND') {
+          // If `async_hooks` is not available, we want to error only if the context manager is
+          // explicitly enabled.
+          if (contextManager === true) {
+            throw new Error(
+              "[OTEL] 'node:async_hooks' module is not available: can't initialize context manager. Possible solutions:\n" +
+                '\t- disable context manager usage by providing `contextManager: false`\n' +
+                '\t- provide a custom context manager in the `contextManager` option' +
+                'Learn more about OTEL configuration here: https://the-guild.dev/graphql/hive/docs/gateway/monitoring-tracing#opentelemetry-traces',
+            );
+          }
+        } else {
+          throw err;
         }
-        return undefined;
-      } else {
-        throw err;
-      }
-    });
+      });
+  }
+
+  return fakePromise(contextManager);
 }

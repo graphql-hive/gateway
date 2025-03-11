@@ -56,6 +56,7 @@ import {
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
+import { tryContextManagerSetup } from './utils';
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -67,11 +68,17 @@ interface OpenTelemetryGatewayPluginOptionsWithoutInit {
    */
   initializeNodeSDK: false;
   /**
-   * Whether to rely on OTEL context api for span correlation (default: true).
-   * If false, the plugin will rely on request context for span parenting,
-   * which implies that any user defined context and spans will be ignored.
+   * Whether to rely on OTEL context api for span correlation.
+   *  - `true`: the plugin will rely on OTEL context manager for span parenting.
+   *  - `false`: the plugin will rely on request context for span parenting,
+   *    which implies that parenting with user defined may be broken.
+   *
+   * By default, it is enabled if the registered Context Manager is compatible with async calls,
+   * or if it is possible to register an `AsyncLocalStorageContextManager`.
+   *
+   * Note: If `true`, an error is thrown if it fails to obtain an async calls compatible Context Manager.
    */
-  contextManager?: false;
+  contextManager?: boolean;
 }
 
 interface OpenTelemetryGatewayPluginOptionsWithInit {
@@ -93,12 +100,15 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    */
   serviceName?: string;
   /**
-   * The context manager used to keep track of the OTEL context.
-   * By default, it uses AsyncLocalStorage based manager, which is compatible only in Node.
-   *
-   * Does not apply when `initializeNodeSDK` is `false`.
+   * Whether to rely on OTEL context api for span correlation.
+   *  - `undefined` (default): the plugin will try to enable context manager if possible.
+   *  - `false`: the plugin will rely on request context for span parenting,
+   *             which implies that any user defined context and spans will be ignored.
+   *  - `true`: the plugin will rely on AsyncLocalStorage based context manager.
+   *            Note that `async_hooks` module must be available, otherwise provide a custom `ContextManager` instance.
+   *  - `ContextManager`: rely on this provided `ContextManger` instance.
    */
-  contextManager?: ContextManager | false;
+  contextManager?: ContextManager | boolean;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -221,7 +231,7 @@ export function useOpenTelemetry(
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
-  const useContextManager = options.contextManager !== false;
+  let useContextManager: boolean;
 
   let tracer: Tracer;
 
@@ -243,22 +253,29 @@ export function useOpenTelemetry(
   }
 
   const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
-  diag.setLogger(
-    {
-      error: (message, ...args) => pluginLogger.error(message, ...args),
-      warn: (message, ...args) => pluginLogger.warn(message, ...args),
-      info: (message, ...args) => pluginLogger.info(message, ...args),
-      debug: (message, ...args) => pluginLogger.debug(message, ...args),
-      verbose: (message, ...args) => pluginLogger.debug(message, ...args),
-    },
-    DiagLogLevel.VERBOSE,
-  );
 
-  let preparation$: Promise<void>;
-  if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
-    preparation$ = fakePromise();
-    tracer = options.tracer || trace.getTracer('gateway');
-  } else {
+  function init(): Promise<boolean> {
+    if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
+      if (options.contextManager === false) {
+        return fakePromise(false);
+      }
+
+      if (
+        options.contextManager === true ||
+        options.contextManager == undefined
+      ) {
+        return tryContextManagerSetup(options.contextManager);
+      }
+
+      if (context.setGlobalContextManager(options.contextManager)) {
+        return fakePromise(true);
+      } else {
+        throw new Error(
+          '[OTEL] The provided context manager failed to register, a context manger is already registered.',
+        );
+      }
+    }
+
     const exporters$ = fakePromise(
       containsOnlyValues(options.exporters)
         ? options.exporters
@@ -270,26 +287,36 @@ export function useOpenTelemetry(
       asyncAttributes,
     );
 
-    let contextManager$ = getContextManager(
-      pluginLogger,
-      useContextManager,
-      options.contextManager,
-    );
+    let contextManager$ = getContextManager(options.contextManager);
 
-    preparation$ = exporters$
+    return exporters$
       .then((exporters) => {
         spanProcessors = exporters;
         provider = new WebTracerProvider({ resource, spanProcessors });
         return contextManager$;
       })
       .then((contextManager) => {
-        provider.register({
-          contextManager: contextManager === false ? undefined : contextManager,
-        });
-        tracer = options.tracer || trace.getTracer('gateway');
-        preparation$ = fakePromise();
+        provider.register({ contextManager });
+        return !!useContextManager;
       });
   }
+
+  let preparation$: Promise<void>;
+  preparation$ = init().then((contextManager) => {
+    diag.setLogger(
+      {
+        error: (message, ...args) => pluginLogger.error(message, ...args),
+        warn: (message, ...args) => pluginLogger.warn(message, ...args),
+        info: (message, ...args) => pluginLogger.info(message, ...args),
+        debug: (message, ...args) => pluginLogger.debug(message, ...args),
+        verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+      },
+      DiagLogLevel.VERBOSE,
+    );
+    useContextManager = contextManager;
+    tracer = options.tracer || trace.getTracer('gateway');
+    preparation$ = fakePromise();
+  });
 
   return withState<
     OpenTelemetryPlugin,

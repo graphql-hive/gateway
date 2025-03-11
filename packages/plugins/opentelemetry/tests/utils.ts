@@ -1,5 +1,5 @@
 import { GatewayPlugin } from '@graphql-hive/gateway';
-import { TraceState } from '@opentelemetry/api';
+import { diag, TraceState } from '@opentelemetry/api';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import {
   type ReadableSpan,
@@ -90,6 +90,7 @@ export async function buildTestGateway(
       return response.json();
     },
     [Symbol.asyncDispose]: () => {
+      diag.disable();
       return stack.disposeAsync();
     },
   };

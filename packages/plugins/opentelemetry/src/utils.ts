@@ -1,48 +1,35 @@
-import { isPromise } from 'util/types';
-import {
-  isPromise as isPromiseLike,
-  mapMaybePromise as mapMaybePromiseLike,
-  type MaybePromise,
-} from '@graphql-tools/utils';
+import { context } from '@opentelemetry/api';
+import { getContextManager } from './context';
 
-function mapMaybePromise<T, R>(
-  value: Promise<T> | T,
-  mapper: (value: T) => Promise<R> | R,
-  errorMapper?: (err: unknown) => Promise<R> | R,
-): Promise<R> | R {
-  const res$ = mapMaybePromiseLike(value, mapper, errorMapper);
-  if (isPromiseLike(res$)) {
-    return toPromise(res$);
+export async function tryContextManagerSetup(
+  useContextManager: true | undefined,
+): Promise<boolean> {
+  if (await isContextManagerCompatibleWithAsync()) {
+    return true;
   }
-  return res$;
+
+  const contextManager = await getContextManager(useContextManager);
+
+  if (!contextManager) {
+    return false;
+  }
+
+  if (!context.setGlobalContextManager(contextManager)) {
+    if (useContextManager) {
+      throw new Error(
+        '[OTEL] A Context Manager is already registered, but is not compatible with async calls.' +
+          ' Please use another context manager, such as `AsyncLocalStorageContextManager`.',
+      );
+    }
+  }
+
+  return true;
 }
-export { mapMaybePromise, mapMaybePromiseLike };
 
-export function toPromise<T>(mp: MaybePromise<T>): Promise<T> {
-  if (isPromise(mp)) {
-    return mp as Promise<T>;
-  }
-  if (isPromiseLike(mp)) {
-    return {
-      then: (onfullfilled, onrejected) =>
-        toPromise(mp.then(onfullfilled, onrejected)),
-      catch: (onrejected) => toPromise(mp.then(null, onrejected)),
-      finally: (onfinally) => {
-        return toPromise(
-          mp.then(
-            (res) => {
-              onfinally?.();
-              return res;
-            },
-            (err) => {
-              onfinally?.();
-              throw err;
-            },
-          ),
-        );
-      },
-      [Symbol.toStringTag]: 'Promise',
-    };
-  }
-  return Promise.resolve(mp);
+export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
+  const symbol = Symbol();
+  const root = context.active();
+  return context.with(root.setValue(symbol, true), async () => {
+    return (context.active().getValue(symbol) as boolean) || false;
+  });
 }
