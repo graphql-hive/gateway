@@ -116,14 +116,12 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   // we dont use a `setInterval` because the proc.getStats is async and we want stats ordered by time
   const samples: LoadtestMemorySample[] = [];
-  let skipSampling = false;
   const memorySnapshotting = (async () => {
     while (!ctrl.signal.aborted) {
       await setTimeout(memorySnapshotWindow);
       try {
         const stats = await server.getStats();
         if (ctrl.signal.aborted) return;
-        if (skipSampling) continue;
         const sample: LoadtestMemorySample = {
           phase,
           run,
@@ -179,9 +177,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     await Promise.race([waitForExit, serverThrowOnExit, memorySnapshotting]);
 
     phase = 'calmdown';
-    skipSampling = true;
     await inspector.collectGarbage();
-    skipSampling = false;
     await Promise.race([
       setTimeout(calmdown),
       serverThrowOnExit,
@@ -189,14 +185,12 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     ]);
 
     if (takeHeapSnapshots) {
-      skipSampling = true;
       const heapsnapshot = await createHeapSnapshot(
         heapsnapshotCwd,
         inspector,
         phase,
         run,
       );
-      skipSampling = false;
       heapsnapshots.push(heapsnapshot);
       await onHeapSnapshot?.(heapsnapshot);
     }
