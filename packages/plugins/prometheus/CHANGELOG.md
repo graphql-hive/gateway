@@ -1,5 +1,25 @@
 # @graphql-mesh/plugin-prometheus
 
+## 1.3.33
+
+### Patch Changes
+
+- [#706](https://github.com/graphql-hive/gateway/pull/706) [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.1) (from `^0.104.0`, in `dependencies`)
+
+- [#727](https://github.com/graphql-hive/gateway/pull/727) [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/disposablestack@^0.0.6` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+
+- [#775](https://github.com/graphql-hive/gateway/pull/775) [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/types@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+
+- Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`f974f5b`](https://github.com/graphql-hive/gateway/commit/f974f5b22fb6a0f1a6d605eac69d94ad90357a9c), [`ff6dcaf`](https://github.com/graphql-hive/gateway/commit/ff6dcafbb226d66cc95f29e7287b4ca4eb4e9f8d), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`6cef6f0`](https://github.com/graphql-hive/gateway/commit/6cef6f0d6389b5521900d220a1d0ff1bee8158b6), [`b145a27`](https://github.com/graphql-hive/gateway/commit/b145a27fc8671f33c36f9f6a3a437d80107631ee), [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f), [`bbc98c5`](https://github.com/graphql-hive/gateway/commit/bbc98c58277283f064ba826a3d844709f75ac451), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`717b293`](https://github.com/graphql-hive/gateway/commit/717b29326b1b1a8d6b0ef399205b44eca123e648), [`e0d5feb`](https://github.com/graphql-hive/gateway/commit/e0d5feb156f896be5c5235eb1ae22144cf67eff9)]:
+  - @graphql-hive/gateway-runtime@1.5.0
+
 ## 1.3.32
 
 ### Patch Changes

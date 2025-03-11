@@ -1,5 +1,88 @@
 # @graphql-hive/gateway-runtime
 
+## 1.5.0
+
+### Minor Changes
+
+- [#745](https://github.com/graphql-hive/gateway/pull/745) [`bbc98c5`](https://github.com/graphql-hive/gateway/commit/bbc98c58277283f064ba826a3d844709f75ac451) Thanks [@ardatan](https://github.com/ardatan)! - **_New plugin/feature:_**
+  Demand Control a.k.a. Cost Limit including the implementation of `@cost` and `@listSize` directives
+
+  [See the documentation to learn more](https://the-guild.dev/graphql/hive/docs/gateway/other-features/security/demand-control)
+
+- [#795](https://github.com/graphql-hive/gateway/pull/795) [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7) Thanks [@ardatan](https://github.com/ardatan)! - Use the same logging option handling logic, and export \`handleLoggingOption\` on runtime package
+
+- [#795](https://github.com/graphql-hive/gateway/pull/795) [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7) Thanks [@ardatan](https://github.com/ardatan)! - Handle string value in `logging` like `logging: 'info'`
+
+- [#743](https://github.com/graphql-hive/gateway/pull/743) [`e0d5feb`](https://github.com/graphql-hive/gateway/commit/e0d5feb156f896be5c5235eb1ae22144cf67eff9) Thanks [@ardatan](https://github.com/ardatan)! - New Cache related hooks;
+
+  `onCacheGet`: invoked when a cache get operation is performed.
+  `onCacheMiss`: invoked when the performed get operation does not find a cache entry.
+  `onCacheHit`: invoked when the performed get operation finds a cache entry.
+  `onCacheGetError`: invoked when an error occurs during a cache get operation.
+
+  `onCacheSet`: invoked when a cache set operation is performed.
+  `onCacheSetDone`: invoked when the performed set operation is completed.
+  `onCacheSetError`: invoked when an error occurs during a cache set operation.
+
+  `onCacheDelete`: invoked when a cache delete operation is performed.
+  `onCacheDeleteDone`: invoked when the performed delete operation is completed.
+  `onCacheDeleteError`: invoked when an error occurs during a cache delete operation.
+
+### Patch Changes
+
+- [#706](https://github.com/graphql-hive/gateway/pull/706) [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@envelop/core@^5.2.3` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.2.3) (from `^5.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.1) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/server@^0.10.1` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.1) (from `^0.10.0`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.1) (from `^5.12.0`, in `dependencies`)
+
+- [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
+
+- [#727](https://github.com/graphql-hive/gateway/pull/727) [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/disposablestack@^0.0.6` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+
+- [#770](https://github.com/graphql-hive/gateway/pull/770) [`f974f5b`](https://github.com/graphql-hive/gateway/commit/f974f5b22fb6a0f1a6d605eac69d94ad90357a9c) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/server@^0.10.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.0) (from `^0.9.68`, in `dependencies`)
+
+- [#771](https://github.com/graphql-hive/gateway/pull/771) [`ff6dcaf`](https://github.com/graphql-hive/gateway/commit/ff6dcafbb226d66cc95f29e7287b4ca4eb4e9f8d) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.8.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.8.0) (from `^0.7.1`, in `dependencies`)
+
+- [#775](https://github.com/graphql-hive/gateway/pull/775) [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-hive@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-hive/v/0.104.0) (from `^0.103.19`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.0) (from `^0.103.21`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+
+- [#799](https://github.com/graphql-hive/gateway/pull/799) [`6cef6f0`](https://github.com/graphql-hive/gateway/commit/6cef6f0d6389b5521900d220a1d0ff1bee8158b6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-hive/core@^0.10.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.10.0) (from `^0.9.0`, in `dependencies`)
+
+- [#806](https://github.com/graphql-hive/gateway/pull/806) [`b145a27`](https://github.com/graphql-hive/gateway/commit/b145a27fc8671f33c36f9f6a3a437d80107631ee) Thanks [@ardatan](https://github.com/ardatan)! - Fix `contentEncoding` type in `defineConfig`
+
+- [#792](https://github.com/graphql-hive/gateway/pull/792) [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f) Thanks [@ardatan](https://github.com/ardatan)! - Ensure subgraph name is present in the upstream error extensions when HTTP Executor throws
+
+- [#766](https://github.com/graphql-hive/gateway/pull/766) [`717b293`](https://github.com/graphql-hive/gateway/commit/717b29326b1b1a8d6b0ef399205b44eca123e648) Thanks [@ardatan](https://github.com/ardatan)! - Respect `lastSeenId` while fetching the supergraph from GraphOS instead of leaving the comparison to the runtime
+
+- Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`002fc95`](https://github.com/graphql-hive/gateway/commit/002fc95c446470943de4d0ef1457850277c3d8aa), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`d949143`](https://github.com/graphql-hive/gateway/commit/d94914302b5b2c71b1c95df5145326fba89b023c), [`661b103`](https://github.com/graphql-hive/gateway/commit/661b103a7b9586641e69b78cbaad516e550e7192), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f), [`0451e82`](https://github.com/graphql-hive/gateway/commit/0451e82446a83a17f9fd4b285da240fb00f1c162), [`2a54e85`](https://github.com/graphql-hive/gateway/commit/2a54e85f2848aea7525703ea33918a21db96b26b)]:
+  - @graphql-hive/logger-json@0.0.3
+  - @graphql-mesh/fusion-runtime@0.11.3
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+  - @graphql-mesh/transport-common@0.7.31
+  - @graphql-tools/batch-delegate@9.0.32
+  - @graphql-tools/delegate@10.2.14
+  - @graphql-tools/executor-common@0.0.4
+  - @graphql-tools/executor-http@1.3.0
+  - @graphql-tools/federation@3.1.5
+  - @graphql-tools/stitch@9.4.19
+  - @graphql-tools/wrap@10.0.32
+
 ## 1.4.17
 
 ### Patch Changes
