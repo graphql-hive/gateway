@@ -18,10 +18,13 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
   if (config.reporting?.type === 'hive') {
     const { target, ...reporting } = config.reporting;
     let usage: HiveConsolePluginOptions['usage'] = reporting.usage;
-    if (usage != null && typeof usage === 'object') {
+    if (usage === false) {
+      // explicitly disabled, leave disabled
+    } else {
+      // user specified a target, extend the usage with the given target
       usage = {
         target,
-        ...usage,
+        ...(typeof usage === 'object' ? { ...usage } : {}),
       };
     }
     return {
