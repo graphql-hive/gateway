@@ -21,7 +21,6 @@ import {
   UnifiedGraphManager,
 } from '@graphql-mesh/fusion-runtime';
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
-import useMeshHive from '@graphql-mesh/plugin-hive';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import type {
@@ -96,6 +95,7 @@ import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
+import useHiveConsole from './plugins/useHiveConsole';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
@@ -191,10 +191,8 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
-  const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
-    config,
-    configContext,
-  );
+  const { name: reportingTarget, plugin: registryPlugin } =
+    getReportingPlugin(config, configContext) || {};
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
@@ -202,8 +200,9 @@ export function createGatewayRuntime<
     'type' in config.persistedDocuments &&
     config.persistedDocuments?.type === 'hive'
   ) {
-    persistedDocumentsPlugin = useMeshHive({
+    persistedDocumentsPlugin = useHiveConsole({
       ...configContext,
+      enabled: false, // disables only usage reporting
       logger: configContext.logger.child({
         plugin: 'Hive Persisted Documents',
       }),
