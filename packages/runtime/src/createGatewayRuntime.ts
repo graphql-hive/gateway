@@ -191,8 +191,10 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
-  const { name: reportingTarget, plugin: registryPlugin } =
-    getReportingPlugin(config, configContext) || {};
+  const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
+    config,
+    configContext,
+  );
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
