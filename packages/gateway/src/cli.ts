@@ -72,9 +72,17 @@ export interface GatewayCLISupergraphConfig
 }
 
 export interface GatewayCLIHiveReportingOptions
-  extends Omit<GatewayHiveReportingOptions, 'token'> {
+  extends Omit<GatewayHiveReportingOptions, 'target' | 'token'> {
   /**
-   * Hive registry token for usage metrics reporting.
+   * The target to which the usage data should be reported to.
+   *
+   * @default process.env.HIVE_USAGE_TARGET
+   */
+  target?: GatewayHiveReportingOptions['target'];
+  /**
+   * Hive registry access token for usage metrics reporting.
+   *
+   * @default process.env.HIVE_USAGE_ACCESS_TOKEN || process.env.HIVE_REGISTRY_TOKEN
    */
   token?: GatewayHiveReportingOptions['token'];
 }
@@ -307,8 +315,20 @@ let cli = new Command()
   .addOption(
     new Option(
       '--hive-registry-token <token>',
-      'Hive registry token for usage metrics reporting',
+      '[DEPRECATED: please use "--hive-usage-target" and "--hive-usage-access-token"] Hive registry token for usage metrics reporting',
     ).env('HIVE_REGISTRY_TOKEN'),
+  )
+  .addOption(
+    new Option(
+      '--hive-usage-target <target>',
+      'Hive registry target to which the usage data should be reported to. requires the "--hive-usage-access-token <token>" option',
+    ).env('HIVE_USAGE_TARGET'),
+  )
+  .addOption(
+    new Option(
+      '--hive-usage-access-token <token>',
+      'Hive registry access token for usage metrics reporting. requires the "--hive-usage-target <target>" option',
+    ).env('HIVE_USAGE_ACCESS_TOKEN'),
   )
   .option(
     '--hive-persisted-documents-endpoint <endpoint>',

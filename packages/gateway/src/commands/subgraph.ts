@@ -22,6 +22,7 @@ import {
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
 import { handleLoggingConfig } from './handleLoggingOption';
+import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
@@ -37,6 +38,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const {
         maskedErrors,
         hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
@@ -53,6 +56,19 @@ export const addCommand: AddCommand = (ctx, cli) =>
         subgraph = schemaPathOrUrl;
       } else if ('subgraph' in loadedConfig) {
         subgraph = loadedConfig.subgraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
+      }
+
+      const registryConfig: Pick<SubgraphConfig, 'reporting'> = {};
+      const reporting = handleReportingConfig(ctx, loadedConfig, {
+        hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
+        // proxy can only do reporting to hive registry
+        apolloGraphRef: undefined,
+        apolloKey: undefined,
+      });
+      if (reporting) {
+        registryConfig.reporting = reporting;
       }
 
       const pubsub = loadedConfig.pubsub || new PubSub();
@@ -88,15 +104,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
             ? loadedConfig.pollingInterval
             : undefined) ||
           defaultOptions.pollingInterval,
-        ...(hiveRegistryToken
-          ? {
-              reporting: {
-                ...loadedConfig.reporting,
-                type: 'hive',
-                token: hiveRegistryToken,
-              },
-            }
-          : {}),
+        ...registryConfig,
         subgraph,
         logging: loadedConfig.logging ?? ctx.log,
         productName: ctx.productName,
