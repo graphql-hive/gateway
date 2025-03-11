@@ -1,5 +1,98 @@
 # @graphql-hive/gateway
 
+## 1.11.0
+
+### Minor Changes
+
+- [#745](https://github.com/graphql-hive/gateway/pull/745) [`bbc98c5`](https://github.com/graphql-hive/gateway/commit/bbc98c58277283f064ba826a3d844709f75ac451) Thanks [@ardatan](https://github.com/ardatan)! - **_New plugin/feature:_**
+  Demand Control a.k.a. Cost Limit including the implementation of `@cost` and `@listSize` directives
+
+  [See the documentation to learn more](https://the-guild.dev/graphql/hive/docs/gateway/other-features/security/demand-control)
+
+- [#746](https://github.com/graphql-hive/gateway/pull/746) [`09de0ba`](https://github.com/graphql-hive/gateway/commit/09de0bae281be40f8d8cc462d9c447d03141a5fa) Thanks [@ardatan](https://github.com/ardatan)! - Support for subgraph request authentication via [AWS Signature Version 4 (SigV4)](https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html)
+
+  Also it supports incoming request authentication via AWS Sigv4 by mimicing AWS APIs' behavior.
+
+  [Learn more about this feature](https://graphql-hive.com/docs/gateway/other-features/security/aws-sigv4))
+
+- [#795](https://github.com/graphql-hive/gateway/pull/795) [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7) Thanks [@ardatan](https://github.com/ardatan)! - Handle string value in `logging` like `logging: 'info'`
+
+- [#667](https://github.com/graphql-hive/gateway/pull/667) [`3cdd0aa`](https://github.com/graphql-hive/gateway/commit/3cdd0aa8fa98a436365c2f36ca80d49968a48a5e) Thanks [@ardatan](https://github.com/ardatan)! - Expose internal methods `getCacheInstanceFromConfig` and `getBuiltinPluginsFromConfig`
+
+- [#743](https://github.com/graphql-hive/gateway/pull/743) [`e0d5feb`](https://github.com/graphql-hive/gateway/commit/e0d5feb156f896be5c5235eb1ae22144cf67eff9) Thanks [@ardatan](https://github.com/ardatan)! - New Cache related hooks;
+
+  `onCacheGet`: invoked when a cache get operation is performed.
+  `onCacheMiss`: invoked when the performed get operation does not find a cache entry.
+  `onCacheHit`: invoked when the performed get operation finds a cache entry.
+  `onCacheGetError`: invoked when an error occurs during a cache get operation.
+
+  `onCacheSet`: invoked when a cache set operation is performed.
+  `onCacheSetDone`: invoked when the performed set operation is completed.
+  `onCacheSetError`: invoked when an error occurs during a cache set operation.
+
+  `onCacheDelete`: invoked when a cache delete operation is performed.
+  `onCacheDeleteDone`: invoked when the performed delete operation is completed.
+  `onCacheDeleteError`: invoked when an error occurs during a cache delete operation.
+
+### Patch Changes
+
+- [#706](https://github.com/graphql-hive/gateway/pull/706) [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@envelop/core@^5.2.3` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.2.3) (from `^5.1.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.1) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.1) (from `^5.12.0`, in `dependencies`)
+
+- [#667](https://github.com/graphql-hive/gateway/pull/667) [`3cdd0aa`](https://github.com/graphql-hive/gateway/commit/3cdd0aa8fa98a436365c2f36ca80d49968a48a5e) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.104.0) (from `^0.103.19`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.6` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.6) (from `^0.0.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-mock@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-mock/v/0.104.0) (from `^0.103.19`, in `dependencies`)
+
+- [#730](https://github.com/graphql-hive/gateway/pull/730) [`c47322a`](https://github.com/graphql-hive/gateway/commit/c47322a1a1385f24f7649f396fd2fbc632a9256c) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.7) (from `^0.0.6`, in `dependencies`)
+
+- [#732](https://github.com/graphql-hive/gateway/pull/732) [`c7a9849`](https://github.com/graphql-hive/gateway/commit/c7a98491e755cd234ba14033b39d5bc83ad0f945) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.0.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.0.8) (from `^0.0.7`, in `dependencies`)
+
+- [#746](https://github.com/graphql-hive/gateway/pull/746) [`09de0ba`](https://github.com/graphql-hive/gateway/commit/09de0bae281be40f8d8cc462d9c447d03141a5fa) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/plugin-aws-sigv4@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-aws-sigv4/v/workspace:^) (to `dependencies`)
+
+- [#775](https://github.com/graphql-hive/gateway/pull/775) [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.105.0) (from `^0.104.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.0) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.104.0) (from `^0.103.19`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.1.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.1.0) (from `^0.0.8`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-deduplicate-request@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-deduplicate-request/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.0) (from `^0.104.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.2.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.2.0) (from `^0.1.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-mock@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-mock/v/0.105.0) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.104.0) (from `^0.103.19`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.0) (from `^0.103.18`, in `dependencies`)
+
+- [#782](https://github.com/graphql-hive/gateway/pull/782) [`890f16a`](https://github.com/graphql-hive/gateway/commit/890f16afb352987f0565658f338022f9db3b4e3d) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jwt-auth@^1.5.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jwt-auth/v/1.5.0) (from `^1.4.8`, in `dependencies`)
+
+- [#806](https://github.com/graphql-hive/gateway/pull/806) [`b145a27`](https://github.com/graphql-hive/gateway/commit/b145a27fc8671f33c36f9f6a3a437d80107631ee) Thanks [@ardatan](https://github.com/ardatan)! - Fix `contentEncoding` type in `defineConfig`
+
+- [#795](https://github.com/graphql-hive/gateway/pull/795) [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7) Thanks [@ardatan](https://github.com/ardatan)! - Use the same logging option handling logic, and export \`handleLoggingOption\` on runtime package
+
+- Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`f974f5b`](https://github.com/graphql-hive/gateway/commit/f974f5b22fb6a0f1a6d605eac69d94ad90357a9c), [`ff6dcaf`](https://github.com/graphql-hive/gateway/commit/ff6dcafbb226d66cc95f29e7287b4ca4eb4e9f8d), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`6cef6f0`](https://github.com/graphql-hive/gateway/commit/6cef6f0d6389b5521900d220a1d0ff1bee8158b6), [`817486d`](https://github.com/graphql-hive/gateway/commit/817486ddfb82590028e3775870c1fb5835766a24), [`890f16a`](https://github.com/graphql-hive/gateway/commit/890f16afb352987f0565658f338022f9db3b4e3d), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`b145a27`](https://github.com/graphql-hive/gateway/commit/b145a27fc8671f33c36f9f6a3a437d80107631ee), [`9c2f323`](https://github.com/graphql-hive/gateway/commit/9c2f323ece47d9c0ef8f4e44050390096ceac17f), [`bbc98c5`](https://github.com/graphql-hive/gateway/commit/bbc98c58277283f064ba826a3d844709f75ac451), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`09de0ba`](https://github.com/graphql-hive/gateway/commit/09de0bae281be40f8d8cc462d9c447d03141a5fa), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`717b293`](https://github.com/graphql-hive/gateway/commit/717b29326b1b1a8d6b0ef399205b44eca123e648), [`e0d5feb`](https://github.com/graphql-hive/gateway/commit/e0d5feb156f896be5c5235eb1ae22144cf67eff9)]:
+  - @graphql-hive/gateway-runtime@1.5.0
+  - @graphql-hive/plugin-aws-sigv4@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+  - @graphql-mesh/plugin-opentelemetry@1.3.45
+  - @graphql-mesh/plugin-prometheus@1.3.33
+  - @graphql-mesh/transport-http@0.6.35
+  - @graphql-mesh/transport-http-callback@0.5.22
+  - @graphql-mesh/transport-ws@1.0.5
+
 ## 1.10.4
 
 ### Patch Changes
