@@ -1,5 +1,6 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
 import { useHive } from '@graphql-hive/yoga';
+import { process } from '@graphql-mesh/cross-helpers';
 import type { Logger } from '@graphql-mesh/types';
 import { GatewayPlugin } from '../types';
 
@@ -18,6 +19,9 @@ export default function useHiveConsole<
   };
   // @ts-expect-error TODO: useHive plugin should inhert the TContext
   return useHive({
+    debug: ['1', 'y', 'yes', 't', 'true'].includes(
+      String(process.env['DEBUG']),
+    ),
     ...options,
     agent,
   });
