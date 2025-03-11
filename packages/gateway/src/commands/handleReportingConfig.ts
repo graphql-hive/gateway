@@ -73,6 +73,7 @@ export function handleReportingConfig(
       ctx.log.info(`Configuring Hive registry reporting`);
     }
     return {
+      ...loadedConfig.reporting,
       type: 'hive',
       token: hiveUsageAccessToken,
       target: opts.hiveUsageTarget,
@@ -88,6 +89,7 @@ export function handleReportingConfig(
       process.exit(1);
     }
     return {
+      ...loadedConfig.reporting,
       type: 'graphos',
       apiKey: opts.apolloKey,
       graphRef: opts.apolloGraphRef,
