@@ -176,7 +176,7 @@ function waitForMessage(
   ws.once('message', onMessage);
   return Promise.race([
     promise,
-    setTimeout(1_000).then(() => {
+    setTimeout(10_000).then(() => {
       throw new Error('Timeout waiting for message');
     }),
   ]).finally(() => {
