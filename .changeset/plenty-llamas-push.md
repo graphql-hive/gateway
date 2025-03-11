@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/gateway': patch
+'@graphql-hive/gateway': minor
 ---
 
 Introduce `target` as a new Hive reporting option
