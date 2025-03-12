@@ -121,6 +121,7 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
+import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -191,6 +192,9 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
+  let replaceSchema: (schema: GraphQLSchema) => void = newSchema => {
+    unifiedGraph = newSchema;
+  };
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
     config,
     configContext,
@@ -684,6 +688,10 @@ export function createGatewayRuntime<
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
+      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
+        unifiedGraph = newUnifiedGraph;
+        replaceSchema(newUnifiedGraph);
+      },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
@@ -797,7 +805,6 @@ export function createGatewayRuntime<
     check: readinessChecker,
   });
 
-  let replaceSchema: (schema: GraphQLSchema) => void;
   const defaultGatewayPlugin: GatewayPlugin = {
     onFetch({ setFetchFn }) {
       if (fetchAPI?.fetch) {
@@ -964,6 +971,7 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
+    useRetryOnSchemaReload(),
   ];
 
   if (config.requestId !== false) {
