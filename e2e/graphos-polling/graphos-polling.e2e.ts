@@ -23,7 +23,7 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
   const upstreamStuck = await service('upstreamStuck');
   const upstreamGood = await service('upstreamGood');
   const hostname = gatewayRunner.includes('docker')
-    ? dockerHostName
+    ? `http://${dockerHostName}`
     : await getLocalhost(graphos.port);
   function pushSchema(schema: string) {
     return fetch(`${hostname}:${graphos.port}/graphql`, {
