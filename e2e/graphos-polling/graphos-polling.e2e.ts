@@ -71,7 +71,7 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
   });
   const compositionWithGood = await composeWithApollo([upstreamGood]);
   await pushSchema(compositionWithGood.result);
-  await expect(result$).resolves.toMatchObject({
+  await expect(result$).resolves.toEqual({
     data: {
       foo: 'bar',
     },
