@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 1.12.0
+
+### Minor Changes
+
+- [#809](https://github.com/graphql-hive/gateway/pull/809) [`17cfa19`](https://github.com/graphql-hive/gateway/commit/17cfa190bf7965681716e5e1ec601793a85935d8) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Introduce `target` as a new Hive reporting option
+
+  Deprecate the `--hive-registry-token` CLI option in favour of `--hive-usage-target` and `--hive-usage-access-token` options. [Read more on Hive's product update page.](https://the-guild.dev/graphql/hive/product-updates/2025-03-10-new-access-tokens)
+
+### Patch Changes
+
+- Updated dependencies [[`17cfa19`](https://github.com/graphql-hive/gateway/commit/17cfa190bf7965681716e5e1ec601793a85935d8), [`17cfa19`](https://github.com/graphql-hive/gateway/commit/17cfa190bf7965681716e5e1ec601793a85935d8)]:
+  - @graphql-hive/gateway-runtime@1.6.0
+  - @graphql-hive/plugin-aws-sigv4@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+  - @graphql-mesh/plugin-opentelemetry@1.3.46
+  - @graphql-mesh/plugin-prometheus@1.3.34
+
 ## 1.11.0
 
 ### Minor Changes

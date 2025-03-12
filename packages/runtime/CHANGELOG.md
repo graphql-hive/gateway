@@ -1,5 +1,23 @@
 # @graphql-hive/gateway-runtime
 
+## 1.6.0
+
+### Minor Changes
+
+- [#809](https://github.com/graphql-hive/gateway/pull/809) [`17cfa19`](https://github.com/graphql-hive/gateway/commit/17cfa190bf7965681716e5e1ec601793a85935d8) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Introduce `target` as a new Hive reporting option
+
+  [Read more on Hive's product update page.](https://the-guild.dev/graphql/hive/product-updates/2025-03-10-new-access-tokens)
+
+### Patch Changes
+
+- [#809](https://github.com/graphql-hive/gateway/pull/809) [`17cfa19`](https://github.com/graphql-hive/gateway/commit/17cfa190bf7965681716e5e1ec601793a85935d8) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/yoga@^0.41.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.41.0) (to `dependencies`)
+  - Removed dependency [`@graphql-mesh/plugin-hive@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-hive/v/0.104.0) (from `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+
 ## 1.5.0
 
 ### Minor Changes
