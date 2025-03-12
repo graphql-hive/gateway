@@ -14,7 +14,6 @@ import type {
   MeshFetch,
   MeshPubSub,
   OnFetchHook,
-  YamlConfig,
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
@@ -40,6 +39,7 @@ import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
 import { DemandControlPluginOptions } from './plugins/useDemandControl';
+import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
@@ -263,10 +263,16 @@ export interface GatewayHiveCDNOptions {
 }
 
 export interface GatewayHiveReportingOptions
-  extends Omit<YamlConfig.HivePlugin, 'experimental__persistedDocuments'> {
+  extends Omit<
+    HiveConsolePluginOptions,
+    // we omit this property because we define persisted documents in GatewayHivePersistedDocumentsOptions
+    'experimental__persistedDocuments'
+  > {
   type: 'hive';
   /** GraphQL Hive registry access token. */
   token: string;
+  /** The target to which the usage data should be reported to. */
+  target?: string;
 }
 
 export interface GatewayGraphOSOptions {

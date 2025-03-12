@@ -18,6 +18,7 @@ import {
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
 import { handleLoggingConfig } from './handleLoggingOption';
+import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
@@ -35,6 +36,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveCdnEndpoint,
         hiveCdnKey,
         hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
         maskedErrors,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
@@ -95,6 +98,19 @@ export const addCommand: AddCommand = (ctx, cli) =>
         process.exit(1);
       }
 
+      const registryConfig: Pick<ProxyConfig, 'reporting'> = {};
+      const reporting = handleReportingConfig(ctx, loadedConfig, {
+        hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
+        // proxy can only do reporting to hive registry
+        apolloGraphRef: undefined,
+        apolloKey: undefined,
+      });
+      if (reporting) {
+        registryConfig.reporting = reporting;
+      }
+
       const pubsub = loadedConfig.pubsub || new PubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
@@ -128,15 +144,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
             ? loadedConfig.pollingInterval
             : undefined) ||
           defaultOptions.pollingInterval,
-        ...(hiveRegistryToken
-          ? {
-              reporting: {
-                ...loadedConfig.reporting,
-                type: 'hive',
-                token: hiveRegistryToken,
-              },
-            }
-          : {}),
+        ...registryConfig,
         proxy,
         schema,
         logging: ctx.log,

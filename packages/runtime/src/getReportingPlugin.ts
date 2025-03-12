@@ -1,5 +1,7 @@
-import useMeshHive from '@graphql-mesh/plugin-hive';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
+import useHiveConsole, {
+  HiveConsolePluginOptions,
+} from './plugins/useHiveConsole';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -10,16 +12,28 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
   config: GatewayConfig<TContext>,
   configContext: GatewayConfigContext,
 ): {
-  name?: string;
+  name?: 'Hive' | 'GraphOS';
   plugin: GatewayPlugin<TContext>;
 } {
   if (config.reporting?.type === 'hive') {
+    const { target, ...reporting } = config.reporting;
+    let usage: HiveConsolePluginOptions['usage'] = reporting.usage;
+    if (usage === false) {
+      // explicitly disabled, leave disabled
+    } else {
+      // user specified a target, extend the usage with the given target
+      usage = {
+        target,
+        ...(typeof usage === 'object' ? { ...usage } : {}),
+      };
+    }
     return {
       name: 'Hive',
-      plugin: useMeshHive({
-        ...configContext,
+      plugin: useHiveConsole({
         logger: configContext.logger.child({ reporting: 'Hive' }),
-        ...config.reporting,
+        enabled: true,
+        ...reporting,
+        ...(usage ? { usage } : {}),
         ...(config.persistedDocuments &&
         'type' in config.persistedDocuments &&
         config.persistedDocuments?.type === 'hive'

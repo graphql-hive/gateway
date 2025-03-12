@@ -28,6 +28,7 @@ import {
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
 import { handleLoggingConfig } from './handleLoggingOption';
+import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
   cli
@@ -50,6 +51,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveCdnEndpoint,
         hiveCdnKey,
         hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
         maskedErrors,
         apolloGraphRef,
         apolloKey,
@@ -151,32 +154,16 @@ export const addCommand: AddCommand = (ctx, cli) =>
         ctx.log.info(`Using default supergraph location: ${supergraph}`);
       }
 
-      let registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
-
-      if (hiveRegistryToken) {
-        ctx.log.info(`Configuring Hive registry reporting`);
-        registryConfig = {
-          reporting: {
-            ...loadedConfig.reporting,
-            type: 'hive',
-            token: hiveRegistryToken,
-          },
-        };
-      } else if (apolloKey) {
-        ctx.log.info(`Configuring Apollo GraphOS registry reporting`);
-        if (!apolloGraphRef) {
-          ctx.log.error(
-            `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref.`,
-          );
-          process.exit(1);
-        }
-        registryConfig = {
-          reporting: {
-            type: 'graphos',
-            apiKey: apolloKey,
-            graphRef: apolloGraphRef,
-          },
-        };
+      const registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
+      const reporting = handleReportingConfig(ctx, loadedConfig, {
+        hiveRegistryToken,
+        hiveUsageTarget,
+        hiveUsageAccessToken,
+        apolloGraphRef,
+        apolloKey,
+      });
+      if (reporting) {
+        registryConfig.reporting = reporting;
       }
 
       const pubsub = loadedConfig.pubsub || new PubSub();
