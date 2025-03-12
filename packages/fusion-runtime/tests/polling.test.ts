@@ -14,7 +14,10 @@ import {
 } from '@graphql-tools/utils';
 import { assertSingleExecutionValue } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { DeferredPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  DeferredPromise,
+  handleMaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
@@ -76,40 +79,57 @@ describe('Polling', () => {
     });
 
     function getFetchedTimeOnComment() {
-      return handleMaybePromise(() => manager.getUnifiedGraph(), schema => {
-        const queryType = schema.getQueryType();
-        const lastFetchedDateStr =
-          queryType?.description?.match(/Fetched on (.*)/)?.[1];
-        if (!lastFetchedDateStr) {
-          throw new Error('Fetched date not found');
-        }
-        const lastFetchedDate = new Date(lastFetchedDateStr);
-        return lastFetchedDate;
-      });
+      return handleMaybePromise(
+        () => manager.getUnifiedGraph(),
+        (schema) => {
+          const queryType = schema.getQueryType();
+          const lastFetchedDateStr =
+            queryType?.description?.match(/Fetched on (.*)/)?.[1];
+          if (!lastFetchedDateStr) {
+            throw new Error('Fetched date not found');
+          }
+          const lastFetchedDate = new Date(lastFetchedDateStr);
+          return lastFetchedDate;
+        },
+      );
     }
 
     function getFetchedTimeFromResolvers() {
-      return handleMaybePromise(() => manager.getUnifiedGraph(), schema => handleMaybePromise(() => normalizedExecutor({
-        schema,
-        document: parse(/* GraphQL */ `
-          query {
-            time
-          }
-        `),
-      }), result => {
-        if (isAsyncIterable(result)) {
-          throw new Error('Unexpected async iterable');
-        }
-        return new Date(result.data.time);
-      }))
+      return handleMaybePromise(
+        () => manager.getUnifiedGraph(),
+        (schema) =>
+          handleMaybePromise(
+            () =>
+              normalizedExecutor({
+                schema,
+                document: parse(/* GraphQL */ `
+                  query {
+                    time
+                  }
+                `),
+              }),
+            (result) => {
+              if (isAsyncIterable(result)) {
+                throw new Error('Unexpected async iterable');
+              }
+              return new Date(result.data.time);
+            },
+          ),
+      );
     }
 
     function compareTimes() {
-      return handleMaybePromise(() => getFetchedTimeOnComment(), timeFromComment =>{
-        return handleMaybePromise(() => getFetchedTimeFromResolvers(), timeFromResolvers => {
-          expect(timeFromComment).toEqual(timeFromResolvers);
-        })
-      });
+      return handleMaybePromise(
+        () => getFetchedTimeOnComment(),
+        (timeFromComment) => {
+          return handleMaybePromise(
+            () => getFetchedTimeFromResolvers(),
+            (timeFromResolvers) => {
+              expect(timeFromComment).toEqual(timeFromResolvers);
+            },
+          );
+        },
+      );
     }
 
     await compareTimes();

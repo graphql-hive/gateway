@@ -166,13 +166,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         () => {
           this.polling$ = undefined;
         },
-        err => {
+        (err) => {
           this.opts.transportContext?.logger?.error(
             'Failed to poll Supergraph',
             err,
           );
           this.polling$ = undefined;
-        }
+        },
       );
     }
     if (!this.unifiedGraph) {
@@ -353,11 +353,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     }
     return handleMaybePromise(
       () => {
-        const jobResult = disposeAll([previousTransportExecutorStack, previousExecutor]);
+        const jobResult = disposeAll([
+          previousTransportExecutorStack,
+          previousExecutor,
+        ]);
         this.disposeReason = undefined;
         return jobResult;
       },
-      () => this.unifiedGraph!
+      () => this.unifiedGraph!,
     );
   }
 
@@ -437,28 +440,30 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
       },
     );
-    return handleMaybePromise(() => disposeAll([
-      this._transportExecutorStack,
-      this.executor
-    ]), () => {
-      this.unifiedGraph = undefined;
-      this.initialUnifiedGraph$ = undefined;
-      this.lastLoadedUnifiedGraph = undefined;
-      this.inContextSDK = undefined;
-      this.lastLoadTime = undefined;
-      this.polling$ = undefined;
-      this.executor = undefined;
-      this._transportEntryMap = undefined;
-      this._transportExecutorStack = undefined;
-      this.executor = undefined;
-    }) as Promise<void>;
+    return handleMaybePromise(
+      () => disposeAll([this._transportExecutorStack, this.executor]),
+      () => {
+        this.unifiedGraph = undefined;
+        this.initialUnifiedGraph$ = undefined;
+        this.lastLoadedUnifiedGraph = undefined;
+        this.inContextSDK = undefined;
+        this.lastLoadTime = undefined;
+        this.polling$ = undefined;
+        this.executor = undefined;
+        this._transportEntryMap = undefined;
+        this._transportExecutorStack = undefined;
+        this.executor = undefined;
+      },
+    ) as Promise<void>;
   }
 }
 
 function disposeAll(disposables: unknown[]) {
-  const disposalJobs = disposables.map((disposable) =>
-    isDisposable(disposable) ? dispose(disposable) : undefined,
-  ).filter(isPromise);
+  const disposalJobs = disposables
+    .map((disposable) =>
+      isDisposable(disposable) ? dispose(disposable) : undefined,
+    )
+    .filter(isPromise);
   if (disposalJobs.length === 0) {
     return undefined;
   } else if (disposalJobs.length === 1) {

@@ -98,6 +98,7 @@ import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
+import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
 import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
@@ -121,7 +122,6 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
-import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -192,7 +192,7 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
-  let replaceSchema: (schema: GraphQLSchema) => void = newSchema => {
+  let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
