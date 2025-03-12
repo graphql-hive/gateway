@@ -4,6 +4,7 @@ import type { AddressInfo } from 'net';
 import os from 'os';
 import path, { isAbsolute } from 'path';
 import { setTimeout } from 'timers/promises';
+import { inspect } from 'util';
 import {
   IntrospectAndCompose,
   RemoteGraphQLDataSource,
@@ -985,8 +986,36 @@ export function createTenv(cwd: string): Tenv {
         });
       }
 
+      let stderr = '';
+      let stdout = '';
+      let stdboth = '';
+
       const introspectAndCompose = await new IntrospectAndCompose({
         subgraphs,
+        logger: {
+          debug(msg) {
+            if (isDebug()) {
+              const line = inspect(msg) + '\n';
+              stdout += line;
+              stdboth += line;
+            }
+          },
+          error(msg) {
+            const line = inspect(msg) + '\n';
+            stderr += line;
+            stdboth += line;
+          },
+          info(msg) {
+            const line = inspect(msg) + '\n';
+            stdout += line;
+            stdboth += line;
+          },
+          warn(msg) {
+            const line = inspect(msg) + '\n';
+            stdout += line;
+            stdboth += line;
+          },
+        },
       }).initialize({
         getDataSource(opts) {
           return new RemoteGraphQLDataSource(opts);
@@ -1003,8 +1032,17 @@ export function createTenv(cwd: string): Tenv {
         getStats() {
           throw new Error('Cannot get stats of a compose.');
         },
-        getStd() {
-          throw new Error('Cannot get std of a compose.');
+        getStd(std) {
+          switch (std) {
+            case 'out':
+              return stdout;
+            case 'err':
+              return stderr;
+            case 'both':
+              return stdboth;
+            default:
+              throw new Error(`Unknown std "${std}"`);
+          }
         },
         [DisposableSymbols.asyncDispose]: () => introspectAndCompose.cleanup(),
       };
