@@ -270,7 +270,7 @@ export interface Tenv {
   service(name: string, opts?: ServiceOptions): Promise<Service>;
   container(opts: ContainerOptions): Promise<Container>;
   composeWithMesh(opts?: ComposeOptions): Promise<Compose>;
-  composeWithApollo(services: Service[]): Promise<string>;
+  composeWithApollo(services: Service[]): Promise<Compose>;
 }
 
 // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
@@ -382,7 +382,7 @@ export function createTenv(cwd: string): Tenv {
         });
         supergraph = output;
       } else if (supergraphOpt?.with === 'apollo') {
-        const output = await tenv.composeWithApollo(supergraphOpt.services);
+        const { output } = await tenv.composeWithApollo(supergraphOpt.services);
         supergraph = output;
       }
 
@@ -983,7 +983,7 @@ export function createTenv(cwd: string): Tenv {
         });
       }
 
-      const { supergraphSdl } = await new IntrospectAndCompose({
+      const introspectAndCompose = await new IntrospectAndCompose({
         subgraphs,
       }).initialize({
         getDataSource(opts) {
@@ -994,8 +994,18 @@ export function createTenv(cwd: string): Tenv {
       });
 
       const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
-      await tenv.fs.write(supergraphFile, supergraphSdl);
-      return supergraphFile;
+      await tenv.fs.write(supergraphFile, introspectAndCompose.supergraphSdl);
+      return {
+        output: supergraphFile,
+        result: introspectAndCompose.supergraphSdl,
+        getStats() {
+          throw new Error('Cannot get stats of a compose.');
+        },
+        getStd() {
+          throw new Error('Cannot get std of a compose.');
+        },
+        [DisposableSymbols.asyncDispose]: () => introspectAndCompose.cleanup(),
+      };
     },
   };
   return tenv;

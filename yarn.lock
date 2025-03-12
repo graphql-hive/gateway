@@ -3125,6 +3125,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/graphos-polling@workspace:e2e/graphos-polling":
+  version: 0.0.0-use.local
+  resolution: "@e2e/graphos-polling@workspace:e2e/graphos-polling"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
+    graphql: "npm:^16.10.0"
+    graphql-yoga: "npm:^5.13.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/graphos@workspace:e2e/graphos":
   version: 0.0.0-use.local
   resolution: "@e2e/graphos@workspace:e2e/graphos"

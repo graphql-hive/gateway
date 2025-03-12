@@ -25,7 +25,9 @@ export function createExampleSetup(
   }
   async function supergraph() {
     const services = await Promise.all(SERVICES.map(exampleService));
-    return composeWithApollo(services);
+    return composeWithApollo(services).then(
+      (composition) => composition.output,
+    );
   }
   return {
     service: exampleService,
