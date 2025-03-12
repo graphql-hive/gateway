@@ -977,9 +977,11 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo(services) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
+        const hostname =
+          this.gatewayRunner === 'docker' ? dockerHostName : '0.0.0.0';
         subgraphs.push({
           name: service.name,
-          url: `${service.protocol}://0.0.0.0:${service.port}/graphql`,
+          url: `${service.protocol}://${hostname}:${service.port}/graphql`,
         });
       }
 
