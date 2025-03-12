@@ -75,7 +75,6 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
         config.reporting.graphRef ||= config.supergraph.graphRef;
       }
     }
-    console.log('config.reporting', config.reporting);
     return {
       name: 'GraphOS',
       // @ts-expect-error - TODO: Fix types
