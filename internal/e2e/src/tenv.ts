@@ -21,6 +21,7 @@ import {
   createOpt,
   createPortOpt,
   createServicePortOpt,
+  getLocalhost,
   isDebug,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -980,11 +981,12 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo({ services = [], pipeLogs = isDebug() }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
-        const hostname =
-          gatewayRunner === 'docker' ? dockerHostName : '0.0.0.0';
+        const hostname = gatewayRunner.includes('docker')
+          ? `${service.protocol}://${dockerHostName}`
+          : await getLocalhost(service.port, service.protocol);
         subgraphs.push({
           name: service.name,
-          url: `${service.protocol}://${hostname}:${service.port}/graphql`,
+          url: `${hostname}:${service.port}/graphql`,
         });
       }
 
