@@ -979,7 +979,7 @@ export function createTenv(cwd: string): Tenv {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
         const hostname =
-          this.gatewayRunner === 'docker' ? dockerHostName : '0.0.0.0';
+          gatewayRunner === 'docker' ? dockerHostName : '0.0.0.0';
         subgraphs.push({
           name: service.name,
           url: `${service.protocol}://${hostname}:${service.port}/graphql`,
