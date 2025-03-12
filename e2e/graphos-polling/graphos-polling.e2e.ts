@@ -11,6 +11,11 @@ afterAll(() => {
   }
 });
 
+/**
+ * First supergraph has a subgraph never returns a value,
+ * and in the meanwhile the schema reloads then we expect it to retry the request
+ * and send the request to the new subgraph that returns a value.
+ */
 it('refreshes the schema, and retries the request when the schema reloads', async () => {
   const graphos = await service('graphos');
   const upstreamStuck = await service('upstreamStuck');
