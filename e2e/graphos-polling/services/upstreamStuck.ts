@@ -5,7 +5,7 @@ import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 
 const opts = Opts(process.argv);
-const port = opts.getServicePort('upstreamStuck');
+const port = opts.getServicePort('upstream_stuck');
 
 createServer(
   createYoga({

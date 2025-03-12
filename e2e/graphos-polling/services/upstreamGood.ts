@@ -6,7 +6,7 @@ import { createYoga } from 'graphql-yoga';
 
 const opts = Opts(process.argv);
 
-const port = opts.getServicePort('upstreamGood');
+const port = opts.getServicePort('upstream_good');
 
 createServer(
   createYoga({

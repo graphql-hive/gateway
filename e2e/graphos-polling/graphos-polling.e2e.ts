@@ -20,8 +20,8 @@ afterAll(() => {
  */
 it('refreshes the schema, and retries the request when the schema reloads', async () => {
   const graphos = await service('graphos');
-  const upstreamStuck = await service('upstreamStuck');
-  const upstreamGood = await service('upstreamGood');
+  const upstreamStuck = await service('upstream_stuck');
+  const upstreamGood = await service('upstream_good');
   const hostname = gatewayRunner.includes('docker')
     ? `http://${dockerHostName}`
     : await getLocalhost(graphos.port);
