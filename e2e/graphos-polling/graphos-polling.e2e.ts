@@ -1,7 +1,9 @@
-import { createTenv } from '@internal/e2e';
+import { createTenv, dockerHostName } from '@internal/e2e';
+import { getLocalhost } from '@internal/testing';
 import { afterAll, expect, it } from 'vitest';
 
-const { service, gateway, composeWithApollo } = createTenv(__dirname);
+const { service, gateway, composeWithApollo, gatewayRunner } =
+  createTenv(__dirname);
 
 let interval: ReturnType<typeof setInterval> | undefined;
 
@@ -20,8 +22,11 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
   const graphos = await service('graphos');
   const upstreamStuck = await service('upstreamStuck');
   const upstreamGood = await service('upstreamGood');
+  const hostname = gatewayRunner.includes('docker')
+    ? dockerHostName
+    : await getLocalhost(graphos.port);
   function pushSchema(schema: string) {
-    return fetch(`http://localhost:${graphos.port}/graphql`, {
+    return fetch(`${hostname}:${graphos.port}/graphql`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +50,7 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
       'supergraph',
       `--apollo-graph-ref=mygraphref@myvariant`,
       `--apollo-key=mykey`,
-      `--apollo-uplink=http://localhost:${graphos.port}/graphql`,
+      `--apollo-uplink=${hostname}:${graphos.port}/graphql`,
     ],
   });
   interval = setInterval(() => {
