@@ -95,7 +95,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           ctx.log.info(`Using GraphOS API key`);
           if (!schemaPathOrUrl.includes('@')) {
             ctx.log.error(
-              `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant> when providing --apollo-key. Please provide a valid graph ref.`,
+              `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant> when providing --apollo-key. Please provide a valid graph ref not ${schemaPathOrUrl}.`,
             );
             process.exit(1);
           }
@@ -131,7 +131,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       } else if (apolloGraphRef) {
         if (!apolloGraphRef.includes('@')) {
           ctx.log.error(
-            `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref.`,
+            `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref not ${apolloGraphRef}.`,
           );
           process.exit(1);
         }

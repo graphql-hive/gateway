@@ -271,7 +271,7 @@ export interface Tenv {
   service(name: string, opts?: ServiceOptions): Promise<Service>;
   container(opts: ContainerOptions): Promise<Container>;
   composeWithMesh(opts?: ComposeOptions): Promise<Compose>;
-  composeWithApollo(services: Service[]): Promise<Compose>;
+  composeWithApollo(opts: ComposeOptions): Promise<Compose>;
 }
 
 // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
@@ -383,7 +383,9 @@ export function createTenv(cwd: string): Tenv {
         });
         supergraph = output;
       } else if (supergraphOpt?.with === 'apollo') {
-        const { output } = await tenv.composeWithApollo(supergraphOpt.services);
+        const { output } = await tenv.composeWithApollo({
+          services: supergraphOpt.services,
+        });
         supergraph = output;
       }
 
@@ -975,7 +977,7 @@ export function createTenv(cwd: string): Tenv {
       }
       return container;
     },
-    async composeWithApollo(services) {
+    async composeWithApollo({ services = [], pipeLogs = isDebug() }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
         const hostname =
@@ -990,7 +992,8 @@ export function createTenv(cwd: string): Tenv {
       let stdout = '';
       let stdboth = '';
 
-      const introspectAndCompose = await new IntrospectAndCompose({
+      let supergraphSdl: string;
+      const introspectAndCompose = new IntrospectAndCompose({
         subgraphs,
         logger: {
           debug(msg) {
@@ -998,37 +1001,59 @@ export function createTenv(cwd: string): Tenv {
               const line = inspect(msg) + '\n';
               stdout += line;
               stdboth += line;
+              if (pipeLogs) {
+                process.stdout.write(line);
+              }
             }
           },
           error(msg) {
             const line = inspect(msg) + '\n';
             stderr += line;
             stdboth += line;
+            if (pipeLogs) {
+              process.stderr.write(line);
+            }
           },
           info(msg) {
             const line = inspect(msg) + '\n';
             stdout += line;
             stdboth += line;
+            if (pipeLogs) {
+              process.stdout.write(line);
+            }
           },
           warn(msg) {
             const line = inspect(msg) + '\n';
             stdout += line;
             stdboth += line;
+            if (pipeLogs) {
+              process.stdout.write(line);
+            }
           },
         },
-      }).initialize({
+      });
+      const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
+      function onSupergraphSdl() {
+        return tenv.fs.write(supergraphFile, supergraphSdl);
+      }
+      const initialized = await introspectAndCompose.initialize({
         getDataSource(opts) {
           return new RemoteGraphQLDataSource(opts);
         },
-        update() {},
+        update(newSupergraphSdl) {
+          supergraphSdl = newSupergraphSdl;
+          return onSupergraphSdl();
+        },
         healthCheck: () => fakePromise(undefined),
       });
+      supergraphSdl = initialized.supergraphSdl;
+      await onSupergraphSdl();
 
-      const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
-      await tenv.fs.write(supergraphFile, introspectAndCompose.supergraphSdl);
       return {
         output: supergraphFile,
-        result: introspectAndCompose.supergraphSdl,
+        get result() {
+          return supergraphSdl;
+        },
         getStats() {
           throw new Error('Cannot get stats of a compose.');
         },
@@ -1044,7 +1069,7 @@ export function createTenv(cwd: string): Tenv {
               throw new Error(`Unknown std "${std}"`);
           }
         },
-        [DisposableSymbols.asyncDispose]: () => introspectAndCompose.cleanup(),
+        [DisposableSymbols.asyncDispose]: () => initialized.cleanup(),
       };
     },
   };

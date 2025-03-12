@@ -43,15 +43,18 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
       }),
     });
   }
-  const compositionWithStuck = await composeWithApollo([upstreamStuck]);
+  const compositionWithStuck = await composeWithApollo({
+    services: [upstreamStuck],
+  });
   await pushSchema(compositionWithStuck.result);
   const gw = await gateway({
     args: [
       'supergraph',
-      `--apollo-graph-ref=mygraphref@myvariant`,
+      `mygraphref@myvariant`,
       `--apollo-key=mykey`,
       `--apollo-uplink=${hostname}:${graphos.port}/graphql`,
     ],
+    services: [graphos],
   });
   interval = setInterval(() => {
     gw.execute({
@@ -69,7 +72,9 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
       }
     `,
   });
-  const compositionWithGood = await composeWithApollo([upstreamGood]);
+  const compositionWithGood = await composeWithApollo({
+    services: [upstreamGood],
+  });
   await pushSchema(compositionWithGood.result);
   await expect(result$).resolves.toEqual({
     data: {

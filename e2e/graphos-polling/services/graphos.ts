@@ -69,6 +69,15 @@ const graphosSchema = createSchema({
 
 const graphosYoga = createYoga({
   schema: graphosSchema,
+  plugins: [
+    {
+      onRequest({ url, fetchAPI, endResponse }) {
+        if (url.pathname.includes('usage')) {
+          return endResponse(new fetchAPI.Response('ok'));
+        }
+      },
+    },
+  ],
 });
 
 createServer(graphosYoga).listen(opts.getServicePort('graphos'), () => {
