@@ -6,7 +6,7 @@ const cwd = __dirname;
 
 const { service, gateway } = createTenv(cwd);
 
-describe('upstream subscriptions over WS', () => {
+describe('upstream subscriptions via websockets', () => {
   memtest(
     {
       cwd,
@@ -27,13 +27,16 @@ describe('upstream subscriptions over WS', () => {
       gateway({
         supergraph: {
           with: 'apollo',
-          services: [await service('products'), await service('reviews')],
+          services: [
+            await service('products', { env: { MEMTEST: 1 } }),
+            await service('reviews'),
+          ],
         },
       }),
   );
 });
 
-describe('upstream subscriptions over SSE', () => {
+describe('upstream subscriptions via http callbacks', () => {
   memtest(
     {
       cwd,
@@ -49,7 +52,10 @@ describe('upstream subscriptions over SSE', () => {
       gateway({
         supergraph: {
           with: 'apollo',
-          services: [await service('products'), await service('reviews')],
+          services: [
+            await service('products', { env: { MEMTEST: 1 } }),
+            await service('reviews'),
+          ],
         },
       }),
   );
