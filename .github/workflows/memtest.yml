@@ -34,6 +34,8 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
+          # TODO: should we test more node versions? we usually always recommend upgrading to
+          #       latest when people suspect leaks - latest is always the most stable
           node-version-file: .node-version
       - name: Test
         run: yarn test:mem
