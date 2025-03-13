@@ -91,7 +91,6 @@ export function createMemorySampleLineChart(samples: LoadtestMemorySample[]) {
             label: {
               color: 'black',
               text: 'Memory trend',
-              displayValue: false,
             },
           },
           segment: {
