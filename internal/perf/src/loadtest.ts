@@ -5,6 +5,7 @@ import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { trimError } from '@internal/testing';
+import { fetch } from '@whatwg-node/fetch';
 import { connectInspector, Inspector } from './inspector';
 
 export interface LoadtestOptions extends ProcOptions {
@@ -96,6 +97,32 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   if (runs < 1) {
     throw new Error(`At least one run is necessary, got "${runs}"`);
+  }
+
+  // make sure the query works before starting the loadtests
+  // the request here matches the request done in loadtest-script.ts
+  const res = await fetch(
+    `${server.protocol}://localhost:${server.port}/graphql`,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    },
+  );
+  const text = await res.text();
+  if (!res.ok) {
+    const err = new Error(
+      `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
+    );
+    err.name = 'ResponseError';
+    throw err;
+  }
+  if (!text.includes('"data":{')) {
+    const err = new Error(`Body does not contain "data":\n${text}`);
+    err.name = 'ResponseError';
+    throw err;
   }
 
   const ctrl = new AbortController();
