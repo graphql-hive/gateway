@@ -163,10 +163,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
             // TODO: inspect the callstack making sure we're filtering out precisely the right frames
             !['register', 'WeakRef', 'any', 'set'].includes(frame.name),
         )
-        .filter(
-          // user-provided heavy frames check
-          expectedHeavyFrame || (() => true),
-        );
+        .filter((frame) => {
+          if (expectedHeavyFrame) {
+            // user-provided heavy frames check
+            return !expectedHeavyFrame(frame);
+          }
+          return true;
+        });
 
       if (unexpectedHeavyFrames.length) {
         let msg = `Unexpected heavy frames detected! In total ${unexpectedHeavyFrames.length} and they are:\n\n`;
