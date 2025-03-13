@@ -3669,13 +3669,13 @@ __metadata:
   linkType: hard
 
 "@eslint-community/eslint-utils@npm:^4.1.2, @eslint-community/eslint-utils@npm:^4.2.0, @eslint-community/eslint-utils@npm:^4.4.0, @eslint-community/eslint-utils@npm:^4.4.1":
-  version: 4.5.0
-  resolution: "@eslint-community/eslint-utils@npm:4.5.0"
+  version: 4.5.1
+  resolution: "@eslint-community/eslint-utils@npm:4.5.1"
   dependencies:
     eslint-visitor-keys: "npm:^3.4.3"
   peerDependencies:
     eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
-  checksum: 10c0/0fad96181bd73ef7254ba61dbbca460a41fe155880122db8852e75c1063617dc60005ff31a7354ecf9dbfcb46fce4349ceca5c1d24db036c5aa39a4bf622fafc
+  checksum: 10c0/b520ae1b7bd04531a5c5da2021071815df4717a9f7d13720e3a5ddccf5c9c619532039830811fcbae1c2f1c9d133e63af2435ee69e0fc0fabbd6d928c6800fb2
   languageName: node
   linkType: hard
 
@@ -4953,16 +4953,16 @@ __metadata:
   linkType: hard
 
 "@graphql-tools/mock@npm:^9.0.3":
-  version: 9.0.20
-  resolution: "@graphql-tools/mock@npm:9.0.20"
+  version: 9.0.21
+  resolution: "@graphql-tools/mock@npm:9.0.21"
   dependencies:
-    "@graphql-tools/schema": "npm:^10.0.21"
-    "@graphql-tools/utils": "npm:^10.8.4"
+    "@graphql-tools/schema": "npm:^10.0.22"
+    "@graphql-tools/utils": "npm:^10.8.5"
     fast-json-stable-stringify: "npm:^2.1.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/061a8c41608a95c0936e207ef183565a677ad2289154178f4e7fe5cb84dca8acb48dc5a8475b86af9f6e2b5e0474ba2ff72f8251f74ef9c6083a044f938ea7f3
+  checksum: 10c0/5de1f59829ad045fb2c2ea16c011f4565b49c9431c7e78d6dfbad41fa0b21653cad70265ceeddcb9bbb516fb71fcf18a8e51466bfd25564bf4f977a0229cd990
   languageName: node
   linkType: hard
 
@@ -4979,7 +4979,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.21, @graphql-tools/schema@npm:^10.0.22, @graphql-tools/schema@npm:^10.0.5":
+"@graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.22, @graphql-tools/schema@npm:^10.0.5":
   version: 10.0.22
   resolution: "@graphql-tools/schema@npm:10.0.22"
   dependencies:
@@ -5056,7 +5056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.0.3, @graphql-tools/utils@npm:^10.5.1, @graphql-tools/utils@npm:^10.5.4, @graphql-tools/utils@npm:^10.6.1, @graphql-tools/utils@npm:^10.6.2, @graphql-tools/utils@npm:^10.6.4, @graphql-tools/utils@npm:^10.7.2, @graphql-tools/utils@npm:^10.8.0, @graphql-tools/utils@npm:^10.8.1, @graphql-tools/utils@npm:^10.8.4, @graphql-tools/utils@npm:^10.8.5":
+"@graphql-tools/utils@npm:^10.0.0, @graphql-tools/utils@npm:^10.0.3, @graphql-tools/utils@npm:^10.5.1, @graphql-tools/utils@npm:^10.5.4, @graphql-tools/utils@npm:^10.6.1, @graphql-tools/utils@npm:^10.6.2, @graphql-tools/utils@npm:^10.6.4, @graphql-tools/utils@npm:^10.7.2, @graphql-tools/utils@npm:^10.8.0, @graphql-tools/utils@npm:^10.8.1, @graphql-tools/utils@npm:^10.8.5":
   version: 10.8.5
   resolution: "@graphql-tools/utils@npm:10.8.5"
   dependencies:
@@ -10300,9 +10300,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001688":
-  version: 1.0.30001703
-  resolution: "caniuse-lite@npm:1.0.30001703"
-  checksum: 10c0/ed88e318da28e9e59c4ac3a2e3c42859558b7b713aebf03696a1f916e4ed4b70734dda82be04635e2b62ec355b8639bbed829b7b12ff528d7f9cc31a3a5bea91
+  version: 1.0.30001704
+  resolution: "caniuse-lite@npm:1.0.30001704"
+  checksum: 10c0/4efa0ece51ef58e7ce7e7c8cd7b50372bcb910581a47397be5c086c046c3cd436d123b734351fb20f638c322b339198edf89b5b632ff59bdd171c74ff7f4efcf
   languageName: node
   linkType: hard
 
@@ -11418,9 +11418,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.73":
-  version: 1.5.115
-  resolution: "electron-to-chromium@npm:1.5.115"
-  checksum: 10c0/52429944c95118d5f1fd9d245225f64e3ab55933a7a7c975bec43bea857a285ea9d57586f5cee7978ed9f7edce8cf650354a824ed821806846493566c6be6400
+  version: 1.5.116
+  resolution: "electron-to-chromium@npm:1.5.116"
+  checksum: 10c0/27f117cd18b17b6a7c4ddf82db5f5093c0eaa37bab27798f544648bf6408ef7d7c938251b50210eb1fa98d1bcf0a65b4302f926a147896f8a3dea3c0fc9a45f6
   languageName: node
   linkType: hard
 
@@ -12603,9 +12603,9 @@ __metadata:
   linkType: hard
 
 "flow-parser@npm:0.*":
-  version: 0.263.0
-  resolution: "flow-parser@npm:0.263.0"
-  checksum: 10c0/755caa4f9e0a3f7b031b50d4582d86dcb70624f1f9441521f5efd0c6e4b1d2f6531e3e07cfb24180e4f2a180d61c3f3316b6deab849d7fc915bc7e7e6106121a
+  version: 0.264.0
+  resolution: "flow-parser@npm:0.264.0"
+  checksum: 10c0/445fb2863166c49eafb3a82be83789b03cdf386e274459fff9fc60f17f8dcbec5ce028119ca834b472160bbc086494ea04d7c38e0493ce9611f646dbcd848a54
   languageName: node
   linkType: hard
 
