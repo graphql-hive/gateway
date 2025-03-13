@@ -25,6 +25,7 @@ memtest(
     expectedHeavyFrame: (frame) =>
       [
         // the onwrite frame comes from whatwg-node/server and is not a leak
+        // heap snapshots were also analyised and concluded to be stable
         'onwrite',
       ].includes(frame.name),
   },
