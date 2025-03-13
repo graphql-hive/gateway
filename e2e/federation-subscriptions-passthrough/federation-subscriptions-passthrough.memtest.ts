@@ -1,5 +1,6 @@
 import { createTenv } from '@internal/e2e';
 import { memtest } from '@internal/perf/memtest';
+import { getAvailablePort } from '@internal/testing';
 import { describe } from 'vitest';
 
 const cwd = __dirname;
@@ -48,8 +49,10 @@ describe('upstream subscriptions via http callbacks', () => {
         }
       `,
     },
-    async () =>
-      gateway({
+    async () => {
+      const availablePort = await getAvailablePort();
+      const publicUrl = `http://0.0.0.0:${availablePort}`;
+      return gateway({
         supergraph: {
           with: 'apollo',
           services: [
@@ -57,6 +60,11 @@ describe('upstream subscriptions via http callbacks', () => {
             await service('reviews'),
           ],
         },
-      }),
+        port: availablePort,
+        env: {
+          PUBLIC_URL: publicUrl,
+        },
+      });
+    },
   );
 });
