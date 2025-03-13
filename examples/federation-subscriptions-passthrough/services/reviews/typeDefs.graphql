@@ -9,4 +9,5 @@ type Review {
 
 type Subscription {
   countdown(from: Int!): Int
+  newReview: Review!
 }

@@ -53,6 +53,13 @@ const schema = buildSubgraphSchema([
               clearInterval(interval);
             }),
         },
+        newProduct: {
+          async *subscribe() {
+            for (const product of products) {
+              yield { newProduct: product };
+            }
+          },
+        },
       },
     },
   },
@@ -75,6 +82,10 @@ const graphqlWsServer = useServer(
       if (hasConnectedWebSocket) {
         console.error('Multiple WebSocket connections attempted');
         process.exit(1);
+      }
+      if (process.env['MEMTEST']) {
+        // no need to authenticate in memtests
+        return true;
       }
       // make sure the authorization header is propagated by the gateway
       if (connectionParams?.['token'] !== TOKEN) {

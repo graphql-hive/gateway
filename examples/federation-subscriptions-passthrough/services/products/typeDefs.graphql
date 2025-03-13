@@ -4,6 +4,7 @@ extend type Query {
 
 type Subscription {
   productPriceChanged: Product!
+  newProduct: Product!
 }
 
 type Product @key(fields: "id") {
