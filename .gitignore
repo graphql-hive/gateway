@@ -17,3 +17,4 @@ hive-gateway
 /e2e/**/*/memtest-memory-usage_*.svg
 /e2e/**/*/*.heapsnapshot
 /e2e/**/*/*.heapprofile
+/e2e/**/*/loadtest.out
