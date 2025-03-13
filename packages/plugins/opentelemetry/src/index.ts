@@ -1,4 +1,5 @@
 import {
+  DiagLogLevel,
   useOpenTelemetry,
   type OpenTelemetryGatewayPluginOptions,
   type OpenTelemetryPlugin,
@@ -9,6 +10,7 @@ export * from './processors';
 export type OpenTelemetryMeshPluginOptions = OpenTelemetryGatewayPluginOptions;
 
 export {
+  DiagLogLevel,
   useOpenTelemetry,
   OpenTelemetryPlugin,
   OpenTelemetryGatewayPluginOptions,

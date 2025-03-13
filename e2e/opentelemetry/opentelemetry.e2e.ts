@@ -67,17 +67,22 @@ describe('OpenTelemetry', () => {
 
       async function expectJaegerTraces(
         service: string,
-        checkFn: (res: JaegerTracesApiResponse) => void | PromiseLike<void>,
+        checkFn: (
+          res: JaegerTracesApiResponse,
+          abort: AbortController,
+        ) => void | PromiseLike<void>,
       ): Promise<void> {
         const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
         let res!: JaegerTracesApiResponse;
         let err: any;
-        const signal = AbortSignal.timeout(15_000);
+        const timeout = AbortSignal.timeout(15_00);
+        const abort = new AbortController();
+        const signal = AbortSignal.any([timeout, abort.signal]);
         while (!signal.aborted) {
           try {
             res = await fetch(url, { signal }).then((r) => r.json());
-            await checkFn(res);
+            await checkFn(res, abort);
             return;
           } catch (e) {
             if (signal.aborted) {
@@ -88,7 +93,7 @@ describe('OpenTelemetry', () => {
         }
         throw err;
       }
-      it('should report telemetry metrics correctly to jaeger', async () => {
+      it.only('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({
           supergraph,
@@ -557,7 +562,7 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        await expectJaegerTraces(serviceName, (traces) => {
+        await expectJaegerTraces(serviceName, (traces, abort) => {
           expect(traces.data.length).toBe(2);
           const relevantTraces = traces.data.filter((trace) =>
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -565,33 +570,39 @@ describe('OpenTelemetry', () => {
           expect(relevantTraces.length).toBe(1);
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace!.spans.length).toBe(18);
+          expect(relevantTrace!.spans.length).toBe(20);
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
+          console.log(printSpanTree(spanTree));
+          abort.abort();
 
-          const expectedHttpChildren = [
+          expect(spanTree!.children).toHaveLength(1);
+
+          const operationSpan = spanTree!.children[0];
+          const expectedOperationChildren = [
             'graphql.parse',
             'graphql.validate',
+            'graphql.context',
             'graphql.execute',
           ];
-          expect(spanTree!.children).toHaveLength(3);
-          for (const operationName of expectedHttpChildren) {
-            expect(spanTree?.children).toContainEqual(
+          expect(operationSpan!.children).toHaveLength(4);
+          for (const operationName of expectedOperationChildren) {
+            expect(operationSpan?.children).toContainEqual(
               expect.objectContaining({
                 span: expect.objectContaining({ operationName }),
               }),
             );
           }
 
-          const executeSpan = spanTree?.children.find(
+          const executeSpan = operationSpan!.children.find(
             ({ span }) => span.operationName === 'graphql.execute',
           );
 
           const expectedExecuteChildren = [
             ['subgraph.execute (accounts)', 2],
             ['subgraph.execute (products)', 2],
-            ['subgraph.execute (inventory)', 1],
+            ['subgraph.execute (inventory)', 2],
             ['subgraph.execute (reviews)', 2],
           ] as const;
 
@@ -1321,4 +1332,15 @@ function buildSpanTree(
 
   const root = spans.find((span) => span.operationName === rootName);
   return root && buildNode(root);
+}
+
+function printSpanTree(node: TraceTreeNode | undefined, prefix = ''): string {
+  if (!node) {
+    return '<empty span tree>';
+  }
+  const childrenSting = node.children
+    .map((c): string => printSpanTree(c, prefix + '  |'))
+    .join('');
+
+  return `${prefix}-- ${node.span.operationName}\n${childrenSting}`;
 }

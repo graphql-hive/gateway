@@ -58,6 +58,10 @@ import {
 } from './spans';
 import { tryContextManagerSetup } from './utils';
 
+export { DiagLogLevel };
+
+const exReqs: ExecutionRequest[] = [];
+
 type BooleanOrPredicate<TInput = never> =
   | boolean
   | ((input: TInput) => boolean);
@@ -137,6 +141,11 @@ export type OpenTelemetryGatewayPluginOptions =
      * See https://opentelemetry.io/docs/languages/js/propagation/
      */
     propagateContext?: boolean;
+    /**
+     * The level of verbosity of OTEL diagnostic logs.
+     * @default Verbose
+     */
+    diagLevel?: DiagLogLevel;
     /**
      * Options to control which spans to create.
      * By default, all spans are enabled.
@@ -303,15 +312,16 @@ export function useOpenTelemetry(
 
   let preparation$: Promise<void>;
   preparation$ = init().then((contextManager) => {
+    const diaLogger = pluginLogger.child('otel-diag');
     diag.setLogger(
       {
-        error: (message, ...args) => pluginLogger.error(message, ...args),
-        warn: (message, ...args) => pluginLogger.warn(message, ...args),
-        info: (message, ...args) => pluginLogger.info(message, ...args),
-        debug: (message, ...args) => pluginLogger.debug(message, ...args),
-        verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+        error: (message, ...args) => diaLogger.error(message, ...args),
+        warn: (message, ...args) => diaLogger.warn(message, ...args),
+        info: (message, ...args) => diaLogger.info(message, ...args),
+        debug: (message, ...args) => diaLogger.debug(message, ...args),
+        verbose: (message, ...args) => diaLogger.debug(message, ...args),
       },
-      DiagLogLevel.VERBOSE,
+      options.diagLevel ?? DiagLogLevel.VERBOSE,
     );
     useContextManager = contextManager;
     tracer = options.tracer || trace.getTracer('gateway');
@@ -527,6 +537,17 @@ export function useOpenTelemetry(
         },
         wrapped,
       ) {
+        pluginLogger.info('subgraph execution span', subgraphName, {
+          isEnabled:
+            !isParentEnabled(parentState) ||
+            parentState.forOperation?.skipExecuteSpan ||
+            !shouldTrace(options.spans?.subgraphExecute, {
+              subgraphName,
+              executionRequest,
+            }),
+          executionRequest,
+        });
+        exReqs.push(executionRequest);
         if (
           !isParentEnabled(parentState) ||
           parentState.forOperation?.skipExecuteSpan ||
@@ -566,6 +587,17 @@ export function useOpenTelemetry(
       },
 
       fetch({ state, executionRequest }, wrapped) {
+        const subgraphCtx = state.forSubgraphExecution.otel?.current;
+        pluginLogger.warn(
+          'Fetch instrumentation',
+          subgraphCtx && trace.getSpan(subgraphCtx)?.name,
+          {
+            executionRequest,
+            forSubgraphExecution: state.forSubgraphExecution,
+            span: subgraphCtx && trace.getSpan(subgraphCtx),
+            knownExecutionRequest: exReqs.includes(executionRequest),
+          },
+        );
         if (
           !isParentEnabled(state) ||
           !shouldTrace(options.spans?.upstreamFetch, executionRequest)
