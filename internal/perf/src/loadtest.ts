@@ -35,6 +35,16 @@ export interface LoadtestOptions extends ProcOptions {
    * @default false
    */
   takeHeapSnapshots?: boolean;
+  /**
+   * Should the loadtest immediatelly error out on the first failed request?
+   *
+   * This is useful and disabled by default because we want to guarantee that the gateway
+   * does not yield under pressure. However, for testing purposes, it's useful to allow
+   * failing requests to debug what's happening.
+   *
+   * @default false
+   */
+  allowFailingRequests?: boolean;
   /** Callback for memory sampling during the loadtest. */
   onMemorySample?(samples: LoadtestMemorySample[]): Promise<void> | void;
   /** Callback when the heapsnapshot has been written on disk. */
@@ -86,6 +96,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     server,
     query,
     takeHeapSnapshots,
+    allowFailingRequests,
     onMemorySample,
     onHeapSnapshot,
     ...procOptions
@@ -195,6 +206,10 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       {
         cwd,
         ...procOptions,
+        env: {
+          ...procOptions.env,
+          ALLOW_FAILING_REQUESTS: allowFailingRequests ? 1 : null,
+        },
         signal: AbortSignal.any([
           ctrl.signal,
           AbortSignal.timeout(

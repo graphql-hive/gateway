@@ -41,7 +41,7 @@ export interface ProcOptions {
    *
    * They will be merged with `process.env` overriding any existing value.
    */
-  env?: Record<string, string | number>;
+  env?: Record<string, string | number | null | undefined>;
   /** Custom replacer of stderr coming from he process. */
   replaceStderr?: (str: string) => string;
 }
@@ -71,7 +71,13 @@ export function spawn(
     // ignore stdin, pipe stdout and stderr
     stdio: ['ignore', 'pipe', 'pipe'],
     env: Object.entries(env).reduce(
-      (acc, [key, val]) => ({ ...acc, [key]: String(val) }),
+      (acc, [key, val]) => {
+        if (val == null) {
+          // omit nullish envionment variables
+          return acc;
+        }
+        return { ...acc, [key]: String(val) };
+      },
       { ...process.env },
     ),
     shell,
