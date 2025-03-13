@@ -22,6 +22,11 @@ memtest(
         }
       }
     `,
+    expectedHeavyFrame: (frame) =>
+      [
+        // the onwrite frame comes from whatwg-node/server and is not a leak
+        'onwrite',
+      ].includes(frame.name),
   },
   async () =>
     gateway({
