@@ -29,7 +29,11 @@ export async function connectInspector(proc: Proc): Promise<Inspector> {
 
   // wait for the debugger to start
   let debuggerUrl = '';
+  let attempts = 0;
   while (!debuggerUrl) {
+    if (attempts++ > 10) {
+      throw new Error('Debugger URL not found within reasonable time');
+    }
     await setTimeout(100);
     for (const line of proc.getStd('err').split('\n')) {
       debuggerUrl = line.split('Debugger listening on ')?.[1] || '';
