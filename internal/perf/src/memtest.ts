@@ -35,7 +35,7 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
-   * @default 60_000
+   * @default 120_000
    */
   duration?: number;
   /**
@@ -47,7 +47,7 @@ export interface MemtestOptions
   /**
    * How many times to run the loadtests?
    *
-   * @default 2
+   * @default 3
    */
   runs?: number;
   /**
@@ -70,9 +70,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     cwd,
     memorySnapshotWindow = 1_000,
     idle = 10_000,
-    duration = 60_000,
+    duration = 120_000,
     calmdown = 30_000,
-    runs = 2,
+    runs = 3,
     onMemorySample,
     onHeapSnapshot,
     expectedHeavyFrame,
