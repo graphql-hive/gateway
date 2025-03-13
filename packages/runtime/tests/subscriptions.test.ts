@@ -168,9 +168,9 @@ describe('Subscriptions', () => {
       errors: [
         {
           extensions: {
-            code: 'SUBSCRIPTION_SCHEMA_RELOAD',
+            code: 'SCHEMA_RELOAD',
           },
-          message: 'subscription has been closed due to a schema reload',
+          message: 'operation has been aborted due to a schema reload',
         },
       ],
     });

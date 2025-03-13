@@ -337,10 +337,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
     if (previousUnifiedGraph != null) {
       this.disposeReason = createGraphQLError(
-        'subscription has been closed due to a schema reload',
+        'operation has been aborted due to a schema reload',
         {
           extensions: {
-            code: 'SUBSCRIPTION_SCHEMA_RELOAD',
+            code: 'SCHEMA_RELOAD',
             http: {
               status: 503,
             },
@@ -352,15 +352,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       );
     }
     return handleMaybePromise(
+      () => disposeAll([previousTransportExecutorStack, previousExecutor]),
       () => {
-        const jobResult = disposeAll([
-          previousTransportExecutorStack,
-          previousExecutor,
-        ]);
         this.disposeReason = undefined;
-        return jobResult;
+        return this.unifiedGraph!;
       },
-      () => this.unifiedGraph!,
+      (err) => {
+        this.opts.transportContext?.logger?.error(
+          'Failed to dispose the existing transports and executors',
+          err,
+        );
+        return this.unifiedGraph!;
+      },
     );
   }
 
