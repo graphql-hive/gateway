@@ -283,8 +283,8 @@ __metadata:
   linkType: hard
 
 "@apollo/rover@npm:^0.28.0":
-  version: 0.28.0
-  resolution: "@apollo/rover@npm:0.28.0"
+  version: 0.28.1
+  resolution: "@apollo/rover@npm:0.28.1"
   dependencies:
     axios: "npm:^1.6.5"
     axios-proxy-builder: "npm:^0.1.1"
@@ -293,7 +293,7 @@ __metadata:
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/05dcef93d74e9259958a7f5f127c16b9386879e047441d63c7889393af1674c43823d859b85c380170445baeffad45f089fbde1adeba4675ca2cc89535a1ba28
+  checksum: 10c0/0501f3efc21163ad0bc6e46261a9cbb52f0e7417a3928b59b0f21ccfd5bdf2b3b69e406bcf8ce2dd492b1f54437a4ddbfd0b52f5e06991d2c35635b2ed1d16e3
   languageName: node
   linkType: hard
 
