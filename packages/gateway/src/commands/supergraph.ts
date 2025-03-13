@@ -160,7 +160,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveRegistryToken,
         hiveUsageTarget,
         hiveUsageAccessToken,
-        apolloGraphRef,
+        apolloGraphRef: apolloGraphRef || schemaPathOrUrl,
         apolloKey,
       });
       if (reporting) {
