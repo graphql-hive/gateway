@@ -6,7 +6,7 @@ import os from 'node:os';
  * be activated for the specific module in code.
  *
  * For example, `isDebug('loadtest')` will only activate when the
- * variable `loadtest` is listed in the `DEBUG` enviorment variable.
+ * variable `loadtest` is listed in the `DEBUG` environment variable.
  */
 export function isDebug(module?: string) {
   if (module) {
