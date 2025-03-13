@@ -174,6 +174,14 @@ export function createGatewayRuntime<
     pubsub: config.pubsub,
   };
 
+  const pubsubDestroyPlugin = configContext.pubsub
+    ? {
+        [DisposableSymbols.asyncDispose]() {
+          return configContext.pubsub!.publish('destroy', {} as any);
+        },
+      }
+    : undefined;
+
   let unifiedGraphPlugin: GatewayPlugin;
 
   const readinessCheckEndpoint = config.readinessCheckEndpoint || '/readiness';
@@ -983,6 +991,7 @@ export function createGatewayRuntime<
     registryPlugin,
     persistedDocumentsPlugin,
     useRetryOnSchemaReload(),
+    pubsubDestroyPlugin,
   ];
 
   if (config.requestId !== false) {
