@@ -3125,6 +3125,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown":
+  version: 0.0.0-use.local
+  resolution: "@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/graphos-polling@workspace:e2e/graphos-polling":
   version: 0.0.0-use.local
   resolution: "@e2e/graphos-polling@workspace:e2e/graphos-polling"
