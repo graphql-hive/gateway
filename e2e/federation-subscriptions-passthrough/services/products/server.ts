@@ -53,6 +53,13 @@ const schema = buildSubgraphSchema([
               clearInterval(interval);
             }),
         },
+        newProduct: {
+          async *subscribe() {
+            for (const product of products) {
+              yield { newProduct: product };
+            }
+          },
+        },
       },
     },
   },

@@ -26,6 +26,13 @@ const schema = buildSubgraphSchema([
           },
           resolve: (count: number) => count,
         },
+        newReview: {
+          async *subscribe() {
+            for (const review of reviews) {
+              yield { newReview: review };
+            }
+          },
+        },
       },
     },
   },
