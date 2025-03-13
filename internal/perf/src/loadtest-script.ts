@@ -14,13 +14,14 @@ export default function () {
 
   const res = http.post(url, { query });
 
+  const body = res.body?.toString() || '';
   if (res.status !== 200) {
     return test.abort(
-      `Status is not 200, got status ${res.status} and body:\n${res.body?.toString()}`,
+      `Status is not 200, got status ${res.status} and body:\n${body}`,
     );
   }
-  if (!res.body?.toString().includes('"data":{')) {
-    return test.abort(`Body does not contain "data":\n${res.body?.toString()}`);
+  if (!body.includes('"data":{')) {
+    return test.abort(`Body does not contain "data":\n${body}`);
   }
 
   // all loadtest request must succeed. or do they? if they dont,
