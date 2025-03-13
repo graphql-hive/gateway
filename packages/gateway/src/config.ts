@@ -219,5 +219,5 @@ export async function getCacheInstanceFromConfig(
   const { default: LocalforageCache } = await import(
     '@graphql-mesh/cache-localforage'
   );
-  return new LocalforageCache();
+  return new LocalforageCache(ctx);
 }
