@@ -10,9 +10,7 @@ import os from 'node:os';
  */
 export function isDebug(module?: string) {
   if (module) {
-    const modules = String(process.env['DEBUG'])
-      .split(',')
-      .map((m) => m.trim());
+    const modules = process.env['DEBUG'] ?? ''.split(',').map((m) => m.trim());
     return modules.includes(module);
   }
   return boolEnv('DEBUG');
