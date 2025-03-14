@@ -2,10 +2,12 @@ import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
-const { gateway } = createTenv(__dirname);
+const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph, query, result } = createExampleSetup(__dirname);
 
-it.each(['SIGINT', 'SIGTERM'] as const)(
+it
+  .skipIf(gatewayRunner.includes('docker'))
+  .each(['SIGINT', 'SIGTERM'] as const)(
   'should gracefully shut down on %s signal',
   async (signal) => {
     const gw = await gateway({
