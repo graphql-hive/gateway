@@ -9,7 +9,6 @@ it.each(['SIGINT', 'SIGTERM'] as const)(
   'should gracefully shut down on %s signal',
   async (signal) => {
     const gw = await gateway({
-      pipeLogs: 'gw.out',
       supergraph: await supergraph(),
     });
 
