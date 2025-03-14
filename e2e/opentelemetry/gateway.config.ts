@@ -4,6 +4,7 @@ import {
   defineConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway';
+import { DiagLogLevel } from '@graphql-mesh/plugin-opentelemetry';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
@@ -28,6 +29,7 @@ const useOnFetchTracer = (): GatewayPlugin => {
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {
+    diagLevel: DiagLogLevel.INFO,
     exporters: [
       process.env['OTLP_EXPORTER_TYPE'] === 'grpc'
         ? createOtlpGrpcExporter(
@@ -36,6 +38,7 @@ export const gatewayConfig = defineConfig({
             },
             // Batching config is set in order to make it easier to test.
             {
+              maxExportBatchSize: 1,
               scheduledDelayMillis: 1,
             },
           )
@@ -45,6 +48,7 @@ export const gatewayConfig = defineConfig({
             },
             // Batching config is set in order to make it easier to test.
             {
+              maxExportBatchSize: 1,
               scheduledDelayMillis: 1,
             },
           ),

@@ -1,5 +1,17 @@
-export * from './processors';
-export {
+import {
+  DiagLogLevel,
   useOpenTelemetry,
-  type OpenTelemetryGatewayPluginOptions as OpenTelemetryMeshPluginOptions,
+  type OpenTelemetryGatewayPluginOptions,
+  type OpenTelemetryPlugin,
 } from './plugin';
+
+export * from './processors';
+
+export type OpenTelemetryMeshPluginOptions = OpenTelemetryGatewayPluginOptions;
+
+export {
+  DiagLogLevel,
+  useOpenTelemetry,
+  OpenTelemetryPlugin,
+  OpenTelemetryGatewayPluginOptions,
+};

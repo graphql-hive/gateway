@@ -253,20 +253,23 @@ export function getOnSubgraphExecute({
       // Caches the lazy executor to prevent race conditions
       subgraphExecutorMap.set(subgraphName, executor);
     }
+
+    const originalExecutor = executor;
+    executor = (executionRequest) => {
+      const subgraphInstrumentation = instrumentation()?.subgraphExecute;
+      return getInstrumented({ executionRequest, subgraphName }).asyncFn(
+        subgraphInstrumentation,
+        originalExecutor,
+      )(executionRequest);
+    };
+
     if (batch) {
       executor = getBatchingExecutor(
         executionRequest.context || subgraphExecutorMap,
         executor,
       );
     }
-    const originalExecutor = executor;
-    executor = (executionRequest) => {
-      const subgraphInstrumentation = instrumentation()?.subgraphExecute;
-      return getInstrumented({ executionRequest }).asyncFn(
-        subgraphInstrumentation,
-        originalExecutor,
-      )(executionRequest);
-    };
+
     return executor(executionRequest);
   };
 }
