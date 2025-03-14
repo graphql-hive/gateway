@@ -16,11 +16,19 @@ env:
 jobs:
   memtest:
     strategy:
+      fail-fast: false
       matrix:
+        test_name:
+          - auto-type-merging
+          - federation-example
+          - federation-mixed
+          - federation-subscriptions-passthrough
+          - opentelemetry
+          - programmatic-batching
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
-    name: ${{matrix.e2e_runner}}
+    name: ${{matrix.e2e_runner}} / ${{matrix.test_name}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,7 +57,11 @@ jobs:
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
-        run: yarn test:mem
-        # TODO: publish heap allocation sampling profile to artifact
+        uses: nick-fields/retry@v3
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
+          command: yarn test:mem ${{matrix.test_name}}
+          # TODO: publish heap allocation sampling profile to artifact
