@@ -5137,7 +5137,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/load@npm:^8.0.1":
+"@graphql-tools/load@npm:^8.0.1, @graphql-tools/load@npm:^8.0.14":
   version: 8.0.19
   resolution: "@graphql-tools/load@npm:8.0.19"
   dependencies:
@@ -5148,20 +5148,6 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/c83dbd3a6cff3784ce3d2e2c4b2381f9af7469d0ff474d175d180fa9b7d14a25e61d1d75134f8049501523ac1e79261e4d07c6d96c0afab1e5023391df522cc3
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/load@npm:^8.0.14":
-  version: 8.0.16
-  resolution: "@graphql-tools/load@npm:8.0.16"
-  dependencies:
-    "@graphql-tools/schema": "npm:^10.0.20"
-    "@graphql-tools/utils": "npm:^10.8.3"
-    p-limit: "npm:3.1.0"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/96d4532fe5210a56726a0fcfcb89a72822c2e53f1f3acbd8de9d0f95019de375a749ab8717258784c50115f4cde7081ef1ffdd0ba1b1e135fdf13a10bdfc1b2a
   languageName: node
   linkType: hard
 
@@ -5201,30 +5187,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/merge@npm:^9.0.21":
-  version: 9.0.21
-  resolution: "@graphql-tools/merge@npm:9.0.21"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.8.3"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/35bbaea2bbc9e86a631019397e3ca1f53705e2fb608c688aed1d162426de826192b74fc7a8f90d95aa91e2d2bef12ded88674c91d5f42a26b6eb9f516c07fbd6
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/merge@npm:^9.0.23":
-  version: 9.0.23
-  resolution: "@graphql-tools/merge@npm:9.0.23"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.8.5"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/5991850d1355fd984e35936c445d4e00c3f57e4a4b9b9187415e41d5f028064a904dbe8e01b0ed438d607a3596e654bc6088ea14a0ab71a8fad405ddae1e3df2
-  languageName: node
-  linkType: hard
-
 "@graphql-tools/mock@npm:^9.0.3":
   version: 9.0.21
   resolution: "@graphql-tools/mock@npm:9.0.21"
@@ -5252,33 +5214,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.22, @graphql-tools/schema@npm:^10.0.5":
-  version: 10.0.22
-  resolution: "@graphql-tools/schema@npm:10.0.22"
-  dependencies:
-    "@graphql-tools/merge": "npm:^9.0.23"
-    "@graphql-tools/utils": "npm:^10.8.5"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/e4329977d7769cdd3866d2f13055f0da4dcc7c53207dccb492146564e4e4b6ef87b952e3ad1dff9410382d52b9ee1450c7b294e92ba799e86b49a9638a238568
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/schema@npm:^10.0.20":
-  version: 10.0.20
-  resolution: "@graphql-tools/schema@npm:10.0.20"
-  dependencies:
-    "@graphql-tools/merge": "npm:^9.0.21"
-    "@graphql-tools/utils": "npm:^10.8.3"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/69911f6fa6601307a6a33a2d949d5bf029026667e0aec105b5cc7be5fde760dbc9c969cf41cfee955100f64f70cc1f527556f2de47e3a2a1d065dc5d11f7c2f9
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/schema@npm:^10.0.23":
+"@graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.22, @graphql-tools/schema@npm:^10.0.23, @graphql-tools/schema@npm:^10.0.5":
   version: 10.0.23
   resolution: "@graphql-tools/schema@npm:10.0.23"
   dependencies:
@@ -5381,21 +5317,6 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/2bfc3b0ef4f00168a4ee6405c482318008ba020cccf6ecd833aff425f1099ec91480158ddef418ca89a11df5aa917ef37410abbb10619c64b84aae342928e778
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/utils@npm:^10.8.3":
-  version: 10.8.4
-  resolution: "@graphql-tools/utils@npm:10.8.4"
-  dependencies:
-    "@graphql-typed-document-node/core": "npm:^3.1.1"
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    cross-inspect: "npm:1.0.1"
-    dset: "npm:^3.1.4"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/c9bd473b79a6029194934965284df0c752cd44d607c65ebcfc20a2cacb9351859e97bab759faac1282db72e31ea6a7a87b0007671064bf3cbc89d907510e503a
   languageName: node
   linkType: hard
 
@@ -6337,13 +6258,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@memlab/api@npm:^1.0.38":
-  version: 1.0.38
-  resolution: "@memlab/api@npm:1.0.38"
+"@memlab/api@npm:^1.0.39":
+  version: 1.0.39
+  resolution: "@memlab/api@npm:1.0.39"
   dependencies:
-    "@memlab/core": "npm:^1.1.39"
-    "@memlab/e2e": "npm:^1.0.39"
-    "@memlab/heap-analysis": "npm:^1.0.36"
+    "@memlab/core": "npm:^1.1.40"
+    "@memlab/e2e": "npm:^1.0.40"
+    "@memlab/heap-analysis": "npm:^1.0.37"
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
     chalk: "npm:^4.0.0"
@@ -6354,18 +6275,18 @@ __metadata:
     string-width: "npm:^4.2.0"
     util.promisify: "npm:^1.1.1"
     xvfb: "npm:^0.4.0"
-  checksum: 10c0/9eb5d4d4ca1c03297618c79c03dbe84026ff5348b291003246d50b6c091dfe65e06aaa1d8c046fb42e91631f0acfb887b1afcc943ffc5cabdf54ab6de4d1e756
+  checksum: 10c0/57f855d2b1e88fd86da3386e903b5e4e66e52ebc7df36ed387cdafb96dc1d11356597e6c8f1141ffdbec6dadeff1744c4950f6c0e7d83df29297679da3aa76e5
   languageName: node
   linkType: hard
 
-"@memlab/cli@npm:^1.0.41":
-  version: 1.0.41
-  resolution: "@memlab/cli@npm:1.0.41"
+"@memlab/cli@npm:^1.0.42":
+  version: 1.0.42
+  resolution: "@memlab/cli@npm:1.0.42"
   dependencies:
-    "@memlab/api": "npm:^1.0.38"
-    "@memlab/core": "npm:^1.1.39"
-    "@memlab/e2e": "npm:^1.0.39"
-    "@memlab/heap-analysis": "npm:^1.0.36"
+    "@memlab/api": "npm:^1.0.39"
+    "@memlab/core": "npm:^1.1.40"
+    "@memlab/e2e": "npm:^1.0.40"
+    "@memlab/heap-analysis": "npm:^1.0.37"
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
     blessed: "npm:^0.1.81"
@@ -6379,13 +6300,13 @@ __metadata:
     xvfb: "npm:^0.4.0"
   bin:
     memlab: bin/memlab.js
-  checksum: 10c0/8be641530db188d76a97d7b62b92b053e4a895909a6fc7173cbabb9ede05f352dc1da6eb82e42ffefc901597722832f3d0e6af218310dcc63632d033034f6c93
+  checksum: 10c0/23abcdf4bfb843f7b485da37dd6c20ba0dd77f375aa165682fe695130d7e90ddf58cb2d2e37978ebc068802d5992458567c7dc4288f046e168102e4ededa41e8
   languageName: node
   linkType: hard
 
-"@memlab/core@npm:^1.1.39":
-  version: 1.1.39
-  resolution: "@memlab/core@npm:1.1.39"
+"@memlab/core@npm:^1.1.39, @memlab/core@npm:^1.1.40":
+  version: 1.1.40
+  resolution: "@memlab/core@npm:1.1.40"
   dependencies:
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
@@ -6397,19 +6318,19 @@ __metadata:
     string-width: "npm:^4.2.0"
     util.promisify: "npm:^1.1.1"
     xvfb: "npm:^0.4.0"
-  checksum: 10c0/2a02a4f137e846e60541eccc735a3f34238df9d93bb35a98aa9d0f0065a8d812c8a1db13d3fca3d9ec2f279cff356fac9c8ca3df903613dfd35004c904bf239d
+  checksum: 10c0/dc95713bfc505aab51f52b25dee01c9b089a5e895c92d02f875fff71bf2849d6dca6b2c4c69d91dc5aa010ab2874b4efdf08d5458f2782d6d33e6f29aa2b8d5c
   languageName: node
   linkType: hard
 
-"@memlab/e2e@npm:^1.0.39":
-  version: 1.0.39
-  resolution: "@memlab/e2e@npm:1.0.39"
+"@memlab/e2e@npm:^1.0.40":
+  version: 1.0.40
+  resolution: "@memlab/e2e@npm:1.0.40"
   dependencies:
     "@babel/generator": "npm:^7.16.0"
     "@babel/parser": "npm:^7.16.4"
     "@babel/template": "npm:^7.16.0"
     "@babel/traverse": "npm:^7.16.3"
-    "@memlab/core": "npm:^1.1.39"
+    "@memlab/core": "npm:^1.1.40"
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
     chalk: "npm:^4.0.0"
@@ -6420,16 +6341,16 @@ __metadata:
     string-width: "npm:^4.2.0"
     util.promisify: "npm:^1.1.1"
     xvfb: "npm:^0.4.0"
-  checksum: 10c0/61b18d5eb36f8964aefe4a1eb685fa1a4bd6cefe28eec9aa93c31562212e6d1d45e2a4141ca25ea7f30f9ef0d6ded1e845c2868c166cac04018ef9bcfe54d612
+  checksum: 10c0/48c0d90276902c5762e17be9d440c4e0f61e18fa59c7e58a2b735a2bc1d4a769a2433037828123eec8f1290431aa04731e7d6c89e55b66160fdb3c5f919da5d8
   languageName: node
   linkType: hard
 
-"@memlab/heap-analysis@npm:^1.0.36":
-  version: 1.0.36
-  resolution: "@memlab/heap-analysis@npm:1.0.36"
+"@memlab/heap-analysis@npm:^1.0.36, @memlab/heap-analysis@npm:^1.0.37":
+  version: 1.0.37
+  resolution: "@memlab/heap-analysis@npm:1.0.37"
   dependencies:
-    "@memlab/core": "npm:^1.1.39"
-    "@memlab/e2e": "npm:^1.0.39"
+    "@memlab/core": "npm:^1.1.40"
+    "@memlab/e2e": "npm:^1.0.40"
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
     chalk: "npm:^4.0.0"
@@ -6440,7 +6361,7 @@ __metadata:
     string-width: "npm:^4.2.0"
     util.promisify: "npm:^1.1.1"
     xvfb: "npm:^0.4.0"
-  checksum: 10c0/cb30e06f60715064ab28b4c68a2220f13d2055c3a0a941ccc4198eb0986aea73c0db3eddfc6b333f97f65029a2746d8f344d5183b89a99150d69c89dbbc04df3
+  checksum: 10c0/16682d8d8966ebb49f5f01d46cbcd28df8b8936cd77b9ead72583d59f7139ff0187909580c9c9593e63eb91c1e7a659eb5d8e15ecd005fba282c20e9091857a0
   languageName: node
   linkType: hard
 
@@ -8813,7 +8734,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12, @types/ws@npm:~8.5.10":
+"@types/ws@npm:^8, @types/ws@npm:^8.0.0, @types/ws@npm:^8.5.12":
+  version: 8.18.0
+  resolution: "@types/ws@npm:8.18.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/a56d2e0d1da7411a1f3548ce02b51a50cbe9e23f025677d03df48f87e4a3c72e1342fbf1d12e487d7eafa8dc670c605152b61bbf9165891ec0e9694b0d3ea8d4
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:~8.5.10":
   version: 8.5.14
   resolution: "@types/ws@npm:8.5.14"
   dependencies:
@@ -11026,11 +10956,11 @@ __metadata:
   linkType: hard
 
 "chart.js@npm:^4.4.7":
-  version: 4.4.7
-  resolution: "chart.js@npm:4.4.7"
+  version: 4.4.8
+  resolution: "chart.js@npm:4.4.8"
   dependencies:
     "@kurkle/color": "npm:^0.3.0"
-  checksum: 10c0/9db499993c561f11184112003956ba96cf00513e025f58846be36e75ebddc6cbab2f93626c3734c305bc801e9362a9ef193b9591e679c59903b2ecb48cfcb317
+  checksum: 10c0/4777e3fef7ccfb664c02b79f90e53fb0e46c01293bc56af5ab81aa8ffef4b1ccc675bef948b7efd071a5dd0ebd59c0e95c42ef606f728da8e3ff1741fc2d1df0
   languageName: node
   linkType: hard
 
@@ -16480,14 +16410,14 @@ __metadata:
   linkType: hard
 
 "memlab@npm:^1.1.56":
-  version: 1.1.56
-  resolution: "memlab@npm:1.1.56"
+  version: 1.1.57
+  resolution: "memlab@npm:1.1.57"
   dependencies:
-    "@memlab/api": "npm:^1.0.38"
-    "@memlab/cli": "npm:^1.0.41"
-    "@memlab/core": "npm:^1.1.39"
-    "@memlab/e2e": "npm:^1.0.39"
-    "@memlab/heap-analysis": "npm:^1.0.36"
+    "@memlab/api": "npm:^1.0.39"
+    "@memlab/cli": "npm:^1.0.42"
+    "@memlab/core": "npm:^1.1.40"
+    "@memlab/e2e": "npm:^1.0.40"
+    "@memlab/heap-analysis": "npm:^1.0.37"
     ansi: "npm:^0.3.1"
     babar: "npm:^0.2.0"
     chalk: "npm:^4.0.0"
@@ -16500,7 +16430,7 @@ __metadata:
     xvfb: "npm:^0.4.0"
   bin:
     memlab: bin/memlab
-  checksum: 10c0/7669af83b641c01c64df65fa79e27303ba40427b18fa3cbe63efa8129c05cfddbdae06486b1ffb6077ba06bd60c2d2c45bb74070715cf5e9b88b39c8b4590616
+  checksum: 10c0/1dce99a5f1b9728f46e82b7cc7cde5014d75e74ae8b6351fa6d1d1a8f380e0114649949258622ef19a961fa0330be3625f59bea52f2e9f1605531f235ce6ac86
   languageName: node
   linkType: hard
 
