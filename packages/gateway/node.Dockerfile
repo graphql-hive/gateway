@@ -35,5 +35,8 @@ RUN chown node . && \
 # npm install should ignore peer deps (which is often "graphql" which is available in root)
 RUN echo "omit=peer" > .npmrc && chown node .npmrc
 
+# we need to set NODE_PATH to include because the root node_modules will dynamically import modules and we want node to search user-installed modules too (when extending the docker image)
+ENV NODE_PATH=/node_modules,/gateway/node_modules
+
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
