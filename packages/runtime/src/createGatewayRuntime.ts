@@ -58,9 +58,7 @@ import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
-import {
-  AsyncDisposableStack,
-} from '@whatwg-node/disposablestack';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   buildASTSchema,
