@@ -27,20 +27,32 @@ export function useWebhooks({
           `webhook:${request.method.toLowerCase()}:${url.pathname}`
         ) {
           logger?.debug(() => `Received webhook request for ${url.pathname}`);
-          serverContext.waitUntil(
-            request.text().then((body) => {
+          function emitEvent() {
+            return request.text().then((body) => {
               logger?.debug(() => [
                 `Emitted webhook request for ${url.pathname}`,
                 body,
               ]);
-              pubsub.publish(
+              pubsub?.publish(
                 eventName,
                 request.headers.get('content-type') === 'application/json'
                   ? JSON.parse(body)
                   : body,
               );
-            }),
-          );
+            });
+          }
+          // Bun handles this differently
+          if (globalThis.Bun) {
+            return emitEvent().finally(() =>
+              endResponse(
+                new fetchAPI.Response(null, {
+                  status: 204,
+                  statusText: 'OK',
+                }),
+              ),
+            );
+          }
+          serverContext.waitUntil(emitEvent());
           return endResponse(
             new fetchAPI.Response(null, {
               status: 204,

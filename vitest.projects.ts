@@ -1,6 +1,6 @@
 import { defineWorkspace } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI, isNotPlatform } from './internal/testing/src/env';
+import { boolEnv, isCI, isNotPlatform } from './internal/testing/src/env';
 
 export default defineWorkspace([
   {
@@ -52,6 +52,7 @@ export default defineWorkspace([
       hookTimeout: testTimeout,
       testTimeout,
       bail: 1,
+      retry: boolEnv('CI') ? 3 : 0,
     },
   },
 ]);

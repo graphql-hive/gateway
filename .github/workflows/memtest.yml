@@ -37,6 +37,17 @@ jobs:
           # TODO: should we test more node versions? we usually always recommend upgrading to
           #       latest when people suspect leaks - latest is always the most stable
           node-version-file: .node-version
+      - if: runner.os == 'Linux'
+        name: Hash Docker Images
+        id: hash-docker-images
+        run: | # get all "image: '" occurrences in the e2e tests and hash them
+          echo "result=$(grep -r -h "image: '" e2e | shasum | base64)" >> "$GITHUB_OUTPUT"
+      - if: runner.os == 'Linux'
+        name: Cache Docker Images
+        uses: ScribeMD/docker-cache@0.5.0
+        continue-on-error: true
+        with:
+          key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
         run: yarn test:mem
         # TODO: publish heap allocation sampling profile to artifact
