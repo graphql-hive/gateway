@@ -29,8 +29,10 @@ import type {
   OnFetchHook,
 } from '@graphql-mesh/types';
 import {
+  dispose,
   getHeadersObj,
   getInContextSDK,
+  isDisposable,
   isUrl,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
@@ -165,6 +167,14 @@ export function createGatewayRuntime<
         onCacheDelete: onCacheDeleteHooks,
       })
     : undefined;
+  let cacheDisposePlugin: GatewayPlugin = {};
+  if (isDisposable(wrappedCache)) {
+    cacheDisposePlugin = {
+      [DisposableSymbols.asyncDispose]() {
+        return dispose(wrappedCache);
+      },
+    };
+  }
 
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
@@ -173,14 +183,6 @@ export function createGatewayRuntime<
     cache: wrappedCache,
     pubsub: config.pubsub,
   };
-
-  const pubsubDestroyPlugin = configContext.pubsub
-    ? {
-        [DisposableSymbols.asyncDispose]() {
-          return configContext.pubsub!.publish('destroy', {} as any);
-        },
-      }
-    : undefined;
 
   let unifiedGraphPlugin: GatewayPlugin;
 
@@ -991,7 +993,7 @@ export function createGatewayRuntime<
     registryPlugin,
     persistedDocumentsPlugin,
     useRetryOnSchemaReload(),
-    pubsubDestroyPlugin,
+    cacheDisposePlugin,
   ];
 
   if (config.requestId !== false) {
