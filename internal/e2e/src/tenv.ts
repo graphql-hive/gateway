@@ -1059,6 +1059,8 @@ export function createTenv(cwd: string): Tenv {
         getStats() {
           throw new Error('Cannot get stats of a compose.');
         },
+        waitForExit: fakePromise,
+        kill: () => initialized.cleanup(),
         getStd(std) {
           switch (std) {
             case 'out':
