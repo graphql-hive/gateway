@@ -28,7 +28,7 @@ import {
 } from '@nestjs/graphql';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { GraphQLSchema, lexicographicSortSchema } from 'graphql';
+import { lexicographicSortSchema } from 'graphql';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -110,33 +110,20 @@ export class HiveGatewayDriver<
                 existingPlugins.push(contextPlugin);
               }
               if (options.transformSchema) {
-                const changedSchemas = new WeakSet<GraphQLSchema>();
                 const schemaTransformPlugin: GatewayPlugin = {
                   onSchemaChange({ schema, replaceSchema }) {
-                    if (changedSchemas.has(schema)) {
-                      return;
-                    }
                     return handleMaybePromise(
                       () => options.transformSchema!(schema),
-                      (newSchema) => {
-                        changedSchemas.add(newSchema);
-                        replaceSchema(newSchema);
-                      },
+                      replaceSchema,
                     );
                   },
                 };
                 existingPlugins.push(schemaTransformPlugin);
               }
               if (options.sortSchema) {
-                const sortedSchemas = new WeakSet<GraphQLSchema>();
                 const schemaSortPlugin: GatewayPlugin = {
                   onSchemaChange({ schema, replaceSchema }) {
-                    if (sortedSchemas.has(schema)) {
-                      return;
-                    }
-                    const newSchema = lexicographicSortSchema(schema);
-                    sortedSchemas.add(newSchema);
-                    replaceSchema(newSchema);
+                    replaceSchema(lexicographicSortSchema(schema));
                   },
                 };
                 existingPlugins.push(schemaSortPlugin);
