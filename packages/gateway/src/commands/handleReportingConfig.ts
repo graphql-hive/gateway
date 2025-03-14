@@ -82,9 +82,9 @@ export function handleReportingConfig(
 
   if (opts.apolloKey) {
     ctx.log.info(`Configuring Apollo GraphOS registry reporting`);
-    if (!opts.apolloGraphRef) {
+    if (!opts.apolloGraphRef?.includes('@')) {
       ctx.log.error(
-        `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref.`,
+        `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref ${opts.apolloGraphRef ? `not ${opts.apolloGraphRef}` : ''}.`,
       );
       process.exit(1);
     }

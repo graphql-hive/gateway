@@ -25,7 +25,6 @@ import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import type {
   KeyValueCache,
-  Logger,
   OnDelegateHook,
   OnFetchHook,
 } from '@graphql-mesh/types';
@@ -98,6 +97,7 @@ import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
+import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
 import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
@@ -191,6 +191,9 @@ export function createGatewayRuntime<
   let contextBuilder: <T>(context: T) => MaybePromise<T>;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
+  let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
+    unifiedGraph = newSchema;
+  };
   const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
     config,
     configContext,
@@ -684,6 +687,10 @@ export function createGatewayRuntime<
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
+      onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
+        unifiedGraph = newUnifiedGraph;
+        replaceSchema(newUnifiedGraph);
+      },
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
@@ -729,66 +736,76 @@ export function createGatewayRuntime<
         return unifiedGraphManager[DisposableSymbols.asyncDispose]();
       },
     };
-    subgraphInformationHTMLRenderer = async () => {
-      const htmlParts: string[] = [];
-      let loaded = false;
-      let loadError!: unknown;
-      let transportEntryMap: Record<string, TransportEntry> = {};
-      try {
-        transportEntryMap = await unifiedGraphManager.getTransportEntryMap();
-        loaded = true;
-      } catch (e) {
-        loaded = false;
-        loadError = e;
-      }
-      if (loaded) {
-        htmlParts.push(`<h3>Supergraph Status: Loaded ✅</h3>`);
-        if (supergraphLoadedPlace) {
-          htmlParts.push(
-            `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
-          );
-          if (reportingTarget) {
+    subgraphInformationHTMLRenderer = () =>
+      handleMaybePromise(
+        () =>
+          handleMaybePromise(
+            () => unifiedGraphManager.getTransportEntryMap(),
+            (transportEntryMap) => ({
+              transportEntryMap,
+              loadError: undefined,
+              loaded: true,
+            }),
+            (loadError) => ({
+              transportEntryMap: {} as Record<
+                string,
+                TransportEntry<Record<string, any>>
+              >,
+              loadError,
+              loaded: false,
+            }),
+          ),
+        ({ transportEntryMap, loaded, loadError }) => {
+          const htmlParts: string[] = [];
+          if (loaded) {
+            htmlParts.push(`<h3>Supergraph Status: Loaded ✅</h3>`);
+            if (supergraphLoadedPlace) {
+              htmlParts.push(
+                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
+              );
+              if (reportingTarget) {
+                htmlParts.push(
+                  `<p><strong>Usage Reporting: </strong> <i>${reportingTarget}</i></p>`,
+                );
+              }
+            }
+            htmlParts.push(`<table>`);
             htmlParts.push(
-              `<p><strong>Usage Reporting: </strong> <i>${reportingTarget}</i></p>`,
+              `<tr><th>Subgraph</th><th>Transport</th><th>Location</th></tr>`,
             );
+            for (const subgraphName in transportEntryMap) {
+              const transportEntry = transportEntryMap[subgraphName]!;
+              htmlParts.push(`<tr>`);
+              htmlParts.push(`<td>${subgraphName}</td>`);
+              htmlParts.push(`<td>${transportEntry.kind}</td>`);
+              htmlParts.push(
+                `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
+              );
+              htmlParts.push(`</tr>`);
+            }
+            htmlParts.push(`</table>`);
+          } else if (loadError) {
+            htmlParts.push(`<h3>Status: Failed ❌</h3>`);
+            if (supergraphLoadedPlace) {
+              htmlParts.push(
+                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
+              );
+            }
+            htmlParts.push(`<h3>Error:</h3>`);
+            htmlParts.push(
+              `<pre>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</pre>`,
+            );
+          } else {
+            htmlParts.push(`<h3>Status: Unknown</h3>`);
+            if (supergraphLoadedPlace) {
+              htmlParts.push(
+                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
+              );
+            }
           }
-        }
-        htmlParts.push(`<table>`);
-        htmlParts.push(
-          `<tr><th>Subgraph</th><th>Transport</th><th>Location</th></tr>`,
-        );
-        for (const subgraphName in transportEntryMap) {
-          const transportEntry = transportEntryMap[subgraphName]!;
-          htmlParts.push(`<tr>`);
-          htmlParts.push(`<td>${subgraphName}</td>`);
-          htmlParts.push(`<td>${transportEntry.kind}</td>`);
-          htmlParts.push(
-            `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
-          );
-          htmlParts.push(`</tr>`);
-        }
-        htmlParts.push(`</table>`);
-      } else if (loadError) {
-        htmlParts.push(`<h3>Status: Failed ❌</h3>`);
-        if (supergraphLoadedPlace) {
-          htmlParts.push(
-            `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
-          );
-        }
-        htmlParts.push(`<h3>Error:</h3>`);
-        htmlParts.push(
-          `<pre>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</pre>`,
-        );
-      } else {
-        htmlParts.push(`<h3>Status: Unknown</h3>`);
-        if (supergraphLoadedPlace) {
-          htmlParts.push(
-            `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
-          );
-        }
-      }
-      return `<section class="supergraph-information">${htmlParts.join('')}</section>`;
-    };
+          return `<section class="supergraph-information">${htmlParts.join('')}</section>`;
+        },
+      );
   }
 
   const readinessCheckPlugin = useReadinessCheck({
@@ -797,7 +814,6 @@ export function createGatewayRuntime<
     check: readinessChecker,
   });
 
-  let replaceSchema: (schema: GraphQLSchema) => void;
   const defaultGatewayPlugin: GatewayPlugin = {
     onFetch({ setFetchFn }) {
       if (fetchAPI?.fetch) {
@@ -931,27 +947,29 @@ export function createGatewayRuntime<
   let landingPageRenderer!: LandingPageRenderer | boolean;
 
   if (config.landingPage == null || config.landingPage === true) {
-    landingPageRenderer = async function gatewayLandingPageRenderer(opts) {
-      const subgraphHtml = await subgraphInformationHTMLRenderer();
-      return new opts.fetchAPI.Response(
-        landingPageHtml
-          .replace(/__GRAPHIQL_LINK__/g, opts.graphqlEndpoint)
-          .replace(/__REQUEST_PATH__/g, opts.url.pathname)
-          .replace(/__SUBGRAPH_HTML__/g, subgraphHtml)
-          .replaceAll(/__PRODUCT_NAME__/g, productName)
-          .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
-          .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
-          .replace(/__PRODUCT_LINK__/, productLink)
-          .replace(/__PRODUCT_LOGO__/g, productLogo),
-        {
-          status: 200,
-          statusText: 'OK',
-          headers: {
-            'Content-Type': 'text/html',
-          },
-        },
+    landingPageRenderer = (opts) =>
+      handleMaybePromise(
+        subgraphInformationHTMLRenderer,
+        (subgraphHtml) =>
+          new opts.fetchAPI.Response(
+            landingPageHtml
+              .replace(/__GRAPHIQL_LINK__/g, opts.graphqlEndpoint)
+              .replace(/__REQUEST_PATH__/g, opts.url.pathname)
+              .replace(/__SUBGRAPH_HTML__/g, subgraphHtml)
+              .replaceAll(/__PRODUCT_NAME__/g, productName)
+              .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
+              .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
+              .replace(/__PRODUCT_LINK__/, productLink)
+              .replace(/__PRODUCT_LOGO__/g, productLogo),
+            {
+              status: 200,
+              statusText: 'OK',
+              headers: {
+                'Content-Type': 'text/html',
+              },
+            },
+          ),
       );
-    };
   } else if (typeof config.landingPage === 'function') {
     landingPageRenderer = config.landingPage;
   } else if (config.landingPage === false) {
@@ -964,6 +982,7 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
+    useRetryOnSchemaReload(),
   ];
 
   if (config.requestId !== false) {
@@ -1065,7 +1084,7 @@ export function createGatewayRuntime<
     return 'Debug mode enabled';
   });
 
-  const yoga = createYoga<any, GatewayContext & TContext>({
+  const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
@@ -1076,13 +1095,7 @@ export function createGatewayRuntime<
       ...(config.plugins?.(configContext) || []),
       ...extraPlugins,
     ],
-    // @ts-expect-error PromiseLike is not compatible with Promise
-    context({ request, params, ...rest }) {
-      // TODO: I dont like this cast, but it's necessary
-      const { req, connectionParams } = rest as {
-        req?: { headers?: Record<string, string> };
-        connectionParams?: Record<string, string>;
-      };
+    context({ request, params, req, connectionParams }) {
       let headers = // Maybe Node-like environment
         req?.headers
           ? getHeadersObj(req.headers)

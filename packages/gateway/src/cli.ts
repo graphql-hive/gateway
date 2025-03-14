@@ -192,7 +192,7 @@ export function defineConfig(config: GatewayCLIConfig) {
 export interface CLIContext {
   /** @default new DefaultLogger() */
   log: Logger;
-  /** @default 'Mesh Serve' */
+  /** @default 'Hive Gateway' */
   productName: string;
   /** @default 'Federated GraphQL Gateway' */
   productDescription: string;

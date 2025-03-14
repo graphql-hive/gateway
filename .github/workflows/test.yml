@@ -79,6 +79,7 @@ jobs:
   e2e:
     runs-on: ${{ matrix.setup.os }}
     strategy:
+      fail-fast: false
       matrix:
         setup:
           # Node

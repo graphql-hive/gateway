@@ -104,6 +104,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
    */
   batch?: boolean;
   instrumentation?: () => Instrumentation | undefined;
+
+  onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
 }
 
 export type Instrumentation = {
@@ -151,14 +153,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     }
   }
 
-  private cleanup() {
-    this.lastLoadedUnifiedGraph = undefined;
-    this.inContextSDK = undefined;
-    this.lastLoadTime = undefined;
-    this.polling$ = undefined;
-    this.executor = undefined;
-  }
-
   private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
     if (
       this.polling$ == null &&
@@ -170,6 +164,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       this.polling$ = handleMaybePromise(
         () => this.getAndSetUnifiedGraph(),
         () => {
+          this.polling$ = undefined;
+        },
+        (err) => {
+          this.opts.transportContext?.logger?.error(
+            'Failed to poll Supergraph',
+            err,
+          );
           this.polling$ = undefined;
         },
       );
@@ -238,22 +239,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       }
       return this.unifiedGraph;
     }
-    if (this.lastLoadedUnifiedGraph != null) {
-      this.disposeReason = createGraphQLError(
-        'operation has been aborted due to a schema reload',
-        {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-            http: {
-              status: 503,
-            },
-          },
-        },
-      );
-      this.opts.transportContext?.logger?.debug(
-        'Supergraph has been changed, updating...',
-      );
-    }
     if (!doNotCache && this.opts.transportContext?.cache) {
       let serializedUnifiedGraph: string | undefined;
       if (typeof loadedUnifiedGraph === 'string') {
@@ -301,101 +286,104 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         }
       }
     }
-    const transportExecutorStackDisposal =
-      this._transportExecutorStack?.disposeAsync?.();
-    if (transportExecutorStackDisposal) {
+    const ensuredSchema = ensureSchema(loadedUnifiedGraph);
+    const transportEntryMap =
+      getTransportEntryMapUsingFusionAndFederationDirectives(
+        ensuredSchema,
+        this.opts.transportEntryAdditions,
+      );
+    const {
+      unifiedGraph: newUnifiedGraph,
+      inContextSDK,
+      getSubgraphSchema,
+      executor,
+    } = this.handleUnifiedGraph({
+      unifiedGraph: ensuredSchema,
+      additionalTypeDefs: this.opts.additionalTypeDefs,
+      additionalResolvers: this.opts.additionalResolvers,
+      onSubgraphExecute(subgraphName, execReq) {
+        return onSubgraphExecute(subgraphName, execReq);
+      },
+      onDelegationPlanHooks: this.onDelegationPlanHooks,
+      onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
+      onDelegateHooks: this.opts.onDelegateHooks,
+      logger: this.opts.transportContext?.logger,
+    });
+    const transportExecutorStack = new AsyncDisposableStack();
+    const onSubgraphExecute = getOnSubgraphExecute({
+      onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
+      transports: this.opts.transports,
+      transportContext: this.opts.transportContext,
+      transportEntryMap,
+      getSubgraphSchema,
+      transportExecutorStack,
+      getDisposeReason: () => this.disposeReason,
+      batch: this.batch,
+      instrumentation: () => this.instrumentation(),
+    });
+
+    const previousTransportExecutorStack = this._transportExecutorStack;
+    const previousExecutor = this.executor;
+    const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
+
+    this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
+    this.unifiedGraph = newUnifiedGraph;
+    this.executor = executor;
+    this._transportExecutorStack = transportExecutorStack;
+    this.inContextSDK = inContextSDK;
+    this.lastLoadTime = Date.now();
+    this._transportEntryMap = transportEntryMap;
+    this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
+
+    if (previousUnifiedGraph != null) {
+      this.disposeReason = createGraphQLError(
+        'operation has been aborted due to a schema reload',
+        {
+          extensions: {
+            code: 'SCHEMA_RELOAD',
+            http: {
+              status: 503,
+            },
+          },
+        },
+      );
       this.opts.transportContext?.logger?.debug(
-        'Disposing the existing transports and executors...',
+        'Supergraph has been changed, updating...',
       );
     }
-    const unifiedgraphExecutorDisposal = isDisposable(this.executor)
-      ? dispose(this.executor)
-      : undefined;
-
-    const disposalJobs = [
-      transportExecutorStackDisposal,
-      unifiedgraphExecutorDisposal,
-    ].filter(isPromise);
     return handleMaybePromise(
-      () =>
-        disposalJobs.length > 0 ? Promise.all(disposalJobs) : disposalJobs,
+      () => disposeAll([previousTransportExecutorStack, previousExecutor]),
       () => {
         this.disposeReason = undefined;
-        this._transportExecutorStack = new AsyncDisposableStack();
-        this._transportExecutorStack.defer(() => {
-          this.cleanup();
-        });
-        this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
-        this.unifiedGraph = ensureSchema(loadedUnifiedGraph);
-        const transportEntryMap =
-          getTransportEntryMapUsingFusionAndFederationDirectives(
-            this.unifiedGraph,
-            this.opts.transportEntryAdditions,
-          );
-        const {
-          unifiedGraph: newUnifiedGraph,
-          inContextSDK,
-          getSubgraphSchema,
-          executor,
-        } = this.handleUnifiedGraph({
-          unifiedGraph: this.unifiedGraph,
-          additionalTypeDefs: this.opts.additionalTypeDefs,
-          additionalResolvers: this.opts.additionalResolvers,
-          onSubgraphExecute(subgraphName, execReq) {
-            return onSubgraphExecute(subgraphName, execReq);
-          },
-          onDelegationPlanHooks: this.onDelegationPlanHooks,
-          onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
-          onDelegateHooks: this.opts.onDelegateHooks,
-          logger: this.opts.transportContext?.logger,
-        });
-        this.unifiedGraph = newUnifiedGraph;
-        this.executor = executor;
-        const onSubgraphExecute = getOnSubgraphExecute({
-          onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
-          transports: this.opts.transports,
-          transportContext: this.opts.transportContext,
-          transportEntryMap,
-          getSubgraphSchema,
-          transportExecutorStack: this._transportExecutorStack,
-          getDisposeReason: () => this.disposeReason,
-          batch: this.batch,
-          instrumentation: () => this.instrumentation(),
-        });
-        this.inContextSDK = inContextSDK;
-        this.lastLoadTime = Date.now();
-        this._transportEntryMap = transportEntryMap;
-        return this.unifiedGraph;
+        return this.unifiedGraph!;
+      },
+      (err) => {
+        this.opts.transportContext?.logger?.error(
+          'Failed to dispose the existing transports and executors',
+          err,
+        );
+        return this.unifiedGraph!;
       },
     );
   }
 
   private getAndSetUnifiedGraph(): MaybePromise<GraphQLSchema> {
-    try {
-      return handleMaybePromise(
-        () => this.opts.getUnifiedGraph(this.opts.transportContext || {}),
-        (loadedUnifiedGraph: string | GraphQLSchema | DocumentNode) =>
-          this.handleLoadedUnifiedGraph(loadedUnifiedGraph),
-        (err) => {
-          this.opts.transportContext?.logger?.error(
-            'Failed to load Supergraph',
-            err,
-          );
-          this.lastLoadTime = Date.now();
-          if (!this.unifiedGraph) {
-            throw err;
-          }
-          return this.unifiedGraph;
-        },
-      );
-    } catch (e) {
-      this.opts.transportContext?.logger?.error('Failed to load Supergraph', e);
-      this.lastLoadTime = Date.now();
-      if (!this.unifiedGraph) {
-        throw e;
-      }
-      return this.unifiedGraph;
-    }
+    return handleMaybePromise(
+      () => this.opts.getUnifiedGraph(this.opts.transportContext || {}),
+      (loadedUnifiedGraph: string | GraphQLSchema | DocumentNode) =>
+        this.handleLoadedUnifiedGraph(loadedUnifiedGraph),
+      (err) => {
+        this.opts.transportContext?.logger?.error(
+          'Failed to load Supergraph',
+          err,
+        );
+        this.lastLoadTime = Date.now();
+        if (!this.unifiedGraph) {
+          throw err;
+        }
+        return this.unifiedGraph;
+      },
+    );
   }
 
   public getUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -447,9 +435,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   [DisposableSymbols.asyncDispose]() {
-    this.unifiedGraph = undefined;
-    this.initialUnifiedGraph$ = undefined;
-    this.cleanup();
     this.disposeReason = createGraphQLError(
       'operation has been aborted because the server is shutting down',
       {
@@ -458,6 +443,34 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
       },
     );
-    return this._transportExecutorStack?.disposeAsync() as PromiseLike<void>;
+    return handleMaybePromise(
+      () => disposeAll([this._transportExecutorStack, this.executor]),
+      () => {
+        this.unifiedGraph = undefined;
+        this.initialUnifiedGraph$ = undefined;
+        this.lastLoadedUnifiedGraph = undefined;
+        this.inContextSDK = undefined;
+        this.lastLoadTime = undefined;
+        this.polling$ = undefined;
+        this.executor = undefined;
+        this._transportEntryMap = undefined;
+        this._transportExecutorStack = undefined;
+        this.executor = undefined;
+      },
+    ) as Promise<void>;
   }
+}
+
+function disposeAll(disposables: unknown[]) {
+  const disposalJobs = disposables
+    .map((disposable) =>
+      isDisposable(disposable) ? dispose(disposable) : undefined,
+    )
+    .filter(isPromise);
+  if (disposalJobs.length === 0) {
+    return undefined;
+  } else if (disposalJobs.length === 1) {
+    return disposalJobs[0];
+  }
+  return Promise.all(disposalJobs).then(() => {});
 }

@@ -2,7 +2,10 @@ import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  handleMaybePromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type {
   FetchAPI,
   GraphQLParams,
@@ -84,17 +87,19 @@ export function useHmacUpstreamSignature(
   let key$: MaybePromise<CryptoKey>;
   let fetchAPI: FetchAPI;
   let textEncoder: TextEncoder;
+  let yogaLogger: YogaLogger;
 
   return {
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
+      yogaLogger = yoga.logger;
     },
     onSubgraphExecute({
       subgraphName,
       subgraph,
       executionRequest,
       setExecutionRequest,
-      logger,
+      logger = yogaLogger,
     }) {
       logger?.debug(`running shouldSign for subgraph ${subgraphName}`);
 
@@ -111,32 +116,32 @@ export function useHmacUpstreamSignature(
               secret: options.secret,
               usages: ['sign'],
             })),
-          async (key) => {
+          (key) => {
             key$ = key;
             const serializedExecutionRequest =
               serializeExecutionRequest(executionRequest);
             const encodedContent = textEncoder.encode(
               serializedExecutionRequest,
             );
-            const signature = await fetchAPI.crypto.subtle.sign(
-              'HMAC',
-              key,
-              encodedContent,
-            );
-            const extensionValue = btoa(
-              String.fromCharCode(...new Uint8Array(signature)),
-            );
-            logger?.debug(
-              `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
-            );
+            return handleMaybePromise(
+              () => fetchAPI.crypto.subtle.sign('HMAC', key, encodedContent),
+              (signature) => {
+                const extensionValue = fetchAPI.btoa(
+                  String.fromCharCode(...new Uint8Array(signature)),
+                );
+                logger?.debug(
+                  `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
+                );
 
-            setExecutionRequest({
-              ...executionRequest,
-              extensions: {
-                ...executionRequest.extensions,
-                [extensionName]: extensionValue,
+                setExecutionRequest({
+                  ...executionRequest,
+                  extensions: {
+                    ...executionRequest.extensions,
+                    [extensionName]: extensionValue,
+                  },
+                });
               },
-            });
+            );
           },
         );
       } else {
@@ -164,7 +169,7 @@ export function useHmacSignatureValidation(
   }
 
   const extensionName = options.extensionName || DEFAULT_EXTENSION_NAME;
-  let key$: Promise<CryptoKey>;
+  let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
   let logger: YogaLogger;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
@@ -187,36 +192,46 @@ export function useHmacSignatureValidation(
         );
       }
 
-      key$ ||= createCryptoKey({
-        textEncoder,
-        crypto: fetchAPI.crypto,
-        secret: options.secret,
-        usages: ['verify'],
-      });
-      return key$.then(async (key) => {
-        const sigBuf = Uint8Array.from(atob(extension), (c) => c.charCodeAt(0));
-        const serializedParams = paramsSerializer(params);
-        logger.debug(
-          `HMAC signature will be calculate based on serialized params: ${serializedParams}`,
-        );
-
-        const result = await fetchAPI.crypto.subtle.verify(
-          'HMAC',
-          key,
-          sigBuf,
-          textEncoder.encode(serializedParams),
-        );
-
-        if (!result) {
-          logger.error(
-            `HMAC signature does not match the body content. short circuit request.`,
+      return handleMaybePromise(
+        () =>
+          (key$ ||= createCryptoKey({
+            textEncoder,
+            crypto: fetchAPI.crypto,
+            secret: options.secret,
+            usages: ['verify'],
+          })),
+        (key) => {
+          key$ = key;
+          const sigBuf = Uint8Array.from(atob(extension), (c) =>
+            c.charCodeAt(0),
+          );
+          const serializedParams = paramsSerializer(params);
+          logger.debug(
+            `HMAC signature will be calculate based on serialized params: ${serializedParams}`,
           );
 
-          throw new Error(
-            `Invalid HMAC signature: extension ${extensionName} does not match the body content.`,
+          return handleMaybePromise(
+            () =>
+              fetchAPI.crypto.subtle.verify(
+                'HMAC',
+                key,
+                sigBuf,
+                textEncoder.encode(serializedParams),
+              ),
+            (result) => {
+              if (!result) {
+                logger.error(
+                  `HMAC signature does not match the body content. short circuit request.`,
+                );
+
+                throw new Error(
+                  `Invalid HMAC signature: extension ${extensionName} does not match the body content.`,
+                );
+              }
+            },
           );
-        }
-      });
+        },
+      );
     },
   };
 }
