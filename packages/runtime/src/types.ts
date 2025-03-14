@@ -497,7 +497,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    */
   readinessCheckEndpoint?: string;
   /**
-   * Working directory to run Mesh Serve with.
+   * Working directory to run Hive Gateway with.
    */
   cwd?: string;
 

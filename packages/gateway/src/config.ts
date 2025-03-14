@@ -41,7 +41,7 @@ export async function loadConfig<
     const configPaths = [
       ...createDefaultConfigPaths(defaultConfigFileName),
       ...createDefaultConfigPaths(opts.configFileName),
-      // For backwards compatibility of Mesh Serve users
+      // For backwards compatibility of Mesh Compose users
       ...createDefaultConfigPaths('mesh.config'),
     ];
     for (const configPath of configPaths) {

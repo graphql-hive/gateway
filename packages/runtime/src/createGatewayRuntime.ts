@@ -25,7 +25,6 @@ import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import type {
   KeyValueCache,
-  Logger,
   OnDelegateHook,
   OnFetchHook,
 } from '@graphql-mesh/types';
@@ -1085,7 +1084,7 @@ export function createGatewayRuntime<
     return 'Debug mode enabled';
   });
 
-  const yoga = createYoga<any, GatewayContext & TContext>({
+  const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
@@ -1096,13 +1095,7 @@ export function createGatewayRuntime<
       ...(config.plugins?.(configContext) || []),
       ...extraPlugins,
     ],
-    // @ts-expect-error PromiseLike is not compatible with Promise
-    context({ request, params, ...rest }) {
-      // TODO: I dont like this cast, but it's necessary
-      const { req, connectionParams } = rest as {
-        req?: { headers?: Record<string, string> };
-        connectionParams?: Record<string, string>;
-      };
+    context({ request, params, req, connectionParams }) {
       let headers = // Maybe Node-like environment
         req?.headers
           ? getHeadersObj(req.headers)

@@ -102,7 +102,7 @@ describe('Schema reload', () => {
       },
     });
     const result = await response.json();
-    expect(result).toMatchObject({
+    expect(result).toEqual({
       data: {
         foo: 'barFromSecond',
       },
