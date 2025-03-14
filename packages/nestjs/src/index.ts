@@ -116,10 +116,12 @@ export class HiveGatewayDriver<
                     if (changedSchemas.has(schema)) {
                       return;
                     }
-                    changedSchemas.add(schema);
                     return handleMaybePromise(
                       () => options.transformSchema?.(schema),
-                      replaceSchema,
+                      (newSchema) => {
+                        changedSchemas.add(schema);
+                        replaceSchema(newSchema);
+                      },
                     );
                   },
                 };
@@ -132,8 +134,9 @@ export class HiveGatewayDriver<
                     if (sortedSchemas.has(schema)) {
                       return;
                     }
-                    sortedSchemas.add(schema);
-                    replaceSchema(lexicographicSortSchema(schema));
+                    const newSchema = lexicographicSortSchema(schema);
+                    sortedSchemas.add(newSchema);
+                    replaceSchema(newSchema);
                   },
                 };
                 existingPlugins.push(schemaSortPlugin);
