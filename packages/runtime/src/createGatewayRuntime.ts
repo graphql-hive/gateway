@@ -167,14 +167,6 @@ export function createGatewayRuntime<
         onCacheDelete: onCacheDeleteHooks,
       })
     : undefined;
-  let cacheDisposePlugin!: GatewayPlugin;
-  if (isDisposable(wrappedCache)) {
-    cacheDisposePlugin = {
-      [DisposableSymbols.asyncDispose]() {
-        return dispose(wrappedCache);
-      },
-    };
-  }
 
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
@@ -993,11 +985,19 @@ export function createGatewayRuntime<
     registryPlugin,
     persistedDocumentsPlugin,
     useRetryOnSchemaReload(),
-    cacheDisposePlugin,
   ];
 
   if (config.requestId !== false) {
     basePlugins.push(useRequestId());
+  }
+
+  if (isDisposable(wrappedCache)) {
+    const cacheDisposePlugin = {
+      onDispose() {
+        return dispose(wrappedCache);
+      },
+    };
+    basePlugins.push(cacheDisposePlugin);
   }
 
   const extraPlugins = [];
