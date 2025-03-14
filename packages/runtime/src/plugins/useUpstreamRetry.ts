@@ -5,7 +5,6 @@ import {
   isAsyncIterable,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 
@@ -173,7 +172,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       }
       return undefined;
     },
-    [DisposableSymbols.dispose]() {
+    onDispose() {
       for (const timeout of timeouts) {
         clearTimeout(timeout);
         timeouts.delete(timeout);

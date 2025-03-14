@@ -29,8 +29,10 @@ import type {
   OnFetchHook,
 } from '@graphql-mesh/types';
 import {
+  dispose,
   getHeadersObj,
   getInContextSDK,
+  isDisposable,
   isUrl,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
@@ -56,10 +58,7 @@ import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
-import {
-  AsyncDisposableStack,
-  DisposableSymbols,
-} from '@whatwg-node/disposablestack';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   buildASTSchema,
@@ -370,7 +369,7 @@ export function createGatewayRuntime<
           setResult([]);
         }
       },
-      [DisposableSymbols.asyncDispose]() {
+      onDispose() {
         pausePolling();
         return transportExecutorStack.disposeAsync();
       },
@@ -623,7 +622,7 @@ export function createGatewayRuntime<
       getSubschemaConfig$ = undefined;
     };
     unifiedGraphPlugin = {
-      [DisposableSymbols.asyncDispose]() {
+      onDispose() {
         return transportExecutorStack.disposeAsync();
       },
     };
@@ -732,8 +731,8 @@ export function createGatewayRuntime<
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
-      [DisposableSymbols.asyncDispose]() {
-        return unifiedGraphManager[DisposableSymbols.asyncDispose]();
+      onDispose() {
+        return dispose(unifiedGraphManager);
       },
     };
     subgraphInformationHTMLRenderer = () =>
@@ -987,6 +986,15 @@ export function createGatewayRuntime<
 
   if (config.requestId !== false) {
     basePlugins.push(useRequestId());
+  }
+
+  if (isDisposable(wrappedCache)) {
+    const cacheDisposePlugin = {
+      onDispose() {
+        return dispose(wrappedCache);
+      },
+    };
+    basePlugins.push(cacheDisposePlugin);
   }
 
   const extraPlugins = [];

@@ -26,9 +26,12 @@ export function useWebhooks({
           eventName ===
           `webhook:${request.method.toLowerCase()}:${url.pathname}`
         ) {
-          logger?.debug(`Received webhook request for ${url.pathname}`);
+          logger?.debug(() => [`Received webhook request for ${url.pathname}`]);
           return request.text().then((body) => {
-            logger?.debug(`Emitted webhook request for ${url.pathname}`, body);
+            logger?.debug(() => [
+              `Emitted webhook request for ${url.pathname}`,
+              body,
+            ]);
             pubsub.publish(
               eventName,
               request.headers.get('content-type') === 'application/json'

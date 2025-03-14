@@ -3125,6 +3125,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown":
+  version: 0.0.0-use.local
+  resolution: "@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/graphos-polling@workspace:e2e/graphos-polling":
   version: 0.0.0-use.local
   resolution: "@e2e/graphos-polling@workspace:e2e/graphos-polling"
@@ -4574,7 +4580,6 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^1.29.0"
     "@opentelemetry/sdk-trace-web": "npm:^1.29.0"
     "@opentelemetry/semantic-conventions": "npm:^1.28.0"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.1"
@@ -4595,7 +4600,6 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.104.1"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@graphql-yoga/plugin-prometheus": "npm:^6.5.3"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.1"
     pkgroll: "npm:2.11.2"
