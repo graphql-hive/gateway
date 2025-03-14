@@ -253,12 +253,7 @@ export function getOnSubgraphExecute({
       // Caches the lazy executor to prevent race conditions
       subgraphExecutorMap.set(subgraphName, executor);
     }
-    if (batch) {
-      executor = getBatchingExecutor(
-        executionRequest.context || subgraphExecutorMap,
-        executor,
-      );
-    }
+
     const originalExecutor = executor;
     executor = (executionRequest) => {
       const subgraphInstrumentation = instrumentation()?.subgraphExecute;
@@ -267,6 +262,14 @@ export function getOnSubgraphExecute({
         originalExecutor,
       )(executionRequest);
     };
+
+    if (batch) {
+      executor = getBatchingExecutor(
+        executionRequest.context || subgraphExecutorMap,
+        executor,
+      );
+    }
+
     return executor(executionRequest);
   };
 }

@@ -168,6 +168,7 @@ export function setGraphQLParseAttributes(input: {
   if (!span) {
     return;
   }
+
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query ?? '<empty>');
   span.setAttribute(
     SEMATTRS_GRAPHQL_OPERATION_NAME,
@@ -176,11 +177,6 @@ export function setGraphQLParseAttributes(input: {
 
   if (input.result instanceof Error) {
     span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
-    span.recordException(input.result);
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: input.result.message,
-    });
   }
 }
 

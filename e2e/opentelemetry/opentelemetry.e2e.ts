@@ -2,6 +2,7 @@ import os from 'os';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { boolEnv } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
+import { SignatureKind } from 'typescript';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
@@ -76,7 +77,7 @@ describe('OpenTelemetry', () => {
 
         let res!: JaegerTracesApiResponse;
         let err: any;
-        const timeout = AbortSignal.timeout(15_00);
+        const timeout = AbortSignal.timeout(15_000);
         const abort = new AbortController();
         const signal = AbortSignal.any([timeout, abort.signal]);
         while (!signal.aborted) {
@@ -86,6 +87,26 @@ describe('OpenTelemetry', () => {
             return;
           } catch (e) {
             if (signal.aborted) {
+              const relevantTrace = res.data.find((trace) =>
+                trace.spans.some(
+                  (span) => span.operationName === 'POST /graphql',
+                ),
+              );
+              console.log(
+                'Span tree:',
+                relevantTrace
+                  ? '\n' +
+                      printSpanTree(
+                        buildSpanTree(relevantTrace.spans, 'POST /graphql'),
+                      )
+                  : 'no trace containing "POST /graphql" span found',
+              );
+              throw timeout.aborted ? err : e;
+            }
+            if (abort.signal.aborted) {
+              throw e;
+            }
+            if (timeout.aborted) {
               throw err;
             }
             err = e;
@@ -93,7 +114,7 @@ describe('OpenTelemetry', () => {
         }
         throw err;
       }
-      it.only('should report telemetry metrics correctly to jaeger', async () => {
+      it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({
           supergraph,
@@ -562,7 +583,7 @@ describe('OpenTelemetry', () => {
             ],
           },
         });
-        await expectJaegerTraces(serviceName, (traces, abort) => {
+        await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTraces = traces.data.filter((trace) =>
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
@@ -570,12 +591,10 @@ describe('OpenTelemetry', () => {
           expect(relevantTraces.length).toBe(1);
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace!.spans.length).toBe(20);
+          expect(relevantTrace!.spans.length).toBe(22);
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
-          console.log(printSpanTree(spanTree));
-          abort.abort();
 
           expect(spanTree!.children).toHaveLength(1);
 
@@ -645,7 +664,7 @@ describe('OpenTelemetry', () => {
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
           );
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace?.spans.length).toBe(2);
+          expect(relevantTrace?.spans.length).toBe(3);
 
           expect(relevantTrace?.spans).toContainEqual(
             expect.objectContaining({ operationName: 'POST /graphql' }),
@@ -706,7 +725,7 @@ describe('OpenTelemetry', () => {
             trace.spans.some((span) => span.operationName === 'POST /graphql'),
           );
           expect(relevantTrace).toBeDefined();
-          expect(relevantTrace?.spans.length).toBe(3);
+          expect(relevantTrace?.spans.length).toBe(4);
 
           expect(relevantTrace?.spans).toContainEqual(
             expect.objectContaining({ operationName: 'POST /graphql' }),
@@ -1295,7 +1314,7 @@ describe('OpenTelemetry', () => {
             expect(span.traceID).toBe(traceId);
           }
 
-          expect(upstreamHttpCalls.length).toBe(7);
+          expect(upstreamHttpCalls.length).toBe(8);
 
           for (const call of upstreamHttpCalls) {
             const transparentHeader = (call.headers || {})['traceparent'];

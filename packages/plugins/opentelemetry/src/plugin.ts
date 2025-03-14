@@ -22,7 +22,6 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
-import '@opentelemetry/api';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -59,8 +58,6 @@ import {
 import { tryContextManagerSetup } from './utils';
 
 export { DiagLogLevel };
-
-const exReqs: ExecutionRequest[] = [];
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -359,6 +356,8 @@ export function useOpenTelemetry(
                 createHttpSpan({ ctx, request, tracer, url }).ctx,
               );
 
+              console.log(trace.getSpan(forRequest.otel.current));
+
               if (useContextManager) {
                 wrapped = context.bind(forRequest.otel.current, wrapped);
               }
@@ -372,6 +371,7 @@ export function useOpenTelemetry(
             .finally(() => {
               const ctx = forRequest.otel?.root;
               ctx && trace.getSpan(ctx)?.end();
+              console.log('SPAN END', ctx && trace.getSpan(ctx));
             }),
         );
       },
@@ -537,17 +537,6 @@ export function useOpenTelemetry(
         },
         wrapped,
       ) {
-        pluginLogger.info('subgraph execution span', subgraphName, {
-          isEnabled:
-            !isParentEnabled(parentState) ||
-            parentState.forOperation?.skipExecuteSpan ||
-            !shouldTrace(options.spans?.subgraphExecute, {
-              subgraphName,
-              executionRequest,
-            }),
-          executionRequest,
-        });
-        exReqs.push(executionRequest);
         if (
           !isParentEnabled(parentState) ||
           parentState.forOperation?.skipExecuteSpan ||
@@ -587,17 +576,6 @@ export function useOpenTelemetry(
       },
 
       fetch({ state, executionRequest }, wrapped) {
-        const subgraphCtx = state.forSubgraphExecution.otel?.current;
-        pluginLogger.warn(
-          'Fetch instrumentation',
-          subgraphCtx && trace.getSpan(subgraphCtx)?.name,
-          {
-            executionRequest,
-            forSubgraphExecution: state.forSubgraphExecution,
-            span: subgraphCtx && trace.getSpan(subgraphCtx),
-            knownExecutionRequest: exReqs.includes(executionRequest),
-          },
-        );
         if (
           !isParentEnabled(state) ||
           !shouldTrace(options.spans?.upstreamFetch, executionRequest)
@@ -674,7 +652,7 @@ export function useOpenTelemetry(
         return;
       }
 
-      return (result) => {
+      return ({ result }) => {
         setGraphQLParseAttributes({
           ctx: getContext(state),
           operationName: gqlCtx.params.operationName,
