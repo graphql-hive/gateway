@@ -510,8 +510,7 @@ export function createTenv(cwd: string): Tenv {
               stack: leftoverStack,
               replaceStderr: (str) => str.replaceAll(__project, ''),
             },
-            'npx',
-            'bun',
+            path.resolve(__project, 'node_modules', '.bin', 'bun'),
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
             ...getFullArgs(),
           );
