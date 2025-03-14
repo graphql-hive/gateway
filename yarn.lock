@@ -5815,7 +5815,7 @@ __metadata:
   dependencies:
     "@memlab/core": "npm:^1.1.39"
     "@memlab/heap-analysis": "npm:^1.0.36"
-    "@types/k6": "npm:^0.54.2"
+    "@types/k6": "npm:^0.57.0"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     canvas: "npm:^3.1.0"
@@ -8524,10 +8524,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/k6@npm:^0.54.2":
-  version: 0.54.2
-  resolution: "@types/k6@npm:0.54.2"
-  checksum: 10c0/8d44dbd11ac53cf426abed3dd3bba0a35b355b3ad18b9d220ec5295259d6a4ee5bb97d0b2c38ff6896b085a1ad151678498df137c66aafae6b760b746bb84be8
+"@types/k6@npm:^0.57.0":
+  version: 0.57.1
+  resolution: "@types/k6@npm:0.57.1"
+  checksum: 10c0/4deea4f2f7c251dcf39b033001809ad174236b15ba9a59302caa69453f82d346f74209d6446b7674da7cc2ccaa5937469c2afb1a84fd1f5d9cebe0532ad21be3
   languageName: node
   linkType: hard
 
