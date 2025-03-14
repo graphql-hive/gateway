@@ -18,6 +18,8 @@ jobs:
       matrix:
         e2e_runner: [node, bun]
         products_size:
+          # The results don't change that much based on the list size,
+          # But later we might want them back
           # - 10
           # - 100
           - 1000
