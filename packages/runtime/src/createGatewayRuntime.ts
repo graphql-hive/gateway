@@ -167,7 +167,7 @@ export function createGatewayRuntime<
         onCacheDelete: onCacheDeleteHooks,
       })
     : undefined;
-  let cacheDisposePlugin: GatewayPlugin = {};
+  let cacheDisposePlugin!: GatewayPlugin;
   if (isDisposable(wrappedCache)) {
     cacheDisposePlugin = {
       [DisposableSymbols.asyncDispose]() {
