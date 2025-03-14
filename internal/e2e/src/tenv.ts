@@ -14,7 +14,7 @@ import {
   fakePromise,
   registerAbortSignalListener,
 } from '@graphql-tools/utils';
-import { Proc, ProcOptions, spawn, waitForPort } from '@internal/proc';
+import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   boolEnv,
   createOpt,
@@ -82,13 +82,10 @@ yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway
   return runner as ServeRunner;
 })();
 
-export interface Server extends Proc {
-  port: number;
-  protocol: string;
-}
-
 export interface GatewayOptions extends ProcOptions {
   port?: number;
+  /** Extra args to pass to the process. */
+  args?: (string | number | boolean)[];
   /**
    * Path to the supergraph file or {@link ComposeOptions} which will be used for composition with GraphQL Mesh.
    * If {@link ComposeOptions} is provided, its {@link ComposeOptions.output output} will always be set to `graphql`;
@@ -140,6 +137,8 @@ export interface Gateway extends Server {
 }
 
 export interface ServiceOptions extends ProcOptions {
+  /** Extra args to pass to the process. */
+  args?: (string | number | boolean)[];
   /**
    * Custom port of this service.
    *
@@ -163,6 +162,8 @@ export interface Service extends Server {
 }
 
 export interface ComposeOptions extends ProcOptions {
+  /** Extra args to pass to the process. */
+  args?: (string | number | boolean)[];
   /**
    * Write the compose output/result to a temporary unique file with the extension.
    * The file will be deleted after the tests complete.
@@ -189,6 +190,8 @@ export interface Compose extends Proc {
 }
 
 export interface ContainerOptions extends ProcOptions {
+  /** Extra args to pass to the process. */
+  args?: (string | number | boolean)[];
   /**
    * Name of the service.
    * Note that the actual Docker container name will have a unique suffix
@@ -336,7 +339,7 @@ export function createTenv(cwd: string): Tenv {
         return fs.writeFile(filePath, content, 'utf-8');
       },
     },
-    spawn(command, { args: extraArgs = [], ...opts } = {}) {
+    spawn(command, opts) {
       const [cmd, ...args] = Array.isArray(command)
         ? command
         : command.split(' ');
@@ -349,7 +352,6 @@ export function createTenv(cwd: string): Tenv {
         },
         String(cmd),
         ...args,
-        ...extraArgs,
       );
     },
     gatewayRunner,
@@ -521,6 +523,9 @@ export function createTenv(cwd: string): Tenv {
               replaceStderr: (str) => str.replaceAll(__project, ''),
             },
             'node',
+            // use next available port when starting inspector (note that this does not start inspect, this still needs to be done manually)
+            // it's not set because in JIT mode because it does not work together (why? no clue)
+            args.includes('--jit') ? null : '--inspect-port=0',
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
@@ -713,7 +718,12 @@ export function createTenv(cwd: string): Tenv {
         gatewayPort && createPortOpt(gatewayPort),
         ...args,
       );
-      const service: Service = { ...proc, name, port, protocol };
+      const service: Service = {
+        ...proc,
+        name,
+        port,
+        protocol,
+      };
       await Promise.race([
         waitForExit
           .then(() => {
@@ -872,6 +882,10 @@ export function createTenv(cwd: string): Tenv {
       await ctr.start();
 
       const container: Container = {
+        kill() {
+          throw new Error('Cannot send signals to containers.');
+        },
+        waitForExit: ctr.wait(),
         containerName,
         name,
         port: hostPort,

@@ -1,0 +1,44 @@
+name: Memtest
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_NO_WARNINGS: 1
+  K6_VERSION: v0.56.0
+
+jobs:
+  memtest:
+    strategy:
+      matrix:
+        e2e_runner:
+          - node
+          # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
+    name: ${{matrix.e2e_runner}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install k6
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cd "$HOME/.local/bin"
+          curl https://github.com/grafana/k6/releases/download/${{ env.K6_VERSION }}/k6-${{ env.K6_VERSION }}-linux-amd64.tar.gz -L | tar xvz --strip-components 1
+          echo "$PWD" >> $GITHUB_PATH
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          # TODO: should we test more node versions? we usually always recommend upgrading to
+          #       latest when people suspect leaks - latest is always the most stable
+          node-version-file: .node-version
+      - name: Test
+        run: yarn test:mem
+        # TODO: publish heap allocation sampling profile to artifact
+        env:
+          E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}

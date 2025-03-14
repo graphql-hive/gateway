@@ -175,6 +175,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
+          # we skip-build on ubuntu arm because the "canvas" package wont build and there are no prebuilts
+          install-command: ${{ matrix.os == 'ubuntu-24.04-arm' && 'yarn install --immutable --mode=skip-build' || '' }}
       - name: Build
         run: yarn build
       - name: Bundle

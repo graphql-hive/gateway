@@ -11,7 +11,6 @@ concurrency:
 
 env:
   NODE_NO_WARNINGS: 1
-  CI: true
 
 jobs:
   bench:
@@ -22,7 +21,7 @@ jobs:
           - 10
           - 100
           - 1000
-    name: Benchmark / ${{matrix.e2e_runner}} / ${{matrix.products_size}} items
+    name: ${{matrix.e2e_runner}} / ${{matrix.products_size}} items
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,4 +35,3 @@ jobs:
         env:
           PRODUCTS_SIZE: ${{matrix.products_size}}
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
-          CI: true
