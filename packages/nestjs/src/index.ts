@@ -92,7 +92,7 @@ export class HiveGatewayDriver<
           ? { disableIf: () => options.introspection || false }
           : undefined,
       ...options,
-      ...(options.context
+      ...(options.context || options.transformSchema || options.sortSchema
         ? {
             plugins: (ctx) => {
               const existingPlugins = options.plugins?.(ctx) || [];
