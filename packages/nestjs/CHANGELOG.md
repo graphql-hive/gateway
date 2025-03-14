@@ -1,5 +1,16 @@
 # @graphql-hive/nestjs
 
+## 1.0.2
+
+### Patch Changes
+
+- [#844](https://github.com/graphql-hive/gateway/pull/844) [`40fe003`](https://github.com/graphql-hive/gateway/commit/40fe003b7f9b6f3871917ab6e395ecd112d967f1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - The plugin system, i.e. envelop, prevents re-transforming already transformed schemas, no need to check again
+
+- [#843](https://github.com/graphql-hive/gateway/pull/843) [`cef3e2f`](https://github.com/graphql-hive/gateway/commit/cef3e2f1e5a7daba5fa0153e1d5ea89a429e7a79) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Apply `transformSchema` and `sortSchema` options without custom `context`
+
+- Updated dependencies [[`b19309b`](https://github.com/graphql-hive/gateway/commit/b19309b450482c203b1c71fb5762320c7e5fa739)]:
+  - @graphql-hive/gateway@1.12.1
+
 ## 1.0.1
 
 ### Patch Changes

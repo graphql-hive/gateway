@@ -1,5 +1,17 @@
 # @graphql-hive/gateway-runtime
 
+## 1.6.1
+
+### Patch Changes
+
+- [#838](https://github.com/graphql-hive/gateway/pull/838) [`b19309b`](https://github.com/graphql-hive/gateway/commit/b19309b450482c203b1c71fb5762320c7e5fa739) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Dispose of cache on teardown
+
+- [#818](https://github.com/graphql-hive/gateway/pull/818) [`115a1f1`](https://github.com/graphql-hive/gateway/commit/115a1f16791e5de39b14a41b375d061113844a1b) Thanks [@ardatan](https://github.com/ardatan)! - When the schema is reloaded during a query execution, retry the request instead of throwing a reload event error
+
+- Updated dependencies [[`115a1f1`](https://github.com/graphql-hive/gateway/commit/115a1f16791e5de39b14a41b375d061113844a1b)]:
+  - @graphql-mesh/fusion-runtime@0.11.4
+  - @graphql-mesh/hmac-upstream-signature@1.2.22
+
 ## 1.6.0
 
 ### Minor Changes

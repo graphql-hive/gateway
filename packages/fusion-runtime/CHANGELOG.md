@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.4
+
+### Patch Changes
+
+- [#818](https://github.com/graphql-hive/gateway/pull/818) [`115a1f1`](https://github.com/graphql-hive/gateway/commit/115a1f16791e5de39b14a41b375d061113844a1b) Thanks [@ardatan](https://github.com/ardatan)! - When the schema is reloaded during a query execution, retry the request instead of throwing a reload event error
+
 ## 0.11.3
 
 ### Patch Changes
