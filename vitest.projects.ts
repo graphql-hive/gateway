@@ -29,6 +29,8 @@ export default defineWorkspace([
       ],
       hookTimeout: testTimeout,
       testTimeout,
+      bail: 1,
+      retry: boolEnv('CI') ? 3 : 0,
     },
   },
   {
