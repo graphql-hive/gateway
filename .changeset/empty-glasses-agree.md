@@ -2,4 +2,4 @@
 '@graphql-hive/nestjs': patch
 ---
 
-Avoid transforming the same schema multiple times
+The plugin system, i.e. envelop, prevents re-transforming already transformed schemas, no need to check again
