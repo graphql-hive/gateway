@@ -60,7 +60,6 @@ import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import {
   AsyncDisposableStack,
-  DisposableSymbols,
 } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
@@ -372,7 +371,7 @@ export function createGatewayRuntime<
           setResult([]);
         }
       },
-      [DisposableSymbols.asyncDispose]() {
+      onDispose() {
         pausePolling();
         return transportExecutorStack.disposeAsync();
       },
@@ -625,7 +624,7 @@ export function createGatewayRuntime<
       getSubschemaConfig$ = undefined;
     };
     unifiedGraphPlugin = {
-      [DisposableSymbols.asyncDispose]() {
+      onDispose() {
         return transportExecutorStack.disposeAsync();
       },
     };
@@ -734,8 +733,8 @@ export function createGatewayRuntime<
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
-      [DisposableSymbols.asyncDispose]() {
-        return unifiedGraphManager[DisposableSymbols.asyncDispose]();
+      onDispose() {
+        return dispose(unifiedGraphManager);
       },
     };
     subgraphInformationHTMLRenderer = () =>

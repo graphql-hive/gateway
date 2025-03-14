@@ -35,7 +35,6 @@ import {
   getHistogramFromConfig,
   usePrometheus as useYogaPrometheus,
 } from '@graphql-yoga/plugin-prometheus';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { type Plugin as YogaPlugin } from 'graphql-yoga';
 import { register as defaultRegistry, Registry } from 'prom-client';
 
@@ -363,7 +362,7 @@ export default function useMeshPrometheus(
     },
     onSubgraphExecute,
     onFetch,
-    [DisposableSymbols.dispose]() {
+    onDispose() {
       return registry.clear();
     },
   };

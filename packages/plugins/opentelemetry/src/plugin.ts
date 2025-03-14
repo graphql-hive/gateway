@@ -25,7 +25,6 @@ import {
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { type OnRequestEventPayload } from '@whatwg-node/server';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
@@ -398,7 +397,7 @@ export function useOpenTelemetry(
 
       requestContextMapping.delete(request);
     },
-    async [DisposableSymbols.asyncDispose]() {
+    async onDispose() {
       if (spanProcessors) {
         await Promise.all(
           spanProcessors.map((processor) => processor.forceFlush()),
