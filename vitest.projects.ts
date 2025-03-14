@@ -52,7 +52,6 @@ export default defineWorkspace([
       include: ['**/*.memtest.ts'],
       hookTimeout: testTimeout,
       testTimeout,
-      retry: boolEnv('CI') ? 3 : 0,
     },
   },
 ]);
