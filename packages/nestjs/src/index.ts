@@ -117,9 +117,9 @@ export class HiveGatewayDriver<
                       return;
                     }
                     return handleMaybePromise(
-                      () => options.transformSchema?.(schema),
+                      () => options.transformSchema!(schema),
                       (newSchema) => {
-                        changedSchemas.add(schema);
+                        changedSchemas.add(newSchema);
                         replaceSchema(newSchema);
                       },
                     );
