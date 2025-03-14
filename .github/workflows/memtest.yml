@@ -61,7 +61,7 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
         with:
-          timeout_minutes: 15
-          max_attempts: 5
+          timeout_minutes: 30
+          max_attempts: 3
           command: yarn test:mem ${{matrix.test_name}}
           # TODO: publish heap allocation sampling profile to artifact
