@@ -17,6 +17,13 @@ jobs:
   memtest:
     strategy:
       matrix:
+        test_name:
+          - auto-type-merging
+          - federation-example
+          - federation-mixed
+          - federation-subscriptions-passthrough
+          - opentelemetry
+          - programmatic-batching
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
@@ -49,7 +56,7 @@ jobs:
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
-        run: yarn test:mem
+        run: yarn test:mem ${{matrix.test_name}}
         # TODO: publish heap allocation sampling profile to artifact
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
