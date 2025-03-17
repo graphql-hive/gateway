@@ -2,7 +2,7 @@
 '@graphql-hive/gateway': minor
 ---
 
-Add built-in security features
+Introduce built-in security features
 
 The following built-in features are introduced:
 
