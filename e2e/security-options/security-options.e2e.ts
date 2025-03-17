@@ -68,7 +68,6 @@ it('should enable all security features when setting true', async () => {
     },
   });
 
-  // max tokens
   await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
@@ -82,7 +81,6 @@ it('should enable all security features when setting true', async () => {
     }
   `);
 
-  // max depth
   await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
@@ -93,7 +91,6 @@ it('should enable all security features when setting true', async () => {
     }
   `);
 
-  // block field suggestions
   await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
@@ -108,6 +105,40 @@ it('should enable all security features when setting true', async () => {
             },
           ],
           "message": "Cannot query field "upcie" on type "Product". [Suggestion hidden]",
+        },
+      ],
+    }
+  `);
+});
+
+it('should disable all security features when setting false', async () => {
+  const gw = await gateway({
+    supergraph: await supergraph(),
+    env: {
+      SECURITY_OPT: 'false',
+    },
+  });
+
+  // too much for inline snapshot
+  await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+
+  // too much for inline snapshot
+  await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+
+  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "extensions": {
+            "code": "GRAPHQL_VALIDATION_FAILED",
+          },
+          "locations": [
+            {
+              "column": 11,
+              "line": 4,
+            },
+          ],
+          "message": "Cannot query field "upcie" on type "Product". Did you mean "upc" or "price"?",
         },
       ],
     }
