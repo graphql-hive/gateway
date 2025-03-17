@@ -110,6 +110,8 @@ function packagejson() {
   return {
     name: 'packagejson',
     generateBundle(_outputs, bundles) {
+      /** @type {string[]} */
+      const e2eModules = [];
       for (const bundle of Object.values(bundles).filter((bundle) => {
         const bundleName = String(bundle.name);
         return (
@@ -118,6 +120,15 @@ function packagejson() {
             bundleName.includes('node_modules\\'))
         );
       })) {
+        if (bundle.name?.startsWith('e2e/')) {
+          const module = bundle.name.match(/node_modules\/(.*)\/index/)?.[1];
+          if (!module) {
+            throw new Error(
+              `Unable to extract module name in the bundle "${bundle.name}"`,
+            );
+          }
+          e2eModules.push(module);
+        }
         const dir = path.dirname(bundle.fileName);
         const bundledFile = path.basename(bundle.fileName).replace(/\\/g, '/');
         /** @type {Record<string, unknown>} */
@@ -137,6 +148,19 @@ function packagejson() {
           source: JSON.stringify(pkg),
         });
       }
+      this.emitFile({
+        type: 'asset',
+        fileName: path.join('e2e', 'package.json'),
+        source: JSON.stringify({
+          dependencies: e2eModules.reduce(
+            (acc, module) => ({
+              ...acc,
+              [module]: '', // empty version means "any" version, it'll keep the local module
+            }),
+            {},
+          ),
+        }),
+      });
     },
   };
 }
