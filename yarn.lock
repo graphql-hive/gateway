@@ -5142,53 +5142,53 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-apollo-inline-trace@npm:^3.13.1":
-  version: 3.13.1
-  resolution: "@graphql-yoga/plugin-apollo-inline-trace@npm:3.13.1"
+"@graphql-yoga/plugin-apollo-inline-trace@npm:^3.13.2":
+  version: 3.13.2
+  resolution: "@graphql-yoga/plugin-apollo-inline-trace@npm:3.13.2"
   dependencies:
     "@apollo/usage-reporting-protobuf": "npm:^4.1.1"
     "@envelop/on-resolve": "npm:^5.1.3"
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.1
-  checksum: 10c0/fdc4ef0d447301773538bb63bbf05a4cc4982fda73d2bea9fe2baf705c5443676fadb8a680bd9e9f0a432b16537983476f660b58ec50fd4898d1d9757a1b4456
+    graphql-yoga: ^5.13.2
+  checksum: 10c0/a69c67158a5bd4061ffb8247b0eaa37deb542711f29553c1f00a54c9a408ca318bc3b310794e49a255744cc70162e9d83c1ccc1f16e374a2b641a05b1e2f5972
   languageName: node
   linkType: hard
 
 "@graphql-yoga/plugin-apollo-usage-report@npm:^0.8.0":
-  version: 0.8.2
-  resolution: "@graphql-yoga/plugin-apollo-usage-report@npm:0.8.2"
+  version: 0.8.3
+  resolution: "@graphql-yoga/plugin-apollo-usage-report@npm:0.8.3"
   dependencies:
     "@apollo/usage-reporting-protobuf": "npm:^4.1.1"
-    "@graphql-yoga/plugin-apollo-inline-trace": "npm:^3.13.1"
+    "@graphql-yoga/plugin-apollo-inline-trace": "npm:^3.13.2"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.1
-  checksum: 10c0/4c1c4d68334e23f1655e2a5ac079b19dd844f31a41ef394be5e1e552f6f74debdc1ed2d0b0fbb6c6af577a366a133cd47b99b90ab1d0acee7b453e4a561eabf6
+    graphql-yoga: ^5.13.2
+  checksum: 10c0/9a774d40250d3bc105bcaeb70782bc23c74a161f2cf6fee57a8fbe44d233e9555363b62dfe44801d3706bdf6848acdac60da2233305279c5324b882c8cb78063
   languageName: node
   linkType: hard
 
 "@graphql-yoga/plugin-csrf-prevention@npm:^3.12.0":
-  version: 3.13.1
-  resolution: "@graphql-yoga/plugin-csrf-prevention@npm:3.13.1"
+  version: 3.13.2
+  resolution: "@graphql-yoga/plugin-csrf-prevention@npm:3.13.2"
   peerDependencies:
-    graphql-yoga: ^5.13.1
-  checksum: 10c0/26b5e92937cee2f0a70538d6d380e1e526c97b8f63768c5a2215605b07818be245d31eb37b0bbebbbfc1b829efa61b978b1f364f3517ea1b779a3fdd48610290
+    graphql-yoga: ^5.13.2
+  checksum: 10c0/f030e3badcf2e695bde70a3c84eb45ebbe127fced9bdbce43d2c65ab2eb0fc9db6dd5af0694311a8b68000bc10987d58fb625767dec2c5c35b78c43114f89866
   languageName: node
   linkType: hard
 
 "@graphql-yoga/plugin-defer-stream@npm:^3.12.0":
-  version: 3.13.1
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.13.1"
+  version: 3.13.2
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:3.13.2"
   dependencies:
     "@graphql-tools/utils": "npm:^10.6.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.1
-  checksum: 10c0/ae0c9e0814a22bcae72205c208d26d493f414fff3452e2dbacc1db562980d53685e7206d23c7b0e6cb36dbb18b7cf447c291948fd83220e37207684ffd045627
+    graphql-yoga: ^5.13.2
+  checksum: 10c0/4a7beb5623eca7828a88b360c55b433cf1935760fd87ed0a57435a3848e921b1573a14d7cfc02b23786f54b7a0c4a92a54e7d9eecadaa5b82cfe7c1946b380d6
   languageName: node
   linkType: hard
 
@@ -5209,27 +5209,27 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-persisted-operations@npm:^3.12.0, @graphql-yoga/plugin-persisted-operations@npm:^3.9.0":
-  version: 3.13.2
-  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.13.2"
+  version: 3.13.3
+  resolution: "@graphql-yoga/plugin-persisted-operations@npm:3.13.3"
   dependencies:
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.1
-  checksum: 10c0/3bf44f2cefe3a7768f0798377c5d0988a16a577df41ca3006a7d5ab572edf46f95bd716cbdba05df94e81c05918befbd531a6d4d63248511d5d436acb3f33385
+    graphql-yoga: ^5.13.2
+  checksum: 10c0/155ae446f63840d86dfe415504297b7acde8a7a83802b8f5edc94aefa9bfd26ac13edb23dd8fc8f4c48e6e42bba52a4c6703ace7e2e8799161b18009763b9935
   languageName: node
   linkType: hard
 
 "@graphql-yoga/plugin-prometheus@npm:^6.5.3":
-  version: 6.8.1
-  resolution: "@graphql-yoga/plugin-prometheus@npm:6.8.1"
+  version: 6.8.2
+  resolution: "@graphql-yoga/plugin-prometheus@npm:6.8.2"
   dependencies:
     "@envelop/prometheus": "npm:^12.1.3"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.1
+    graphql-yoga: ^5.13.2
     prom-client: ^15.0.0
-  checksum: 10c0/9fbdca12336dd0f0d4328a3770ccaffe9cef9863967d7804196370451b3480111b48bb8c79fbdeafc85b6bfd513c1390407cb769c086a7c47ff0750331cecaae
+  checksum: 10c0/42a486457ba3bd649042f0ee654c4be60fe9e20943ad5a4b6e73d879a73feec5c1096f9b96059876a2994aab2ab7d43a0351162f46f4e85a839e2c04d32af313
   languageName: node
   linkType: hard
 
@@ -13839,8 +13839,8 @@ __metadata:
   linkType: hard
 
 "graphql-yoga@npm:^5.12.0, graphql-yoga@npm:^5.12.1, graphql-yoga@npm:^5.12.2, graphql-yoga@npm:^5.13.1":
-  version: 5.13.1
-  resolution: "graphql-yoga@npm:5.13.1"
+  version: 5.13.2
+  resolution: "graphql-yoga@npm:5.13.2"
   dependencies:
     "@envelop/core": "npm:^5.2.3"
     "@envelop/instrumentation": "npm:^1.0.0"
@@ -13857,7 +13857,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-  checksum: 10c0/424a18602caeeb9781f1c97d14373ed96162ab17928d4d9df1ba01a8bf343c1b5eccfcc017782c0fd442de64752a259439506a29bc5d9167e006347e02d20402
+  checksum: 10c0/c89823f36e661fb5b45e0ba038e85f3feece658bf29a947a550454491f442270684160490756656d11380202a25d26818c9fe48b9d09b4e73cc16a838196d376
   languageName: node
   linkType: hard
 
