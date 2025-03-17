@@ -65,28 +65,41 @@ export type Transports =
     }
   | ((kind: string) => MaybePromise<Transport | { default: Transport }>);
 
-function defaultTransportsGetter(kind: string): Promise<Transport> {
+function defaultTransportsGetter(kind: string): MaybePromise<Transport> {
   const moduleName = `@graphql-mesh/transport-${kind}`;
   return handleMaybePromise(
     () => import(moduleName),
     (transport) => {
+      if (!transport) {
+        throw new Error(`${moduleName} module is empty`);
+      }
       if (typeof transport !== 'object') {
         throw new Error(`${moduleName} module does not export an object`);
       }
-      if (transport?.default?.getSubgraphExecutor) {
+      let getSubgraphExecutor: TransportGetSubgraphExecutor | undefined;
+      while (true) {
+        if (transport.getSubgraphExecutor) {
+          getSubgraphExecutor = transport.getSubgraphExecutor;
+          break;
+        }
+        if (!transport.default) {
+          break;
+        }
+        // unwrap default export, node's sometimes weird and puts a default inside a default
+        // TODO: prove with a test
         transport = transport.default;
       }
-      if (!transport?.getSubgraphExecutor) {
+      if (!getSubgraphExecutor) {
         throw new Error(
           `${moduleName} module does not export "getSubgraphExecutor"`,
         );
       }
-      if (typeof transport?.getSubgraphExecutor !== 'function') {
+      if (typeof getSubgraphExecutor !== 'function') {
         throw new Error(
           `${moduleName} module's export "getSubgraphExecutor" is not a function`,
         );
       }
-      return transport;
+      return { getSubgraphExecutor };
     },
   );
 }
