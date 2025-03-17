@@ -123,6 +123,29 @@ export const resolve: module.ResolveHook = async (
     return await nextResolve(specifier, context);
   } catch (e) {
     debug(`Default resolve for "${specifier}" failed, trying alternatives`);
+
+    // NODE_PATHs are not supported in ESM, but we still want to try them because,
+    // in Docker container, a user might've installed a dependency (like a plugin)
+    // that is imported by the root module, from `/node_modules`, and the dependency
+    // is in the project, in `/gateway/node_modules` - we want the root to be able to import it
+    const nodePaths = process.env['NODE_PATH'] || '';
+    if (nodePaths) {
+      debug(`NODE_PATH set to "${nodePaths}", trying its paths`);
+      for (const nodePath of nodePaths.split(',').map((v) => v.trim())) {
+        try {
+          const adjustedSpecifier = fixSpecifier(
+            resolveFilename(path.join(nodePath, specifier)),
+            context,
+          );
+          debug(`Trying "${adjustedSpecifier}"`);
+          return await nextResolve(adjustedSpecifier, context);
+        } catch {
+          // noop
+        }
+      }
+      debug(`Resolving with NODE_PATH paths failed, trying other alternatives`);
+    }
+
     try {
       const specifierWithoutJs = specifier.endsWith('.js')
         ? specifier.slice(0, -3)
