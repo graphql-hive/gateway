@@ -114,8 +114,8 @@ function packagejson() {
         const bundleName = String(bundle.name);
         return (
           !!deps[bundleName] &&
-          (bundleName.startsWith('node_modules/') ||
-            bundleName.startsWith('node_modules\\'))
+          (bundleName.includes('node_modules/') ||
+            bundleName.includes('node_modules\\'))
         );
       })) {
         const dir = path.dirname(bundle.fileName);
