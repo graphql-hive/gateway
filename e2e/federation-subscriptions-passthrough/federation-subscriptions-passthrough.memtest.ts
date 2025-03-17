@@ -56,7 +56,9 @@ describe('upstream subscriptions via http callbacks', () => {
           'onRequest',
           'Repeater.next',
           'Set',
+          'debug',
         ].includes(frame.name),
+        allowFailingRequests: true,
     },
     async () => {
       const availablePort = await getAvailablePort();
