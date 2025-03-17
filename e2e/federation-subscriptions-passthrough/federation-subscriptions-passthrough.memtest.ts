@@ -12,13 +12,12 @@ describe('upstream subscriptions via websockets', () => {
     {
       cwd,
       query: /* GraphQL */ `
-        subscription OnProductPriceChanged {
-          productPriceChanged {
-            # Defined in Products subgraph
+        subscription {
+          newProduct {
+            id
             name
             price
             reviews {
-              # Defined in Reviews subgraph
               score
             }
           }
@@ -43,8 +42,10 @@ describe('upstream subscriptions via http callbacks', () => {
     {
       cwd,
       query: /* GraphQL */ `
-        subscription CountDown {
-          countdown(from: 4)
+        subscription {
+          newReview {
+            score
+          }
         }
       `,
       expectedHeavyFrame: (frame) =>
