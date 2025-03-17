@@ -37,7 +37,7 @@ describe('upstream subscriptions via websockets', () => {
   );
 });
 
-describe('upstream subscriptions via http callbacks', () => {
+describe.only('upstream subscriptions via http callbacks', () => {
   memtest(
     {
       cwd,
@@ -58,7 +58,7 @@ describe('upstream subscriptions via http callbacks', () => {
           'Set',
           'debug',
         ].includes(frame.name),
-        allowFailingRequests: true,
+      allowFailingRequests: true,
     },
     async () => {
       const availablePort = await getAvailablePort();

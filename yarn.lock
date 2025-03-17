@@ -8811,24 +8811,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.7.1, @whatwg-node/node-fetch@npm:^0.7.11":
-  version: 0.7.12
-  resolution: "@whatwg-node/node-fetch@npm:0.7.12"
+"@whatwg-node/node-fetch@npm:0.7.13-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0":
+  version: 0.7.13-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0
+  resolution: "@whatwg-node/node-fetch@npm:0.7.13-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
+    "@whatwg-node/promise-helpers": "npm:1.2.5-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/019772d91880a73b6b4365ebad13e35da73eb4f0da036e4d1b00b274b2c63ea685e6f8c7da52787d06db3d761461cf5f7197317a886d8ffea4b79a7b38b0e1dd
+  checksum: 10c0/d3fbe6d03706b61bc5a453924514909610d3fb9a18092812e4cb8490212591729a7b3d3532dde2f697da16457821fae07b8c039aa07e3168ebbac55a5a8b13e4
   languageName: node
   linkType: hard
 
-"@whatwg-node/promise-helpers@npm:^1.0.0, @whatwg-node/promise-helpers@npm:^1.2.0, @whatwg-node/promise-helpers@npm:^1.2.1, @whatwg-node/promise-helpers@npm:^1.2.3, @whatwg-node/promise-helpers@npm:^1.2.4":
-  version: 1.2.4
-  resolution: "@whatwg-node/promise-helpers@npm:1.2.4"
+"@whatwg-node/promise-helpers@npm:1.2.5-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0":
+  version: 1.2.5-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0
+  resolution: "@whatwg-node/promise-helpers@npm:1.2.5-alpha-20250316014213-6b5d97cf20e1c790fba9f3c11c0cd0f6a3f67fa0"
   dependencies:
     tslib: "npm:^2.6.3"
-  checksum: 10c0/df62da1c9871506736942d704422436c56d77b0b0110203b8fffffd5750930a8d199eb5d93218a61aeb1f09bf6b315276e7257e19bcebb6f639b4d3a52171870
+  checksum: 10c0/806ee040eda7ea347e93043520a4a2c4395829fa89b7c1bf5bef4b11f67c70589903b7444049b67831c7382e9dc61c64d22d4e66c07b64c0d640349a84fa00fe
   languageName: node
   linkType: hard
 

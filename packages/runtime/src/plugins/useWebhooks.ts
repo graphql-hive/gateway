@@ -1,4 +1,5 @@
 import type { Logger, MeshPubSub } from '@graphql-mesh/types';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { Plugin } from 'graphql-yoga';
 
 // TODO: Use Yoga PubSub later
@@ -20,31 +21,37 @@ export function useWebhooks({
     See documentation: https://the-guild.dev/docs/mesh/pubsub`);
   }
   return {
-    onRequest({ request, url, endResponse, fetchAPI }): void | Promise<void> {
-      for (const eventName of pubsub.getEventNames()) {
-        if (
-          eventName ===
-          `webhook:${request.method.toLowerCase()}:${url.pathname}`
-        ) {
-          logger?.debug(() => [`Received webhook request for ${url.pathname}`]);
-          return request.text().then((body) => {
-            logger?.debug(() => [
-              `Emitted webhook request for ${url.pathname}`,
-              body,
-            ]);
-            pubsub.publish(
-              eventName,
-              request.headers.get('content-type') === 'application/json'
-                ? JSON.parse(body)
-                : body,
-            );
-            endResponse(
-              new fetchAPI.Response(null, {
-                status: 204,
-                statusText: 'OK',
-              }),
-            );
-          });
+    onRequest({ request, url, endResponse, fetchAPI }) {
+      const eventNames = pubsub.getEventNames();
+      if ((eventNames as string[]).length === 0) {
+        return;
+      }
+      const requestMethod = request.method.toLowerCase();
+      const pathname = url.pathname;
+      const expectedEventName = `webhook:${requestMethod}:${pathname}`;
+      for (const eventName of eventNames) {
+        if (eventName === expectedEventName) {
+          logger?.debug(() => `Received webhook request for ${pathname}`);
+          return handleMaybePromise(
+            () => request.text(),
+            function handleWebhookPayload(webhookPayload) {
+              logger?.debug(
+                () =>
+                  `Emitted webhook request for ${pathname}: ${webhookPayload}`,
+              );
+              webhookPayload =
+                request.headers.get('content-type') === 'application/json'
+                  ? JSON.parse(webhookPayload)
+                  : webhookPayload;
+              pubsub.publish(eventName, webhookPayload);
+              return endResponse(
+                new fetchAPI.Response(null, {
+                  status: 204,
+                  statusText: 'OK',
+                }),
+              );
+            },
+          );
         }
       }
     },

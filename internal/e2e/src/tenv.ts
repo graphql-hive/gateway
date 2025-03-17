@@ -10,11 +10,7 @@ import {
   RemoteGraphQLDataSource,
   type ServiceEndpointDefinition,
 } from '@apollo/gateway';
-import {
-  createDeferred,
-  fakePromise,
-  registerAbortSignalListener,
-} from '@graphql-tools/utils';
+import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
   boolEnv,
@@ -792,22 +788,22 @@ export function createTenv(cwd: string): Tenv {
           .catch(() => false);
         if (!exists) {
           const imageStream = await docker.pull(image);
-          leftoverStack.defer(() => {
-            if (
-              'destroy' in imageStream &&
-              typeof imageStream.destroy === 'function'
-            ) {
-              imageStream.destroy();
-            }
-          });
-          registerAbortSignalListener(ctrl.signal, () => {
-            if (
-              'destroy' in imageStream &&
-              typeof imageStream.destroy === 'function'
-            ) {
-              imageStream.destroy(ctrl.signal.reason);
-            }
-          });
+
+          if (
+            'destroy' in imageStream &&
+            typeof imageStream.destroy === 'function'
+          ) {
+            leftoverStack.defer(() => {
+              (imageStream.destroy as VoidFunction)();
+            });
+            ctrl.signal.addEventListener(
+              'abort',
+              () => {
+                (imageStream.destroy as VoidFunction)();
+              },
+              { once: true },
+            );
+          }
           await new Promise((resolve, reject) => {
             docker.modem.followProgress(
               imageStream,

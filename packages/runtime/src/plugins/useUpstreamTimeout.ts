@@ -8,7 +8,6 @@ import {
   ExecutionResult,
   isAsyncIterable,
   isPromise,
-  registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { GatewayPlugin } from '../types';
 
@@ -81,8 +80,14 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
                   [Symbol.asyncIterator]() {
                     const iterator = result[Symbol.asyncIterator]();
                     if (iterator.return) {
-                      registerAbortSignalListener(timeoutSignal, () =>
-                        iterator.return?.(timeoutSignal.reason),
+                      timeoutSignal.addEventListener(
+                        'abort',
+                        () => {
+                          iterator.return?.(timeoutSignal.reason);
+                        },
+                        {
+                          once: true,
+                        },
                       );
                     }
                     return iterator;
