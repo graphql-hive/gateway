@@ -38,7 +38,7 @@ switch (securityOpt) {
     break;
   case 'only-block-field-suggestions':
     security = {
-      maxDepth: true,
+      blockFieldSuggestions: true,
     };
     break;
   default:

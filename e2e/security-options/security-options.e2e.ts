@@ -341,3 +341,40 @@ it.concurrent('should have configurable max depth', async ({ expect }) => {
     }
   `);
 });
+
+it.concurrent(
+  'should enable only block field suggestions but disable others',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'only-block-field-suggestions',
+      },
+    });
+
+    // too much for inline snapshot
+    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+
+    // too much for inline snapshot
+    await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+      {
+        "errors": [
+          {
+            "extensions": {
+              "code": "GRAPHQL_VALIDATION_FAILED",
+            },
+            "locations": [
+              {
+                "column": 11,
+                "line": 4,
+              },
+            ],
+            "message": "Cannot query field "upcie" on type "Product". [Suggestion hidden]",
+          },
+        ],
+      }
+    `);
+  },
+);
