@@ -122,61 +122,62 @@ export const resolve: module.ResolveHook = async (
     debug(`Trying default resolve for "${specifier}"`);
     return await nextResolve(specifier, context);
   } catch (e) {
+    debug(`Default resolve for "${specifier}" failed, trying alternatives`);
     try {
-      debug(
-        `Trying default resolve for "${specifier}" failed; trying alternatives`,
-      );
       const specifierWithoutJs = specifier.endsWith('.js')
         ? specifier.slice(0, -3)
         : specifier;
       const specifierWithTs = specifierWithoutJs + '.ts'; // TODO: .mts or .cts
-      debug(`Trying "${specifierWithTs}"`);
-      return await nextResolve(fixSpecifier(specifierWithTs, context), context);
+      const adjustedSpecifier = fixSpecifier(specifierWithTs, context);
+      debug(`Trying "${adjustedSpecifier}"`);
+      return await nextResolve(adjustedSpecifier, context);
     } catch (e) {
       try {
-        return await nextResolve(
-          fixSpecifier(resolveFilename(specifier), context),
+        const adjustedSpecifier = fixSpecifier(
+          resolveFilename(specifier),
           context,
         );
+        debug(`Trying "${adjustedSpecifier}"`);
+        return await nextResolve(adjustedSpecifier, context);
       } catch {
         try {
           const specifierWithoutJs = specifier.endsWith('.js')
             ? specifier.slice(0, -3)
             : specifier;
           // usual filenames tried, could be a .ts file?
-          return await nextResolve(
-            fixSpecifier(
-              resolveFilename(
-                specifierWithoutJs + '.ts', // TODO: .mts or .cts?
-              ),
-              context,
+          const adjustedSpecifier = fixSpecifier(
+            resolveFilename(
+              specifierWithoutJs + '.ts', // TODO: .mts or .cts?
             ),
             context,
           );
+          debug(`Trying "${adjustedSpecifier}"`);
+          return await nextResolve(adjustedSpecifier, context);
         } catch {
           // not a .ts file, try the tsconfig paths if available
           if (pathsMatcher) {
             for (const possiblePath of pathsMatcher(specifier)) {
               try {
-                return await nextResolve(
-                  fixSpecifier(resolveFilename(possiblePath), context),
+                const adjustedSpecifier = fixSpecifier(
+                  resolveFilename(possiblePath),
                   context,
                 );
+                debug(`Trying "${adjustedSpecifier}"`);
+                return await nextResolve(adjustedSpecifier, context);
               } catch {
                 try {
                   const possiblePathWithoutJs = possiblePath.endsWith('.js')
                     ? possiblePath.slice(0, -3)
                     : possiblePath;
                   // the tsconfig path might point to a .ts file, try it too
-                  return await nextResolve(
-                    fixSpecifier(
-                      resolveFilename(
-                        possiblePathWithoutJs + '.ts', // TODO: .mts or .cts?
-                      ),
-                      context,
+                  const adjustedSpecifier = fixSpecifier(
+                    resolveFilename(
+                      possiblePathWithoutJs + '.ts', // TODO: .mts or .cts?
                     ),
                     context,
                   );
+                  debug(`Trying "${adjustedSpecifier}"`);
+                  return await nextResolve(adjustedSpecifier, context);
                 } catch {
                   // noop
                 }
