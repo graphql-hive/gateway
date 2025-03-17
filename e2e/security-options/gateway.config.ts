@@ -9,7 +9,7 @@ switch (securityOpt) {
   case 'false':
     security = false;
     break;
-  case 'all-false':
+  case 'each-false':
     security = {
       maxTokens: false,
       maxDepth: false,
