@@ -1,5 +1,13 @@
 # @graphql-hive/gateway
 
+## 1.12.2
+
+### Patch Changes
+
+- [#853](https://github.com/graphql-hive/gateway/pull/853) [`6a8e0de`](https://github.com/graphql-hive/gateway/commit/6a8e0de49089179458a1c011de05ee30c5167fbb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - This release does not contain any code changes.
+
+  It's an empty release only fixing the partially failing release process.
+
 ## 1.12.1
 
 ### Patch Changes
