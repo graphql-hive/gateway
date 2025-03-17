@@ -86,7 +86,7 @@ function defaultTransportsGetter(kind: string): MaybePromise<Transport> {
           break;
         }
         // unwrap default export, node's sometimes weird and puts a default inside a default
-        // TODO: prove with a test
+        // all e2e tests that import transports prove that the default gets wrapped multiple times
         transport = transport.default;
       }
       if (!getSubgraphExecutor) {
