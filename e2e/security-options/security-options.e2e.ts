@@ -1,11 +1,67 @@
-import { createExampleSetup, createTenv } from '@internal/e2e';
+import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
+function checkMaxTokens(
+  gw: Gateway,
+  // 1 alias contains ~3 tokens: the alias, ":" and the field
+  aliases = 333,
+) {
+  const aLot = Array.from(
+    {
+      // we cut in half because
+      length: aliases,
+    },
+    (_, i) => `n${i}: upc`,
+  ).join(', ');
+  return gw.execute({
+    query: /* GraphQL */ `
+      {
+        topProducts {
+          ${aLot}
+        }
+      }
+    `,
+  });
+}
+
+function checkMaxDepth(gw: Gateway, depth = 7) {
+  let query = '{ topProducts { ';
+
+  for (
+    let i = 0;
+    i < depth - 2; // substract 2 because we already are 2 levels deep
+    i++
+  ) {
+    if (i % 2) {
+      query += 'author { ';
+    } else {
+      query += 'reviews { ';
+    }
+  }
+  query += 'id ';
+
+  query += Array.from({ length: depth }, () => '}').join(' ');
+
+  return gw.execute({ query });
+}
+
+function checkBlockSuggestions(gw: Gateway) {
+  return gw.execute({
+    query: /* GraphQL */ `
+      {
+        topProducts {
+          upcie
+        }
+      }
+    `,
+  });
+}
+
 it('should enable all security features when setting true', async () => {
-  const { execute } = await gateway({
+  const gw = await gateway({
     supergraph: await supergraph(),
     env: {
       SECURITY_OPT: 'true',
@@ -13,19 +69,7 @@ it('should enable all security features when setting true', async () => {
   });
 
   // max tokens
-  const veryLongAlias = Array.from({ length: 500 }, (_, i) => `n${i}`);
-  await expect(
-    execute({
-      query: /* GraphQL */ `
-        {
-          topProducts {
-            ${veryLongAlias}_1: upc
-            ${veryLongAlias}_2: name
-          }
-        }
-      `,
-    }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -39,34 +83,7 @@ it('should enable all security features when setting true', async () => {
   `);
 
   // max depth
-  await expect(
-    execute({
-      query: /* GraphQL */ `
-        {
-          # 1
-          topProducts {
-            # 2
-            reviews {
-              # 3
-              author {
-                # 4
-                reviews {
-                  # 5
-                  author {
-                    # 6
-                    reviews {
-                      # 7
-                      id
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `,
-    }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -77,17 +94,7 @@ it('should enable all security features when setting true', async () => {
   `);
 
   // block field suggestions
-  await expect(
-    execute({
-      query: /* GraphQL */ `
-        {
-          topProducts {
-            upcie
-          }
-        }
-      `,
-    }),
-  ).resolves.toMatchInlineSnapshot(`
+  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -96,7 +103,7 @@ it('should enable all security features when setting true', async () => {
           },
           "locations": [
             {
-              "column": 13,
+              "column": 11,
               "line": 4,
             },
           ],
