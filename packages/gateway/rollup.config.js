@@ -66,11 +66,11 @@ if (
 ) {
   // extras specific to the docker serve runner in e2e tests
   console.warn('⚠️ Bundling extra modules for e2e tests!');
-  deps['node_modules/@internal/testing/index'] =
+  deps['e2e/node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
-  deps['node_modules/@graphql-mesh/transport-rest/index'] =
+  deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
     '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
-  deps['node_modules/@graphql-mesh/plugin-live-query/index'] =
+  deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }
 
