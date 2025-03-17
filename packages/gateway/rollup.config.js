@@ -66,11 +66,11 @@ if (
 ) {
   // extras specific to the docker serve runner in e2e tests
   console.warn('⚠️ Bundling extra modules for e2e tests!');
-  deps['node_modules/@internal/testing/index'] =
+  deps['e2e/node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
-  deps['node_modules/@graphql-mesh/transport-rest/index'] =
+  deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
     '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
-  deps['node_modules/@graphql-mesh/plugin-live-query/index'] =
+  deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }
 
@@ -110,14 +110,25 @@ function packagejson() {
   return {
     name: 'packagejson',
     generateBundle(_outputs, bundles) {
+      /** @type {string[]} */
+      const e2eModules = [];
       for (const bundle of Object.values(bundles).filter((bundle) => {
         const bundleName = String(bundle.name);
         return (
           !!deps[bundleName] &&
-          (bundleName.startsWith('node_modules/') ||
-            bundleName.startsWith('node_modules\\'))
+          (bundleName.includes('node_modules/') ||
+            bundleName.includes('node_modules\\'))
         );
       })) {
+        if (bundle.name?.startsWith('e2e/')) {
+          const module = bundle.name.match(/node_modules\/(.*)\/index/)?.[1];
+          if (!module) {
+            throw new Error(
+              `Unable to extract module name in the bundle "${bundle.name}"`,
+            );
+          }
+          e2eModules.push(module);
+        }
         const dir = path.dirname(bundle.fileName);
         const bundledFile = path.basename(bundle.fileName).replace(/\\/g, '/');
         /** @type {Record<string, unknown>} */
@@ -137,6 +148,19 @@ function packagejson() {
           source: JSON.stringify(pkg),
         });
       }
+      this.emitFile({
+        type: 'asset',
+        fileName: path.join('e2e', 'package.json'),
+        source: JSON.stringify({
+          dependencies: e2eModules.reduce(
+            (acc, module) => ({
+              ...acc,
+              [module]: '', // empty version means "any" version, it'll keep the local module
+            }),
+            {},
+          ),
+        }),
+      });
     },
   };
 }
