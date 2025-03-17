@@ -31,9 +31,9 @@ switch (securityOpt) {
       maxDepth: true,
     };
     break;
-  case 'max-depth-2':
+  case 'max-depth-4':
     security = {
-      maxDepth: 2,
+      maxDepth: 4,
     };
     break;
   case 'only-block-field-suggestions':

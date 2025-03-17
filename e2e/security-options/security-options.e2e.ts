@@ -1,5 +1,5 @@
 import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
-import { expect, it } from 'vitest';
+import { it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
@@ -257,30 +257,28 @@ it.concurrent('should have configurable max tokens', async ({ expect }) => {
   `);
 });
 
-it.concurrent(
-  'should enable only max depth but disable others',
-  async ({ expect }) => {
-    const gw = await gateway({
-      supergraph: await supergraph(),
-      env: {
-        SECURITY_OPT: 'only-max-depth',
-      },
-    });
+it.concurrent('should have configurable max depth', async ({ expect }) => {
+  const gw = await gateway({
+    supergraph: await supergraph(),
+    env: {
+      SECURITY_OPT: 'max-depth-4',
+    },
+  });
 
-    // too much for inline snapshot
-    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+  // too much for inline snapshot
+  await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
 
-    await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkMaxDepth(gw, 5)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
-          "message": "Syntax Error: Query depth limit of 6 exceeded, found 7.",
+          "message": "Syntax Error: Query depth limit of 4 exceeded, found 5.",
         },
       ],
     }
   `);
 
-    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -298,5 +296,4 @@ it.concurrent(
       ],
     }
   `);
-  },
-);
+});
