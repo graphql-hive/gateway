@@ -6,7 +6,6 @@ import {
   DisposableAsyncExecutor,
   ExecutionRequest,
   getOperationASTFromRequest,
-  registerAbortSignalListener,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { DocumentNode } from 'graphql';
@@ -151,9 +150,13 @@ export function buildGraphQLWSExecutor(
       serializeExecutionRequest({ executionRequest, printFn }),
     );
     if (iterableIterator.return && signal) {
-      registerAbortSignalListener(signal, () => {
-        iterableIterator.return?.();
-      });
+      signal.addEventListener(
+        'abort',
+        () => {
+          iterableIterator.return?.();
+        },
+        { once: true },
+      );
     }
     if (operationType === 'subscription') {
       return iterableIterator;

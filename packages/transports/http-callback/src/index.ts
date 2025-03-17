@@ -8,7 +8,6 @@ import { makeDisposable } from '@graphql-mesh/utils';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import {
   createGraphQLError,
-  registerAbortSignalListener,
   type ExecutionRequest,
 } from '@graphql-tools/utils';
 import { Repeater, type Push } from '@repeaterjs/repeater';
@@ -232,9 +231,17 @@ export default {
       executionRequest.context?.waitUntil?.(subFetchCall$);
       return new Repeater<ExecutionResult>((push, stop) => {
         if (signal) {
-          registerAbortSignalListener(signal, () => {
+          if (signal.aborted) {
             stop(signal?.reason);
-          });
+            return;
+          }
+          signal.addEventListener(
+            'abort',
+            () => {
+              stop(signal?.reason);
+            },
+            { once: true },
+          );
         }
         pushFn = push;
         stopSubscription = stop;

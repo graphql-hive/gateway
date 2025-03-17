@@ -1,4 +1,3 @@
-import { registerAbortSignalListener } from '@graphql-tools/utils';
 import { createDisposableServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import {
@@ -20,7 +19,9 @@ describe('Upstream Cancellation', () => {
     const dataSourceFetchSpy = vi.fn((res: Response) => res.text());
     const dataSourceAdapter = createServerAdapter((req) => {
       serveRuntimeFetchCallAbortCtrl.abort();
-      registerAbortSignalListener(req.signal, abortSpyOnDataSource);
+      req.signal.addEventListener('abort', abortSpyOnDataSource, {
+        once: true,
+      });
       return dataSourceDeferred.promise;
     });
     await using dataSourceServer =
