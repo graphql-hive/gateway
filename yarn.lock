@@ -3265,6 +3265,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/security-options@workspace:e2e/security-options":
+  version: 0.0.0-use.local
+  resolution: "@e2e/security-options@workspace:e2e/security-options"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive":
   version: 0.0.0-use.local
   resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
