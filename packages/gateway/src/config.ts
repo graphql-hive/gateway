@@ -154,6 +154,50 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
+  if (config.security) {
+    const maxTokensOpt =
+      config.security === true || config.security.maxTokens === true
+        ? 1000
+        : config.security.maxTokens;
+    if (maxTokensOpt) {
+      const { maxTokensPlugin: useMaxTokens } = await import(
+        '@escape.tech/graphql-armor-max-tokens'
+      );
+      const maxTokensPlugin = useMaxTokens({ n: maxTokensOpt });
+      plugins.push(
+        // @ts-expect-error the armor plugin does not inherit the context
+        maxTokensPlugin,
+      );
+    }
+
+    const maxDepthOpt =
+      config.security === true || config.security.maxDepth === true
+        ? 6
+        : config.security.maxDepth;
+    if (maxDepthOpt) {
+      const { maxDepthPlugin: useMaxDepth } = await import(
+        '@escape.tech/graphql-armor-max-depth'
+      );
+      const maxDepthPlugin = useMaxDepth({ n: maxDepthOpt });
+      plugins.push(
+        // @ts-expect-error the armor plugin does not inherit the context
+        maxDepthPlugin,
+      );
+    }
+
+    const blockFieldSuggestionsOpt =
+      config.security === true || config.security.blockFieldSuggestions;
+    if (blockFieldSuggestionsOpt) {
+      const { blockFieldSuggestionsPlugin: useBlockFieldSuggestions } =
+        await import('@escape.tech/graphql-armor-block-field-suggestions');
+      const blockFieldSuggestionsPlugin = useBlockFieldSuggestions();
+      plugins.push(
+        // @ts-expect-error the armor plugin does not inherit the context
+        blockFieldSuggestionsPlugin,
+      );
+    }
+  }
+
   return plugins;
 }
 

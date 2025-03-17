@@ -159,6 +159,52 @@ export interface GatewayCLIBuiltinPluginConfig {
     | GatewayCLIRedisCacheConfig
     | GatewayCLICloudflareKVCacheConfig
     | GatewayCLIUpstashRedisCacheConfig;
+  /**
+   * Enable, disable or configure the built-in security features of Hive Gateway.
+   *
+   * Passing `true` will enable all {@link SecurityPluginOptions security features} with sane defaults, those features are:
+   *
+   * - `maxTokens`: Limit the number of tokens in a GraphQL document. Defaults to `1000` tokens.
+   * - `maxDepth`: Limit the depth of a GraphQL document. Defaults to `6` levels.
+   * - `blockFieldSuggestions`: Prevent returning field suggestions and leaking your schema to unauthorized actors. Defaults to `true`
+   *
+   * @default false
+   */
+  security?: boolean | SecurityPluginOptions;
+}
+
+export interface SecurityPluginOptions {
+  /**
+   * Limit the number of tokens in a GraphQL document.
+   *
+   * Passing `true` will enable the feature with the default limit of `1000` tokens.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-max-tokens` plugin](https://escape.tech/graphql-armor/docs/plugins/max-tokens/#with-envelopcore-from-the-guild-org) instead.
+   *
+   * @default false
+   */
+  maxTokens?: boolean | number;
+  /**
+   * Limit the depth of a GraphQL document.
+   *
+   * Passing `true` will enable the feature with the default limit of `6` levels.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-max-depth` plugin](https://escape.tech/graphql-armor/docs/plugins/max-depth/#with-envelopcore-from-the-guild-org) instead
+   *
+   * @default false
+   */
+  maxDepth?: boolean | number;
+  /**
+   * Prevent returning field suggestions and leaking your schema to unauthorized actors.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-block-field-suggestions` plugin](https://escape.tech/graphql-armor/docs/plugins/block-field-suggestions/#with-envelopcore-from-the-guild-org) instead
+   *
+   * @default false
+   */
+  blockFieldSuggestions?: boolean;
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {

@@ -3684,6 +3684,60 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@escape.tech/graphql-armor-block-field-suggestions@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@escape.tech/graphql-armor-block-field-suggestions@npm:3.0.0"
+  dependencies:
+    "@envelop/core": "npm:^5.0.0"
+    graphql: "npm:^16.0.0"
+  dependenciesMeta:
+    "@envelop/core":
+      optional: true
+  checksum: 10c0/e660c4fc5dea17e5ee44e9e982889d817de9a5cf3cd917589a1eb4f25390d013668470a3b3db5dff6a2c3d988640079aadc4dc1686490d30f8fcba59b485b367
+  languageName: node
+  linkType: hard
+
+"@escape.tech/graphql-armor-max-depth@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "@escape.tech/graphql-armor-max-depth@npm:2.4.0"
+  dependencies:
+    "@envelop/core": "npm:^5.0.0"
+    "@escape.tech/graphql-armor-types": "npm:0.7.0"
+    graphql: "npm:^16.0.0"
+  dependenciesMeta:
+    "@envelop/core":
+      optional: true
+    "@escape.tech/graphql-armor-types":
+      optional: true
+  checksum: 10c0/18964284c1109077369d04cb3ffb308092298bbcecbf3964ed1592f927b32a5d80557e6f7c602dffc4b6604f6e5a176fc699cde5345d5ad88d25a08840aa25be
+  languageName: node
+  linkType: hard
+
+"@escape.tech/graphql-armor-max-tokens@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "@escape.tech/graphql-armor-max-tokens@npm:2.5.0"
+  dependencies:
+    "@envelop/core": "npm:^5.0.0"
+    "@escape.tech/graphql-armor-types": "npm:0.7.0"
+    graphql: "npm:^16.0.0"
+  dependenciesMeta:
+    "@envelop/core":
+      optional: true
+    "@escape.tech/graphql-armor-types":
+      optional: true
+  checksum: 10c0/1eeadd692e80b1b4ab209a3cdac03197abd977a1f02232edfdb1e52c518b760943c3e699d1e8accb9f99a017fb67adedc9355049db9ac95d973245428a81dda1
+  languageName: node
+  linkType: hard
+
+"@escape.tech/graphql-armor-types@npm:0.7.0":
+  version: 0.7.0
+  resolution: "@escape.tech/graphql-armor-types@npm:0.7.0"
+  dependencies:
+    graphql: "npm:^16.0.0"
+  checksum: 10c0/555d8ce8c364b31dfd8239cfb3cac3b44307950df457ce7f3585aa30d112edb9332ea6aa417f9e9fb245ed913004f8350ba9abbc60847fde75d4c006fd5c68b7
+  languageName: node
+  linkType: hard
+
 "@eslint-community/eslint-utils@npm:^4.1.2, @eslint-community/eslint-utils@npm:^4.2.0, @eslint-community/eslint-utils@npm:^4.4.0, @eslint-community/eslint-utils@npm:^4.4.1":
   version: 4.5.1
   resolution: "@eslint-community/eslint-utils@npm:4.5.1"
@@ -3912,6 +3966,9 @@ __metadata:
   dependencies:
     "@commander-js/extra-typings": "npm:^13.1.0"
     "@envelop/core": "npm:^5.2.3"
+    "@escape.tech/graphql-armor-block-field-suggestions": "npm:^3.0.0"
+    "@escape.tech/graphql-armor-max-depth": "npm:^2.4.0"
+    "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
