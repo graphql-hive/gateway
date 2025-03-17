@@ -257,6 +257,50 @@ it.concurrent('should have configurable max tokens', async ({ expect }) => {
   `);
 });
 
+it.concurrent(
+  'should enable only max depth but disable others',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'only-max-depth',
+      },
+    });
+
+    // too much for inline snapshot
+    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+
+    await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+      {
+        "errors": [
+          {
+            "message": "Syntax Error: Query depth limit of 6 exceeded, found 7.",
+          },
+        ],
+      }
+    `);
+
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "extensions": {
+            "code": "GRAPHQL_VALIDATION_FAILED",
+          },
+          "locations": [
+            {
+              "column": 11,
+              "line": 4,
+            },
+          ],
+          "message": "Cannot query field "upcie" on type "Product". Did you mean "upc" or "price"?",
+        },
+      ],
+    }
+  `);
+  },
+);
+
 it.concurrent('should have configurable max depth', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
