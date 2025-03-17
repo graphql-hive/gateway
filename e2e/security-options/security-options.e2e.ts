@@ -60,15 +60,17 @@ function checkBlockSuggestions(gw: Gateway) {
   });
 }
 
-it('should enable all security features when setting true', async () => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      SECURITY_OPT: 'true',
-    },
-  });
+it.concurrent(
+  'should enable all security features when setting true',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'true',
+      },
+    });
 
-  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -81,7 +83,7 @@ it('should enable all security features when setting true', async () => {
     }
   `);
 
-  await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -91,7 +93,7 @@ it('should enable all security features when setting true', async () => {
     }
   `);
 
-  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -109,23 +111,26 @@ it('should enable all security features when setting true', async () => {
       ],
     }
   `);
-});
+  },
+);
 
-it('should disable all security features when setting false', async () => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      SECURITY_OPT: 'false',
-    },
-  });
+it.concurrent(
+  'should disable all security features when setting false',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'false',
+      },
+    });
 
-  // too much for inline snapshot
-  await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+    // too much for inline snapshot
+    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
 
-  // too much for inline snapshot
-  await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+    // too much for inline snapshot
+    await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
 
-  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -143,23 +148,26 @@ it('should disable all security features when setting false', async () => {
       ],
     }
   `);
-});
+  },
+);
 
-it('should disable each security feature when setting them to false', async () => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      SECURITY_OPT: 'each-false',
-    },
-  });
+it.concurrent(
+  'should disable each security feature when setting them to false',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'each-false',
+      },
+    });
 
-  // too much for inline snapshot
-  await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+    // too much for inline snapshot
+    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
 
-  // too much for inline snapshot
-  await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+    // too much for inline snapshot
+    await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
 
-  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -177,17 +185,20 @@ it('should disable each security feature when setting them to false', async () =
       ],
     }
   `);
-});
+  },
+);
 
-it('should enable only max tokens but disable others', async () => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      SECURITY_OPT: 'only-max-tokens',
-    },
-  });
+it.concurrent(
+  'should enable only max tokens but disable others',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'only-max-tokens',
+      },
+    });
 
-  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -200,10 +211,10 @@ it('should enable only max tokens but disable others', async () => {
     }
   `);
 
-  // too much for inline snapshot
-  await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+    // too much for inline snapshot
+    await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
 
-  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -221,9 +232,10 @@ it('should enable only max tokens but disable others', async () => {
       ],
     }
   `);
-});
+  },
+);
 
-it('should have configurable max tokens', async () => {
+it.concurrent('should have configurable max tokens', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
     env: {
@@ -244,3 +256,47 @@ it('should have configurable max tokens', async () => {
     }
   `);
 });
+
+it.concurrent(
+  'should enable only max depth but disable others',
+  async ({ expect }) => {
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        SECURITY_OPT: 'only-max-depth',
+      },
+    });
+
+    // too much for inline snapshot
+    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+
+    await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "message": "Syntax Error: Query depth limit of 6 exceeded, found 7.",
+        },
+      ],
+    }
+  `);
+
+    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "extensions": {
+            "code": "GRAPHQL_VALIDATION_FAILED",
+          },
+          "locations": [
+            {
+              "column": 11,
+              "line": 4,
+            },
+          ],
+          "message": "Cannot query field "upcie" on type "Product". Did you mean "upc" or "price"?",
+        },
+      ],
+    }
+  `);
+  },
+);
