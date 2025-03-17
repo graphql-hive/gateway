@@ -21,7 +21,7 @@ jobs:
     with:
       node-version-file: .node-version
     secrets:
-      githubToken: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
   snapshot:
     if: github.event_name == 'pull_request'
     name: Snapshot
@@ -38,7 +38,7 @@ jobs:
       npmTag: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && 'rc' || 'alpha' }}
       restoreDeletedChangesets: ${{ github.event.pull_request.title == 'Upcoming Release Changes' && true || false }}
     secrets:
-      githubToken: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   stable:
     if: github.ref == 'refs/heads/main'
@@ -54,7 +54,7 @@ jobs:
       releaseScript: changeset publish
       versionScript: changeset version
     secrets:
-      githubToken: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+      githubToken: ${{ secrets.BOT_GITHUB_TOKEN }}
       npmToken: ${{ secrets.NPM_TOKEN }}
   ghcr:
     runs-on: ubuntu-latest
@@ -128,7 +128,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
-          GITHUB_TOKEN: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           header: snapshot-release-${{ matrix.runtime == 'Bun' && 'bun-' || '' }}docker-image
           message: |
             ### 🚀 Snapshot Release (${{matrix.runtime}} Docker Image)
@@ -201,7 +201,7 @@ jobs:
         name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+          repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
           tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
           release_name: hive-gateway@${{ steps.ver-gateway.outputs.result }}
           asset_name: ${{ steps.compressed-binary.outputs.name }}
@@ -220,7 +220,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
-          GITHUB_TOKEN: ${{ secrets.BOT_HIVE_ORG_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           header: snapshot-release-binary-${{ runner.os }}-${{ runner.arch }}
           message: |
             ### 🚀 Snapshot Release (Binary for `${{ runner.os }}-${{ runner.arch }}`)
@@ -241,4 +241,4 @@ jobs:
     # with:
     #   publishedPackages: ${{needs.stable.outputs.publishedPackages || needs.snapshot.outputs.publishedPackages}}
     secrets:
-      token: ${{secrets.BOT_HIVE_ORG_TOKEN}}
+      token: ${{secrets.BOT_GITHUB_TOKEN}}
