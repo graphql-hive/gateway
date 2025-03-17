@@ -37,7 +37,7 @@ describe('upstream subscriptions via websockets', () => {
   );
 });
 
-describe.only('upstream subscriptions via http callbacks', () => {
+describe('upstream subscriptions via http callbacks', () => {
   memtest(
     {
       cwd,
