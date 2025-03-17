@@ -133,11 +133,11 @@ export const resolve: module.ResolveHook = async (
       debug(`NODE_PATH set to "${nodePaths}", trying its paths`);
       for (const nodePath of nodePaths.split(',').map((v) => v.trim())) {
         try {
+          debug(`Trying "${specifier}" under "${nodePath}"`);
           const adjustedSpecifier = fixSpecifier(
             resolveFilename(path.join(nodePath, specifier)),
             context,
           );
-          debug(`Trying "${adjustedSpecifier}"`);
           return await nextResolve(adjustedSpecifier, context);
         } catch {
           // noop
@@ -156,11 +156,11 @@ export const resolve: module.ResolveHook = async (
       return await nextResolve(adjustedSpecifier, context);
     } catch (e) {
       try {
+        debug(`Trying fixed "${specifier}"`);
         const adjustedSpecifier = fixSpecifier(
           resolveFilename(specifier),
           context,
         );
-        debug(`Trying "${adjustedSpecifier}"`);
         return await nextResolve(adjustedSpecifier, context);
       } catch {
         try {
@@ -168,30 +168,31 @@ export const resolve: module.ResolveHook = async (
             ? specifier.slice(0, -3)
             : specifier;
           // usual filenames tried, could be a .ts file?
+          debug(`Trying "${specifierWithoutJs + '.ts'}"`);
           const adjustedSpecifier = fixSpecifier(
             resolveFilename(
               specifierWithoutJs + '.ts', // TODO: .mts or .cts?
             ),
             context,
           );
-          debug(`Trying "${adjustedSpecifier}"`);
           return await nextResolve(adjustedSpecifier, context);
         } catch {
           // not a .ts file, try the tsconfig paths if available
           if (pathsMatcher) {
             for (const possiblePath of pathsMatcher(specifier)) {
               try {
+                debug(`Trying "${possiblePath}"`);
                 const adjustedSpecifier = fixSpecifier(
                   resolveFilename(possiblePath),
                   context,
                 );
-                debug(`Trying "${adjustedSpecifier}"`);
                 return await nextResolve(adjustedSpecifier, context);
               } catch {
                 try {
                   const possiblePathWithoutJs = possiblePath.endsWith('.js')
                     ? possiblePath.slice(0, -3)
                     : possiblePath;
+                  debug(`Trying "${possiblePathWithoutJs + '.ts'}"`);
                   // the tsconfig path might point to a .ts file, try it too
                   const adjustedSpecifier = fixSpecifier(
                     resolveFilename(
@@ -199,7 +200,6 @@ export const resolve: module.ResolveHook = async (
                     ),
                     context,
                   );
-                  debug(`Trying "${adjustedSpecifier}"`);
                   return await nextResolve(adjustedSpecifier, context);
                 } catch {
                   // noop
