@@ -4171,8 +4171,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.4.1":
-  version: 1.4.1
-  resolution: "@graphql-mesh/compose-cli@npm:1.4.1"
+  version: 1.4.2
+  resolution: "@graphql-mesh/compose-cli@npm:1.4.2"
   dependencies:
     "@commander-js/extra-typings": "npm:^13.0.0"
     "@graphql-mesh/fusion-composition": "npm:^0.8.1"
@@ -4193,7 +4193,7 @@ __metadata:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/0bfadcb9f6b8f5e98b1e8ca6557ca8ce0b52cccf73c8432de8c7fe8355710bd22824cb3ad6a2210aec435f11cadd5415804cb19ed7f45fb94aa3ea56f251898b
+  checksum: 10c0/30f15f98bf190199fa579abed10f430072c47280128c80f7e237eb5bf583b3cd1481ba85f613104228521106400b78d6bc0436bc58e34405060e9e02a9900d42
   languageName: node
   linkType: hard
 
