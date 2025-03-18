@@ -30,6 +30,18 @@
     {
       "groupName": "all graphql-mesh dependencies",
       "matchPackageNames": ["/graphql-mesh/", "/omnigraph/"]
+    },
+    {
+      "groupName": "all opentelemetry dependencies",
+      "matchPackageNames": ["/opentelemetry/"]
+    },
+    {
+      "groupName": "all bun dependencies",
+      "matchPackageNames": ["/bun/"]
+    },
+    {
+      "groupName": "all whatwg-node dependencies",
+      "matchPackageNames": ["/@whatwg-node/"]
     }
   ]
 }
