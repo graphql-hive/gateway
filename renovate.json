@@ -30,6 +30,10 @@
     {
       "groupName": "all graphql-mesh dependencies",
       "matchPackageNames": ["/graphql-mesh/", "/omnigraph/"]
+    },
+    {
+      "groupName": "all opentelemetry dependencies",
+      "matchPackageNames": ["/opentelemetry/"]
     }
   ]
 }
