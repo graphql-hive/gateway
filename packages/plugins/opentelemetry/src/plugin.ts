@@ -22,7 +22,10 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
-import { Resource } from '@opentelemetry/resources';
+import {
+  detectResources,
+  resourceFromAttributes,
+} from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
@@ -185,10 +188,12 @@ export function useOpenTelemetry(
             spanProcessors = await Promise.all(options.exporters);
           }
           const webProvider = new WebTracerProvider({
-            resource: new Resource({
-              [SEMRESATTRS_SERVICE_NAME]: serviceName,
-              [ATTR_SERVICE_VERSION]: yoga.version,
-            }),
+            resource: detectResources().merge(
+              resourceFromAttributes({
+                [SEMRESATTRS_SERVICE_NAME]: serviceName,
+                [ATTR_SERVICE_VERSION]: yoga.version,
+              }),
+            ),
             spanProcessors,
           });
           webProvider.register();
