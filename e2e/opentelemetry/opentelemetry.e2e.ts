@@ -607,9 +607,8 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(
-          execute({ query: 'query { test' }),
-        ).resolves.toMatchInlineSnapshot(`
+        await expect(execute({ query: 'query { test' })).resolves
+          .toMatchInlineSnapshot(`
           {
             "errors": [
               {
@@ -683,9 +682,8 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(
-          execute({ query: 'query { nonExistentField }' }),
-        ).resolves.toMatchInlineSnapshot(`
+        await expect(execute({ query: 'query { nonExistentField }' })).resolves
+          .toMatchInlineSnapshot(`
           {
             "errors": [
               {
