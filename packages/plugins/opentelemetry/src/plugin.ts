@@ -24,7 +24,10 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
-import { Resource } from '@opentelemetry/resources';
+import {
+  detectResources,
+  resourceFromAttributes,
+} from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
