@@ -28,18 +28,22 @@
       ]
     },
     {
+      "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "all graphql-mesh dependencies",
       "matchPackageNames": ["/graphql-mesh/", "/omnigraph/"]
     },
     {
+      "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "all opentelemetry dependencies",
       "matchPackageNames": ["/opentelemetry/"]
     },
     {
+      "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "all bun dependencies",
       "matchPackageNames": ["/bun/"]
     },
     {
+      "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "all whatwg-node dependencies",
       "matchPackageNames": ["/@whatwg-node/"]
     }
