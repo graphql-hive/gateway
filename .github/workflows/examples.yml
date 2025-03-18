@@ -24,7 +24,7 @@ jobs:
       message: ${{ steps.commit.outputs.message }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           ref: ${{github.event.pull_request.head.sha || github.sha}}
       - name: Inspect
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -66,7 +66,7 @@ jobs:
       - name: Convert
         run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs.publishedPackages}}'
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: example-${{matrix.e2e}}
           # include all files and folders starting with a dot (.)
@@ -86,11 +86,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           token: ${{secrets.token}}
       - name: Download
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4
         with:
           pattern: example-*
           merge-multiple: true
@@ -98,7 +98,7 @@ jobs:
         run: git diff --pretty
       - name: Commit
         if: github.ref != 'refs/heads/main'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@e348103e9026cc0eee72ae06630dbe30c8bf7a79 # v5
         with:
           file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'
@@ -107,7 +107,7 @@ jobs:
           commit_author: theguild-bot <bot@the-guild.dev> # dont use the actor as an author
       - name: PR
         if: github.ref == 'refs/heads/main'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7
         with:
           token: ${{secrets.token}}
           add-paths: examples/
