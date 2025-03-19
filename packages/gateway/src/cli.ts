@@ -20,7 +20,6 @@ import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import useMeshRateLimit from '@graphql-mesh/plugin-rate-limit';
 import type {
   KeyValueCache,
   Logger,
@@ -138,10 +137,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting)
    */
-  rateLimiting?: Exclude<
-    Parameters<typeof useMeshRateLimit>[0],
-    GatewayConfigContext
-  >;
+  rateLimiting?: YamlConfig.RateLimitPluginConfig;
   /**
    * Enable and configure AWS Sigv4 signing
    */
