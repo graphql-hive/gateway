@@ -2839,6 +2839,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/armor-options@workspace:e2e/armor-options":
+  version: 0.0.0-use.local
+  resolution: "@e2e/armor-options@workspace:e2e/armor-options"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/auto-type-merging@workspace:e2e/auto-type-merging":
   version: 0.0.0-use.local
   resolution: "@e2e/auto-type-merging@workspace:e2e/auto-type-merging"
@@ -3262,12 +3268,6 @@ __metadata:
     graphql: "npm:16.10.0"
     graphql-yoga: "npm:^5.13.1"
     tslib: "npm:^2.8.1"
-  languageName: unknown
-  linkType: soft
-
-"@e2e/security-options@workspace:e2e/security-options":
-  version: 0.0.0-use.local
-  resolution: "@e2e/security-options@workspace:e2e/security-options"
   languageName: unknown
   linkType: soft
 
