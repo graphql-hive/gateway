@@ -263,7 +263,10 @@ export function useOpenTelemetry(
 
             const otelContextToSet = trace.setSpan(otelContext, httpSpan);
             requestContextMapping.set(request, otelContextToSet);
-            contextMapping.set(onRequestPayload.serverContext, otelContextToSet);
+            contextMapping.set(
+              onRequestPayload.serverContext,
+              otelContextToSet,
+            );
           }
         },
       );
