@@ -136,8 +136,13 @@ export interface GatewayCLIBuiltinPluginConfig {
    * Configure Rate Limiting
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting)
+   *
+   * @deprecated Please use the {@link security} option instead.
    */
-  rateLimiting?: boolean | YamlConfig.RateLimitPluginConfig;
+  rateLimiting?:
+    | boolean
+    | YamlConfig.RateLimitPluginConfig['config']
+    | YamlConfig.RateLimitPluginConfig; // deprecated
   /**
    * Enable and configure AWS Sigv4 signing
    */
@@ -163,6 +168,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    * - `maxTokens`: Limit the number of tokens in a GraphQL document. Defaults to `1000` tokens.
    * - `maxDepth`: Limit the depth of a GraphQL document. Defaults to `6` levels.
    * - `blockFieldSuggestions`: Prevent returning field suggestions and leaking your schema to unauthorized actors. Defaults to `true`
+   * - `rateLimiting`: Rate limits fields through the [`@rateLimit` directive in the GraphQL schema SDL](https://the-guild.dev/graphql/mesh/v1/rate-limit). Defaults to `true`
    *
    * @default false
    */
@@ -201,6 +207,13 @@ export interface SecurityPluginOptions {
    * @default false
    */
   blockFieldSuggestions?: boolean;
+  /**
+   * Enable or configure Rate Limiting. If `true` is provided, the rate limiting will be enabled
+   * and expects the usage of the [`@rateLimit` directive in the GraphQL schema SDL](https://the-guild.dev/graphql/mesh/v1/rate-limit).
+   *
+   * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
+   */
+  rateLimiting?: boolean | YamlConfig.RateLimitPluginConfig['config'];
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {

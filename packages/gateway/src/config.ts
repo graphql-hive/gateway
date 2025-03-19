@@ -5,7 +5,12 @@ import type {
   GatewayConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import type { KeyValueCache, Logger, MeshPubSub } from '@graphql-mesh/types';
+import type {
+  KeyValueCache,
+  Logger,
+  MeshPubSub,
+  YamlConfig,
+} from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -132,16 +137,35 @@ export async function getBuiltinPluginsFromConfig(
     );
   }
 
-  if (config.rateLimiting) {
+  if (config.rateLimiting || config.security) {
     const { default: useMeshRateLimit } = await import(
       '@graphql-mesh/plugin-rate-limit'
     );
+
+    // config.security takes precedence over config.rateLimiting
+    // TODO: should we raise an error if both are used?
+    let rateLimitConfig: YamlConfig.RateLimitPluginConfig['config'];
+    if (config.security === true) {
+      rateLimitConfig = [];
+    } else if (
+      typeof config.security === 'object' &&
+      config.security.rateLimiting
+    ) {
+      rateLimitConfig =
+        config.security.rateLimiting === true
+          ? []
+          : config.security.rateLimiting;
+    } else {
+      rateLimitConfig = Array.isArray(config.rateLimiting)
+        ? config.rateLimiting
+        : typeof config.rateLimiting === 'object'
+          ? config.rateLimiting.config
+          : [];
+    }
+
     plugins.push(
       useMeshRateLimit({
-        config:
-          typeof config.rateLimiting === 'object'
-            ? config.rateLimiting.config
-            : [],
+        config: rateLimitConfig,
         cache: ctx.cache,
       }),
     );
