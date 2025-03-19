@@ -456,6 +456,9 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * WHATWG compatible Fetch implementation.
    *
+   * If you want to change the fetch function implementation, use `useCustomFetch` plugin.
+   * But we do not recommend changing the fetch implementation unless you know what you are doing.
+   *
    * @warning Do not use this option unless you know what you are doing.
    */
   fetchAPI?: Partial<
@@ -467,6 +470,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Enable, disable or implement a custom logger for logging.
    *
    * @default true
+   * @see https://the-guild.dev/graphql/hive/docs/gateway/logging-and-error-handling
    */
   logging?: boolean | Logger | LogLevel | keyof typeof LogLevel | undefined;
   /**
