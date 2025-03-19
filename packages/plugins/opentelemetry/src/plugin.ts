@@ -161,6 +161,23 @@ export function useOpenTelemetry(
   const propagateContext = options.propagateContext ?? true;
 
   const requestContextMapping = new WeakMap<Request, Context>();
+  const contextMapping = new WeakMap<any, Context>();
+  function getOTELContext(
+    context: any,
+    request?: Request,
+  ): Context | undefined {
+    let otelContext: Context | undefined;
+    if (request) {
+      otelContext = requestContextMapping.get(request);
+    }
+    if (!otelContext && context?.request) {
+      otelContext = requestContextMapping.get(context.request);
+    }
+    if (!otelContext && context) {
+      otelContext = contextMapping.get(context);
+    }
+    return otelContext;
+  }
   let tracer: Tracer;
 
   let spanProcessors: SpanProcessor[];
@@ -214,7 +231,7 @@ export function useOpenTelemetry(
         opentelemetry: {
           tracer,
           activeContext: () =>
-            requestContextMapping.get(context.request) ?? context['active'](),
+            getOTELContext(context, context.request) ?? context['active'](),
         },
       });
     },
@@ -244,10 +261,9 @@ export function useOpenTelemetry(
               otelContext,
             });
 
-            requestContextMapping.set(
-              request,
-              trace.setSpan(otelContext, httpSpan),
-            );
+            const otelContextToSet = trace.setSpan(otelContext, httpSpan);
+            requestContextMapping.set(request, otelContextToSet);
+            contextMapping.set(onRequestPayload.serverContext, otelContext);
           }
         },
       );
@@ -259,7 +275,7 @@ export function useOpenTelemetry(
           : (options.spans?.graphqlValidate ?? true);
 
       const { context } = onValidatePayload;
-      const otelContext = requestContextMapping.get(context.request);
+      const otelContext = getOTELContext(context, context.request);
 
       if (shouldTraceValidate && otelContext) {
         const { done } = createGraphQLValidateSpan({
@@ -280,7 +296,7 @@ export function useOpenTelemetry(
           : (options.spans?.graphqlParse ?? true);
 
       const { context } = onParsePayload;
-      const otelContext = requestContextMapping.get(context.request);
+      const otelContext = getOTELContext(context, context.request);
 
       if (shouldTracePrase && otelContext) {
         const { done } = createGraphQLParseSpan({
@@ -301,7 +317,10 @@ export function useOpenTelemetry(
           : (options.spans?.graphqlExecute ?? true);
 
       const { args } = onExecuteArgs;
-      const otelContext = requestContextMapping.get(args.contextValue.request);
+      const otelContext = getOTELContext(
+        args.contextValue,
+        args.contextValue?.request,
+      );
 
       if (shouldTraceExecute && otelContext) {
         const { done } = createGraphQLExecuteSpan({
@@ -326,11 +345,10 @@ export function useOpenTelemetry(
           ? options.spans.subgraphExecute(onSubgraphPayload)
           : (options.spans?.subgraphExecute ?? true);
 
-      const otelContext = onSubgraphPayload.executionRequest.context?.request
-        ? requestContextMapping.get(
-            onSubgraphPayload.executionRequest.context.request,
-          )
-        : undefined;
+      const otelContext = getOTELContext(
+        onSubgraphPayload.executionRequest?.context,
+        onSubgraphPayload.executionRequest?.context?.request,
+      );
 
       if (shouldTraceSubgraphExecute && otelContext) {
         const { subgraphName, executionRequest } = onSubgraphPayload;
@@ -359,7 +377,7 @@ export function useOpenTelemetry(
         executionRequest,
       } = onFetchPayload;
 
-      const otelContext = requestContextMapping.get(context.request);
+      const otelContext = getOTELContext(context, context?.request);
       if (shouldTraceFetch && otelContext) {
         if (propagateContext) {
           const reqHeaders = getHeadersObj(fetchOptions.headers || {});
@@ -383,8 +401,8 @@ export function useOpenTelemetry(
       }
       return void 0;
     },
-    onResponse({ request, response }) {
-      const otelContext = requestContextMapping.get(request);
+    onResponse({ request, response, serverContext }) {
+      const otelContext = getOTELContext(serverContext, request);
       if (!otelContext) {
         return;
       }
