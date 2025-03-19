@@ -52,10 +52,10 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@nestjs/common": "11.0.11",
-    "@nestjs/core": "11.0.11",
+    "@nestjs/common": "11.0.12",
+    "@nestjs/core": "11.0.12",
     "@nestjs/graphql": "13.0.3",
-    "@nestjs/testing": "11.0.11",
+    "@nestjs/testing": "11.0.12",
     "@types/supertest": "6.0.2",
     "fastify": "5.2.1",
     "graphql": "^16.9.0",
