@@ -137,7 +137,7 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting)
    */
-  rateLimiting?: YamlConfig.RateLimitPluginConfig;
+  rateLimiting?: boolean | YamlConfig.RateLimitPluginConfig;
   /**
    * Enable and configure AWS Sigv4 signing
    */

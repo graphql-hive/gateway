@@ -138,7 +138,10 @@ export async function getBuiltinPluginsFromConfig(
     );
     plugins.push(
       useMeshRateLimit({
-        ...config.rateLimiting,
+        config:
+          typeof config.rateLimiting === 'object'
+            ? config.rateLimiting.config
+            : [],
         cache: ctx.cache,
       }),
     );
