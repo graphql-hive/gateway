@@ -15,7 +15,7 @@ beforeAll(async () => {
     name: `jaeger-http`,
     image:
       platform().toLowerCase() === 'win32'
-        ? 'johnnyhuy/jaeger-windows:1809'
+        ? 'johnnyhuy/jaeger-windows:latest'
         : 'jaegertracing/all-in-one:1.56',
     env: {
       COLLECTOR_OTLP_ENABLED: 'true',
