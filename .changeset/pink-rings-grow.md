@@ -2,7 +2,7 @@
 '@graphql-hive/gateway': minor
 ---
 
-Introduce built-in security features
+Introduce built-in armor security features
 
 The following built-in features are introduced:
 
@@ -13,16 +13,14 @@ The following built-in features are introduced:
 - `blockFieldSuggestions`: Prevent returning field suggestions and leaking your schema to unauthorized actors.
   Defaults to `true`
 
-They are all **disabled** by default. You have an option to enable them all, or configure them individually. Only basic configuration options are allowed - security features needing more configuration should instead have the plugin installed and used manually.
+They are all **disabled** by default. You can enable or configure them individually. Only basic configuration options are allowed - security features needing more configuration should instead have the plugin installed and used manually.
 
 #### Disable all (default)
 
 ```ts
 import { defineConfig } from '@graphql-hive/gateway';
 
-export const gatewayConfig = defineConfig({
-  security: false,
-});
+export const gatewayConfig = defineConfig();
 ```
 
 #### Enable all
@@ -31,35 +29,21 @@ export const gatewayConfig = defineConfig({
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-  security: true,
+  maxTokens: true,
+  maxDepth: true,
+  blockFieldSuggestions: true,
 });
 ```
 
-#### Enable individually
+#### Configure
 
 ```ts
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-  security: {
-    maxTokens: true, // default false
-    maxDepth: true, // default false
-    blockFieldSuggestions: true, // default false
-  },
-});
-```
-
-#### Configure individually
-
-```ts
-import { defineConfig } from '@graphql-hive/gateway';
-
-export const gatewayConfig = defineConfig({
-  security: {
-    maxTokens: 3000,
-    maxDepth: 10,
-    blockFieldSuggestions: false,
-  },
+  maxTokens: 3000,
+  maxDepth: 10,
+  blockFieldSuggestions: false,
 });
 ```
 
@@ -74,11 +58,7 @@ import { maxDepthRule } from '@escape.tech/graphql-armor-max-depth';
 import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-  security: {
-    maxTokens: true,
-    // disable maxDepth feature by omitting it or setting it to false
-    blockFieldSuggestions: true,
-  },
+  // disable maxDepth feature by omitting it or setting it to false
   plugins: () => [
     maxDepthRule({
       ignoreIntrospection: false,
