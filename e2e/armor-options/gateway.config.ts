@@ -1,7 +1,7 @@
 import { defineConfig } from '@graphql-hive/gateway';
 
 let security;
-const securityOpt = process.env['SECURITY_OPT'];
+const securityOpt = process.env['ARMOR_OPT'];
 switch (securityOpt) {
   case 'true':
     security = {
@@ -50,7 +50,7 @@ switch (securityOpt) {
     };
     break;
   default:
-    throw new Error(`Unexpected SECURITY_OPT value ${securityOpt}`);
+    throw new Error(`Unexpected ARMOR_OPT value ${securityOpt}`);
 }
 
 export const gatewayConfig = defineConfig({ ...security });

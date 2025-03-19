@@ -64,7 +64,7 @@ it.concurrent('should enable all armor features', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
     env: {
-      SECURITY_OPT: 'true',
+      ARMOR_OPT: 'true',
     },
   });
 
@@ -115,7 +115,7 @@ it.concurrent('should disable all armor features', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
     env: {
-      SECURITY_OPT: 'false',
+      ARMOR_OPT: 'false',
     },
   });
 
@@ -151,7 +151,7 @@ it.concurrent(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        SECURITY_OPT: 'each-false',
+        ARMOR_OPT: 'each-false',
       },
     });
 
@@ -188,7 +188,7 @@ it.concurrent(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        SECURITY_OPT: 'only-max-tokens',
+        ARMOR_OPT: 'only-max-tokens',
       },
     });
 
@@ -233,7 +233,7 @@ it.concurrent('should have configurable max tokens', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
     env: {
-      SECURITY_OPT: 'max-tokens-10',
+      ARMOR_OPT: 'max-tokens-10',
     },
   });
 
@@ -257,7 +257,7 @@ it.concurrent(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        SECURITY_OPT: 'only-max-depth',
+        ARMOR_OPT: 'only-max-depth',
       },
     });
 
@@ -299,7 +299,7 @@ it.concurrent('should have configurable max depth', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
     env: {
-      SECURITY_OPT: 'max-depth-4',
+      ARMOR_OPT: 'max-depth-4',
     },
   });
 
@@ -342,7 +342,7 @@ it.concurrent(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        SECURITY_OPT: 'only-block-field-suggestions',
+        ARMOR_OPT: 'only-block-field-suggestions',
       },
     });
 
