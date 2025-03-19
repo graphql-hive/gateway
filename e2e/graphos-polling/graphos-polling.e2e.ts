@@ -1,17 +1,43 @@
-import { createTenv, dockerHostName } from '@internal/e2e';
-import { getLocalhost } from '@internal/testing';
-import { afterAll, expect, it } from 'vitest';
+import { platform } from 'os';
+import { Container, createTenv, dockerHostName } from '@internal/e2e';
+import { boolEnv, getLocalhost } from '@internal/testing';
+import { afterAll, beforeAll, expect, it } from 'vitest';
 
-const { service, gateway, composeWithApollo, gatewayRunner } =
+const { service, gateway, composeWithApollo, gatewayRunner, container } =
   createTenv(__dirname);
 
 let interval: ReturnType<typeof setInterval> | undefined;
+
+let jaeger: Container;
+
+beforeAll(async () => {
+  jaeger = await container({
+    name: `jaeger-http`,
+    image:
+      platform().toLowerCase() === 'win32'
+        ? 'johnnyhuy/jaeger-windows:1809'
+        : 'jaegertracing/all-in-one:1.56',
+    env: {
+      COLLECTOR_OTLP_ENABLED: 'true',
+    },
+    containerPort: 4318,
+    additionalContainerPorts: [16686, 4317],
+    healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
+  });
+});
 
 afterAll(() => {
   if (interval) {
     clearInterval(interval);
   }
 });
+
+const JAEGER_HOSTNAME =
+  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
+    ? boolEnv('CI')
+      ? '172.17.0.1'
+      : 'host.docker.internal'
+    : '0.0.0.0';
 
 /**
  * First supergraph has a subgraph never returns a value,
@@ -55,6 +81,9 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
       `--apollo-uplink=${hostname}:${graphos.port}/graphql`,
     ],
     services: [graphos],
+    env: {
+      OTLP_EXPORTER_URL: `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`,
+    },
   });
   interval = setInterval(() => {
     gw.execute({

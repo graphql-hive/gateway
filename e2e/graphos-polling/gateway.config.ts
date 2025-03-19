@@ -1,4 +1,4 @@
-import { defineConfig } from '@graphql-hive/gateway';
+import { createOtlpHttpExporter, defineConfig } from '@graphql-hive/gateway';
 import { boolEnv, Opts } from '@internal/testing';
 
 const uplinkHost = String(process.env['E2E_GATEWAY_RUNNER']).includes('docker')
@@ -23,5 +23,17 @@ export const gatewayConfig = defineConfig({
     apiKey: 'my-api-key',
     graphRef: 'my-graph-ref@my-variant',
     endpoint: `${upLink}/usage`,
+  },
+  openTelemetry: {
+    exporters: [
+      createOtlpHttpExporter(
+        {
+          url: process.env['OTLP_EXPORTER_URL'],
+        },
+        {
+          scheduledDelayMillis: 1,
+        },
+      ),
+    ],
   },
 });

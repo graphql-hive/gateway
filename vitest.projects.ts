@@ -24,6 +24,7 @@ export default defineWorkspace([
               '!**/e2e/soap-demo',
               '!**/e2e/mysql-employees',
               '!**/e2e/opentelemetry',
+              '!**/e2e/graphos-polling',
             ]
           : []),
       ],
