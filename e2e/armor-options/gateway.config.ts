@@ -1,13 +1,21 @@
-import { defineConfig, SecurityPluginOptions } from '@graphql-hive/gateway';
+import { defineConfig } from '@graphql-hive/gateway';
 
-let security: boolean | SecurityPluginOptions;
+let security;
 const securityOpt = process.env['SECURITY_OPT'];
 switch (securityOpt) {
   case 'true':
-    security = true;
+    security = {
+      maxTokens: true,
+      maxDepth: true,
+      blockFieldSuggestions: true,
+    };
     break;
   case 'false':
-    security = false;
+    security = {
+      maxTokens: false,
+      maxDepth: false,
+      blockFieldSuggestions: false,
+    };
     break;
   case 'each-false':
     security = {
@@ -45,4 +53,4 @@ switch (securityOpt) {
     throw new Error(`Unexpected SECURITY_OPT value ${securityOpt}`);
 }
 
-export const gatewayConfig = defineConfig({ security });
+export const gatewayConfig = defineConfig({ ...security });

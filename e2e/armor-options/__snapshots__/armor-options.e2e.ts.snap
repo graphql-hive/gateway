@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should disable all security features when setting false 1`] = `
+exports[`should disable all armor features when setting false 1`] = `
 {
   "data": {
     "topProducts": [
@@ -1014,7 +1014,7 @@ exports[`should disable all security features when setting false 1`] = `
 }
 `;
 
-exports[`should disable all security features when setting false 2`] = `
+exports[`should disable all armor features when setting false 2`] = `
 {
   "data": {
     "topProducts": [
@@ -1155,7 +1155,7 @@ exports[`should disable all security features when setting false 2`] = `
 }
 `;
 
-exports[`should disable each security feature when setting them to false 1`] = `
+exports[`should disable each armor feature when setting them to false 1`] = `
 {
   "data": {
     "topProducts": [
@@ -2169,7 +2169,7 @@ exports[`should disable each security feature when setting them to false 1`] = `
 }
 `;
 
-exports[`should disable each security feature when setting them to false 2`] = `
+exports[`should disable each armor feature when setting them to false 2`] = `
 {
   "data": {
     "topProducts": [

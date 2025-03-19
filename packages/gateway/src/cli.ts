@@ -117,27 +117,25 @@ export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Configure JWT Auth
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/authorization-authentication)
+   * @see https://graphql-hive.com/docs/gateway/authorization-authentication
    */
   jwt?: JWTAuthPluginOptions;
   /**
    * Configure Prometheus metrics
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/monitoring-tracing)
+   * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
   prometheus?: Exclude<PrometheusPluginOptions, GatewayConfigContext>;
   /**
    * Configure OpenTelemetry
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/monitoring-tracing)
+   * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
   openTelemetry?: Exclude<OpenTelemetryMeshPluginOptions, GatewayConfigContext>;
   /**
    * Configure Rate Limiting
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting)
-   *
-   * @deprecated Please use the {@link security} option instead.
+   * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
    */
   rateLimiting?:
     | boolean
@@ -150,7 +148,7 @@ export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Enable Just-In-Time compilation of GraphQL documents.
    *
-   * [Learn more](https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks)
+   * @see https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks
    */
   jit?: boolean;
   cache?:
@@ -160,22 +158,6 @@ export interface GatewayCLIBuiltinPluginConfig {
     | GatewayCLIRedisCacheConfig
     | GatewayCLICloudflareKVCacheConfig
     | GatewayCLIUpstashRedisCacheConfig;
-  /**
-   * Enable, disable or configure the built-in security features of Hive Gateway.
-   *
-   * Passing `true` will enable all {@link SecurityPluginOptions security features} with sane defaults, those features are:
-   *
-   * - `maxTokens`: Limit the number of tokens in a GraphQL document. Defaults to `1000` tokens.
-   * - `maxDepth`: Limit the depth of a GraphQL document. Defaults to `6` levels.
-   * - `blockFieldSuggestions`: Prevent returning field suggestions and leaking your schema to unauthorized actors. Defaults to `true`
-   * - `rateLimiting`: Rate limits fields through the [`@rateLimit` directive in the GraphQL schema SDL](https://the-guild.dev/graphql/mesh/v1/rate-limit). Defaults to `true`
-   *
-   * @default false
-   */
-  security?: boolean | SecurityPluginOptions;
-}
-
-export interface SecurityPluginOptions {
   /**
    * Limit the number of tokens in a GraphQL document.
    *
@@ -207,13 +189,6 @@ export interface SecurityPluginOptions {
    * @default false
    */
   blockFieldSuggestions?: boolean;
-  /**
-   * Enable or configure Rate Limiting. If `true` is provided, the rate limiting will be enabled
-   * and expects the usage of the [`@rateLimit` directive in the GraphQL schema SDL](https://the-guild.dev/graphql/mesh/v1/rate-limit).
-   *
-   * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
-   */
-  rateLimiting?: boolean | YamlConfig.RateLimitPluginConfig['config'];
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {

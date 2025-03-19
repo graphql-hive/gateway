@@ -60,17 +60,15 @@ function checkBlockSuggestions(gw: Gateway) {
   });
 }
 
-it.concurrent(
-  'should enable all security features when setting true',
-  async ({ expect }) => {
-    const gw = await gateway({
-      supergraph: await supergraph(),
-      env: {
-        SECURITY_OPT: 'true',
-      },
-    });
+it.concurrent('should enable all armor features', async ({ expect }) => {
+  const gw = await gateway({
+    supergraph: await supergraph(),
+    env: {
+      SECURITY_OPT: 'true',
+    },
+  });
 
-    await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -83,7 +81,7 @@ it.concurrent(
     }
   `);
 
-    await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -93,7 +91,7 @@ it.concurrent(
     }
   `);
 
-    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -111,26 +109,23 @@ it.concurrent(
       ],
     }
   `);
-  },
-);
+});
 
-it.concurrent(
-  'should disable all security features when setting false',
-  async ({ expect }) => {
-    const gw = await gateway({
-      supergraph: await supergraph(),
-      env: {
-        SECURITY_OPT: 'false',
-      },
-    });
+it.concurrent('should disable all armor features', async ({ expect }) => {
+  const gw = await gateway({
+    supergraph: await supergraph(),
+    env: {
+      SECURITY_OPT: 'false',
+    },
+  });
 
-    // too much for inline snapshot
-    await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
+  // too much for inline snapshot
+  await expect(checkMaxTokens(gw)).resolves.toMatchSnapshot();
 
-    // too much for inline snapshot
-    await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
+  // too much for inline snapshot
+  await expect(checkMaxDepth(gw)).resolves.toMatchSnapshot();
 
-    await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
+  await expect(checkBlockSuggestions(gw)).resolves.toMatchInlineSnapshot(`
     {
       "errors": [
         {
@@ -148,11 +143,10 @@ it.concurrent(
       ],
     }
   `);
-  },
-);
+});
 
 it.concurrent(
-  'should disable each security feature when setting them to false',
+  'should disable each armor feature when setting them to false',
   async ({ expect }) => {
     const gw = await gateway({
       supergraph: await supergraph(),

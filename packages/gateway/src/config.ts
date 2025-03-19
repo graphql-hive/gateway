@@ -5,12 +5,7 @@ import type {
   GatewayConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import type {
-  KeyValueCache,
-  Logger,
-  MeshPubSub,
-  YamlConfig,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, Logger, MeshPubSub } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -137,35 +132,17 @@ export async function getBuiltinPluginsFromConfig(
     );
   }
 
-  if (config.rateLimiting || config.security) {
+  if (config.rateLimiting) {
     const { default: useMeshRateLimit } = await import(
       '@graphql-mesh/plugin-rate-limit'
     );
-
-    // config.security takes precedence over config.rateLimiting
-    // TODO: should we raise an error if both are used?
-    let rateLimitConfig: YamlConfig.RateLimitPluginConfig['config'];
-    if (config.security === true) {
-      rateLimitConfig = [];
-    } else if (
-      typeof config.security === 'object' &&
-      config.security.rateLimiting
-    ) {
-      rateLimitConfig =
-        config.security.rateLimiting === true
-          ? []
-          : config.security.rateLimiting;
-    } else {
-      rateLimitConfig = Array.isArray(config.rateLimiting)
-        ? config.rateLimiting
-        : typeof config.rateLimiting === 'object'
-          ? config.rateLimiting.config
-          : [];
-    }
-
     plugins.push(
       useMeshRateLimit({
-        config: rateLimitConfig,
+        config: Array.isArray(config.rateLimiting)
+          ? config.rateLimiting
+          : typeof config.rateLimiting === 'object'
+            ? config.rateLimiting.config
+            : [],
         cache: ctx.cache,
       }),
     );
@@ -181,48 +158,40 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
-  if (config.security) {
-    const maxTokensOpt =
-      config.security === true || config.security.maxTokens === true
-        ? 1000
-        : config.security.maxTokens;
-    if (maxTokensOpt) {
-      const { maxTokensPlugin: useMaxTokens } = await import(
-        '@escape.tech/graphql-armor-max-tokens'
-      );
-      const maxTokensPlugin = useMaxTokens({ n: maxTokensOpt });
-      plugins.push(
-        // @ts-expect-error the armor plugin does not inherit the context
-        maxTokensPlugin,
-      );
-    }
+  if (config.maxTokens) {
+    const { maxTokensPlugin: useMaxTokens } = await import(
+      '@escape.tech/graphql-armor-max-tokens'
+    );
+    const maxTokensPlugin = useMaxTokens({
+      n: config.maxTokens === true ? 1000 : config.maxTokens,
+    });
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      maxTokensPlugin,
+    );
+  }
 
-    const maxDepthOpt =
-      config.security === true || config.security.maxDepth === true
-        ? 6
-        : config.security.maxDepth;
-    if (maxDepthOpt) {
-      const { maxDepthPlugin: useMaxDepth } = await import(
-        '@escape.tech/graphql-armor-max-depth'
-      );
-      const maxDepthPlugin = useMaxDepth({ n: maxDepthOpt });
-      plugins.push(
-        // @ts-expect-error the armor plugin does not inherit the context
-        maxDepthPlugin,
-      );
-    }
+  if (config.maxDepth) {
+    const { maxDepthPlugin: useMaxDepth } = await import(
+      '@escape.tech/graphql-armor-max-depth'
+    );
+    const maxDepthPlugin = useMaxDepth({
+      n: config.maxDepth === true ? 6 : config.maxDepth,
+    });
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      maxDepthPlugin,
+    );
+  }
 
-    const blockFieldSuggestionsOpt =
-      config.security === true || config.security.blockFieldSuggestions;
-    if (blockFieldSuggestionsOpt) {
-      const { blockFieldSuggestionsPlugin: useBlockFieldSuggestions } =
-        await import('@escape.tech/graphql-armor-block-field-suggestions');
-      const blockFieldSuggestionsPlugin = useBlockFieldSuggestions();
-      plugins.push(
-        // @ts-expect-error the armor plugin does not inherit the context
-        blockFieldSuggestionsPlugin,
-      );
-    }
+  if (config.blockFieldSuggestions) {
+    const { blockFieldSuggestionsPlugin: useBlockFieldSuggestions } =
+      await import('@escape.tech/graphql-armor-block-field-suggestions');
+    const blockFieldSuggestionsPlugin = useBlockFieldSuggestions();
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      blockFieldSuggestionsPlugin,
+    );
   }
 
   return plugins;
