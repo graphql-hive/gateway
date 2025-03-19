@@ -455,6 +455,8 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   batching?: BatchingOptions;
   /**
    * WHATWG compatible Fetch implementation.
+   *
+   * @warning Do not use this option unless you know what you are doing.
    */
   fetchAPI?: Partial<
     Omit<FetchAPI, 'fetch'> & {
