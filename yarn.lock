@@ -3899,18 +3899,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.10.0, @graphql-hive/core@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@graphql-hive/core@npm:0.10.0"
+"@graphql-hive/core@npm:0.10.1, @graphql-hive/core@npm:^0.10.0":
+  version: 0.10.1
+  resolution: "@graphql-hive/core@npm:0.10.1"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:0.10.1"
-    async-retry: "npm:1.3.3"
-    lodash.sortby: "npm:4.7.0"
-    tiny-lru: "npm:8.0.2"
+    "@whatwg-node/fetch": "npm:^0.10.1"
+    async-retry: "npm:^1.3.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^8.0.2"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/7cd8fc7e8b6af91884bd9a1ce2cc19abb2660da77ebb5f9c05ba2a042ed7e6294dc858b3876f92f6ad52e838fdb6dbaa790393b9e510f494b36db9981d6def2e
+  checksum: 10c0/29979cbfc9650db278f2542e15a1aa116ec52c1b02b1d82c706ff339cc19751fdafbbb24093bd07818618c7b3480016830341ab27bdbd1739cf75419d782c171
   languageName: node
   linkType: hard
 
@@ -4103,7 +4103,7 @@ __metadata:
     pkgroll: "npm:2.11.2"
     reflect-metadata: "npm:0.2.2"
     rxjs: "npm:7.8.2"
-    supertest: "npm:7.0.0"
+    supertest: "npm:7.1.0"
     tslib: "npm:^2.8.1"
   peerDependencies:
     "@nestjs/common": ^10 || ^11
@@ -4133,15 +4133,15 @@ __metadata:
   linkType: soft
 
 "@graphql-hive/yoga@npm:^0.41.0":
-  version: 0.41.0
-  resolution: "@graphql-hive/yoga@npm:0.41.0"
+  version: 0.41.1
+  resolution: "@graphql-hive/yoga@npm:0.41.1"
   dependencies:
-    "@graphql-hive/core": "npm:0.10.0"
+    "@graphql-hive/core": "npm:0.10.1"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/d52e8234bbccdf9fadac028c53a3754bdd427317222cada1f9935b408746cfc84e1726f5def510e82668119bf7a150218e2576f12a062561ed723285faf3b316
+  checksum: 10c0/e7ce87f5635cf03395e7eb1fab7a3177ef5a5f8cf3f4eb64890f367398f920af76aa034894ed574680e286bcb0e59a73b29541eb78c851c2d769fb7cd2d8fc6f
   languageName: node
   linkType: hard
 
@@ -8853,17 +8853,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.10.1":
-  version: 0.10.1
-  resolution: "@whatwg-node/fetch@npm:0.10.1"
-  dependencies:
-    "@whatwg-node/node-fetch": "npm:^0.7.1"
-    urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/8db24a980181683676a503d63ff22e7ac9ce70bb842f3a1a83d260ffd0682cc0fdcab24d825cb742364bf075fedaa404d08508703ecf7302e3332612bdb35d61
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.4, @whatwg-node/fetch@npm:^0.10.5":
+"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.1, @whatwg-node/fetch@npm:^0.10.4, @whatwg-node/fetch@npm:^0.10.5":
   version: 0.10.5
   resolution: "@whatwg-node/fetch@npm:0.10.5"
   dependencies:
@@ -8873,7 +8863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.7.1, @whatwg-node/node-fetch@npm:^0.7.11":
+"@whatwg-node/node-fetch@npm:^0.7.11":
   version: 0.7.13
   resolution: "@whatwg-node/node-fetch@npm:0.7.13"
   dependencies:
@@ -15964,7 +15954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.sortby@npm:4.7.0, lodash.sortby@npm:^4.7.0":
+"lodash.sortby@npm:^4.7.0":
   version: 4.7.0
   resolution: "lodash.sortby@npm:4.7.0"
   checksum: 10c0/fc48fb54ff7669f33bb32997cab9460757ee99fafaf72400b261c3e10fde21538e47d8cfcbe6a25a31bcb5b7b727c27d52626386fc2de24eb059a6d64a89cdf5
@@ -19612,13 +19602,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supertest@npm:7.0.0":
-  version: 7.0.0
-  resolution: "supertest@npm:7.0.0"
+"supertest@npm:7.1.0":
+  version: 7.1.0
+  resolution: "supertest@npm:7.1.0"
   dependencies:
     methods: "npm:^1.1.2"
     superagent: "npm:^9.0.1"
-  checksum: 10c0/f0b10a1d292e6156fab16efdbb90d8cb1df54367667ae4108a6da67b81058d35182720dd9a3b4b2f538b14729dc8633741e6242724f1a0ccfde5197341ea96ec
+  checksum: 10c0/7a711630b5895c86978980fc88db0b6e54a655424d47e83bb126ff13d3879130271c37bca5e1f404c9ce8cbcaa922ab0897f3955598c3d5bb0dc6914161221bc
   languageName: node
   linkType: hard
 
@@ -19881,17 +19871,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tiny-lru@npm:8.0.2":
-  version: 8.0.2
-  resolution: "tiny-lru@npm:8.0.2"
-  checksum: 10c0/32dc73db748ae50bf43498f81150ed23922c924d7a3665ea240c7041abbbd5e8667c05328fd520ca923b4d10b89e69a4ba671365eaac221c6f7eb8b898530506
-  languageName: node
-  linkType: hard
-
 "tiny-lru@npm:^11.0.0":
   version: 11.2.11
   resolution: "tiny-lru@npm:11.2.11"
   checksum: 10c0/6fe45e477e198f204752cb83bb02c963e9cdcabfb0083a723b498e6a7661143641be36a3d7170df6e4a0b5d5ac6a06533b8cccc98cbdfddacec826016a5dab97
+  languageName: node
+  linkType: hard
+
+"tiny-lru@npm:^8.0.2":
+  version: 8.0.2
+  resolution: "tiny-lru@npm:8.0.2"
+  checksum: 10c0/32dc73db748ae50bf43498f81150ed23922c924d7a3665ea240c7041abbbd5e8667c05328fd520ca923b4d10b89e69a4ba671365eaac221c6f7eb8b898530506
   languageName: node
   linkType: hard
 

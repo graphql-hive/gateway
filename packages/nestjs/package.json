@@ -62,7 +62,7 @@
     "pkgroll": "2.11.2",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
-    "supertest": "7.0.0"
+    "supertest": "7.1.0"
   },
   "sideEffects": false
 }
