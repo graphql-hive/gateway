@@ -117,7 +117,7 @@ describe('NestJS', () => {
   });
 
   it('should use cache', async () => {
-    const onCacheSetFn = vitest.fn();
+    const onCacheSetErrorFn = vitest.fn();
     const [, port] = await createNestApp({
       cache: {
         type: 'localforage',
@@ -125,7 +125,7 @@ describe('NestJS', () => {
       plugins: () => [
         {
           onCacheSet: () => ({
-            onCacheSetError: onCacheSetFn,
+            onCacheSetError: onCacheSetErrorFn,
           }),
         },
       ],
@@ -150,6 +150,6 @@ describe('NestJS', () => {
         },
       }
     `);
-    expect(onCacheSetFn).not.toHaveBeenCalled();
+    expect(onCacheSetErrorFn).not.toHaveBeenCalled();
   });
 });
