@@ -70,7 +70,7 @@ async function createNestApp(
 }
 
 describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
-  it('should execute quries and have the correct schama', async () => {
+  it('should execute queries and have the correct schama', async () => {
     const [app, port] = await createNestApp();
     const res = await fetch(`http://localhost:${port}/graphql`, {
       method: 'POST',
