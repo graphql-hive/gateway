@@ -84,6 +84,7 @@ export default function useHiveConsole<
           ),
           ...options,
           enabled: false,
+          token,
           agent,
           usage,
         },
