@@ -82,6 +82,7 @@ export class HiveGatewayDriver<
       cache,
     });
     this._gatewayRuntime = createGatewayRuntime({
+      ...options,
       logging: configCtx.logger,
       cache,
       graphqlEndpoint: options.path,
@@ -91,7 +92,6 @@ export class HiveGatewayDriver<
         options.introspection === false
           ? { disableIf: () => options.introspection || false }
           : undefined,
-      ...options,
       ...(options.context || options.transformSchema || options.sortSchema
         ? {
             plugins: (ctx) => {

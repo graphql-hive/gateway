@@ -116,4 +116,43 @@ describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
     });
     expect(schemaChangeFn).toHaveBeenCalledTimes(1);
   });
+
+  it('should use cache', async () => {
+    const onCacheSetFn = vitest.fn();
+    const [, port] = await createNestApp({
+      cache: {
+        type: 'localforage',
+        // host: 'host.docker.internal',
+        // port: '6379',
+      },
+      plugins: () => [
+        {
+          onCacheSet: () => ({
+            onCacheSetError: onCacheSetFn,
+          }),
+        },
+      ],
+    });
+    const res = await fetch(`http://localhost:${port}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: /* GraphQL */ `
+          query {
+            hello
+          }
+        `,
+      }),
+    });
+    await expect(res.json()).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "hello": "world",
+        },
+      }
+    `);
+    expect(onCacheSetFn).not.toHaveBeenCalled();
+  });
 });
