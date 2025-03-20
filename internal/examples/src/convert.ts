@@ -450,6 +450,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     console.group('Creating an example archive...');
     using _ = defer(() => console.groupEnd());
 
+    // https://reproducible-builds.org/docs/archives/
     const [, waitForExit] = await spawn(
       {
         cwd: path.join(__project, 'examples'),
@@ -468,6 +469,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       '--owner=0',
       '--group=0',
       '--numeric-owner',
+      // PAX headers
+      '--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime',
       // create gzip
       '-cz',
       // filename
