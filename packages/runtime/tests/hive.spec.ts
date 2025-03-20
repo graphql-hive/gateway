@@ -265,7 +265,7 @@ describe('Hive CDN', () => {
       },
       reporting: {
         type: 'hive',
-        token: '',
+        token,
       },
       persistedDocuments: {
         type: 'hive',
