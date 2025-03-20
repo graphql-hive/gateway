@@ -1,5 +1,96 @@
 # @graphql-hive/gateway
 
+## 1.13.0
+
+### Minor Changes
+
+- [#871](https://github.com/graphql-hive/gateway/pull/871) [`d8a7e9e`](https://github.com/graphql-hive/gateway/commit/d8a7e9e4f0492268f07301a87f1e102400fae921) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Introduce built-in armor security features
+
+  The following built-in features are introduced:
+
+  - `maxTokens`: Limit the number of tokens in a GraphQL document.
+    Defaults to `1000` tokens.
+  - `maxDepth`: Limit the depth of a GraphQL document.
+    Defaults to `6` levels.
+  - `blockFieldSuggestions`: Prevent returning field suggestions and leaking your schema to unauthorized actors.
+    Defaults to `true`
+
+  They are all **disabled** by default. You can enable or configure them individually. Only basic configuration options are allowed - security features needing more configuration should instead have the plugin installed and used manually.
+
+  #### Disable all (default)
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig();
+  ```
+
+  #### Enable all
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig({
+    maxTokens: true,
+    maxDepth: true,
+    blockFieldSuggestions: true,
+  });
+  ```
+
+  #### Configure
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig({
+    maxTokens: 3000,
+    maxDepth: 10,
+    blockFieldSuggestions: false,
+  });
+  ```
+
+  #### Advanced configuration
+
+  ```sh
+  npm i @escape.tech/graphql-armor-max-depth
+  ```
+
+  ```ts
+  import { maxDepthRule } from '@escape.tech/graphql-armor-max-depth';
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig({
+    // disable maxDepth feature by omitting it or setting it to false
+    plugins: () => [
+      maxDepthRule({
+        ignoreIntrospection: false,
+        flattenFragments: true,
+      }),
+    ],
+  });
+  ```
+
+### Patch Changes
+
+- [#871](https://github.com/graphql-hive/gateway/pull/871) [`d8a7e9e`](https://github.com/graphql-hive/gateway/commit/d8a7e9e4f0492268f07301a87f1e102400fae921) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@escape.tech/graphql-armor-block-field-suggestions@^3.0.0` ↗︎](https://www.npmjs.com/package/@escape.tech/graphql-armor-block-field-suggestions/v/3.0.0) (to `dependencies`)
+  - Added dependency [`@escape.tech/graphql-armor-max-depth@^2.4.0` ↗︎](https://www.npmjs.com/package/@escape.tech/graphql-armor-max-depth/v/2.4.0) (to `dependencies`)
+  - Added dependency [`@escape.tech/graphql-armor-max-tokens@^2.5.0` ↗︎](https://www.npmjs.com/package/@escape.tech/graphql-armor-max-tokens/v/2.5.0) (to `dependencies`)
+
+- [#865](https://github.com/graphql-hive/gateway/pull/865) [`dc8c4ce`](https://github.com/graphql-hive/gateway/commit/dc8c4ce642ecc8bb47d14002b196981f67c78c3c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Allow importing user installed modules from the root gateway
+
+- Updated dependencies [[`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`dc8c4ce`](https://github.com/graphql-hive/gateway/commit/dc8c4ce642ecc8bb47d14002b196981f67c78c3c), [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448), [`e6b4faa`](https://github.com/graphql-hive/gateway/commit/e6b4faa9813a6d17278feb7c8729433eb77ddf40)]:
+  - @graphql-hive/gateway-runtime@1.6.2
+  - @graphql-hive/plugin-aws-sigv4@1.0.2
+  - @graphql-mesh/hmac-upstream-signature@1.2.23
+  - @graphql-mesh/plugin-opentelemetry@1.3.48
+  - @graphql-mesh/transport-http@0.6.36
+  - @graphql-mesh/transport-http-callback@0.5.23
+  - @graphql-hive/importer@1.1.0
+  - @graphql-mesh/plugin-prometheus@1.3.36
+  - @graphql-mesh/transport-ws@1.0.6
+
 ## 1.12.2
 
 ### Patch Changes
