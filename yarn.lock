@@ -15460,8 +15460,8 @@ __metadata:
   linkType: hard
 
 "jscodeshift@npm:^17.1.1":
-  version: 17.1.2
-  resolution: "jscodeshift@npm:17.1.2"
+  version: 17.2.0
+  resolution: "jscodeshift@npm:17.2.0"
   dependencies:
     "@babel/core": "npm:^7.24.7"
     "@babel/parser": "npm:^7.24.7"
@@ -15478,7 +15478,7 @@ __metadata:
     micromatch: "npm:^4.0.7"
     neo-async: "npm:^2.5.0"
     picocolors: "npm:^1.0.1"
-    recast: "npm:^0.23.9"
+    recast: "npm:^0.23.10"
     tmp: "npm:^0.2.3"
     write-file-atomic: "npm:^5.0.1"
   peerDependencies:
@@ -15488,7 +15488,7 @@ __metadata:
       optional: true
   bin:
     jscodeshift: bin/jscodeshift.js
-  checksum: 10c0/1212b9fc24bbd0ca5df531ec9a2e389e09c977dbba9a91ac9ce87a947056d957bf66149e0633f1298b7baeb9a98b406028f610f92d4370f7c0d9b0a739eab2fe
+  checksum: 10c0/885a6b45e725b512ebcfdeade0588f7736e70d04c5585bc1500fd1039fe5cef6e54e640593541b33b50c23268c16398ca23edeaaabc88d57ba4f7c4295b47857
   languageName: node
   linkType: hard
 
@@ -18158,7 +18158,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"recast@npm:^0.23.9":
+"recast@npm:^0.23.10":
   version: 0.23.11
   resolution: "recast@npm:0.23.11"
   dependencies:
