@@ -1,12 +1,14 @@
 import {
   createGatewayRuntime,
   GatewayCLIBuiltinPluginConfig,
+  GatewayConfigProxy,
+  GatewayConfigSubgraph,
+  GatewayConfigSupergraph,
   GatewayPlugin,
   getBuiltinPluginsFromConfig,
   getCacheInstanceFromConfig,
   getGraphQLWSOptions,
   PubSub,
-  type GatewayConfig,
   type GatewayRuntime,
 } from '@graphql-hive/gateway';
 import {
@@ -32,18 +34,24 @@ import { lexicographicSortSchema } from 'graphql';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
-> = GatewayConfig<TContext> &
-  GatewayCLIBuiltinPluginConfig &
-  Omit<GqlModuleOptions, 'schema'> & {
-    /**
-     * If enabled, "subscriptions-transport-ws" will be automatically registered.
-     */
-    installSubscriptionHandlers?: boolean;
-    /**
-     * Subscriptions configuration.
-     */
-    subscriptions?: SubscriptionConfig;
-  };
+> =
+  // we spread each of the GatewayConfig union members because not doing so breaks the types and does not merge the `cache` property together
+  (
+    | Omit<GatewayConfigSupergraph<TContext>, 'cache'>
+    | Omit<GatewayConfigSubgraph<TContext>, 'cache'>
+    | Omit<GatewayConfigProxy<TContext>, 'cache'>
+  ) &
+    GatewayCLIBuiltinPluginConfig &
+    Omit<GqlModuleOptions, 'schema'> & {
+      /**
+       * If enabled, "subscriptions-transport-ws" will be automatically registered.
+       */
+      installSubscriptionHandlers?: boolean;
+      /**
+       * Subscriptions configuration.
+       */
+      subscriptions?: SubscriptionConfig;
+    };
 
 @Injectable()
 export class HiveGatewayDriver<

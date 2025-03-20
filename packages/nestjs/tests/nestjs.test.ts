@@ -1,5 +1,4 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { GatewayConfigSupergraph } from '@graphql-hive/gateway-runtime';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -27,7 +26,7 @@ const schemaSDL = /* GraphQL */ `
   }
 `;
 async function createNestApp(
-  opts: Omit<GatewayConfigSupergraph, 'supergraph'> &
+  opts: Omit<HiveGatewayDriverConfig, 'supergraph'> &
     Omit<GqlModuleOptions, 'driver'> = {},
 ) {
   const upstreamSchema = buildSubgraphSchema({
