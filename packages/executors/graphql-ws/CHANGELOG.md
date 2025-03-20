@@ -1,5 +1,11 @@
 # @graphql-tools/executor-graphql-ws
 
+## 2.0.5
+
+### Patch Changes
+
+- [#862](https://github.com/graphql-hive/gateway/pull/862) [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448) Thanks [@ardatan](https://github.com/ardatan)! - Use signal.addEventListener instead of leaking `registerAbortSignalListener` helper
+
 ## 2.0.4
 
 ### Patch Changes

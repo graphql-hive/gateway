@@ -1,5 +1,11 @@
 # @graphql-hive/importer
 
+## 1.1.0
+
+### Minor Changes
+
+- [#865](https://github.com/graphql-hive/gateway/pull/865) [`dc8c4ce`](https://github.com/graphql-hive/gateway/commit/dc8c4ce642ecc8bb47d14002b196981f67c78c3c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Respect NODE_PATH environment variable even when importing ESM modules
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @graphql-tools/delegate
 
+## 10.2.15
+
+### Patch Changes
+
+- [#862](https://github.com/graphql-hive/gateway/pull/862) [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.2.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.5) (from `^1.0.0`, in `dependencies`)
+
+- Updated dependencies [[`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448)]:
+  - @graphql-tools/batch-execute@9.0.14
+
 ## 10.2.14
 
 ### Patch Changes
