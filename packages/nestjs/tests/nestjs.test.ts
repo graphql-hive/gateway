@@ -14,7 +14,7 @@ import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { afterAll, describe, expect, it, vitest } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
 
 const disposableStack = new AsyncDisposableStack();
@@ -96,7 +96,7 @@ describe('NestJS', () => {
   });
 
   it('should run transform schema only once', async () => {
-    const transformFn = vitest.fn((schema) => schema);
+    const transformFn = vi.fn((schema) => schema);
     await createNestApp({
       transformSchema: transformFn,
     });
@@ -104,7 +104,7 @@ describe('NestJS', () => {
   });
 
   it('should sort schema only once', async () => {
-    const schemaChangeFn = vitest.fn();
+    const schemaChangeFn = vi.fn();
     await createNestApp({
       sortSchema: true,
       plugins: () => [
@@ -117,7 +117,7 @@ describe('NestJS', () => {
   });
 
   it('should use cache', async () => {
-    const onCacheSetErrorFn = vitest.fn();
+    const onCacheSetErrorFn = vi.fn();
     const [, port] = await createNestApp({
       cache: {
         type: 'localforage',
