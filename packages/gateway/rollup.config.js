@@ -55,6 +55,13 @@ const deps = {
     '../transports/ws/src/index.ts',
   'node_modules/@graphql-mesh/transport-http-callback/index':
     '../transports/http-callback/src/index.ts',
+  // security plugins are built-in but are dynamically imported
+  'node_modules/@escape.tech/graphql-armor-max-tokens/index':
+    '../../node_modules/@escape.tech/graphql-armor-max-tokens/dist/graphql-armor-max-tokens.esm.js',
+  'node_modules/@escape.tech/graphql-armor-max-depth/index':
+    '../../node_modules/@escape.tech/graphql-armor-max-depth/dist/graphql-armor-max-depth.esm.js',
+  'node_modules/@escape.tech/graphql-armor-block-field-suggestions/index':
+    '../../node_modules/@escape.tech/graphql-armor-block-field-suggestions/dist/graphql-armor-block-field-suggestions.esm.js',
   // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',

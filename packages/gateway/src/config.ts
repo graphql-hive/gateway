@@ -138,7 +138,11 @@ export async function getBuiltinPluginsFromConfig(
     );
     plugins.push(
       useMeshRateLimit({
-        ...config.rateLimiting,
+        config: Array.isArray(config.rateLimiting)
+          ? config.rateLimiting
+          : typeof config.rateLimiting === 'object'
+            ? config.rateLimiting.config
+            : [],
         cache: ctx.cache,
       }),
     );
@@ -152,6 +156,42 @@ export async function getBuiltinPluginsFromConfig(
   if (config.awsSigv4) {
     const { useAWSSigv4 } = await import('@graphql-hive/plugin-aws-sigv4');
     plugins.push(useAWSSigv4(config.awsSigv4));
+  }
+
+  if (config.maxTokens) {
+    const { maxTokensPlugin: useMaxTokens } = await import(
+      '@escape.tech/graphql-armor-max-tokens'
+    );
+    const maxTokensPlugin = useMaxTokens({
+      n: config.maxTokens === true ? 1000 : config.maxTokens,
+    });
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      maxTokensPlugin,
+    );
+  }
+
+  if (config.maxDepth) {
+    const { maxDepthPlugin: useMaxDepth } = await import(
+      '@escape.tech/graphql-armor-max-depth'
+    );
+    const maxDepthPlugin = useMaxDepth({
+      n: config.maxDepth === true ? 6 : config.maxDepth,
+    });
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      maxDepthPlugin,
+    );
+  }
+
+  if (config.blockFieldSuggestions) {
+    const { blockFieldSuggestionsPlugin: useBlockFieldSuggestions } =
+      await import('@escape.tech/graphql-armor-block-field-suggestions');
+    const blockFieldSuggestionsPlugin = useBlockFieldSuggestions();
+    plugins.push(
+      // @ts-expect-error the armor plugin does not inherit the context
+      blockFieldSuggestionsPlugin,
+    );
   }
 
   return plugins;

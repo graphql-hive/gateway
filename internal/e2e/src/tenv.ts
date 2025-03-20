@@ -569,6 +569,11 @@ export function createTenv(cwd: string): Tenv {
             });
             if (!res.ok) {
               const resText = await res.text();
+              try {
+                return JSON.parse(resText);
+              } catch {
+                // not a GraphQL error, something weird happened
+              }
               const err = new Error(
                 `${res.status} ${res.statusText}\n${resText}`,
               );

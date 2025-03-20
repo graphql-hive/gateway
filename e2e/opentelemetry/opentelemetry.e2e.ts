@@ -607,9 +607,25 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(execute({ query: 'query { test' })).rejects.toThrow(
-          'Syntax Error: Expected Name, found <EOF>.',
-        );
+        await expect(execute({ query: 'query { test' })).resolves
+          .toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "GRAPHQL_PARSE_FAILED",
+                },
+                "locations": [
+                  {
+                    "column": 13,
+                    "line": 1,
+                  },
+                ],
+                "message": "Syntax Error: Expected Name, found <EOF>.",
+              },
+            ],
+          }
+        `);
         await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTrace = traces.data.find((trace) =>
@@ -666,11 +682,25 @@ describe('OpenTelemetry', () => {
           },
         });
 
-        await expect(
-          execute({ query: 'query { nonExistentField }' }),
-        ).rejects.toThrow(
-          '400 Bad Request\n{"errors":[{"message":"Cannot query field \\"nonExistentField\\" on type \\"Query\\".","locations":[{"line":1,"column":9}],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"}}]}',
-        );
+        await expect(execute({ query: 'query { nonExistentField }' })).resolves
+          .toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "GRAPHQL_VALIDATION_FAILED",
+                },
+                "locations": [
+                  {
+                    "column": 9,
+                    "line": 1,
+                  },
+                ],
+                "message": "Cannot query field "nonExistentField" on type "Query".",
+              },
+            ],
+          }
+        `);
         await expectJaegerTraces(serviceName, (traces) => {
           expect(traces.data.length).toBe(2);
           const relevantTrace = traces.data.find((trace) =>

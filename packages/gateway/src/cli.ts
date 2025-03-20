@@ -20,7 +20,6 @@ import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import useMeshRateLimit from '@graphql-mesh/plugin-rate-limit';
 import type {
   KeyValueCache,
   Logger,
@@ -118,30 +117,30 @@ export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Configure JWT Auth
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/authorization-authentication)
+   * @see https://graphql-hive.com/docs/gateway/authorization-authentication
    */
   jwt?: JWTAuthPluginOptions;
   /**
    * Configure Prometheus metrics
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/monitoring-tracing)
+   * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
   prometheus?: Exclude<PrometheusPluginOptions, GatewayConfigContext>;
   /**
    * Configure OpenTelemetry
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/monitoring-tracing)
+   * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
   openTelemetry?: Exclude<OpenTelemetryMeshPluginOptions, GatewayConfigContext>;
   /**
    * Configure Rate Limiting
    *
-   * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting)
+   * @see https://graphql-hive.com/docs/gateway/other-features/security/rate-limiting
    */
-  rateLimiting?: Exclude<
-    Parameters<typeof useMeshRateLimit>[0],
-    GatewayConfigContext
-  >;
+  rateLimiting?:
+    | boolean
+    | YamlConfig.RateLimitPluginConfig['config']
+    | YamlConfig.RateLimitPluginConfig; // deprecated
   /**
    * Enable and configure AWS Sigv4 signing
    */
@@ -149,7 +148,7 @@ export interface GatewayCLIBuiltinPluginConfig {
   /**
    * Enable Just-In-Time compilation of GraphQL documents.
    *
-   * [Learn more](https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks)
+   * @see https://github.com/zalando-incubator/graphql-jit?tab=readme-ov-file#benchmarks
    */
   jit?: boolean;
   cache?:
@@ -159,6 +158,37 @@ export interface GatewayCLIBuiltinPluginConfig {
     | GatewayCLIRedisCacheConfig
     | GatewayCLICloudflareKVCacheConfig
     | GatewayCLIUpstashRedisCacheConfig;
+  /**
+   * Limit the number of tokens in a GraphQL document.
+   *
+   * Passing `true` will enable the feature with the default limit of `1000` tokens.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-max-tokens` plugin](https://escape.tech/graphql-armor/docs/plugins/max-tokens/#with-envelopcore-from-the-guild-org) instead.
+   *
+   * @default false
+   */
+  maxTokens?: boolean | number;
+  /**
+   * Limit the depth of a GraphQL document.
+   *
+   * Passing `true` will enable the feature with the default limit of `6` levels.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-max-depth` plugin](https://escape.tech/graphql-armor/docs/plugins/max-depth/#with-envelopcore-from-the-guild-org) instead
+   *
+   * @default false
+   */
+  maxDepth?: boolean | number;
+  /**
+   * Prevent returning field suggestions and leaking your schema to unauthorized actors.
+   *
+   * If you would like more configuration options, please disable this feature and
+   * use the [`@escape.tech/graphql-armor-block-field-suggestions` plugin](https://escape.tech/graphql-armor/docs/plugins/block-field-suggestions/#with-envelopcore-from-the-guild-org) instead
+   *
+   * @default false
+   */
+  blockFieldSuggestions?: boolean;
 }
 
 export type GatewayCLILocalforageCacheConfig = YamlConfig.LocalforageConfig & {
