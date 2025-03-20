@@ -61,9 +61,9 @@ async function createNestApp(
   }).compile();
   const app = moduleRef.createNestApplication();
   disposableStack.defer(() => app.close());
-  app.init();
 
   const port = await getAvailablePort();
+  // app.init(); // app.listen() will call init
   await app.listen(port);
 
   return [app, port] as const;
@@ -114,7 +114,7 @@ describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
         },
       ],
     });
-    expect(schemaChangeFn).toHaveBeenCalledTimes(1);
+    expect(schemaChangeFn).toHaveBeenCalledTimes(2); // 1st time for the lazy Hive Gateway schema, 2nd time for the sorted  schema
   });
 
   it('should use cache', async () => {
@@ -122,8 +122,6 @@ describe.skipIf(process.env['LEAK_TEST'])('NestJS', () => {
     const [, port] = await createNestApp({
       cache: {
         type: 'localforage',
-        // host: 'host.docker.internal',
-        // port: '6379',
       },
       plugins: () => [
         {

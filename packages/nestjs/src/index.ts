@@ -57,6 +57,11 @@ export class HiveGatewayDriver<
     resolvers,
     ...options
   }: HiveGatewayDriverConfig<TContext>) {
+    if (this._gatewayRuntime) {
+      // the gateway runtime can already be initialized beacuse Nest calls `generateSchema` before `start`
+      // dont create multiple instances, just return the existing one if it exists
+      return this._gatewayRuntime;
+    }
     const additionalTypeDefs: TypeSource[] = [];
     if (typeDefs) {
       additionalTypeDefs.push(typeDefs);
@@ -139,7 +144,7 @@ export class HiveGatewayDriver<
   public async start(
     options: HiveGatewayDriverConfig<TContext>,
   ): Promise<void> {
-    const _gatewayRuntime = await this.ensureGatewayRuntime(options);
+    const gatewayRuntime = await this.ensureGatewayRuntime(options);
     const platformName = this.httpAdapterHost.httpAdapter.getType();
     if (platformName === 'express') {
       this.registerExpress();
@@ -153,7 +158,7 @@ export class HiveGatewayDriver<
         options.subscriptions || { 'graphql-ws': {} };
       if (subscriptionsOptions['graphql-ws']) {
         const gwOptions = getGraphQLWSOptions<TContext, any>(
-          _gatewayRuntime,
+          gatewayRuntime,
           (ctx) => ({
             req: ctx.extra?.request,
             socket: ctx.extra?.socket,
@@ -181,9 +186,6 @@ export class HiveGatewayDriver<
           },
           ws: WebSocket,
         ) => {
-          if (!this._gatewayRuntime) {
-            throw new Error('Hive Gateway is not initialized');
-          }
           const {
             schema,
             execute,
@@ -191,7 +193,7 @@ export class HiveGatewayDriver<
             contextFactory,
             parse,
             validate,
-          } = this._gatewayRuntime.getEnveloped({
+          } = gatewayRuntime.getEnveloped({
             ...params.context,
             req:
               // @ts-expect-error upgradeReq does exist but is untyped
@@ -219,7 +221,7 @@ export class HiveGatewayDriver<
       }
       this._subscriptionService = new GqlSubscriptionService(
         {
-          schema: await _gatewayRuntime!.getSchema(),
+          schema: await gatewayRuntime!.getSchema(),
           path: options.path,
           // @ts-expect-error - We know that execute and subscribe are defined
           execute: (args) => args.rootValue.execute(args),
@@ -233,8 +235,10 @@ export class HiveGatewayDriver<
   }
 
   public async stop(): Promise<void> {
-    await this._subscriptionService?.stop();
-    await this._gatewayRuntime?.dispose();
+    await Promise.all([
+      this._subscriptionService?.stop(),
+      this._gatewayRuntime?.dispose(),
+    ]);
   }
 
   public override async generateSchema(
@@ -245,6 +249,9 @@ export class HiveGatewayDriver<
   }
 
   private registerExpress() {
+    if (!this._gatewayRuntime) {
+      throw new Error('Hive Gateway is not initialized');
+    }
     this.httpAdapterHost.httpAdapter.use(this._gatewayRuntime);
   }
   private registerFastify() {
