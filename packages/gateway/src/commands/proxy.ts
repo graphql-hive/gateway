@@ -199,9 +199,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 export type ProxyConfig = GatewayConfigProxy & GatewayCLIConfig;
 
 export async function runProxy({ log }: CLIContext, config: ProxyConfig) {
-  if (handleFork(log, config)) {
-    return;
-  }
+  handleFork(log, config);
 
   log.info(`Proxying requests to ${config.proxy.endpoint}`);
 

@@ -2,7 +2,7 @@ import cluster, { type Worker } from 'node:cluster';
 import type { Logger } from '@graphql-mesh/types';
 import { registerTerminateHandler } from '@graphql-mesh/utils';
 
-export function handleFork(log: Logger, config: { fork?: number }): boolean {
+export function handleFork(log: Logger, config: { fork?: number }) {
   try {
     if (cluster.isPrimary && config.fork && config.fork > 1) {
       const workers = new Set<Worker>();
@@ -43,10 +43,8 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
           w.kill(signal);
         });
       });
-      return true;
     }
   } catch (e) {
     log.error(`Error while forking workers: `, e);
   }
-  return false;
 }

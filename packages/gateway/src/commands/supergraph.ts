@@ -340,9 +340,7 @@ export async function runSupergraph(
     }
   }
 
-  if (handleFork(log, config)) {
-    return;
-  }
+  handleFork(log, config);
 
   if (config.additionalTypeDefs) {
     const loaders = [new GraphQLFileLoader(), new CodeFileLoader()];

@@ -30,9 +30,7 @@ describe('Gateway', async () => {
         signal: ctrl.signal,
       });
       const data = await res.json();
-      expect(data).toEqual({
-        data: expect.any(Object),
-      });
+      expect(data).toEqual(example.result);
     },
     {
       async setup() {

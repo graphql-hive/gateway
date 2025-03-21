@@ -175,9 +175,7 @@ export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
     }
   }
 
-  if (handleFork(log, config)) {
-    return;
-  }
+  handleFork(log, config);
 
   const runtime = createGatewayRuntime(config);
 
