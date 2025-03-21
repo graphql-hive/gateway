@@ -175,6 +175,7 @@ describe('Hive CDN', () => {
       reporting: {
         type: 'hive',
         token,
+        printTokenInfo: false,
         selfHosting: {
           graphqlEndpoint: cdnServer.url + '/graphql',
           applicationUrl: cdnServer.url,
@@ -324,6 +325,7 @@ describe('Hive CDN', () => {
       reporting: {
         type: 'hive',
         token,
+        printTokenInfo: false,
         selfHosting: {
           graphqlEndpoint: cdnServer.url + '/graphql',
           applicationUrl: cdnServer.url,
