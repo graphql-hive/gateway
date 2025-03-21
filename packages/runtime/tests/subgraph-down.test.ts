@@ -9,7 +9,7 @@ import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
-describe('Error handling', async () => {
+describe('Error handling', () => {
   /**
    * type Query {
    *  subgraph1: Subgraph1 # This subgraph is down
