@@ -159,10 +159,16 @@ describe('Hive CDN', () => {
     const token = 'secret';
 
     const { promise: waitForUsageReq, resolve: usageReq } =
-      createDeferredPromise<Request>();
+      createDeferredPromise<{
+        headers: Record<string, string>;
+        body: any;
+      }>();
     await using cdnServer = await createDisposableServer(
       createServerAdapter(async (req) => {
-        usageReq(req);
+        usageReq({
+          headers: Object.fromEntries(req.headers),
+          body: await req.json(),
+        });
         return new Response();
       }),
     );
@@ -207,9 +213,9 @@ describe('Hive CDN', () => {
 
     const req = await waitForUsageReq;
 
-    expect(req.headers.get('authorization')).toBe(`Bearer ${token}`);
-    expect(req.headers.get('user-agent')).toContain('hive-gateway/');
-    await expect(req.json()).resolves.toEqual(
+    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
+    expect(req.headers['user-agent']).toContain('hive-gateway/');
+    expect(req.body).toEqual(
       expect.objectContaining({
         map: expect.any(Object),
         operations: expect.any(Array),
@@ -284,7 +290,10 @@ describe('Hive CDN', () => {
   it('handles persisted documents with reporting', async () => {
     const token = 'secret';
     const { promise: waitForUsageReq, resolve: usageReq } =
-      createDeferredPromise<Request>();
+      createDeferredPromise<{
+        headers: Record<string, string>;
+        body: any;
+      }>();
     await using cdnServer = await createDisposableServer(
       createServerAdapter(async (req) => {
         if (
@@ -302,7 +311,10 @@ describe('Hive CDN', () => {
             }
           `);
         }
-        usageReq(req);
+        usageReq({
+          headers: Object.fromEntries(req.headers),
+          body: await req.json(),
+        });
         return new Response();
       }),
     );
@@ -359,9 +371,9 @@ describe('Hive CDN', () => {
 
     const req = await waitForUsageReq;
 
-    expect(req.headers.get('authorization')).toBe(`Bearer ${token}`);
-    expect(req.headers.get('user-agent')).toContain('hive-gateway/');
-    await expect(req.json()).resolves.toEqual(
+    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
+    expect(req.headers['user-agent']).toContain('hive-gateway/');
+    expect(req.body).toEqual(
       expect.objectContaining({
         map: expect.any(Object),
         operations: expect.any(Array),
