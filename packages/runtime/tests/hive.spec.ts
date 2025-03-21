@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
@@ -215,6 +216,9 @@ describe('Hive CDN', () => {
         size: 1,
       }),
     );
+
+    await setTimeout(10); // allow hive client to flush before disposing
+    // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
@@ -364,5 +368,8 @@ describe('Hive CDN', () => {
         size: 1,
       }),
     );
+
+    await setTimeout(10); // allow hive client to flush before disposing
+    // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
 });
