@@ -1,4 +1,5 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
+import { createHive } from '@graphql-hive/core';
 import { useHive } from '@graphql-hive/yoga';
 import { process } from '@graphql-mesh/cross-helpers';
 import type { Logger } from '@graphql-mesh/types';
@@ -66,7 +67,7 @@ export default function useHiveConsole<
   if (enabled && !token) {
     throw new Error('Hive plugin is enabled but the token is not provided');
   }
-  const hivePlugin = useHive(
+  const hive = createHive(
     enabled
       ? {
           debug: ['1', 'y', 'yes', 't', 'true'].includes(
@@ -89,7 +90,11 @@ export default function useHiveConsole<
           usage,
         },
   );
+  const hivePlugin = useHive(hive);
 
   // @ts-expect-error TODO: useHive plugin should inhert the TContext
-  return hivePlugin;
+  return {
+    ...hivePlugin,
+    onDispose: () => hive.dispose(),
+  };
 }
