@@ -203,7 +203,7 @@ describe('Error handling', async () => {
       errors: [
         {
           message: 'Cannot return null for non-nullable field Query.subgraph1.',
-          locations: [{ line: 3, column: 25 }],
+          locations: [{ line: 3, column: 13 }],
           path: ['subgraph1'],
         },
       ],
