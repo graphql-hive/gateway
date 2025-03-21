@@ -38,7 +38,7 @@ export default function useHiveConsole<
   TContext
 > {
   const agent: HiveConsolePluginOptions['agent'] = {
-    name: 'graphql-hive-gateway',
+    name: 'hive-gateway',
     logger: options.logger,
     ...options.agent,
   };

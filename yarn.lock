@@ -5666,10 +5666,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/testing@workspace:internal/testing"
   dependencies:
+    "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-tools/utils": "npm:^10.7.2"
     "@types/node": "npm:^22.7.5"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
+    "@whatwg-node/promise-helpers": "npm:^1.2.5"
     graphql: "npm:^16.10.0"
     jest-leak-detector: "npm:29.7.0"
     ws: "npm:^8.18.0"
