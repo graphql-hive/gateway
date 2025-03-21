@@ -4376,8 +4376,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-http-cache@npm:^0.105.0":
-  version: 0.105.1
-  resolution: "@graphql-mesh/plugin-http-cache@npm:0.105.1"
+  version: 0.105.2
+  resolution: "@graphql-mesh/plugin-http-cache@npm:0.105.2"
   dependencies:
     "@graphql-mesh/types": "npm:^0.104.1"
     "@graphql-mesh/utils": "npm:^0.104.1"
@@ -4387,7 +4387,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/b77fde6b42738902a2bc3a3cd6d8652b056ed9560add586298ecc5c255efbd0c3a5f545b6e7d54a382994bd2ba88de07f7dd52468cf64979f5a153cd07aa9556
+  checksum: 10c0/76f8dab9a8b88b31afae1e87e8efd11ee7c91fff27aae7736637f9b8dbdcc8b71bbde24fbebdf4a6bf9a799ba797fd13ac1c0c65d9d7aa19162fe942af848f13
   languageName: node
   linkType: hard
 
