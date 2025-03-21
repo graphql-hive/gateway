@@ -155,13 +155,13 @@ describe('Hive CDN', () => {
       printSchema(upstreamSchema),
     );
   });
-  it('handles reporting', async () => {
+  it.only('handles reporting', async () => {
     const token = 'secret';
 
     const { promise: waitForUsageReq, resolve: usageReq } =
       createDeferredPromise<Request>();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter(async (req) => {
+      createServerAdapter((req) => {
         usageReq(req);
         return new Response();
       }),

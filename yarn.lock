@@ -3951,7 +3951,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
-    "@whatwg-node/server": "npm:^0.10.1"
+    "@whatwg-node/server": "npm:^0.10.2-alpha-20250321155437-a449cf2a40368aee8ef44eaa90773342baa2f073"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -8907,6 +8907,19 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.2.3"
     tslib: "npm:^2.6.3"
   checksum: 10c0/265930c1977f2b246c03c478fc67b8e4f120190da3a5d5953ee3ca9766d1f3d2bee5bde70d510e0f51da1a8d20045c165274c1699ba3880d2a9ca8b1e8a1e8aa
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/server@npm:^0.10.2-alpha-20250321155437-a449cf2a40368aee8ef44eaa90773342baa2f073":
+  version: 0.10.2-alpha-20250321155437-a449cf2a40368aee8ef44eaa90773342baa2f073
+  resolution: "@whatwg-node/server@npm:0.10.2-alpha-20250321155437-a449cf2a40368aee8ef44eaa90773342baa2f073"
+  dependencies:
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/fetch": "npm:^0.10.5"
+    "@whatwg-node/promise-helpers": "npm:^1.2.3"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/edc8f5644d5cfd7710f3b9bfca3b4fc3a27558417b48c221c6ad25421d228886e6f95376e87f0800102e15f59c56c153e3adf6b445fe202812323a4e63f04478
   languageName: node
   linkType: hard
 
