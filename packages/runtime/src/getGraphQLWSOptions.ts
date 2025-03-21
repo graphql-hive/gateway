@@ -42,6 +42,7 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         gwRuntime.getEnveloped({
           connectionParams: ctx.connectionParams,
+          waitUntil: gwRuntime.waitUntil,
           ...(await onContext(ctx)),
         });
       const args: EnvelopedExecutionArgs = {

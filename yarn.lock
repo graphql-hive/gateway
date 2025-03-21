@@ -3951,7 +3951,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.4"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
-    "@whatwg-node/server": "npm:^0.10.1"
+    "@whatwg-node/server": "npm:^0.10.2"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -8897,7 +8897,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.1":
+"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.1, @whatwg-node/server@npm:^0.10.2":
   version: 0.10.2
   resolution: "@whatwg-node/server@npm:0.10.2"
   dependencies:
