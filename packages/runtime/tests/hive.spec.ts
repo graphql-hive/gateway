@@ -1,7 +1,14 @@
+import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { createDisposableServer, isDebug } from '@internal/testing';
+import {
+  createDeferredPromise,
+  createDisposableServer,
+  executeFetch,
+  initForExecuteFetchArgs,
+  isDebug,
+} from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import {
@@ -59,17 +66,15 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await gateway.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+
+    const res = await gateway.fetch(
+      'http://localhost/graphql',
+      initForExecuteFetchArgs({
         query: getIntrospectionQuery({
           descriptions: false,
         }),
       }),
-    });
+    );
 
     expect(res.status).toBe(200);
     const resJson: ExecutionResult<IntrospectionQuery> = await res.json();
@@ -131,21 +136,16 @@ describe('Hive CDN', () => {
       ],
       logging: isDebug(),
     });
-    const res = await gateway.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+
+    await expect(
+      executeFetch(gateway, {
         query: /* GraphQL */ `
           query {
             foo
           }
         `,
       }),
-    });
-    const resJson: ExecutionResult = await res.json();
-    expect(resJson).toEqual({
+    ).resolves.toEqual({
       data: {
         foo: 'bar',
       },
@@ -154,6 +154,77 @@ describe('Hive CDN', () => {
     expect(printSchema(schemaChangeSpy.mock.calls[0]?.[0]!)).toBe(
       printSchema(upstreamSchema),
     );
+  });
+  it('handles reporting', async () => {
+    const token = 'secret';
+
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<{
+        headers: Record<string, string>;
+        body: any;
+      }>();
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter(async (req) => {
+        usageReq({
+          headers: Object.fromEntries(req.headers),
+          body: await req.json(),
+        });
+        return new Response();
+      }),
+    );
+    await using upstreamServer = await createDisposableServer(
+      createYoga({ schema: createUpstreamSchema() }),
+    );
+    await using gateway = createGatewayRuntime({
+      proxy: {
+        endpoint: `${upstreamServer.url}/graphql`,
+      },
+      reporting: {
+        type: 'hive',
+        token,
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url,
+        },
+        agent: {
+          sendInterval: 0,
+        },
+      },
+      logging: isDebug(),
+    });
+
+    await expect(
+      executeFetch(gateway, {
+        query: /* GraphQL */ `
+          {
+            foo
+          }
+        `,
+      }),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "foo": "bar",
+        },
+      }
+    `);
+
+    const req = await waitForUsageReq;
+
+    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
+    expect(req.headers['user-agent']).toContain('hive-gateway/');
+    expect(req.body).toEqual(
+      expect.objectContaining({
+        map: expect.any(Object),
+        operations: expect.any(Array),
+        size: 1,
+      }),
+    );
+
+    await setTimeout(10); // allow hive client to flush before disposing
+    // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
   it('handles persisted documents without reporting', async () => {
     const token = 'secret';
@@ -204,18 +275,13 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await gateway.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+
+    await expect(
+      executeFetch(gateway, {
         documentId:
           'graphql-app~1.0.0~Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
       }),
-    });
-    const resJson: ExecutionResult = await res.json();
-    expect(resJson).toEqual({
+    ).resolves.toEqual({
       data: {
         foo: 'bar',
       },
@@ -223,8 +289,13 @@ describe('Hive CDN', () => {
   });
   it('handles persisted documents with reporting', async () => {
     const token = 'secret';
+    const { promise: waitForUsageReq, resolve: usageReq } =
+      createDeferredPromise<{
+        headers: Record<string, string>;
+        body: any;
+      }>();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter((req) => {
+      createServerAdapter(async (req) => {
         if (
           req.url.endsWith(
             '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
@@ -240,7 +311,11 @@ describe('Hive CDN', () => {
             }
           `);
         }
-        return new Response('Not Found', { status: 404 });
+        usageReq({
+          headers: Object.fromEntries(req.headers),
+          body: await req.json(),
+        });
+        return new Response();
       }),
     );
     await using upstreamServer = await createDisposableServer(
@@ -265,7 +340,16 @@ describe('Hive CDN', () => {
       },
       reporting: {
         type: 'hive',
-        token: '',
+        token,
+        printTokenInfo: false,
+        selfHosting: {
+          graphqlEndpoint: cdnServer.url + '/graphql',
+          applicationUrl: cdnServer.url,
+          usageEndpoint: cdnServer.url,
+        },
+        agent: {
+          sendInterval: 0,
+        },
       },
       persistedDocuments: {
         type: 'hive',
@@ -274,21 +358,30 @@ describe('Hive CDN', () => {
       },
       logging: isDebug(),
     });
-    const res = await gateway.fetch('http://localhost:4000/graphql', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+    await expect(
+      executeFetch(gateway, {
         documentId:
           'graphql-app~1.0.0~Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
       }),
-    });
-    const resJson: ExecutionResult = await res.json();
-    expect(resJson).toEqual({
+    ).resolves.toEqual({
       data: {
         foo: 'bar',
       },
     });
+
+    const req = await waitForUsageReq;
+
+    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
+    expect(req.headers['user-agent']).toContain('hive-gateway/');
+    expect(req.body).toEqual(
+      expect.objectContaining({
+        map: expect.any(Object),
+        operations: expect.any(Array),
+        size: 1,
+      }),
+    );
+
+    await setTimeout(10); // allow hive client to flush before disposing
+    // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
 });

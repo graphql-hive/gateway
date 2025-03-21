@@ -6,3 +6,5 @@ export * from './assertions';
 export * from './benchConfig';
 export * from './trimError';
 export * from './composeLocalSchemasWithApollo';
+export * from './graphql';
+export * from '@whatwg-node/promise-helpers';
