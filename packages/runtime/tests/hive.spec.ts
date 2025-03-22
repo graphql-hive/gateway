@@ -120,10 +120,8 @@ describe('Hive CDN', () => {
       plugins: () => [
         useCustomFetch((url, opts): MaybePromise<Response> => {
           if (url === 'http://upstream/graphql') {
-            return upstreamServer.fetch(
-              url,
-              opts as RequestInit,
-            );
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
           }
           return gateway.fetchAPI.Response.error();
         }),
