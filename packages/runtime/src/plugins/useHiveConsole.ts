@@ -1,5 +1,4 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
-import { createHive } from '@graphql-hive/core';
 import { useHive } from '@graphql-hive/yoga';
 import { process } from '@graphql-mesh/cross-helpers';
 import type { Logger } from '@graphql-mesh/types';
@@ -67,34 +66,16 @@ export default function useHiveConsole<
   if (enabled && !token) {
     throw new Error('Hive plugin is enabled but the token is not provided');
   }
-  const hive = createHive(
-    enabled
-      ? {
-          debug: ['1', 'y', 'yes', 't', 'true'].includes(
-            String(process.env['DEBUG']),
-          ),
-          ...options,
-          enabled: true,
-          token: token!,
-          agent,
-          usage,
-        }
-      : {
-          debug: ['1', 'y', 'yes', 't', 'true'].includes(
-            String(process.env['DEBUG']),
-          ),
-          ...options,
-          enabled: false,
-          token,
-          agent,
-          usage,
-        },
-  );
-  const hivePlugin = useHive(hive);
 
   // @ts-expect-error TODO: useHive plugin should inhert the TContext
-  return {
-    ...hivePlugin,
-    onDispose: () => hive.dispose(),
-  };
+  return useHive({
+    debug: ['1', 'y', 'yes', 't', 'true'].includes(
+      String(process.env['DEBUG']),
+    ),
+    ...options,
+    enabled: !!enabled,
+    token: token!,
+    agent,
+    usage,
+  });
 }
