@@ -1,5 +1,20 @@
 # @graphql-hive/nestjs
 
+## 1.0.5
+
+### Patch Changes
+
+- [#889](https://github.com/graphql-hive/gateway/pull/889) [`79dc3bb`](https://github.com/graphql-hive/gateway/commit/79dc3bb8c7cc26d46edb2e431a28369117abaf93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Correct type definitions for builtin plugins and cache types
+
+- [#889](https://github.com/graphql-hive/gateway/pull/889) [`79dc3bb`](https://github.com/graphql-hive/gateway/commit/79dc3bb8c7cc26d46edb2e431a28369117abaf93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Initialise the gateway only once
+
+  Nest can invoke `generateSchema` method before running `start`. If that is the case, the existing Hive Gateway instance should be used in `start`.
+
+- [#889](https://github.com/graphql-hive/gateway/pull/889) [`79dc3bb`](https://github.com/graphql-hive/gateway/commit/79dc3bb8c7cc26d46edb2e431a28369117abaf93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use prepared cache instance
+
+- Updated dependencies [[`2e83074`](https://github.com/graphql-hive/gateway/commit/2e830742df0d8dd16826e440e41f8f75fce81513)]:
+  - @graphql-hive/gateway@1.13.1
+
 ## 1.0.4
 
 ### Patch Changes
