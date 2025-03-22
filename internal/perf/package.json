@@ -16,7 +16,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/k6": "^0.57.0",
+    "@types/k6": "^1.0.0",
     "@types/ws": "^8.5.12"
   }
 }
