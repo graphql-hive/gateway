@@ -1,7 +1,7 @@
 import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { MaybePromise, printSchemaWithDirectives } from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   createDisposableServer,
@@ -118,13 +118,10 @@ describe('Hive CDN', () => {
         key: hiveKey,
       },
       plugins: () => [
-        useCustomFetch((url, opts): any => {
+        useCustomFetch((url, opts): MaybePromise<Response> => {
           if (url === 'http://upstream/graphql') {
-            return upstreamServer.fetch(
-              // @ts-expect-error TODO: url can be a string, not only an instance of URL
-              url,
-              opts,
-            );
+            // @ts-expect-error - Fetch signature is not compatible
+            return upstreamServer.fetch(url, opts);
           }
           return gateway.fetchAPI.Response.error();
         }),

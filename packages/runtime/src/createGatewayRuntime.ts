@@ -641,6 +641,8 @@ export function createGatewayRuntime<
           endpoint,
           key,
           logger: configContext.logger.child({ source: 'Hive CDN' }),
+          // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
+          fetchImplementation: configContext.fetch,
         });
         unifiedGraphFetcher = () =>
           fetcher().then(({ supergraphSdl }) => supergraphSdl);
