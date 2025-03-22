@@ -137,6 +137,7 @@ export function getFieldsNotInSubschema(
             }
             return true;
           },
+          fragments,
         );
         if (unavailableFields.length) {
           fieldNotInSchema = true;
