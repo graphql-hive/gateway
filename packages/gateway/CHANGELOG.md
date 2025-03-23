@@ -1,5 +1,20 @@
 # @graphql-hive/gateway
 
+## 1.13.1
+
+### Patch Changes
+
+- [#908](https://github.com/graphql-hive/gateway/pull/908) [`2e83074`](https://github.com/graphql-hive/gateway/commit/2e830742df0d8dd16826e440e41f8f75fce81513) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.2) (from `^0.105.0`, in `dependencies`)
+
+- Updated dependencies [[`1950f44`](https://github.com/graphql-hive/gateway/commit/1950f44d9180c8cd8a73917487c087ab1d1b74fa), [`df1bce6`](https://github.com/graphql-hive/gateway/commit/df1bce649e3f468435aa34d9141b4c20d8d26699), [`df1bce6`](https://github.com/graphql-hive/gateway/commit/df1bce649e3f468435aa34d9141b4c20d8d26699)]:
+  - @graphql-hive/gateway-runtime@1.6.3
+  - @graphql-hive/plugin-aws-sigv4@1.0.2
+  - @graphql-mesh/hmac-upstream-signature@1.2.23
+  - @graphql-mesh/plugin-opentelemetry@1.3.49
+  - @graphql-mesh/plugin-prometheus@1.3.37
+
 ## 1.13.0
 
 ### Minor Changes
