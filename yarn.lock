@@ -8929,15 +8929,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006":
-  version: 0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006
-  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006"
+"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a":
+  version: 0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a
+  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/3b0d6b0eaa67845e1c16c7a63ad36fc326cb9de514cfc190ec155d8812062c30925105ac10fe12c93837eb49cebedae1630384b3185d3ab760c27231b2d9667c
+  checksum: 10c0/7d32f2dde0330e4ad5508379c9b53147b5e66134b08d787c4287cd14f37a276111c51ae43143c151d8497ab5cc1008f3171d909380071227743b2056ceacd7e8
   languageName: node
   linkType: hard
 
@@ -8961,16 +8961,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.1, @whatwg-node/server@npm:^0.10.2":
-  version: 0.10.2
-  resolution: "@whatwg-node/server@npm:0.10.2"
+"@whatwg-node/server@npm:0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a":
+  version: 0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a
+  resolution: "@whatwg-node/server@npm:0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.5"
     "@whatwg-node/promise-helpers": "npm:^1.2.3"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/e9187a5a252922537b7a504cbb17c4bf57b46c177b9faad52711322b157e50043d9f5060df60cfae5af05a18915993ff39771d7704b0ae73a28cfdd530a8c8c8
+  checksum: 10c0/9f097c597671d92b9b036562d2bc66effdeb8a4f4caea0f975fe7cb093f7ee486b3f8ad26e7b494ba474ad0aa85adf8559b63b689883e29716a4d62cdd06d52e
   languageName: node
   linkType: hard
 
