@@ -1,5 +1,5 @@
-// https://github.com/unjs/std-env/blob/ab15595debec9e9115a9c1d31bc7597a8e71dbfd/src/runtimes.ts#L14-L21
-const isNode = globalThis.process?.release?.name === 'node';
+// https://github.com/unjs/std-env/blob/ab15595debec9e9115a9c1d31bc7597a8e71dbfd/src/runtimes.ts
+const isNode = !globalThis.Bun && globalThis.process?.release?.name === 'node';
 
 const anySignalRegistry = isNode
   ? new FinalizationRegistry<() => void>((cb) => cb())
