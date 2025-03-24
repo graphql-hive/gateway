@@ -1,8 +1,8 @@
 import LeakDetector from 'jest-leak-detector';
-import { it } from 'vitest';
+import { expect, it } from 'vitest';
 import { abortSignalAny } from '../src/abortSignalAny';
 
-it('should not abort if none of the signals abort', ({ expect }) => {
+it('should not abort if none of the signals abort', () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
@@ -11,7 +11,7 @@ it('should not abort if none of the signals abort', ({ expect }) => {
   expect(() => signal.throwIfAborted()).not.toThrow();
 });
 
-it('should abort if any signal aborts', ({ expect }) => {
+it('should abort if any signal aborts', () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
@@ -25,7 +25,7 @@ it('should abort if any signal aborts', ({ expect }) => {
   );
 });
 
-it('should return aborted signal if aborted before any', ({ expect }) => {
+it('should return aborted signal if aborted before any', () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
@@ -39,7 +39,7 @@ it('should return aborted signal if aborted before any', ({ expect }) => {
   );
 });
 
-it('should GC all signals after abort', async ({ expect }) => {
+it('should GC all signals after abort', async () => {
   let ctrl1: AbortController | null = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
@@ -63,7 +63,7 @@ it('should GC all signals after abort', async ({ expect }) => {
   await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
 });
 
-it('should GC all signals without abort', async ({ expect }) => {
+it('should GC all signals without abort', async () => {
   let ctrl1: AbortController | null = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
