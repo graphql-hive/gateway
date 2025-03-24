@@ -161,7 +161,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           (frame) =>
             // these frames are expected to be big
             // TODO: inspect the callstack making sure we're filtering out precisely the right frames
-            !['register', 'WeakRef', 'any', 'set'].includes(frame.name),
+            !['set'].includes(frame.name),
         )
         .filter((frame) => {
           if (expectedHeavyFrame) {
