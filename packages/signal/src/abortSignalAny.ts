@@ -8,17 +8,17 @@ const anySignalRegistry = isNode
 const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
 
 /**
- * Memory safe polyfill of `AbortSignal.any`. In Node environments, the native
+ * Memory safe ponyfill of `AbortSignal.any`. In Node environments, the native
  * `AbortSignal.any` seems to be leaky and can lead to subtle memory leaks over
  * a larger period of time.
  *
- * This polyfill is a custom implementation that makes sure AbortSignals get properly
+ * This ponyfill is a custom implementation that makes sure AbortSignals get properly
  * GC-ed as well as aborted.
  */
 export function abortSignalAny(signals: AbortSignal[]) {
   if (!isNode) {
     // AbortSignal.any seems to be leaky only in Node env
-    // TODO: should we polyfill other envs, will they always have AbortSignal.any?
+    // TODO: should we ponyfill other envs, will they always have AbortSignal.any?
     return AbortSignal.any(signals);
   }
 
