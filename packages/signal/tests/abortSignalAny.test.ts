@@ -1,4 +1,3 @@
-import { setTimeout } from 'node:timers/promises';
 import LeakDetector from 'jest-leak-detector';
 import { expect, it } from 'vitest';
 import { abortSignalAny } from '../src/abortSignalAny';
