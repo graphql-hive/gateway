@@ -4096,7 +4096,7 @@ __metadata:
     "@nestjs/core": "npm:11.0.12"
     "@nestjs/graphql": "npm:13.0.4"
     "@nestjs/testing": "npm:11.0.12"
-    "@types/supertest": "npm:6.0.2"
+    "@types/supertest": "npm:6.0.3"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
     fastify: "npm:5.2.1"
     graphql: "npm:^16.9.0"
@@ -8500,13 +8500,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/supertest@npm:6.0.2":
-  version: 6.0.2
-  resolution: "@types/supertest@npm:6.0.2"
+"@types/supertest@npm:6.0.3":
+  version: 6.0.3
+  resolution: "@types/supertest@npm:6.0.3"
   dependencies:
     "@types/methods": "npm:^1.1.4"
     "@types/superagent": "npm:^8.1.0"
-  checksum: 10c0/44a28f9b35b65800f4c7bcc23748e71c925098aa74ea504d14c98385c36d00de2a4f5aca15d7dc4514bc80533e0af21f985a4ab9f5f317c7266e9e75836aef39
+  checksum: 10c0/a2080f870154b09db123864a484fb633bc9e2a0f7294a194388df4c7effe5af9de36d5a5ebf819f72b404fa47b5e813c47d5a3a51354251fd2fa8589bfb64f2c
   languageName: node
   linkType: hard
 
@@ -15420,8 +15420,8 @@ __metadata:
   linkType: hard
 
 "jscodeshift@npm:^17.1.1":
-  version: 17.2.0
-  resolution: "jscodeshift@npm:17.2.0"
+  version: 17.3.0
+  resolution: "jscodeshift@npm:17.3.0"
   dependencies:
     "@babel/core": "npm:^7.24.7"
     "@babel/parser": "npm:^7.24.7"
@@ -15438,7 +15438,7 @@ __metadata:
     micromatch: "npm:^4.0.7"
     neo-async: "npm:^2.5.0"
     picocolors: "npm:^1.0.1"
-    recast: "npm:^0.23.10"
+    recast: "npm:^0.23.11"
     tmp: "npm:^0.2.3"
     write-file-atomic: "npm:^5.0.1"
   peerDependencies:
@@ -15448,7 +15448,7 @@ __metadata:
       optional: true
   bin:
     jscodeshift: bin/jscodeshift.js
-  checksum: 10c0/885a6b45e725b512ebcfdeade0588f7736e70d04c5585bc1500fd1039fe5cef6e54e640593541b33b50c23268c16398ca23edeaaabc88d57ba4f7c4295b47857
+  checksum: 10c0/366e3c8ec52597a00919c6eb37007b6bcde0037722b89bda0a4416aec36e34717a7c46d10b3e637ac0a2cf91b986e868063fd1e99a943699ac292f7aef78e3ba
   languageName: node
   linkType: hard
 
@@ -18118,7 +18118,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"recast@npm:^0.23.10":
+"recast@npm:^0.23.11":
   version: 0.23.11
   resolution: "recast@npm:0.23.11"
   dependencies:
