@@ -160,8 +160,10 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         .filter(
           (frame) =>
             // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
-            frame.name === 'set' &&
-            frame.callstack.some((stack) => stack.name === 'memoized'),
+            !(
+              frame.name === 'set' &&
+              frame.callstack.some((stack) => stack.name === 'memoized')
+            ),
         )
         .filter((frame) => {
           if (expectedHeavyFrame) {
