@@ -163,6 +163,16 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
             !(
               frame.name === 'set' &&
               frame.callstack.some((stack) => stack.name === 'memoized')
+            ) &&
+            // graphql visitor enter is heavy because it's called a lot, but it's proven to not leak
+            !(
+              frame.name === 'enter' &&
+              frame.callstack.some((stack) => stack.name === 'visit')
+            ) &&
+            // graphql visitor leave is heavy because it's called a lot, but it's proven to not leak
+            !(
+              frame.name === 'leave' &&
+              frame.callstack.some((stack) => stack.name === 'visit')
             ),
         )
         .filter((frame) => {
