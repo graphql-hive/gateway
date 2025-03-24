@@ -1,3 +1,4 @@
+import { abortSignalAny } from '@graphql-hive/signal';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -65,7 +66,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           timeoutSignal.addEventListener('abort', rejectDeferred, {
             once: true,
           });
-          const combinedSignal = AbortSignal.any(signals);
+          const combinedSignal = abortSignalAny(signals);
           const res$ = executor({
             ...executionRequest,
             signal: combinedSignal,
@@ -149,7 +150,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           }
           setOptions({
             ...options,
-            signal: AbortSignal.any(signals),
+            signal: abortSignalAny(signals),
           });
         }
       }

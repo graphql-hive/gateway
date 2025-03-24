@@ -10,6 +10,7 @@ memtest(
   {
     cwd,
     query,
+    takeHeapSnapshots: true,
   },
   async () =>
     gateway({

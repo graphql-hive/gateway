@@ -1,3 +1,4 @@
+import { abortSignalAny } from '@graphql-hive/signal';
 import {
   defaultPrintFn,
   SerializedExecutionRequest,
@@ -232,7 +233,7 @@ export function buildHTTPExecutor(
       signals.push(subscriptionCtrl.signal);
     }
 
-    const signal = AbortSignal.any(signals);
+    const signal = abortSignalAny(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
       serviceName,
