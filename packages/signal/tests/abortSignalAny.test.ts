@@ -114,3 +114,33 @@ it.skipIf(
   await expect(ctrl2SignalDetector.isLeaking()).resolves.toBeFalsy();
   await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
 });
+
+it.skipIf(
+  // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
+  // we also assume that bun doesnt leak
+  globalThis.Bun,
+)('should GC timeout signals without abort', async () => {
+  let ctrl1: AbortController | undefined = new AbortController();
+  const ctrl1Detector = new LeakDetector(ctrl1);
+  const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
+  let timeoutSignal: AbortSignal | undefined = AbortSignal.timeout(60_000); // longer than the test
+  const timeoutSignalDetector = new LeakDetector(timeoutSignal);
+
+  let signal: AbortSignal | undefined = abortSignalAny([
+    ctrl1.signal,
+    timeoutSignal,
+  ]);
+  const signalDetector = new LeakDetector(signal);
+
+  // no abort
+  // ctrl1.abort('Test');
+
+  ctrl1 = undefined;
+  timeoutSignal = undefined;
+  signal = undefined;
+
+  await expect(ctrl1Detector.isLeaking()).resolves.toBeFalsy();
+  await expect(ctrl1SignalDetector.isLeaking()).resolves.toBeFalsy();
+  await expect(timeoutSignalDetector.isLeaking()).resolves.toBeFalsy();
+  await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
+});
