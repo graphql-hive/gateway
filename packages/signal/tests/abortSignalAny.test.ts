@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import LeakDetector from 'jest-leak-detector';
 import { expect, it } from 'vitest';
 import { abortSignalAny } from '../src/abortSignalAny';
@@ -11,7 +12,7 @@ it('should not abort if none of the signals abort', () => {
   expect(() => signal.throwIfAborted()).not.toThrow();
 });
 
-it('should abort if any signal aborts', () => {
+it('should abort if any signal aborts', async () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
@@ -20,12 +21,13 @@ it('should abort if any signal aborts', () => {
 
   expect(signal).not.toBe(ctrl1.signal);
 
-  expect(() => signal.throwIfAborted()).toThrowErrorMatchingInlineSnapshot(
-    `"Test"`,
-  );
+  expect(() => signal.throwIfAborted()).toThrowError('Test');
 });
 
-it('should return aborted signal if aborted before any', () => {
+it.skipIf(
+  // bun doesnt use the ponyfill and wont return the first aborted signal
+  globalThis.Bun,
+)('should return aborted signal if aborted before any', () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
@@ -34,12 +36,14 @@ it('should return aborted signal if aborted before any', () => {
 
   expect(signal).toBe(ctrl1.signal);
 
-  expect(() => signal.throwIfAborted()).toThrowErrorMatchingInlineSnapshot(
-    `"Test"`,
-  );
+  expect(() => signal.throwIfAborted()).toThrowError('Test');
 });
 
-it('should GC all signals after abort', async () => {
+it.skipIf(
+  // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
+  // we also assume that bun doesnt leak
+  globalThis.Bun,
+)('should GC all signals after abort', async () => {
   let ctrl1: AbortController | null = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
@@ -63,7 +67,11 @@ it('should GC all signals after abort', async () => {
   await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
 });
 
-it('should GC all signals without abort', async () => {
+it.skipIf(
+  // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
+  // we also assume that bun doesnt leak
+  globalThis.Bun,
+)('should GC all signals without abort', async () => {
   let ctrl1: AbortController | null = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
