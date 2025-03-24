@@ -1,4 +1,9 @@
-const anySignalRegistry = new FinalizationRegistry<() => void>((cb) => cb());
+// https://github.com/unjs/std-env/blob/ab15595debec9e9115a9c1d31bc7597a8e71dbfd/src/runtimes.ts#L14-L21
+const isNode = globalThis.process?.release?.name === 'node';
+
+const anySignalRegistry = isNode
+  ? new FinalizationRegistry<() => void>((cb) => cb())
+  : null;
 
 const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
 
@@ -11,10 +16,11 @@ const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
  * GC-ed as well as aborted.
  */
 export function abortSignalAny(signals: AbortSignal[]) {
-  // TODO: AbortSignal.any is leaky in Node, it should not be used
-  // if (AbortSignal.any) {
-  //   return AbortSignal.any(signals);
-  // }
+  if (!isNode) {
+    // AbortSignal.any seems to be leaky only in Node env
+    // TODO: should we polyfill other envs, will they always have AbortSignal.any?
+    return AbortSignal.any(signals);
+  }
 
   for (const signal of signals) {
     if (signal.aborted) {
