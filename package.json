@@ -69,7 +69,7 @@
     "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch",
     "@vitest/snapshot@npm:3.0.9": "patch:@vitest/snapshot@npm%3A3.0.9#~/.yarn/patches/@vitest-snapshot-npm-3.0.0-d5b381862b.patch",
-    "@whatwg-node/node-fetch": "0.7.15-alpha-20250324115826-c3e12812d7a2ef843a6f579be60f51f485ca084a",
+    "@whatwg-node/node-fetch": "0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006",
     "cookie": "^1.0.0",
     "cross-spawn": "7.0.6",
     "esbuild": "0.25.1",

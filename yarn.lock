@@ -8929,15 +8929,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324115826-c3e12812d7a2ef843a6f579be60f51f485ca084a":
-  version: 0.7.15-alpha-20250324115826-c3e12812d7a2ef843a6f579be60f51f485ca084a
-  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324115826-c3e12812d7a2ef843a6f579be60f51f485ca084a"
+"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006":
+  version: 0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006
+  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324202134-33d302e59f5335edd59b806443020e17318e1006"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/0b3bbda34f1fdeccbbf4984f183d996aaabb481b0bab41b0d5227ecd284a87d79d5a96ce142934b2a322ba8afe055414d04fb5b520f857f1d5fe3f418f049ea2
+  checksum: 10c0/3b0d6b0eaa67845e1c16c7a63ad36fc326cb9de514cfc190ec155d8812062c30925105ac10fe12c93837eb49cebedae1630384b3185d3ab760c27231b2d9667c
   languageName: node
   linkType: hard
 
