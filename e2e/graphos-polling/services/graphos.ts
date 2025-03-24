@@ -5,6 +5,7 @@ import { createSchema, createYoga } from 'graphql-yoga';
 const opts = Opts(process.argv);
 
 let supergraphSDL: string | undefined;
+let id: number | undefined;
 
 const graphosSchema = createSchema({
   typeDefs: /* GraphQL */ `
@@ -50,17 +51,27 @@ const graphosSchema = createSchema({
       __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     Query: {
-      routerConfig: () => ({
-        __typename: 'RouterConfigResult',
-        id: Date.now(),
-        supergraphSDL,
-        minDelaySeconds: 0.00001,
-        messages: [],
-      }),
+      routerConfig: (_, { ifAfterId }) => {
+        if (ifAfterId === id) {
+          return {
+            __typename: 'Unchanged',
+            id,
+            minDelaySeconds: 0.00001,
+          };
+        }
+        return {
+          __typename: 'RouterConfigResult',
+          id,
+          supergraphSDL,
+          minDelaySeconds: 0.00001,
+          messages: [],
+        };
+      },
     },
     Mutation: {
       setSupergraphSDL: (_root, { sdl }) => {
         supergraphSDL = sdl;
+        id = Date.now();
         return 'ok';
       },
     },

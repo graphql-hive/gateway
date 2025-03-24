@@ -335,6 +335,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this._transportEntryMap = transportEntryMap;
     this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
 
+    this.polling$ = undefined;
     if (previousUnifiedGraph != null) {
       this.disposeReason = createGraphQLError(
         'operation has been aborted due to a schema reload',
@@ -358,6 +359,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         return this.unifiedGraph!;
       },
       (err) => {
+        this.disposeReason = undefined;
         this.opts.transportContext?.logger?.error(
           'Failed to dispose the existing transports and executors',
           err,
@@ -378,6 +380,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           err,
         );
         this.lastLoadTime = Date.now();
+        this.disposeReason = undefined;
+        this.polling$ = undefined;
         if (!this.unifiedGraph) {
           throw err;
         }
