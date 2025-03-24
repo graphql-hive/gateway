@@ -1,5 +1,20 @@
 # @graphql-hive/gateway-runtime
 
+## 1.6.3
+
+### Patch Changes
+
+- [#910](https://github.com/graphql-hive/gateway/pull/910) [`1950f44`](https://github.com/graphql-hive/gateway/commit/1950f44d9180c8cd8a73917487c087ab1d1b74fa) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/server@^0.10.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.2) (from `^0.10.1`, in `dependencies`)
+
+- [#900](https://github.com/graphql-hive/gateway/pull/900) [`df1bce6`](https://github.com/graphql-hive/gateway/commit/df1bce649e3f468435aa34d9141b4c20d8d26699) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Dispose of Hive Console plugin on teardown
+
+- [#900](https://github.com/graphql-hive/gateway/pull/900) [`df1bce6`](https://github.com/graphql-hive/gateway/commit/df1bce649e3f468435aa34d9141b4c20d8d26699) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Hive reporting usage clientInfo can be an object
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.23
+
 ## 1.6.2
 
 ### Patch Changes
