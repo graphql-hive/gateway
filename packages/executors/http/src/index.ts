@@ -543,6 +543,13 @@ export function buildHTTPExecutor(
         };
       },
     },
+    [DisposableSymbols.asyncDispose]: {
+      get() {
+        return function asyncDispose() {
+          return disposeCtrl.abort(options?.getDisposeReason?.());
+        };
+      },
+    },
   });
 
   return executor as DisposableExecutor<any, HTTPExecutorOptions>;
