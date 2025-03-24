@@ -173,6 +173,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
             !(
               frame.name === 'leave' &&
               frame.callstack.some((stack) => stack.name === 'visit')
+            ) &&
+            // the (fake)promises themselves cannot leak, things they do can
+            !(
+              frame.name === 'then' &&
+              frame.callstack.some(
+                (stack) => stack.name === 'handleMaybePromise',
+              )
             ),
         )
         .filter((frame) => {
