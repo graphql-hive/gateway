@@ -1,11 +1,16 @@
 import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { MaybePromise, printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  fakePromise,
+  MaybePromise,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   createDisposableServer,
   executeFetch,
+  handleMaybePromise,
   initForExecuteFetchArgs,
   isDebug,
 } from '@internal/testing';
@@ -23,6 +28,18 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
+
+function cloneRequest(req: Request): MaybePromise<Request> {
+  // Only for Bun
+  if (globalThis.Bun) {
+    return req.json().then((json) => ({
+      ...req,
+      headers: req.headers,
+      json: () => fakePromise(json),
+    }));
+  }
+  return req;
+}
 
 function createUpstreamSchema() {
   return createSchema({
@@ -158,10 +175,15 @@ describe('Hive CDN', () => {
     const { promise: waitForUsageReq, resolve: usageReq } =
       createDeferredPromise<Request>();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter((req) => {
-        usageReq(req);
-        return new Response();
-      }),
+      createServerAdapter((req) =>
+        handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        ),
+      ),
     );
     await using upstreamServer = await createDisposableServer(
       createYoga({ schema: createUpstreamSchema() }),
@@ -300,8 +322,13 @@ describe('Hive CDN', () => {
             }
           `);
         }
-        usageReq(req);
-        return new Response();
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        );
       }),
     );
     await using upstreamServer = await createDisposableServer(
