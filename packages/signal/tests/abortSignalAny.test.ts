@@ -2,13 +2,27 @@ import LeakDetector from 'jest-leak-detector';
 import { expect, it } from 'vitest';
 import { abortSignalAny } from '../src/abortSignalAny';
 
+it('should return the single signal passed', () => {
+  const ctrl = new AbortController();
+
+  const signal = abortSignalAny([ctrl.signal]);
+
+  expect(ctrl.signal).toBe(signal);
+});
+
+it('should return undefined if no signals have been passed', () => {
+  const signal = abortSignalAny([]);
+
+  expect(signal).toBeUndefined();
+});
+
 it('should not abort if none of the signals abort', () => {
   const ctrl1 = new AbortController();
   const ctrl2 = new AbortController();
 
   const signal = abortSignalAny([ctrl1.signal, ctrl2.signal]);
 
-  expect(() => signal.throwIfAborted()).not.toThrow();
+  expect(() => signal!.throwIfAborted()).not.toThrow();
 });
 
 it('should abort if any signal aborts', async () => {
@@ -20,7 +34,7 @@ it('should abort if any signal aborts', async () => {
 
   expect(signal).not.toBe(ctrl1.signal);
 
-  expect(() => signal.throwIfAborted()).toThrowError('Test');
+  expect(() => signal!.throwIfAborted()).toThrowError('Test');
 });
 
 it.skipIf(
@@ -35,7 +49,7 @@ it.skipIf(
 
   expect(signal).toBe(ctrl1.signal);
 
-  expect(() => signal.throwIfAborted()).toThrowError('Test');
+  expect(() => signal!.throwIfAborted()).toThrowError('Test');
 });
 
 it.skipIf(
@@ -43,21 +57,24 @@ it.skipIf(
   // we also assume that bun doesnt leak
   globalThis.Bun,
 )('should GC all signals after abort', async () => {
-  let ctrl1: AbortController | null = new AbortController();
+  let ctrl1: AbortController | undefined = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
-  let ctrl2: AbortController | null = new AbortController();
+  let ctrl2: AbortController | undefined = new AbortController();
   const ctrl2Detector = new LeakDetector(ctrl2);
   const ctrl2SignalDetector = new LeakDetector(ctrl2.signal);
 
-  let signal: AbortSignal | null = abortSignalAny([ctrl1.signal, ctrl2.signal]);
+  let signal: AbortSignal | undefined = abortSignalAny([
+    ctrl1.signal,
+    ctrl2.signal,
+  ]);
   const signalDetector = new LeakDetector(signal);
 
   ctrl1.abort('Test');
 
-  ctrl1 = null;
-  ctrl2 = null;
-  signal = null;
+  ctrl1 = undefined;
+  ctrl2 = undefined;
+  signal = undefined;
 
   await expect(ctrl1Detector.isLeaking()).resolves.toBeFalsy();
   await expect(ctrl1SignalDetector.isLeaking()).resolves.toBeFalsy();
@@ -71,22 +88,25 @@ it.skipIf(
   // we also assume that bun doesnt leak
   globalThis.Bun,
 )('should GC all signals without abort', async () => {
-  let ctrl1: AbortController | null = new AbortController();
+  let ctrl1: AbortController | undefined = new AbortController();
   const ctrl1Detector = new LeakDetector(ctrl1);
   const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
-  let ctrl2: AbortController | null = new AbortController();
+  let ctrl2: AbortController | undefined = new AbortController();
   const ctrl2Detector = new LeakDetector(ctrl2);
   const ctrl2SignalDetector = new LeakDetector(ctrl2.signal);
 
-  let signal: AbortSignal | null = abortSignalAny([ctrl1.signal, ctrl2.signal]);
+  let signal: AbortSignal | undefined = abortSignalAny([
+    ctrl1.signal,
+    ctrl2.signal,
+  ]);
   const signalDetector = new LeakDetector(signal);
 
   // no abort
   // ctrl1.abort('Test');
 
-  ctrl1 = null;
-  ctrl2 = null;
-  signal = null;
+  ctrl1 = undefined;
+  ctrl2 = undefined;
+  signal = undefined;
 
   await expect(ctrl1Detector.isLeaking()).resolves.toBeFalsy();
   await expect(ctrl1SignalDetector.isLeaking()).resolves.toBeFalsy();

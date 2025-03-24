@@ -15,7 +15,21 @@ const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
  * This ponyfill is a custom implementation that makes sure AbortSignals get properly
  * GC-ed as well as aborted.
  */
-export function abortSignalAny(signals: AbortSignal[]) {
+export function abortSignalAny(
+  signals: AbortSignal[],
+): AbortSignal | undefined {
+  if (signals.length === 0) {
+    // if no signals are passed, return undefined because the abortcontroller
+    // wouldnt ever be aborted (should be when GCd, but it's only a waste of memory)
+    // furthermore, the native AbortSignal.any will also never abort if receiving no signals
+    return undefined;
+  }
+
+  if (signals.length === 1) {
+    // no need to waste resources by wrapping a single signal, simply return it
+    return signals[0];
+  }
+
   if (!isNode) {
     // AbortSignal.any seems to be leaky only in Node env
     // TODO: should we ponyfill other envs, will they always have AbortSignal.any?
