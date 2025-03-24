@@ -8929,15 +8929,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a":
-  version: 0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a
-  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a"
+"@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e":
+  version: 0.7.15-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e
+  resolution: "@whatwg-node/node-fetch@npm:0.7.15-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/7d32f2dde0330e4ad5508379c9b53147b5e66134b08d787c4287cd14f37a276111c51ae43143c151d8497ab5cc1008f3171d909380071227743b2056ceacd7e8
+  checksum: 10c0/a5e61abb75133d7f33c874c5966b02db3d4cdf3a4a7bc8405a0c61f644fe17bbe5e960d34d2048ffcba1ab5bf8dae18b882dc76a40332fcecaec35483d655bfc
   languageName: node
   linkType: hard
 
@@ -8961,16 +8961,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a":
-  version: 0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a
-  resolution: "@whatwg-node/server@npm:0.10.3-alpha-20250324212704-7c1695b36a5a2beeebc4b58563b2cab25c34ed9a"
+"@whatwg-node/server@npm:0.10.3-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e":
+  version: 0.10.3-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e
+  resolution: "@whatwg-node/server@npm:0.10.3-alpha-20250324222403-2ef78ff377f20332833c8667d4e7b48b99d5282e"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.5"
     "@whatwg-node/promise-helpers": "npm:^1.2.3"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/9f097c597671d92b9b036562d2bc66effdeb8a4f4caea0f975fe7cb093f7ee486b3f8ad26e7b494ba474ad0aa85adf8559b63b689883e29716a4d62cdd06d52e
+  checksum: 10c0/d9122b99b65b736e4837ceb1b77eef40de9822a0da3421e247f3be27b5c870d9e713cd9c161596badc6f563ded61960a835ca23749914e932d66d0b81a6289b4
   languageName: node
   linkType: hard
 
