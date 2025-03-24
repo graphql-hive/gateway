@@ -1,6 +1,5 @@
-import { setTimeout } from 'timers/promises';
 import LeakDetector from 'jest-leak-detector';
-import { it, vi } from 'vitest';
+import { it } from 'vitest';
 import { abortSignalAny } from '../src/abortSignalAny';
 
 it('should not abort if none of the signals abort', ({ expect }) => {
