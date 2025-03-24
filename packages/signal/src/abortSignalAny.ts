@@ -46,7 +46,7 @@ export function abortSignalAny(signals: AbortSignal[]) {
     }
     signal.addEventListener('abort', abort);
     eventListenerPairs.push([signalRef, abort]);
-    anySignalRegistry.register(
+    anySignalRegistry!.register(
       signal,
       () =>
         // dispose when all of the signals have been GCed
@@ -60,11 +60,11 @@ export function abortSignalAny(signals: AbortSignal[]) {
       const signal = signalRef.deref();
       if (signal) {
         signal.removeEventListener('abort', abort);
-        anySignalRegistry.unregister(signal);
+        anySignalRegistry!.unregister(signal);
       }
       const ctrl = ctrlRef.deref();
       if (ctrl) {
-        anySignalRegistry.unregister(ctrl.signal);
+        anySignalRegistry!.unregister(ctrl.signal);
         // @ts-expect-error
         delete ctrl.signal[controllerInSignalSy];
       }
@@ -74,7 +74,7 @@ export function abortSignalAny(signals: AbortSignal[]) {
   // cleanup when aborted
   ctrl.signal.addEventListener('abort', dispose);
   // cleanup when GCed
-  anySignalRegistry.register(ctrl.signal, dispose, ctrl.signal);
+  anySignalRegistry!.register(ctrl.signal, dispose, ctrl.signal);
 
   // keeping a strong reference of the cotroller binding it to the lifecycle of its signal
   // @ts-expect-error
