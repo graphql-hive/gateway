@@ -28,13 +28,14 @@ const supportedFlags = [
  * - `chart` Writes the memory consumption chart.
  * - `sampling` Will write the heap allocation sampling profile regardless of whether the test fails.
  */
-const flags = (process.env['MEMTEST'] || '').split(',').map((flag) => {
-  flag = flag.trim().toLowerCase();
-  if (!supportedFlags.includes(flag as any)) {
-    throw new Error(`Unsupported MEMTEST flag: "${flag}"`);
-  }
-  return flag as (typeof supportedFlags)[number];
-});
+const flags =
+  process.env['MEMTEST']?.split(',').map((flag) => {
+    flag = flag.trim().toLowerCase();
+    if (!supportedFlags.includes(flag as any)) {
+      throw new Error(`Unsupported MEMTEST flag: "${flag}"`);
+    }
+    return flag as (typeof supportedFlags)[number];
+  }) || [];
 
 export interface MemtestOptions
   extends Omit<
