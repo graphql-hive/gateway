@@ -82,6 +82,7 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap>
     if (!topic) {
       return; // should not happen TODO: throw?
     }
+    this.#subIdTopic.delete(subId);
 
     const listeners = this.#topicListeners.get(topic);
     if (!listeners) {
