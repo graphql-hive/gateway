@@ -94,12 +94,16 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap>
     }
   }
 
+  #asyncIteratorStops = new Set<() => void>();
+
   public asyncIterator<Topic extends keyof Data>(
     topic: Topic,
   ): AsyncIterable<Data[Topic]> {
     return new Repeater(async (push, stop) => {
       const subId = this.subscribe(topic, push);
+      this.#asyncIteratorStops.add(stop);
       await stop;
+      this.#asyncIteratorStops.delete(stop);
       this.unsubscribe(subId);
     });
   }
@@ -108,7 +112,10 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap>
     this.#topicListeners.clear();
     this.#subIdListeners.clear();
     this.#subIdTopic.clear();
-    // TODO: return all async iterators on dispose
+    for (const stop of this.#asyncIteratorStops) {
+      stop();
+    }
+    this.#asyncIteratorStops.clear();
   }
 
   [DisposableSymbols.dispose]() {
