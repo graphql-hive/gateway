@@ -84,10 +84,14 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap> {
     });
   }
 
-  [DisposableSymbols.dispose]() {
+  public dispose() {
     this.#topicListeners.clear();
     this.#subIdListeners.clear();
     this.#subIdTopic.clear();
     // TODO: return all async iterators on dispose
+  }
+
+  [DisposableSymbols.dispose]() {
+    this.dispose();
   }
 }
