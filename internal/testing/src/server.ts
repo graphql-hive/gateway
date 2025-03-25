@@ -83,6 +83,7 @@ async function createDisposableNodeServer(
       for (const socket of sockets) {
         socket.destroy();
       }
+      server.closeIdleConnections();
       server.closeAllConnections();
       return new Promise<void>((resolve, reject) => {
         server.close((err) => {

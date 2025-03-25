@@ -42,7 +42,7 @@
     "@yarnpkg/cli": "^4.5.3",
     "@yarnpkg/core": "^4.1.6",
     "@yarnpkg/plugin-pack": "^4.0.0",
-    "bun": "1.2.5",
+    "bun": "1.2.6",
     "cross-env": "^7.0.3",
     "eslint": "^9.12.0",
     "eslint-plugin-import": "^2.31.0",
