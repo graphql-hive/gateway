@@ -1,5 +1,16 @@
 # @graphql-tools/wrap
 
+## 10.0.34
+
+### Patch Changes
+
+- [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
+
+- Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04)]:
+  - @graphql-tools/delegate@10.2.16
+
 ## 10.0.33
 
 ### Patch Changes

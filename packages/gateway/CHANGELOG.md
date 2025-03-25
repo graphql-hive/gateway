@@ -1,5 +1,23 @@
 # @graphql-hive/gateway
 
+## 1.13.2
+
+### Patch Changes
+
+- [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.13.2` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.2) (from `^5.13.1`, in `dependencies`)
+
+- Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106)]:
+  - @graphql-hive/gateway-runtime@1.6.4
+  - @graphql-hive/plugin-aws-sigv4@1.0.3
+  - @graphql-mesh/hmac-upstream-signature@1.2.24
+  - @graphql-mesh/plugin-opentelemetry@1.3.50
+  - @graphql-mesh/transport-http@0.6.37
+  - @graphql-mesh/transport-http-callback@0.5.24
+  - @graphql-mesh/plugin-prometheus@1.3.38
+  - @graphql-mesh/transport-ws@1.0.7
+
 ## 1.13.1
 
 ### Patch Changes

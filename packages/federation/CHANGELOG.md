@@ -1,5 +1,19 @@
 # @graphql-tools/federation
 
+## 3.1.7
+
+### Patch Changes
+
+- [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
+
+- Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`7b86c09`](https://github.com/graphql-hive/gateway/commit/7b86c097f5d424b82c84b87c743d5ed4ebe6aa5c), [`dbfb0f7`](https://github.com/graphql-hive/gateway/commit/dbfb0f7d6906d99b07b959bb6254d10e2fe2adf0)]:
+  - @graphql-tools/delegate@10.2.16
+  - @graphql-tools/executor-http@1.3.2
+  - @graphql-tools/stitch@9.4.21
+  - @graphql-tools/wrap@10.0.34
+
 ## 3.1.6
 
 ### Patch Changes
