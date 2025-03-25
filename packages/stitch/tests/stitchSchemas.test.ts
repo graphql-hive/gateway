@@ -1143,31 +1143,27 @@ bookingById(id: "b1") {
         const stitchedResult = await graphql({
           schema: stitchedSchema,
           source: /* GraphQL */ `
+            fragment TestInterfaceFragment on TestInterface {
+              kind
+              testString
+            }
+            fragment TestImpl1Fragment on TestImpl1 {
+              foo
+            }
+            fragment UnionImplFragment on UnionImpl {
+              someField
+            }
             query {
               test1: unionTest(output: "Interface") {
-                ... on TestInterface {
-                  kind
-                  testString
-                }
-                ... on TestImpl1 {
-                  foo
-                }
-                ... on UnionImpl {
-                  someField
-                }
+                ...TestInterfaceFragment
+                ...TestImpl1Fragment
+                ...UnionImplFragment
               }
 
               test2: unionTest(output: "OtherStuff") {
-                ... on TestInterface {
-                  kind
-                  testString
-                }
-                ... on TestImpl1 {
-                  foo
-                }
-                ... on UnionImpl {
-                  someField
-                }
+                ...TestInterfaceFragment
+                ...TestImpl1Fragment
+                ...UnionImplFragment
               }
             }
           `,
