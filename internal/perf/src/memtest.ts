@@ -15,6 +15,7 @@ const supportedFlags = [
   'heapsnaps' as const,
   'moreruns' as const,
   'chart' as const,
+  'sampling' as const,
 ];
 
 /**
@@ -25,6 +26,7 @@ const supportedFlags = [
  * - `heapsnaps` Takes heap snapshots instead of the defaults.
  * - `moreruns` Does `5` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
+ * - `sampling` Will write the heap allocation sampling profile regardless of whether the test fails.
  */
 const flags = (process.env['MEMTEST'] || '').split(',').map((flag) => {
   flag = flag.trim().toLowerCase();
@@ -180,7 +182,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         cwd,
         `memtest_${startTime}.heapprofile`,
       );
-      if (isDebug('memtest')) {
+      if (flags.includes('sampling')) {
         await fs.writeFile(
           heapSamplingProfileFile,
           JSON.stringify(loadtestResult.profile),
