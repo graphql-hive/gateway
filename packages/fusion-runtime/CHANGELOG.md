@@ -1,5 +1,25 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.6
+
+### Patch Changes
+
+- [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.2` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.2) (from `^5.13.1`, in `dependencies`)
+
+- [#919](https://github.com/graphql-hive/gateway/pull/919) [`3003ae2`](https://github.com/graphql-hive/gateway/commit/3003ae2545148f75edf0ddca5e84c7b527176713) Thanks [@ardatan](https://github.com/ardatan)! - Improve disposal and polling cleanup
+
+- Updated dependencies [[`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`7b86c09`](https://github.com/graphql-hive/gateway/commit/7b86c097f5d424b82c84b87c743d5ed4ebe6aa5c)]:
+  - @graphql-mesh/transport-common@0.7.32
+  - @graphql-tools/batch-execute@9.0.15
+  - @graphql-tools/delegate@10.2.16
+  - @graphql-tools/federation@3.1.7
+  - @graphql-tools/stitch@9.4.21
+  - @graphql-tools/wrap@10.0.34
+  - @graphql-tools/stitching-directives@3.1.31
+
 ## 0.11.5
 
 ### Patch Changes

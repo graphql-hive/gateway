@@ -1,5 +1,22 @@
 # @graphql-tools/executor-http
 
+## 1.3.2
+
+### Patch Changes
+
+- [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
+
+- [#922](https://github.com/graphql-hive/gateway/pull/922) [`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/signal@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/signal/v/workspace:^) (to `dependencies`)
+
+- [#929](https://github.com/graphql-hive/gateway/pull/929) [`dbfb0f7`](https://github.com/graphql-hive/gateway/commit/dbfb0f7d6906d99b07b959bb6254d10e2fe2adf0) Thanks [@ardatan](https://github.com/ardatan)! - Throw an understandable error with HTTP details when the response is empty
+
+- Updated dependencies [[`c9cd206`](https://github.com/graphql-hive/gateway/commit/c9cd20666a740514a5c17ecd6d0c000ad0dd7106)]:
+  - @graphql-hive/signal@1.0.0
+
 ## 1.3.1
 
 ### Patch Changes
