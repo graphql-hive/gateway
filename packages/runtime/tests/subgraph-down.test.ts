@@ -71,7 +71,10 @@ describe('Error handling', () => {
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {
-            return Response.error();
+            return new Response(null, {
+              status: 500,
+              statusText: 'Internal Server Error',
+            });
           }
           if (url === 'http://subgraph2:4000/graphql') {
             return subgraph2server.fetch(url, options as RequestInit);
@@ -106,6 +109,25 @@ describe('Error handling', () => {
           subgraph2Field: 'hello from subgraph2',
         },
       },
+      errors: [
+        {
+          extensions: {
+            code: 'DOWNSTREAM_SERVICE_ERROR',
+            request: {
+              body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              method: 'POST',
+            },
+            response: {
+              body: '',
+              status: 500,
+              statusText: 'Internal Server Error',
+            },
+            serviceName: 'subgraph1',
+          },
+          message: 'No response returned',
+          path: ['subgraph1'],
+        },
+      ],
     });
   });
   /**
@@ -170,7 +192,10 @@ describe('Error handling', () => {
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {
-            return Response.error();
+            return new Response(null, {
+              status: 500,
+              statusText: 'Internal Server Error',
+            });
           }
           if (url === 'http://subgraph2:4000/graphql') {
             return subgraph2server.fetch(url, options as RequestInit);
@@ -202,8 +227,20 @@ describe('Error handling', () => {
       data: null,
       errors: [
         {
-          message: 'Cannot return null for non-nullable field Query.subgraph1.',
-          locations: [{ line: 3, column: 13 }],
+          extensions: {
+            code: 'DOWNSTREAM_SERVICE_ERROR',
+            request: {
+              body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              method: 'POST',
+            },
+            response: {
+              body: '',
+              status: 500,
+              statusText: 'Internal Server Error',
+            },
+            serviceName: 'subgraph1',
+          },
+          message: 'No response returned',
           path: ['subgraph1'],
         },
       ],

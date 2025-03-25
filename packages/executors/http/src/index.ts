@@ -236,6 +236,7 @@ export function buildHTTPExecutor(
     const signal = abortSignalAny(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
+      code: 'DOWNSTREAM_SERVICE_ERROR',
       serviceName,
       request: {
         method,
@@ -466,6 +467,14 @@ export function buildHTTPExecutor(
                         ],
                       };
                     }
+                  } else {
+                    return {
+                      errors: [
+                        createGraphQLError('No response returned', {
+                          extensions: upstreamErrorExtensions,
+                        }),
+                      ],
+                    };
                   }
                 } else {
                   return result;
