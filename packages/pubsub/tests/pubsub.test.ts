@@ -1,8 +1,8 @@
-import { it } from 'vitest';
+import { it, vi } from 'vitest';
 import { PubSub } from '../src/pubsub';
 
 it('should respect topic data generic', () => {
-  const pubsub = new PubSub<{ hello: 'world'; obj: Record<string, any> }>();
+  using pubsub = new PubSub<{ hello: 'world'; obj: Record<string, any> }>();
 
   pubsub.publish('hello', 'world');
 
@@ -26,18 +26,14 @@ it('should respect topic data generic', () => {
     '{}',
   );
 
-  pubsub.unsubscribe(
-    pubsub.subscribe('hello', (data) => {
-      // @ts-expect-error must be 'world'
-      data();
-    }),
-  );
+  pubsub.subscribe('hello', (data) => {
+    // @ts-expect-error must be 'world'
+    data();
+  });
 
-  pubsub.unsubscribe(
-    pubsub.subscribe(
-      // @ts-expect-error does not exist in map
-      'aloha',
-      () => {},
-    ),
+  pubsub.subscribe(
+    // @ts-expect-error does not exist in map
+    'aloha',
+    () => {},
   );
 });

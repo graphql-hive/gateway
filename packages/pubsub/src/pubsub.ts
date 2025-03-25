@@ -1,4 +1,5 @@
 import { Repeater } from '@repeaterjs/repeater';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 
 type TopicDataMap = {
   [key: string]: any;
@@ -81,5 +82,12 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap> {
       await stop;
       this.unsubscribe(subId);
     });
+  }
+
+  [DisposableSymbols.dispose]() {
+    this.#topicListeners.clear();
+    this.#subIdListeners.clear();
+    this.#subIdTopic.clear();
+    // TODO: return all async iterators on dispose
   }
 }
