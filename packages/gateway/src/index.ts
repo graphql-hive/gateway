@@ -1,6 +1,7 @@
 export * from './cli';
 export * from '@graphql-hive/gateway-runtime';
-export { PubSub, LogLevel, DefaultLogger } from '@graphql-mesh/utils';
+export { LogLevel, DefaultLogger } from '@graphql-mesh/utils';
+export { PubSub } from '@graphql-hive/pubsub';
 export * from '@graphql-mesh/plugin-jwt-auth';
 export * from '@graphql-mesh/plugin-opentelemetry';
 export * from '@graphql-mesh/plugin-prometheus';

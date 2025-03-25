@@ -1,9 +1,7 @@
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 
-type TopicDataMap = {
-  [key: string]: any;
-};
+type TopicDataMap = Record<string, any>;
 
 export interface HivePubSub<Data extends TopicDataMap = TopicDataMap> {
   /** @deprecated Please use {@link subscribedTopics} if implemented instead. This method will be removed in next major release. */

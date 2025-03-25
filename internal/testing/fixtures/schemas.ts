@@ -1,4 +1,4 @@
-import { PubSub } from '@graphql-mesh/utils';
+import { PubSub } from '@graphql-hive/pubsub';
 import {
   createDefaultExecutor,
   SubschemaConfig,

@@ -5,7 +5,8 @@ import type {
   GatewayConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import type { KeyValueCache, Logger, MeshPubSub } from '@graphql-mesh/types';
+import { HivePubSub } from '@graphql-hive/pubsub';
+import type { KeyValueCache, Logger } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -105,7 +106,7 @@ export async function getBuiltinPluginsFromConfig(
   ctx: {
     cache: KeyValueCache;
     logger: Logger;
-    pubsub: MeshPubSub;
+    pubsub: HivePubSub;
     cwd: string;
   },
 ) {
@@ -203,7 +204,7 @@ export async function getBuiltinPluginsFromConfig(
  */
 export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
-  ctx: { logger: Logger; pubsub: MeshPubSub; cwd: string },
+  ctx: { logger: Logger; pubsub: HivePubSub; cwd: string },
 ): Promise<KeyValueCache> {
   if (typeof config.cache === 'function') {
     return config.cache(ctx);

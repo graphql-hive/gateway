@@ -3923,6 +3923,7 @@ __metadata:
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.10.0"
     "@graphql-hive/logger-json": "workspace:^"
+    "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-hive/yoga": "npm:^0.41.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
@@ -3979,6 +3980,7 @@ __metadata:
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
+    "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.0"
     "@graphql-mesh/cache-localforage": "npm:^0.105.0"
     "@graphql-mesh/cache-redis": "npm:^0.104.0"
@@ -4133,7 +4135,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/pubsub@workspace:packages/pubsub":
+"@graphql-hive/pubsub@workspace:*, @graphql-hive/pubsub@workspace:^, @graphql-hive/pubsub@workspace:packages/pubsub":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/pubsub@workspace:packages/pubsub"
   dependencies:
@@ -4620,6 +4622,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.2.3"
+    "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/types": "npm:^0.104.0"
@@ -5649,6 +5652,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/testing@workspace:internal/testing"
   dependencies:
+    "@graphql-hive/pubsub": "workspace:*"
     "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-tools/utils": "npm:^10.7.2"
     "@types/node": "npm:^22.7.5"
