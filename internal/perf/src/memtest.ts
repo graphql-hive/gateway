@@ -10,6 +10,24 @@ import {
 } from './heap';
 import { loadtest, LoadtestOptions } from './loadtest';
 
+/**
+ * Allows controlling the memtest runs with the `MEMTEST` environment variable.
+ *
+ * Available flags are:
+ * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
+ * - `heapsnaps` Takes heap snapshots instead of the defaults.
+ * - `moreruns` Does `5` runs instead of the defaults.
+ */
+const memtestFlags = (process.env['MEMTEST'] || '')
+  .split(',')
+  .map((flag) => flag.trim().toLowerCase())
+  .filter(
+    (flag) =>
+      flag === ('short' as const) ||
+      flag === ('heapsnaps' as const) ||
+      flag === ('moreruns' as const),
+  );
+
 export interface MemtestOptions
   extends Omit<
     LoadtestOptions,
@@ -27,6 +45,15 @@ export interface MemtestOptions
    */
   memorySnapshotWindow?: number;
   /**
+   * Whether to take heap snapshots on the end of the `idle` phase and then at the end
+   * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
+   *
+   * Ignores the `default` and runs with `true` if {@link memtestFlags MEMTEST has the `heapsnaps` flag}.
+   *
+   * @default false
+   */
+  takeHeapSnapshots?: boolean;
+  /**
    * Idling duration before loadtests {@link runs run} in milliseconds.
    *
    * @default 10_000
@@ -35,17 +62,23 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
+   * Ignores the `default` and runs for `30s` if {@link memtestFlags MEMTEST has the `short` flag}.
+   *
    * @default 120_000
    */
   duration?: number;
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
+   * Ignores the `default` and runs for `10s` if {@link memtestFlags MEMTEST has the `short` flag}.
+   *
    * @default 30_000
    */
   calmdown?: number;
   /**
    * How many times to run the loadtests?
+   *
+   * Ignores the `default` and does `5` runs if {@link memtestFlags MEMTEST has the `moreruns` flag}.
    *
    * @default 3
    */
@@ -70,9 +103,10 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     cwd,
     memorySnapshotWindow = 1_000,
     idle = 10_000,
-    duration = 120_000,
-    calmdown = 30_000,
-    runs = 3,
+    duration = memtestFlags.includes('short') ? 30_000 : 120_000,
+    calmdown = memtestFlags.includes('short') ? 10_000 : 30_000,
+    runs = memtestFlags.includes('moreruns') ? 5 : 3,
+    takeHeapSnapshots = memtestFlags.includes('heapsnaps'),
     onMemorySample,
     onHeapSnapshot,
     expectedHeavyFrame,
@@ -103,6 +137,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         ...loadtestOpts,
         cwd,
         memorySnapshotWindow,
+        takeHeapSnapshots,
         idle,
         duration,
         calmdown,
@@ -120,7 +155,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           return onMemorySample?.(samples);
         },
         async onHeapSnapshot(heapsnapshot) {
-          if (isDebug('memtest')) {
+          if (memtestFlags.includes('heapsnaps')) {
             await fs.copyFile(
               heapsnapshot.file,
               path.join(
@@ -159,6 +194,11 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       )
         .filter(
           (frame) =>
+            // node internals can allocate a lot, but they on their own cannot leak
+            // if other things triggered by node internals are leaking, they will show up in other frames
+            !frame.callstack.every((stack) =>
+              stack.file?.startsWith('node:'),
+            ) &&
             // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
             !(
               frame.name === 'set' &&
