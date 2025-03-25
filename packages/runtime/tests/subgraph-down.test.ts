@@ -71,7 +71,7 @@ describe('Error handling', () => {
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {
-            return Response.error();
+            return new Response(null, { status: 500 });
           }
           if (url === 'http://subgraph2:4000/graphql') {
             return subgraph2server.fetch(url, options as RequestInit);
