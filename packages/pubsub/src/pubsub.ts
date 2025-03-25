@@ -6,13 +6,13 @@ type TopicDataMap = {
 
 export type PubSubListener<
   Data extends TopicDataMap,
-  Topic extends keyof Data = keyof Data,
+  Topic extends keyof Data,
 > = (data: Data[Topic]) => void;
 
 export class PubSub<Data extends TopicDataMap = TopicDataMap> {
-  #topicListeners = new Map<keyof Data, Set<PubSubListener<Data>>>();
-  #subIdTopic = new Map<number, keyof Data>();
-  #subIdListeners = new Map<number, PubSubListener<Data>>();
+  #topicListeners = new Map<keyof Data, Set<PubSubListener<Data, any>>>();
+  #subIdTopic = new Map<number, any>();
+  #subIdListeners = new Map<number, PubSubListener<Data, any>>();
 
   /** @deprecated Please use {@link subscribedTopics} instead. */
   public getEventNames(): Iterable<keyof Data> {
@@ -38,21 +38,14 @@ export class PubSub<Data extends TopicDataMap = TopicDataMap> {
   ) {
     let listeners = this.#topicListeners.get(topic);
     if (!listeners) {
-      listeners = new Set<PubSubListener<Data>>();
+      listeners = new Set<PubSubListener<Data, Topic>>();
       this.#topicListeners.set(topic, listeners);
     }
-    listeners.add(
-      // @ts-expect-error
-      listener,
-    );
+    listeners.add(listener);
 
     const subId = Math.floor(Math.random() * 100_000_000);
     this.#subIdTopic.set(subId, topic);
-    this.#subIdListeners.set(
-      subId,
-      // @ts-expect-error
-      listener,
-    );
+    this.#subIdListeners.set(subId, listener);
 
     return subId;
   }
