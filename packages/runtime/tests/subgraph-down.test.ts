@@ -71,7 +71,10 @@ describe('Error handling', () => {
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {
-            return new Response(null, { status: 500 });
+            return new Response(null, {
+              status: 500,
+              statusText: 'Internal Server Error',
+            });
           }
           if (url === 'http://subgraph2:4000/graphql') {
             return subgraph2server.fetch(url, options as RequestInit);
@@ -189,7 +192,10 @@ describe('Error handling', () => {
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {
-            return Response.error();
+            return new Response(null, {
+              status: 500,
+              statusText: 'Internal Server Error',
+            });
           }
           if (url === 'http://subgraph2:4000/graphql') {
             return subgraph2server.fetch(url, options as RequestInit);
