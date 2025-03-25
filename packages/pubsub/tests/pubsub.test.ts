@@ -1,3 +1,4 @@
+import LeakDetector from 'jest-leak-detector';
 import { expect, it, vi } from 'vitest';
 import { PubSub } from '../src/pubsub';
 
@@ -85,4 +86,29 @@ it('should not receive topics after dispose', () => {
   pubsub.publish('hello', 'world');
 
   expect(helloCb).toHaveBeenCalledTimes(1);
+});
+
+it.skipIf(
+  // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
+  // we also assume that bun doesnt leak
+  globalThis.Bun,
+)('should GC listener after unsubscribe', async () => {
+  const pubsub = new PubSub();
+
+  let cb: null | (() => void) = () => {
+    // noop
+  };
+  const cbDetector = new LeakDetector(cb);
+
+  const subId = pubsub.subscribe('hello', cb);
+
+  pubsub.publish('hello', 'world');
+
+  cb = null;
+
+  await expect(cbDetector.isLeaking()).resolves.toBeTruthy(); // since not yet unsubscribed
+
+  pubsub.unsubscribe(subId);
+
+  await expect(cbDetector.isLeaking()).resolves.toBeFalsy(); // unsubscribed
 });
