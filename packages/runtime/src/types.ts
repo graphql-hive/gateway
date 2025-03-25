@@ -1,5 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
+import { HivePubSub } from '@graphql-hive/pubsub';
 import type {
   Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
@@ -12,7 +13,6 @@ import type {
   KeyValueCache,
   Logger,
   MeshFetch,
-  MeshPubSub,
   OnFetchHook,
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
@@ -44,7 +44,7 @@ import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
-export type { UnifiedGraphConfig, TransportEntryAdditions };
+export type { TransportEntryAdditions, UnifiedGraphConfig };
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -69,7 +69,7 @@ export interface GatewayConfigContext {
   /**
    * Event bus for pub/sub.
    */
-  pubsub?: MeshPubSub;
+  pubsub?: HivePubSub;
   /**
    * Cache Storage
    */
@@ -493,7 +493,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * For example, the fetched {@link supergraph} will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
    */
   cache?: KeyValueCache;
-  pubsub?: MeshPubSub;
+  pubsub?: HivePubSub;
   /**
    * Health check endpoint
    */

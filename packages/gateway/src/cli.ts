@@ -16,16 +16,12 @@ import {
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
+import { HivePubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import type {
-  KeyValueCache,
-  Logger,
-  MeshPubSub,
-  YamlConfig,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
 import parseDuration from 'parse-duration';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
@@ -109,7 +105,7 @@ export interface GatewayCLIProxyConfig
 
 export type KeyValueCacheFactoryFn = (ctx: {
   logger: Logger;
-  pubsub: MeshPubSub;
+  pubsub: HivePubSub;
   cwd: string;
 }) => KeyValueCache;
 

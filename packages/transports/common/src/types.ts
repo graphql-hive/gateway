@@ -1,9 +1,5 @@
-import type {
-  KeyValueCache,
-  Logger,
-  MeshFetch,
-  MeshPubSub,
-} from '@graphql-mesh/types';
+import { HivePubSub } from '@graphql-hive/pubsub';
+import type { KeyValueCache, Logger, MeshFetch } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
 import type { GraphQLError, GraphQLSchema } from 'graphql';
 
@@ -25,7 +21,7 @@ export interface TransportEntry<
 
 export interface TransportContext {
   fetch?: MeshFetch;
-  pubsub?: MeshPubSub;
+  pubsub?: HivePubSub;
   logger?: Logger;
   cwd?: string;
   cache?: KeyValueCache;
