@@ -204,8 +204,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           (frame) =>
             // node internals can allocate a lot, but they on their own cannot leak
             // if other things triggered by node internals are leaking, they will show up in other frames
-            !frame.callstack.every((stack) =>
-              stack.file?.startsWith('node:'),
+            !frame.callstack.every(
+              (stack) =>
+                stack.file?.startsWith('node:') || stack.name === '(root)',
             ) &&
             // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
             !(
