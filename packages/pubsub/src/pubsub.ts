@@ -5,22 +5,44 @@ type TopicDataMap = {
   [key: string]: any;
 };
 
+export interface HivePubSub<Data extends TopicDataMap = TopicDataMap> {
+  /** @deprecated Please use {@link subscribedTopics} if implemented instead. This method will be removed in next major release. */
+  getEventNames(): Iterable<keyof Data>;
+  /** @important This method will be required starting next major release. */
+  subscribedTopics?(): Iterable<keyof Data>;
+  publish<Topic extends keyof Data>(topic: Topic, data: Data[Topic]): void;
+  subscribe<Topic extends keyof Data>(
+    topic: Topic,
+    listener: PubSubListener<Data, Topic>,
+  ): number;
+  unsubscribe(subId: number): void;
+  asyncIterator<Topic extends keyof Data>(
+    topic: Topic,
+  ): AsyncIterable<Data[Topic]>;
+  /** @important This method will be required starting next major release. */
+  dispose?(): void;
+  /** @important This method will be required starting next major release. */
+  [DisposableSymbols.dispose]?(): void;
+}
+
 export type PubSubListener<
   Data extends TopicDataMap,
   Topic extends keyof Data,
 > = (data: Data[Topic]) => void;
 
-export class PubSub<Data extends TopicDataMap = TopicDataMap> {
+export class PubSub<Data extends TopicDataMap = TopicDataMap>
+  implements HivePubSub<Data>
+{
   #topicListeners = new Map<keyof Data, Set<PubSubListener<Data, any>>>();
   #subIdTopic = new Map<number, any>();
   #subIdListeners = new Map<number, PubSubListener<Data, any>>();
 
   /** @deprecated Please use {@link subscribedTopics} instead. */
-  public getEventNames(): Iterable<keyof Data> {
+  public getEventNames() {
     return this.#topicListeners.keys();
   }
 
-  public subscribedTopics(): Iterable<keyof Data> {
+  public subscribedTopics() {
     return this.#topicListeners.keys();
   }
 
