@@ -39,7 +39,8 @@
     "prepack": "yarn build"
   },
   "dependencies": {
-    "@repeaterjs/repeater": "^3.0.6"
+    "@repeaterjs/repeater": "^3.0.6",
+    "@whatwg-node/disposablestack": "^0.0.6"
   },
   "devDependencies": {
     "pkgroll": "2.11.2"

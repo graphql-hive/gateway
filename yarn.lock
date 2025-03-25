@@ -4138,6 +4138,7 @@ __metadata:
   resolution: "@graphql-hive/pubsub@workspace:packages/pubsub"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.6"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
     pkgroll: "npm:2.11.2"
   languageName: unknown
   linkType: soft
