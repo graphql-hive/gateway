@@ -3923,6 +3923,7 @@ __metadata:
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.10.0"
     "@graphql-hive/logger-json": "workspace:^"
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-hive/yoga": "npm:^0.41.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.8.0"
@@ -4129,6 +4130,14 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/signal@workspace:packages/signal"
+  dependencies:
+    pkgroll: "npm:2.11.2"
   languageName: unknown
   linkType: soft
 
@@ -4601,6 +4610,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.2.3"
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-mesh/utils": "npm:^0.104.1"
@@ -4619,6 +4629,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-http-callback@workspace:packages/transports/http-callback"
   dependencies:
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:^0.5.6"
     "@graphql-mesh/transport-common": "workspace:^"
@@ -4870,6 +4881,7 @@ __metadata:
   resolution: "@graphql-tools/executor-http@workspace:packages/executors/http"
   dependencies:
     "@apollo/server": "npm:^4.11.2"
+    "@graphql-hive/signal": "workspace:^"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@repeaterjs/repeater": "npm:^3.0.4"

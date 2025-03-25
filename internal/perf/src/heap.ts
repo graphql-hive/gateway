@@ -127,13 +127,13 @@ export interface HeapSamplingProfileFrame extends HeapSamplingProfileNode {
  * Analyses the {@link v8Profile v8 heap sampling profile}.
  *
  * @param v8Profile - The v8 heap sampling profile.
- * @param threshold - The exclusive threshold of {@link HeapSamplingProfileNode.selfSize node's self size} usage of the whole memory that's considered heavy. Defaults to `0.03` (3%).
+ * @param threshold - The exclusive threshold of {@link HeapSamplingProfileNode.selfSize node's self size} usage of the whole memory that's considered heavy. Defaults to `0.05` (5%).
  *
  * @returns The heaviest leaf frames.
  */
 export function getHeaviestFramesFromHeapSamplingProfile(
   v8Profile: HeapProfiler.SamplingHeapProfile,
-  threshold = 0.03,
+  threshold = 0.05,
 ): HeapSamplingProfileFrame[] {
   const profile = importFromChromeHeapProfile(
     // @ts-expect-error is ok, speedscope will add the id and totalSize properties

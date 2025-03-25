@@ -159,9 +159,28 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       )
         .filter(
           (frame) =>
-            // these frames are expected to be big
-            // TODO: inspect the callstack making sure we're filtering out precisely the right frames
-            !['register', 'WeakRef', 'any', 'set'].includes(frame.name),
+            // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
+            !(
+              frame.name === 'set' &&
+              frame.callstack.some((stack) => stack.name === 'memoized')
+            ) &&
+            // graphql visitor enter is heavy because it's called a lot, but it's proven to not leak
+            !(
+              frame.name === 'enter' &&
+              frame.callstack.some((stack) => stack.name === 'visit')
+            ) &&
+            // graphql visitor leave is heavy because it's called a lot, but it's proven to not leak
+            !(
+              frame.name === 'leave' &&
+              frame.callstack.some((stack) => stack.name === 'visit')
+            ) &&
+            // the (fake)promises themselves cannot leak, things they do can
+            !(
+              frame.name === 'then' &&
+              frame.callstack.some(
+                (stack) => stack.name === 'handleMaybePromise',
+              )
+            ),
         )
         .filter((frame) => {
           if (expectedHeavyFrame) {

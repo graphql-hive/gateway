@@ -1,3 +1,4 @@
+import { abortSignalAny } from '@graphql-hive/signal';
 import { GraphQLResolveInfo } from '@graphql-tools/utils';
 import type { GatewayPlugin } from '../types';
 
@@ -20,7 +21,7 @@ export function useUpstreamCancel(): GatewayPlugin {
       if (options.signal) {
         signals.push(options.signal);
       }
-      options.signal = AbortSignal.any(signals);
+      options.signal = abortSignalAny(signals);
     },
     onSubgraphExecute({ executionRequest }) {
       const signals: AbortSignal[] = [];
@@ -33,7 +34,7 @@ export function useUpstreamCancel(): GatewayPlugin {
       if (executionRequest.signal) {
         signals.push(executionRequest.signal);
       }
-      executionRequest.signal = AbortSignal.any(signals);
+      executionRequest.signal = abortSignalAny(signals);
     },
   };
 }
