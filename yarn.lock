@@ -8846,14 +8846,14 @@ __metadata:
   linkType: hard
 
 "@whatwg-node/node-fetch@npm:^0.7.11":
-  version: 0.7.16
-  resolution: "@whatwg-node/node-fetch@npm:0.7.16"
+  version: 0.7.17
+  resolution: "@whatwg-node/node-fetch@npm:0.7.17"
   dependencies:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.2.5"
     busboy: "npm:^1.6.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/fcac1542dc07f5bf8e40748450784ac933b3e1e2a533a66fa81550957cd1df3f721a1dc9445b255c90f0d49fe6e94a8d052c05b763edd16c17d9aaa467f44fcf
+  checksum: 10c0/59d96508e804ed359d253c11e2aa56f0fb7caa88e7ec4131350ab255ca731c60444146d8b3c08cd9d885cdbd2e8808a529e87c0933f6f77492a3b38e62e665a6
   languageName: node
   linkType: hard
 
