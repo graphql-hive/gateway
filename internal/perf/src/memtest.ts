@@ -241,12 +241,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           msg += '\n';
         }
         msg += `Writing heap sampling profile to ${heapSamplingProfileFile}`;
-        expect.fail(msg);
 
         await fs.writeFile(
           heapSamplingProfileFile,
           JSON.stringify(loadtestResult.profile),
         );
+
+        expect.fail(msg);
       }
     },
   );
