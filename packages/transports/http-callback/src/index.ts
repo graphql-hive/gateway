@@ -95,7 +95,6 @@ export default {
       })
     See documentation: https://graphql-hive.com/docs/gateway/pubsub`);
     }
-    const reqAbortCtrls = new Set<AbortController>();
     const heartbeats = new Map<string, ReturnType<typeof setTimeout>>();
     const stopFnSet = new Set<VoidFunction>();
     const publicUrl =
@@ -326,11 +325,6 @@ export default {
       }
       for (const interval of heartbeats.values()) {
         clearTimeout(interval);
-      }
-      for (const ctrl of reqAbortCtrls) {
-        if (!ctrl.signal.aborted) {
-          ctrl.abort();
-        }
       }
     }
     return makeDisposable(httpCallbackExecutor, disposeFn);
