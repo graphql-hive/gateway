@@ -39,6 +39,8 @@ export function withState<
 
     if (executionRequest) {
       defineState('forSubgraphExecution', executionRequest);
+      // ExecutionRequest can happen outside of any Graphql Operation for Gateway internal usage like Introspection queries.
+      // We check for `params` to be prensent, which means it's actually a GraphQL context.
       if (executionRequest.context?.params) context = executionRequest.context;
     }
     if (context) {
