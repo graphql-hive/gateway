@@ -4133,6 +4133,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/pubsub@workspace:packages/pubsub":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/pubsub@workspace:packages/pubsub"
+  dependencies:
+    "@repeaterjs/repeater": "npm:^3.0.6"
+    pkgroll: "npm:2.11.2"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/signal@workspace:packages/signal"
