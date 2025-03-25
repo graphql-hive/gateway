@@ -213,9 +213,9 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
 }
 
 export function isRetryExecutionRequest(
-  executionRequest: ExecutionRequest,
+  executionRequest?: ExecutionRequest,
 ): executionRequest is RetryExecutionRequest {
-  return !!(executionRequest as any)[RETRY_SYMBOL];
+  return !!(executionRequest as any)?.[RETRY_SYMBOL];
 }
 
 export function getRetryInfo(
