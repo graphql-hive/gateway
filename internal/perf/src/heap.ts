@@ -155,7 +155,14 @@ export function getHeaviestFramesFromHeapSamplingProfile(
   const heaviestFrames: HeapSamplingProfileFrame[] = [];
 
   function toHeapSamplingProfileNode(frame: Frame): HeapSamplingProfileNode {
-    let file = frame.file?.split(__project)[1] || null;
+    let file: string | null = null;
+    const fileProjectRelative = frame.file?.split(__project)[1];
+    if (fileProjectRelative) {
+      file = fileProjectRelative;
+    } else {
+      // must not always be relative to the project, like with node internals
+      file = frame.file || null;
+    }
     if (file && frame.line) {
       file += `:${frame.line + 1}`; // we increment because the line is weirdly off by one
     }
