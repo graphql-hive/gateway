@@ -558,6 +558,9 @@ export function compareSchemas(
   a: DocumentNode | string | GraphQLSchema,
   b: DocumentNode | string | GraphQLSchema,
 ) {
+  if (a === b) {
+    return true;
+  }
   let aStr: string;
   if (typeof a === 'string') {
     aStr = a;

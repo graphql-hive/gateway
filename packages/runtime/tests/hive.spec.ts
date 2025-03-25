@@ -1,11 +1,16 @@
 import { setTimeout } from 'timers/promises';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { MaybePromise, printSchemaWithDirectives } from '@graphql-tools/utils';
+import {
+  fakePromise,
+  MaybePromise,
+  printSchemaWithDirectives,
+} from '@graphql-tools/utils';
 import {
   createDeferredPromise,
   createDisposableServer,
   executeFetch,
+  handleMaybePromise,
   initForExecuteFetchArgs,
   isDebug,
 } from '@internal/testing';
@@ -23,6 +28,18 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
+
+function cloneRequest(req: Request): MaybePromise<Request> {
+  // Only for Bun
+  if (globalThis.Bun) {
+    return req.json().then((json) => ({
+      ...req,
+      headers: req.headers,
+      json: () => fakePromise(json),
+    }));
+  }
+  return req;
+}
 
 function createUpstreamSchema() {
   return createSchema({
@@ -156,18 +173,17 @@ describe('Hive CDN', () => {
     const token = 'secret';
 
     const { promise: waitForUsageReq, resolve: usageReq } =
-      createDeferredPromise<{
-        headers: Record<string, string>;
-        body: any;
-      }>();
+      createDeferredPromise<Request>();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter(async (req) => {
-        usageReq({
-          headers: Object.fromEntries(req.headers),
-          body: await req.json(),
-        });
-        return new Response();
-      }),
+      createServerAdapter((req) =>
+        handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        ),
+      ),
     );
     await using upstreamServer = await createDisposableServer(
       createYoga({ schema: createUpstreamSchema() }),
@@ -210,9 +226,10 @@ describe('Hive CDN', () => {
 
     const req = await waitForUsageReq;
 
-    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
-    expect(req.headers['user-agent']).toContain('hive-gateway/');
-    expect(req.body).toEqual(
+    expect(req.headers.get('authorization')).toBe(`Bearer ${token}`);
+    expect(req.headers.get('user-agent')).toContain('hive-gateway/');
+    const body = await req.json();
+    expect(body).toEqual(
       expect.objectContaining({
         map: expect.any(Object),
         operations: expect.any(Array),
@@ -287,12 +304,9 @@ describe('Hive CDN', () => {
   it('handles persisted documents with reporting', async () => {
     const token = 'secret';
     const { promise: waitForUsageReq, resolve: usageReq } =
-      createDeferredPromise<{
-        headers: Record<string, string>;
-        body: any;
-      }>();
+      createDeferredPromise<Request>();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter(async (req) => {
+      createServerAdapter((req) => {
         if (
           req.url.endsWith(
             '/apps/graphql-app/1.0.0/Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
@@ -308,11 +322,13 @@ describe('Hive CDN', () => {
             }
           `);
         }
-        usageReq({
-          headers: Object.fromEntries(req.headers),
-          body: await req.json(),
-        });
-        return new Response();
+        return handleMaybePromise(
+          () => cloneRequest(req),
+          (req) => {
+            usageReq(req);
+            return new Response();
+          },
+        );
       }),
     );
     await using upstreamServer = await createDisposableServer(
@@ -368,9 +384,10 @@ describe('Hive CDN', () => {
 
     const req = await waitForUsageReq;
 
-    expect(req.headers['authorization']).toBe(`Bearer ${token}`);
-    expect(req.headers['user-agent']).toContain('hive-gateway/');
-    expect(req.body).toEqual(
+    expect(req.headers.get('authorization')).toBe(`Bearer ${token}`);
+    expect(req.headers.get('user-agent')).toContain('hive-gateway/');
+    const body = await req.json();
+    expect(body).toEqual(
       expect.objectContaining({
         map: expect.any(Object),
         operations: expect.any(Array),
