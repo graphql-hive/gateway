@@ -60,7 +60,7 @@ describe('upstream subscriptions via http callbacks', () => {
           'Map',
           'createBatchingExecutor',
           '_storeHeader',
-          'eos'
+          'eos',
         ].includes(frame.name),
       allowFailingRequests: true,
     },
