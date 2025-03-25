@@ -4489,7 +4489,7 @@ __metadata:
     "@opentelemetry/sdk-trace-web": "npm:^1.29.0"
     "@opentelemetry/semantic-conventions": "npm:^1.28.0"
     "@whatwg-node/promise-helpers": "npm:1.3.0"
-    "@whatwg-node/server": "npm:^0.9.65"
+    "@whatwg-node/server": "npm:^0.10.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.2"
     pkgroll: "npm:2.11.2"
@@ -8827,15 +8827,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/disposablestack@npm:^0.0.5":
-  version: 0.0.5
-  resolution: "@whatwg-node/disposablestack@npm:0.0.5"
-  dependencies:
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/dfa949223f348a51acdeca2e3f08393ec8816a2ac2cee754a129e9b2ee4ada3afc1b3dcfbec7bdfe5abe14b30627ef0cef89d01a00062a031c82d555c43ab7f9
-  languageName: node
-  linkType: hard
-
 "@whatwg-node/disposablestack@npm:^0.0.6":
   version: 0.0.6
   resolution: "@whatwg-node/disposablestack@npm:0.0.6"
@@ -8907,17 +8898,6 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.2.3"
     tslib: "npm:^2.6.3"
   checksum: 10c0/bcf8d4a5524ed18b5d3824623d11808af64da8930b8e60e2f2356608658bbdcde9d23f430056840c83943edb0d115dc2a63645bd79cd5564d78ae2ab24197ee3
-  languageName: node
-  linkType: hard
-
-"@whatwg-node/server@npm:^0.9.65":
-  version: 0.9.66
-  resolution: "@whatwg-node/server@npm:0.9.66"
-  dependencies:
-    "@whatwg-node/disposablestack": "npm:^0.0.5"
-    "@whatwg-node/fetch": "npm:^0.10.0"
-    tslib: "npm:^2.6.3"
-  checksum: 10c0/2f596931bda0ac5c42b829cfe4743c3eb6454b193a8030b02240f055257ef822639ced7e2827e3627f90397c7d4ffd536e8c6b2e1413f7c14943b615c6646a83
   languageName: node
   linkType: hard
 
