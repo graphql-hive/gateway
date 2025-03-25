@@ -4,6 +4,7 @@
   "devDependencies": {
     "@apollo/server": "^4.10.3",
     "@apollo/subgraph": "^2.7.2",
-    "graphql": "^16.9.0"
+    "graphql": "^16.9.0",
+    "node-libcurl": "^4.1.0"
   }
 }
