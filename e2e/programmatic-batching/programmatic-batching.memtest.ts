@@ -22,12 +22,6 @@ memtest(
         }
       }
     `,
-    expectedHeavyFrame: (frame) =>
-      [
-        // heap snapshots were analyised and concluded that the memory is stable considering the given heavy frames
-        'onwrite',
-        'leave',
-      ].includes(frame.name),
   },
   async () =>
     gateway({
