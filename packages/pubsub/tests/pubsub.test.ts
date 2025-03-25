@@ -88,6 +88,20 @@ it('should not receive topics after dispose', () => {
   expect(helloCb).toHaveBeenCalledTimes(1);
 });
 
+it('should return async iterables after dispose', async () => {
+  const pubsub = new PubSub();
+
+  const iter = (async () => {
+    for await (const _data of pubsub.asyncIterator('hello')) {
+    }
+    // wont break if not disposed
+  })();
+
+  pubsub.dispose();
+
+  await expect(iter).resolves.toBeUndefined();
+});
+
 it.skipIf(
   // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
   // we also assume that bun doesnt leak
