@@ -24,6 +24,10 @@ memtest(
         }
       }
     `,
+    expectedHeavyFrame: (frame) =>
+      // allocates a lot but all is freed confirmed through heap snapshot
+      frame.name === 'set' &&
+      frame.callstack.some((frame) => frame.name === 'createBatchingExecutor'),
   },
   async () =>
     await gateway({
