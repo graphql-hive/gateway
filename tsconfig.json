@@ -14,6 +14,7 @@
       "@internal/testing": ["./internal/testing/src/index.ts"],
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@internal/proc": ["./internal/proc/src/index.ts"],
+      "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"],
       "@internal/perf": ["./internal/perf/src/index.ts"],
       "@internal/perf/memtest": ["./internal/perf/src/memtest.ts"],
       "@internal/testing/to-be-similar-string": [
@@ -101,6 +102,12 @@
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",
     "./e2e/config-syntax-error/gateway.config.ts",
-    "./e2e/config-syntax-error/custom-resolvers.ts"
+    "./e2e/config-syntax-error/custom-resolvers.ts",
+    "./internal/heapsnapshot"
+  ],
+  "references": [
+    {
+      "path": "./internal/heapsnapshot/tsconfig.json"
+    }
   ]
 }

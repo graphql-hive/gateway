@@ -1,0 +1,9 @@
+{
+  "name": "@internal/heapsnapshot",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.8"
+  }
+}
