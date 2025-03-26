@@ -20,7 +20,7 @@ describe('GraphOS', () => {
     it('should fetch the supergraph SDL', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
 
-      const result = unifiedGraphFetcher({});
+      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(supergraphSdl);
     });
@@ -37,7 +37,7 @@ describe('GraphOS', () => {
         },
       });
 
-      const result = unifiedGraphFetcher({});
+      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
@@ -51,7 +51,9 @@ describe('GraphOS', () => {
         { maxRetries: 3 },
       );
 
-      const result = unifiedGraphFetcher({}).catch((err) => err);
+      const result = Promise.resolve()
+        .then(() => unifiedGraphFetcher({}))
+        .catch((err) => err);
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
@@ -65,7 +67,9 @@ describe('GraphOS', () => {
         { maxRetries: 3 },
       );
 
-      const result = unifiedGraphFetcher({}).catch(() => {});
+      const result = Promise.resolve()
+        .then(() => unifiedGraphFetcher({}))
+        .catch(() => {});
       await advanceTimersByTimeAsync(25);
       expect(mockFetchError).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(50);
@@ -80,12 +84,12 @@ describe('GraphOS', () => {
     it('should respect min-delay between polls', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
 
-      unifiedGraphFetcher({});
+      Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(25);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
-      unifiedGraphFetcher({});
+      Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(50);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(50);
@@ -103,19 +107,19 @@ describe('GraphOS', () => {
           return mockSDL();
         },
       });
-      const result1 = unifiedGraphFetcher({});
+      const result1 = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
-      const result2 = unifiedGraphFetcher({});
+      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
       expect(await result1).toBe(await result2);
     }, 30_000);
 
     it('should not wait if min delay is superior to polling interval', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
-      const result = unifiedGraphFetcher({});
+      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
       await result;
-      const result2 = unifiedGraphFetcher({});
+      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
     });
@@ -142,9 +146,9 @@ describe('GraphOS', () => {
         },
       });
 
-      const result = unifiedGraphFetcher({});
+      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
-      const result2 = unifiedGraphFetcher({});
+      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
     });
@@ -180,6 +184,7 @@ function createTestFetcher(
       graphRef: 'test-graph-ref',
       ...opts,
     },
+    pollingInterval: 0.000000001,
   });
 }
 
