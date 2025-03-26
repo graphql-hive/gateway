@@ -23,6 +23,14 @@ describe('upstream subscriptions via websockets', () => {
           }
         }
       `,
+      expectedHeavyFrame: (frame) =>
+        // allocates a lot but all is freed confirmed through heap snapshot
+        frame.name === 'set' &&
+        frame.callstack.some(
+          (frame) =>
+            frame.name.includes('stitchingInfo') ||
+            frame.name.includes('batch'),
+        ),
     },
     async () =>
       gateway({
@@ -48,20 +56,6 @@ describe('upstream subscriptions via http callbacks', () => {
           }
         }
       `,
-      expectedHeavyFrame: (frame) =>
-        // these frames are not leaks and have been confirmed to be stable analysing the heap snapshots (they do allocate a lot, but they all of their memory gets freed)
-        [
-          'delete',
-          'get pathname',
-          'onRequest',
-          'Repeater.next',
-          'Set',
-          'debug',
-          'Map',
-          'createBatchingExecutor',
-          '_storeHeader',
-          'eos',
-        ].includes(frame.name),
       allowFailingRequests: true,
     },
     async () => {

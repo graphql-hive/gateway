@@ -10,6 +10,33 @@ import {
 } from './heap';
 import { loadtest, LoadtestOptions } from './loadtest';
 
+const supportedFlags = [
+  'short' as const,
+  'heapsnaps' as const,
+  'moreruns' as const,
+  'chart' as const,
+  'sampling' as const,
+];
+
+/**
+ * Allows controlling the memtest runs with the `MEMTEST` environment variable.
+ *
+ * {@link supportedFlags Supported flags} are:
+ * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
+ * - `heapsnaps` Takes heap snapshots instead of the defaults.
+ * - `moreruns` Does `5` runs instead of the defaults.
+ * - `chart` Writes the memory consumption chart.
+ * - `sampling` Will write the heap allocation sampling profile regardless of whether the test fails.
+ */
+const flags =
+  process.env['MEMTEST']?.split(',').map((flag) => {
+    flag = flag.trim().toLowerCase();
+    if (!supportedFlags.includes(flag as any)) {
+      throw new Error(`Unsupported MEMTEST flag: "${flag}"`);
+    }
+    return flag as (typeof supportedFlags)[number];
+  }) || [];
+
 export interface MemtestOptions
   extends Omit<
     LoadtestOptions,
@@ -27,6 +54,15 @@ export interface MemtestOptions
    */
   memorySnapshotWindow?: number;
   /**
+   * Whether to take heap snapshots on the end of the `idle` phase and then at the end
+   * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
+   *
+   * Ignores the `default` and runs with `true` if {@link flags MEMTEST has the `heapsnaps` flag}.
+   *
+   * @default false
+   */
+  takeHeapSnapshots?: boolean;
+  /**
    * Idling duration before loadtests {@link runs run} in milliseconds.
    *
    * @default 10_000
@@ -35,17 +71,23 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
+   * Ignores the `default` and runs for `30s` if {@link flags MEMTEST has the `short` flag}.
+   *
    * @default 120_000
    */
   duration?: number;
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
+   * Ignores the `default` and runs for `10s` if {@link flags MEMTEST has the `short` flag}.
+   *
    * @default 30_000
    */
   calmdown?: number;
   /**
    * How many times to run the loadtests?
+   *
+   * Ignores the `default` and does `5` runs if {@link flags MEMTEST has the `moreruns` flag}.
    *
    * @default 3
    */
@@ -70,9 +112,10 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     cwd,
     memorySnapshotWindow = 1_000,
     idle = 10_000,
-    duration = 120_000,
-    calmdown = 30_000,
-    runs = 3,
+    duration = flags.includes('short') ? 30_000 : 120_000,
+    calmdown = flags.includes('short') ? 10_000 : 30_000,
+    runs = flags.includes('moreruns') ? 5 : 3,
+    takeHeapSnapshots = flags.includes('heapsnaps'),
     onMemorySample,
     onHeapSnapshot,
     expectedHeavyFrame,
@@ -103,6 +146,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         ...loadtestOpts,
         cwd,
         memorySnapshotWindow,
+        takeHeapSnapshots,
         idle,
         duration,
         calmdown,
@@ -110,7 +154,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         server,
         pipeLogs: isDebug('memtest') ? 'loadtest.out' : undefined,
         async onMemorySample(samples) {
-          if (isDebug('memtest')) {
+          if (flags.includes('chart')) {
             const chart = createMemorySampleLineChart(samples);
             await fs.writeFile(
               path.join(cwd, `memtest-memory-usage_${startTime}.svg`),
@@ -120,7 +164,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           return onMemorySample?.(samples);
         },
         async onHeapSnapshot(heapsnapshot) {
-          if (isDebug('memtest')) {
+          if (flags.includes('heapsnaps')) {
             await fs.copyFile(
               heapsnapshot.file,
               path.join(
@@ -139,7 +183,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         cwd,
         `memtest_${startTime}.heapprofile`,
       );
-      if (isDebug('memtest')) {
+      if (flags.includes('sampling')) {
         await fs.writeFile(
           heapSamplingProfileFile,
           JSON.stringify(loadtestResult.profile),
@@ -159,6 +203,12 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       )
         .filter(
           (frame) =>
+            // node internals can allocate a lot, but they on their own cannot leak
+            // if other things triggered by node internals are leaking, they will show up in other frames
+            !frame.callstack.every(
+              (stack) =>
+                stack.file?.startsWith('node:') || stack.name === '(root)',
+            ) &&
             // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
             !(
               frame.name === 'set' &&
@@ -201,12 +251,13 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           msg += '\n';
         }
         msg += `Writing heap sampling profile to ${heapSamplingProfileFile}`;
-        expect.fail(msg);
 
         await fs.writeFile(
           heapSamplingProfileFile,
           JSON.stringify(loadtestResult.profile),
         );
+
+        expect.fail(msg);
       }
     },
   );

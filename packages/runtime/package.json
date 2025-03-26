@@ -49,6 +49,7 @@
     "@envelop/generic-auth": "^9.0.0",
     "@graphql-hive/core": "^0.10.0",
     "@graphql-hive/logger-json": "workspace:^",
+    "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
     "@graphql-hive/yoga": "^0.41.0",
     "@graphql-mesh/cross-helpers": "^0.4.10",

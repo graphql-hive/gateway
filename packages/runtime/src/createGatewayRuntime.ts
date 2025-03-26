@@ -165,12 +165,14 @@ export function createGatewayRuntime<
       })
     : undefined;
 
+  const pubsub = config.pubsub;
+
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
     logger,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
-    pubsub: config.pubsub,
+    pubsub,
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
@@ -994,6 +996,15 @@ export function createGatewayRuntime<
     const cacheDisposePlugin = {
       onDispose() {
         return dispose(wrappedCache);
+      },
+    };
+    basePlugins.push(cacheDisposePlugin);
+  }
+
+  if (isDisposable(pubsub)) {
+    const cacheDisposePlugin = {
+      onDispose() {
+        return dispose(pubsub);
       },
     };
     basePlugins.push(cacheDisposePlugin);

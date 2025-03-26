@@ -1,10 +1,10 @@
-import type { Logger, MeshPubSub } from '@graphql-mesh/types';
+import { HivePubSub } from '@graphql-hive/pubsub';
+import type { Logger } from '@graphql-mesh/types';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { Plugin } from 'graphql-yoga';
 
-// TODO: Use Yoga PubSub later
 export interface GatewayWebhooksPluginOptions {
-  pubsub?: MeshPubSub;
+  pubsub?: HivePubSub;
   logger: Logger;
 }
 export function useWebhooks({
@@ -14,6 +14,7 @@ export function useWebhooks({
   if (!pubsub) {
     throw new Error(`You must provide a pubsub instance to webhooks feature!
     Example:
+      import { PubSub } from '@graphql-hive/gateway'
       export const gatewayConfig = defineConfig({
         pubsub: new PubSub(),
         webhooks: true,

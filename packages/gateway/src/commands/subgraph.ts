@@ -6,7 +6,8 @@ import {
   type GatewayConfigSubgraph,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
-import { isUrl, PubSub } from '@graphql-mesh/utils';
+import { PubSub } from '@graphql-hive/pubsub';
+import { isUrl } from '@graphql-mesh/utils';
 import { isValidPath } from '@graphql-tools/utils';
 import {
   defaultOptions,
