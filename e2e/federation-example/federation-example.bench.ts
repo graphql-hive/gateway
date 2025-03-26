@@ -68,10 +68,8 @@ describe('Gateway', async () => {
       async setup() {
         hiveGw = await gateway({
           supergraph,
-          args: ['--jit'],
           env: {
             NODE_ENV: 'production',
-            JIT: 'true',
           },
         });
       },
