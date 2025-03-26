@@ -1,130 +1,230 @@
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { dispose } from '@graphql-mesh/utils';
+import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
+import { createGraphQLError } from '@graphql-tools/utils';
 import {
-  FormattedExecutionResult,
-  GraphQLFormattedError,
-  versionInfo,
-} from 'graphql';
+  composeLocalSchemasWithApollo,
+  createDisposableServer,
+  DisposableServer,
+} from '@internal/testing';
+import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import { fetch } from '@whatwg-node/fetch';
+import { FormattedExecutionResult, parse } from 'graphql';
+import { createYoga } from 'graphql-yoga';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { TestEnvironment } from './fixtures/TestEnvironment';
 
-const describeIf = (condition: boolean) =>
-  condition ? describe : describe.skip;
-
-describeIf(versionInfo.major >= 16)(
-  'Yoga gateway - subgraph unavailable',
-  () => {
-    let ctx: TestEnvironment;
-
-    beforeAll(async () => {
-      ctx = new TestEnvironment();
-      await ctx.start();
-    });
-
-    afterAll(async () => {
-      await ctx.stop();
-    });
-
-    const multiSubgraphQuery = /* GraphQL */ `
-      query {
-        testNestedField {
-          subgraph1 {
-            testSuccessQuery {
-              id
-              email
-              sub1
-            }
-          }
-          subgraph2 {
-            testSuccessQuery {
-              id
-              email
-              sub2
-            }
-          }
-        }
-      }
-    `;
-
-    const subgraph2Query = /* GraphQL */ `
-      query {
-        testNestedField {
-          subgraph2 {
-            testErrorQuery {
-              id
-              email
-              sub2
-            }
-          }
-        }
-      }
-    `;
-
-    const expectedSubgraph2UnavailableData = {
-      testNestedField: {
-        subgraph1: {
-          testSuccessQuery: {
-            id: 'user1',
-            email: 'user1@example.com',
-            sub1: true,
-          },
-        },
-        subgraph2: null,
-      },
-    };
-
-    const expectedUnavailableErrors: GraphQLFormattedError[] = [
-      {
-        message: expect.stringMatching(
-          /^connect ECONNREFUSED (127.0.0.1|::1):\d{4}$/,
-        ),
-        path: ['testNestedField'], // path should actually be ['testNestedField', 'subgraph2_Nullable | subgraph2_NonNullable', 'testErrorQuery'],
-      },
-      {
-        message: expect.stringMatching(
-          /^connect ECONNREFUSED (127.0.0.1|::1):\d{4}$/,
-        ),
-        path: ['testNestedField'], // path should actually be ['testNestedField', 'subgraph2_Nullable | subgraph2_NonNullable', 'testErrorQuery'],
-      },
-    ];
-
-    describe('UNEXPECTED RESPONSE - FAILING TESTS', () => {
+describe('Yoga gateway - subgraph unavailable', () => {
+  describe('UNEXPECTED RESPONSE - FAILING TESTS', () => {
+    describe('subgraph2 is unavailable', () => {
+      const disposableStack = new AsyncDisposableStack();
+      let gatewayServer: DisposableServer;
       beforeAll(async () => {
-        await ctx.subgraph2.stop();
-      });
+        const subgraph1Schema = buildSubgraphSchema({
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              testNestedField: TestNestedField
+            }
 
-      afterAll(async () => {
-        await ctx.subgraph2.start();
-      });
+            type TestNestedField {
+              subgraph1: TestSubgraph1Query
+            }
 
-      it('subgraph1.testSuccessQuery - subgraph2 is unavailable', async () => {
-        const response = await ctx.yoga.fetch('http://yoga/graphql', {
+            type TestSubgraph1Query {
+              testSuccessQuery: TestUser1
+              testErrorQuery: TestUser1
+            }
+
+            type TestUser1 {
+              id: String!
+              email: String!
+              sub1: Boolean!
+            }
+          `),
+          resolvers: {
+            Query: {
+              testNestedField: () => ({
+                subgraph1: () => ({
+                  testSuccessQuery: () => {
+                    return {
+                      id: 'user1',
+                      email: 'user1@example.com',
+                      sub1: true,
+                    };
+                  },
+                  testErrorQuery: () => {
+                    throw createGraphQLError('My original subgraph1 error!', {
+                      extensions: {
+                        code: 'BAD_REQUEST',
+                      },
+                    });
+                  },
+                }),
+              }),
+            },
+          },
+        });
+        const subgraph1Yoga = createYoga({
+          schema: subgraph1Schema,
+        });
+        disposableStack.use(subgraph1Yoga);
+        const subgraph1Server = await createDisposableServer(subgraph1Yoga);
+        disposableStack.use(subgraph1Server);
+        const subgraph2Schema = buildSubgraphSchema({
+          typeDefs: parse(/* GraphQL */ `
+            type Query {
+              testNestedField: TestNestedField
+            }
+
+            type TestNestedField {
+              subgraph2: TestSubgraph2Query
+            }
+
+            type TestSubgraph2Query {
+              testSuccessQuery: TestUser2
+              testErrorQuery: TestUser2
+            }
+
+            type TestUser2 {
+              id: String!
+              email: String!
+              sub2: Boolean!
+            }
+          `),
+          resolvers: {
+            Query: {
+              testNestedField: () => ({
+                subgraph2: () => ({
+                  testSuccessQuery: () => {
+                    return {
+                      id: 'user2',
+                      email: 'user1@example.com',
+                      sub2: true,
+                    };
+                  },
+                  testErrorQuery: () => {
+                    throw createGraphQLError('My original subgraph2 error!', {
+                      extensions: {
+                        code: 'BAD_REQUEST',
+                      },
+                    });
+                  },
+                }),
+              }),
+            },
+          },
+        });
+        const subgraph2Yoga = createYoga({
+          schema: subgraph2Schema,
+        });
+        disposableStack.use(subgraph2Yoga);
+        const subgraph2Server = await createDisposableServer(subgraph2Yoga);
+        const supergraphSdl = await composeLocalSchemasWithApollo([
+          {
+            schema: subgraph1Schema,
+            name: 'subgraph1',
+            url: `${subgraph1Server.url}/graphql`,
+          },
+          {
+            schema: subgraph2Schema,
+            name: 'subgraph2',
+            url: `${subgraph2Server.url}/graphql`,
+          },
+        ]);
+        const gatewayYoga = createYoga({
+          schema: getStitchedSchemaFromSupergraphSdl({ supergraphSdl }),
+        });
+        disposableStack.use(gatewayYoga);
+        gatewayServer = await createDisposableServer(gatewayYoga);
+        disposableStack.use(gatewayServer);
+        // Close subgraph 2
+        await dispose(subgraph2Server);
+      });
+      afterAll(() => disposableStack.disposeAsync());
+      it.only('multiSubgraphQuery', async () => {
+        const response = await fetch(`${gatewayServer.url}/graphql`, {
           method: 'POST',
-          body: JSON.stringify({ query: multiSubgraphQuery }),
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                testNestedField {
+                  subgraph1 {
+                    testSuccessQuery {
+                      id
+                      email
+                      sub1
+                    }
+                  }
+                  subgraph2 {
+                    testSuccessQuery {
+                      id
+                      email
+                      sub2
+                    }
+                  }
+                }
+              }
+            `,
+          }),
           headers: { 'content-type': 'application/json' },
         });
-
         const result: FormattedExecutionResult = await response.json();
 
         expect(response.status).toBe(200);
-        expect(result.data).toMatchObject(expectedSubgraph2UnavailableData);
+        expect(result.data).toMatchObject({
+          testNestedField: {
+            subgraph1: {
+              testSuccessQuery: {
+                id: 'user1',
+                email: 'user1@example.com',
+                sub1: true,
+              },
+            },
+            subgraph2: null,
+          },
+        });
         // the "ECONNREFUSED" error got completely lost somewhere along the way !!!
         expect(result.errors).toBeDefined();
         expect(result.errors).toHaveLength(1);
       });
-
-      it('subgraph2.testSuccessQuery - subgraph2 is unavailable', async () => {
-        const response = await ctx.yoga.fetch('http://yoga/graphql', {
+      it('subgraph2Query', async () => {
+        const response = await fetch(`${gatewayServer.url}/graphql`, {
           method: 'POST',
-          body: JSON.stringify({ query: subgraph2Query }),
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                testNestedField {
+                  subgraph2 {
+                    testErrorQuery {
+                      id
+                      email
+                      sub2
+                    }
+                  }
+                }
+              }
+            `,
+          }),
           headers: { 'content-type': 'application/json' },
         });
-
         const result: FormattedExecutionResult = await response.json();
 
         expect(response.status).toBe(200);
-        expect(result.errors).toMatchObject(expectedUnavailableErrors);
+        expect(result.errors).toMatchObject([
+          {
+            message: expect.stringContaining('connect ECONNREFUSED'),
+            extensions: {
+              code: 'DOWNSTREAM_SERVICE_ERROR',
+              request: {
+                body: '{"query":"{__typename testNestedField{subgraph2{testErrorQuery{id email sub2}}}}"}',
+                method: 'POST',
+              },
+            },
+            path: ['testNestedField'], // path should actually be ['testNestedField', 'subgraph2_Nullable | subgraph2_NonNullable', 'testErrorQuery'],
+          },
+        ]);
         // shouldn't be "testNestedField" resolved as null and not as an empty object?
         expect(result.data).toMatchObject({ testNestedField: null });
       });
     });
-  },
-);
+  });
+});
