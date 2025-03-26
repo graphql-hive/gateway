@@ -56,7 +56,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
     let res!: JaegerTracesApiResponse;
-    const signal = AbortSignal.timeout(2_000);
+    const signal = AbortSignal.timeout(2000);
     while (!signal.aborted) {
       try {
         res = await fetch(url).then((r) => r.json());
@@ -135,14 +135,14 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     `);
 
     const traces = await getJaegerTraces(serviceName, 2);
-    expect(traces.data.length).toBe(3);
+    expect(traces.data.length).toBe(2);
     const relevantTraces = traces.data.filter((trace) =>
       trace.spans.some((span) => span.operationName === 'POST /graphql'),
     );
     expect(relevantTraces.length).toBe(1);
     const relevantTrace = relevantTraces[0];
     expect(relevantTrace).toBeDefined();
-    expect(relevantTrace?.spans.length).toBe(8);
+    expect(relevantTrace?.spans.length).toBe(5);
 
     expect(relevantTrace?.spans).toContainEqual(
       expect.objectContaining({ operationName: 'POST /graphql' }),
@@ -234,7 +234,7 @@ describe.skipIf(gatewayRunner !== 'node')('Cloudflare Workers', () => {
     );
 
     const traces = await getJaegerTraces(serviceName, 3);
-    expect(traces.data.length).toBe(4);
+    expect(traces.data.length).toBe(3);
 
     const relevantTraces = traces.data.filter((trace) =>
       trace.spans.some((span) => span.operationName === 'POST /graphql'),

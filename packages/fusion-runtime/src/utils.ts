@@ -256,7 +256,6 @@ export function getOnSubgraphExecute({
               transportEntryMap,
               transportContext,
               getSubgraphSchema,
-              instrumentation,
             });
             // Caches the executor for future use
             subgraphExecutorMap.set(subgraphName, executor);
@@ -267,14 +266,20 @@ export function getOnSubgraphExecute({
       // Caches the lazy executor to prevent race conditions
       subgraphExecutorMap.set(subgraphName, executor);
     }
-
     if (batch) {
       executor = getBatchingExecutor(
         executionRequest.context || subgraphExecutorMap,
         executor,
       );
     }
-
+    const originalExecutor = executor;
+    executor = (executionRequest) => {
+      const subgraphInstrumentation = instrumentation()?.subgraphExecute;
+      return getInstrumented({ executionRequest }).asyncFn(
+        subgraphInstrumentation,
+        originalExecutor,
+      )(executionRequest);
+    };
     return executor(executionRequest);
   };
 }
@@ -286,7 +291,6 @@ export interface WrapExecuteWithHooksOptions {
   transportEntryMap?: Record<string, TransportEntry>;
   getSubgraphSchema: (subgraphName: string) => GraphQLSchema;
   transportContext?: TransportContext;
-  instrumentation: () => Instrumentation | undefined;
 }
 
 declare module 'graphql' {
@@ -306,9 +310,8 @@ export function wrapExecutorWithHooks({
   transportEntryMap,
   getSubgraphSchema,
   transportContext,
-  instrumentation,
 }: WrapExecuteWithHooksOptions): Executor {
-  function executorWithHooks(baseExecutionRequest: ExecutionRequest) {
+  return function executorWithHooks(baseExecutionRequest: ExecutionRequest) {
     baseExecutionRequest.info =
       baseExecutionRequest.info || ({} as GraphQLResolveInfo);
     baseExecutionRequest.info.executionRequest = baseExecutionRequest;
@@ -438,14 +441,6 @@ export function wrapExecutorWithHooks({
         );
       },
     );
-  }
-
-  return function instrumentedExecutor(executionRequest: ExecutionRequest) {
-    const subgraphInstrument = instrumentation()?.subgraphExecute;
-    return getInstrumented({ executionRequest, subgraphName }).asyncFn(
-      subgraphInstrument,
-      executorWithHooks,
-    )(executionRequest);
   };
 }
 

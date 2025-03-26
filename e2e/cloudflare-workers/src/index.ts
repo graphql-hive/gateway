@@ -1,6 +1,7 @@
 import { ExportedHandler, Response } from '@cloudflare/workers-types';
 import {
   createGatewayRuntime,
+  DisposableSymbols,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import {
@@ -8,6 +9,7 @@ import {
   useOpenTelemetry,
 } from '@graphql-mesh/plugin-opentelemetry';
 import http from '@graphql-mesh/transport-http';
+import { fakePromise } from '@graphql-tools/utils';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
@@ -35,21 +37,27 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
-let runtime: ReturnType<typeof createGatewayRuntime>;
-function getRuntime(env: Env) {
-  if (!runtime) {
-    console.log(env);
-    runtime = createGatewayRuntime({
-      proxy: { endpoint: 'https://countries.trevorblades.com' },
-      transports: { http },
+export default {
+  async fetch(req, env, ctx) {
+    const runtime = createGatewayRuntime({
+      proxy: {
+        endpoint: 'https://countries.trevorblades.com',
+      },
+      transports: {
+        http,
+      },
       plugins: (ctx) => [
         useOpenTelemetry({
           ...ctx,
           exporters: [
             createOtlpHttpExporter(
-              { url: env['OTLP_EXPORTER_URL'] },
+              {
+                url: env['OTLP_EXPORTER_URL'],
+              },
               // Batching config is set in order to make it easier to test.
-              false,
+              {
+                scheduledDelayMillis: 1,
+              },
             ),
           ],
           serviceName: env['OTLP_SERVICE_NAME'],
@@ -57,12 +65,8 @@ function getRuntime(env: Env) {
         useOnFetchTracer(),
       ],
     });
-  }
-  return runtime;
-}
-export default {
-  async fetch(req, env, ctx) {
-    const res = await getRuntime(env)(req, env, ctx);
+    const res = await runtime(req, env, ctx);
+    ctx.waitUntil(fakePromise(runtime[DisposableSymbols.asyncDispose]()));
     return res as unknown as Response;
   },
 } satisfies ExportedHandler<Env>;
