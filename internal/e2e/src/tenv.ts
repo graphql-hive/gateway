@@ -153,6 +153,11 @@ export interface ServiceOptions extends ProcOptions {
    * @default http
    */
   protocol?: string;
+  /**
+   * Services dependent on this service.
+   * It will supply `--<service.name>_port=<service.port>` arguments to the process.
+   */
+  services?: Service[];
 }
 
 export interface Service extends Server {
@@ -701,6 +706,7 @@ export function createTenv(cwd: string): Tenv {
         args = [],
         protocol = 'http',
         env,
+        services,
       } = {},
     ) {
       port ||= await getAvailablePort();
@@ -720,6 +726,9 @@ export function createTenv(cwd: string): Tenv {
         path.join(cwd, 'services', name),
         createServicePortOpt(name, port),
         gatewayPort && createPortOpt(gatewayPort),
+        ...(services?.map(({ name, port }) =>
+          createServicePortOpt(name, port),
+        ) || []),
         ...args,
       );
       const service: Service = {

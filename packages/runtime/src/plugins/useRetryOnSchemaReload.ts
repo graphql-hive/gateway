@@ -1,3 +1,5 @@
+import { Logger } from '@graphql-mesh/types';
+import { requestIdByRequest } from '@graphql-mesh/utils';
 import type { MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -7,9 +9,11 @@ import { getOperationAST, type ExecutionResult } from 'graphql';
 import { isAsyncIterable, YogaInitialContext } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
-export function useRetryOnSchemaReload<
-  TContext extends Record<string, any>,
->(): GatewayPlugin<TContext> {
+export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
+  logger,
+}: {
+  logger: Logger;
+}): GatewayPlugin<TContext> {
   const execHandlerByContext = new WeakMap<
     {},
     () => MaybePromise<MaybeAsyncIterable<ExecutionResult>>
@@ -31,13 +35,21 @@ export function useRetryOnSchemaReload<
         execHandlerByContext.delete(args.contextValue);
       }
     },
-    onExecutionResult({ context, result, setResult }) {
+    onExecutionResult({ request, context, result, setResult }) {
       const execHandler = execHandlerByContext.get(context);
       if (
         execHandler &&
         !isAsyncIterable(result) &&
         result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
       ) {
+        let requestLogger = logger;
+        const requestId = requestIdByRequest.get(request);
+        if (requestId) {
+          requestLogger = logger.child({ requestId });
+        }
+        requestLogger.info(
+          'The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
+        );
         if (execHandler) {
           return handleMaybePromise(execHandler, (newResult) =>
             setResult(newResult),

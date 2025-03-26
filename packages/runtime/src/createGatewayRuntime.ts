@@ -34,6 +34,7 @@ import {
   getInContextSDK,
   isDisposable,
   isUrl,
+  LogLevel,
   wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
@@ -155,6 +156,7 @@ export function createGatewayRuntime<
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
     () => instrumentation,
+    logger,
   );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
@@ -652,6 +654,7 @@ export function createGatewayRuntime<
         const graphosFetcherContainer = createGraphOSFetcher({
           graphosOpts: config.supergraph,
           configContext,
+          pollingInterval: config.pollingInterval,
         });
         unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
         supergraphLoadedPlace = graphosFetcherContainer.supergraphLoadedPlace;
@@ -708,29 +711,29 @@ export function createGatewayRuntime<
       batch: config.__experimental__batchDelegation,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
-    readinessChecker = () =>
-      handleMaybePromise(
+    readinessChecker = () => {
+      const logger = configContext.logger.child('readiness');
+      logger.debug(`checking`);
+      return handleMaybePromise(
         () => unifiedGraphManager.getUnifiedGraph(),
         (schema) => {
           if (!schema) {
             logger.debug(
-              `Readiness check failed because supergraph has not been loaded yet or failed to load`,
+              `failed because supergraph has not been loaded yet or failed to load`,
             );
             return false;
           }
-          logger.debug(
-            `Readiness check passed because supergraph has been loaded already`,
-          );
+          logger.debug('passed');
           return true;
         },
         (err) => {
-          logger.debug(
-            `Readiness check failed due to errors on loading supergraph:\n${err.stack || err.message}`,
+          logger.error(
+            `failed due to errors on loading supergraph:\n${err.stack || err.message}`,
           );
-          logger.error(err);
           return false;
         },
       );
+    };
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
     contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
@@ -985,11 +988,14 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useRetryOnSchemaReload(),
+    useRetryOnSchemaReload({ logger }),
   ];
 
   if (config.requestId !== false) {
-    basePlugins.push(useRequestId());
+    const reqIdPlugin = useRequestId(
+      typeof config.requestId === 'object' ? config.requestId : undefined,
+    );
+    basePlugins.push(reqIdPlugin);
   }
 
   if (isDisposable(wrappedCache)) {
@@ -1095,15 +1101,27 @@ export function createGatewayRuntime<
     extraPlugins.push(useDemandControl(config.demandControl));
   }
 
-  logger.debug(() => {
+  let isDebug: boolean = false;
+
+  if ('level' in logger) {
+    if (logger.level === 'debug' || logger.level === LogLevel.debug) {
+      isDebug = true;
+    }
+  } else {
+    logger.debug(() => {
+      isDebug = true;
+      return 'Debug mode enabled';
+    });
+  }
+
+  if (isDebug) {
     extraPlugins.push(
       useSubgraphExecuteDebug(configContext),
       useFetchDebug(configContext),
       useDelegationPlanDebug(configContext),
       useCacheDebug(configContext),
     );
-    return 'Debug mode enabled';
-  });
+  }
 
   const yoga = createYoga({
     // @ts-expect-error Types???

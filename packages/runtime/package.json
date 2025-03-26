@@ -58,7 +58,7 @@
     "@graphql-mesh/plugin-response-cache": "^0.104.0",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.0",
-    "@graphql-mesh/utils": "^0.104.1",
+    "@graphql-mesh/utils": "^0.104.2",
     "@graphql-tools/batch-delegate": "workspace:^",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor-common": "workspace:^",
