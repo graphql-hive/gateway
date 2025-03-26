@@ -76,7 +76,7 @@ export function createGraphOSFetcher({
       });
       let retries = maxRetries;
       function fetchSupergraphWithDelay(): MaybePromise<string> {
-        if (lastSupergraphSdl && nextFetchTime) {
+        if (nextFetchTime) {
           const currentTime = Date.now();
           if (nextFetchTime >= currentTime) {
             const delay = nextFetchTime - currentTime;
