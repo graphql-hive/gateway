@@ -1,6 +1,6 @@
-import { defineConfig } from "@graphql-hive/gateway";
+import { defineConfig } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
-    jit: true,
-    contentEncoding: true,
-})
+  jit: true,
+  contentEncoding: true,
+});
