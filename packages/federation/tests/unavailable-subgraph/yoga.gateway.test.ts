@@ -140,7 +140,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
         await dispose(subgraph2Server);
       });
       afterAll(() => disposableStack.disposeAsync());
-      it.only('multiSubgraphQuery', async () => {
+      it('multiSubgraphQuery', async () => {
         const response = await fetch(`${gatewayServer.url}/graphql`, {
           method: 'POST',
           body: JSON.stringify({
