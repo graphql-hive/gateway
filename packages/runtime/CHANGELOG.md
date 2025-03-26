@@ -1,5 +1,15 @@
 # @graphql-hive/gateway-runtime
 
+## 1.6.5
+
+### Patch Changes
+
+- [#940](https://github.com/graphql-hive/gateway/pull/940) [`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Revert accidental OpenTelemetry potential breaking changes
+
+- Updated dependencies [[`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b)]:
+  - @graphql-mesh/hmac-upstream-signature@1.2.25
+  - @graphql-mesh/fusion-runtime@0.11.7
+
 ## 1.6.4
 
 ### Patch Changes

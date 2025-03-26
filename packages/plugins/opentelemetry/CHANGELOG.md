@@ -1,5 +1,19 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.51
+
+### Patch Changes
+
+- [#940](https://github.com/graphql-hive/gateway/pull/940) [`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `1.3.0`, in `dependencies`)
+  - Removed dependency [`@opentelemetry/context-async-hooks@^1.30.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/1.30.0) (from `dependencies`)
+
+- [#940](https://github.com/graphql-hive/gateway/pull/940) [`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Revert accidental OpenTelemetry potential breaking changes
+
+- Updated dependencies [[`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b)]:
+  - @graphql-hive/gateway-runtime@1.6.5
+
 ## 1.3.50
 
 ### Patch Changes
