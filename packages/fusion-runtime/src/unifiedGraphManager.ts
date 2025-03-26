@@ -113,7 +113,7 @@ export type Instrumentation = {
    * Wrap each subgraph execution request. This can happen multiple time for the same graphql operation.
    */
   subgraphExecute?: (
-    payload: { executionRequest: ExecutionRequest; subgraphName: string },
+    payload: { executionRequest: ExecutionRequest },
     wrapped: () => MaybePromise<void>,
   ) => MaybePromise<void>;
 };
