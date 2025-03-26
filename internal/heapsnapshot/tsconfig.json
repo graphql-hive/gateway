@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "esnext",
+    "useUnknownInCatchVariables": false,
+    "composite": true
+  }
+}

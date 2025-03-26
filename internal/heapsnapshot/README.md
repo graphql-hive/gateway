@@ -1,0 +1,1 @@
+Fork of [ChromeDevTools/devtools-frontend/[..]/HeapSnapshot.ts](https://github.com/ChromeDevTools/devtools-frontend/blob/dd60dc9c8add93357dcffcfc3e2a9e5a31864413/front_end/entrypoints/heap_snapshot_worker/HeapSnapshot.ts) without the browser requirements, just the parser.
