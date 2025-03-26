@@ -1,102 +1,69 @@
+import fs from 'fs/promises';
 import { HeapProfiler } from 'inspector';
 import path from 'path';
-import { serializer } from '@memlab/core';
-import { getFullHeapFromFile, PluginUtils } from '@memlab/heap-analysis';
+import { HeapSnapshotProgress, JSHeapSnapshot } from '@internal/heapsnapshot';
 import { CallTreeNode, Frame } from 'speedscope/profile';
 import { importFromChromeHeapProfile } from 'speedscope/profile/v8heapalloc';
+import { HeapSnapshotLoader } from '../../heapsnapshot/src/HeapSnapshotLoader';
 
 const __project = path.resolve(__dirname, '..', '..', '..') + path.sep;
 
-/**
- * Analyses the {@link file heap snapshot file} logging the largest single objects and summed objects.
- *
- * TODO: Leak detection and return something.
- * TODO: innacurate when comparing results to chrome devtools
- */
-export async function analyzeHeapSnapshot(file: string) {
-  const snap = await getFullHeapFromFile(file);
-
-  // these are largest _single_ objects in the heap
-  const largestSingleObjects = PluginUtils.filterOutLargestObjects(
-    snap,
-    PluginUtils.isNodeWorthInspecting,
-    5,
+export async function compareHeapSnapshotFiles(snapshotFiles: string[]) {
+  const profiles = await Promise.all(
+    snapshotFiles.map((file) =>
+      fs.readFile(file, 'utf8').then((c) => JSON.parse(c)),
+    ),
   );
-  console.group('Largest single objects');
-  for (const node of largestSingleObjects) {
-    console.group(`(${node.type}) ${node.name}`.trim());
 
-    console.log('self size', (node.self_size / 1024).toFixed(2), 'kB');
-    console.log(
-      'retained size',
-      (node.retainedSize / (1024 * 1024)).toFixed(2),
-      'MB',
-    );
-
-    console.groupEnd();
-  }
-  console.groupEnd();
-
-  //
-
-  // a summed node is a node whose sizes are summed up for all instances of that node
-  type SummedObject = {
-    type: string;
-    name: string;
-    selfSize: number;
-    retainedSize: number;
-  };
-
-  const summedObjects: {
-    [key: string]: SummedObject;
-  } = {};
-
-  snap.nodes.forEach((node) => {
-    if (!PluginUtils.isNodeWorthInspecting(node)) {
-      // we only care about nodes we have control over, like objects and strings
-      return;
+  class Progress implements HeapSnapshotProgress {
+    reportProblem(error: string): void {
+      console.error(error);
     }
-
-    const key = serializer.summarizeNodeShape(node);
-
-    if (summedObjects[key]) {
-      summedObjects[key].selfSize += node.self_size;
-      summedObjects[key].retainedSize += node.retainedSize;
-    } else {
-      summedObjects[key] = {
-        type: node.type,
-        name: node.name,
-        selfSize: node.self_size,
-        retainedSize: node.retainedSize,
-      };
+    updateProgress(title: string, value: number, total: number): void {
+      console.log(title, value, total);
     }
-  });
-
-  const largestSummedObjects: SummedObject[] = [];
-
-  for (const object of Object.values(summedObjects)) {
-    // only the top 10 nodes with the highest retained size
-    largestSummedObjects.push(object);
-    largestSummedObjects.sort((n1, n2) => n2.retainedSize - n1.retainedSize);
-    if (largestSummedObjects.length > 10) {
-      largestSummedObjects.pop();
+    updateStatus(status: string): void {
+      console.log(status);
     }
   }
 
-  console.group('Largest summed objects');
-  for (const node of largestSummedObjects) {
-    console.group(`(${node.type}) ${node.name}`.trim());
+  const loader = new HeapSnapshotLoader(null as any);
+  loader.write(JSON.stringify(profiles[0]));
+  loader.close();
 
-    console.log('self size', (node.selfSize / (1024 * 1024)).toFixed(2), 'MB');
-    console.log(
-      'retained size',
-      (node.retainedSize / (1024 * 1024)).toFixed(2),
-      'MB',
-    );
+  const worker = new Worker('////');
+  const chan = new MessageChannel();
 
-    console.groupEnd();
+  worker.postMessage(
+    {
+      disposition: 'setupForSecondaryInit',
+      objectId: 0,
+    },
+    [chan.port2],
+  );
+
+  const snap = await loader.buildSnapshot(chan.port1);
+
+  const snaps: JSHeapSnapshot[] = [];
+  for (const profile of profiles) {
+    snaps.push(new JSHeapSnapshot(profile, new Progress()));
   }
-  console.groupEnd();
+
+  let baseSnap = snaps.pop()!;
+  while (baseSnap) {
+    const snap = snaps.pop();
+    if (!snap) {
+      break; // last snap
+    }
+
+    const defs = snap.interfaceDefinitions();
+    const aggregates = baseSnap.aggregatesForDiff(defs);
+
+    const diffs = snap.calculateSnapshotDiff('', aggregates);
+    for (const [constructor, diff] of Object.entries(diffs)) {
+      console.log({ constructor, diff });
+    }
+  }
 }
 
 export interface HeapSamplingProfileNode {
