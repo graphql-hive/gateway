@@ -1,5 +1,16 @@
 # @graphql-mesh/transport-common
 
+## 0.7.33
+
+### Patch Changes
+
+- [#933](https://github.com/graphql-hive/gateway/pull/933) [`a374bfc`](https://github.com/graphql-hive/gateway/commit/a374bfcf4309f5953b8c8304fba8e079b6f6b6dc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/pubsub@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/pubsub/v/workspace:^) (to `dependencies`)
+
+- Updated dependencies [[`a374bfc`](https://github.com/graphql-hive/gateway/commit/a374bfcf4309f5953b8c8304fba8e079b6f6b6dc)]:
+  - @graphql-hive/pubsub@1.0.0
+
 ## 0.7.32
 
 ### Patch Changes
