@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.7
+
+### Patch Changes
+
+- [#940](https://github.com/graphql-hive/gateway/pull/940) [`ab96392`](https://github.com/graphql-hive/gateway/commit/ab96392b3561de62cf6a57280e4c3ac0ec98d88b) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Revert accidental OpenTelemetry potential breaking changes
+
 ## 0.11.6
 
 ### Patch Changes
