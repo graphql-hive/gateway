@@ -53,8 +53,8 @@ it('should write logs with attributes in context', () => {
   const ctx = {};
   logger.setAttrsInCtx(ctx, { hello: 'world' });
 
-  logger.logCtx(ctx, 'info', { world: 'hello' }, 'Hello, world!');
-  logger.logCtx(ctx, 'info', '2nd Hello, world!');
+  logger.logCtx('info', ctx, { world: 'hello' }, 'Hello, world!');
+  logger.logCtx('info', ctx, '2nd Hello, world!');
 
   expect(writter.logs).toMatchInlineSnapshot(`
     [
