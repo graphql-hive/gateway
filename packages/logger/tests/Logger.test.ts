@@ -5,7 +5,7 @@ import { LogWriter } from '../src/writers';
 class TLogWriter implements LogWriter {
   public logs: { level: LogLevel; msg: string; attrs?: unknown }[] = [];
 
-  write(level: LogLevel, msg: string, attrs: Record<string, unknown>): void {
+  write(level: LogLevel, msg: string, attrs: Record<string, any>): void {
     this.logs.push({ level, msg, ...(attrs ? { attrs } : {}) });
   }
 

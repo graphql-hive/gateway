@@ -1,8 +1,20 @@
 import { LogLevel } from './Logger';
 
+/** Context can be any JavaScript object to which a property can be assigned; */
 export type Context = Object;
 
-export type Attributes = Record<string, any>;
+export type AttributeValue =
+  | string
+  | number
+  | boolean
+  | { [key: PropertyKey]: AttributeValue }
+  | AttributeValue[]
+  | Object // redundant, but this will allow _any_ object be the value
+  | null
+  | undefined
+  | (() => AttributeValue); // lazy attribute
+
+export type Attributes = Record<PropertyKey, AttributeValue>;
 
 export function logLevelToString(level: LogLevel): string {
   switch (level) {
