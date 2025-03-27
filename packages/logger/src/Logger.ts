@@ -24,9 +24,7 @@ export class Logger implements LogWriter {
    * Gets the attributes from the {@link context ctx} under the hidden logger symbol key.
    */
   public getCtxAttrs(ctx: Context): Attributes | undefined {
-    const metadata = ctx[Logger.#CTX_ATTRS_SY];
-    // @ts-expect-error should the type be enforced on runtime?
-    return metadata;
+    return Object(ctx)[Logger.#CTX_ATTRS_SY];
   }
 
   /**
@@ -34,9 +32,8 @@ export class Logger implements LogWriter {
    * the hidden logger symbol key.
    */
   public setAttrsInCtx(ctx: Context, attrs: Attributes) {
-    ctx[Logger.#CTX_ATTRS_SY] = {
-      // @ts-expect-error this should either be the attributes or undefined
-      ...ctx[Logger.CTX_ATTRS_SY],
+    Object(ctx)[Logger.#CTX_ATTRS_SY] = {
+      ...this.getCtxAttrs(ctx),
       ...attrs,
     };
   }
