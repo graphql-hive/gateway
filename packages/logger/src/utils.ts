@@ -1,6 +1,25 @@
+import { LogLevel } from './Logger';
+
 export type Context = Record<PropertyKey, unknown>;
 
 export type Attributes = Record<string, any>;
+
+export function logLevelToString(level: LogLevel): string {
+  switch (level) {
+    case 'trace':
+      return 'TRC';
+    case 'debug':
+      return 'DBG';
+    case 'info':
+      return 'INF';
+    case 'warn':
+      return 'WRN';
+    case 'error':
+      return 'ERR';
+    default:
+      throw new Error(`Unknown log level "${level}"`);
+  }
+}
 
 export function isPromise(val: unknown): val is Promise<any> {
   const obj = Object(val);
