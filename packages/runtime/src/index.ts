@@ -13,7 +13,11 @@ export {
   getSdkRequesterForUnifiedGraph,
   getExecutorForUnifiedGraph,
 } from '@graphql-mesh/fusion-runtime';
-export { useUpstreamRetry } from './plugins/useUpstreamRetry';
+export {
+  useUpstreamRetry,
+  getRetryInfo,
+  isRetryExecutionRequest,
+} from './plugins/useUpstreamRetry';
 export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 export { getGraphQLWSOptions } from './getGraphQLWSOptions';
 export * from './getDefaultLogger';
