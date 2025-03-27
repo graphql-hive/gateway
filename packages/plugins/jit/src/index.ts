@@ -1,5 +1,9 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { isAsyncIterable } from '@graphql-tools/utils';
+import {
+  handleMaybePromise,
+  mapAsyncIterator,
+} from '@whatwg-node/promise-helpers';
 import type { DocumentNode, ExecutionArgs } from 'graphql';
 import { compileQuery, isCompiledQuery, type CompiledQuery } from 'graphql-jit';
 
@@ -24,33 +28,37 @@ function createExecuteFnWithJit() {
         return compilationResult;
       }
     }
-    if (compiledQuery.subscribe) {
-      return compiledQuery.subscribe(
-        args.rootValue,
-        args.contextValue,
-        args.variableValues,
-      );
-    }
-    if (compiledQuery.stringify) {
-      return handleMaybePromise(
-        () =>
-          compiledQuery.query(
+    const executeFn = () =>
+      compiledQuery.subscribe
+        ? compiledQuery.subscribe(
             args.rootValue,
             args.contextValue,
             args.variableValues,
-          ),
-        (result) => {
-          // @ts-expect-error - stringify is a custom property added by graphql-jit
-          result.stringify = compiledQuery.stringify;
-          return result;
-        },
-      );
+          )
+        : compiledQuery.query(
+            args.rootValue,
+            args.contextValue,
+            args.variableValues,
+          );
+    if (compiledQuery.stringify) {
+      return handleMaybePromise(executeFn, (result) => {
+        if (isAsyncIterable(result)) {
+          return mapAsyncIterator(result, (result) => ({
+            data: result.data,
+            errors: result.errors,
+            extensions: result.extensions,
+            stringify: compiledQuery.stringify,
+          }));
+        }
+        return {
+          data: result.data,
+          errors: result.errors,
+          extensions: result.extensions,
+          stringify: compiledQuery.stringify,
+        };
+      });
     }
-    return compiledQuery.query(
-      args.rootValue,
-      args.contextValue,
-      args.variableValues,
-    );
+    return executeFn();
   };
 }
 
