@@ -66,6 +66,8 @@ export class Logger implements LogWriter {
     return;
   }
 
+  // TODO: flush on dispose
+
   //
 
   public logCtx(
