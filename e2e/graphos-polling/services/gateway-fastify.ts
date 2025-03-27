@@ -39,8 +39,8 @@ const app = fastify({
   // Align with Hive Gateway's request id log label
   requestIdLogLabel: 'requestId',
   // Check the header first, then generate a new one if not found
-  genReqId: (req) =>
-    req.headers[requestIdHeader]?.toString() || crypto.randomUUID(),
+  genReqId: (req): string =>
+    req.headers[requestIdHeader]?.toString() || gw.fetchAPI.crypto.randomUUID(),
 });
 
 export interface FastifyContext {
