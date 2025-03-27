@@ -6,7 +6,19 @@ import {
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { GraphQLResolveInfo } from 'graphql';
 import { GatewayPlugin } from '../types';
+
+export const RETRY_SYMBOL = Symbol.for('@hive-gateway/runtime/upstreamRetry');
+
+type RetryExecutionRequest = ExecutionRequest & {
+  [RETRY_SYMBOL]: RetryInfo;
+};
+
+type RetryInfo = {
+  attempt: number;
+  executionRequest: ExecutionRequest;
+};
 
 export interface UpstreamRetryOptions {
   /**
@@ -57,11 +69,14 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
   return {
     onSubgraphExecute({
       subgraphName,
-      executionRequest,
+      executionRequest: subgraphExecutionRequest,
       executor,
       setExecutor,
     }) {
-      const optsForReq = retryOptions({ subgraphName, executionRequest });
+      const optsForReq = retryOptions({
+        subgraphName,
+        executionRequest: subgraphExecutionRequest,
+      });
       if (optsForReq) {
         const {
           maxRetries,
@@ -91,7 +106,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
           },
         } = optsForReq;
         if (maxRetries > 0) {
-          setExecutor(function (executionRequest: ExecutionRequest) {
+          setExecutor(function (executorExecutionRequest: ExecutionRequest) {
             let attemptsLeft = maxRetries + 1;
             let executionResult: MaybeAsyncIterable<ExecutionResult>;
             let currRetryDelay = retryDelay;
@@ -104,15 +119,31 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                 }
                 const requestTime = Date.now();
                 attemptsLeft--;
+
+                const attemptExecutionRequest: RetryExecutionRequest = {
+                  ...executorExecutionRequest,
+                  [RETRY_SYMBOL]: {
+                    attempt: maxRetries - attemptsLeft,
+                    executionRequest: executorExecutionRequest,
+                  },
+                };
+                attemptExecutionRequest.info = {
+                  ...executorExecutionRequest.info,
+                  executionRequest: attemptExecutionRequest,
+                } as GraphQLResolveInfo;
+
                 return handleMaybePromise(
-                  () => executor(executionRequest),
+                  () => {
+                    return executor(attemptExecutionRequest);
+                  },
                   (currRes) => {
                     executionResult = currRes;
                     let retryAfterSecondsFromHeader: number | undefined;
-                    const response =
-                      executionRequestResponseMap.get(executionRequest);
+                    const response = executionRequestResponseMap.get(
+                      attemptExecutionRequest,
+                    );
                     // Remove the response from the map after used so we don't see it again
-                    executionRequestResponseMap.delete(executionRequest);
+                    executionRequestResponseMap.delete(attemptExecutionRequest);
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
@@ -130,7 +161,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                       currRetryDelay * retryDelayFactor;
                     if (
                       shouldRetry({
-                        executionRequest,
+                        executionRequest: attemptExecutionRequest,
                         executionResult,
                         response,
                       })
@@ -183,4 +214,16 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       }
     },
   };
+}
+
+export function isRetryExecutionRequest(
+  executionRequest?: ExecutionRequest,
+): executionRequest is RetryExecutionRequest {
+  return !!(executionRequest as any)?.[RETRY_SYMBOL];
+}
+
+export function getRetryInfo(
+  executionRequest: RetryExecutionRequest,
+): RetryInfo {
+  return executionRequest[RETRY_SYMBOL];
 }
