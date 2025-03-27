@@ -272,6 +272,7 @@ export function useOpenTelemetry(
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
       if (options.contextManager === false) {
+        pluginLogger.debug("context manager disabled by user.")
         return fakePromise(false);
       }
 
@@ -314,7 +315,7 @@ export function useOpenTelemetry(
       })
       .then((contextManager) => {
         provider.register({ contextManager });
-        return !!useContextManager;
+        return !!contextManager;
       });
   }
 
@@ -332,6 +333,9 @@ export function useOpenTelemetry(
       options.diagLevel ?? DiagLogLevel.VERBOSE,
     );
     useContextManager = contextManager;
+    pluginLogger.debug(
+      `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
+    );
     tracer = options.tracer || trace.getTracer('gateway');
     preparation$ = fakePromise();
   });
