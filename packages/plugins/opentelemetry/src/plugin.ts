@@ -25,7 +25,10 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import { setGlobalErrorHandler } from '@opentelemetry/core';
-import { Resource } from '@opentelemetry/resources';
+import {
+  detectResources,
+  resourceFromAttributes,
+} from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
@@ -252,8 +255,7 @@ export function useOpenTelemetry(
   let spanProcessors: SpanProcessor[];
   let provider: WebTracerProvider;
 
-  const { promise: asyncAttributes, resolve: resolveAsyncAttributes } =
-    createDeferred<{ [ATTR_SERVICE_VERSION]: string }>();
+  const yogaVersion = createDeferred<string>();
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -271,6 +273,7 @@ export function useOpenTelemetry(
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
       if (options.contextManager === false) {
+        pluginLogger.debug('context manager disabled by user.');
         return fakePromise(false);
       }
 
@@ -296,9 +299,11 @@ export function useOpenTelemetry(
         : Promise.all(options.exporters),
     );
 
-    const resource = new Resource(
-      { [SEMRESATTRS_SERVICE_NAME]: options.serviceName || 'Gateway' },
-      asyncAttributes,
+    const resource = detectResources().merge(
+      resourceFromAttributes({
+        [SEMRESATTRS_SERVICE_NAME]: options.serviceName ?? 'Gateway',
+        [ATTR_SERVICE_VERSION]: yogaVersion.promise,
+      }),
     );
 
     let contextManager$ = getContextManager(options.contextManager);
@@ -315,7 +320,7 @@ export function useOpenTelemetry(
       })
       .then((contextManager) => {
         provider.register({ contextManager });
-        return !!useContextManager;
+        return !!contextManager;
       });
   }
 
@@ -333,6 +338,9 @@ export function useOpenTelemetry(
       options.diagLevel ?? DiagLogLevel.VERBOSE,
     );
     useContextManager = contextManager;
+    pluginLogger.debug(
+      `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
+    );
     tracer = options.tracer || trace.getTracer('gateway');
     preparation$ = fakePromise();
   });
@@ -642,7 +650,7 @@ export function useOpenTelemetry(
     },
 
     onYogaInit({ yoga }) {
-      resolveAsyncAttributes({ [ATTR_SERVICE_VERSION]: yoga.version });
+      yogaVersion.resolve(yoga.version);
     },
 
     onEnveloped({ state, extendContext }) {

@@ -14,3 +14,17 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### vitest-tsconfig-paths
 
 1. Resolve tsconfig paths in modules that have been [inlined](https://vitest.dev/config/#server-deps-inline).
+
+### @opentelemetry/exporter-trace-otlp-http
+
+1. Point to esnext instead of esm for ES Module support
+
+### @opentelemetry/otlp-exporter-base
+
+1. Point to esnext instead of esm for ES Module support
+1. Use `import` instead of `require` for dynamic resolution in ES Module
+
+### @opentelemetry/resources
+
+1. Point to esnext instead of esm for ES Module support
+1. Use `import` instead of `require` for dynamic resolution in ES Module
