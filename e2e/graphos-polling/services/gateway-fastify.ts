@@ -5,7 +5,9 @@ import {
   useOpenTelemetry,
 } from '@graphql-mesh/plugin-opentelemetry';
 import { boolEnv, Opts } from '@internal/testing';
-import fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
+
+/* --- E2E TEST SPECIFIC CONFIGURATION START---  */
 
 const uplinkHost = String(process.env['E2E_GATEWAY_RUNNER']).includes('docker')
   ? boolEnv('CI')
@@ -16,6 +18,10 @@ const uplinkHost = String(process.env['E2E_GATEWAY_RUNNER']).includes('docker')
 const opts = Opts(process.argv);
 
 const upLink = `http://${uplinkHost}:${opts.getServicePort('graphos')}`;
+
+const port = opts.getServicePort('gateway-fastify');
+
+/*---  E2E TEST SPECIFIC CONFIGURATION END---  */
 
 const requestIdHeader = 'x-guild-request-id';
 
@@ -32,12 +38,9 @@ const app = fastify({
   requestIdHeader,
   // Align with Hive Gateway's request id log label
   requestIdLogLabel: 'requestId',
-  genReqId(req) {
-    if (req.headers[requestIdHeader]) {
-      return req.headers[requestIdHeader].toString();
-    }
-    return crypto.randomUUID();
-  },
+  // Check the header first, then generate a new one if not found
+  genReqId: (req) =>
+    req.headers[requestIdHeader]?.toString() || crypto.randomUUID(),
 });
 
 export interface FastifyContext {
@@ -46,26 +49,32 @@ export interface FastifyContext {
 }
 
 const gw = createGatewayRuntime<FastifyContext>({
+  // Integrate Fastify's logger / Pino with the gateway logger
   logging: createLoggerFromPino(app.log),
+  // Align with Fastify
+  requestId: {
+    // Use the same header name as Fastify
+    headerName: requestIdHeader,
+    // Use the request id from Fastify
+    generateRequestId: ({ context }) => context.req.id,
+  },
+  // GraphOS configuration
   supergraph: {
     type: 'graphos',
     apiKey: 'my-api-key',
     graphRef: 'my-graph-ref@my-variant',
     upLink: `${upLink}/graphql`,
   },
+  // Fetch the schema from the uplink every 10 seconds
+  pollingInterval: 10_000,
+  // Report usage to GraphOS
   reporting: {
     type: 'graphos',
     apiKey: 'my-api-key',
     graphRef: 'my-graph-ref@my-variant',
     endpoint: `${upLink}/usage`,
   },
-  pollingInterval: 10_000,
-  requestId: {
-    headerName: requestIdHeader,
-    generateRequestId({ context }) {
-      return context.req.id;
-    },
-  },
+  // Use OpenTelemetry to report traces
   plugins: (ctx) => [
     useOpenTelemetry({
       ...ctx,
@@ -85,12 +94,12 @@ const gw = createGatewayRuntime<FastifyContext>({
 
 app.route({
   method: ['GET', 'POST', 'OPTIONS'],
+  // "*" is recommendeded in order to handle landing page, readiness and other related endpoints
   url: '*',
+  // Connect the gateway to Fastify route
   handler: (req, reply) =>
     gw.handleNodeRequestAndResponse(req, reply, { req, reply }),
 });
-
-const port = opts.getServicePort('gateway-fastify');
 
 app.listen({ port, host: '0.0.0.0' }, (err) => {
   if (err) {
