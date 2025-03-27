@@ -15,8 +15,8 @@ class TLogWriter implements LogWriter {
 }
 
 function createTLogger() {
-  const writter = new TLogWriter();
-  return [new Logger(writter), writter] as const;
+  const writer = new TLogWriter();
+  return [new Logger({ writers: [writer] }), writer] as const;
 }
 
 it('should write logs with levels, message and attributes', () => {
