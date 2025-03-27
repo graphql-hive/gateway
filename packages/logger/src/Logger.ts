@@ -10,7 +10,7 @@ export class Logger implements LogWriter {
   /**
    * Gets the attributes from the {@link context ctx} under the hidden logger symbol key.
    */
-  static getCtxAttrs(ctx: Context): Attributes | undefined {
+  public getCtxAttrs(ctx: Context): Attributes | undefined {
     const metadata = ctx[Logger.#CTX_ATTRS_SY];
     // @ts-expect-error should the type be enforced on runtime?
     return metadata;
@@ -20,7 +20,7 @@ export class Logger implements LogWriter {
    * Mutates the {@link ctx context object} in place adding the {@link attrs attributes} under
    * the hidden logger symbol key.
    */
-  static setAttrsInCtx(ctx: Context, attrs: Attributes) {
+  public setAttrsInCtx(ctx: Context, attrs: Attributes) {
     ctx[Logger.#CTX_ATTRS_SY] = {
       // @ts-expect-error this should either be the attributes or undefined
       ...ctx[Logger.CTX_ATTRS_SY],
@@ -69,26 +69,26 @@ export class Logger implements LogWriter {
   //
 
   public logCtx(
-    level: LogLevel,
     ctx: Context,
+    level: LogLevel,
     attrs: Attributes,
     msg: string,
     ...interpolationValues: unknown[]
   ): void;
   public logCtx(
-    level: LogLevel,
     ctx: Context,
+    level: LogLevel,
     msg: string,
     ...interpolationValues: unknown[]
   ): void;
   public logCtx(
-    level: LogLevel,
     ctx: Context,
+    level: LogLevel,
     attrsOrMsg: Attributes | string,
     ...rest: unknown[]
   ): void {
     let msg = '';
-    let attrs = Logger.getCtxAttrs(ctx);
+    let attrs = this.getCtxAttrs(ctx);
     if (attrsOrMsg instanceof Object) {
       attrs = { ...attrs, ...attrsOrMsg };
       msg = rest.shift() + ''; // as per the overload, the first rest value is the message. TODO: enforce in runtime?
