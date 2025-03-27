@@ -55,7 +55,7 @@ export interface DemandControlPluginOptions {
 export function useDemandControl<TContext extends Record<string, any>>({
   listSize = 0,
   maxCost,
-  includeExtensionMetadata = process.env.NODE_ENV === 'development',
+  includeExtensionMetadata = process.env['NODE_ENV'] === 'development',
   operationTypeCost = (operationType) =>
     operationType === 'mutation' ? 10 : 0,
   fieldCost,
