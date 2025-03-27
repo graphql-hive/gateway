@@ -1,0 +1,62 @@
+diff --git a/build/esnext/transport/http-exporter-transport.js b/build/esnext/transport/http-exporter-transport.js
+index 7977489487a2236fbd0e4c2273ef53fd3c7b93a8..edec72e84b575cb07ea3e4710f9bcb61f3915805 100644
+--- a/build/esnext/transport/http-exporter-transport.js
++++ b/build/esnext/transport/http-exporter-transport.js
+@@ -20,7 +20,7 @@ class HttpExporterTransport {
+         this._parameters = _parameters;
+     }
+     async send(data, timeoutMillis) {
+-        const { agent, send } = this._loadUtils();
++        const { agent, send } = await this._loadUtils();
+         return new Promise(resolve => {
+             send(this._parameters, agent, data, result => {
+                 resolve(result);
+@@ -30,13 +30,11 @@ class HttpExporterTransport {
+     shutdown() {
+         // intentionally left empty, nothing to do.
+     }
+-    _loadUtils() {
++    async _loadUtils() {
+         let utils = this._utils;
+         if (utils === null) {
+             // Lazy require to ensure that http/https is not required before instrumentations can wrap it.
+-            const { sendWithHttp, createHttpAgent,
+-            // eslint-disable-next-line @typescript-eslint/no-var-requires
+-             } = require('./http-transport-utils');
++            const { sendWithHttp, createHttpAgent } = await import('./http-transport-utils');
+             utils = this._utils = {
+                 agent: createHttpAgent(this._parameters.url, this._parameters.agentOptions),
+                 send: sendWithHttp,
+diff --git a/package.json b/package.json
+index d00689f7f0eb517923fe6f6f9e8b6b624d5936ca..c60c871496c8823ee1c3d0ba62a11553eb35822b 100644
+--- a/package.json
++++ b/package.json
+@@ -3,24 +3,24 @@
+   "version": "0.200.0",
+   "description": "OpenTelemetry OTLP Exporter base (for internal use only)",
+   "main": "build/src/index.js",
+-  "module": "build/esm/index.js",
++  "module": "build/esnext/index.js",
+   "esnext": "build/esnext/index.js",
+   "types": "build/src/index.d.ts",
+   "exports": {
+     ".": {
+-      "module": "./build/esm/index.js",
++      "module": "./build/esnext/index.js",
+       "esnext": "./build/esnext/index.js",
+       "types": "./build/src/index.d.ts",
+       "default": "./build/src/index.js"
+     },
+     "./node-http": {
+-      "module": "./build/esm/index-node-http.js",
++      "module": "./build/esnext/index-node-http.js",
+       "esnext": "./build/esnext/index-node-http.js",
+       "types": "./build/src/index-node-http.d.ts",
+       "default": "./build/src/index-node-http.js"
+     },
+     "./browser-http": {
+-      "module": "./build/esm/index-browser-http.js",
++      "module": "./build/esnext/index-browser-http.js",
+       "esnext": "./build/esnext/index-browser-http.js",
+       "types": "./build/src/index-browser-http.d.ts",
+       "default": "./build/src/index-browser-http.js"
