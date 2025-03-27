@@ -1,32 +1,7 @@
-import { isPromise, jsonStringify } from './utils';
-
-type Context = Record<PropertyKey, unknown>;
-
-type Attributes = Record<string, any>;
+import { Attributes, Context, isPromise } from './utils';
+import { LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
-
-export interface LogWriter {
-  write(
-    level: LogLevel,
-    msg: string,
-    attrs: Attributes | undefined,
-  ): void | Promise<void>;
-  flush(): void | Promise<void>;
-}
-
-export class ConsoleLogWriter implements LogWriter {
-  write(level: LogLevel, msg: string, attrs: Attributes): void {
-    switch (level) {
-      // TODO: other levels
-      default:
-        console.log(msg, attrs ? jsonStringify(attrs) : undefined);
-    }
-  }
-  flush() {
-    // noop
-  }
-}
 
 export class Logger implements LogWriter {
   /** Hidden symbol used as a key for appending context attributes. */
