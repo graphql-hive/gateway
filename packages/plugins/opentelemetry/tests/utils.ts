@@ -140,7 +140,9 @@ export class MockSpanExporter implements SpanExporter {
     new TraceTreeNode(
       span,
       this.spans
-        .filter(({ parentSpanId }) => parentSpanId === span.id)
+        .filter(
+          ({ parentSpanContext }) => parentSpanContext?.spanId === span.id,
+        )
         .map(this.buildSpanNode),
     );
 
