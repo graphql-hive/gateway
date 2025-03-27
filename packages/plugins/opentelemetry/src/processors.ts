@@ -39,14 +39,14 @@ export function createStdoutExporter(
 }
 
 export function createZipkinExporter(
-  config: ZipkinExporterConfig,
+  config?: ZipkinExporterConfig,
   batchingConfig?: BatchingConfig,
 ): SpanProcessor {
   return resolveBatchingConfig(new ZipkinExporter(config), batchingConfig);
 }
 
 export function createOtlpHttpExporter(
-  config: OTLPExporterNodeConfigBase,
+  config?: OTLPExporterNodeConfigBase,
   batchingConfig?: BatchingConfig,
 ): SpanProcessor {
   return resolveBatchingConfig(new OtlpHttpExporter(config), batchingConfig);
@@ -86,7 +86,7 @@ function loadExporterLazily<
 }
 
 export function createOtlpGrpcExporter(
-  config: OTLPGRPCExporterConfigNode,
+  config?: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
   return handleMaybePromise(
