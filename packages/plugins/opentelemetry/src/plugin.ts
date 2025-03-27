@@ -22,6 +22,7 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { Resource } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
@@ -212,15 +213,19 @@ export function useOpenTelemetry(
           provider = webProvider;
         }
         const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
+        const diagLogger = pluginLogger.child('OtelDiag');
         diag.setLogger(
           {
-            error: (message, ...args) => pluginLogger.error(message, ...args),
-            warn: (message, ...args) => pluginLogger.warn(message, ...args),
-            info: (message, ...args) => pluginLogger.info(message, ...args),
-            debug: (message, ...args) => pluginLogger.debug(message, ...args),
-            verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+            error: (message, ...args) => diagLogger.error(message, ...args),
+            warn: (message, ...args) => diagLogger.warn(message, ...args),
+            info: (message, ...args) => diagLogger.info(message, ...args),
+            debug: (message, ...args) => diagLogger.debug(message, ...args),
+            verbose: (message, ...args) => diagLogger.debug(message, ...args),
           },
           DiagLogLevel.VERBOSE,
+        );
+        setGlobalErrorHandler((err) =>
+          diagLogger.error('Uncaught OTEL internal error', err),
         );
         tracer = options.tracer || trace.getTracer('gateway');
         preparation$ = undefined;
