@@ -272,7 +272,7 @@ export function useOpenTelemetry(
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
       if (options.contextManager === false) {
-        pluginLogger.debug("context manager disabled by user.")
+        pluginLogger.debug('context manager disabled by user.');
         return fakePromise(false);
       }
 
