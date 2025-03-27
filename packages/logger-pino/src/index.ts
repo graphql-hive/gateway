@@ -3,7 +3,7 @@ import type {
   Logger as MeshLogger,
 } from '@graphql-mesh/types';
 import { LogLevel } from '@graphql-mesh/utils';
-import pino from 'pino';
+import type pino from 'pino';
 
 type PinoWithChild = pino.BaseLogger & {
   child: (meta: any) => PinoWithChild;
