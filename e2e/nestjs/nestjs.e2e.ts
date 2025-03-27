@@ -7,7 +7,7 @@ const { service } = createTenv(__dirname);
 const { supergraph, query, result } = createExampleSetup(__dirname);
 
 // TODO: run tests without needing to build the project
-it.todo('executes the query', async () => {
+it('executes the query', async () => {
   const supergraphPath = await supergraph();
   const { port } = await service('nestjs', {
     args: [`--supergraph=${supergraphPath}`],
