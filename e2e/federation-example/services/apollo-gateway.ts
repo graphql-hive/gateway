@@ -24,4 +24,7 @@ async function main() {
   console.log(`🚀 Gateway ready at ${url}`);
 }
 
-main().then;
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
