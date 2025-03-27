@@ -16,7 +16,11 @@ export class ConsoleLogWriter implements LogWriter {
       // TODO: other levels
       default:
         // TODO: write log level and time
-        console.log(msg, attrs ? jsonStringify(attrs) : undefined);
+        console.log(
+          msg,
+          // we want to stringify because we want all properties be properly displayed
+          attrs ? jsonStringify(attrs) : undefined,
+        );
     }
   }
   flush() {
