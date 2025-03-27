@@ -10,7 +10,7 @@ import { bench, describe, expect } from 'vitest';
 
 describe('Gateway', async () => {
   const { gateway, service } = createTenv(__dirname);
-  const example = createExampleSetup(__dirname);
+  const example = createExampleSetup(__dirname, 1000);
 
   const supergraph = await example.supergraph();
 
