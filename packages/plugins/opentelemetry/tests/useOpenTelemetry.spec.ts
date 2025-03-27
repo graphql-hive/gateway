@@ -1,6 +1,9 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  AlwaysOnSampler,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { createSchema, createYoga } from 'graphql-yoga';
 import {
@@ -26,6 +29,7 @@ describe('useOpenTelemetry', () => {
   const TracerProvider = WebTracerProvider;
   mockModule('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
+    AlwaysOnSampler: vi.fn(),
   }));
 
   let traceProvider: WebTracerProvider;
