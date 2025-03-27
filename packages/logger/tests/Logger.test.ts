@@ -3,10 +3,10 @@ import { Logger, LogLevel } from '../src/Logger';
 import { LogWriter } from '../src/writers';
 
 class TLogWriter implements LogWriter {
-  public logs: { level: LogLevel; msg: string; attrs: unknown }[] = [];
+  public logs: { level: LogLevel; msg: string; attrs?: unknown }[] = [];
 
   write(level: LogLevel, msg: string, attrs: Record<string, unknown>): void {
-    this.logs.push({ level, msg, attrs });
+    this.logs.push({ level, msg, ...(attrs ? { attrs } : {}) });
   }
 
   flush(): void {
@@ -21,11 +21,14 @@ function createTLogger() {
 
 it('should write logs with levels, message and attributes', () => {
   const [logger, writter] = createTLogger();
+
   logger.log(
     'info',
     { hello: 'world', err: new Error('Woah!') },
     'Hello, world!',
   );
+  logger.log('info', '2nd Hello, world!');
+
   expect(writter.logs).toMatchInlineSnapshot(`
     [
       {
@@ -35,6 +38,10 @@ it('should write logs with levels, message and attributes', () => {
         },
         "level": "info",
         "msg": "Hello, world!",
+      },
+      {
+        "level": "info",
+        "msg": "2nd Hello, world!",
       },
     ]
   `);
@@ -47,6 +54,8 @@ it('should write logs with attributes in context', () => {
   logger.setAttrsInCtx(ctx, { hello: 'world' });
 
   logger.logCtx(ctx, 'info', { world: 'hello' }, 'Hello, world!');
+  logger.logCtx(ctx, 'info', '2nd Hello, world!');
+
   expect(writter.logs).toMatchInlineSnapshot(`
     [
       {
@@ -56,6 +65,13 @@ it('should write logs with attributes in context', () => {
         },
         "level": "info",
         "msg": "Hello, world!",
+      },
+      {
+        "attrs": {
+          "hello": "world",
+        },
+        "level": "info",
+        "msg": "2nd Hello, world!",
       },
     ]
   `);
