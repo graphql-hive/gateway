@@ -4025,7 +4025,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:1.2.7"
+    "@types/bun": "npm:1.2.8"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.4"
     adm-zip: "npm:^0.5.15"
@@ -8142,12 +8142,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:1.2.7":
-  version: 1.2.7
-  resolution: "@types/bun@npm:1.2.7"
+"@types/bun@npm:1.2.8":
+  version: 1.2.8
+  resolution: "@types/bun@npm:1.2.8"
   dependencies:
     bun-types: "npm:1.2.7"
-  checksum: 10c0/849fbe08eac2b4949d6559faf7a8d267c4fbd19d6f8ccbe304eb49cf86a6a2bb93395285c762e66eed2edc72bef17a92a18b8ec361cd164f405f17f33e8ba11e
+  checksum: 10c0/68b86db346bbad88b42ad5c33c77db79591a092faf489b7c612dc5ec7b3733d89457efcf01d71d4f2af42d93e2c8cd5dc5bdf0442b93895bf49fe0efaad1a26b
   languageName: node
   linkType: hard
 
