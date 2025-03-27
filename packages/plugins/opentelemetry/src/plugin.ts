@@ -18,6 +18,7 @@ import {
   DiagLogLevel,
   propagation,
   ROOT_CONTEXT,
+  TextMapPropagator,
   trace,
   type Context,
   type ContextManager,
@@ -27,6 +28,7 @@ import {
 import { setGlobalErrorHandler } from '@opentelemetry/core';
 import {
   detectResources,
+  envDetector,
   resourceFromAttributes,
 } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -61,7 +63,7 @@ import {
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
-import { tryContextManagerSetup } from './utils';
+import { getPropagator, tryContextManagerSetup } from './utils';
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -84,6 +86,16 @@ interface OpenTelemetryGatewayPluginOptionsWithoutInit {
    * Note: If `true`, an error is thrown if it fails to obtain an async calls compatible Context Manager.
    */
   contextManager?: boolean;
+  /**
+   * Whether to propagate the context to the outgoing requests (default: true).
+   *
+   * This process is done by injecting the context into the outgoing request headers. If disabled, the context will not be propagated.
+   *
+   * Note: You must set a propagator for this to have an effect.
+   *
+   * See https://opentelemetry.io/docs/languages/js/propagation/
+   */
+  propagator?: boolean;
 }
 
 interface OpenTelemetryGatewayPluginOptionsWithInit {
@@ -114,6 +126,16 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    *  - `ContextManager`: rely on this provided `ContextManger` instance.
    */
   contextManager?: ContextManager | boolean;
+  /**
+   * Propagators that will be used to send the trace context along with upstream requests to correlate subgraphs spans
+   *
+   * Possible values are:
+   *  - 'default': This is the default and most used propagator. In includes both Trace Context and Baggage headers.
+   *  - 'none': disables the propagation of tracing context
+   *  - 'b3': OpenTelemetry's B3 propagator with both Single and Multi headers encoding.
+   *  - 'jaeger': OpenTelemetry's Jaeger propagator.
+   */
+  propagator?: 'default' | 'b3' | 'jaeger' | TextMapPropagator;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -134,13 +156,6 @@ export type OpenTelemetryGatewayPluginOptions =
      * See https://opentelemetry.io/docs/languages/js/propagation/
      */
     inheritContext?: boolean;
-    /**
-     * Whether to propagate the context to the outgoing requests (default: true).
-     *
-     * This process is done by injecting the context into the outgoing request headers. If disabled, the context will not be propagated.
-     *
-     * See https://opentelemetry.io/docs/languages/js/propagation/
-     */
     propagateContext?: boolean;
     /**
      * The level of verbosity of OTEL diagnostic logs.
@@ -299,6 +314,8 @@ export function useOpenTelemetry(
         : Promise.all(options.exporters),
     );
 
+    const propagator$ = getPropagator(options.propagator);
+
     const resource = detectResources().merge(
       resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: options.serviceName ?? 'Gateway',
@@ -318,9 +335,12 @@ export function useOpenTelemetry(
         provider = new WebTracerProvider({ resource, spanProcessors });
         return contextManager$;
       })
-      .then((contextManager) => {
-        provider.register({ contextManager });
-        return !!contextManager;
+      .then((contextManager) =>
+        propagator$.then((propagator) => ({ contextManager, propagator })),
+      )
+      .then((config) => {
+        provider.register(config);
+        return !!config.contextManager;
       });
   }
 
