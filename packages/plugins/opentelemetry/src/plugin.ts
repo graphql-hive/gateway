@@ -28,7 +28,6 @@ import {
 import { setGlobalErrorHandler } from '@opentelemetry/core';
 import {
   detectResources,
-  envDetector,
   resourceFromAttributes,
 } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
