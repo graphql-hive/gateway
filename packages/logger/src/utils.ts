@@ -1,6 +1,6 @@
 import { LogLevel } from './Logger';
 
-export type Context = Record<PropertyKey, unknown>;
+export type Context = Object;
 
 export type Attributes = Record<string, any>;
 
