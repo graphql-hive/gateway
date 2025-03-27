@@ -1613,7 +1613,11 @@ function makeExternalObject(
     const errorsToPush = [...errors];
     for (const fieldName of fieldNames) {
       if (data?.[fieldName] == null) {
-        data[fieldName] = errorsToPush.pop();
+        const error = errorsToPush.pop();
+        if (error) {
+          data ||= {};
+          data[fieldName] = error;
+        }
       }
     }
   }

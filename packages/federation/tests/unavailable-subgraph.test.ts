@@ -170,21 +170,34 @@ describe('Yoga gateway - subgraph unavailable', () => {
         const result: FormattedExecutionResult = await response.json();
 
         expect(response.status).toBe(200);
-        expect(result.data).toMatchObject({
-          testNestedField: {
-            subgraph1: {
-              testSuccessQuery: {
-                id: 'user1',
-                email: 'user1@example.com',
-                sub1: true,
+        expect(result).toEqual({
+          data: {
+            testNestedField: {
+              subgraph1: {
+                testSuccessQuery: {
+                  id: 'user1',
+                  email: 'user1@example.com',
+                  sub1: true,
+                },
               },
+              subgraph2: null,
             },
-            subgraph2: null,
           },
+          errors: expect.arrayContaining([
+            {
+              message: expect.stringContaining('connect'),
+              extensions: {
+                code: 'DOWNSTREAM_SERVICE_ERROR',
+                request: {
+                  body: '{"query":"{__typename testNestedField{subgraph2{testSuccessQuery{id email sub2}}}}"}',
+                  method: 'POST',
+                },
+                serviceName: 'SUBGRAPH2',
+              },
+              path: ['testNestedField'],
+            },
+          ]),
         });
-        // the "ECONNREFUSED" error got completely lost somewhere along the way !!!
-        expect(result.errors).toBeDefined();
-        expect(result.errors).toHaveLength(1);
       });
       it('subgraph2Query', async () => {
         const response = await fetch(`${gatewayServer.url}/graphql`, {
