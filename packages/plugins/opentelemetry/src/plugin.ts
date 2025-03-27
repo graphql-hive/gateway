@@ -24,6 +24,7 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import {
   detectResources,
   resourceFromAttributes,
@@ -306,6 +307,10 @@ export function useOpenTelemetry(
     );
 
     let contextManager$ = getContextManager(options.contextManager);
+
+    setGlobalErrorHandler((err) => {
+      diag.error('Uncaught Error', err);
+    });
 
     return exporters$
       .then((exporters) => {
