@@ -1610,15 +1610,29 @@ function makeExternalObject(
     data[UNPATHED_ERRORS_SYMBOL] = errors;
   }
   if (errors.length) {
-    const errorsToPush = [...errors];
+    const emptyFields: string[] = [];
     for (const fieldName of fieldNames) {
       if (data?.[fieldName] == null) {
-        const error = errorsToPush.pop();
-        if (error) {
-          data ||= {};
-          data[fieldName] = error;
-        }
+        emptyFields.push(fieldName);
       }
+    }
+    if (emptyFields.length === errors.length) {
+      for (const emptyFieldIndex in emptyFields) {
+        data ||= {};
+        const emptyField = emptyFields[emptyFieldIndex]!;
+        data[emptyField] = errors[emptyFieldIndex];
+      }
+    } else {
+      data ||= {};
+      const emptyField = emptyFields[0]!;
+      const aggregatedError =
+        errors.length === 1
+          ? errors[0]
+          : new AggregateError(
+              errors,
+              errors.map((error) => error.message).join(', \n'),
+            );
+      data[emptyField] = aggregatedError;
     }
   }
   return data;
