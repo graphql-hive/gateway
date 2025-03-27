@@ -1,3 +1,7 @@
+export type Context = Record<PropertyKey, unknown>;
+
+export type Attributes = Record<string, any>;
+
 export function isPromise(val: unknown): val is Promise<any> {
   const obj = Object(val);
   return (
