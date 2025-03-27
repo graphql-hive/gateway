@@ -4,6 +4,7 @@
 
 dependencies updates: 
 
+- Updated dependency [`@opentelemetry/core@^2.0.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.0.0) (from `^1.30.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.200.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.200.0) (from `^0.57.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.200.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.200.0) (from `^0.57.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/exporter-zipkin@^2.0.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.0.0) (from `^1.29.0`, in `dependencies`)
