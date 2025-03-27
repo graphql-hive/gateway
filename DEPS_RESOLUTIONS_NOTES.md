@@ -19,3 +19,17 @@ Here we collect reasons and write explanations about why some resolutions or pat
 
 1. Define package.json#export for `@memlab/core/Types`
 1. Define package.json#export for `@memlab/core/Utils`
+
+### @opentelemetry/exporter-trace-otlp-http
+
+1. Point to esnext instead of esm for ES Module support
+
+### @opentelemetry/otlp-exporter-base
+
+1. Point to esnext instead of esm for ES Module support
+1. Use `import` instead of `require` for dynamic resolution in ES Module
+
+### @opentelemetry/resources
+
+1. Point to esnext instead of esm for ES Module support
+1. Use `import` instead of `require` for dynamic resolution in ES Module
