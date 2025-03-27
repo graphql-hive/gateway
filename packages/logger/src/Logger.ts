@@ -132,6 +132,8 @@ export class Logger implements LogWriter {
   ): void {
     // TODO: validate types on runtime, or not?
 
+    // TODO: log only if level is enabled
+
     let msg = '';
     let attrs: Attributes | undefined;
     if (attrsOrMsg instanceof Object) {
@@ -140,6 +142,8 @@ export class Logger implements LogWriter {
     } else {
       msg = attrsOrMsg;
     }
+
+    // TODO: unwrap lazy attribute values
 
     // @ts-expect-error TODO: interpolate values into the message
     const interpolationValues = rest;
