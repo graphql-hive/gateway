@@ -13,8 +13,12 @@ export interface LoggerOptions {
 }
 
 export class Logger implements LogWriter {
-  /** Hidden symbol used as a key for appending context attributes. */
-  static #CTX_ATTRS_SY = Symbol('LOGGER_CONTEXT_ATTRIBUTES');
+  /**
+   * Hidden symbol used as a key for appending context attributes for all loggers.
+   *
+   * TODO: should the symbol be scoped for a specific logger?
+   */
+  static #CTX_ATTRS_SY = Symbol('hive.logger.context.attributes');
 
   /**
    * Gets the attributes from the {@link context ctx} under the hidden logger symbol key.
