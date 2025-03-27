@@ -254,8 +254,8 @@ export function useOpenTelemetry(
   let spanProcessors: SpanProcessor[];
   let provider: WebTracerProvider;
 
-  const { promise: asyncAttributes, resolve: resolveAsyncAttributes } =
-    createDeferred<{ [ATTR_SERVICE_VERSION]: string }>();
+  const { promise: yogaVersion, resolve: resolveYogaVersion } =
+    createDeferred<string>();
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -298,9 +298,11 @@ export function useOpenTelemetry(
         : Promise.all(options.exporters),
     );
 
-    const resource = new Resource(
-      { [SEMRESATTRS_SERVICE_NAME]: options.serviceName || 'Gateway' },
-      asyncAttributes,
+    const resource = detectResources().merge(
+      resourceFromAttributes({
+        [SEMRESATTRS_SERVICE_NAME]: options.serviceName ?? 'Gateway',
+        [ATTR_SERVICE_VERSION]: yogaVersion,
+      }),
     );
 
     let contextManager$ = getContextManager(options.contextManager);
@@ -640,7 +642,7 @@ export function useOpenTelemetry(
     },
 
     onYogaInit({ yoga }) {
-      resolveAsyncAttributes({ [ATTR_SERVICE_VERSION]: yoga.version });
+      resolveYogaVersion(yoga.version);
     },
 
     onEnveloped({ state, extendContext }) {
