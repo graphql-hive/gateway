@@ -4122,6 +4122,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/logger@workspace:packages/logger":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/logger@workspace:packages/logger"
+  dependencies:
+    pkgroll: "npm:2.11.2"
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/nestjs@workspace:^, @graphql-hive/nestjs@workspace:packages/nestjs":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/nestjs@workspace:packages/nestjs"
