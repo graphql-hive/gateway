@@ -66,6 +66,7 @@
         "./packages/logger-winston/src/index.ts"
       ],
       "@graphql-hive/logger-pino": ["./packages/logger-pino/src/index.ts"],
+      "@graphql-hive/plugin-jit": ["./packages/plugins/jit/src/index.ts"],
       "@graphql-hive/plugin-aws-sigv4": [
         "./packages/plugins/aws-sigv4/src/index.ts"
       ],

@@ -150,7 +150,7 @@ export async function getBuiltinPluginsFromConfig(
   }
 
   if (config.jit) {
-    const { useJIT } = await import('@graphql-mesh/plugin-jit');
+    const { useJIT } = await import('@graphql-hive/plugin-jit');
     plugins.push(useJIT());
   }
 
