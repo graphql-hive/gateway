@@ -254,8 +254,7 @@ export function useOpenTelemetry(
   let spanProcessors: SpanProcessor[];
   let provider: WebTracerProvider;
 
-  const { promise: yogaVersion, resolve: resolveYogaVersion } =
-    createDeferred<string>();
+  const yogaVersion = createDeferred<string>();
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -301,7 +300,7 @@ export function useOpenTelemetry(
     const resource = detectResources().merge(
       resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: options.serviceName ?? 'Gateway',
-        [ATTR_SERVICE_VERSION]: yogaVersion,
+        [ATTR_SERVICE_VERSION]: yogaVersion.promise,
       }),
     );
 
@@ -642,7 +641,7 @@ export function useOpenTelemetry(
     },
 
     onYogaInit({ yoga }) {
-      resolveYogaVersion(yoga.version);
+      yogaVersion.resolve(yoga.version);
     },
 
     onEnveloped({ state, extendContext }) {
