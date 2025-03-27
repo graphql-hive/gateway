@@ -1,7 +1,16 @@
 import { Attributes, Context, isPromise } from './utils';
-import { LogWriter } from './writers';
+import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
+
+export interface LoggerOptions {
+  /**
+   * The log writers to use when writing logs.
+   *
+   * @default [new ConsoleLogWriter()]
+   */
+  writers: [LogWriter, ...LogWriter[]];
+}
 
 export class Logger implements LogWriter {
   /** Hidden symbol used as a key for appending context attributes. */
@@ -35,8 +44,8 @@ export class Logger implements LogWriter {
 
   // TODO: logs for specific level
 
-  constructor(writer: LogWriter, ...additionalWriters: LogWriter[]) {
-    this.#writers = [writer, ...additionalWriters];
+  constructor(opts: LoggerOptions = { writers: [new ConsoleLogWriter()] }) {
+    this.#writers = opts.writers;
   }
 
   public write(
