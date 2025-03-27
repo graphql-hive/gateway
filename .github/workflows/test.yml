@@ -17,6 +17,7 @@ env:
 jobs:
   unit:
     strategy:
+      fail-fast: false
       matrix:
         node-version:
           - 18
@@ -54,6 +55,7 @@ jobs:
 
   leaks:
     strategy:
+      fail-fast: false
       matrix:
         node-version:
           - 18
