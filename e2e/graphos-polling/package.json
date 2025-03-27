@@ -1,5 +1,6 @@
 {
   "name": "@e2e/graphos-polling",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@apollo/subgraph": "^2.10.0",
