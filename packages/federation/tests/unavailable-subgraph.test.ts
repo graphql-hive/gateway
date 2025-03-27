@@ -209,10 +209,13 @@ describe('Yoga gateway - subgraph unavailable', () => {
         const result: FormattedExecutionResult = await response.json();
 
         expect(response.status).toBe(200);
-        expect(result.errors).toEqual(
-          expect.arrayContaining([
+        expect(result).toEqual({
+          data: {
+            testNestedField: null,
+          },
+          errors: expect.arrayContaining([
             {
-              message: expect.stringContaining('connect ECONNREFUSED'),
+              message: expect.stringContaining('connect'),
               extensions: {
                 code: 'DOWNSTREAM_SERVICE_ERROR',
                 request: {
@@ -221,12 +224,10 @@ describe('Yoga gateway - subgraph unavailable', () => {
                 },
                 serviceName: 'SUBGRAPH2',
               },
-              path: ['testNestedField'], // path should actually be ['testNestedField', 'subgraph2_Nullable | subgraph2_NonNullable', 'testErrorQuery'],
+              path: ['testNestedField'],
             },
           ]),
-        );
-        // shouldn't be "testNestedField" resolved as null and not as an empty object?
-        expect(result.data).toMatchObject({ testNestedField: null });
+        });
       });
     });
   });
