@@ -81,21 +81,21 @@ export class Logger implements LogWriter {
   //
 
   public logCtx(
-    ctx: Context,
     level: LogLevel,
+    ctx: Context,
     attrs: Attributes,
     msg: string,
     ...interpolationValues: unknown[]
   ): void;
   public logCtx(
-    ctx: Context,
     level: LogLevel,
+    ctx: Context,
     msg: string,
     ...interpolationValues: unknown[]
   ): void;
   public logCtx(
-    ctx: Context,
     level: LogLevel,
+    ctx: Context,
     attrsOrMsg: Attributes | string,
     ...rest: unknown[]
   ): void {
@@ -130,6 +130,8 @@ export class Logger implements LogWriter {
     attrsOrMsg: Attributes | string,
     ...rest: unknown[]
   ): void {
+    // TODO: validate types on runtime, or not?
+
     let msg = '';
     let attrs: Attributes | undefined;
     if (attrsOrMsg instanceof Object) {
@@ -143,5 +145,125 @@ export class Logger implements LogWriter {
     const interpolationValues = rest;
 
     this.write(level, msg, attrs);
+  }
+
+  public traceCtx(
+    ctx: Context,
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public traceCtx(
+    ctx: Context,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public traceCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
+    this.logCtx('trace', ...args);
+  }
+  public trace(
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public trace(msg: string, ...interpolationValues: unknown[]): void;
+  public trace(...args: [arg0: any, ...rest: any[]]): void {
+    this.log('trace', ...args);
+  }
+
+  public debugCtx(
+    ctx: Context,
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public debugCtx(
+    ctx: Context,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public debugCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
+    this.logCtx('debug', ...args);
+  }
+  public debug(
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public debug(msg: string, ...interpolationValues: unknown[]): void;
+  public debug(...args: [arg0: any, ...rest: any[]]): void {
+    this.log('debug', ...args);
+  }
+
+  public infoCtx(
+    ctx: Context,
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public infoCtx(
+    ctx: Context,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public infoCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
+    this.logCtx('info', ...args);
+  }
+  public info(
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public info(msg: string, ...interpolationValues: unknown[]): void;
+  public info(...args: [arg0: any, ...rest: any[]]): void {
+    this.log('info', ...args);
+  }
+
+  public warnCtx(
+    ctx: Context,
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public warnCtx(
+    ctx: Context,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public warnCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
+    this.logCtx('warn', ...args);
+  }
+  public warn(
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public warn(msg: string, ...interpolationValues: unknown[]): void;
+  public warn(...args: [arg0: any, ...rest: any[]]): void {
+    this.log('warn', ...args);
+  }
+
+  public errorCtx(
+    ctx: Context,
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public errorCtx(
+    ctx: Context,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public errorCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
+    this.logCtx('error', ...args);
+  }
+  public error(
+    attrs: Attributes,
+    msg: string,
+    ...interpolationValues: unknown[]
+  ): void;
+  public error(msg: string, ...interpolationValues: unknown[]): void;
+  public error(...args: [arg0: any, ...rest: any[]]): void {
+    this.log('error', ...args);
   }
 }
