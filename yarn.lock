@@ -4581,6 +4581,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.104.2"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@opentelemetry/api": "npm:^1.9.0"
+    "@opentelemetry/context-async-hooks": "npm:^1.30.0"
     "@opentelemetry/core": "npm:^1.30.0"
     "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.57.0"
     "@opentelemetry/exporter-trace-otlp-http": "npm:^0.57.0"
@@ -4590,7 +4591,8 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^1.29.0"
     "@opentelemetry/sdk-trace-web": "npm:^1.29.0"
     "@opentelemetry/semantic-conventions": "npm:^1.28.0"
-    "@whatwg-node/promise-helpers": "npm:^1.3.0"
+    "@whatwg-node/promise-helpers": "npm:1.3.0"
+    "@whatwg-node/server": "npm:^0.10.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.4"
     pkgroll: "npm:2.12.1"
@@ -6593,6 +6595,15 @@ __metadata:
   version: 1.9.0
   resolution: "@opentelemetry/api@npm:1.9.0"
   checksum: 10c0/9aae2fe6e8a3a3eeb6c1fdef78e1939cf05a0f37f8a4fae4d6bf2e09eb1e06f966ece85805626e01ba5fab48072b94f19b835449e58b6d26720ee19a58298add
+  languageName: node
+  linkType: hard
+
+"@opentelemetry/context-async-hooks@npm:^1.30.0":
+  version: 1.30.1
+  resolution: "@opentelemetry/context-async-hooks@npm:1.30.1"
+  peerDependencies:
+    "@opentelemetry/api": ">=1.0.0 <1.10.0"
+  checksum: 10c0/3e8114d360060a5225226d2fcd8df08cd542246003790a7f011c0774bc60b8a931f46f4c6673f3977a7d9bba717de6ee028cae51b752c2567053d7f46ed3eba3
   languageName: node
   linkType: hard
 
@@ -9133,6 +9144,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@whatwg-node/promise-helpers@npm:1.3.0":
+  version: 1.3.0
+  resolution: "@whatwg-node/promise-helpers@npm:1.3.0"
+  dependencies:
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/79b3d4fd264a7ce82fe977690191bade5c6da50f085c63bf1b548c2066c7bb9ccb9088ad064fbb0ff8da9bea7b336a527973556d8475642bac639e75bedec7ea
+  languageName: node
+  linkType: hard
+
 "@whatwg-node/promise-helpers@npm:^1.0.0, @whatwg-node/promise-helpers@npm:^1.2.0, @whatwg-node/promise-helpers@npm:^1.2.1, @whatwg-node/promise-helpers@npm:^1.2.4, @whatwg-node/promise-helpers@npm:^1.2.5, @whatwg-node/promise-helpers@npm:^1.3.0, @whatwg-node/promise-helpers@npm:^1.3.1":
   version: 1.3.1
   resolution: "@whatwg-node/promise-helpers@npm:1.3.1"
@@ -9690,13 +9710,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/pnp@npm:^4.0.9, @yarnpkg/pnp@npm:^4.1.0":
+"@yarnpkg/pnp@npm:^4.0.9":
   version: 4.1.1
   resolution: "@yarnpkg/pnp@npm:4.1.1"
   dependencies:
     "@types/node": "npm:^18.17.15"
     "@yarnpkg/fslib": "npm:^3.1.2"
   checksum: 10c0/7b80b4d4c73fefd76773bdccef55091cfd36c1d8cb3883706448f37f2c1f547d479c64c22bee079211012f5f6999a328fb11aedb7be3007ba9360326994dc61e
+  languageName: node
+  linkType: hard
+
+"@yarnpkg/pnp@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@yarnpkg/pnp@npm:4.1.0"
+  dependencies:
+    "@types/node": "npm:^18.17.15"
+    "@yarnpkg/fslib": "npm:^3.1.2"
+  checksum: 10c0/7197a54350993084e3b3a7d17a914814da8a55ffb2a54cbbef32689072c58fad995c2e0efa6f84ad4d569f4fc6f36e672d100bf2b6b0a0d48b3beb9ad6684466
   languageName: node
   linkType: hard
 

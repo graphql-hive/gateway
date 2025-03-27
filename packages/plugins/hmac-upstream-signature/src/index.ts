@@ -98,7 +98,6 @@ export function useHmacUpstreamSignature(
       subgraphName,
       subgraph,
       executionRequest,
-      setExecutionRequest,
       logger = yogaLogger,
     }) {
       logger?.debug(`running shouldSign for subgraph ${subgraphName}`);
@@ -133,13 +132,10 @@ export function useHmacUpstreamSignature(
                   `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
                 );
 
-                setExecutionRequest({
-                  ...executionRequest,
-                  extensions: {
-                    ...executionRequest.extensions,
-                    [extensionName]: extensionValue,
-                  },
-                });
+                if (!executionRequest.extensions) {
+                  executionRequest.extensions = {};
+                }
+                executionRequest.extensions[extensionName] = extensionValue;
               },
             );
           },

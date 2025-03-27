@@ -22,7 +22,7 @@
     "format": "yarn check:format --write",
     "test": "vitest --project unit",
     "test:bun": "bun test --bail",
-    "test:e2e": "vitest --project e2e",
+    "test:e2e": "vitest --project e2e --slowTestThreshold 1000",
     "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks",
     "test:mem": "vitest --project memtest"
   },
