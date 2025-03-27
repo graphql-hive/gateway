@@ -32,8 +32,10 @@ function memoize1<T extends (...args: any) => any>(fn: T): T {
 
 describe('Federation', async () => {
   const { fs } = createTenv(__dirname);
-  const { query, operationName, result, supergraph } =
-    createExampleSetup(__dirname);
+  const { query, operationName, result, supergraph } = createExampleSetup(
+    __dirname,
+    1000,
+  );
   const services: Record<string, { schema: GraphQLSchema }> = {
     accounts,
     inventory,
@@ -75,9 +77,21 @@ describe('Federation', async () => {
     throw new Error(`Operation ${operationName} not found`);
   }
 
-  let apolloGW: ApolloGateway;
-  let apolloGWSchema: GraphQLSchema;
-  let apolloGWExecutor: ApolloGateway['executor'];
+  const apolloGW = new ApolloGateway({
+    logger: dummyLogger,
+    supergraphSdl,
+    buildService({ name }) {
+      const lowercasedName = name.toLowerCase();
+      const service = services[lowercasedName];
+      if (!service) {
+        throw new Error(`Service ${name} not found`);
+      }
+      return new LocalGraphQLDataSource(service.schema);
+    },
+  });
+
+  let { schema: apolloGWSchema, executor: apolloGWExecutor } =
+    await apolloGW.load();
 
   const schemaHash: string & { __fauxpaque: 'SchemaHash' } = Object.assign(
     new String(supergraphSdl) as string,
@@ -111,32 +125,20 @@ describe('Federation', async () => {
         },
       );
     },
-    {
-      async setup() {
-        apolloGW = new ApolloGateway({
-          logger: dummyLogger,
-          supergraphSdl,
-          buildService({ name }) {
-            const lowercasedName = name.toLowerCase();
-            const service = services[lowercasedName];
-            if (!service) {
-              throw new Error(`Service ${name} not found`);
-            }
-            return new LocalGraphQLDataSource(service.schema);
-          },
-        });
-        const { schema, executor } = await apolloGW.load();
-        apolloGWSchema = schema;
-        apolloGWExecutor = executor;
-      },
-      teardown() {
-        return apolloGW.stop();
-      },
-      ...benchConfig,
-    },
+    benchConfig,
   );
 
-  let stitchedSchema: GraphQLSchema;
+  const stitchedSchema = getStitchedSchemaFromSupergraphSdl({
+    supergraphSdl,
+    onSubschemaConfig(subschemaConfig) {
+      const lowercasedName = subschemaConfig.name.toLowerCase();
+      const service = services[lowercasedName];
+      if (!service) {
+        throw new Error(`Service ${subschemaConfig.name} not found`);
+      }
+      subschemaConfig.executor = createDefaultExecutor(service.schema);
+    },
+  });
 
   bench(
     'Stitching',
@@ -153,21 +155,6 @@ describe('Federation', async () => {
           expect(response).toEqual(result);
         },
       ),
-    {
-      setup() {
-        stitchedSchema = getStitchedSchemaFromSupergraphSdl({
-          supergraphSdl,
-          onSubschemaConfig(subschemaConfig) {
-            const lowercasedName = subschemaConfig.name.toLowerCase();
-            const service = services[lowercasedName];
-            if (!service) {
-              throw new Error(`Service ${subschemaConfig.name} not found`);
-            }
-            subschemaConfig.executor = createDefaultExecutor(service.schema);
-          },
-        });
-      },
-      ...benchConfig,
-    },
+    benchConfig,
   );
 });
