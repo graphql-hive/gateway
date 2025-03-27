@@ -15,6 +15,7 @@ export class ConsoleLogWriter implements LogWriter {
     switch (level) {
       // TODO: other levels
       default:
+        // TODO: write log level and time
         console.log(msg, attrs ? jsonStringify(attrs) : undefined);
     }
   }
