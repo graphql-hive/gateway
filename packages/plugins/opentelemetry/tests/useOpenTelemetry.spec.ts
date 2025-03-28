@@ -1,9 +1,6 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import {
-  AlwaysOnSampler,
-  SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { createSchema, createYoga } from 'graphql-yoga';
 import {
