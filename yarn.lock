@@ -4294,14 +4294,14 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.2":
-  version: 0.8.2
-  resolution: "@graphql-mesh/fusion-composition@npm:0.8.2"
+  version: 0.8.3
+  resolution: "@graphql-mesh/fusion-composition@npm:0.8.3"
   dependencies:
     "@graphql-mesh/utils": "npm:^0.104.2"
     "@graphql-tools/schema": "npm:^10.0.5"
     "@graphql-tools/stitching-directives": "npm:^3.1.9"
     "@graphql-tools/utils": "npm:^10.8.0"
-    "@theguild/federation-composition": "npm:^0.14.0"
+    "@theguild/federation-composition": "npm:^0.15.0"
     change-case: "npm:^4.1.2"
     graphql-scalars: "npm:^1.23.0"
     minimatch: "npm:^10.0.0"
@@ -4310,7 +4310,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/3d27ecd04a2727522b4fe523019c4aec57429da192f52034b549543824a74ece951406709f669dc79a3263254da2c19ee3bc97a9d65f085c8ce84098eba6d239
+  checksum: 10c0/36f908708f948803ea61f701c0cc0475164ea94e770270c4baa20b5b1979b3e1216dd9adbdb9a0d8d71e5b5a5836cd498f7b50b4b280f3627dfc9b26bbb0a541
   languageName: node
   linkType: hard
 
@@ -7985,17 +7985,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/federation-composition@npm:^0.14.0":
-  version: 0.14.4
-  resolution: "@theguild/federation-composition@npm:0.14.4"
+"@theguild/federation-composition@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "@theguild/federation-composition@npm:0.15.0"
   dependencies:
-    constant-case: "npm:^3.0.0"
+    constant-case: "npm:^3.0.4"
     debug: "npm:4.3.4"
-    json5: "npm:^2.2.0"
+    json5: "npm:^2.2.3"
     lodash.sortby: "npm:^4.7.0"
   peerDependencies:
     graphql: ^16.0.0
-  checksum: 10c0/8a6cfada14a775410f6f8e02edf5a35cd981edfcc2412ea9cc625a6dd062beb809c78a8499d10ce0393318b904f3df634581ca412b51d3c15611206901fbec56
+  checksum: 10c0/0bbc629148c090dffb6702c87856c11ac705cc2211fd61688b4f584fd33f95222b3adc81ed7076a867577ad1b469254b69a0892ba60962c88f27cc465ed69a13
   languageName: node
   linkType: hard
 
@@ -11163,7 +11163,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"constant-case@npm:^3.0.0, constant-case@npm:^3.0.4":
+"constant-case@npm:^3.0.4":
   version: 3.0.4
   resolution: "constant-case@npm:3.0.4"
   dependencies:
@@ -15598,7 +15598,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json5@npm:^2.2.0, json5@npm:^2.2.3":
+"json5@npm:^2.2.3":
   version: 2.2.3
   resolution: "json5@npm:2.2.3"
   bin:
