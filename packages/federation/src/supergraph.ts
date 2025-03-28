@@ -1610,29 +1610,35 @@ function makeExternalObject(
     data[UNPATHED_ERRORS_SYMBOL] = errors;
   }
   if (errors.length) {
-    const emptyFields: string[] = [];
+    const errorsToPop = [...errors];
+    const fieldNamesToPop: string[] = [];
     for (const fieldName of fieldNames) {
       if (data?.[fieldName] == null) {
-        emptyFields.push(fieldName);
+        fieldNamesToPop.push(fieldName);
       }
     }
-    if (emptyFields.length === errors.length) {
-      for (const emptyFieldIndex in emptyFields) {
-        data ||= {};
-        const emptyField = emptyFields[emptyFieldIndex]!;
-        data[emptyField] = errors[emptyFieldIndex];
+    while (fieldNamesToPop.length && errorsToPop.length) {
+      const fieldName = fieldNamesToPop.pop();
+      if (!fieldName) {
+        break;
       }
-    } else {
-      data ||= {};
-      const emptyField = emptyFields[0]!;
-      const aggregatedError =
-        errors.length === 1
-          ? errors[0]
-          : new AggregateError(
-              errors,
-              errors.map((error) => error.message).join(', \n'),
-            );
-      data[emptyField] = aggregatedError;
+      const error = errorsToPop.pop();
+      if (!error) {
+        break;
+      }
+      let errorToSet: Error | undefined;
+      if (fieldNamesToPop.length || !errorsToPop.length) {
+        errorToSet = error;
+      } else {
+        errorToSet = new AggregateError(
+          errorsToPop,
+          errorsToPop.map((error) => error.message).join(', \n'),
+        );
+      }
+      if (errorToSet) {
+        data ||= {};
+        data[fieldName] = errorToSet;
+      }
     }
   }
   return data;
