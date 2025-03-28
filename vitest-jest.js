@@ -40,6 +40,9 @@ module.exports = new Proxy(require('@jest/globals'), {
       itFn.each = function itEach(table) {
         return jestGlobals.it.each(table);
       };
+      itFn.todo = function itTodo(name, ...args) {
+        return jestGlobals.it.todo(name, ...args);
+      };
       return itFn;
     }
     return Reflect.get(jestGlobals, prop, receiver);
