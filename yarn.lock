@@ -4255,11 +4255,11 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.4.1":
-  version: 1.4.3
-  resolution: "@graphql-mesh/compose-cli@npm:1.4.3"
+  version: 1.4.4
+  resolution: "@graphql-mesh/compose-cli@npm:1.4.4"
   dependencies:
     "@commander-js/extra-typings": "npm:^13.0.0"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.2"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.3"
     "@graphql-mesh/include": "npm:^0.3.2"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.2"
@@ -4277,7 +4277,7 @@ __metadata:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/cb1c274b580383e07aa0ed422099733b9173a463dfecc21596f6a3bfe5fcb7c8fdfc890b256f05d5fbdd3411c5edfc81734a03cc8f1e9b5e640e17eeaf2ef092
+  checksum: 10c0/1f8c5a71c2465f828e39f914e95a069a3a26f30e5ae5d6dff188018432e89d91188a46c22a5faa5f3f57cc67062a3da5e288693713666b1c11923a45f202a682
   languageName: node
   linkType: hard
 
@@ -4293,7 +4293,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.2":
+"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.3":
   version: 0.8.3
   resolution: "@graphql-mesh/fusion-composition@npm:0.8.3"
   dependencies:
@@ -6458,11 +6458,11 @@ __metadata:
   linkType: hard
 
 "@omnigraph/openapi@npm:^0.109.0":
-  version: 0.109.3
-  resolution: "@omnigraph/openapi@npm:0.109.3"
+  version: 0.109.4
+  resolution: "@omnigraph/openapi@npm:0.109.4"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.2"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.3"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.2"
     "@graphql-mesh/utils": "npm:^0.104.2"
@@ -6474,7 +6474,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/67eaec0f82f7c8a340db620cc805532227be6dcb73e50fa5ac7717dbb06a905db3983e2e5979804d74fb0194c3dc4a6a7eec24779ab111f7dcc75379f1a8d57e
+  checksum: 10c0/357e91b8564e1564dc0f2c3d248c467e78944af6dc11ec2a958ac1baf933221c7d8a9b8836bda8a48d21e5c66cdbd221f4fdbe2e1dcfbb2c2d2ccbdbb7d81663
   languageName: node
   linkType: hard
 
