@@ -1,5 +1,19 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.9
+
+### Patch Changes
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- Updated dependencies [[`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f)]:
+  - @graphql-tools/delegate@10.2.17
+  - @graphql-tools/federation@3.1.8
+  - @graphql-tools/stitch@9.4.22
+  - @graphql-mesh/transport-common@0.7.34
+  - @graphql-tools/stitching-directives@3.1.32
+  - @graphql-tools/wrap@10.0.35
+
 ## 0.11.8
 
 ### Patch Changes

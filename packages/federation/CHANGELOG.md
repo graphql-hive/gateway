@@ -1,5 +1,16 @@
 # @graphql-tools/federation
 
+## 3.1.8
+
+### Patch Changes
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- Updated dependencies [[`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f)]:
+  - @graphql-tools/delegate@10.2.17
+  - @graphql-tools/stitch@9.4.22
+  - @graphql-tools/wrap@10.0.35
+
 ## 3.1.7
 
 ### Patch Changes
