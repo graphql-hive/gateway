@@ -1,12 +1,13 @@
 {
-  "name": "@graphql-mesh/hmac-upstream-signature",
-  "version": "1.2.25",
+  "name": "@graphql-hive/logger-pino",
+  "version": "0.0.0",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/graphql-hive/gateway.git",
-    "directory": "packages/plugins/hmac-upstream-signature"
+    "directory": "packages/logger-pino"
   },
+  "homepage": "https://the-guild.dev/graphql/hive/docs/gateway",
   "author": {
     "email": "contact@the-guild.dev",
     "name": "The Guild",
@@ -39,23 +40,19 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0"
+    "graphql": "^15.9.0 || ^16.9.0",
+    "pino": "^9.6.0"
   },
   "dependencies": {
-    "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/types": "^0.104.0",
     "@graphql-mesh/utils": "^0.104.2",
-    "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.8.1",
-    "@whatwg-node/promise-helpers": "^1.3.0",
-    "json-stable-stringify": "^1.1.1",
+    "@whatwg-node/disposablestack": "^0.0.6",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@graphql-hive/gateway-runtime": "workspace:*",
-    "graphql": "^16.9.0",
-    "graphql-yoga": "^5.13.2",
-    "pkgroll": "2.12.1"
+    "graphql": "16.10.0",
+    "pino": "^9.6.0",
+    "pkgroll": "2.11.2"
   },
   "sideEffects": false
 }

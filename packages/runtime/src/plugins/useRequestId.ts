@@ -1,13 +1,51 @@
 import { requestIdByRequest } from '@graphql-mesh/utils';
-import type { GatewayPlugin } from '../types';
+import { FetchAPI } from '@whatwg-node/server';
+import type { GatewayContext, GatewayPlugin } from '../types';
 
-export function useRequestId<
-  TContext extends Record<string, any>,
->(): GatewayPlugin<TContext> {
+export interface GenerateRequestIdPayload<TContext> {
+  request: Request;
+  fetchAPI: FetchAPI;
+  context: TContext & GatewayContext;
+}
+
+export interface RequestIdOptions<TContext> {
+  /**
+   * Function to generate a request ID
+   *
+   * Ignored when `headerName` is available in the request headers
+   */
+  generateRequestId?: GenerateRequestIdFn<TContext>;
+  /**
+   * Header name to use for request ID
+   *
+   * Default: `x-request-id`
+   */
+  headerName?: string;
+}
+
+export type GenerateRequestIdFn<TContext> = (
+  payload: GenerateRequestIdPayload<TContext>,
+) => string;
+export const defaultGenerateRequestId: GenerateRequestIdFn<any> = ({
+  fetchAPI = globalThis,
+}) => fetchAPI.crypto.randomUUID();
+export const defaultRequestIdHeader: string = 'x-request-id';
+
+export function useRequestId<TContext extends Record<string, any>>(
+  opts?: RequestIdOptions<TContext>,
+): GatewayPlugin<TContext> {
+  const headerName = opts?.headerName || defaultRequestIdHeader;
+  const generateRequestId = opts?.generateRequestId || defaultGenerateRequestId;
   return {
-    onRequest({ request, fetchAPI }) {
+    onRequest({ request, fetchAPI, serverContext }) {
       const requestId =
-        request.headers.get('x-request-id') || fetchAPI.crypto.randomUUID();
+        request.headers.get(headerName) ||
+        generateRequestId({
+          request,
+          fetchAPI,
+          // @ts-expect-error - Server context is not typed
+          context: serverContext,
+        });
       requestIdByRequest.set(request, requestId);
     },
     onContextBuilding({ context }) {
@@ -27,7 +65,7 @@ export function useRequestId<
             ...(options || {}),
             headers: {
               ...(options.headers || {}),
-              'x-request-id': requestId,
+              [headerName]: requestId,
             },
           });
         }
@@ -36,7 +74,7 @@ export function useRequestId<
     onResponse({ request, response }) {
       const requestId = requestIdByRequest.get(request);
       if (requestId) {
-        response.headers.set('x-request-id', requestId);
+        response.headers.set(headerName, requestId);
       }
     },
   };

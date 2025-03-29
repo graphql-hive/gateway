@@ -1,9 +1,10 @@
 import { platform } from 'os';
 import { Container, createTenv, dockerHostName } from '@internal/e2e';
 import { boolEnv, getLocalhost } from '@internal/testing';
+import { fetch } from '@whatwg-node/fetch';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
-const { service, gateway, composeWithApollo, gatewayRunner, container } =
+const { service, composeWithApollo, gatewayRunner, container } =
   createTenv(__dirname);
 
 let interval: ReturnType<typeof setInterval> | undefined;
@@ -73,34 +74,29 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
     services: [upstreamStuck],
   });
   await pushSchema(compositionWithStuck.result);
-  const gw = await gateway({
-    args: [
-      'supergraph',
-      `mygraphref@myvariant`,
-      `--apollo-key=mykey`,
-      `--apollo-uplink=${hostname}:${graphos.port}/graphql`,
-    ],
-    services: [graphos],
+  const gw = await service('gateway-fastify', {
     env: {
       OTLP_EXPORTER_URL: `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`,
     },
+    services: [graphos],
   });
   interval = setInterval(() => {
-    gw.execute({
+    fetch(`http://0.0.0.0:${gw.port}/readiness`).then((res) => res.text());
+  }, 1_000);
+
+  const result$ = fetch(`http://0.0.0.0:${gw.port}/graphql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
       query: /* GraphQL */ `
-        {
-          __typename
+        query Foo {
+          foo
         }
       `,
-    });
-  }, 100);
-  const result$ = gw.execute({
-    query: /* GraphQL */ `
-      query Foo {
-        foo
-      }
-    `,
-  });
+    }),
+  }).then((resp) => resp.json());
   const compositionWithGood = await composeWithApollo({
     services: [upstreamGood],
   });

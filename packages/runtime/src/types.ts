@@ -41,6 +41,7 @@ import type { AgentFactory } from './plugins/useCustomAgent';
 import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
+import { RequestIdOptions } from './plugins/useRequestId';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
@@ -639,11 +640,11 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   upstreamRetry?: UpstreamRetryPluginOptions;
 
   /**
-   * Add and handle `x-request-id` header
+   * Configure the request ID for the gateway
    *
    * @default true
    */
-  requestId?: boolean;
+  requestId?: boolean | RequestIdOptions<TContext>;
 
   /**
    * Demand Control

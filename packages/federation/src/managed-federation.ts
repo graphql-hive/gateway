@@ -206,13 +206,14 @@ export async function fetchSupergraphSdlFromManagedFederation(
       `,
       variables,
     }),
+    signal: AbortSignal.timeout(30_000),
   });
 
   const responseBody = await response.text();
 
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch supergraph SDL from managed federation up link '${upLink}': [${response.status} ${response.statusText}] ${responseBody}`,
+      `Failed to fetch supergraph SDL from '${upLink}' due to an HTTP error (${response.status}) ${responseBody}`,
     );
   }
 
@@ -221,20 +222,20 @@ export async function fetchSupergraphSdlFromManagedFederation(
     result = JSON.parse(responseBody);
   } catch (err) {
     throw new Error(
-      `Failed to parse response from managed federation up link '${upLink}': ${(err as Error).message}\n\n${responseBody}`,
+      `Failed to parse response from '${upLink}': ${(err as Error).message}\n\n${responseBody}`,
     );
   }
 
   if (result.errors) {
-    const errors = result.errors.map(({ message }) => '\n' + message).join('');
-    throw new Error(
-      `Failed to fetch supergraph SDL from managed federation up link '${upLink}': ${errors}`,
+    throw new AggregateError(
+      result.errors,
+      `Failed to fetch supergraph SDL from '${upLink}'`,
     );
   }
 
   if (!result.data?.routerConfig) {
     throw new Error(
-      `Failed to fetch supergraph SDL from managed federation up link '${upLink}': ${responseBody}`,
+      `Failed to fetch supergraph SDL from '${upLink}': ${responseBody}`,
     );
   }
 
