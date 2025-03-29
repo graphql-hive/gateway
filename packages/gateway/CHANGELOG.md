@@ -1,5 +1,21 @@
 # @graphql-hive/gateway
 
+## 1.13.5
+
+### Patch Changes
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- Updated dependencies [[`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d), [`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d)]:
+  - @graphql-mesh/plugin-opentelemetry@1.3.53
+  - @graphql-hive/gateway-runtime@1.6.7
+  - @graphql-hive/plugin-aws-sigv4@1.0.6
+  - @graphql-mesh/transport-http@0.6.39
+  - @graphql-mesh/transport-http-callback@0.5.26
+  - @graphql-mesh/transport-ws@1.0.9
+  - @graphql-mesh/hmac-upstream-signature@1.2.25
+  - @graphql-mesh/plugin-prometheus@1.3.41
+
 ## 1.13.4
 
 ### Patch Changes
