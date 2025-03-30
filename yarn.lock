@@ -8887,10 +8887,10 @@ __metadata:
   linkType: hard
 
 "@yarnpkg/cli@npm:^4.5.3":
-  version: 4.8.0
-  resolution: "@yarnpkg/cli@npm:4.8.0"
+  version: 4.8.1
+  resolution: "@yarnpkg/cli@npm:4.8.1"
   dependencies:
-    "@yarnpkg/core": "npm:^4.3.0"
+    "@yarnpkg/core": "npm:^4.3.1"
     "@yarnpkg/fslib": "npm:^3.1.2"
     "@yarnpkg/libzip": "npm:^3.1.1"
     "@yarnpkg/parsers": "npm:^3.0.3"
@@ -8924,14 +8924,14 @@ __metadata:
     tslib: "npm:^2.4.0"
     typanion: "npm:^3.14.0"
   peerDependencies:
-    "@yarnpkg/core": ^4.3.0
-  checksum: 10c0/a6c798d1c068196338c8a7be309e59ac6a11d6ca4acb8bacaced2a88843fd161110ae289458332eaa057870d361210e5922bb867b19bc0793fc88f4c71a165f6
+    "@yarnpkg/core": ^4.3.1
+  checksum: 10c0/7e64455030f98981ae091cd7a3765675090a399f208843fa31707775911a1731710c7881606043fce1dba2c9f596aaec70916327eed4e5c7ba4baa9e44852ab9
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:^4.1.6, @yarnpkg/core@npm:^4.2.1, @yarnpkg/core@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "@yarnpkg/core@npm:4.3.0"
+"@yarnpkg/core@npm:^4.1.6, @yarnpkg/core@npm:^4.2.1, @yarnpkg/core@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "@yarnpkg/core@npm:4.3.1"
   dependencies:
     "@arcanis/slice-ansi": "npm:^1.1.1"
     "@types/semver": "npm:^7.1.0"
@@ -8959,7 +8959,7 @@ __metadata:
     treeify: "npm:^1.1.0"
     tslib: "npm:^2.4.0"
     tunnel: "npm:^0.0.6"
-  checksum: 10c0/db5fec40cdbdcd71866e2fd39d5540197f278a15077ba886867201c9f707f0e3ae314043d12da6ed690c5440939fa2c6ddb74fc3b3b2f24a02df350f3227b0ae
+  checksum: 10c0/2c926b096e7daa331e1acc92dc3dda11d945e89baebc6cbe2d969289a4b3f0b93d0ef420c5e64908586e8c1174aa2e0f1464ba4f6dccf47ea61169b025722952
   languageName: node
   linkType: hard
 
