@@ -71,7 +71,7 @@
     "@vitest/snapshot@npm:3.0.9": "patch:@vitest/snapshot@npm%3A3.0.9#~/.yarn/patches/@vitest-snapshot-npm-3.0.0-d5b381862b.patch",
     "cookie": "^1.0.0",
     "cross-spawn": "7.0.6",
-    "esbuild": "0.25.1",
+    "esbuild": "0.25.2",
     "graphql": "16.10.0",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
     "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
