@@ -4245,11 +4245,11 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.4.1":
-  version: 1.4.5
-  resolution: "@graphql-mesh/compose-cli@npm:1.4.5"
+  version: 1.4.6
+  resolution: "@graphql-mesh/compose-cli@npm:1.4.6"
   dependencies:
     "@commander-js/extra-typings": "npm:^13.0.0"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.4"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.5"
     "@graphql-mesh/include": "npm:^0.3.2"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.2"
@@ -4267,7 +4267,7 @@ __metadata:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/64d8560a6d69773a4078f7d869c695ba7a9a079fbd4a41444a8e598a6e8904358808e272b465cc215872231d252b6b1d3c2a820cf21bab37bd198888367a18c6
+  checksum: 10c0/e9a1b7b7ebe2207d9f5ee3d842d79157345b8bfd151ecfde2a6b38716fa8bcfeed34ec00a6e9392542440a948c33c63220fcc2922aaa0a2ab0b9653fbff8dea5
   languageName: node
   linkType: hard
 
@@ -4283,15 +4283,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.4":
-  version: 0.8.4
-  resolution: "@graphql-mesh/fusion-composition@npm:0.8.4"
+"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.5":
+  version: 0.8.5
+  resolution: "@graphql-mesh/fusion-composition@npm:0.8.5"
   dependencies:
     "@graphql-mesh/utils": "npm:^0.104.2"
     "@graphql-tools/schema": "npm:^10.0.5"
     "@graphql-tools/stitching-directives": "npm:^3.1.9"
     "@graphql-tools/utils": "npm:^10.8.0"
-    "@theguild/federation-composition": "npm:^0.17.0"
+    "@theguild/federation-composition": "npm:^0.18.0"
     change-case: "npm:^4.1.2"
     graphql-scalars: "npm:^1.23.0"
     minimatch: "npm:^10.0.0"
@@ -4300,7 +4300,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/b74749c5f14478df5f9e5eb37d9fdcc53058e0f60ddae06003e523f8ce6dc2ac9487c5f209f95545d9e206df3ba924072f3bf069f2fcf567e33b32b1008eecc3
+  checksum: 10c0/e326bc1a01d96aecaa2b9d6688ddd0f8fc4c96499248c0ad582a5821940725fb9f0eda9b0090f78726437da196ff14d834a15e4a2414ac33114638b5876a9db7
   languageName: node
   linkType: hard
 
@@ -6448,11 +6448,11 @@ __metadata:
   linkType: hard
 
 "@omnigraph/openapi@npm:^0.109.0":
-  version: 0.109.5
-  resolution: "@omnigraph/openapi@npm:0.109.5"
+  version: 0.109.6
+  resolution: "@omnigraph/openapi@npm:0.109.6"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.4"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.5"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.2"
     "@graphql-mesh/utils": "npm:^0.104.2"
@@ -6464,7 +6464,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/ff4b78d102ee3b90e8f5917d74fecd861ff3a16b1b6c07f4fe292d9243b0791504114ce569ad3ddef5f3dc708a05bfed089f9736c672f8dbf89f80c12c8e562d
+  checksum: 10c0/19a206b22dd00623da2fffb831f08e51996a52041865c191e19e6a8b8d578116f3222eed5bb30506f97f32feea8f382ac354d8f5eda01076a8d252272af4fc50
   languageName: node
   linkType: hard
 
@@ -7975,17 +7975,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/federation-composition@npm:^0.17.0":
-  version: 0.17.0
-  resolution: "@theguild/federation-composition@npm:0.17.0"
+"@theguild/federation-composition@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "@theguild/federation-composition@npm:0.18.0"
   dependencies:
     constant-case: "npm:^3.0.4"
-    debug: "npm:4.3.4"
+    debug: "npm:4.4.0"
     json5: "npm:^2.2.3"
     lodash.sortby: "npm:^4.7.0"
   peerDependencies:
     graphql: ^16.0.0
-  checksum: 10c0/9bbb822dc190d274eee883ce9dcde7622602cb7b0c0e017c87ecced6e70142906698b5d11fe47bd6027398389075cde66d699661af8340d95884c0673d35d337
+  checksum: 10c0/43d98ce6280e0ff94c6ff68dc4f815bae0d09d3f1fdbfe623e37a8e02a6a901fe2200ff732b356959c5848f64857735a5d055f000e3421ec68b4b31ae4ff12a8
   languageName: node
   linkType: hard
 
@@ -11423,7 +11423,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.3.5, debug@npm:^4.3.6, debug@npm:^4.4.0":
+"debug@npm:4, debug@npm:4.4.0, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:^4.3.5, debug@npm:^4.3.6, debug@npm:^4.4.0":
   version: 4.4.0
   resolution: "debug@npm:4.4.0"
   dependencies:
@@ -11432,18 +11432,6 @@ __metadata:
     supports-color:
       optional: true
   checksum: 10c0/db94f1a182bf886f57b4755f85b3a74c39b5114b9377b7ab375dc2cfa3454f09490cc6c30f829df3fc8042bc8b8995f6567ce5cd96f3bc3688bd24027197d9de
-  languageName: node
-  linkType: hard
-
-"debug@npm:4.3.4":
-  version: 4.3.4
-  resolution: "debug@npm:4.3.4"
-  dependencies:
-    ms: "npm:2.1.2"
-  peerDependenciesMeta:
-    supports-color:
-      optional: true
-  checksum: 10c0/cedbec45298dd5c501d01b92b119cd3faebe5438c3917ff11ae1bff86a6c722930ac9c8659792824013168ba6db7c4668225d845c633fbdafbbf902a6389f736
   languageName: node
   linkType: hard
 
@@ -13136,9 +13124,9 @@ __metadata:
   linkType: hard
 
 "flow-parser@npm:0.*":
-  version: 0.266.0
-  resolution: "flow-parser@npm:0.266.0"
-  checksum: 10c0/b60d6f9310640190670913cf4d6fc5125a423c90aafcd5bd59b0464859aebdd5325c3c6cbe0362f905fa9077ee0707f853d5ae61a637a377580a57765d620688
+  version: 0.266.1
+  resolution: "flow-parser@npm:0.266.1"
+  checksum: 10c0/0e2d0253315e41eac0a6df2142e3d1aa127a525976ec959a092901e7f15681d6429095d56c3b56bfa80b8b9b8e3174419c6cbe09f8cf4dd9a7573f17dea1b652
   languageName: node
   linkType: hard
 
