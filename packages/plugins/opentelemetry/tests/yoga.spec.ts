@@ -1,20 +1,7 @@
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
-import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import {
-  SimpleSpanProcessor,
-  WebTracerProvider,
-} from '@opentelemetry/sdk-trace-web';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
-import { MockSpanExporter } from './utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { spanExporter } from './utils';
 
 let mockModule = vi.mock;
 if (globalThis.Bun) {
@@ -23,26 +10,10 @@ if (globalThis.Bun) {
 const mockRegisterProvider = vi.fn();
 
 describe('useOpenTelemetry', () => {
-  // WORKAROUND: Bun does replace already imported modules instances. We make a copy to have the real implementation
-  const TracerProvider = WebTracerProvider;
   mockModule('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
   }));
 
-  let traceProvider: WebTracerProvider;
-  const spanExporter = new MockSpanExporter();
-
-  beforeAll(async () => {
-    traceProvider = new TracerProvider({
-      spanProcessors: [new SimpleSpanProcessor(spanExporter)],
-    });
-    traceProvider.register({
-      contextManager: new AsyncLocalStorageContextManager(),
-    });
-  });
-  afterAll(async () => {
-    traceProvider.shutdown?.();
-  });
   beforeEach(() => {
     vi.clearAllMocks();
     spanExporter.reset();
