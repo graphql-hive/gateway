@@ -50,8 +50,11 @@ import {
   createHttpSpan,
   startSubgraphExecuteFetchSpan as createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
+  recordCacheError,
+  recordCacheEvent,
   registerException,
   setExecutionAttributesOnOperationSpan,
+  setExecutionResultAttributes,
   setGraphQLExecutionAttributes,
   setGraphQLExecutionResultAttributes,
   setGraphQLParseAttributes,
@@ -204,6 +207,10 @@ export type OpenTelemetryGatewayPluginOptions =
        * Enable/disable upstream HTTP fetch calls spans (default: true).
        */
       upstreamFetch?: BooleanOrPredicate<ExecutionRequest | undefined>;
+      /**
+       * Enable/Disable cache related span events (default: true).
+       */
+      cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
     };
   };
 
@@ -662,6 +669,25 @@ export function useOpenTelemetry(
       });
     },
 
+    onCacheGet: (payload) =>
+      shouldTrace(options.spans?.cache, { key: payload.key, action: 'read' })
+        ? {
+            onCacheMiss: () => recordCacheEvent('miss', payload),
+            onCacheHit: () => recordCacheEvent('hit', payload),
+            onCacheGetError: ({ error }) =>
+              recordCacheError('read', error, payload),
+          }
+        : undefined,
+
+    onCacheSet: (payload) =>
+      shouldTrace(options.spans?.cache, { key: payload.key, action: 'write' })
+        ? {
+            onCacheSetDone: () => recordCacheEvent('write', payload),
+            onCacheSetError: ({ error }) =>
+              recordCacheError('write', error, payload),
+          }
+        : undefined,
+
     onResponse({ response, state }) {
       try {
         state.forRequest.otel &&
@@ -671,7 +697,7 @@ export function useOpenTelemetry(
       }
     },
 
-    onParams({ state, context: gqlCtx, params }) {
+    onParams: function onParamsOTEL({ state, context: gqlCtx, params }) {
       if (
         !isParentEnabled(state) ||
         !shouldTrace(options.spans?.graphql, gqlCtx)
@@ -681,6 +707,21 @@ export function useOpenTelemetry(
 
       const ctx = getContext(state);
       setParamsAttributes({ ctx, params });
+    },
+
+    onExecutionResult: function onExeResOTEL({
+      result,
+      context: gqlCtx,
+      state,
+    }) {
+      if (
+        !isParentEnabled(state) ||
+        !shouldTrace(options.spans?.graphql, gqlCtx)
+      ) {
+        return;
+      }
+
+      setExecutionResultAttributes({ ctx: getContext(state), result });
     },
 
     onParse({ state, context: gqlCtx }) {
