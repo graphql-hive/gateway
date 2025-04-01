@@ -37,13 +37,17 @@ export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
 }
 
 export function getPropagator(
-  propagator?: 'none' | 'default' | 'b3' | 'jaeger' | TextMapPropagator,
+  propagator?: boolean | 'default' | 'b3' | 'jaeger' | TextMapPropagator,
 ): Promise<TextMapPropagator | undefined | null> {
-  if (propagator === undefined || propagator === 'default') {
+  if (
+    propagator === undefined ||
+    propagator === 'default' ||
+    propagator === true
+  ) {
     return fakePromise(undefined);
   }
 
-  if (propagator === null || propagator === 'none') {
+  if (propagator === null || propagator === false) {
     return fakePromise(null);
   }
 
