@@ -24,7 +24,7 @@ You can configure an alternative context manager (or entirely disable it) with `
 
 Spans also now covers the entire duration of each phases, including the plugin hooks execution.
 
-### Custom spans and standard instrumentation support
+#### Custom spans and standard instrumentation support
 
 We are now fully compatible with OpenTelemetry Context, meaning you can now create custom spans
 inside your plugins, or enable standard OTEL instrumentation like Node SDK.
@@ -109,7 +109,28 @@ const useMyPlugin = () => ({
 })
 ```
 
+### New propagators available
+
+The plugin now comes with more propagators out of the box and allows to provide your own custom implementation.
+
+You have now the choice between Trace Context + Baggage (the default), B3 or Jaeger.
+
+```ts
+import { defineConfig } from '@graphql-hive/gateway';
+
+export const gatewayConfig = defineConfig({
+  opentelemetry: {
+    propagator: 'jaeger',
+  },
+});
+```
+
 ## Breaking Changes
+
+### Trace Propagation configuration
+
+The trace propagation configuration have been improved, `propagateContext` have been renamed to
+`propagator` and now offers more options than enabled/disabled.
 
 ### Spans Parenting
 
