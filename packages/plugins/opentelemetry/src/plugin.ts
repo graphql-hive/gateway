@@ -130,11 +130,12 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    *
    * Possible values are:
    *  - 'default': This is the default and most used propagator. In includes both Trace Context and Baggage headers.
-   *  - 'none': disables the propagation of tracing context
+   *  - false: disables the propagation of tracing context
    *  - 'b3': OpenTelemetry's B3 propagator with both Single and Multi headers encoding.
    *  - 'jaeger': OpenTelemetry's Jaeger propagator.
+   *  - `TextMapPropagator` instance: a custom propagator
    */
-  propagator?: 'default' | 'b3' | 'jaeger' | TextMapPropagator;
+  propagator?: boolean | 'default' | 'b3' | 'jaeger' | TextMapPropagator;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -155,7 +156,6 @@ export type OpenTelemetryGatewayPluginOptions =
      * See https://opentelemetry.io/docs/languages/js/propagation/
      */
     inheritContext?: boolean;
-    propagateContext?: boolean;
     /**
      * The level of verbosity of OTEL diagnostic logs.
      * @default Verbose
@@ -261,7 +261,7 @@ export function useOpenTelemetry(
   },
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
-  const propagateContext = options.propagateContext ?? true;
+  let propagateContext = !!(options.propagator ?? true);
   let useContextManager: boolean;
 
   let tracer: Tracer;
