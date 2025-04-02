@@ -1,8 +1,5 @@
 import { LogLevel } from './Logger';
 
-/** Context can be any JavaScript object to which a property can be assigned; */
-export type Context = Object;
-
 export type AttributeValue =
   | string
   | number
