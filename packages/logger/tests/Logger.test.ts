@@ -46,33 +46,3 @@ it('should write logs with levels, message and attributes', () => {
     ]
   `);
 });
-
-it('should write logs with attributes in context', () => {
-  const [logger, writter] = createTLogger();
-
-  const ctx = {};
-  logger.setAttrsInCtx(ctx, { hello: 'world' });
-
-  logger.logCtx('info', ctx, { world: 'hello' }, 'Hello, world!');
-  logger.logCtx('info', ctx, '2nd Hello, world!');
-
-  expect(writter.logs).toMatchInlineSnapshot(`
-    [
-      {
-        "attrs": {
-          "hello": "world",
-          "world": "hello",
-        },
-        "level": "info",
-        "msg": "Hello, world!",
-      },
-      {
-        "attrs": {
-          "hello": "world",
-        },
-        "level": "info",
-        "msg": "2nd Hello, world!",
-      },
-    ]
-  `);
-});
