@@ -5,6 +5,11 @@ export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
 export interface LoggerOptions {
   /**
+   * The attributes to include in all logs. Is mainly used to pass the parent
+   * attributes when creating child loggers.
+   */
+  attrs?: Attributes;
+  /**
    * The log writers to use when writing logs.
    *
    * @default [new ConsoleLogWriter()]
@@ -40,12 +45,14 @@ export class Logger implements LogWriter {
 
   //
 
+  #attrs: Attributes | undefined;
   #writers: LogWriter[];
   #pendingWrites = new Set<Promise<void>>();
 
   // TODO: logs for specific level
 
   constructor(opts: LoggerOptions = { writers: [new ConsoleLogWriter()] }) {
+    this.#attrs = opts.attrs;
     this.#writers = opts.writers;
   }
 
@@ -108,7 +115,7 @@ export class Logger implements LogWriter {
       msg = attrsOrMsg;
     }
     if (attrs) {
-      this.log(level, attrs, msg, ...rest);
+      this.log(level, { ...this.#attrs, ...attrs }, msg, ...rest);
     } else {
       this.log(level, msg, ...rest);
     }
@@ -148,7 +155,7 @@ export class Logger implements LogWriter {
     // @ts-expect-error TODO: interpolate values into the message
     const interpolationValues = rest;
 
-    this.write(level, msg, attrs);
+    this.write(level, msg, this.#attrs ? { ...this.#attrs, ...attrs } : attrs);
   }
 
   public traceCtx(
