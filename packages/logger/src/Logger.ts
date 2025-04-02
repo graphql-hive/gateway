@@ -1,4 +1,4 @@
-import { Attributes, Context, isPromise } from './utils';
+import { Attributes, isPromise } from './utils';
 import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
@@ -18,33 +18,6 @@ export interface LoggerOptions {
 }
 
 export class Logger implements LogWriter {
-  /**
-   * Hidden symbol used as a key for appending context attributes for all loggers.
-   *
-   * TODO: should the symbol be scoped for a specific logger?
-   */
-  static #CTX_ATTRS_SY = Symbol('hive.logger.context.attributes');
-
-  /**
-   * Gets the attributes from the {@link context ctx} under the hidden logger symbol key.
-   */
-  public getCtxAttrs(ctx: Context): Attributes | undefined {
-    return Object(ctx)[Logger.#CTX_ATTRS_SY];
-  }
-
-  /**
-   * Mutates the {@link ctx context object} in place adding the {@link attrs attributes} under
-   * the hidden logger symbol key.
-   */
-  public setAttrsInCtx(ctx: Context, attrs: Attributes) {
-    Object(ctx)[Logger.#CTX_ATTRS_SY] = {
-      ...this.getCtxAttrs(ctx),
-      ...attrs,
-    };
-  }
-
-  //
-
   #attrs: Attributes | undefined;
   #writers: LogWriter[];
   #pendingWrites = new Set<Promise<void>>();
@@ -87,40 +60,6 @@ export class Logger implements LogWriter {
 
   //
 
-  public logCtx(
-    level: LogLevel,
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public logCtx(
-    level: LogLevel,
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public logCtx(
-    level: LogLevel,
-    ctx: Context,
-    attrsOrMsg: Attributes | string,
-    ...rest: unknown[]
-  ): void {
-    let msg = '';
-    let attrs = this.getCtxAttrs(ctx);
-    if (attrsOrMsg instanceof Object) {
-      attrs = { ...attrs, ...attrsOrMsg };
-      msg = rest.shift() + ''; // as per the overload, the first rest value is the message. TODO: enforce in runtime?
-    } else {
-      msg = attrsOrMsg;
-    }
-    if (attrs) {
-      this.log(level, { ...this.#attrs, ...attrs }, msg, ...rest);
-    } else {
-      this.log(level, msg, ...rest);
-    }
-  }
-
   public log(
     level: LogLevel,
     attrs: Attributes,
@@ -158,20 +97,6 @@ export class Logger implements LogWriter {
     this.write(level, msg, this.#attrs ? { ...this.#attrs, ...attrs } : attrs);
   }
 
-  public traceCtx(
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public traceCtx(
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public traceCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
-    this.logCtx('trace', ...args);
-  }
   public trace(
     attrs: Attributes,
     msg: string,
@@ -182,20 +107,6 @@ export class Logger implements LogWriter {
     this.log('trace', ...args);
   }
 
-  public debugCtx(
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public debugCtx(
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public debugCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
-    this.logCtx('debug', ...args);
-  }
   public debug(
     attrs: Attributes,
     msg: string,
@@ -206,20 +117,6 @@ export class Logger implements LogWriter {
     this.log('debug', ...args);
   }
 
-  public infoCtx(
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public infoCtx(
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public infoCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
-    this.logCtx('info', ...args);
-  }
   public info(
     attrs: Attributes,
     msg: string,
@@ -230,20 +127,6 @@ export class Logger implements LogWriter {
     this.log('info', ...args);
   }
 
-  public warnCtx(
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public warnCtx(
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public warnCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
-    this.logCtx('warn', ...args);
-  }
   public warn(
     attrs: Attributes,
     msg: string,
@@ -254,20 +137,6 @@ export class Logger implements LogWriter {
     this.log('warn', ...args);
   }
 
-  public errorCtx(
-    ctx: Context,
-    attrs: Attributes,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public errorCtx(
-    ctx: Context,
-    msg: string,
-    ...interpolationValues: unknown[]
-  ): void;
-  public errorCtx(...args: [ctx: Context, arg0: any, ...rest: any[]]): void {
-    this.logCtx('error', ...args);
-  }
   public error(
     attrs: Attributes,
     msg: string,
