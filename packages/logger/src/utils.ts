@@ -43,6 +43,7 @@ export function isPromise(val: unknown): val is Promise<any> {
 export function jsonStringify(val: unknown) {
   return JSON.stringify(val, (_key, val) => {
     if (val instanceof Error) {
+      // TODO: also handle graphql errors, and maybe all other errors that can contain more properties
       return {
         name: val.name,
         message: val.message,
