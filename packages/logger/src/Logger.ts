@@ -4,6 +4,8 @@ import { ConsoleLogWriter, LogWriter } from './writers';
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
 export interface LoggerOptions {
+  /** A prefix to provide to every log's message. */
+  prefix?: string;
   /**
    * The attributes to include in all logs. Is mainly used to pass the parent
    * attributes when creating child loggers.
@@ -18,13 +20,15 @@ export interface LoggerOptions {
 }
 
 export class Logger implements LogWriter {
+  prefix: string | undefined;
   #attrs: Attributes | undefined;
-  #writers: LogWriter[];
+  #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites = new Set<Promise<void>>();
 
   // TODO: logs for specific level
 
   constructor(opts: LoggerOptions = { writers: [new ConsoleLogWriter()] }) {
+    this.prefix = opts.prefix;
     this.#attrs = opts.attrs;
     this.#writers = opts.writers;
   }
@@ -60,6 +64,25 @@ export class Logger implements LogWriter {
 
   //
 
+  public child(prefix: string): Logger;
+  public child(attrs: Attributes): Logger;
+  public child(prefixOrAttrs: string | Attributes, prefix?: string): Logger {
+    if (typeof prefixOrAttrs === 'string') {
+      prefix = prefixOrAttrs;
+      return new Logger({
+        prefix: prefix,
+        writers: this.#writers,
+      });
+    }
+    return new Logger({
+      prefix: prefix,
+      attrs: prefixOrAttrs,
+      writers: this.#writers,
+    });
+  }
+
+  //
+
   public log(
     level: LogLevel,
     attrs: Attributes,
@@ -87,6 +110,10 @@ export class Logger implements LogWriter {
       msg = rest.shift() + ''; // as per the overload, the first rest value is the message. TODO: enforce in runtime?
     } else {
       msg = attrsOrMsg;
+    }
+
+    if (this.prefix) {
+      msg = `${this.prefix.trim()} ${msg}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
     // TODO: unwrap lazy attribute values
