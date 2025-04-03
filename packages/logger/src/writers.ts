@@ -1,5 +1,10 @@
 import { LogLevel } from './Logger';
-import { Attributes, jsonStringify } from './utils';
+import {
+  Attributes,
+  jsonStringify,
+  logLevelToString,
+  truthyEnv,
+} from './utils';
 
 export interface LogWriter {
   write(
@@ -10,22 +15,83 @@ export interface LogWriter {
   flush(): void | Promise<void>;
 }
 
+export class MemoryLogWriter implements LogWriter {
+  public logs: { level: LogLevel; msg?: string; attrs?: unknown }[] = [];
+  write(
+    level: LogLevel,
+    attrs: Record<string, any>,
+    msg: string | null | undefined,
+  ): void {
+    this.logs.push({
+      level,
+      ...(msg ? { msg } : {}),
+      ...(attrs ? { attrs } : {}),
+    });
+  }
+  flush(): void {
+    // noop
+  }
+}
+
+const asciMap = {
+  timestamp: '\x1b[90m', // bright black
+  trace: '\x1b[36m', // cyan
+  debug: '\x1b[90m', // bright black
+  info: '\x1b[32m', // green
+  warn: '\x1b[33m', // yellow
+  error: '\x1b[41;39m', // red; white
+  message: '\x1b[1m', // bold
+  reset: '\x1b[0m', // reset
+};
+
 export class ConsoleLogWriter implements LogWriter {
+  #nocolor = truthyEnv('NO_COLOR');
+  color(style: keyof typeof asciMap, text: string | null | undefined) {
+    if (!text) {
+      return text;
+    }
+    if (this.#nocolor) {
+      return text;
+    }
+    return asciMap[style] + text + asciMap.reset;
+  }
   write(
     level: LogLevel,
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void {
-    switch (level) {
-      // TODO: other levels
-      default:
-        // TODO: write log level and time
-        console.log(
-          msg,
-          // we want to stringify because we want all properties be properly displayed
-          attrs ? jsonStringify(attrs) : undefined,
-        );
-    }
+    console[level === 'trace' ? 'debug' : level](
+      [
+        this.color('timestamp', new Date().toISOString()),
+        this.color(level, logLevelToString(level)),
+        this.color('message', msg),
+        // we want to stringify because we want all properties (even nested ones)be properly displayed
+        attrs ? jsonStringify(attrs, truthyEnv('LOG_JSON_PRETTY')) : undefined,
+      ].join(' '),
+    );
+  }
+  flush() {
+    // noop
+  }
+}
+
+export class JSONLogWriter implements LogWriter {
+  write(
+    level: LogLevel,
+    attrs: Attributes | null | undefined,
+    msg: string | null | undefined,
+  ): void {
+    console.log(
+      jsonStringify(
+        {
+          ...attrs,
+          level,
+          ...(msg ? { msg } : {}),
+          timestamp: new Date().toISOString(),
+        },
+        truthyEnv('LOG_JSON_PRETTY'),
+      ),
+    );
   }
   flush() {
     // noop

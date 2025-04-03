@@ -4127,6 +4127,7 @@ __metadata:
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:
     "@types/quick-format-unescaped": "npm:^4.0.3"
+    fast-safe-stringify: "npm:^2.1.1"
     pkgroll: "npm:2.11.2"
     quick-format-unescaped: "npm:^4.0.4"
   languageName: unknown

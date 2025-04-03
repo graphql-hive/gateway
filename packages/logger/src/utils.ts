@@ -1,3 +1,4 @@
+import fastSafeStringify from 'fast-safe-stringify';
 import { LogLevel } from './Logger';
 
 export type AttributeValue =
@@ -43,18 +44,22 @@ export function isPromise(val: unknown): val is Promise<any> {
 }
 
 /** An error safe JSON stringifyer. */
-export function jsonStringify(val: unknown) {
-  return JSON.stringify(val, (_key, val) => {
-    if (val instanceof Error) {
-      // TODO: also handle graphql errors, and maybe all other errors that can contain more properties
-      return {
-        name: val.name,
-        message: val.message,
-        stack: val.stack,
-      };
-    }
-    return val;
-  });
+export function jsonStringify(val: unknown, pretty?: boolean): string {
+  return fastSafeStringify(
+    val,
+    (_key, val) => {
+      if (val instanceof Error) {
+        // TODO: also handle graphql errors, and maybe all other errors that can contain more properties
+        return {
+          name: val.name,
+          message: val.message,
+          stack: val.stack,
+        };
+      }
+      return val;
+    },
+    pretty ? 2 : undefined,
+  );
 }
 
 /** Recursivelly unwrapps the lazy attributes. */
