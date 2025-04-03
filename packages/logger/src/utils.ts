@@ -13,6 +13,7 @@ export type AttributeValue =
 
 export type Attributes =
   | (() => Attributes)
+  | AttributeValue[]
   | { [key: string | number]: AttributeValue };
 
 export function logLevelToString(level: LogLevel): string {
