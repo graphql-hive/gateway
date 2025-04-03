@@ -1,4 +1,5 @@
-import { Attributes, isPromise, unwrapAttrs } from './utils';
+import format from 'quick-format-unescaped';
+import { Attributes, getEnv, isPromise, unwrapAttrs } from './utils';
 import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
@@ -21,7 +22,7 @@ export interface LoggerOptions {
    *
    * Providing `false` will disable all logging.
    *
-   * @default trace
+   * @default env.LOG_LEVEL || 'trace'
    */
   level?: LogLevel | false;
   /** A prefix to include in every log's message. */
@@ -46,10 +47,14 @@ export class Logger implements LogWriter {
   #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites = new Set<Promise<void>>();
 
-  // TODO: logs for specific level
-
   constructor(opts: LoggerOptions = {}) {
-    this.#level = opts.level ?? 'trace';
+    let logLevelEnv = getEnv('LOG_LEVEL');
+    if (logLevelEnv && !(logLevelEnv in logLevel)) {
+      throw new Error(
+        `Invalid LOG_LEVEL environment variable "${logLevelEnv}". Must be one of: ${[...Object.keys(logLevel), 'false'].join(',  ')}`,
+      );
+    }
+    this.#level = opts.level ?? (logLevelEnv as LogLevel) ?? 'trace';
     this.#prefix = opts.prefix;
     this.#attrs = opts.attrs;
     this.#writers = opts.writers ?? [new ConsoleLogWriter()];
@@ -122,13 +127,11 @@ export class Logger implements LogWriter {
     maybeAttrsOrMsg?: Attributes | string | null | undefined,
     ...rest: unknown[]
   ): void {
-    // TODO: validate types on runtime, or not?
-
     if (this.#level === false || logLevel[level] < logLevel[this.#level]) {
       return;
     }
 
-    let msg: string | null = null;
+    let msg: string | undefined;
     let attrs: Attributes | undefined;
     if (typeof maybeAttrsOrMsg === 'string') {
       msg = maybeAttrsOrMsg;
@@ -146,9 +149,7 @@ export class Logger implements LogWriter {
 
     attrs = this.#attrs ? { ...this.#attrs, ...attrs } : attrs;
     attrs = attrs ? unwrapAttrs(attrs) : attrs;
-
-    // @ts-expect-error TODO: interpolate values into the message
-    const interpol = rest;
+    msg = msg ? format(msg, rest) : msg;
 
     this.write(level, attrs, msg);
   }

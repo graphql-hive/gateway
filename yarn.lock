@@ -4126,7 +4126,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:
+    "@types/quick-format-unescaped": "npm:^4.0.3"
     pkgroll: "npm:2.11.2"
+    quick-format-unescaped: "npm:^4.0.4"
   languageName: unknown
   linkType: soft
 
@@ -8559,6 +8561,13 @@ __metadata:
   version: 6.9.18
   resolution: "@types/qs@npm:6.9.18"
   checksum: 10c0/790b9091348e06dde2c8e4118b5771ab386a8c22a952139a2eb0675360a2070d0b155663bf6f75b23f258fd0a1f7ffc0ba0f059d99a719332c03c40d9e9cd63b
+  languageName: node
+  linkType: hard
+
+"@types/quick-format-unescaped@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@types/quick-format-unescaped@npm:4.0.3"
+  checksum: 10c0/e95ba1dfa68f9d1dee785905c3c648b9fe1514c5261160e566d9a19731013d138269937632dea79a73859988a90621c9653504170c6a7415cacb426343f2a11a
   languageName: node
   linkType: hard
 
@@ -18279,7 +18288,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"quick-format-unescaped@npm:^4.0.3":
+"quick-format-unescaped@npm:^4.0.3, quick-format-unescaped@npm:^4.0.4":
   version: 4.0.4
   resolution: "quick-format-unescaped@npm:4.0.4"
   checksum: 10c0/fe5acc6f775b172ca5b4373df26f7e4fd347975578199e7d74b2ae4077f0af05baa27d231de1e80e8f72d88275ccc6028568a7a8c9ee5e7368ace0e18eff93a4

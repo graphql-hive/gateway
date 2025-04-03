@@ -117,3 +117,21 @@ function unwrapAttrVal(attr: AttributeValue, depth = 0): AttributeValue {
 function isPrimitive(val: unknown): val is string | number | boolean {
   return val !== Object(val);
 }
+
+export function getEnv(key: string): string | undefined {
+  return (
+    globalThis.process?.env?.[key] ||
+    // @ts-expect-error can exist in wrangler and maybe other runtimes
+    globalThis.env?.[key] ||
+    // @ts-expect-error can exist in deno
+    globalThis.Deno?.env?.get(key) ||
+    // @ts-expect-error could be
+    globalThis[key]
+  );
+}
+
+export function truthyEnv(key: string): boolean {
+  return ['1', 't', 'true', 'y', 'yes'].includes(
+    getEnv(key)?.toLowerCase() || '',
+  );
+}

@@ -1,21 +1,12 @@
 import { expect, it, vi } from 'vitest';
-import { Logger, LoggerOptions, LogLevel } from '../src/Logger';
-import { LogWriter } from '../src/writers';
+import { Logger, LoggerOptions } from '../src/Logger';
+import { MemoryLogWriter } from '../src/writers';
 
-class TLogWriter implements LogWriter {
-  public logs: { level: LogLevel; msg: string; attrs?: unknown }[] = [];
-
-  write(level: LogLevel, msg: string, attrs: Record<string, any>): void {
-    this.logs.push({ level, msg, ...(attrs ? { attrs } : {}) });
-  }
-
-  flush(): void {
-    // noop
-  }
-}
+const log = new Logger();
+log.info('Hello, world!');
 
 function createTLogger(opts?: Partial<LoggerOptions>) {
-  const writer = new TLogWriter();
+  const writer = new MemoryLogWriter();
   return [
     new Logger({ ...opts, writers: opts?.writers ? opts.writers : [writer] }),
     writer,
@@ -25,11 +16,15 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
 it('should write logs with levels, message and attributes', () => {
   const [log, writter] = createTLogger();
 
+  log.log('info');
   log.log('info', { hello: 'world', err: new Error('Woah!') }, 'Hello, world!');
   log.log('info', '2nd Hello, world!');
 
   expect(writter.logs).toMatchInlineSnapshot(`
     [
+      {
+        "level": "info",
+      },
       {
         "attrs": {
           "err": [Error: Woah!],
@@ -211,3 +206,28 @@ it('should not unwrap lazy attributes if level is not to be logged', () => {
 it.todo('should log to async writers');
 
 it.todo('should wait for async writers on flush');
+
+it('should format string', () => {
+  const [log, writer] = createTLogger();
+
+  log.info('%o hello %s', { worldly: 1 }, 'world');
+  log.info({ these: { are: 'attrs' } }, '%o hello %s', { worldly: 1 }, 'world');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "{"worldly":1} hello world",
+      },
+      {
+        "attrs": {
+          "these": {
+            "are": "attrs",
+          },
+        },
+        "level": "info",
+        "msg": "{"worldly":1} hello world",
+      },
+    ]
+  `);
+});
