@@ -131,3 +131,57 @@ it('should include attributes and prefix in child loggers', () => {
     ]
   `);
 });
+
+it('should unwrap lazy attributes', () => {
+  const [log, writter] = createTLogger();
+
+  log.info(
+    {
+      lazy: () => 'lazy',
+      nested: {
+        lazy: () => 'nested lazy',
+      },
+      arr: [() => '0', '1'],
+    },
+    'hello',
+  );
+
+  log.info(
+    () => ({
+      every: 'thing',
+      nested: {
+        lazy: () => 'nested lazy',
+      },
+    }),
+    'hello',
+  );
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "arr": [
+            "0",
+            "1",
+          ],
+          "lazy": "lazy",
+          "nested": {
+            "lazy": "nested lazy",
+          },
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "attrs": {
+          "every": "thing",
+          "nested": {
+            "lazy": "nested lazy",
+          },
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
