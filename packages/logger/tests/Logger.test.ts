@@ -78,3 +78,66 @@ it('should write logs only if level is higher than set', () => {
     ]
   `);
 });
+
+it('should include attributes in child loggers', () => {
+  let [log, writter] = createTLogger({
+    level: 'info',
+  });
+
+  log = log.child({ par: 'ent' });
+
+  log.info('hello');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "par": "ent",
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
+
+it('should include prefix in child loggers', () => {
+  let [log, writter] = createTLogger({
+    level: 'info',
+  });
+
+  log = log.child('prefix');
+
+  log.info('hello');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "prefix hello",
+      },
+    ]
+  `);
+});
+
+it('should include attributes and prefix in child loggers', () => {
+  let [log, writter] = createTLogger({
+    level: 'info',
+  });
+
+  log = log.child({ par: 'ent' }, 'prefix');
+
+  log.info('hello');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "par": "ent",
+        },
+        "level": "info",
+        "msg": "prefix hello",
+      },
+    ]
+  `);
+});
