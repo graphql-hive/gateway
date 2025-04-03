@@ -4,14 +4,18 @@ import { Attributes, jsonStringify } from './utils';
 export interface LogWriter {
   write(
     level: LogLevel,
-    msg: string,
-    attrs: Attributes | undefined,
+    attrs: Attributes | null | undefined,
+    msg: string | null | undefined,
   ): void | Promise<void>;
   flush(): void | Promise<void>;
 }
 
 export class ConsoleLogWriter implements LogWriter {
-  write(level: LogLevel, msg: string, attrs: Attributes): void {
+  write(
+    level: LogLevel,
+    attrs: Attributes | null | undefined,
+    msg: string | null | undefined,
+  ): void {
     switch (level) {
       // TODO: other levels
       default:
