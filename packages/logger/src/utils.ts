@@ -4,14 +4,14 @@ export type AttributeValue =
   | string
   | number
   | boolean
-  | { [key: PropertyKey]: AttributeValue }
+  | { [key: string | number]: AttributeValue }
   | AttributeValue[]
   | Object // redundant, but this will allow _any_ object be the value
   | null
   | undefined
   | (() => AttributeValue); // lazy attribute
 
-export type Attributes = Record<PropertyKey, AttributeValue>;
+export type Attributes = Record<string | number, AttributeValue>;
 
 export function logLevelToString(level: LogLevel): string {
   switch (level) {
