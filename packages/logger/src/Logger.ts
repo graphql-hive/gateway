@@ -1,4 +1,4 @@
-import { Attributes, isPromise } from './utils';
+import { Attributes, isPromise, unwrapAttrs } from './utils';
 import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
@@ -137,7 +137,8 @@ export class Logger implements LogWriter {
       msg = `${this.#prefix.trim()} ${msg}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
-    // TODO: unwrap lazy attribute values
+    attrs = this.#attrs ? { ...this.#attrs, ...attrs } : attrs;
+    attrs = attrs ? unwrapAttrs(attrs) : attrs;
 
     // @ts-expect-error TODO: interpolate values into the message
     const interpolationValues = rest;
