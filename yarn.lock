@@ -3912,6 +3912,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^7.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.10.0"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/logger-json": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -3969,6 +3970,7 @@ __metadata:
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.0"
@@ -4078,7 +4080,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/logger@workspace:packages/logger":
+"@graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:

@@ -5,7 +5,7 @@ import {
 } from '@envelop/types';
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
-import type { Logger, OnFetchHookPayload } from '@graphql-mesh/types';
+import type { OnFetchHookPayload } from '@graphql-mesh/types';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
   fakePromise,
@@ -151,7 +151,7 @@ const HeadersTextMapGetter: TextMapGetter<Headers> = {
 };
 
 export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions & { logger: Logger },
+  options: OpenTelemetryGatewayPluginOptions,
 ): GatewayPlugin<{
   opentelemetry: {
     tracer: Tracer;
@@ -212,26 +212,27 @@ export function useOpenTelemetry(
           webProvider.register();
           provider = webProvider;
         }
-        const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
-        const diagLogger = pluginLogger.child('OtelDiag');
-        diag.setLogger(
-          {
-            error: (message, ...args) => diagLogger.error(message, ...args),
-            warn: (message, ...args) => diagLogger.warn(message, ...args),
-            info: (message, ...args) => diagLogger.info(message, ...args),
-            debug: (message, ...args) => diagLogger.debug(message, ...args),
-            verbose: (message, ...args) => diagLogger.debug(message, ...args),
-          },
-          DiagLogLevel.VERBOSE,
-        );
-        setGlobalErrorHandler((err) =>
-          diagLogger.error('Uncaught OTEL internal error', err),
-        );
         tracer = options.tracer || trace.getTracer('gateway');
         preparation$ = undefined;
       });
     },
     onContextBuilding({ extendContext, context }) {
+      const log = context.log.child('OpenTelemetry');
+      const diagLog = log.child('OtelDiag');
+      diag.setLogger(
+        {
+          error: (message, ...args) => diagLog.error(args, message),
+          warn: (message, ...args) => diagLog.warn(args, message),
+          info: (message, ...args) => diagLog.info(args, message),
+          debug: (message, ...args) => diagLog.debug(args, message),
+          verbose: (message, ...args) => diagLog.debug(args, message),
+        },
+        DiagLogLevel.VERBOSE,
+      );
+      setGlobalErrorHandler((err) =>
+        log.error('Uncaught OTEL internal error', err),
+      );
+
       extendContext({
         opentelemetry: {
           tracer,

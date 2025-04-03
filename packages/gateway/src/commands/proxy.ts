@@ -119,7 +119,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
-        logger: ctx.log,
+        log: ctx.log,
         cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(
