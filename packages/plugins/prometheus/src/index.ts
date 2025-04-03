@@ -2,17 +2,12 @@ import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecuteHook } from '@graphql-mesh/fusion-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
-  ImportFn,
   Logger,
   MeshFetchRequestInit,
   MeshPlugin,
   OnFetchHook,
 } from '@graphql-mesh/types';
-import {
-  defaultImportFn,
-  getHeadersObj,
-  loadFromModuleExportExpression,
-} from '@graphql-mesh/utils';
+import { getHeadersObj } from '@graphql-mesh/utils';
 import {
   isAsyncIterable,
   type ExecutionRequest,
@@ -151,12 +146,6 @@ type MeshMetricsConfig = {
 export type PrometheusPluginOptions = PrometheusTracingPluginConfig &
   MeshMetricsConfig;
 
-type YamlConfig = {
-  baseDir?: string;
-  importFn?: ImportFn;
-  registry?: Registry | string;
-};
-
 type SubgraphMetricsLabelParams = {
   subgraphName: string;
   transportEntry?: TransportEntry;
@@ -170,12 +159,7 @@ type FetchMetricsLabelParams = {
 };
 
 export default function useMeshPrometheus(
-  pluginOptions: Omit<
-    PrometheusPluginOptions,
-    // Remove this after Mesh v1 is released;
-    'registry'
-  > &
-    YamlConfig, // Remove this after Mesh v1 is released,
+  pluginOptions: PrometheusPluginOptions,
 ): MeshPlugin<any> & YogaPlugin & GatewayPlugin {
   let registry: Registry;
   if (!pluginOptions.registry) {
@@ -183,9 +167,10 @@ export default function useMeshPrometheus(
   } else if (typeof pluginOptions.registry !== 'string') {
     registry = pluginOptions.registry;
   } else {
-    // TODO: Remove this once Mesh v1 is released
-    //       Mesh v1 config is now a TS config file, we don't need to load it from a string anymore
-    registry = registryFromYamlConfig(pluginOptions);
+    pluginOptions.logger.error(
+      'Could not identify given prometheus registry. Utilizing default registry.',
+    );
+    registry = defaultRegistry;
   }
 
   const config: PrometheusPluginOptions = {
@@ -366,36 +351,6 @@ export default function useMeshPrometheus(
       return registry.clear();
     },
   };
-}
-
-function registryFromYamlConfig(
-  config: YamlConfig & { logger: Logger },
-): Registry {
-  if (!config.registry) {
-    throw new Error('Registry not defined in the YAML config');
-  }
-  const registry$ = loadFromModuleExportExpression<Registry>(config.registry, {
-    cwd: config.baseDir || globalThis.process?.cwd(),
-    importFn: config.importFn || defaultImportFn,
-    defaultExportName: 'default',
-  });
-
-  const registryProxy = Proxy.revocable(defaultRegistry, {
-    get(target, prop, receiver) {
-      if (typeof (target as any)[prop] === 'function') {
-        return function (...args: any[]) {
-          return registry$.then((registry) => (registry as any)[prop](...args));
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-  });
-
-  registry$
-    .then(() => registryProxy.revoke())
-    .catch((e) => config.logger.error(e));
-
-  return registryProxy.proxy;
 }
 
 function filterHeaders(
