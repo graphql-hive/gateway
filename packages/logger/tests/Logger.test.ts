@@ -23,14 +23,10 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
 }
 
 it('should write logs with levels, message and attributes', () => {
-  const [logger, writter] = createTLogger();
+  const [log, writter] = createTLogger();
 
-  logger.log(
-    'info',
-    { hello: 'world', err: new Error('Woah!') },
-    'Hello, world!',
-  );
-  logger.log('info', '2nd Hello, world!');
+  log.log('info', { hello: 'world', err: new Error('Woah!') }, 'Hello, world!');
+  log.log('info', '2nd Hello, world!');
 
   expect(writter.logs).toMatchInlineSnapshot(`
     [
@@ -80,9 +76,7 @@ it('should write logs only if level is higher than set', () => {
 });
 
 it('should include attributes in child loggers', () => {
-  let [log, writter] = createTLogger({
-    level: 'info',
-  });
+  let [log, writter] = createTLogger();
 
   log = log.child({ par: 'ent' });
 
@@ -102,9 +96,7 @@ it('should include attributes in child loggers', () => {
 });
 
 it('should include prefix in child loggers', () => {
-  let [log, writter] = createTLogger({
-    level: 'info',
-  });
+  let [log, writter] = createTLogger();
 
   log = log.child('prefix');
 
@@ -121,9 +113,7 @@ it('should include prefix in child loggers', () => {
 });
 
 it('should include attributes and prefix in child loggers', () => {
-  let [log, writter] = createTLogger({
-    level: 'info',
-  });
+  let [log, writter] = createTLogger();
 
   log = log.child({ par: 'ent' }, 'prefix');
 
