@@ -3,12 +3,30 @@ import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
+const logLevel: { [level in LogLevel]: number } = {
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
+};
+
+// TODO: explain what happens when attribute keys match existing keys from the logger (like "msg")
+
+// TODO: an "id" or "name" of a logger allowing us to create scoped loggers which on their own can be disabled/enabled
+
 export interface LoggerOptions {
-  /** A prefix to provide to every log's message. */
+  /**
+   * The minimum log level to log.
+   *
+   * @default trace
+   */
+  level?: LogLevel;
+  /** A prefix to include in every log's message. */
   prefix?: string;
   /**
    * The attributes to include in all logs. Is mainly used to pass the parent
-   * attributes when creating child loggers.
+   * attributes when creating {@link Logger.child child loggers}.
    */
   attrs?: Attributes;
   /**
@@ -20,7 +38,8 @@ export interface LoggerOptions {
 }
 
 export class Logger implements LogWriter {
-  prefix: string | undefined;
+  #level: LogLevel;
+  #prefix: string | undefined;
   #attrs: Attributes | undefined;
   #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites = new Set<Promise<void>>();
@@ -28,7 +47,8 @@ export class Logger implements LogWriter {
   // TODO: logs for specific level
 
   constructor(opts: LoggerOptions = { writers: [new ConsoleLogWriter()] }) {
-    this.prefix = opts.prefix;
+    this.#level = opts.level || 'trace';
+    this.#prefix = opts.prefix;
     this.#attrs = opts.attrs;
     this.#writers = opts.writers;
   }
@@ -65,17 +85,16 @@ export class Logger implements LogWriter {
   //
 
   public child(prefix: string): Logger;
-  public child(attrs: Attributes): Logger;
+  public child(attrs: Attributes, prefix?: string): Logger;
   public child(prefixOrAttrs: string | Attributes, prefix?: string): Logger {
     if (typeof prefixOrAttrs === 'string') {
-      prefix = prefixOrAttrs;
       return new Logger({
-        prefix: prefix,
+        prefix: prefixOrAttrs,
         writers: this.#writers,
       });
     }
     return new Logger({
-      prefix: prefix,
+      prefix,
       attrs: prefixOrAttrs,
       writers: this.#writers,
     });
@@ -101,7 +120,9 @@ export class Logger implements LogWriter {
   ): void {
     // TODO: validate types on runtime, or not?
 
-    // TODO: log only if level is enabled
+    if (logLevel[level] < logLevel[this.#level]) {
+      return;
+    }
 
     let msg = '';
     let attrs: Attributes | undefined;
@@ -112,8 +133,8 @@ export class Logger implements LogWriter {
       msg = attrsOrMsg;
     }
 
-    if (this.prefix) {
-      msg = `${this.prefix.trim()} ${msg}`.trim(); // we trim everything because maybe the "msg" is empty
+    if (this.#prefix) {
+      msg = `${this.#prefix.trim()} ${msg}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
     // TODO: unwrap lazy attribute values
