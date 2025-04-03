@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { Logger, LoggerOptions, LogLevel } from '../src/Logger';
 import { LogWriter } from '../src/writers';
 
@@ -184,4 +184,26 @@ it('should unwrap lazy attributes', () => {
       },
     ]
   `);
+});
+
+it('should not unwrap lazy attributes if level is not to be logged', () => {
+  const [log] = createTLogger({
+    level: 'info',
+  });
+
+  const lazy = vi.fn(() => ({ la: 'zy' }));
+  log.debug(
+    {
+      lazy,
+      nested: {
+        lazy,
+      },
+      arr: [lazy, '1'],
+    },
+    'hello',
+  );
+
+  log.debug(lazy, 'hello');
+
+  expect(lazy).not.toHaveBeenCalled();
 });
