@@ -207,3 +207,7 @@ it('should not unwrap lazy attributes if level is not to be logged', () => {
 
   expect(lazy).not.toHaveBeenCalled();
 });
+
+it.todo('should log to async writers');
+
+it.todo('should wait for async writers on flush');
