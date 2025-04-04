@@ -4,6 +4,7 @@ import type {
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
+import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
   ExecutionRequest,
   Executor,
@@ -37,7 +38,6 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
-import { CRITICAL_ERROR } from '@graphql-tools/executor';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
