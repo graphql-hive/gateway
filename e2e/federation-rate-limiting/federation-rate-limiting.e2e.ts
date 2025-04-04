@@ -25,7 +25,9 @@ it('should rate limit with calmdown', async () => {
     // first 5 requests should not be rate limited
     for (let j = 0; j < 5; j++) {
       await expect(execute({ query })).resolves.toEqual({
-        data: expect.any(Object),
+        data: {
+          users: expect.any(Array),
+        },
       });
     }
 
@@ -68,7 +70,9 @@ it('should rate limit under pressure', async () => {
     // first 5 requests should not be rate limited
     for (let j = 0; j < 5; j++) {
       await expect(execute({ query })).resolves.toEqual({
-        data: expect.any(Object),
+        data: {
+          users: expect.any(Array),
+        },
       });
     }
 
