@@ -56,7 +56,6 @@ export default {
         : undefined,
       ...payload.transportEntry.options,
       getDisposeReason: payload.getDisposeReason,
-      serviceName: payload.subgraphName,
       // @ts-expect-error - TODO: Fix this in executor-http
       fetch: payload.fetch,
     });

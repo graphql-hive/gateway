@@ -275,31 +275,10 @@ export default {
                 break;
               case 'complete':
                 if (message.errors) {
-                  if (message.errors.length === 1 && message.errors[0]) {
-                    const error = message.errors[0];
-                    stopSubscription(
-                      createGraphQLError(error.message, {
-                        ...error,
-                        extensions: {
-                          ...error.extensions,
-                          code: 'DOWNSTREAM_SERVICE_ERROR',
-                        },
-                      }),
-                    );
+                  if (message.errors.length === 1) {
+                    stopSubscription(message.errors[0]);
                   } else {
-                    stopSubscription(
-                      new AggregateError(
-                        message.errors.map((err) =>
-                          createGraphQLError(err.message, {
-                            ...err,
-                            extensions: {
-                              ...err.extensions,
-                              code: 'DOWNSTREAM_SERVICE_ERROR',
-                            },
-                          }),
-                        ),
-                      ),
-                    );
+                    stopSubscription(new AggregateError(message.errors));
                   }
                 } else {
                   stopSubscription();
