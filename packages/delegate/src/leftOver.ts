@@ -3,7 +3,11 @@ import { FieldNode } from 'graphql';
 import { Subschema } from './Subschema.js';
 import { DelegationPlanBuilder, ExternalObject } from './types.js';
 
-export type Deferred<T = unknown> = PromiseWithResolvers<T>;
+export type Deferred<T = unknown> = {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: any) => void;
+};
 
 // TODO: Remove this after Node 22
 export { createDeferred };
