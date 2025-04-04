@@ -8771,6 +8771,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.1#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
+  version: 3.1.1
+  resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.1#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch::version=3.1.1&hash=2cf17b"
+  dependencies:
+    "@vitest/pretty-format": "npm:3.1.1"
+    magic-string: "npm:^0.30.17"
+    pathe: "npm:^2.0.3"
+  checksum: 10c0/8be31f2292dfe33beb1e70ce23decbf2f9aa7dc324756731b4e726cdc6286137cf8381b369530f83199d368859731c3626bf18ca14d6e9f3d1b6c10025346900
+  languageName: node
+  linkType: hard
+
 "@vitest/spy@npm:3.1.1":
   version: 3.1.1
   resolution: "@vitest/spy@npm:3.1.1"
