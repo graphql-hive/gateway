@@ -706,6 +706,7 @@ export function parseTenv(source: string): Eenv {
           root
             .find(j.CallExpression, {
               callee: {
+                // @ts-expect-error - TODO: fix this
                 type: 'Identifier',
                 name: createExampleSetupImport.local!.name,
               },
@@ -744,8 +745,10 @@ export function parseTenv(source: string): Eenv {
             // const ? = createTenv()
             .find(j.VariableDeclarator, {
               init: {
+                // @ts-expect-error - TODO: fix this
                 type: 'CallExpression',
                 callee: {
+                  // @ts-expect-error - TODO: fix this
                   type: 'Identifier',
                   name: createTenvImport.local!.name,
                 },
