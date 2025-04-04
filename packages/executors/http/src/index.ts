@@ -58,10 +58,6 @@ export type SyncImportFn = (moduleName: string) => any;
 
 export interface HTTPExecutorOptions {
   /**
-   * The name of the service
-   */
-  serviceName?: string;
-  /**
    * The endpoint to use when querying the upstream API
    * @default '/graphql'
    */
@@ -163,7 +159,6 @@ export function buildHTTPExecutor(
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
   let disposeCtrl: AbortController | undefined;
-  const serviceName = options?.serviceName;
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
@@ -237,8 +232,6 @@ export function buildHTTPExecutor(
     const signal = abortSignalAny(signals);
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
-      code: 'DOWNSTREAM_SERVICE_ERROR',
-      serviceName,
       request: {
         method,
       },
@@ -442,15 +435,7 @@ export function buildHTTPExecutor(
                             }: {
                               message: string;
                               extensions: Record<string, unknown>;
-                            }) =>
-                              createGraphQLError(message, {
-                                ...options,
-                                extensions: {
-                                  code: 'DOWNSTREAM_SERVICE_ERROR',
-                                  serviceName,
-                                  ...(options.extensions || {}),
-                                },
-                              }),
+                            }) => createGraphQLError(message, options),
                           ),
                         };
                       }

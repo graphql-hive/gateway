@@ -285,14 +285,7 @@ describe('buildHTTPExecutor', () => {
       `),
     });
     expect(res).toMatchObject({
-      errors: expect.arrayContaining([
-        expect.any(GraphQLError),
-        expect.objectContaining({
-          extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
-          },
-        }),
-      ]),
+      errors: expect.arrayContaining([expect.any(GraphQLError)]),
     });
   });
 

@@ -187,12 +187,10 @@ describe('Yoga gateway - subgraph unavailable', () => {
             {
               message: expect.stringContaining('connect'),
               extensions: {
-                code: 'DOWNSTREAM_SERVICE_ERROR',
                 request: {
                   body: '{"query":"{__typename testNestedField{subgraph2{testSuccessQuery{id email sub2}}}}"}',
                   method: 'POST',
                 },
-                serviceName: 'SUBGRAPH2',
               },
               path: ['testNestedField'],
             },
@@ -230,12 +228,10 @@ describe('Yoga gateway - subgraph unavailable', () => {
             {
               message: expect.stringContaining('connect'),
               extensions: {
-                code: 'DOWNSTREAM_SERVICE_ERROR',
                 request: {
                   body: '{"query":"{__typename testNestedField{subgraph2{testErrorQuery{id email sub2}}}}"}',
                   method: 'POST',
                 },
-                serviceName: 'SUBGRAPH2',
               },
               path: ['testNestedField'],
             },

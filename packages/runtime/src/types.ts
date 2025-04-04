@@ -42,6 +42,7 @@ import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { RequestIdOptions } from './plugins/useRequestId';
+import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
@@ -661,6 +662,11 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @experimental
    */
   __experimental__batchDelegation?: boolean;
+
+  /**
+   * Subgraph error handling
+   */
+  subgraphErrors?: SubgraphErrorPluginOptions | false;
 }
 
 interface DisableIntrospectionOptions {
