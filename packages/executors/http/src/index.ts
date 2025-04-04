@@ -162,12 +162,13 @@ export function buildHTTPExecutor(
   options?: HTTPExecutorOptions,
 ): DisposableExecutor<any, HTTPExecutorOptions> {
   const printFn = options?.print ?? defaultPrintFn;
-  const disposeCtrl = new AbortController();
+  let disposeCtrl: AbortController | undefined;
   const serviceName = options?.serviceName;
   const baseExecutor = (
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
   ) => {
+    disposeCtrl ||= new AbortController();
     if (disposeCtrl.signal.aborted) {
       return createResultForAbort(disposeCtrl.signal.reason);
     }
@@ -518,7 +519,7 @@ export function buildHTTPExecutor(
       function retryAttempt():
         | Promise<ExecutionResult<any>>
         | ExecutionResult<any> {
-        if (disposeCtrl.signal.aborted) {
+        if (disposeCtrl?.signal.aborted) {
           return createResultForAbort(disposeCtrl.signal.reason);
         }
         attempt++;
@@ -549,14 +550,16 @@ export function buildHTTPExecutor(
     [DisposableSymbols.dispose]: {
       get() {
         return function dispose() {
-          return disposeCtrl.abort(options?.getDisposeReason?.());
+          disposeCtrl?.abort(options?.getDisposeReason?.());
+          disposeCtrl = undefined;
         };
       },
     },
     [DisposableSymbols.asyncDispose]: {
       get() {
         return function asyncDispose() {
-          return disposeCtrl.abort(options?.getDisposeReason?.());
+          disposeCtrl?.abort(options?.getDisposeReason?.());
+          disposeCtrl = undefined;
         };
       },
     },

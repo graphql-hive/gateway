@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@graphql-tools/delegate": "workspace:^",
+    "@graphql-tools/executor": "^1.4.7",
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/merge": "^9.0.12",
     "@graphql-tools/schema": "^10.0.11",

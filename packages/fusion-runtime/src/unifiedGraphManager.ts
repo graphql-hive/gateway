@@ -4,6 +4,7 @@ import type {
 } from '@graphql-mesh/transport-common';
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
+import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
   ExecutionRequest,
   Executor,
@@ -225,148 +226,159 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
     doNotCache?: boolean,
   ): MaybePromise<GraphQLSchema> {
-    if (
-      loadedUnifiedGraph != null &&
-      this.lastLoadedUnifiedGraph != null &&
-      compareSchemas(loadedUnifiedGraph, this.lastLoadedUnifiedGraph)
-    ) {
-      this.opts.transportContext?.logger?.debug(
-        'Supergraph has not been changed, skipping...',
-      );
-      this.lastLoadTime = Date.now();
-      if (!this.unifiedGraph) {
-        throw new Error(`This should not happen!`);
+    if (loadedUnifiedGraph != null) {
+      if (
+        this.lastLoadedUnifiedGraph != null &&
+        compareSchemas(loadedUnifiedGraph, this.lastLoadedUnifiedGraph)
+      ) {
+        this.opts.transportContext?.logger?.debug(
+          'Supergraph has not been changed, skipping...',
+        );
+        this.lastLoadTime = Date.now();
+        if (!this.unifiedGraph) {
+          throw new Error(`This should not happen!`);
+        }
+        return this.unifiedGraph;
       }
-      return this.unifiedGraph;
-    }
-    if (!doNotCache && this.opts.transportContext?.cache) {
-      let serializedUnifiedGraph: string | undefined;
-      if (typeof loadedUnifiedGraph === 'string') {
-        serializedUnifiedGraph = loadedUnifiedGraph;
-      } else if (isSchema(loadedUnifiedGraph)) {
-        serializedUnifiedGraph = printSchemaWithDirectives(loadedUnifiedGraph);
-      } else if (isDocumentNode(loadedUnifiedGraph)) {
-        serializedUnifiedGraph = print(loadedUnifiedGraph);
-      }
-      if (serializedUnifiedGraph != null) {
-        try {
-          const ttl = this.opts.pollingInterval
-            ? this.opts.pollingInterval * 0.001
-            : // if no polling interval (cache TTL) is configured, default to
-              // 60 seconds making sure the unifiedgraph is not kept forever
-              // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
-              60;
-          this.opts.transportContext.logger?.debug(
-            `Caching Supergraph with TTL ${ttl}s`,
-          );
-          const logCacheSetError = (e: unknown) => {
-            this.opts.transportContext?.logger?.debug(
-              `Unable to store Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
-              e,
-            );
-          };
+      if (!doNotCache && this.opts.transportContext?.cache) {
+        let serializedUnifiedGraph: string | undefined;
+        if (typeof loadedUnifiedGraph === 'string') {
+          serializedUnifiedGraph = loadedUnifiedGraph;
+        } else if (isSchema(loadedUnifiedGraph)) {
+          serializedUnifiedGraph =
+            printSchemaWithDirectives(loadedUnifiedGraph);
+        } else if (isDocumentNode(loadedUnifiedGraph)) {
+          serializedUnifiedGraph = print(loadedUnifiedGraph);
+        }
+        if (serializedUnifiedGraph != null) {
           try {
-            const cacheSet$ = this.opts.transportContext.cache.set(
-              UNIFIEDGRAPH_CACHE_KEY,
-              serializedUnifiedGraph,
-              { ttl },
+            const ttl = this.opts.pollingInterval
+              ? this.opts.pollingInterval * 0.001
+              : // if no polling interval (cache TTL) is configured, default to
+                // 60 seconds making sure the unifiedgraph is not kept forever
+                // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
+                60;
+            this.opts.transportContext.logger?.debug(
+              `Caching Supergraph with TTL ${ttl}s`,
             );
-            if (isPromise(cacheSet$)) {
-              cacheSet$.then(() => {}, logCacheSetError);
-              this._transportExecutorStack?.defer(() => cacheSet$);
+            const logCacheSetError = (e: unknown) => {
+              this.opts.transportContext?.logger?.debug(
+                `Unable to store Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
+                e,
+              );
+            };
+            try {
+              const cacheSet$ = this.opts.transportContext.cache.set(
+                UNIFIEDGRAPH_CACHE_KEY,
+                serializedUnifiedGraph,
+                { ttl },
+              );
+              if (isPromise(cacheSet$)) {
+                cacheSet$.then(() => {}, logCacheSetError);
+                this._transportExecutorStack?.defer(() => cacheSet$);
+              }
+            } catch (e) {
+              logCacheSetError(e);
             }
           } catch (e) {
-            logCacheSetError(e);
+            this.opts.transportContext.logger?.error(
+              'Failed to initiate caching of Supergraph',
+              e,
+            );
           }
-        } catch (e) {
-          this.opts.transportContext.logger?.error(
-            'Failed to initiate caching of Supergraph',
-            e,
-          );
         }
       }
-    }
-    const ensuredSchema = ensureSchema(loadedUnifiedGraph);
-    const transportEntryMap =
-      getTransportEntryMapUsingFusionAndFederationDirectives(
-        ensuredSchema,
-        this.opts.transportEntryAdditions,
-      );
-    const {
-      unifiedGraph: newUnifiedGraph,
-      inContextSDK,
-      getSubgraphSchema,
-      executor,
-    } = this.handleUnifiedGraph({
-      unifiedGraph: ensuredSchema,
-      additionalTypeDefs: this.opts.additionalTypeDefs,
-      additionalResolvers: this.opts.additionalResolvers,
-      onSubgraphExecute(subgraphName, execReq) {
-        return onSubgraphExecute(subgraphName, execReq);
-      },
-      onDelegationPlanHooks: this.onDelegationPlanHooks,
-      onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
-      onDelegateHooks: this.opts.onDelegateHooks,
-      logger: this.opts.transportContext?.logger,
-    });
-    const transportExecutorStack = new AsyncDisposableStack();
-    const onSubgraphExecute = getOnSubgraphExecute({
-      onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
-      transports: this.opts.transports,
-      transportContext: this.opts.transportContext,
-      transportEntryMap,
-      getSubgraphSchema,
-      transportExecutorStack,
-      getDisposeReason: () => this.disposeReason,
-      batch: this.batch,
-      instrumentation: () => this.instrumentation(),
-    });
+      const ensuredSchema = ensureSchema(loadedUnifiedGraph);
+      const transportEntryMap =
+        getTransportEntryMapUsingFusionAndFederationDirectives(
+          ensuredSchema,
+          this.opts.transportEntryAdditions,
+        );
+      const {
+        unifiedGraph: newUnifiedGraph,
+        inContextSDK,
+        getSubgraphSchema,
+        executor,
+      } = this.handleUnifiedGraph({
+        unifiedGraph: ensuredSchema,
+        additionalTypeDefs: this.opts.additionalTypeDefs,
+        additionalResolvers: this.opts.additionalResolvers,
+        onSubgraphExecute(subgraphName, execReq) {
+          return onSubgraphExecute(subgraphName, execReq);
+        },
+        onDelegationPlanHooks: this.onDelegationPlanHooks,
+        onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
+        onDelegateHooks: this.opts.onDelegateHooks,
+        logger: this.opts.transportContext?.logger,
+      });
+      const transportExecutorStack = new AsyncDisposableStack();
+      const onSubgraphExecute = getOnSubgraphExecute({
+        onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
+        transports: this.opts.transports,
+        transportContext: this.opts.transportContext,
+        transportEntryMap,
+        getSubgraphSchema,
+        transportExecutorStack,
+        getDisposeReason: () => this.disposeReason,
+        batch: this.batch,
+        instrumentation: () => this.instrumentation(),
+      });
 
-    const previousTransportExecutorStack = this._transportExecutorStack;
-    const previousExecutor = this.executor;
-    const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
+      const previousTransportExecutorStack = this._transportExecutorStack;
+      const previousExecutor = this.executor;
+      const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
 
-    this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
-    this.unifiedGraph = newUnifiedGraph;
-    this.executor = executor;
-    this._transportExecutorStack = transportExecutorStack;
-    this.inContextSDK = inContextSDK;
-    this.lastLoadTime = Date.now();
-    this._transportEntryMap = transportEntryMap;
-    this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
+      this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
+      this.unifiedGraph = newUnifiedGraph;
+      this.executor = executor;
+      this._transportExecutorStack = transportExecutorStack;
+      this.inContextSDK = inContextSDK;
+      this.lastLoadTime = Date.now();
+      this._transportEntryMap = transportEntryMap;
+      this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
 
-    this.polling$ = undefined;
-    if (previousUnifiedGraph != null) {
-      this.disposeReason = createGraphQLError(
-        'operation has been aborted due to a schema reload',
-        {
-          extensions: {
-            code: 'SCHEMA_RELOAD',
-            http: {
-              status: 503,
+      this.polling$ = undefined;
+      if (previousUnifiedGraph != null) {
+        this.disposeReason = createGraphQLError(
+          'operation has been aborted due to a schema reload',
+          {
+            extensions: {
+              code: 'SCHEMA_RELOAD',
+              http: {
+                status: 503,
+              },
+              [CRITICAL_ERROR]: true,
             },
           },
+        );
+        this.opts.transportContext?.logger?.debug(
+          'Supergraph has been changed, updating...',
+        );
+      }
+      return handleMaybePromise(
+        () => disposeAll([previousTransportExecutorStack, previousExecutor]),
+        () => {
+          this.disposeReason = undefined;
+          return this.unifiedGraph!;
+        },
+        (err) => {
+          this.disposeReason = undefined;
+          this.opts.transportContext?.logger?.error(
+            'Failed to dispose the existing transports and executors',
+            err,
+          );
+          return this.unifiedGraph!;
         },
       );
-      this.opts.transportContext?.logger?.debug(
-        'Supergraph has been changed, updating...',
+    } else if (!this.unifiedGraph) {
+      throw new Error(
+        `Failed to fetch the supergraph, check your supergraph configuration.`,
       );
     }
-    return handleMaybePromise(
-      () => disposeAll([previousTransportExecutorStack, previousExecutor]),
-      () => {
-        this.disposeReason = undefined;
-        return this.unifiedGraph!;
-      },
-      (err) => {
-        this.disposeReason = undefined;
-        this.opts.transportContext?.logger?.error(
-          'Failed to dispose the existing transports and executors',
-          err,
-        );
-        return this.unifiedGraph!;
-      },
-    );
+    this.disposeReason = undefined;
+    this.polling$ = undefined;
+    this.lastLoadTime = Date.now();
+    return this.unifiedGraph;
   }
 
   private getAndSetUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -444,6 +456,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       {
         extensions: {
           code: 'SHUTTING_DOWN',
+          [CRITICAL_ERROR]: true,
         },
       },
     );

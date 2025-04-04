@@ -56,14 +56,14 @@ const graphosSchema = createSchema({
           return {
             __typename: 'Unchanged',
             id,
-            minDelaySeconds: 0.00001,
+            minDelaySeconds: 10,
           };
         }
         return {
           __typename: 'RouterConfigResult',
           id,
           supergraphSDL,
-          minDelaySeconds: 0.00001,
+          minDelaySeconds: 10,
           messages: [],
         };
       },
