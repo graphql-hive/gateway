@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.2.7 AS install
+FROM oven/bun:1.2.8 AS install
 
 WORKDIR /install
 
@@ -8,7 +8,7 @@ RUN bun i graphql@^16.9.0
 
 #
 
-FROM oven/bun:1.2.7
+FROM oven/bun:1.2.8
 
 RUN rm /var/lib/dpkg/info/libc-bin.*
 RUN apt-get clean
