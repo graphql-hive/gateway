@@ -19,8 +19,9 @@ describe.skipIf(process.env['LEAK_TEST'])('Transpile', () => {
     const { format, source } = await transpileTypeScriptFile(url.toString());
     expect(format).toMatchInlineSnapshot(`"commonjs"`);
     expect(source.trim()).toMatchInlineSnapshot(`
-  ""use strict";const str = 'ing';
-  module.exports = { str };"`);
+      ""use strict";const str = 'ing';
+      module.exports = { str };"
+    `);
   });
 
   it('should fail transpiling typescript file with syntax error and file location', async () => {

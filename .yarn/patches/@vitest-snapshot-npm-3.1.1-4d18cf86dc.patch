@@ -1,0 +1,26 @@
+diff --git a/dist/index.js b/dist/index.js
+index 970efe10b98682161182bd6cfd7ccdb601373274..e446a2a8e5e0eb8706a6c372287e0d0fdf848d45 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1718,7 +1718,7 @@ function normalizeNewlines(string) {
+ }
+ async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
+ 	const snapshots = Object.keys(snapshotData).sort(naturalCompare).map((key) => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`);
+-	const content = `${environment.getHeader()}\n\n${snapshots.join("\n\n")}\n`;
++	const content = `// Jest Snapshot v1, https://goo.gl/fbAQLP\n\n${snapshots.join("\n\n")}\n`;
+ 	const oldContent = await environment.readSnapshotFile(snapshotPath);
+ 	const skipWriting = oldContent != null && oldContent === content;
+ 	if (skipWriting) {
+@@ -2189,10 +2189,10 @@ class SnapshotClient {
+ 				throw err;
+ 			}
+ 		}
+-		const testName = [name, ...message ? [message] : []].join(" > ");
++		const testName = [name, ...(message ? [message] : [])].join(": ");
+ 		const { actual, expected, key, pass } = snapshotState.match({
+ 			testId,
+-			testName,
++			testName: testName.replaceAll(' >', ''),
+ 			received,
+ 			isInline,
+ 			error,
