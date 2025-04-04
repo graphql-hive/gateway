@@ -556,7 +556,7 @@ describe('useOpenTelemetry', () => {
       }
     });
 
-    it.only('should have a response cache attribute', async () => {
+    it('should have a response cache attribute', async () => {
       function checkCacheAttributes(attrs: {
         http: 'hit' | 'miss';
         operation?: 'hit' | 'miss';
