@@ -4948,6 +4948,7 @@ __metadata:
     "@apollo/server-gateway-interface": "npm:^1.1.1"
     "@apollo/subgraph": "npm:^2.5.4"
     "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/executor": "npm:^1.4.7"
     "@graphql-tools/executor-http": "workspace:^"
     "@graphql-tools/merge": "npm:^9.0.12"
     "@graphql-tools/schema": "npm:^10.0.11"

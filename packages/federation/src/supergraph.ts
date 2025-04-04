@@ -11,6 +11,7 @@ import {
   Transform,
   UNPATHED_ERRORS_SYMBOL,
 } from '@graphql-tools/delegate';
+import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import {
   buildHTTPExecutor,
   HTTPExecutorOptions,
@@ -1108,7 +1109,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           `Was not able to find any options for ${fieldName}: This shouldn't have happened.`,
           {
             extensions: {
-              CRITICAL_ERROR: true,
+              [CRITICAL_ERROR]: true,
             },
             nodes: [fieldNode],
           },

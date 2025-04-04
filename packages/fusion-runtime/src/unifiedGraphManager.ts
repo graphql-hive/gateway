@@ -37,6 +37,7 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
+import { CRITICAL_ERROR } from '@graphql-tools/executor';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
@@ -346,6 +347,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
               http: {
                 status: 503,
               },
+              [CRITICAL_ERROR]: true,
             },
           },
         );
@@ -454,6 +456,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       {
         extensions: {
           code: 'SHUTTING_DOWN',
+          [CRITICAL_ERROR]: true,
         },
       },
     );
