@@ -1,5 +1,13 @@
 # @graphql-tools/delegate
 
+## 10.2.17
+
+### Patch Changes
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- [#994](https://github.com/graphql-hive/gateway/pull/994) [`0af3485`](https://github.com/graphql-hive/gateway/commit/0af3485abb1b3dfba4126f09d291b2096d23aa32) Thanks [@ardatan](https://github.com/ardatan)! - Do not use the global \`PromiseWithResolvers\`
+
 ## 10.2.16
 
 ### Patch Changes

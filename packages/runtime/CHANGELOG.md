@@ -1,5 +1,83 @@
 # @graphql-hive/gateway-runtime
 
+## 1.7.0
+
+### Minor Changes
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - Request ID configuration;
+
+  By default, first Hive Gateway was checking if `x-request-id` exists in the HTTP headers, then generates and sets a new one.
+  And this can be disabled by setting `requestId` to `false` in the `gatewayConfig`.
+
+  Now you can configure the request ID generation by providing a function to the `requestId` field in the `gatewayConfig` (or inherit from the framework you use).
+  And you can also rename the header name by setting the `headerName` field in the `gatewayConfig`.
+
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  export const gatewayConfig = defineConfig({
+    requestId: {
+      headerName: 'x-request-id',
+      generateRequestId({ request, context, fetchAPI }) {
+        return fetchAPI.crypto.randomUUID();
+      },
+    },
+  });
+  ```
+
+  This is useful with Fastify because it handles the request ID generation and propagation by itself.
+
+  ```ts
+  const requestIdHeader = 'x-guild-request-id';
+
+  const app = fastify({
+    /** ... */
+    requestIdHeader,
+    // Align with Hive Gateway's request id log label
+    requestIdLogLabel: 'requestId',
+    genReqId(req) {
+      if (req.headers[requestIdHeader]) {
+        return req.headers[requestIdHeader].toString();
+      }
+      return crypto.randomUUID();
+    },
+  });
+
+  const gateway = createGateway({
+    /** ... */
+    requestId: {
+      headerName: requestIdHeader,
+      generateRequestId({ request, context, fetchAPI }) {
+        return request.id;
+      },
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.2) (from `^0.104.1`, in `dependencies`)
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - Log the information when an ongoing request is aborted and retried when a new schema is reloaded (mostly done by polling)
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - Now all the messages from GraphOS fetcher are improved, it now includes details about attempts, which uplinks are in use, what errors are thrown etc.
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - Simplify and make readable the logs printed by the readiness checks, now it uses `readiness` title and prints `passes` or `fails` with errors if present
+
+- Updated dependencies [[`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`0af3485`](https://github.com/graphql-hive/gateway/commit/0af3485abb1b3dfba4126f09d291b2096d23aa32)]:
+  - @graphql-hive/logger-json@0.0.4
+  - @graphql-mesh/fusion-runtime@0.11.9
+  - @graphql-mesh/hmac-upstream-signature@1.2.26
+  - @graphql-tools/federation@3.2.0
+  - @graphql-tools/delegate@10.2.17
+  - @graphql-tools/stitch@9.4.22
+  - @graphql-mesh/transport-common@0.7.34
+  - @graphql-tools/executor-http@1.3.3
+  - @graphql-tools/batch-delegate@9.0.35
+  - @graphql-tools/wrap@10.0.35
+
 ## 1.6.6
 
 ### Patch Changes
