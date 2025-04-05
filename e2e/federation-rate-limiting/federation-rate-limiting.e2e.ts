@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
@@ -67,7 +68,23 @@ it('should rate limit under pressure', async () => {
   `;
 
   for (let i = 0; i < 5; i++) {
-    // first 5 requests should not be rate limited
+    if (i > 0) {
+      // then 1st request should still be rate limited because we were spamming
+      await expect(execute({ query })).resolves.toEqual({
+        data: {
+          users: null,
+        },
+        errors: expect.arrayContaining([
+          expect.objectContaining({
+            message: 'Rate limit of "Query.users" exceeded for "anonymous"',
+          }),
+        ]),
+      });
+
+      await setTimeout(rateLimitTtl);
+    }
+
+    // (then) first 5 requests should not be rate limited
     for (let j = 0; j < 5; j++) {
       await expect(execute({ query })).resolves.toEqual({
         data: {
