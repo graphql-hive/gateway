@@ -2948,6 +2948,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting":
+  version: 0.0.0-use.local
+  resolution: "@e2e/federation-rate-limiting@workspace:e2e/federation-rate-limiting"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough":
   version: 0.0.0-use.local
   resolution: "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough"
