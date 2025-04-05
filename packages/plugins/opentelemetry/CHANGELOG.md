@@ -1,5 +1,23 @@
 # @graphql-mesh/plugin-opentelemetry
 
+## 1.3.53
+
+### Patch Changes
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.2) (from `^0.104.1`, in `dependencies`)
+
+- [#962](https://github.com/graphql-hive/gateway/pull/962) [`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+
+  - Added dependency [`@opentelemetry/core@^1.30.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/1.30.0) (to `dependencies`)
+
+- [#962](https://github.com/graphql-hive/gateway/pull/962) [`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - OpenTelemetry uncaught internal errors are no longer logged as stringified JSON.
+
+- Updated dependencies [[`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35)]:
+  - @graphql-hive/gateway-runtime@1.7.0
+  - @graphql-mesh/transport-common@0.7.34
+
 ## 1.3.52
 
 ### Patch Changes

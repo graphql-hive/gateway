@@ -1,5 +1,11 @@
 # @graphql-tools/executor-http
 
+## 1.3.3
+
+### Patch Changes
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
 ## 1.3.2
 
 ### Patch Changes
