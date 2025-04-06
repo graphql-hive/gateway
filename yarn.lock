@@ -13378,7 +13378,7 @@ __metadata:
     graphql: "npm:^16.9.0"
     jest: "npm:^29.7.0"
     prettier: "npm:^3.3.3"
-    prettier-plugin-pkg: "npm:^0.18.1"
+    prettier-plugin-pkg: "npm:^0.19.0"
     prettier-plugin-sh: "npm:^0.16.0"
     ts-jest: "npm:29.3.1"
     ts-node: "npm:^10.9.2"
@@ -17666,24 +17666,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-pkg@npm:^0.18.1":
-  version: 0.18.1
-  resolution: "prettier-plugin-pkg@npm:0.18.1"
+"prettier-plugin-pkg@npm:^0.19.0":
+  version: 0.19.0
+  resolution: "prettier-plugin-pkg@npm:0.19.0"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/8f0f1308e53d0197ca7ff532c4136930f42ad334c32728b71d8f81136a5a663d9231b659d848d2d7587461bd68ce3c2a3afe4bd34cc8718471710511113e07f9
+  checksum: 10c0/087bc37c5360c5c17339e810a0667179159ca8e36e75d498eaf224940062b8df0704473aac02d60f87bba7527aca7e780e95af07407952fd72a6239992cd908f
   languageName: node
   linkType: hard
 
 "prettier-plugin-sh@npm:^0.16.0":
-  version: 0.16.0
-  resolution: "prettier-plugin-sh@npm:0.16.0"
+  version: 0.16.1
+  resolution: "prettier-plugin-sh@npm:0.16.1"
   dependencies:
     mvdan-sh: "npm:^0.10.1"
     sh-syntax: "npm:^0.4.2"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/d83a6716d271f24da006c0bbe08fb3be18ebcf6e88cddb0d83af8c4377a04ad718e7cbd9bfb2e80e1e3f12008c920888e06c68c9f5bbe8233bf0e4e8b6de4a82
+  checksum: 10c0/4538b636e69316899bf0d90d20194fcb32564cd4dcf96871c8b1540fe3dff4edac7fd78b01c7ab17d61e08ffc5075c403d76a09289a13da79e94697bfa41ef1c
   languageName: node
   linkType: hard
 
