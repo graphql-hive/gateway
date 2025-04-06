@@ -18,6 +18,7 @@
     "node": ">=18.0.0"
   },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "require": {
@@ -31,7 +32,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],

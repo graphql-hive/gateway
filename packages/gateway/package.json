@@ -21,6 +21,7 @@
     "hive-gateway": "./dist/bin.js"
   },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "require": {
@@ -34,7 +35,6 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
