@@ -463,7 +463,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       // consistent sort of files (by default tar sorts files by order of the filesystem)
       '--sort=name',
       // set modify time to zero
-      '--mtime=@0',
+      '--mtime="@0"',
       // set default permissions and owners
       '--mode=a+rwX',
       '--owner=0',
