@@ -11,16 +11,21 @@ memtest(
     cwd,
     query: exampleSetup.query,
   },
-  async () =>
-    gateway({
+  async () => {
+    const inventoryService = await exampleSetup.service('inventory');
+    return gateway({
       supergraph: {
         with: 'mesh',
         services: [
           await service('accounts'),
-          await exampleSetup.service('inventory'),
+          inventoryService,
           await exampleSetup.service('products'),
           await exampleSetup.service('reviews'),
         ],
       },
-    }),
+      env: {
+        INVENTORY_ENDPOINT: `http://localhost:${inventoryService.port}/graphql`,
+      },
+    });
+  },
 );
