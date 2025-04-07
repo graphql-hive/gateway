@@ -43,7 +43,7 @@ export const composeConfig = defineConfig({
     },
     {
       sourceHandler: loadGraphQLHTTPSubgraph('inventory', {
-        endpoint: `http://localhost:${opts.getServicePort('inventory')}/graphql`,
+        endpoint: '{env.INVENTORY_ENDPOINT}',
       }),
     },
     {
