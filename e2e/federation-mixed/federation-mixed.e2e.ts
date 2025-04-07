@@ -7,7 +7,10 @@ const exampleSetup = createExampleSetup(__dirname);
 
 it('should execute', async () => {
   const inventoryService = await exampleSetup.service('inventory');
-      const inventoryHost = await getLocalhost(inventoryService.port, inventoryService.protocol);
+  const inventoryHost = await getLocalhost(
+    inventoryService.port,
+    inventoryService.protocol,
+  );
   const { execute } = await gateway({
     supergraph: {
       with: 'mesh',
