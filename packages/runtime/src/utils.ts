@@ -317,7 +317,7 @@ export function getDirectiveNameForFederationDirective({
               const normalizedImportDirective = normalizeDirectiveName(
                 importDirective.name,
               );
-              if (normalizedImportDirective === directiveName) {
+              if (normalizedImportDirective === normalizedDirectiveName) {
                 const normalizedAlias = normalizeDirectiveName(
                   importDirective.as,
                 );
