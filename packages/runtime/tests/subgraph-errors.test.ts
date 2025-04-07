@@ -1,5 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { createGatewayRuntime, useCustomFetch } from '@graphql-hive/gateway-runtime';
+import {
+  createGatewayRuntime,
+  useCustomFetch,
+} from '@graphql-hive/gateway-runtime';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -94,11 +97,11 @@ describe('Subgraph Errors', () => {
               headers: {
                 'Content-Type': 'text/plain',
               },
-            })
+            });
           }
           return Response.error();
-        })
-      ]
+        }),
+      ],
     });
     const query = /* GraphQL */ `
       query hello {
@@ -117,8 +120,7 @@ describe('Subgraph Errors', () => {
       data: null,
       errors: [
         {
-          message:
-            'Unexpected error.',
+          message: 'Unexpected error.',
           extensions: {
             code: 'INTERNAL_SERVER_ERROR',
           },
@@ -126,5 +128,5 @@ describe('Subgraph Errors', () => {
         },
       ],
     });
-  })
+  });
 });
