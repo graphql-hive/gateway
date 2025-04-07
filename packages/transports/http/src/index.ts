@@ -1,5 +1,8 @@
 import { process } from '@graphql-mesh/cross-helpers';
-import { getInterpolatedHeadersFactory, getInterpolatedStringFactory } from '@graphql-mesh/string-interpolation';
+import {
+  getInterpolatedHeadersFactory,
+  getInterpolatedStringFactory,
+} from '@graphql-mesh/string-interpolation';
 import {
   type Transport,
   type TransportEntry,
@@ -48,14 +51,14 @@ export default {
       : undefined;
 
     const httpExecutor = buildHTTPExecutor({
-      endpoint: endpointFactory ?
-        (execReq) =>
-          endpointFactory({
-            env: process.env as Record<string, string>,
-            root: execReq?.rootValue,
-            context: execReq?.context,
-            info: execReq?.info,
-          })
+      endpoint: endpointFactory
+        ? (execReq) =>
+            endpointFactory({
+              env: process.env as Record<string, string>,
+              root: execReq?.rootValue,
+              context: execReq?.context,
+              info: execReq?.info,
+            })
         : payload.transportEntry.location,
       headers: headersFactory
         ? (execReq) =>
