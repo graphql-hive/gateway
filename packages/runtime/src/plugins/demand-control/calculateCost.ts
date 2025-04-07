@@ -3,6 +3,7 @@ import {
   createGraphQLError,
   getDirective,
   getDirectiveExtensions,
+  memoize1,
   memoize3,
 } from '@graphql-tools/utils';
 import {
@@ -20,6 +21,7 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
+import { getDirectiveNameForFederationDirective } from '../../utils';
 
 type ListSizeAnnotation =
   | {
@@ -49,6 +51,28 @@ function getDepthOfListType(type: GraphQLOutputType) {
   return depth;
 }
 
+export const getCostListSizeDirectiveNames = memoize1(
+  function getCostListSizeDirectiveNames(schema: GraphQLSchema) {
+    const costDirectiveName = getDirectiveNameForFederationDirective({
+      schema,
+      directiveName: 'cost',
+      specUrl: 'https://specs.apollo.dev/cost/v0.1',
+    });
+    const listSizeDirectiveName = getDirectiveNameForFederationDirective({
+      schema,
+      directiveName: 'listSize',
+      specUrl: 'https://specs.apollo.dev/cost/v0.1',
+    });
+    return {
+      cost: costDirectiveName,
+      listSize: listSizeDirectiveName,
+    } as {
+      cost: 'cost';
+      listSize: 'listSize';
+    };
+  },
+);
+
 export function createCalculateCost({
   listSize,
   operationTypeCost,
@@ -65,6 +89,8 @@ export function createCalculateCost({
     document: DocumentNode,
     variables: Record<string, any>,
   ) {
+    const { cost: costDirectiveName, listSize: listSizeDirectiveName } =
+      getCostListSizeDirectiveNames(schema);
     let cost = 0;
     const factorQueue: number[] = [];
     function timesFactor(c: number) {
@@ -91,8 +117,10 @@ export function createCalculateCost({
               const factoryResult = fieldCost?.(node, typeInfo);
               if (factoryResult) {
                 currentFieldCost += factoryResult;
-              } else if (fieldAnnotations?.cost) {
-                for (const costAnnotation of fieldAnnotations.cost) {
+              } else if (fieldAnnotations?.[costDirectiveName]) {
+                for (const costAnnotation of fieldAnnotations[
+                  costDirectiveName
+                ]) {
                   if (costAnnotation?.weight) {
                     const weight = Number(costAnnotation.weight);
                     if (weight && !isNaN(weight)) {
@@ -109,8 +137,10 @@ export function createCalculateCost({
               if (sizedFieldFactor) {
                 factor = sizedFieldFactor;
                 fieldFactorMap.delete(field.name);
-              } else if (fieldAnnotations?.listSize) {
-                for (const listSizeAnnotation of fieldAnnotations.listSize) {
+              } else if (fieldAnnotations?.[listSizeDirectiveName]) {
+                for (const listSizeAnnotation of fieldAnnotations[
+                  listSizeDirectiveName
+                ]) {
                   if (listSizeAnnotation) {
                     if ('slicingArguments' in listSizeAnnotation) {
                       const slicingArguments =
@@ -182,8 +212,10 @@ export function createCalculateCost({
                     namedReturnType,
                     schema,
                   );
-                if (namedReturnTypeAnnotations.cost) {
-                  for (const costAnnotation of namedReturnTypeAnnotations.cost) {
+                if (namedReturnTypeAnnotations?.[costDirectiveName]) {
+                  for (const costAnnotation of namedReturnTypeAnnotations[
+                    costDirectiveName
+                  ]) {
                     if (costAnnotation?.weight) {
                       const weight = Number(costAnnotation?.weight);
                       if (weight && !isNaN(weight)) {
