@@ -413,16 +413,13 @@ export function buildHTTPExecutor(
                         (parsedResult.errors == null ||
                           parsedResult.errors.length === 0)
                       ) {
+                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
                         return {
                           errors: [
-                            createGraphQLError(
-                              'Unexpected empty "data" and "errors" fields in result: ' +
-                                result,
+                            createGraphQLError(message,
                               {
-                                extensions: {
-                                  ...upstreamErrorExtensions,
-                                  unexpected: true,
-                                },
+                                originalError: new Error(message),
+                                extensions: upstreamErrorExtensions,
                               },
                             ),
                           ],
@@ -449,10 +446,7 @@ export function buildHTTPExecutor(
                           createGraphQLError(
                             `Unexpected response: ${JSON.stringify(result)}`,
                             {
-                              extensions: {
-                                ...upstreamErrorExtensions,
-                                unexpected: true,
-                              },
+                              extensions: upstreamErrorExtensions,
                               originalError: e,
                             },
                           ),
@@ -460,13 +454,12 @@ export function buildHTTPExecutor(
                       };
                     }
                   } else {
+                    const message = 'No response returned';
                     return {
                       errors: [
-                        createGraphQLError('No response returned', {
-                          extensions: {
-                            ...upstreamErrorExtensions,
-                            unexpected: true,
-                          },
+                        createGraphQLError(message, {
+                          extensions: upstreamErrorExtensions,
+                          originalError: new Error(message),
                         }),
                       ],
                     };
