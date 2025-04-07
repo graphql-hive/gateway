@@ -1,16 +1,16 @@
 import format from 'quick-format-unescaped';
-import { Attributes, getEnv, isPromise, unwrapAttrs } from './utils';
+import {
+  Attributes,
+  getEnv,
+  isPromise,
+  logLevel,
+  shouldLog,
+  truthyEnv,
+  unwrapAttrs,
+} from './utils';
 import { ConsoleLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
-
-const logLevel: { [level in LogLevel]: number } = {
-  trace: 0,
-  debug: 1,
-  info: 2,
-  warn: 3,
-  error: 4,
-};
 
 // TODO: explain what happens when attribute keys match existing keys from the logger (like "msg")
 
@@ -22,7 +22,7 @@ export interface LoggerOptions {
    *
    * Providing `false` will disable all logging.
    *
-   * @default env.LOG_LEVEL || 'trace'
+   * @default env.LOG_LEVEL || env.DEBUG ? 'debug' : 'info'
    */
   level?: LogLevel | false;
   /** A prefix to include in every log's message. */
@@ -54,7 +54,10 @@ export class Logger implements LogWriter {
         `Invalid LOG_LEVEL environment variable "${logLevelEnv}". Must be one of: ${[...Object.keys(logLevel), 'false'].join(',  ')}`,
       );
     }
-    this.#level = opts.level ?? (logLevelEnv as LogLevel) ?? 'trace';
+    this.#level =
+      opts.level ??
+      (logLevelEnv as LogLevel) ??
+      (truthyEnv('DEBUG') ? 'debug' : 'info');
     this.#prefix = opts.prefix;
     this.#attrs = opts.attrs;
     this.#writers = opts.writers ?? [new ConsoleLogWriter()];
@@ -62,6 +65,10 @@ export class Logger implements LogWriter {
 
   public get prefix() {
     return this.#prefix;
+  }
+
+  public get level() {
+    return this.#level;
   }
 
   public write(
@@ -127,7 +134,7 @@ export class Logger implements LogWriter {
     maybeAttrsOrMsg?: Attributes | string | null | undefined,
     ...rest: unknown[]
   ): void {
-    if (this.#level === false || logLevel[level] < logLevel[this.#level]) {
+    if (!shouldLog(this.#level, level)) {
       return;
     }
 

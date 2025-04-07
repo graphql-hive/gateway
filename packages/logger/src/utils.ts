@@ -17,6 +17,24 @@ export type Attributes =
   | AttributeValue[]
   | { [key: string | number]: AttributeValue };
 
+export const logLevel: { [level in LogLevel]: number } = {
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
+};
+
+export function shouldLog(
+  setLevel: LogLevel | false,
+  loggingLevel: LogLevel,
+): boolean {
+  return (
+    setLevel !== false && // logging is not disabled
+    logLevel[setLevel] <= logLevel[loggingLevel] // and set log level is less than or equal to logging level
+  );
+}
+
 export function logLevelToString(level: LogLevel): string {
   switch (level) {
     case 'trace':
