@@ -215,7 +215,7 @@ export function buildHTTPExecutor(
     if (!endpoint) {
       endpoint = '/graphql';
     }
-    
+
     const headers: Record<string, any> = { accept };
 
     if (options?.headers) {
