@@ -1,5 +1,25 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.9
+
+### Patch Changes
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.2) (from `^0.104.1`, in `dependencies`)
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - Fail when the fetcher returns an empty result. Previously even if fetcher returns `undefined`, the runtime was trying to handle the result then fails with a cryptic error
+
+- Updated dependencies [[`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f), [`0af3485`](https://github.com/graphql-hive/gateway/commit/0af3485abb1b3dfba4126f09d291b2096d23aa32)]:
+  - @graphql-tools/federation@3.2.0
+  - @graphql-tools/delegate@10.2.17
+  - @graphql-tools/stitch@9.4.22
+  - @graphql-mesh/transport-common@0.7.34
+  - @graphql-tools/stitching-directives@3.1.32
+  - @graphql-tools/wrap@10.0.35
+
 ## 0.11.8
 
 ### Patch Changes
