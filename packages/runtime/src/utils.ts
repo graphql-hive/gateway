@@ -1,8 +1,12 @@
 import { KeyValueCache } from '@graphql-mesh/types';
 import type { ExecutionArgs } from '@graphql-tools/executor';
-import { Executor, memoize1 } from '@graphql-tools/utils';
+import {
+  Executor,
+  getDirectiveExtensions,
+  memoize1,
+} from '@graphql-tools/utils';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
-import type { SelectionSetNode } from 'graphql';
+import type { GraphQLSchema, SelectionSetNode } from 'graphql';
 import {
   OnCacheDeleteHook,
   OnCacheDeleteHookResult,
@@ -264,4 +268,66 @@ export function wrapCacheWithHooks({
       return Reflect.get(target, prop, receiver);
     },
   });
+}
+
+function urlMatches(url: string, specUrl: string | RegExp): boolean {
+  if (typeof specUrl === 'string') {
+    return url === specUrl;
+  }
+  return specUrl.test(url);
+}
+
+function normalizeDirectiveName(directiveName: string): string {
+  if (directiveName.startsWith('@')) {
+    return directiveName.slice(1);
+  }
+  return directiveName;
+}
+
+export function getDirectiveNameForFederationDirective({
+  schema,
+  directiveName,
+  specUrl,
+}: {
+  schema: GraphQLSchema;
+  directiveName: string;
+  specUrl: string | RegExp;
+}) {
+  const directivesOnSchemaDef = getDirectiveExtensions<{
+    link: {
+      url: string;
+      import: (string | { name: string; as: string })[];
+    };
+  }>(schema, schema);
+  const normalizedDirectiveName = normalizeDirectiveName(directiveName);
+  if (directivesOnSchemaDef?.['link']) {
+    const linkDirectives = directivesOnSchemaDef['link'];
+    for (const linkDirective of linkDirectives) {
+      if (urlMatches(linkDirective.url, specUrl)) {
+        const imports = linkDirective.import;
+        if (imports) {
+          for (const importDirective of imports) {
+            if (typeof importDirective === 'string') {
+              const normalizedImportDirective =
+                normalizeDirectiveName(importDirective);
+              if (normalizedImportDirective === normalizedDirectiveName) {
+                return normalizedImportDirective;
+              }
+            } else {
+              const normalizedImportDirective = normalizeDirectiveName(
+                importDirective.name,
+              );
+              if (normalizedImportDirective === directiveName) {
+                const normalizedAlias = normalizeDirectiveName(
+                  importDirective.as,
+                );
+                return normalizedAlias;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return normalizedDirectiveName;
 }
