@@ -413,19 +413,15 @@ export function buildHTTPExecutor(
                         (parsedResult.errors == null ||
                           parsedResult.errors.length === 0)
                       ) {
-                        const message = 'Unexpected empty "data" and "errors" fields in result: ' +
-                          result;
                         return {
                           errors: [
-                            createGraphQLError(
-                              message,
-                              {
-                                extensions: upstreamErrorExtensions,
-                                originalError: new TypeError(
-                                  'Unexpected empty "data" and "errors" fields in result: ' + result,
-                                )
+                            createGraphQLError('Unexpected empty "data" and "errors" fields in result: ' +
+                              result, {
+                              extensions: {
+                                ...upstreamErrorExtensions,
+                                unexpected: true,
                               },
-                            ),
+                            }),
                           ],
                         };
                       }
@@ -450,7 +446,10 @@ export function buildHTTPExecutor(
                           createGraphQLError(
                             `Unexpected response: ${JSON.stringify(result)}`,
                             {
-                              extensions: upstreamErrorExtensions,
+                              extensions: {
+                                ...upstreamErrorExtensions,
+                                unexpected: true,
+                              },
                               originalError: e,
                             },
                           ),
@@ -461,7 +460,10 @@ export function buildHTTPExecutor(
                     return {
                       errors: [
                         createGraphQLError('No response returned', {
-                          extensions: upstreamErrorExtensions,
+                          extensions: {
+                            ...upstreamErrorExtensions,
+                            unexpected: true,
+                          },
                         }),
                       ],
                     };

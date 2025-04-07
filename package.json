@@ -73,6 +73,7 @@
     "cross-spawn": "7.0.6",
     "esbuild": "0.25.2",
     "graphql": "16.10.0",
+    "graphql-yoga": "5.13.3-alpha-20250407120218-2f298b4a6fbc913b0a0be796b61eae5c2b8c6098",
     "graphql-rate-limit@npm:^3.3.0": "patch:graphql-rate-limit@npm%3A3.3.0#~/.yarn/patches/graphql-rate-limit-npm-3.3.0-3ae882ba75.patch",
     "ioredis-mock@npm:^8.8.3": "patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
     "jest-leak-detector": "patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
