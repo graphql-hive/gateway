@@ -64,7 +64,7 @@
     "@graphql-hive/plugin-aws-sigv4": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.0",
-    "@graphql-mesh/cache-localforage": "^0.105.0",
+    "@graphql-mesh/cache-localforage": "^0.105.3",
     "@graphql-mesh/cache-redis": "^0.104.0",
     "@graphql-mesh/cache-upstash-redis": "^0.1.0",
     "@graphql-mesh/cross-helpers": "^0.4.10",
