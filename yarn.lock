@@ -3980,7 +3980,7 @@ __metadata:
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.0"
-    "@graphql-mesh/cache-localforage": "npm:^0.105.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94"
+    "@graphql-mesh/cache-localforage": "npm:^0.105.3"
     "@graphql-mesh/cache-redis": "npm:^0.104.0"
     "@graphql-mesh/cache-upstash-redis": "npm:^0.1.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
@@ -4208,9 +4208,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-inmemory-lru@npm:0.8.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94":
-  version: 0.8.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94
-  resolution: "@graphql-mesh/cache-inmemory-lru@npm:0.8.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94"
+"@graphql-mesh/cache-inmemory-lru@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "@graphql-mesh/cache-inmemory-lru@npm:0.8.3"
   dependencies:
     "@graphql-mesh/types": "npm:^0.104.2"
     "@graphql-mesh/utils": "npm:^0.104.2"
@@ -4218,22 +4218,22 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/fc92b06322bd401b46ee030a8b142732c64879c05c69c20534bb04cd6b6e2d8db74fefbd6082d64b961f2c12f819520edf2eca70c748ef97493a74ca8fd394e1
+  checksum: 10c0/53e36348f080e6155bf45e9363f736b4af068a83701a51da14bf52a752168c6e50b7bbb114c0ea064dcabc8c391485b69527a1fc853831e5e1925cb8c38072b8
   languageName: node
   linkType: hard
 
-"@graphql-mesh/cache-localforage@npm:^0.105.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94":
-  version: 0.105.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94
-  resolution: "@graphql-mesh/cache-localforage@npm:0.105.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94"
+"@graphql-mesh/cache-localforage@npm:^0.105.3":
+  version: 0.105.3
+  resolution: "@graphql-mesh/cache-localforage@npm:0.105.3"
   dependencies:
-    "@graphql-mesh/cache-inmemory-lru": "npm:0.8.3-alpha-20250405165939-b1b965f47e98d7497122f1800267755c73853e94"
+    "@graphql-mesh/cache-inmemory-lru": "npm:^0.8.3"
     "@graphql-mesh/types": "npm:^0.104.2"
     "@graphql-mesh/utils": "npm:^0.104.2"
     localforage: "npm:1.10.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/aa65989d10dc92bae3e6784ee1124ef1917e47300b316914f381c7fb5c5786841fb031551c51fbe7feb552bb09a37617c8607a2cb8e7e4b8be72e5fc275a7ea6
+  checksum: 10c0/7090cf74e4bc6fa024bb5c0c27e00b41bbb54b6b06bc7fc6eda22b29ceaab0842dfa2d4a56ec06419bcebdb384ad90fc2f3061547aed62c4ba65659d601b9691
   languageName: node
   linkType: hard
 
