@@ -4484,8 +4484,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-mock@npm:^0.105.0":
-  version: 0.105.2
-  resolution: "@graphql-mesh/plugin-mock@npm:0.105.2"
+  version: 0.105.3
+  resolution: "@graphql-mesh/plugin-mock@npm:0.105.3"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
@@ -4499,7 +4499,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/44c3456bfcc7fd63be8c7a46852531058163a19a449d7621b464c76343fff0d740333efb95805645b7a0d2dc57fc18a0274fa6775e8309351aee7ce35c4c8bf4
+  checksum: 10c0/8b3eb8a046e019b0c7b73fb5784905d3becd4f045edb6ef77a456b3f5fab0700000891f029ed6fd4430aff07d9ff37773563db81c37c6ac7658807bf8ec0cec7
   languageName: node
   linkType: hard
 
@@ -4574,8 +4574,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-response-cache@npm:^0.104.0":
-  version: 0.104.2
-  resolution: "@graphql-mesh/plugin-response-cache@npm:0.104.2"
+  version: 0.104.3
+  resolution: "@graphql-mesh/plugin-response-cache@npm:0.104.3"
   dependencies:
     "@envelop/core": "npm:^5.1.0"
     "@envelop/response-cache": "npm:^7.0.0"
@@ -4591,7 +4591,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/a52e9980c86cfa79a2cb7c65da627f0483cd2454ce9163cf37167066e1c0e52b08be677b30f6493fa545f3abd6178acfa341a8ab833007db5a4382e15702f5aa
+  checksum: 10c0/83218d3f74aad1406140847b7a587bb09259047b74c6ec0f88f7300b5d74c532096fb4f296f5abe6105c9d6277878285710ac25bc76df3e15190919669b51f71
   languageName: node
   linkType: hard
 
