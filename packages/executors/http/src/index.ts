@@ -413,13 +413,17 @@ export function buildHTTPExecutor(
                         (parsedResult.errors == null ||
                           parsedResult.errors.length === 0)
                       ) {
+                        const message = 'Unexpected empty "data" and "errors" fields in result: ' +
+                          result;
                         return {
                           errors: [
                             createGraphQLError(
-                              'Unexpected empty "data" and "errors" fields in result: ' +
-                                result,
+                              message,
                               {
                                 extensions: upstreamErrorExtensions,
+                                originalError: new TypeError(
+                                  'Unexpected empty "data" and "errors" fields in result: ' + result,
+                                )
                               },
                             ),
                           ],
