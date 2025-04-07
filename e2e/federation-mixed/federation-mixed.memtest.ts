@@ -14,7 +14,10 @@ memtest(
   },
   async () => {
     const inventoryService = await exampleSetup.service('inventory');
-    const inventoryHost = await getLocalhost(inventoryService.port, inventoryService.protocol);
+    const inventoryHost = await getLocalhost(
+      inventoryService.port,
+      inventoryService.protocol,
+    );
     return gateway({
       supergraph: {
         with: 'mesh',
