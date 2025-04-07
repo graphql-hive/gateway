@@ -17,7 +17,7 @@ it('should execute', async () => {
       ],
       env: {
         INVENTORY_ENDPOINT: `http://localhost:${inventoryService.port}/graphql`,
-      }
+      },
     },
   });
   await expect(
