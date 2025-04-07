@@ -1,5 +1,29 @@
 # @graphql-hive/gateway
 
+## 1.13.5
+
+### Patch Changes
+
+- [#1000](https://github.com/graphql-hive/gateway/pull/1000) [`c53e40e`](https://github.com/graphql-hive/gateway/commit/c53e40eabb7b6ca16efa02aa05892fd6b72ab230) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.3` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.3) (from `^0.105.0`, in `dependencies`)
+
+- [#946](https://github.com/graphql-hive/gateway/pull/946) [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.2) (from `^0.104.1`, in `dependencies`)
+
+- [#950](https://github.com/graphql-hive/gateway/pull/950) [`c7ea2c5`](https://github.com/graphql-hive/gateway/commit/c7ea2c5ae71b6b338ef22edd927a3fc93803965f) Thanks [@kroupacz](https://github.com/kroupacz)! - Errors should not be swallowed when it is thrown from the shared root
+
+- Updated dependencies [[`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`c31234a`](https://github.com/graphql-hive/gateway/commit/c31234a44cc4a580837ea22cbabf21d62fea871d), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35), [`7d771d8`](https://github.com/graphql-hive/gateway/commit/7d771d89ff6d731b1025acfc5eb197541a6d5d35)]:
+  - @graphql-hive/gateway-runtime@1.7.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.26
+  - @graphql-mesh/plugin-opentelemetry@1.3.53
+  - @graphql-mesh/plugin-prometheus@1.3.41
+  - @graphql-mesh/transport-http@0.6.39
+  - @graphql-mesh/transport-http-callback@0.5.26
+  - @graphql-mesh/transport-ws@1.0.9
+  - @graphql-hive/plugin-aws-sigv4@1.0.6
+
 ## 1.13.4
 
 ### Patch Changes
