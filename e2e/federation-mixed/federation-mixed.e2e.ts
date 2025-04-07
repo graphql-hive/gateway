@@ -5,19 +5,23 @@ const { service, gateway } = createTenv(__dirname);
 const exampleSetup = createExampleSetup(__dirname);
 
 it('should execute', async () => {
-  const { execute } = await gateway({
+  await using inventoryService = await exampleSetup.service('inventory');
+  await using gw = await gateway({
     supergraph: {
       with: 'mesh',
       services: [
         await service('accounts'),
-        await exampleSetup.service('inventory'),
+        inventoryService,
         await exampleSetup.service('products'),
         await exampleSetup.service('reviews'),
       ],
+      env: {
+        INVENTORY_ENDPOINT: `http://localhost:${inventoryService.port}/graphql`,
+      }
     },
   });
   await expect(
-    execute({
+    gw.execute({
       query: exampleSetup.query,
     }),
   ).resolves.toEqual(exampleSetup.result);
