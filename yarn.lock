@@ -7204,6 +7204,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@reteps/dockerfmt@npm:^0.2.3":
+  version: 0.2.4
+  resolution: "@reteps/dockerfmt@npm:0.2.4"
+  dependencies:
+    typescript: "npm:^5.8.3"
+  checksum: 10c0/4409bdf7d122db4f786c8a8223155ab47c8c96e0416373594fed98f604f9f05a4950b28ff2b0d7830a2aa6d358c870ec02e82be6c4603530e9f927ca901d28b1
+  languageName: node
+  linkType: hard
+
 "@rollup/plugin-alias@npm:^5.1.0":
   version: 5.1.1
   resolution: "@rollup/plugin-alias@npm:5.1.1"
@@ -13446,7 +13455,7 @@ __metadata:
     jest: "npm:^29.7.0"
     prettier: "npm:^3.3.3"
     prettier-plugin-pkg: "npm:^0.19.0"
-    prettier-plugin-sh: "npm:^0.16.0"
+    prettier-plugin-sh: "npm:^0.17.0"
     ts-jest: "npm:29.3.1"
     ts-node: "npm:^10.9.2"
     tsx: "npm:4.19.3"
@@ -16701,13 +16710,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mvdan-sh@npm:^0.10.1":
-  version: 0.10.1
-  resolution: "mvdan-sh@npm:0.10.1"
-  checksum: 10c0/cfdd3c6429aad170014892f7934ff60a4418b32e4c14db10f0d3cfb7743f37385e2a3a8c58c65b7c4fbfe44838d9e8cf8c93897b9763a08224c32957a72621c0
-  languageName: node
-  linkType: hard
-
 "mz@npm:^2.7.0":
   version: 2.7.0
   resolution: "mz@npm:2.7.0"
@@ -17741,15 +17743,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-sh@npm:^0.16.0":
-  version: 0.16.1
-  resolution: "prettier-plugin-sh@npm:0.16.1"
+"prettier-plugin-sh@npm:^0.17.0":
+  version: 0.17.0
+  resolution: "prettier-plugin-sh@npm:0.17.0"
   dependencies:
-    mvdan-sh: "npm:^0.10.1"
-    sh-syntax: "npm:^0.4.2"
+    "@reteps/dockerfmt": "npm:^0.2.3"
+    sh-syntax: "npm:^0.5.6"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/4538b636e69316899bf0d90d20194fcb32564cd4dcf96871c8b1540fe3dff4edac7fd78b01c7ab17d61e08ffc5075c403d76a09289a13da79e94697bfa41ef1c
+  checksum: 10c0/19bb3b287a591662994677ad17b19c301eeea41795692afd1fe28c334f9589ce1528d04f4a851d2c573aee26e2a9031b79325ba38f864f71251c3f6962223509
   languageName: node
   linkType: hard
 
@@ -18856,12 +18858,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sh-syntax@npm:^0.4.2":
-  version: 0.4.2
-  resolution: "sh-syntax@npm:0.4.2"
+"sh-syntax@npm:^0.5.6":
+  version: 0.5.6
+  resolution: "sh-syntax@npm:0.5.6"
   dependencies:
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/0bfe3b3ffcfa7b59a91d432e2f77e6cd4ccb0f267fe6fcce95b9be4ddf34169a8e2721060e067385574e3248818860b682af24b1cb4b5803167e1666bc6fec24
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/0a545ca724da66b97ab24e01e39e46fe3d3819350c687a278bf147328c144a62b2c3632daeb87eb84dba705ef3d81ba46d5bb684cf77355411520153301502cd
   languageName: node
   linkType: hard
 
@@ -20388,7 +20390,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.6.3":
+"typescript@npm:^5.6.3, typescript@npm:^5.8.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
   bin:
@@ -20398,7 +20400,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.6.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.6.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
   version: 5.8.3
   resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:
