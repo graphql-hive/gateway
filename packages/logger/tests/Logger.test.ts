@@ -13,8 +13,11 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
 it('should write logs with levels, message and attributes', () => {
   const [log, writter] = createTLogger();
 
+  const err = new Error('Woah!');
+  err.stack = '<stack>';
+
   log.log('info');
-  log.log('info', { hello: 'world', err: new Error('Woah!') }, 'Hello, world!');
+  log.log('info', { hello: 'world', err }, 'Hello, world!');
   log.log('info', '2nd Hello, world!');
 
   expect(writter.logs).toMatchInlineSnapshot(`
@@ -24,7 +27,12 @@ it('should write logs with levels, message and attributes', () => {
       },
       {
         "attrs": {
-          "err": [Error: Woah!],
+          "err": {
+            "class": "Error",
+            "message": "Woah!",
+            "name": "Error",
+            "stack": "<stack>",
+          },
           "hello": "world",
         },
         "level": "info",
@@ -224,6 +232,63 @@ it('should format string', () => {
         },
         "level": "info",
         "msg": "{"worldly":1} hello world",
+      },
+    ]
+  `);
+});
+
+it('should write logs with unexpected attributes', () => {
+  const [log, writer] = createTLogger();
+
+  const err = new Error('Woah!');
+  err.stack = '<stack>';
+
+  log.info(err);
+
+  log.info([err, { denis: 'badurina' }, ['hello'], 'world']);
+
+  class MyClass {
+    constructor(public someprop: string) {}
+    get getsomeprop() {
+      return this.someprop;
+    }
+  }
+  log.info(new MyClass('hey'));
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "class": "Error",
+          "message": "Woah!",
+          "name": "Error",
+          "stack": "<stack>",
+        },
+        "level": "info",
+      },
+      {
+        "attrs": [
+          {
+            "class": "Error",
+            "message": "Woah!",
+            "name": "Error",
+            "stack": "<stack>",
+          },
+          {
+            "denis": "badurina",
+          },
+          [
+            "hello",
+          ],
+          "world",
+        ],
+        "level": "info",
+      },
+      {
+        "attrs": {
+          "someprop": "hey",
+        },
+        "level": "info",
       },
     ]
   `);
