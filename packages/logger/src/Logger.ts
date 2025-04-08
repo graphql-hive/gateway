@@ -4,9 +4,10 @@ import {
   getEnv,
   isPromise,
   logLevel,
+  MaybeLazy,
+  parseAttrs,
   shouldLog,
   truthyEnv,
-  unwrapAttrs,
 } from './utils';
 import { ConsoleLogWriter, LogWriter } from './writers';
 
@@ -31,7 +32,7 @@ export interface LoggerOptions {
    * The attributes to include in all logs. Is mainly used to pass the parent
    * attributes when creating {@link Logger.child child loggers}.
    */
-  attrs?: Attributes;
+  attrs?: MaybeLazy<Attributes>;
   /**
    * The log writers to use when writing logs.
    *
@@ -43,7 +44,7 @@ export interface LoggerOptions {
 export class Logger implements LogWriter {
   #level: LogLevel | false;
   #prefix: string | undefined;
-  #attrs: Attributes | undefined;
+  #attrs: MaybeLazy<Attributes> | undefined;
   #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites = new Set<Promise<void>>();
 
@@ -103,8 +104,11 @@ export class Logger implements LogWriter {
   //
 
   public child(prefix: string): Logger;
-  public child(attrs: Attributes, prefix?: string): Logger;
-  public child(prefixOrAttrs: string | Attributes, prefix?: string): Logger {
+  public child(attrs: MaybeLazy<Attributes>, prefix?: string): Logger;
+  public child(
+    prefixOrAttrs: string | MaybeLazy<Attributes>,
+    prefix?: string,
+  ): Logger {
     if (typeof prefixOrAttrs === 'string') {
       return new Logger({
         prefix: prefixOrAttrs,
@@ -121,17 +125,17 @@ export class Logger implements LogWriter {
   //
 
   public log(level: LogLevel): void;
-  public log(level: LogLevel, attrs: Attributes): void;
+  public log(level: LogLevel, attrs: MaybeLazy<Attributes>): void;
   public log(level: LogLevel, msg: string, ...interpol: unknown[]): void;
   public log(
     level: LogLevel,
-    attrs: Attributes,
+    attrs: MaybeLazy<Attributes>,
     msg: string,
     ...interpol: unknown[]
   ): void;
   public log(
     level: LogLevel,
-    maybeAttrsOrMsg?: Attributes | string | null | undefined,
+    maybeAttrsOrMsg?: MaybeLazy<Attributes> | string | null | undefined,
     ...rest: unknown[]
   ): void {
     if (!shouldLog(this.#level, level)) {
@@ -139,7 +143,7 @@ export class Logger implements LogWriter {
     }
 
     let msg: string | undefined;
-    let attrs: Attributes | undefined;
+    let attrs: MaybeLazy<Attributes> | undefined;
     if (typeof maybeAttrsOrMsg === 'string') {
       msg = maybeAttrsOrMsg;
     } else if (maybeAttrsOrMsg) {
@@ -154,17 +158,24 @@ export class Logger implements LogWriter {
       msg = `${this.#prefix.trim()} ${msg || ''}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
-    attrs = this.#attrs ? { ...this.#attrs, ...attrs } : attrs;
-    attrs = attrs ? unwrapAttrs(attrs) : attrs;
+    attrs = attrs ? parseAttrs(attrs) : attrs;
+    attrs = this.#attrs ? { ...parseAttrs(this.#attrs), ...attrs } : attrs;
     msg = msg ? format(msg, rest) : msg;
 
     this.write(level, attrs, msg);
+    if (truthyEnv('LOG_TRACE_LOGS')) {
+      console.trace('👆');
+    }
   }
 
   public trace(): void;
-  public trace(attrs: Attributes): void;
+  public trace(attrs: MaybeLazy<Attributes>): void;
   public trace(msg: string, ...interpol: unknown[]): void;
-  public trace(attrs: Attributes, msg: string, ...interpol: unknown[]): void;
+  public trace(
+    attrs: MaybeLazy<Attributes>,
+    msg: string,
+    ...interpol: unknown[]
+  ): void;
   public trace(...args: any): void {
     this.log(
       'trace',
@@ -174,9 +185,13 @@ export class Logger implements LogWriter {
   }
 
   public debug(): void;
-  public debug(attrs: Attributes): void;
+  public debug(attrs: MaybeLazy<Attributes>): void;
   public debug(msg: string, ...interpol: unknown[]): void;
-  public debug(attrs: Attributes, msg: string, ...interpol: unknown[]): void;
+  public debug(
+    attrs: MaybeLazy<Attributes>,
+    msg: string,
+    ...interpol: unknown[]
+  ): void;
   public debug(...args: any): void {
     this.log(
       'debug',
@@ -186,9 +201,13 @@ export class Logger implements LogWriter {
   }
 
   public info(): void;
-  public info(attrs: Attributes): void;
+  public info(attrs: MaybeLazy<Attributes>): void;
   public info(msg: string, ...interpol: unknown[]): void;
-  public info(attrs: Attributes, msg: string, ...interpol: unknown[]): void;
+  public info(
+    attrs: MaybeLazy<Attributes>,
+    msg: string,
+    ...interpol: unknown[]
+  ): void;
   public info(...args: any): void {
     this.log(
       'info',
@@ -198,9 +217,13 @@ export class Logger implements LogWriter {
   }
 
   public warn(): void;
-  public warn(attrs: Attributes): void;
+  public warn(attrs: MaybeLazy<Attributes>): void;
   public warn(msg: string, ...interpol: unknown[]): void;
-  public warn(attrs: Attributes, msg: string, ...interpol: unknown[]): void;
+  public warn(
+    attrs: MaybeLazy<Attributes>,
+    msg: string,
+    ...interpol: unknown[]
+  ): void;
   public warn(...args: any): void {
     this.log(
       'warn',
@@ -210,9 +233,13 @@ export class Logger implements LogWriter {
   }
 
   public error(): void;
-  public error(attrs: Attributes): void;
+  public error(attrs: MaybeLazy<Attributes>): void;
   public error(msg: string, ...interpol: unknown[]): void;
-  public error(attrs: Attributes, msg: string, ...interpol: unknown[]): void;
+  public error(
+    attrs: MaybeLazy<Attributes>,
+    msg: string,
+    ...interpol: unknown[]
+  ): void;
   public error(...args: any): void {
     this.log(
       'error',

@@ -1,8 +1,9 @@
 import fastSafeStringify from 'fast-safe-stringify';
 import { LogLevel } from './Logger';
 
+export type MaybeLazy<T> = T | (() => T);
+
 export type AttributeValue =
-  | any // this any will replace all other elements in the union, but is necessary for passing "interfaces" as attributes
   | string
   | number
   | boolean
@@ -11,10 +12,10 @@ export type AttributeValue =
   | Object // redundant, but this will allow _any_ object be the value
   | null
   | undefined
-  | (() => AttributeValue); // lazy attribute
+  // TODO: remove `any`. this any will replace all other elements in the union, but is necessary for passing "interfaces" as attributes
+  | any;
 
 export type Attributes =
-  | (() => Attributes)
   | AttributeValue[]
   | { [key: string | number]: AttributeValue };
 
@@ -68,12 +69,7 @@ export function jsonStringify(val: unknown, pretty?: boolean): string {
     val,
     (_key, val) => {
       if (val instanceof Error) {
-        // TODO: also handle graphql errors, and maybe all other errors that can contain more properties
-        return {
-          name: val.name,
-          message: val.message,
-          stack: val.stack,
-        };
+        return objectifyError(val);
       }
       return val;
     },
@@ -81,25 +77,39 @@ export function jsonStringify(val: unknown, pretty?: boolean): string {
   );
 }
 
-/** Recursivelly unwrapps the lazy attributes. */
-export function unwrapAttrs(attrs: Attributes, depth = 0): Attributes {
+/** Recursivelly unwrapps the lazy attributes and parses instances of classes. */
+export function parseAttrs(
+  attrs: MaybeLazy<Attributes>,
+  depth = 0,
+): Attributes {
   if (depth > 10) {
     throw new Error('Too much recursion while unwrapping function attributes');
   }
 
   if (typeof attrs === 'function') {
-    return unwrapAttrs(attrs(), depth + 1);
+    return parseAttrs(attrs(), depth + 1);
   }
 
-  const unwrapped: Attributes = {};
-  for (const key of Object.keys(attrs)) {
-    const val = attrs[key as keyof typeof attrs];
-    unwrapped[key] = unwrapAttrVal(val, depth + 1);
+  if (Array.isArray(attrs)) {
+    return attrs.map((val) => unwrapAttrVal(val, depth + 1));
   }
-  return unwrapped;
+
+  if (Object.prototype.toString.call(attrs) === '[object Object]') {
+    const unwrapped: Attributes = {};
+    for (const key of Object.keys(attrs)) {
+      const val = attrs[key as keyof typeof attrs];
+      unwrapped[key] = unwrapAttrVal(val, depth + 1);
+    }
+    return unwrapped;
+  }
+
+  return objectifyClass(attrs);
 }
 
-function unwrapAttrVal(attr: AttributeValue, depth = 0): AttributeValue {
+function unwrapAttrVal(
+  attr: MaybeLazy<AttributeValue>,
+  depth = 0,
+): AttributeValue {
   if (depth > 10) {
     throw new Error(
       'Too much recursion while unwrapping function attribute values',
@@ -118,7 +128,6 @@ function unwrapAttrVal(attr: AttributeValue, depth = 0): AttributeValue {
     return unwrapAttrVal(attr(), depth + 1);
   }
 
-  // unwrap array items
   if (Array.isArray(attr)) {
     return attr.map((val) => unwrapAttrVal(val, depth + 1));
   }
@@ -135,11 +144,39 @@ function unwrapAttrVal(attr: AttributeValue, depth = 0): AttributeValue {
   }
 
   // very likely an instance of something, dont unwrap it
-  return attr;
+  return objectifyClass(attr);
 }
 
 function isPrimitive(val: unknown): val is string | number | boolean {
   return val !== Object(val);
+}
+
+function objectifyClass(val: unknown): Record<string, unknown> {
+  if (!val) {
+    // TODO: this should never happen, objectify class should not be called on empty values
+    return {};
+  }
+  const props: Record<string, unknown> = {};
+  for (const propName of Object.getOwnPropertyNames(val)) {
+    props[propName] = val[propName as keyof typeof val];
+  }
+  for (const protoPropName of Object.getOwnPropertyNames(
+    Object.getPrototypeOf(val),
+  )) {
+    const propVal = val[protoPropName as keyof typeof val];
+    if (typeof propVal === 'function') {
+      continue;
+    }
+    props[protoPropName] = propVal;
+  }
+  return {
+    ...props,
+    class: val.constructor.name,
+  };
+}
+
+function objectifyError(err: Error) {
+  return objectifyClass(err);
 }
 
 export function getEnv(key: string): string | undefined {
