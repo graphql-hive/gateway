@@ -32,7 +32,7 @@ export interface LoggerOptions {
    * The attributes to include in all logs. Is mainly used to pass the parent
    * attributes when creating {@link Logger.child child loggers}.
    */
-  attrs?: MaybeLazy<Attributes>;
+  attrs?: Attributes;
   /**
    * The log writers to use when writing logs.
    *
@@ -44,7 +44,7 @@ export interface LoggerOptions {
 export class Logger implements LogWriter {
   #level: LogLevel | false;
   #prefix: string | undefined;
-  #attrs: MaybeLazy<Attributes> | undefined;
+  #attrs: Attributes | undefined;
   #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites = new Set<Promise<void>>();
 
@@ -104,20 +104,20 @@ export class Logger implements LogWriter {
   //
 
   public child(prefix: string): Logger;
-  public child(attrs: MaybeLazy<Attributes>, prefix?: string): Logger;
-  public child(
-    prefixOrAttrs: string | MaybeLazy<Attributes>,
-    prefix?: string,
-  ): Logger {
+  public child(attrs: Attributes, prefix?: string): Logger;
+  public child(prefixOrAttrs: string | Attributes, prefix?: string): Logger {
     if (typeof prefixOrAttrs === 'string') {
       return new Logger({
-        prefix: prefixOrAttrs,
+        level: this.#level,
+        prefix: (this.#prefix || '') + prefixOrAttrs,
+        attrs: this.#attrs,
         writers: this.#writers,
       });
     }
     return new Logger({
-      prefix,
-      attrs: prefixOrAttrs,
+      level: this.#level,
+      prefix: (this.#prefix || '') + (prefix || '') || undefined,
+      attrs: { ...this.#attrs, ...prefixOrAttrs },
       writers: this.#writers,
     });
   }
@@ -155,7 +155,7 @@ export class Logger implements LogWriter {
     }
 
     if (this.#prefix) {
-      msg = `${this.#prefix.trim()} ${msg || ''}`.trim(); // we trim everything because maybe the "msg" is empty
+      msg = `${this.#prefix}${msg || ''}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
     attrs = attrs ? parseAttrs(attrs) : attrs;

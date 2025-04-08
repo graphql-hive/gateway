@@ -98,7 +98,7 @@ it('should include attributes in child loggers', () => {
 it('should include prefix in child loggers', () => {
   let [log, writter] = createTLogger();
 
-  log = log.child('prefix');
+  log = log.child('prefix ');
 
   log.info('hello');
 
@@ -115,7 +115,7 @@ it('should include prefix in child loggers', () => {
 it('should include attributes and prefix in child loggers', () => {
   let [log, writter] = createTLogger();
 
-  log = log.child({ par: 'ent' }, 'prefix');
+  log = log.child({ par: 'ent' }, 'prefix ');
 
   log.info('hello');
 
@@ -127,6 +127,50 @@ it('should include attributes and prefix in child loggers', () => {
         },
         "level": "info",
         "msg": "prefix hello",
+      },
+    ]
+  `);
+});
+
+it('should have child inherit parent log level', () => {
+  let [log, writter] = createTLogger({ level: 'warn' });
+
+  log = log.child({ par: 'ent' });
+
+  log.debug('no hello');
+  log.info('still no hello');
+  log.warn('hello');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "par": "ent",
+        },
+        "level": "warn",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
+
+it('should include attributes and prefix in nested child loggers', () => {
+  let [log, writter] = createTLogger();
+
+  log = log.child({ par: 'ent' }, 'prefix ');
+  log = log.child({ par2: 'ent2' }, 'prefix2 ');
+
+  log.info('hello');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "par": "ent",
+          "par2": "ent2",
+        },
+        "level": "info",
+        "msg": "prefix prefix2 hello",
       },
     ]
   `);
