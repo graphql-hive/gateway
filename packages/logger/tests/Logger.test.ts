@@ -2,9 +2,6 @@ import { expect, it, vi } from 'vitest';
 import { Logger, LoggerOptions } from '../src/Logger';
 import { MemoryLogWriter } from '../src/writers';
 
-const log = new Logger();
-log.info('Hello, world!');
-
 function createTLogger(opts?: Partial<LoggerOptions>) {
   const writer = new MemoryLogWriter();
   return [
