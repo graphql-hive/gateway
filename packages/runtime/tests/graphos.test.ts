@@ -1,9 +1,9 @@
 import { setTimeout } from 'timers/promises';
 import {
-  JSONLogger,
   type GatewayConfigContext,
   type GatewayGraphOSManagedFederationOptions,
 } from '@graphql-hive/gateway-runtime';
+import { Logger } from '@graphql-hive/logger';
 import { Response } from '@whatwg-node/fetch';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
@@ -20,7 +20,9 @@ describe('GraphOS', () => {
     it('should fetch the supergraph SDL', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
 
-      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(supergraphSdl);
     });
@@ -37,7 +39,9 @@ describe('GraphOS', () => {
         },
       });
 
-      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
       }
@@ -52,7 +56,7 @@ describe('GraphOS', () => {
       );
 
       const result = Promise.resolve()
-        .then(() => unifiedGraphFetcher({}))
+        .then(() => unifiedGraphFetcher({ log: new Logger({ level: false }) }))
         .catch((err) => err);
       for (let i = 0; i < 3; i++) {
         await advanceTimersByTimeAsync(1_000);
@@ -68,7 +72,7 @@ describe('GraphOS', () => {
       );
 
       const result = Promise.resolve()
-        .then(() => unifiedGraphFetcher({}))
+        .then(() => unifiedGraphFetcher({ log: new Logger({ level: false }) }))
         .catch(() => {});
       await advanceTimersByTimeAsync(25);
       expect(mockFetchError).toHaveBeenCalledTimes(1);
@@ -84,12 +88,16 @@ describe('GraphOS', () => {
     it('should respect min-delay between polls', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
 
-      Promise.resolve().then(() => unifiedGraphFetcher({}));
+      Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(25);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
-      Promise.resolve().then(() => unifiedGraphFetcher({}));
+      Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(50);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(50);
@@ -107,19 +115,27 @@ describe('GraphOS', () => {
           return mockSDL();
         },
       });
-      const result1 = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result1 = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
-      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result2 = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
       expect(await result1).toBe(await result2);
     }, 30_000);
 
     it('should not wait if min delay is superior to polling interval', async () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
-      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
       await result;
-      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result2 = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
     });
@@ -146,9 +162,13 @@ describe('GraphOS', () => {
         },
       });
 
-      const result = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
-      const result2 = Promise.resolve().then(() => unifiedGraphFetcher({}));
+      const result2 = Promise.resolve().then(() =>
+        unifiedGraphFetcher({ log: new Logger({ level: false }) }),
+      );
       await advanceTimersByTimeAsync(1_000);
       expect(await result).toBe(await result2);
     });
@@ -163,18 +183,7 @@ function createTestFetcher(
 ) {
   return createGraphOSFetcher({
     configContext: {
-      logger: process.env['DEBUG']
-        ? new JSONLogger()
-        : {
-            child() {
-              return this;
-            },
-            info: () => {},
-            debug: () => {},
-            error: () => {},
-            warn: () => {},
-            log: () => {},
-          },
+      log: new Logger({ level: process.env['DEBUG'] ? 'debug' : false }),
       cwd: process.cwd(),
       ...configContext,
     },

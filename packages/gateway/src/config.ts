@@ -126,12 +126,7 @@ export async function getBuiltinPluginsFromConfig(
     const { useOpenTelemetry } = await import(
       '@graphql-mesh/plugin-opentelemetry'
     );
-    plugins.push(
-      useOpenTelemetry({
-        logger: ctx.logger,
-        ...config.openTelemetry,
-      }),
-    );
+    plugins.push(useOpenTelemetry(config.openTelemetry));
   }
 
   if (config.rateLimiting) {

@@ -1,3 +1,4 @@
+import { LegacyLogger } from '@graphql-hive/logger';
 import type { YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
@@ -158,7 +159,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  logger,
+  log,
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -230,7 +231,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
                     originalResolver,
                     typeName,
                     onDelegationStageExecuteHooks,
-                    logger,
+                    log,
                   );
                 }
               }
@@ -278,7 +279,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     executableUnifiedGraph,
     // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
     subschemas,
-    logger,
+    LegacyLogger.from(log),
     onDelegateHooks || [],
   );
   const stitchingInfo = executableUnifiedGraph.extensions?.[
@@ -306,16 +307,15 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
             delegationPlanBuilder = newDelegationPlanBuilder;
           }
           const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] = [];
-          let currentLogger = logger;
           let requestId: string | undefined;
           if (context?.request) {
             requestId = requestIdByRequest.get(context.request);
             if (requestId) {
-              currentLogger = currentLogger?.child({ requestId });
+              log = log.child({ requestId });
             }
           }
           if (sourceSubschema.name) {
-            currentLogger = currentLogger?.child({
+            log = log.child({
               subgraph: sourceSubschema.name,
             });
           }
@@ -328,7 +328,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
               variables,
               fragments,
               fieldNodes,
-              logger: currentLogger,
+              log,
               context,
               info,
               delegationPlanBuilder,

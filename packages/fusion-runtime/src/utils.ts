@@ -519,7 +519,7 @@ export interface OnDelegationPlanHookPayload<TContext> {
   fieldNodes: SelectionNode[];
   context: TContext;
   requestId?: string;
-  logger?: Logger;
+  log: Logger;
   info?: GraphQLResolveInfo;
   delegationPlanBuilder: DelegationPlanBuilder;
   setDelegationPlanBuilder(delegationPlanBuilder: DelegationPlanBuilder): void;
@@ -556,7 +556,7 @@ export interface OnDelegationStageExecutePayload<TContext> {
   typeName: string;
 
   requestId?: string;
-  logger?: Logger;
+  log: Logger;
 }
 
 export type OnDelegationStageExecuteDoneHook = (
@@ -634,7 +634,7 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
         typeName,
         type,
         requestId,
-        logger: log,
+        log,
         resolver,
         setResolver,
       });

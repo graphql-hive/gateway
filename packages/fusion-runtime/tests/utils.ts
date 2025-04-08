@@ -1,3 +1,4 @@
+import { Logger } from '@graphql-hive/logger';
 import {
   getUnifiedGraphGracefully,
   type SubgraphConfig,
@@ -23,6 +24,9 @@ import {
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
   const manager = new UnifiedGraphManager({
     getUnifiedGraph: () => getUnifiedGraphGracefully(subgraphs),
+    transportContext: {
+      log: new Logger({ level: false }),
+    },
     transports() {
       return {
         getSubgraphExecutor({ subgraphName }) {
@@ -46,6 +50,9 @@ export function composeAndGetExecutor<TContext>(
 ) {
   const manager = new UnifiedGraphManager({
     getUnifiedGraph: () => getUnifiedGraphGracefully(subgraphs),
+    transportContext: {
+      log: new Logger({ level: false }),
+    },
     transports() {
       return {
         getSubgraphExecutor({ subgraphName }) {
