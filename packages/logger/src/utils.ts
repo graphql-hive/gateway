@@ -2,6 +2,7 @@ import fastSafeStringify from 'fast-safe-stringify';
 import { LogLevel } from './Logger';
 
 export type AttributeValue =
+  | any // this any will replace all other elements in the union, but is necessary for passing "interfaces" as attributes
   | string
   | number
   | boolean
