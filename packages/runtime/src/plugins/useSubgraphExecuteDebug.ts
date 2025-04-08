@@ -1,24 +1,23 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
-import type { Logger } from '@graphql-mesh/types';
 import { FetchAPI, isAsyncIterable } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
 export function useSubgraphExecuteDebug<
   TContext extends Record<string, any>,
->(opts: { logger: Logger }): GatewayPlugin<TContext> {
+>(): GatewayPlugin<TContext> {
   let fetchAPI: FetchAPI;
   return {
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onSubgraphExecute({ executionRequest, logger = opts.logger }) {
-      const subgraphExecuteHookLogger = logger.child({
+    onSubgraphExecute({ executionRequest }) {
+      const log = executionRequest.context?.log.child({
         subgraphExecuteId: fetchAPI.crypto.randomUUID(),
       });
-      const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
-        'subgraph-execute-start',
-      );
-      subgraphExecuteStartLogger.debug(() => {
+      if (!log) {
+        throw new Error('Logger is not available in the execution context');
+      }
+      log.debug(() => {
         const logData: Record<string, any> = {};
         if (executionRequest.document) {
           logData['query'] = defaultPrintFn(executionRequest.document);
@@ -30,28 +29,25 @@ export function useSubgraphExecuteDebug<
           logData['variables'] = executionRequest.variables;
         }
         return logData;
-      });
+      }, 'subgraph-execute-start');
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
-        const subgraphExecuteEndLogger = subgraphExecuteHookLogger.child(
-          'subgraph-execute-end',
-        );
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              const subgraphExecuteNextLogger = subgraphExecuteHookLogger.child(
-                'subgraph-execute-next',
-              );
-              subgraphExecuteNextLogger.debug(result);
+              log.debug(result, 'subgraph-execute-next');
             },
             onEnd() {
-              subgraphExecuteEndLogger.debug(() => ({
-                duration: performance.now() - start,
-              }));
+              log.debug(
+                () => ({
+                  duration: performance.now() - start,
+                }),
+                'subgraph-execute-end',
+              );
             },
           };
         }
-        subgraphExecuteEndLogger.debug(result);
+        log.debug(result, 'subgraph-execute-done');
         return void 0;
       };
     },
