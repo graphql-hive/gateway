@@ -82,8 +82,6 @@ export function withState<
   const pluginWithState = addStateGetters(hooks);
   pluginWithState.instrumentation = addStateGetters(instrumentation);
 
-  console.log('plugin hooks: ', Object.entries(pluginWithState));
-
   return pluginWithState as P;
 }
 
