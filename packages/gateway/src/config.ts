@@ -106,7 +106,7 @@ export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: {
     cache: KeyValueCache;
-    logger: Logger;
+    log: Logger;
     pubsub: HivePubSub;
     cwd: string;
   },
@@ -126,9 +126,7 @@ export async function getBuiltinPluginsFromConfig(
     const { useOpenTelemetry } = await import(
       '@graphql-mesh/plugin-opentelemetry'
     );
-    plugins.push(
-      useOpenTelemetry({ ...config.openTelemetry, log: ctx.logger }),
-    );
+    plugins.push(useOpenTelemetry({ ...config.openTelemetry, log: ctx.log }));
   }
 
   if (config.rateLimiting) {
