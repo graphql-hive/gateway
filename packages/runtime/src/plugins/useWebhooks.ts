@@ -1,14 +1,15 @@
+import type { Logger } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
-import type { Logger } from '@graphql-mesh/types';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { Plugin } from 'graphql-yoga';
 import { GatewayPlugin } from '../types';
 
 export interface GatewayWebhooksPluginOptions {
+  log: Logger;
   pubsub?: HivePubSub;
 }
 
 export function useWebhooks({
+  log,
   pubsub,
 }: GatewayWebhooksPluginOptions): GatewayPlugin {
   if (!pubsub) {
@@ -32,13 +33,14 @@ export function useWebhooks({
       const expectedEventName = `webhook:${requestMethod}:${pathname}`;
       for (const eventName of eventNames) {
         if (eventName === expectedEventName) {
-          logger?.debug(() => `Received webhook request for ${pathname}`);
+          log.debug('Received webhook request for %s', pathname);
           return handleMaybePromise(
             () => request.text(),
             function handleWebhookPayload(webhookPayload) {
-              logger?.debug(
-                () =>
-                  `Emitted webhook request for ${pathname}: ${webhookPayload}`,
+              log.debug(
+                'Emitted webhook request for %s: %s',
+                pathname,
+                webhookPayload,
               );
               webhookPayload =
                 request.headers.get('content-type') === 'application/json'
