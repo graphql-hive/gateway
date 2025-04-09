@@ -128,7 +128,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           ...opts,
         },
         {
-          logger: ctx.log,
+          log: ctx.log,
           cache,
           pubsub,
           cwd,

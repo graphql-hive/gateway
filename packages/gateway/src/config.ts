@@ -106,7 +106,7 @@ export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: {
     cache: KeyValueCache;
-    logger: Logger;
+    log: Logger;
     pubsub: HivePubSub;
     cwd: string;
   },
