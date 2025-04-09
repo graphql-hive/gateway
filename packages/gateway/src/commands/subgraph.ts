@@ -3,6 +3,7 @@ import { lstat } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import {
   createGatewayRuntime,
+  createLoggerFromLogging,
   type GatewayConfigSubgraph,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
@@ -22,7 +23,6 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleLoggingConfig } from './handleLoggingOption';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -75,11 +75,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const pubsub = loadedConfig.pubsub || new PubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
-        handleLoggingConfig(loadedConfig.logging, ctx);
+        ctx.log = createLoggerFromLogging(loadedConfig.logging);
       }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
-        logger: ctx.log,
+        log: ctx.log,
         cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(

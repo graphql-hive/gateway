@@ -1,4 +1,3 @@
-import type { Logger } from '@graphql-mesh/types';
 import { pathToArray } from '@graphql-tools/utils';
 import { print } from 'graphql';
 import { FetchAPI } from 'graphql-yoga';
@@ -6,7 +5,7 @@ import type { GatewayContext, GatewayPlugin } from '../types';
 
 export function useDelegationPlanDebug<
   TContext extends Record<string, any>,
->(opts: { logger: Logger }): GatewayPlugin<TContext> {
+>(): GatewayPlugin<TContext> {
   let fetchAPI: FetchAPI;
   const stageExecuteLogById = new WeakMap<GatewayContext, Set<string>>();
   return {
@@ -18,15 +17,12 @@ export function useDelegationPlanDebug<
       variables,
       fragments,
       fieldNodes,
+      context,
       info,
-      logger = opts.logger,
     }) {
       const planId = fetchAPI.crypto.randomUUID();
-      const planLogger = logger.child({ planId, typeName });
-      const delegationPlanStartLogger = planLogger.child(
-        'delegation-plan-start',
-      );
-      delegationPlanStartLogger.debug(() => {
+      const log = context.log.child({ planId, typeName });
+      log.debug(() => {
         const logObj: Record<string, any> = {};
         if (variables && Object.keys(variables).length) {
           logObj['variables'] = variables;
@@ -48,19 +44,20 @@ export function useDelegationPlanDebug<
           logObj['path'] = pathToArray(info.path).join(' | ');
         }
         return logObj;
-      });
+      }, 'delegation-plan-start');
       return ({ delegationPlan }) => {
-        const delegationPlanDoneLogger = logger.child('delegation-plan-done');
-        delegationPlanDoneLogger.debug(() =>
-          delegationPlan.map((plan) => {
-            const planObj: Record<string, string> = {};
-            for (const [subschema, selectionSet] of plan) {
-              if (subschema.name) {
-                planObj[subschema.name] = print(selectionSet);
+        log.debug(
+          () =>
+            delegationPlan.map((plan) => {
+              const planObj: Record<string, string> = {};
+              for (const [subschema, selectionSet] of plan) {
+                if (subschema.name) {
+                  planObj[subschema.name] = print(selectionSet);
+                }
               }
-            }
-            return planObj;
-          }),
+              return planObj;
+            }),
+          'delegation-plan-done',
         );
       };
     },
@@ -72,19 +69,18 @@ export function useDelegationPlanDebug<
       selectionSet,
       key,
       typeName,
-      logger = opts.logger,
     }) {
       let contextLog = stageExecuteLogById.get(context);
       if (!contextLog) {
         contextLog = new Set();
         stageExecuteLogById.set(context, contextLog);
       }
-      const log = {
+      const logAttr = {
         key: JSON.stringify(key),
         object: JSON.stringify(object),
         selectionSet: print(selectionSet),
       };
-      const logStr = JSON.stringify(log);
+      const logStr = JSON.stringify(logAttr);
       if (contextLog.has(logStr)) {
         return;
       }
@@ -94,18 +90,16 @@ export function useDelegationPlanDebug<
         subgraph,
         typeName,
       };
-      const delegationStageLogger = logger.child(logMeta);
-      delegationStageLogger.debug('delegation-plan-start', () => {
-        return {
+      const log = context.log.child(logMeta);
+      log.debug(
+        () => ({
           ...log,
           path: pathToArray(info.path).join(' | '),
-        };
-      });
+        }),
+        'delegation-plan-start',
+      );
       return ({ result }) => {
-        const delegationStageExecuteDoneLogger = logger.child(
-          'delegation-stage-execute-done',
-        );
-        delegationStageExecuteDoneLogger.debug(() => result);
+        log.debug(() => result, 'delegation-stage-execute-done');
       };
     },
   };

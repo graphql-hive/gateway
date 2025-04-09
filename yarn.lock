@@ -3942,6 +3942,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^7.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.12.0"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/logger-json": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -4000,6 +4001,7 @@ __metadata:
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-deduplicate-request": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
@@ -4122,7 +4124,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/logger@workspace:packages/logger":
+"@graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:
@@ -4383,6 +4385,7 @@ __metadata:
   dependencies:
     "@envelop/core": "npm:^5.2.3"
     "@envelop/instrumentation": "npm:^1.0.0"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.0"
@@ -4569,6 +4572,7 @@ __metadata:
   resolution: "@graphql-mesh/plugin-prometheus@workspace:packages/plugins/prometheus"
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-mesh/utils": "npm:^0.104.2"
@@ -4677,6 +4681,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.2.3"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"

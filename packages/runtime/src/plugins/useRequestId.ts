@@ -48,12 +48,14 @@ export function useRequestId<TContext extends Record<string, any>>(
         });
       requestIdByRequest.set(request, requestId);
     },
-    onContextBuilding({ context }) {
+    onContextBuilding({ context, extendContext }) {
       if (context?.request) {
         const requestId = requestIdByRequest.get(context.request);
-        if (requestId && context.logger) {
-          // @ts-expect-error - Logger is somehow read-only
-          context.logger = context.logger.child({ requestId });
+        if (requestId) {
+          extendContext(
+            // @ts-expect-error TODO: typescript is acting up here
+            { log: context.log.child({ requestId }) },
+          );
         }
       }
     },

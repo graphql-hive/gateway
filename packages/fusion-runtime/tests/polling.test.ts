@@ -1,4 +1,5 @@
 import { setTimeout } from 'timers/promises';
+import { Logger } from '@graphql-hive/logger';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
@@ -21,7 +22,6 @@ import {
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
@@ -65,6 +65,9 @@ describe('Polling', () => {
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
+      transportContext: {
+        log: new Logger({ level: false }),
+      },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -203,6 +206,9 @@ describe('Polling', () => {
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
+      transportContext: {
+        log: new Logger({ level: false }),
+      },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -298,6 +304,9 @@ describe('Polling', () => {
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 1000,
+      transportContext: {
+        log: new Logger({ level: false }),
+      },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -374,20 +383,18 @@ describe('Polling', () => {
     const unifiedGraphFetcher = vi.fn(() => {
       return graphDeferred ? graphDeferred.promise : unifiedGraph;
     });
-    const logger = getDefaultLogger();
+    const log = new Logger();
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,
-      transportContext: {
-        logger,
-      },
+      transportContext: { log },
       transports() {
-        logger.debug('transports');
+        log.debug('transports');
         return {
           getSubgraphExecutor() {
-            logger.debug('getSubgraphExecutor');
+            log.debug('getSubgraphExecutor');
             return function dynamicExecutor(...args) {
-              logger.debug('dynamicExecutor');
+              log.debug('dynamicExecutor');
               return createDefaultExecutor(schema)(...args);
             };
           },

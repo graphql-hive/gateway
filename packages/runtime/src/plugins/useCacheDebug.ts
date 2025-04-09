@@ -4,7 +4,13 @@ import { GatewayPlugin } from '../types';
 export function useCacheDebug<
   TContext extends Record<string, any>,
 >(): GatewayPlugin<TContext> {
+  let log: Logger;
   return {
+    onContextBuilding({ context }) {
+      // TODO: this one should execute last
+      // TODO: on contextBuilding might not execute at all
+      log = context.log;
+    },
     onCacheGet({ key }) {
       log = log.child({ key });
       log.debug('cache get');
