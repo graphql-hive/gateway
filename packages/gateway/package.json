@@ -61,6 +61,7 @@
     "@escape.tech/graphql-armor-max-tokens": "^2.5.0",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/importer": "workspace:^",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/plugin-aws-sigv4": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.0",
