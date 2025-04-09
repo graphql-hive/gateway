@@ -24,13 +24,14 @@ export function useRetryOnSchemaReload<
       }
     }
   }
+  const logForRequest = new WeakMap<Request, Logger>();
   function handleExecutionResult({
     context,
     result,
     setResult,
     request,
   }: {
-    context: { log: Logger };
+    context: {};
     result?: ExecutionResult;
     setResult: (result: MaybeAsyncIterable<ExecutionResult>) => void;
     request: Request;
@@ -40,7 +41,7 @@ export function useRetryOnSchemaReload<
       execHandler &&
       result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
     ) {
-      let log = context.log;
+      let log = logForRequest.get(request)!; // must exist at this point
       const requestId = requestIdByRequest.get(request);
       if (requestId) {
         log = log.child({ requestId });
@@ -65,10 +66,14 @@ export function useRetryOnSchemaReload<
         }),
       );
     },
-    onExecute({ args }) {
+    onExecute({ args, context }) {
+      // we set the logger here because it most likely contains important attributes (like the request-id)
+      logForRequest.set(context.request, context.log);
       handleOnExecute(args);
     },
-    onSubscribe({ args }) {
+    onSubscribe({ args, context }) {
+      // we set the logger here because it most likely contains important attributes (like the request-id)
+      logForRequest.set(context.request, context.log);
       handleOnExecute(args);
     },
     onExecutionResult({ request, context, result, setResult }) {
