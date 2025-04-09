@@ -104,33 +104,31 @@ export function useDemandControl<TContext extends Record<string, any>>({
     },
     onExecutionResult({ result, setResult, context }) {
       if (includeExtensionMetadata) {
-        const costByContext = costByContextMap.get(context);
-        if (costByContext) {
-          if (isAsyncIterable(result)) {
-            setResult(
-              mapAsyncIterator(result, (value) => ({
-                ...value,
-                extensions: {
-                  ...(value.extensions || {}),
-                  cost: {
-                    estimated: costByContext,
-                    max: maxCost,
-                  },
-                },
-              })),
-            );
-          } else {
-            setResult({
-              ...(result || {}),
+        const costByContext = costByContextMap.get(context) || 0;
+        if (isAsyncIterable(result)) {
+          setResult(
+            mapAsyncIterator(result, (value) => ({
+              ...value,
               extensions: {
-                ...(result?.extensions || {}),
+                ...(value.extensions || {}),
                 cost: {
                   estimated: costByContext,
                   max: maxCost,
                 },
               },
-            });
-          }
+            })),
+          );
+        } else {
+          setResult({
+            ...(result || {}),
+            extensions: {
+              ...(result?.extensions || {}),
+              cost: {
+                estimated: costByContext,
+                max: maxCost,
+              },
+            },
+          });
         }
       }
     },

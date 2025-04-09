@@ -753,6 +753,11 @@ describe('Demand Control', () => {
           path: ['items'],
         },
       ],
+      extensions: {
+        cost: {
+          estimated: 0,
+        },
+      },
     });
   });
   it('@listSize(slicingArguments:, requireOneSlicingArgument:false)', async () => {
@@ -1012,6 +1017,171 @@ describe('Demand Control', () => {
       extensions: {
         cost: {
           estimated: 8,
+        },
+      },
+    });
+  });
+
+  it('returns cost even if it does not hit the subgraph', async () => {
+    const subgraph = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          foo: String
+        }
+      `),
+    });
+    await using subgraphServer = createYoga({
+      schema: subgraph,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: await composeLocalSchemasWithApollo([
+        {
+          name: 'subgraph',
+          schema: subgraph,
+          url: 'http://subgraph/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        useCustomFetch(subgraphServer.fetch),
+        useDemandControl({
+          includeExtensionMetadata: true,
+        }),
+      ],
+    });
+    const query = /* GraphQL */ `
+      query EmptyQuery {
+        __typename
+        a: __typename
+      }
+    `;
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        __typename: 'Query',
+        a: 'Query',
+      },
+      extensions: {
+        cost: {
+          estimated: 0,
+        },
+      },
+    });
+  });
+
+  it('handles batched requests', async () => {
+    const subgraph = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          foo: Foo
+          bar: Bar
+        }
+
+        type Foo {
+          id: ID
+        }
+
+        type Bar {
+          id: ID
+        }
+      `),
+      resolvers: {
+        Query: {
+          foo: async () => ({ id: 'foo' }),
+          bar: async () => ({ id: 'bar' }),
+        },
+      },
+    });
+    await using subgraphServer = createYoga({
+      schema: subgraph,
+    });
+    await using gateway = createGatewayRuntime({
+      supergraph: await composeLocalSchemasWithApollo([
+        {
+          name: 'subgraph',
+          schema: subgraph,
+          url: 'http://subgraph/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+        useCustomFetch(subgraphServer.fetch),
+        useDemandControl({
+          includeExtensionMetadata: true,
+          maxCost: 1,
+        }),
+      ],
+    });
+    const query = /* GraphQL */ `
+      query FooQuery {
+        foo {
+          id
+        }
+        bar {
+          id
+        }
+      }
+    `;
+    const response = await gateway.fetch('http://localhost:4000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        foo: null,
+        bar: null,
+      },
+      errors: [
+        {
+          extensions: {
+            code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+            cost: {
+              estimated: 2,
+              max: 1,
+            },
+          },
+          locations: [
+            {
+              column: 9,
+              line: 3,
+            },
+          ],
+          message: 'Operation estimated cost 2 exceeded configured maximum 1',
+          path: ['foo'],
+        },
+        {
+          extensions: {
+            code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+            cost: {
+              estimated: 2,
+              max: 1,
+            },
+          },
+          locations: [
+            {
+              column: 9,
+              line: 6,
+            },
+          ],
+          message: 'Operation estimated cost 2 exceeded configured maximum 1',
+          path: ['bar'],
+        },
+      ],
+      extensions: {
+        cost: {
+          estimated: 2,
+          max: 1,
         },
       },
     });
