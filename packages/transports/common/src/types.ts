@@ -1,5 +1,6 @@
+import type { Logger } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
-import type { KeyValueCache, Logger, MeshFetch } from '@graphql-mesh/types';
+import type { KeyValueCache, MeshFetch } from '@graphql-mesh/types';
 import type { Executor, MaybePromise } from '@graphql-tools/utils';
 import type { GraphQLError, GraphQLSchema } from 'graphql';
 
@@ -20,10 +21,12 @@ export interface TransportEntry<
 }
 
 export interface TransportContext {
+  log: Logger;
+  /** The fetch API to use. */
   fetch?: MeshFetch;
-  pubsub?: HivePubSub;
-  logger?: Logger;
+  /** Will be empty when run on serverless. */
   cwd?: string;
+  pubsub?: HivePubSub;
   cache?: KeyValueCache;
 }
 

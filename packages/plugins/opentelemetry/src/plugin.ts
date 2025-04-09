@@ -1,5 +1,4 @@
 import {
-  GatewayConfigContext,
   getRetryInfo,
   isRetryExecutionRequest,
   type GatewayPlugin,
@@ -242,9 +241,7 @@ export type OpenTelemetryPlugin =
   };
 
 export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions & {
-    logger: GatewayConfigContext['logger'];
-  },
+  options: OpenTelemetryGatewayPluginOptions,
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
