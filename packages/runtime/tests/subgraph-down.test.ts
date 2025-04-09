@@ -68,6 +68,7 @@ describe('Error handling', () => {
     ]);
     await using gw = createGatewayRuntime({
       supergraph,
+      maskedErrors: false,
       plugins: () => [
         useCustomFetch(function (url, options) {
           if (url === 'http://subgraph1:4000/graphql') {

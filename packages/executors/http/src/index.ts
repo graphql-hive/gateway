@@ -413,15 +413,13 @@ export function buildHTTPExecutor(
                         (parsedResult.errors == null ||
                           parsedResult.errors.length === 0)
                       ) {
+                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
                         return {
                           errors: [
-                            createGraphQLError(
-                              'Unexpected empty "data" and "errors" fields in result: ' +
-                                result,
-                              {
-                                extensions: upstreamErrorExtensions,
-                              },
-                            ),
+                            createGraphQLError(message, {
+                              originalError: new Error(message),
+                              extensions: upstreamErrorExtensions,
+                            }),
                           ],
                         };
                       }
@@ -454,10 +452,12 @@ export function buildHTTPExecutor(
                       };
                     }
                   } else {
+                    const message = 'No response returned';
                     return {
                       errors: [
-                        createGraphQLError('No response returned', {
+                        createGraphQLError(message, {
                           extensions: upstreamErrorExtensions,
+                          originalError: new Error(message),
                         }),
                       ],
                     };
