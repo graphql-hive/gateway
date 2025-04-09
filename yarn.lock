@@ -2838,9 +2838,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20241112.0":
-  version: 4.20250408.0
-  resolution: "@cloudflare/workers-types@npm:4.20250408.0"
-  checksum: 10c0/48414bef36335d90a720c2aa90bd34b3ef7e0697f28e440dfc47b009bc11417a210144c7449ed48e4055359bb4bb9d859fc47e89c1816e1dda9b0203247af7d9
+  version: 4.20250409.0
+  resolution: "@cloudflare/workers-types@npm:4.20250409.0"
+  checksum: 10c0/e3a71518f4cd5e245be9f7615c97ad1a3e8ac22445f5c668857f549449e170512f94db0e255bb1cb1a06e5ba7d330c3233bb5ba795593de90b9384d4f680ab55
   languageName: node
   linkType: hard
 
@@ -7204,12 +7204,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reteps/dockerfmt@npm:^0.2.3":
-  version: 0.2.4
-  resolution: "@reteps/dockerfmt@npm:0.2.4"
-  dependencies:
-    typescript: "npm:^5.8.3"
-  checksum: 10c0/4409bdf7d122db4f786c8a8223155ab47c8c96e0416373594fed98f604f9f05a4950b28ff2b0d7830a2aa6d358c870ec02e82be6c4603530e9f927ca901d28b1
+"@reteps/dockerfmt@npm:^0.2.5":
+  version: 0.2.6
+  resolution: "@reteps/dockerfmt@npm:0.2.6"
+  checksum: 10c0/753a4bfa34f84b4e13346d251337aeaa968a3988b05f61fcbca97b22d56107c42db034859fd10f0dc7e9c299fa3a0fe3fcec6382697073cf9f8bfb1a96862256
   languageName: node
   linkType: hard
 
@@ -17744,14 +17742,14 @@ __metadata:
   linkType: hard
 
 "prettier-plugin-sh@npm:^0.17.0":
-  version: 0.17.0
-  resolution: "prettier-plugin-sh@npm:0.17.0"
+  version: 0.17.1
+  resolution: "prettier-plugin-sh@npm:0.17.1"
   dependencies:
-    "@reteps/dockerfmt": "npm:^0.2.3"
+    "@reteps/dockerfmt": "npm:^0.2.5"
     sh-syntax: "npm:^0.5.6"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/19bb3b287a591662994677ad17b19c301eeea41795692afd1fe28c334f9589ce1528d04f4a851d2c573aee26e2a9031b79325ba38f864f71251c3f6962223509
+  checksum: 10c0/f4746fe95d8f6b0ea4c5cae0029db4207a7567e32e29a571aaed0b2110a223fb5c0d5d191cf84ea3d33c4697df39e2eeb5d6b423050420ed05ba57f0ef86f684
   languageName: node
   linkType: hard
 
@@ -20390,7 +20388,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.6.3, typescript@npm:^5.8.3":
+"typescript@npm:^5.6.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
   bin:
@@ -20400,7 +20398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A^5.6.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^5.6.3#optional!builtin<compat/typescript>":
   version: 5.8.3
   resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:
