@@ -132,6 +132,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
         ]);
         const gatewayYoga = createYoga({
           schema: getStitchedSchemaFromSupergraphSdl({ supergraphSdl }),
+          maskedErrors: false,
         });
         disposableStack.use(gatewayYoga);
         gatewayServer = await createDisposableServer(gatewayYoga);
