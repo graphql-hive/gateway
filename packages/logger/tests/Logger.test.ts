@@ -337,3 +337,9 @@ it('should write logs with unexpected attributes', () => {
     ]
   `);
 });
+
+it.todo('should serialise aggregate errors');
+
+it.todo('should serialise error causes');
+
+it.todo('should serialise using the toJSON method');
