@@ -3,6 +3,7 @@ import {
   isRetryExecutionRequest,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
+import type { Logger } from '@graphql-hive/logger';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
   createDeferred,
@@ -241,7 +242,7 @@ export type OpenTelemetryPlugin =
   };
 
 export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions,
+  options: OpenTelemetryGatewayPluginOptions & { log: Logger },
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
@@ -265,7 +266,7 @@ export function useOpenTelemetry(
       : (getMostSpecificState(state)?.otel?.current ?? ROOT_CONTEXT);
   }
 
-  const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
+  const pluginLogger = options.log.child({ plugin: 'OpenTelemetry' });
 
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
