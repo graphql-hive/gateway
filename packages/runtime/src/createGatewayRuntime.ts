@@ -1171,6 +1171,11 @@ export function createGatewayRuntime<
   fetchAPI ||= yoga.fetchAPI;
 
   Object.defineProperties(yoga, {
+    version: {
+      get() {
+        return globalThis.__VERSION__;
+      },
+    },
     invalidateUnifiedGraph: {
       value: schemaInvalidator,
       configurable: true,
