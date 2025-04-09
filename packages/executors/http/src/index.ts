@@ -416,12 +416,10 @@ export function buildHTTPExecutor(
                         const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
                         return {
                           errors: [
-                            createGraphQLError(message,
-                              {
-                                originalError: new Error(message),
-                                extensions: upstreamErrorExtensions,
-                              },
-                            ),
+                            createGraphQLError(message, {
+                              originalError: new Error(message),
+                              extensions: upstreamErrorExtensions,
+                            }),
                           ],
                         };
                       }
