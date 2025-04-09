@@ -1053,7 +1053,6 @@ export function getStitchingOptionsFromSupergraphSdl(
     }
     let executor: Executor = buildHTTPExecutor({
       endpoint,
-      serviceName: subgraphName,
       ...httpExecutorOpts,
     });
     if (globalThis.process?.env?.['DEBUG']) {

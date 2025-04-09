@@ -98,6 +98,7 @@ import useHiveConsole from './plugins/useHiveConsole';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
+import { useSubgraphErrorPlugin } from './plugins/useSubgraphErrorPlugin';
 import { useSubgraphExecuteDebug } from './plugins/useSubgraphExecuteDebug';
 import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
@@ -990,6 +991,16 @@ export function createGatewayRuntime<
     persistedDocumentsPlugin,
     useRetryOnSchemaReload({ logger }),
   ];
+
+  if (config.subgraphErrors !== false) {
+    basePlugins.push(
+      useSubgraphErrorPlugin(
+        typeof config.subgraphErrors === 'object'
+          ? config.subgraphErrors
+          : undefined,
+      ),
+    );
+  }
 
   if (config.requestId !== false) {
     const reqIdPlugin = useRequestId(
