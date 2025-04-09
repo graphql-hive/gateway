@@ -117,7 +117,6 @@ export type OnCacheGetHook = (
 ) => MaybePromise<OnCacheGetHookResult | void>;
 
 export interface OnCacheGetHookEventPayload {
-  log: Logger;
   cache: KeyValueCache;
   key: string;
   ttl?: number;
@@ -132,13 +131,11 @@ export interface OnCacheGetHookResult {
 export type OnCacheErrorHook = (payload: OnCacheErrorHookPayload) => void;
 
 export interface OnCacheErrorHookPayload {
-  log: Logger;
   error: Error;
 }
 
 export type OnCacheHitHook = (payload: OnCacheHitHookEventPayload) => void;
 export interface OnCacheHitHookEventPayload {
-  log: Logger;
   value: any;
 }
 export type OnCacheMissHook = () => void;
@@ -153,7 +150,6 @@ export interface OnCacheSetHookResult {
 }
 
 export interface OnCacheSetHookEventPayload {
-  log: Logger;
   cache: KeyValueCache;
   key: string;
   value: any;
@@ -170,7 +166,6 @@ export interface OnCacheDeleteHookResult {
 }
 
 export interface OnCacheDeleteHookEventPayload {
-  log: Logger;
   cache: KeyValueCache;
   key: string;
 }
