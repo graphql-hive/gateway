@@ -6,12 +6,12 @@ export const gatewayConfig = defineConfig({
     maxRetries: 4,
   },
   upstreamTimeout: 300,
-  plugins(ctx) {
+  plugins() {
     return [
       {
-        onFetch({ options }) {
+        onFetch({ options, context }) {
           i++;
-          ctx.logger.info(`Fetching with ${options.body} for the ${i} time`);
+          context.log.info(`Fetching with ${options.body} for the ${i} time`);
         },
       },
     ];
