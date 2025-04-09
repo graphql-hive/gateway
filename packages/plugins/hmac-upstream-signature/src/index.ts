@@ -1,4 +1,5 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
+import type { Logger } from '@graphql-hive/logger';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
@@ -143,6 +144,7 @@ export function useHmacUpstreamSignature(
 }
 
 export type HMACUpstreamSignatureValidationOptions = {
+  log: Logger;
   secret: string;
   extensionName?: string;
   serializeParams?: (params: GraphQLParams) => string;
@@ -163,15 +165,11 @@ export function useHmacSignatureValidation(
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
 
   return {
-    onParams({ params, fetchAPI, context }) {
+    onParams({ params, fetchAPI }) {
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 
       if (!extension) {
-        logger.warn(
-          `Missing HMAC signature: extension ${extensionName} not found in request.`,
-        );
-
         throw new Error(
           `Missing HMAC signature: extension ${extensionName} not found in request.`,
         );
@@ -191,8 +189,9 @@ export function useHmacSignatureValidation(
             c.charCodeAt(0),
           );
           const serializedParams = paramsSerializer(params);
-          logger.debug(
-            `HMAC signature will be calculate based on serialized params: ${serializedParams}`,
+          options.log.debug(
+            'HMAC signature will be calculate based on serialized params %s',
+            serializedParams,
           );
 
           return handleMaybePromise(
@@ -205,8 +204,8 @@ export function useHmacSignatureValidation(
               ),
             (result) => {
               if (!result) {
-                logger.error(
-                  `HMAC signature does not match the body content. short circuit request.`,
+                options.log.error(
+                  'HMAC signature does not match the body content. short circuit request.',
                 );
 
                 throw new Error(
