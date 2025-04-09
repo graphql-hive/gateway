@@ -9,7 +9,6 @@ import {
 import type {
   FetchAPI,
   GraphQLParams,
-  YogaLogger,
   Plugin as YogaPlugin,
 } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
@@ -87,24 +86,18 @@ export function useHmacUpstreamSignature(
   let key$: MaybePromise<CryptoKey>;
   let fetchAPI: FetchAPI;
   let textEncoder: TextEncoder;
-  let yogaLogger: YogaLogger;
 
   return {
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
-      yogaLogger = yoga.logger;
     },
-    onSubgraphExecute({
-      subgraphName,
-      subgraph,
-      executionRequest,
-      logger = yogaLogger,
-    }) {
-      logger?.debug(`running shouldSign for subgraph ${subgraphName}`);
+    onSubgraphExecute({ subgraphName, subgraph, executionRequest, log }) {
+      log.debug('Running shouldSign for subgraph %s', subgraphName);
 
       if (shouldSign({ subgraphName, subgraph, executionRequest })) {
-        logger?.debug(
-          `shouldSign is true for subgraph ${subgraphName}, signing request`,
+        log.debug(
+          'shouldSign is true for subgraph $s, signing request',
+          subgraphName,
         );
         textEncoder ||= new fetchAPI.TextEncoder();
         return handleMaybePromise(
@@ -128,7 +121,7 @@ export function useHmacUpstreamSignature(
                 const extensionValue = fetchAPI.btoa(
                   String.fromCharCode(...new Uint8Array(signature)),
                 );
-                logger?.debug(
+                log.debug(
                   `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
                 );
 
@@ -141,7 +134,7 @@ export function useHmacUpstreamSignature(
           },
         );
       } else {
-        logger?.debug(
+        log.debug(
           `shouldSign is false for subgraph ${subgraphName}, skipping hmac signature`,
         );
       }
@@ -167,14 +160,10 @@ export function useHmacSignatureValidation(
   const extensionName = options.extensionName || DEFAULT_EXTENSION_NAME;
   let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
-  let logger: YogaLogger;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
 
   return {
-    onYogaInit({ yoga }) {
-      logger = yoga.logger;
-    },
-    onParams({ params, fetchAPI }) {
+    onParams({ params, fetchAPI, context }) {
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 

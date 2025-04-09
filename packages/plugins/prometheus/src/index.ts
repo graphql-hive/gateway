@@ -1,9 +1,9 @@
 import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
+import type { Logger } from '@graphql-hive/logger';
 import type { OnSubgraphExecuteHook } from '@graphql-mesh/fusion-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
   ImportFn,
-  Logger,
   MeshFetchRequestInit,
   MeshPlugin,
   OnFetchHook,
@@ -140,12 +140,11 @@ type MeshMetricsConfig = {
      */
     fetchResponseHeaders?: boolean | string[];
   };
-
   /**
    * The logger instance used by the plugin to log messages.
    * This should be the logger instance provided by Mesh in the plugins context.
    */
-  logger: Logger;
+  log: Logger;
 };
 
 export type PrometheusPluginOptions = PrometheusTracingPluginConfig &
@@ -369,7 +368,7 @@ export default function useMeshPrometheus(
 }
 
 function registryFromYamlConfig(
-  config: YamlConfig & { logger: Logger },
+  config: YamlConfig & { log: Logger },
 ): Registry {
   if (!config.registry) {
     throw new Error('Registry not defined in the YAML config');
@@ -393,7 +392,7 @@ function registryFromYamlConfig(
 
   registry$
     .then(() => registryProxy.revoke())
-    .catch((e) => config.logger.error(e));
+    .catch((e) => config.log.error(e, 'Failed to load Prometheus registry'));
 
   return registryProxy.proxy;
 }

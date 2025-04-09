@@ -1,4 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
+import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import {
   defaultPrintFn,
   type Transport,
@@ -7,7 +8,6 @@ import {
   type TransportGetSubgraphExecutor,
   type TransportGetSubgraphExecutorOptions,
 } from '@graphql-mesh/transport-common';
-import type { Logger } from '@graphql-mesh/types';
 import {
   isDisposable,
   iterateAsync,
@@ -121,12 +121,12 @@ function getTransportExecutor({
 }): MaybePromise<Executor> {
   // TODO
   const kind = transportEntry?.kind || '';
-  let logger = transportContext?.logger;
-  if (logger) {
+  let log = transportContext.log;
+  if (log) {
     if (subgraphName) {
-      logger = logger.child({ subgraph: subgraphName });
+      log = log.child({ subgraph: subgraphName });
     }
-    logger?.debug(`Loading transport "${kind}"`);
+    log.debug(`Loading transport "${kind}"`);
   }
   return handleMaybePromise(
     () =>
@@ -186,7 +186,7 @@ export const subgraphNameByExecutionRequest = new WeakMap<
  */
 export function getOnSubgraphExecute({
   onSubgraphExecuteHooks,
-  transportContext = {},
+  transportContext,
   transportEntryMap,
   getSubgraphSchema,
   transportExecutorStack,
@@ -197,7 +197,7 @@ export function getOnSubgraphExecute({
 }: {
   onSubgraphExecuteHooks: OnSubgraphExecuteHook[];
   transports?: Transports;
-  transportContext?: TransportContext;
+  transportContext: TransportContext;
   transportEntryMap: Record<string, TransportEntry>;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
@@ -214,18 +214,18 @@ export function getOnSubgraphExecute({
     let executor: Executor | undefined = subgraphExecutorMap.get(subgraphName);
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
-      let logger = transportContext?.logger;
-      if (logger) {
+      let log = transportContext.log;
+      if (log) {
         const requestId = requestIdByRequest.get(
           executionRequest.context?.request,
         );
         if (requestId) {
-          logger = logger.child({ requestId });
+          log = log.child({ requestId });
         }
         if (subgraphName) {
-          logger = logger.child({ subgraph: subgraphName });
+          log = log.child({ subgraph: subgraphName });
         }
-        logger.debug(`Initializing executor`);
+        log.debug('Initializing executor');
       }
       // Lazy executor that loads transport executor on demand
       executor = function lazyExecutor(subgraphExecReq: ExecutionRequest) {
@@ -285,7 +285,7 @@ export interface WrapExecuteWithHooksOptions {
   subgraphName: string;
   transportEntryMap?: Record<string, TransportEntry>;
   getSubgraphSchema: (subgraphName: string) => GraphQLSchema;
-  transportContext?: TransportContext;
+  transportContext: TransportContext;
   instrumentation: () => Instrumentation | undefined;
 }
 
@@ -321,14 +321,17 @@ export function wrapExecutorWithHooks({
     const requestId =
       baseExecutionRequest.context?.request &&
       requestIdByRequest.get(baseExecutionRequest.context.request);
-    let execReqLogger = transportContext?.logger;
+    let execReqLogger = transportContext.log;
     if (execReqLogger) {
       if (requestId) {
         execReqLogger = execReqLogger.child({ requestId });
       }
-      loggerForExecutionRequest.set(baseExecutionRequest, execReqLogger);
+      loggerForExecutionRequest.set(
+        baseExecutionRequest,
+        LegacyLogger.from(execReqLogger),
+      );
     }
-    execReqLogger = execReqLogger?.child?.({ subgraph: subgraphName });
+    execReqLogger = execReqLogger?.child({ subgraph: subgraphName });
     if (onSubgraphExecuteHooks.length === 0) {
       return baseExecutor(baseExecutionRequest);
     }
@@ -358,7 +361,7 @@ export function wrapExecutorWithHooks({
                 executor = newExecutor;
               },
               requestId,
-              logger: execReqLogger,
+              log: execReqLogger,
             }),
           onSubgraphExecuteDoneHooks,
         ),
@@ -474,7 +477,7 @@ export interface OnSubgraphExecutePayload<TContext> {
   executor: Executor;
   setExecutor(executor: Executor): void;
   requestId?: string;
-  logger?: Logger;
+  log: Logger;
 }
 
 export interface OnSubgraphExecuteDonePayload {
@@ -600,19 +603,18 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
   originalResolver: MergedTypeResolver<TContext>,
   typeName: string,
   onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[],
-  baseLogger?: Logger,
+  log: Logger,
 ): MergedTypeResolver<TContext> {
   return (object, context, info, subschema, selectionSet, key, type) => {
-    let logger = baseLogger;
     let requestId: string | undefined;
-    if (logger && context['request']) {
+    if (log && context['request']) {
       requestId = requestIdByRequest.get(context['request']);
       if (requestId) {
-        logger = logger.child({ requestId });
+        log = log.child({ requestId });
       }
     }
     if (subschema.name) {
-      logger = logger?.child({ subgraph: subschema.name });
+      log = log.child({ subgraph: subschema.name });
     }
     let resolver = originalResolver as MergedTypeResolver<TContext>;
     function setResolver(newResolver: MergedTypeResolver<TContext>) {
@@ -632,7 +634,7 @@ export function wrapMergedTypeResolver<TContext extends Record<string, any>>(
         typeName,
         type,
         requestId,
-        logger,
+        logger: log,
         resolver,
         setResolver,
       });
