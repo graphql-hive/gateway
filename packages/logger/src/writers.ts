@@ -45,7 +45,12 @@ const asciMap = {
 };
 
 export class ConsoleLogWriter implements LogWriter {
-  #nocolor = truthyEnv('NO_COLOR');
+  #nocolor =
+    // no color if we're running in browser-like (edge) environments
+    // TODO: is this the most accurate way to detect it?
+    typeof process === 'undefined' ||
+    // no color if https://no-color.org/
+    truthyEnv('NO_COLOR');
   color(style: keyof typeof asciMap, text: string | null | undefined) {
     if (!text) {
       return text;
