@@ -1,5 +1,24 @@
 # @graphql-tools/federation
 
+## 3.2.1
+
+### Patch Changes
+
+- [#997](https://github.com/graphql-hive/gateway/pull/997) [`4cf75cb`](https://github.com/graphql-hive/gateway/commit/4cf75cbf1f14169826d1917532ee73ee45c002d5) Thanks [@ardatan](https://github.com/ardatan)! - - **BREAKING**: HTTP Executor no longer takes `serviceName` as an option.
+
+  - Both HTTP executor and `@graphql-mesh/transport-http-callback` no longer handle `DOWNSTREAM_SERVICE_ERROR` error code with `serviceName`.
+  - Gateway runtime handles subgraph errors on its own with `DOWNSTREAM_SERVICE_ERROR` error code and `serviceName` as a property. This behavior can be configured with `subgraphErrors` option of the `createGatewayRuntime` function or CLI config.
+
+  ```ts
+  subgraphError: {
+     errorCode: 'DOWNSTREAM_SERVICE_ERROR', // or `false` to remove this code completely
+     subgraphNameProp: 'serviceName' // or `false` to remove this prop completely
+  }
+  ```
+
+- Updated dependencies [[`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228), [`4cf75cb`](https://github.com/graphql-hive/gateway/commit/4cf75cbf1f14169826d1917532ee73ee45c002d5)]:
+  - @graphql-tools/executor-http@2.0.0
+
 ## 3.2.0
 
 ### Minor Changes
