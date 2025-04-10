@@ -15,8 +15,7 @@ export function useFetchDebug<
       log.debug(
         () => ({
           url,
-          ...(options || {}),
-          body: options?.body,
+          body: options?.body?.toString(),
           headers: options?.headers,
           signal: options?.signal?.aborted ? options?.signal?.reason : false,
         }),

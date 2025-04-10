@@ -1,8 +1,7 @@
-import { LegacyLogger } from '@graphql-hive/logger';
+import { LegacyLogger, Logger } from '@graphql-hive/logger';
 import type { YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
-  requestIdByRequest,
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
 import type {
@@ -307,13 +306,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
             delegationPlanBuilder = newDelegationPlanBuilder;
           }
           const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] = [];
-          let requestId: string | undefined;
-          if (context?.request) {
-            requestId = requestIdByRequest.get(context.request);
-            if (requestId) {
-              log = log.child({ requestId });
-            }
-          }
+          let log = context.log as Logger;
           if (sourceSubschema.name) {
             log = log.child({
               subgraph: sourceSubschema.name,
