@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 1.13.6
+
+### Patch Changes
+
+- [#1015](https://github.com/graphql-hive/gateway/pull/1015) [`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.13.3` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.3) (from `^5.13.2`, in `dependencies`)
+
+- Updated dependencies [[`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228), [`f797304`](https://github.com/graphql-hive/gateway/commit/f797304fe27fb4174cea5a50d9869a91b08b5e0d), [`4cf75cb`](https://github.com/graphql-hive/gateway/commit/4cf75cbf1f14169826d1917532ee73ee45c002d5), [`0f70298`](https://github.com/graphql-hive/gateway/commit/0f70298d420766f56398a198d9d91c12884f033d)]:
+  - @graphql-hive/gateway-runtime@1.8.0
+  - @graphql-mesh/transport-http-callback@0.6.0
+  - @graphql-hive/plugin-aws-sigv4@1.0.7
+  - @graphql-mesh/hmac-upstream-signature@1.2.26
+  - @graphql-mesh/plugin-opentelemetry@1.3.54
+  - @graphql-mesh/plugin-prometheus@1.3.42
+  - @graphql-mesh/transport-http@0.6.40
+
 ## 1.13.5
 
 ### Patch Changes
