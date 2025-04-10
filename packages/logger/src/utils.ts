@@ -28,9 +28,10 @@ export const logLevel: { [level in LogLevel]: number } = {
 };
 
 export function shouldLog(
-  setLevel: LogLevel | false,
+  setLevel: MaybeLazy<LogLevel | false>,
   loggingLevel: LogLevel,
 ): boolean {
+  setLevel = typeof setLevel === 'function' ? setLevel() : setLevel;
   return (
     setLevel !== false && // logging is not disabled
     logLevel[setLevel] <= logLevel[loggingLevel] // and set log level is less than or equal to logging level

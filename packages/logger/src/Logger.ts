@@ -23,9 +23,11 @@ export interface LoggerOptions {
    *
    * Providing `false` will disable all logging.
    *
+   * Provided function will always be invoked to get the current log level.
+   *
    * @default env.LOG_LEVEL || env.DEBUG ? 'debug' : 'info'
    */
-  level?: LogLevel | false;
+  level?: MaybeLazy<LogLevel | false>;
   /** A prefix to include in every log's message. */
   prefix?: string;
   /**
@@ -42,7 +44,7 @@ export interface LoggerOptions {
 }
 
 export class Logger implements LogWriter {
-  #level: LogLevel | false;
+  #level: MaybeLazy<LogLevel | false>;
   #prefix: string | undefined;
   #attrs: Attributes | undefined;
   #writers: [LogWriter, ...LogWriter[]];
@@ -69,7 +71,11 @@ export class Logger implements LogWriter {
   }
 
   public get level() {
-    return this.#level;
+    return typeof this.#level === 'function' ? this.#level() : this.#level;
+  }
+
+  public setLevel(level: MaybeLazy<LogLevel | false>) {
+    this.#level = level;
   }
 
   public write(
@@ -108,14 +114,14 @@ export class Logger implements LogWriter {
   public child(prefixOrAttrs: string | Attributes, prefix?: string): Logger {
     if (typeof prefixOrAttrs === 'string') {
       return new Logger({
-        level: this.#level,
+        level: () => this.level, // inherits the parent level (yet can be changed on child only when using setLevel)
         prefix: (this.#prefix || '') + prefixOrAttrs,
         attrs: this.#attrs,
         writers: this.#writers,
       });
     }
     return new Logger({
-      level: this.#level,
+      level: () => this.level, // inherits the parent level (yet can be changed on child only when using setLevel)
       prefix: (this.#prefix || '') + (prefix || '') || undefined,
       attrs: { ...this.#attrs, ...prefixOrAttrs },
       writers: this.#writers,
