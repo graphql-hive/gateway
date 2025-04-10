@@ -29,6 +29,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./request": {
+      "require": {
+        "types": "./dist/request.d.cts",
+        "default": "./dist/request.cjs"
+      },
+      "import": {
+        "types": "./dist/request.d.ts",
+        "default": "./dist/request.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
