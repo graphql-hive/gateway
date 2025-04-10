@@ -18,7 +18,11 @@ export class LegacyLogger {
 
   #log(level: LogLevel, ...[maybeMsgOrArg, ...restArgs]: any[]) {
     if (typeof maybeMsgOrArg === 'string') {
-      this.#logger.log(level, restArgs, maybeMsgOrArg);
+      if (restArgs.length) {
+        this.#logger.log(level, restArgs, maybeMsgOrArg);
+      } else {
+        this.#logger.log(level, maybeMsgOrArg);
+      }
     } else {
       if (restArgs.length) {
         this.#logger.log(level, [maybeMsgOrArg, ...restArgs]);
@@ -53,9 +57,11 @@ export class LegacyLogger {
   }
 
   child(name: string | Record<string, string | number>): LegacyLogger {
-    name = stringifyName(name);
-    if (this.#logger.prefix?.includes(name)) {
-      // TODO: why do we do this?
+    name =
+      stringifyName(name) +
+      // append space if object is strigified to space out the prefix
+      (typeof name === 'object' ? ' ' : '');
+    if (this.#logger.prefix === name) {
       return this;
     }
     return LegacyLogger.from(this.#logger.child(name));
