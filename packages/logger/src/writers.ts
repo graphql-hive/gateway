@@ -1,10 +1,10 @@
+import fastSafeStringify from 'fast-safe-stringify';
 import { LogLevel } from './Logger';
-import {
-  Attributes,
-  jsonStringify,
-  logLevelToString,
-  truthyEnv,
-} from './utils';
+import { Attributes, logLevelToString, truthyEnv } from './utils';
+
+export function jsonStringify(val: unknown, pretty?: boolean): string {
+  return fastSafeStringify(val, undefined, pretty ? 2 : undefined);
+}
 
 export interface LogWriter {
   write(
