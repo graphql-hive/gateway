@@ -15,7 +15,7 @@ export type FetchInstrumentation = {
 };
 
 export function wrapFetchWithHooks<TContext>(
-  onFetchHooks: OnFetchHook<TContext>[],
+  // onFetchHooks: OnFetchHook<TContext>[], TODO: move over onfetchhook types with new signature
   instrumentation?: () => FetchInstrumentation | undefined,
 ): MeshFetch {
   let wrappedFetchFn = function wrappedFetchFn(url, options, context, info) {
