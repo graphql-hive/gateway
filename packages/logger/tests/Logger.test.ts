@@ -343,3 +343,73 @@ it.todo('should serialise aggregate errors');
 it.todo('should serialise error causes');
 
 it.todo('should serialise using the toJSON method');
+
+it('should change log level', () => {
+  const [log, writer] = createTLogger();
+
+  log.info('hello');
+  log.setLevel('warn');
+  log.info('no hello');
+  log.warn('yes hello');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "level": "warn",
+        "msg": "yes hello",
+      },
+    ]
+  `);
+});
+
+it('should change root log level and propagate to child loggers', () => {
+  const [rootLog, writer] = createTLogger();
+
+  const childLog = rootLog.child('sub ');
+
+  childLog.info('hello');
+  rootLog.setLevel('warn');
+  childLog.info('no hello');
+  childLog.warn('yes hello');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "sub hello",
+      },
+      {
+        "level": "warn",
+        "msg": "sub yes hello",
+      },
+    ]
+  `);
+});
+
+it('should change child log level only on child', () => {
+  const [rootLog, writer] = createTLogger();
+
+  const childLog = rootLog.child('sub ');
+
+  childLog.setLevel('warn');
+  rootLog.info('yes hello'); // should still log because root didnt change
+  childLog.info('no hello');
+  childLog.warn('yes hello');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "yes hello",
+      },
+      {
+        "level": "warn",
+        "msg": "sub yes hello",
+      },
+    ]
+  `);
+});
