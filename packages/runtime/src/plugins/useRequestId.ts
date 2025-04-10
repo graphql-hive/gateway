@@ -1,4 +1,7 @@
-import { requestIdByRequest } from '@graphql-mesh/utils';
+import {
+  loggerForRequest,
+  requestIdByRequest,
+} from '@graphql-hive/logger/request';
 import { FetchAPI } from '@whatwg-node/server';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
@@ -48,14 +51,18 @@ export function useRequestId<TContext extends Record<string, any>>(
         });
       requestIdByRequest.set(request, requestId);
     },
-    onContextBuilding({ context }) {
-      if (context?.request) {
-        const requestId = requestIdByRequest.get(context.request);
-        if (requestId && context.logger) {
-          // @ts-expect-error - Logger is somehow read-only
-          context.logger = context.logger.child({ requestId });
-        }
-      }
+    onContextBuilding({ context, extendContext }) {
+      extendContext(
+        // @ts-expect-error TODO: typescript is acting up here
+        {
+          log: loggerForRequest(context.log, context.request, () => {
+            throw new Error(
+              "Request ID must've already been created but is not found",
+            );
+            // because we are using the logger's requestIdByRequest map
+          }),
+        },
+      );
     },
     onFetch({ context, options, setOptions }) {
       if (context?.request) {

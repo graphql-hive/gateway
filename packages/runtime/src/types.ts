@@ -1,5 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
+import type { Logger, LogLevel } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type {
   Instrumentation as GatewayRuntimeInstrumentation,
@@ -11,11 +12,10 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
-  Logger,
   MeshFetch,
   OnFetchHook,
 } from '@graphql-mesh/types';
-import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
+import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
   IResolvers,
@@ -61,9 +61,9 @@ export interface GatewayConfigContext {
    */
   fetch: MeshFetch;
   /**
-   * The logger to use throught Mesh and it's plugins.
+   * The logger to use throught Hive and its plugins.
    */
-  logger: Logger;
+  log: Logger;
   /**
    * Current working directory.
    */
@@ -472,9 +472,10 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Enable, disable or implement a custom logger for logging.
    *
    * @default true
+   *
    * @see https://the-guild.dev/graphql/hive/docs/gateway/logging-and-error-handling
    */
-  logging?: boolean | Logger | LogLevel | keyof typeof LogLevel | undefined;
+  logging?: boolean | Logger | LogLevel | undefined;
   /**
    * Endpoint of the GraphQL API.
    */
