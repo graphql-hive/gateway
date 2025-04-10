@@ -26,6 +26,7 @@ describe('useOpenTelemetry', () => {
   const TracerProvider = WebTracerProvider;
   mockModule('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
+    AlwaysOnSampler: vi.fn(),
   }));
 
   let traceProvider: WebTracerProvider;
