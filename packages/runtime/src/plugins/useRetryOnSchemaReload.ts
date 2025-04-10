@@ -1,5 +1,5 @@
 import type { Logger } from '@graphql-hive/logger';
-import { requestIdByRequest } from '@graphql-mesh/utils';
+import { loggerForRequest } from '@graphql-hive/logger/request';
 import type { MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -41,11 +41,10 @@ export function useRetryOnSchemaReload<
       execHandler &&
       result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
     ) {
-      let log = logForRequest.get(request)!; // must exist at this point
-      const requestId = requestIdByRequest.get(request);
-      if (requestId) {
-        log = log.child({ requestId });
-      }
+      const log = loggerForRequest(
+        logForRequest.get(request)!, // must exist at this point
+        request,
+      );
       log.info(
         'The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
       );

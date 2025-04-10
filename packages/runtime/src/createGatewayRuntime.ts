@@ -34,7 +34,6 @@ import {
   getInContextSDK,
   isDisposable,
   isUrl,
-  wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
@@ -122,6 +121,7 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
+import { wrapFetchWithHooks } from './wrapFetchWithHooks';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -157,7 +157,6 @@ export function createGatewayRuntime<
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
     () => instrumentation,
-    LegacyLogger.from(log),
   );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
