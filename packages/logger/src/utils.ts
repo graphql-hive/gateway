@@ -1,19 +1,8 @@
-import fastSafeStringify from 'fast-safe-stringify';
 import { LogLevel } from './Logger';
 
 export type MaybeLazy<T> = T | (() => T);
 
-export type AttributeValue =
-  | string
-  | number
-  | boolean
-  | { [key: string | number]: AttributeValue }
-  | AttributeValue[]
-  | Object // redundant, but this will allow _any_ object be the value
-  | null
-  | undefined
-  // TODO: remove `any`. this any will replace all other elements in the union, but is necessary for passing "interfaces" as attributes
-  | any;
+export type AttributeValue = any;
 
 export type Attributes =
   | AttributeValue[]
@@ -61,20 +50,6 @@ export function isPromise(val: unknown): val is Promise<any> {
     typeof obj.then === 'function' &&
     typeof obj.catch === 'function' &&
     typeof obj.finally === 'function'
-  );
-}
-
-/** An error safe JSON stringifyer. */
-export function jsonStringify(val: unknown, pretty?: boolean): string {
-  return fastSafeStringify(
-    val,
-    (_key, val) => {
-      if (val instanceof Error) {
-        return objectifyError(val);
-      }
-      return val;
-    },
-    pretty ? 2 : undefined,
   );
 }
 
@@ -174,10 +149,6 @@ function objectifyClass(val: unknown): Record<string, unknown> {
     ...props,
     class: val.constructor.name,
   };
-}
-
-function objectifyError(err: Error) {
-  return objectifyClass(err);
 }
 
 export function getEnv(key: string): string | undefined {
