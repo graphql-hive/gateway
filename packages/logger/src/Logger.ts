@@ -66,14 +66,29 @@ export class Logger implements LogWriter {
     this.#writers = opts.writers ?? [new ConsoleLogWriter()];
   }
 
+  /** The prefix that's prepended to each log message. */
   public get prefix() {
     return this.#prefix;
   }
 
+  /**
+   * The attributes that are added to each log. If the log itself contains
+   * attributes with keys existing in {@link attrs}, the log's attributes will
+   * override.
+   */
+  public get attrs() {
+    return this.#attrs;
+  }
+
+  /** The current {@link LogLevel} of the logger. You can change the level using the {@link setLevel} method. */
   public get level() {
     return typeof this.#level === 'function' ? this.#level() : this.#level;
   }
 
+  /**
+   * Sets the new {@link LogLevel} of the logger. All subsequent logs, and {@link child child loggers} whose
+   * level did not change, will respect the new level.
+   */
   public setLevel(level: MaybeLazy<LogLevel | false>) {
     this.#level = level;
   }
