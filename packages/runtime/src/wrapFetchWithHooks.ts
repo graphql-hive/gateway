@@ -1,11 +1,9 @@
 import { getInstrumented } from '@envelop/instrumentation';
-import type {
-  MeshFetch,
-  OnFetchHook,
-  OnFetchHookDone,
-} from '@graphql-mesh/types';
-import { type ExecutionRequest, type MaybePromise } from '@graphql-tools/utils';
+import type { Logger } from '@graphql-hive/logger';
+import type { MeshFetch } from '@graphql-mesh/types';
+import type { ExecutionRequest, MaybePromise } from '@graphql-tools/utils';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
+import { OnFetchHook, OnFetchHookDone } from './types';
 
 export type FetchInstrumentation = {
   fetch?: (
@@ -15,7 +13,8 @@ export type FetchInstrumentation = {
 };
 
 export function wrapFetchWithHooks<TContext>(
-  // onFetchHooks: OnFetchHook<TContext>[], TODO: move over onfetchhook types with new signature
+  onFetchHooks: OnFetchHook<TContext>[],
+  log: Logger,
   instrumentation?: () => FetchInstrumentation | undefined,
 ): MeshFetch {
   let wrappedFetchFn = function wrappedFetchFn(url, options, context, info) {
@@ -41,7 +40,7 @@ export function wrapFetchWithHooks<TContext>(
               setOptions(newOptions) {
                 options = newOptions;
               },
-              context,
+              context: { log, ...context },
               // @ts-expect-error TODO: why?
               info,
               get executionRequest() {
