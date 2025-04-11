@@ -13,11 +13,12 @@ import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
   MeshFetch,
-  OnFetchHook,
+  MeshFetchRequestInit,
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
+  ExecutionRequest,
   IResolvers,
   MaybePromise,
   TypeSource,
@@ -35,6 +36,7 @@ import type {
   Plugin as YogaPlugin,
   YogaServerOptions,
 } from 'graphql-yoga';
+import { GraphQLResolveInfo } from 'graphql/type';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
@@ -96,7 +98,7 @@ export type GatewayPlugin<
   TContext extends Record<string, any> = Record<string, any>,
 > = YogaPlugin<Partial<TPluginContext> & GatewayContext & TContext> &
   UnifiedGraphPlugin<Partial<TPluginContext> & GatewayContext & TContext> & {
-    onFetch?: OnFetchHook<Partial<TPluginContext> & GatewayContext & TContext>;
+    onFetch?: OnFetchHook<Partial<TPluginContext> & TContext>;
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
@@ -111,6 +113,38 @@ export type GatewayPlugin<
       TPluginContext & TContext & GatewayContext
     >;
   };
+
+export interface OnFetchHookPayload<TContext> {
+  url: string;
+  setURL(url: URL | string): void;
+  options: MeshFetchRequestInit;
+  setOptions(options: MeshFetchRequestInit): void;
+  /**
+   * The context is not available in cases where "fetch" is done in
+   * order to pull a supergraph or do some internal work.
+   *
+   * The logger will be available in all cases.
+   */
+  context: (GatewayContext & TContext) | { log: Logger };
+  info: GraphQLResolveInfo;
+  fetchFn: MeshFetch;
+  setFetchFn: (fetchFn: MeshFetch) => void;
+  executionRequest?: ExecutionRequest;
+  endResponse: (response$: MaybePromise<Response>) => void;
+}
+
+export interface OnFetchHookDonePayload {
+  response: Response;
+  setResponse: (response: Response) => void;
+}
+
+export type OnFetchHookDone = (
+  payload: OnFetchHookDonePayload,
+) => MaybePromise<void>;
+
+export type OnFetchHook<TContext> = (
+  payload: OnFetchHookPayload<TContext>,
+) => MaybePromise<void | OnFetchHookDone>;
 
 export type OnCacheGetHook = (
   payload: OnCacheGetHookEventPayload,

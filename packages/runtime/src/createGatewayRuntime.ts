@@ -27,11 +27,7 @@ import {
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
-import type {
-  KeyValueCache,
-  OnDelegateHook,
-  OnFetchHook,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
   getHeadersObj,
@@ -118,6 +114,7 @@ import type {
   OnCacheDeleteHook,
   OnCacheGetHook,
   OnCacheSetHook,
+  OnFetchHook,
   UnifiedGraphConfig,
 } from './types';
 import {
@@ -161,6 +158,7 @@ export function createGatewayRuntime<
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
+    log,
     () => instrumentation,
   );
   const wrappedCache: KeyValueCache | undefined = config.cache

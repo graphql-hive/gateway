@@ -1,7 +1,6 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import type { OnFetchHookDone } from '@graphql-mesh/types';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { GatewayPlugin } from '../types';
+import type { GatewayPlugin, OnFetchHookDone } from '../types';
 
 interface FromClientToSubgraphsPayload {
   request: Request;
