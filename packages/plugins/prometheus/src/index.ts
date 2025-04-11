@@ -1,4 +1,4 @@
-import { type GatewayPlugin } from '@graphql-hive/gateway-runtime';
+import type { GatewayPlugin, OnFetchHook } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-hive/logger';
 import type { OnSubgraphExecuteHook } from '@graphql-mesh/fusion-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
@@ -6,7 +6,6 @@ import type {
   ImportFn,
   MeshFetchRequestInit,
   MeshPlugin,
-  OnFetchHook,
 } from '@graphql-mesh/types';
 import {
   defaultImportFn,
