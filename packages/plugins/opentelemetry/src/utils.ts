@@ -35,7 +35,7 @@ export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
 }
 
 export const getEnvVar =
-  'process' in global
+  'process' in globalThis
     ? <T>(name: string, defaultValue: T): string | T =>
         process.env[name] || defaultValue
     : <T>(_name: string, defaultValue: T): string | T => defaultValue;
