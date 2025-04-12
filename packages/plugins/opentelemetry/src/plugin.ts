@@ -61,7 +61,7 @@ import {
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
-import { tryContextManagerSetup } from './utils';
+import { getEnvVar, tryContextManagerSetup } from './utils';
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -99,11 +99,18 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    */
   exporters: MaybePromise<SpanProcessor>[];
   /**
-   * Service name to use for OpenTelemetry NodeSDK resource option (default: 'Gateway').
+   * Service name to use for OpenTelemetry Resource option (default: 'Gateway').
    *
    * Does not apply when `initializeNodeSDK` is `false`.
    */
   serviceName?: string;
+  /**
+   * Service version to use for OpenTelemetry Resource option (default: Hive Gateway version).
+   *
+   * Note: This can also be set by using `OTEL_SERVICE_VERSION` environment variable.
+   */
+  serviceVersion?: string;
+
   /**
    * Whether to rely on OTEL context api for span correlation.
    *  - `undefined` (default): the plugin will try to enable context manager if possible.
@@ -301,8 +308,11 @@ export function useOpenTelemetry(
 
     const resource = detectResources().merge(
       resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: options.serviceName ?? 'Gateway',
-        [ATTR_SERVICE_VERSION]: yogaVersion.promise,
+        [SEMRESATTRS_SERVICE_NAME]:
+          options.serviceName ?? getEnvVar('OTEL_SERVICE_NAME', 'Gateway'),
+        [ATTR_SERVICE_VERSION]:
+          options.serviceVersion ??
+          getEnvVar('OTEL_SERVICE_VERSION', yogaVersion.promise),
       }),
     );
 
