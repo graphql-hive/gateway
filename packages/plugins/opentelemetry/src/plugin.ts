@@ -54,6 +54,7 @@ import {
   createGraphQLSpan,
   createGraphQLValidateSpan,
   createHttpSpan,
+  createSchemaLoadingSpan,
   startSubgraphExecuteFetchSpan as createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
   recordCacheError,
@@ -67,6 +68,7 @@ import {
   setGraphQLValidateAttributes,
   setParamsAttributes,
   setResponseAttributes,
+  setSchemaAttributes,
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
@@ -231,6 +233,12 @@ export type OpenTelemetryGatewayPluginOptions =
        * Enable/Disable cache related span events (default: true).
        */
       cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
+      /**
+       * Enable/disable schema loading spans (default: true).
+       *
+       * Note: This span requires an Async compatible context manager
+       */
+      schema?: boolean;
     };
   };
 
@@ -376,6 +384,15 @@ export function useOpenTelemetry(
       logger.debug(
         `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
+      if (!useContextManager) {
+        if (options.spans?.schema) {
+          logger.warn(
+            'Schema loading spans are disabled because no context manager is available',
+          );
+        }
+        options.spans = options.spans ?? {};
+        options.spans.schema = false;
+      }
       diag.setLogger(
         {
           error: (message, ...args) =>
@@ -696,6 +713,14 @@ export function useOpenTelemetry(
             }),
         );
       },
+
+      schema(_, wrapped) {
+        if (!shouldTrace(options.spans?.schema, null)) {
+          return;
+        }
+
+        return context.with(createSchemaLoadingSpan({ tracer }), wrapped);
+      },
     },
 
     onYogaInit({ yoga }) {
@@ -863,6 +888,11 @@ export function useOpenTelemetry(
         setUpstreamFetchResponseAttributes({ ctx, response });
       };
     },
+
+    onSchemaChange(payload) {
+      setSchemaAttributes(payload);
+    },
+
     async onDispose() {
       if (options.initializeNodeSDK) {
         await provider?.forceFlush?.();
