@@ -40,6 +40,9 @@
         "./packages/transports/http-callback/src/index.ts"
       ],
       "@graphql-mesh/transport-ws": ["./packages/transports/ws/src/index.ts"],
+      "@graphql-mesh/transport-grpc": [
+        "./packages/transports/grpc/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
