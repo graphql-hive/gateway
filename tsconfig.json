@@ -46,6 +46,9 @@
       "@graphql-mesh/transport-mysql": [
         "./packages/transports/mysql/src/index.ts"
       ],
+      "@graphql-mesh/transport-soap": [
+        "./packages/transports/soap/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
