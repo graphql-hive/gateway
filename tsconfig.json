@@ -58,6 +58,9 @@
       "@graphql-mesh/transport-odata": [
         "./packages/transports/odata/src/index.ts"
       ],
+      "@graphql-mesh/transport-sqlite": [
+        "./packages/transports/sqlite/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
