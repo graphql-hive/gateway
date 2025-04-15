@@ -4794,6 +4794,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-mesh/transport-mysql@workspace:packages/transports/mysql":
+  version: 0.0.0-use.local
+  resolution: "@graphql-mesh/transport-mysql@workspace:packages/transports/mysql"
+  dependencies:
+    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.8"
+    "@graphql-mesh/transport-common": "workspace:^"
+    "@graphql-mesh/types": "npm:^0.104.2"
+    "@graphql-mesh/utils": "npm:^0.104.2"
+    "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/utils": "npm:^10.8.0"
+    "@types/graphql-fields": "npm:^1.3.9"
+    "@types/mysql": "npm:^2.15.27"
+    "@whatwg-node/fetch": "npm:^0.10.6"
+    graphql: "npm:^16.10.0"
+    graphql-fields: "npm:^2.0.3"
+    mysql: "npm:^2.18.1"
+    mysql-utilities: "npm:^1.1.4"
+    pkgroll: "npm:2.12.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
+  languageName: unknown
+  linkType: soft
+
 "@graphql-mesh/transport-rest@npm:^0.9.0, @graphql-mesh/transport-rest@npm:^0.9.3":
   version: 0.9.3
   resolution: "@graphql-mesh/transport-rest@npm:0.9.3"
@@ -8506,6 +8531,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/graphql-fields@npm:^1.3.9":
+  version: 1.3.9
+  resolution: "@types/graphql-fields@npm:1.3.9"
+  dependencies:
+    graphql: "npm:*"
+  checksum: 10c0/47cf1b6f8c3e8b16ae79d83632b0721b77ff81bb045642af6633bffb932abf8a67b4cc1872e5ce3ad8fb2972a42ce64f2150c7d3a3c4415d16d8673de8a4113b
+  languageName: node
+  linkType: hard
+
 "@types/html-minifier-terser@npm:^7.0.2":
   version: 7.0.2
   resolution: "@types/html-minifier-terser@npm:7.0.2"
@@ -8643,6 +8677,15 @@ __metadata:
   version: 2.1.0
   resolution: "@types/ms@npm:2.1.0"
   checksum: 10c0/5ce692ffe1549e1b827d99ef8ff71187457e0eb44adbae38fdf7b9a74bae8d20642ee963c14516db1d35fa2652e65f47680fdf679dcbde52bbfadd021f497225
+  languageName: node
+  linkType: hard
+
+"@types/mysql@npm:^2.15.27":
+  version: 2.15.27
+  resolution: "@types/mysql@npm:2.15.27"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/d34064de1697e9e29dbad313df759a8c7aff9d9d1918c9b666b1ebc894b9a0c1c6f4ae779453fdcd20b892fa60a8e55640138c292c6c2a28d2f758eaeb539ce3
   languageName: node
   linkType: hard
 
@@ -10601,6 +10644,13 @@ __metadata:
   dependencies:
     is-windows: "npm:^1.0.0"
   checksum: 10c0/7335130729d59a14b8e4753fea180ca84e287cccc20cb5f2438a95667abc5810327c414eee7b3c79ed1b5a348a40284ea872958f50caba69432c40405eb0acce
+  languageName: node
+  linkType: hard
+
+"bignumber.js@npm:9.0.0":
+  version: 9.0.0
+  resolution: "bignumber.js@npm:9.0.0"
+  checksum: 10c0/a760979ca822533ad7a437a45bcac66c191554a407092baa4991e068fd4af7344ff52d9e82e0574946c831690de706cf86fbc80775b5ebc6e59c2eef7325172c
   languageName: node
   linkType: hard
 
@@ -17034,6 +17084,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mysql-utilities@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "mysql-utilities@npm:1.1.4"
+  dependencies:
+    mysql: "npm:^2.18.1"
+  checksum: 10c0/d3ba2659bfb0f49464562b95dadb566a5fae53e92fd174b1131d7516d78849aee66f9e6beaa7143fea00bc468b7dc991db2d4aa0cca1710334e589467769586a
+  languageName: node
+  linkType: hard
+
+"mysql@npm:^2.18.1":
+  version: 2.18.1
+  resolution: "mysql@npm:2.18.1"
+  dependencies:
+    bignumber.js: "npm:9.0.0"
+    readable-stream: "npm:2.3.7"
+    safe-buffer: "npm:5.1.2"
+    sqlstring: "npm:2.3.1"
+  checksum: 10c0/146aee0fde379e222b0a66194f61e5761123123f48729785c862e18b46531fe29bf96174ee991216f8fb49bbd278defec79bd5e6265c30af7a65a60a5e53321d
+  languageName: node
+  linkType: hard
+
 "mz@npm:^2.7.0":
   version: 2.7.0
   resolution: "mz@npm:2.7.0"
@@ -18465,6 +18536,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"readable-stream@npm:2.3.7":
+  version: 2.3.7
+  resolution: "readable-stream@npm:2.3.7"
+  dependencies:
+    core-util-is: "npm:~1.0.0"
+    inherits: "npm:~2.0.3"
+    isarray: "npm:~1.0.0"
+    process-nextick-args: "npm:~2.0.0"
+    safe-buffer: "npm:~5.1.1"
+    string_decoder: "npm:~1.1.1"
+    util-deprecate: "npm:~1.0.1"
+  checksum: 10c0/1708755e6cf9daff6ff60fa5b4575636472289c5b95d38058a91f94732b8d024a940a0d4d955639195ce42c22cab16973ee8fea8deedd24b5fec3dd596465f86
+  languageName: node
+  linkType: hard
+
 "readable-stream@npm:^2.2.2":
   version: 2.3.8
   resolution: "readable-stream@npm:2.3.8"
@@ -18961,17 +19047,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"safe-buffer@npm:5.1.2, safe-buffer@npm:~5.1.0, safe-buffer@npm:~5.1.1":
+  version: 5.1.2
+  resolution: "safe-buffer@npm:5.1.2"
+  checksum: 10c0/780ba6b5d99cc9a40f7b951d47152297d0e260f0df01472a1b99d4889679a4b94a13d644f7dbc4f022572f09ae9005fa2fbb93bbbd83643316f365a3e9a45b21
+  languageName: node
+  linkType: hard
+
 "safe-buffer@npm:5.2.1, safe-buffer@npm:^5.0.1, safe-buffer@npm:~5.2.0":
   version: 5.2.1
   resolution: "safe-buffer@npm:5.2.1"
   checksum: 10c0/6501914237c0a86e9675d4e51d89ca3c21ffd6a31642efeba25ad65720bce6921c9e7e974e5be91a786b25aa058b5303285d3c15dbabf983a919f5f630d349f3
-  languageName: node
-  linkType: hard
-
-"safe-buffer@npm:~5.1.0, safe-buffer@npm:~5.1.1":
-  version: 5.1.2
-  resolution: "safe-buffer@npm:5.1.2"
-  checksum: 10c0/780ba6b5d99cc9a40f7b951d47152297d0e260f0df01472a1b99d4889679a4b94a13d644f7dbc4f022572f09ae9005fa2fbb93bbbd83643316f365a3e9a45b21
   languageName: node
   linkType: hard
 
@@ -19627,6 +19713,13 @@ __metadata:
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
   checksum: 10c0/ecadcfe4c771890140da5023d43e190b7566d9cf8b2d238600f31bec0fc653f328da4450eb04bd59a431771a8e9cc0e118f0aa3974b683a4981b4e07abc2a5bb
+  languageName: node
+  linkType: hard
+
+"sqlstring@npm:2.3.1":
+  version: 2.3.1
+  resolution: "sqlstring@npm:2.3.1"
+  checksum: 10c0/8c188effb480ca810f5a2c74deb034b99f5831aa1acfb372fab7029172e0e1f5add19195ad82416d3fd88a0646317a4d15a31e012d7b02da20f5e7e173deee24
   languageName: node
   linkType: hard
 

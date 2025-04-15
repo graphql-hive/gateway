@@ -43,6 +43,9 @@
       "@graphql-mesh/transport-grpc": [
         "./packages/transports/grpc/src/index.ts"
       ],
+      "@graphql-mesh/transport-mysql": [
+        "./packages/transports/mysql/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
