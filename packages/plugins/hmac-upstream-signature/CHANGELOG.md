@@ -1,5 +1,13 @@
 # @graphql-mesh/hmac-upstream-signature
 
+## 1.2.27
+
+### Patch Changes
+
+- [#1045](https://github.com/graphql-hive/gateway/pull/1045) [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Update graphql-yoga and whatwg-node packages
+
+  In light of https://github.com/ardatan/whatwg-node/pull/2305. Please upgrade as soon as possible!
+
 ## 1.2.26
 
 ### Patch Changes
