@@ -76,7 +76,7 @@ if (
   deps['e2e/node_modules/@internal/testing/index'] =
     '../../internal/testing/src/index.ts';
   deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
-    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
+    '../transports/rest/src/index.ts';
   deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
     '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
 }
