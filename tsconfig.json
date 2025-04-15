@@ -52,6 +52,9 @@
       "@graphql-mesh/transport-rest": [
         "./packages/transports/rest/src/index.ts"
       ],
+      "@graphql-mesh/transport-neo4j": [
+        "./packages/transports/neo4j/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
