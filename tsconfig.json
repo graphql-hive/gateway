@@ -30,37 +30,7 @@
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
       ],
-      "@graphql-mesh/transport-common": [
-        "./packages/transports/common/src/index.ts"
-      ],
-      "@graphql-mesh/transport-http": [
-        "./packages/transports/http/src/index.ts"
-      ],
-      "@graphql-mesh/transport-http-callback": [
-        "./packages/transports/http-callback/src/index.ts"
-      ],
-      "@graphql-mesh/transport-ws": ["./packages/transports/ws/src/index.ts"],
-      "@graphql-mesh/transport-grpc": [
-        "./packages/transports/grpc/src/index.ts"
-      ],
-      "@graphql-mesh/transport-mysql": [
-        "./packages/transports/mysql/src/index.ts"
-      ],
-      "@graphql-mesh/transport-soap": [
-        "./packages/transports/soap/src/index.ts"
-      ],
-      "@graphql-mesh/transport-rest": [
-        "./packages/transports/rest/src/index.ts"
-      ],
-      "@graphql-mesh/transport-neo4j": [
-        "./packages/transports/neo4j/src/index.ts"
-      ],
-      "@graphql-mesh/transport-odata": [
-        "./packages/transports/odata/src/index.ts"
-      ],
-      "@graphql-mesh/transport-sqlite": [
-        "./packages/transports/sqlite/src/index.ts"
-      ],
+      "@graphql-mesh/transport-*": ["./packages/transports/*/src/index.ts"],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],

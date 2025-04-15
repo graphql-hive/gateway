@@ -1,0 +1,59 @@
+{
+  "name": "@graphql-mesh/transport-thrift",
+  "version": "0.9.2",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/transports/thrift"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^15.9.0 || ^16.9.0"
+  },
+  "dependencies": {
+    "@creditkarma/thrift-client": "^1.0.4",
+    "@creditkarma/thrift-server-core": "^1.0.4",
+    "@graphql-mesh/string-interpolation": "^0.5.8",
+    "@graphql-mesh/transport-common": "workspace:^",
+    "@graphql-mesh/utils": "^0.104.2",
+    "@graphql-tools/utils": "^10.8.0",
+    "pascal-case": "^3.1.2",
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "graphql": "^16.10.0",
+    "pkgroll": "2.12.1"
+  },
+  "sideEffects": false
+}
