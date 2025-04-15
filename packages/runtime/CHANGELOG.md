@@ -1,5 +1,52 @@
 # @graphql-hive/gateway-runtime
 
+## 1.8.0
+
+### Minor Changes
+
+- [#997](https://github.com/graphql-hive/gateway/pull/997) [`4cf75cb`](https://github.com/graphql-hive/gateway/commit/4cf75cbf1f14169826d1917532ee73ee45c002d5) Thanks [@ardatan](https://github.com/ardatan)! - - **BREAKING**: HTTP Executor no longer takes `serviceName` as an option.
+
+  - Both HTTP executor and `@graphql-mesh/transport-http-callback` no longer handle `DOWNSTREAM_SERVICE_ERROR` error code with `serviceName`.
+  - Gateway runtime handles subgraph errors on its own with `DOWNSTREAM_SERVICE_ERROR` error code and `serviceName` as a property. This behavior can be configured with `subgraphErrors` option of the `createGatewayRuntime` function or CLI config.
+
+  ```ts
+  subgraphError: {
+     errorCode: 'DOWNSTREAM_SERVICE_ERROR', // or `false` to remove this code completely
+     subgraphNameProp: 'serviceName' // or `false` to remove this prop completely
+  }
+  ```
+
+### Patch Changes
+
+- [#1015](https://github.com/graphql-hive/gateway/pull/1015) [`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.13.3` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.3) (from `^5.13.2`, in `dependencies`)
+
+- [#1045](https://github.com/graphql-hive/gateway/pull/1045) [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/server@^0.10.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.5) (from `^0.10.3`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.4` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.4) (from `^5.13.3`, in `dependencies`)
+
+- [#1045](https://github.com/graphql-hive/gateway/pull/1045) [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Update graphql-yoga and whatwg-node packages
+
+  In light of https://github.com/ardatan/whatwg-node/pull/2305. Please upgrade as soon as possible!
+
+- [#1007](https://github.com/graphql-hive/gateway/pull/1007) [`f797304`](https://github.com/graphql-hive/gateway/commit/f797304fe27fb4174cea5a50d9869a91b08b5e0d) Thanks [@ardatan](https://github.com/ardatan)! - Support aliased imports for Demand Control directives such as;
+
+  ```graphql
+  extend schema @link(url: "...", import: [{ name: "@cost", as: "@myCost" }])
+  ```
+
+  So in this case, `@myCost` will be available in the schema as `@myCost` instead of `@cost`.
+
+- [#960](https://github.com/graphql-hive/gateway/pull/960) [`0f70298`](https://github.com/graphql-hive/gateway/commit/0f70298d420766f56398a198d9d91c12884f033d) Thanks [@ardatan](https://github.com/ardatan)! - Fix the version property in the gateway runtime instance
+
+- Updated dependencies [[`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93), [`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228), [`4cf75cb`](https://github.com/graphql-hive/gateway/commit/4cf75cbf1f14169826d1917532ee73ee45c002d5)]:
+  - @graphql-mesh/fusion-runtime@0.11.10
+  - @graphql-tools/executor-http@2.0.0
+  - @graphql-tools/federation@3.2.1
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+
 ## 1.7.0
 
 ### Minor Changes

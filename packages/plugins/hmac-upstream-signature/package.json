@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/hmac-upstream-signature",
-  "version": "1.2.26",
+  "version": "1.2.27",
   "type": "module",
   "repository": {
     "type": "git",

@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 1.0.7
+
+### Patch Changes
+
+- [#1045](https://github.com/graphql-hive/gateway/pull/1045) [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Update graphql-yoga and whatwg-node packages
+
+  In light of https://github.com/ardatan/whatwg-node/pull/2305. Please upgrade as soon as possible!
+
+- Updated dependencies [[`9a120c8`](https://github.com/graphql-hive/gateway/commit/9a120c85ac67654f63e374cf420ac4b73da21228), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93), [`da47a0e`](https://github.com/graphql-hive/gateway/commit/da47a0effcc0e3c2b934bc97ab10e6e86ef8cd93)]:
+  - @graphql-mesh/fusion-runtime@0.11.10
+
 ## 1.0.6
 
 ### Patch Changes
