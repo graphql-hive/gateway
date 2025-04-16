@@ -10,7 +10,10 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
   ] as const;
 }
 
-it('should write logs with levels, message and attributes', () => {
+it.skipIf(
+  // skip on bun because bun serialises errors differently from node (failing the snapshot)
+  globalThis.Bun,
+)('should write logs with levels, message and attributes', () => {
   const [log, writter] = createTLogger();
 
   const err = new Error('Woah!');
@@ -281,7 +284,10 @@ it('should format string', () => {
   `);
 });
 
-it('should write logs with unexpected attributes', () => {
+it.skipIf(
+  // skip on bun because bun serialises errors differently from node (failing the snapshot)
+  globalThis.Bun,
+)('should write logs with unexpected attributes', () => {
   const [log, writer] = createTLogger();
 
   const err = new Error('Woah!');
