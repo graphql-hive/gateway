@@ -13645,6 +13645,7 @@ __metadata:
     "@babel/plugin-proposal-explicit-resource-management": "npm:7.27.4"
     "@babel/plugin-transform-class-properties": "npm:7.27.1"
     "@babel/plugin-transform-class-static-block": "npm:7.27.1"
+    "@babel/plugin-transform-private-methods": "npm:^7.27.1"
     "@babel/preset-env": "npm:7.27.2"
     "@babel/preset-typescript": "npm:7.27.1"
     "@changesets/changelog-github": "npm:^0.5.0"
