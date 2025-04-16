@@ -1,3 +1,4 @@
+import { LegacyLogger } from '@graphql-hive/logger';
 import {
   loggerForRequest,
   requestIdByRequest,
@@ -52,20 +53,22 @@ export function useRequestId<TContext extends Record<string, any>>(
       requestIdByRequest.set(request, requestId);
     },
     onContextBuilding({ context, extendContext }) {
+      const log = loggerForRequest(context.log, context.request, () => {
+        throw new Error(
+          "Request ID must've already been created but is not found",
+        );
+        // because we are using the logger's requestIdByRequest map
+      });
       extendContext(
         // @ts-expect-error TODO: typescript is acting up here
         {
-          log: loggerForRequest(context.log, context.request, () => {
-            throw new Error(
-              "Request ID must've already been created but is not found",
-            );
-            // because we are using the logger's requestIdByRequest map
-          }),
+          log,
+          logger: LegacyLogger.from(log),
         },
       );
     },
     onFetch({ context, options, setOptions }) {
-      if (context?.request) {
+      if ('request' in context) {
         const requestId = requestIdByRequest.get(context.request);
         if (requestId) {
           setOptions({
