@@ -1,3 +1,4 @@
+import { Logger } from '@graphql-hive/logger';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 import type { GraphQLResolveInfo } from 'graphql';
 import { expect, it } from 'vitest';
@@ -26,6 +27,7 @@ it('should wrap fetch instrumentation', async () => {
         );
       },
     ],
+    new Logger({ level: false }),
     () => fetchInstrumentation,
   );
   const executionRequest = {};

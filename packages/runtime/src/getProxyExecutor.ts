@@ -1,3 +1,4 @@
+import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   Instrumentation,
   OnSubgraphExecuteHook,
@@ -42,7 +43,10 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
         return fakeTransportEntryMap[subgraphNameProp];
       },
     }),
-    transportContext: configContext,
+    transportContext: {
+      ...configContext,
+      logger: LegacyLogger.from(configContext.log),
+    },
     getSubgraphSchema: getSchema,
     transportExecutorStack,
     transports: config.transports,

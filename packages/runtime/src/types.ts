@@ -12,6 +12,7 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
+  Logger as LegacyLogger,
   MeshFetch,
   MeshFetchRequestInit,
 } from '@graphql-mesh/types';
@@ -126,6 +127,8 @@ export interface OnFetchHookPayload<TContext> {
    * The logger will be available in all cases.
    */
   context: (GatewayContext & TContext) | { log: Logger };
+  /** @deprecated Please use `log` from the {@link context} instead. */
+  logger: LegacyLogger;
   info: GraphQLResolveInfo;
   fetchFn: MeshFetch;
   setFetchFn: (fetchFn: MeshFetch) => void;

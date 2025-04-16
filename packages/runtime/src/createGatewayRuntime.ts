@@ -476,7 +476,10 @@ export function createGatewayRuntime<
             const onSubgraphExecute = getOnSubgraphExecute({
               onSubgraphExecuteHooks,
               ...(config.transports ? { transports: config.transports } : {}),
-              transportContext: configContext,
+              transportContext: {
+                ...configContext,
+                logger: LegacyLogger.from(configContext.log),
+              },
               transportEntryMap,
               getSubgraphSchema() {
                 return unifiedGraph;
@@ -735,7 +738,10 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: configContext,
+      transportContext: {
+        ...configContext,
+        logger: LegacyLogger.from(configContext.log),
+      },
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
