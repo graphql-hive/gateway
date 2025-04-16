@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { Logger } from '@graphql-hive/logger';
+import { LegacyLogger, Logger } from '@graphql-hive/logger';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { getExecutorForUnifiedGraph } from '@graphql-mesh/fusion-runtime';
 import {
@@ -61,13 +61,12 @@ describe('Polling', () => {
 
     const disposeFn = vi.fn();
 
+    const log = new Logger({ level: false });
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
-      transportContext: {
-        log: new Logger({ level: false }),
-      },
+      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -202,13 +201,12 @@ describe('Polling', () => {
         },
       ]);
     });
+    const log = new Logger({ level: false });
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
-      transportContext: {
-        log: new Logger({ level: false }),
-      },
+      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -301,12 +299,11 @@ describe('Polling', () => {
       ]);
     });
     let disposeFn = vi.fn();
+    const log = new Logger({ level: false });
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 1000,
-      transportContext: {
-        log: new Logger({ level: false }),
-      },
+      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -387,7 +384,7 @@ describe('Polling', () => {
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 10_000,
-      transportContext: { log },
+      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         log.debug('transports');
         return {
