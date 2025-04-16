@@ -992,7 +992,7 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useRetryOnSchemaReload(),
+    useRetryOnSchemaReload({ log }),
   ];
 
   if (config.subgraphErrors !== false) {
