@@ -53,12 +53,8 @@ export function useRequestId<TContext extends Record<string, any>>(
       requestIdByRequest.set(request, requestId);
     },
     onContextBuilding({ context, extendContext }) {
-      const log = loggerForRequest(context.log, context.request, () => {
-        throw new Error(
-          "Request ID must've already been created but is not found",
-        );
-        // because we are using the logger's requestIdByRequest map
-      });
+      // the request ID wont always be available because there's no request in websockets
+      const log = loggerForRequest(context.log, context.request);
       extendContext(
         // @ts-expect-error TODO: typescript is acting up here
         {
