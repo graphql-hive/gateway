@@ -1,30 +1,12 @@
 import { getDocumentString } from '@envelop/core';
-import { ExecutionRequest } from '@graphql-tools/utils';
+import { ExecutionRequest, memoize1 } from '@graphql-tools/utils';
 import { DocumentNode, print, stripIgnoredCharacters } from 'graphql';
-import fastCompare from 'react-fast-compare';
 
-const documentNodesCache = new Map<DocumentNode, string>();
-
-export function defaultPrintFn(document: DocumentNode) {
-  for (const [cachedDocument, documentString] of documentNodesCache) {
-    if (fastCompare(document, cachedDocument)) {
-      return documentString;
-    }
-  }
-
-  const documentString = stripIgnoredCharacters(
-    getDocumentString(document, print),
-  );
-  documentNodesCache.set(document, documentString);
-
-  if (documentNodesCache.size > 10) {
-    // remove oldest entry in the map
-    const firstDocument = documentNodesCache.keys().next().value!;
-    documentNodesCache.delete(firstDocument);
-  }
-
-  return documentString;
-}
+export const defaultPrintFn = memoize1(function defaultPrintFn(
+  document: DocumentNode,
+) {
+  return stripIgnoredCharacters(getDocumentString(document, print));
+});
 
 interface ExecutionRequestToGraphQLParams {
   executionRequest: ExecutionRequest;
