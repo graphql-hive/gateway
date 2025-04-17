@@ -36,7 +36,7 @@ export function getExecutorForUnifiedGraph<TContext>(
         function handleExecutor(executor: Executor) {
           opts?.transportContext?.logger?.debug(
             'Executing request on unified graph',
-            print(execReq.document),
+            () => print(execReq.document),
           );
           return executor({
             ...execReq,
@@ -52,7 +52,7 @@ export function getExecutorForUnifiedGraph<TContext>(
                 (unifiedGraph) => {
                   opts?.transportContext?.logger?.debug(
                     'Executing request on unified graph',
-                    print(execReq.document),
+                    () => print(execReq.document),
                   );
                   executor = createDefaultExecutor(unifiedGraph);
                   return handleExecutor(executor);
