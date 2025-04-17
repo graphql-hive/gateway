@@ -1,5 +1,6 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-hive/logger';
+import { loggerForRequest } from '@graphql-hive/logger/request';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
@@ -165,7 +166,8 @@ export function useHmacSignatureValidation(
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
 
   return {
-    onParams({ params, fetchAPI }) {
+    onParams({ params, fetchAPI, request }) {
+      const log = loggerForRequest(options.log, request);
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 
@@ -189,7 +191,7 @@ export function useHmacSignatureValidation(
             c.charCodeAt(0),
           );
           const serializedParams = paramsSerializer(params);
-          options.log.debug(
+          log.debug(
             'HMAC signature will be calculate based on serialized params %s',
             serializedParams,
           );
@@ -204,10 +206,9 @@ export function useHmacSignatureValidation(
               ),
             (result) => {
               if (!result) {
-                options.log.error(
+                log.error(
                   'HMAC signature does not match the body content. short circuit request.',
                 );
-
                 throw new Error(
                   `Invalid HMAC signature: extension ${extensionName} does not match the body content.`,
                 );
