@@ -76,7 +76,7 @@ export function useJWT(
       executionRequest,
       subgraphName,
       setExecutionRequest,
-      logger,
+      log,
     }) {
       if (shouldForward && executionRequest.context?.jwt) {
         const jwtData: Partial<JWTExtendContextFields> = {
@@ -86,9 +86,10 @@ export function useJWT(
           token: forwardToken ? executionRequest.context.jwt.token : undefined,
         };
 
-        logger?.debug(
-          `Forwarding JWT payload to subgraph ${subgraphName}, payload: `,
-          jwtData.payload,
+        log.debug(
+          { payload: jwtData.payload },
+          'Forwarding JWT payload to subgraph %s',
+          subgraphName,
         );
 
         setExecutionRequest({

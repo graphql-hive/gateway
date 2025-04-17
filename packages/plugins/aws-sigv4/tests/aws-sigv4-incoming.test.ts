@@ -10,7 +10,7 @@ import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { useAWSSigv4 } from '../src';
 
-describe.skip('AWS Sigv4 Incoming requests', () => {
+describe('AWS Sigv4 Incoming requests', () => {
   const subgraphSchema = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Query {
