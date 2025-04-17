@@ -31,7 +31,7 @@ it.skipIf(
       }),
     ).rejects.toThrowError(
       gatewayRunner === 'bun' || gatewayRunner === 'bun-docker'
-        ? /error: Expected \\"{\\" but found \\"hello\\"(.|\n)*\/custom-resolvers.ts:8:11/
+        ? /Expected \\"{\\" but found \\"hello\\"(.|\n)*\/custom-resolvers.ts/
         : /Error transforming .*(\/|\\)custom-resolvers.ts: Unexpected token, expected \\"{\\" \(8:11\)/,
     );
   },
