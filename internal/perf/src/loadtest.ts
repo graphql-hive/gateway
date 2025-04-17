@@ -5,6 +5,7 @@ import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
 import { trimError } from '@internal/testing';
+import { cancelledSignal } from '@internal/testing/vitest';
 import { fetch } from '@whatwg-node/fetch';
 import { connectInspector, Inspector } from './inspector';
 
@@ -142,6 +143,11 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       ctrl.abort();
     },
   };
+
+  cancelledSignal.throwIfAborted();
+  cancelledSignal.addEventListener('abort', () => {
+    ctrl.abort('Test run cancelled');
+  });
 
   const heapsnapshotCwd = await fs.mkdtemp(
     path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),

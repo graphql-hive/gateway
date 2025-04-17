@@ -20,6 +20,7 @@ import {
   getLocalhost,
   isDebug,
 } from '@internal/testing';
+import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import Dockerode from 'dockerode';
@@ -349,6 +350,7 @@ export function createTenv(cwd: string): Tenv {
       return spawn(
         {
           ...opts,
+          signal: cancelledSignal,
           cwd,
           stack: leftoverStack,
           replaceStderr: (str) => str.replaceAll(__project, ''),
@@ -505,6 +507,7 @@ export function createTenv(cwd: string): Tenv {
         case 'bun': {
           [proc, waitForExit] = await spawn(
             {
+              signal: cancelledSignal,
               env,
               cwd,
               pipeLogs,
@@ -520,6 +523,7 @@ export function createTenv(cwd: string): Tenv {
         case 'node': {
           [proc, waitForExit] = await spawn(
             {
+              signal: cancelledSignal,
               env,
               cwd,
               pipeLogs,
@@ -529,7 +533,7 @@ export function createTenv(cwd: string): Tenv {
             'node',
             // use next available port when starting inspector (note that this does not start inspect, this still needs to be done manually)
             // it's not set because in JIT mode because it does not work together (why? no clue)
-            args.includes('--jit') ? null : '--inspect-port=0',
+            // args.includes('--jit') ? null : '--inspect-port=0',
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
@@ -540,6 +544,7 @@ export function createTenv(cwd: string): Tenv {
         case 'bin': {
           [proc, waitForExit] = await spawn(
             {
+              signal: cancelledSignal,
               env,
               cwd,
               pipeLogs,
@@ -614,7 +619,7 @@ export function createTenv(cwd: string): Tenv {
           })
           // stop reachability wait after exit
           .finally(() => ctrl.abort()),
-        waitForReachable(gw, ctrl.signal),
+        waitForReachable(gw, AbortSignal.any([ctrl.signal, cancelledSignal])),
       ]);
       return gw;
     },
@@ -640,6 +645,7 @@ export function createTenv(cwd: string): Tenv {
       }
       const [proc, waitForExit] = await spawn(
         {
+          signal: cancelledSignal,
           cwd,
           pipeLogs,
           env,
@@ -713,9 +719,9 @@ export function createTenv(cwd: string): Tenv {
       const ctrl = new AbortController();
       const [proc, waitForExit] = await spawn(
         {
+          signal: AbortSignal.any([ctrl.signal, cancelledSignal]),
           cwd,
           pipeLogs,
-          signal: ctrl.signal,
           stack: leftoverStack,
           replaceStderr: (str) => str.replaceAll(__project, ''),
           env,
@@ -746,7 +752,10 @@ export function createTenv(cwd: string): Tenv {
           })
           // stop reachability wait after exit
           .finally(() => ctrl.abort()),
-        waitForReachable(service, ctrl.signal),
+        waitForReachable(
+          service,
+          AbortSignal.any([ctrl.signal, cancelledSignal]),
+        ),
       ]);
       return service;
     },
@@ -792,6 +801,7 @@ export function createTenv(cwd: string): Tenv {
         .catch(() => false);
 
       const ctrl = new AbortController();
+      const signal = AbortSignal.any([ctrl.signal, cancelledSignal]);
 
       if (!bakedImage) {
         // pull image if it doesnt exist and wait for finish
@@ -810,7 +820,7 @@ export function createTenv(cwd: string): Tenv {
             leftoverStack.defer(() => {
               (imageStream.destroy as VoidFunction)();
             });
-            ctrl.signal.addEventListener(
+            signal.addEventListener(
               'abort',
               () => {
                 (imageStream.destroy as VoidFunction)();
@@ -877,7 +887,7 @@ export function createTenv(cwd: string): Tenv {
                 Retries: retries,
               }
             : undefined,
-        abortSignal: ctrl.signal,
+        abortSignal: signal,
       });
 
       let stdboth = '';
@@ -885,7 +895,7 @@ export function createTenv(cwd: string): Tenv {
         stream: true,
         stdout: true,
         stderr: true,
-        abortSignal: ctrl.signal,
+        abortSignal: signal,
       });
       stream.on('data', (data) => {
         stdboth += data.toString();
@@ -912,7 +922,7 @@ export function createTenv(cwd: string): Tenv {
           throw new Error('Cannot get stats of a container.');
         },
         async [DisposableSymbols.asyncDispose]() {
-          if (ctrl.signal.aborted) {
+          if (signal.aborted) {
             // noop if already disposed
             return;
           }
@@ -926,7 +936,7 @@ export function createTenv(cwd: string): Tenv {
       while (startCheckRetries) {
         await setTimeout(interval);
         try {
-          await ctr.inspect({ abortSignal: ctrl.signal });
+          await ctr.inspect({ abortSignal: signal });
           break;
         } catch (err) {
           // we dont use the err.statusCode because it doesnt work in CI, why? no clue
@@ -945,12 +955,12 @@ export function createTenv(cwd: string): Tenv {
 
       // wait for healthy
       if (healthcheck.length > 0) {
-        while (!ctrl.signal.aborted) {
+        while (!signal.aborted) {
           let status = '';
           try {
             const {
               State: { Health },
-            } = await ctr.inspect({ abortSignal: ctrl.signal });
+            } = await ctr.inspect({ abortSignal: signal });
             status = Health?.Status ? String(Health?.Status) : '';
           } catch (err) {
             if (/no such container/i.test(String(err))) {
@@ -983,7 +993,7 @@ export function createTenv(cwd: string): Tenv {
           }
         }
       } else {
-        await waitForReachable(container, ctrl.signal);
+        await waitForReachable(container, signal);
       }
       return container;
     },

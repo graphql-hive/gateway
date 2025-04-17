@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./fixtures/schemas": "./fixtures/schemas.ts",
+    "./vitest": "./src/vitest.ts",
     "./to-be-similar-string": "./src/to-be-similar-string.ts",
     "./to-be-similar-gql-doc": "./src/to-be-similar-gql-doc.ts"
   },
