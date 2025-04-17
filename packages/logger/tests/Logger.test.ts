@@ -259,6 +259,27 @@ it.todo('should log to async writers');
 
 it.todo('should wait for async writers on flush');
 
+it('should log array attributes with object child attributes', () => {
+  let [log, writer] = createTLogger();
+
+  log = log.child({ hello: 'world' });
+  log.info(['hello', 'world']);
+
+  // TODO: should it be logged like this? maybe place the child attrs in the array as first child?
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "0": "hello",
+          "1": "world",
+          "hello": "world",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
 it('should format string', () => {
   const [log, writer] = createTLogger();
 
