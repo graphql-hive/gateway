@@ -4521,9 +4521,10 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.104.3"
     "@graphql-mesh/utils": "npm:^0.104.3"
     "@graphql-yoga/plugin-jwt": "npm:^3.4.9"
-    graphql: "npm:16.10.0"
+    graphql: "npm:^16.10.0"
     graphql-yoga: "npm:^5.13.4"
     jsonwebtoken: "npm:9.0.2"
+    pkgroll: "npm:2.12.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
