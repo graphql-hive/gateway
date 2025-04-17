@@ -143,6 +143,9 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     },
   };
 
+  // @ts-expect-error https://github.com/vitest-dev/vitest/issues/7647#issuecomment-2712223721
+  __vitest_worker__.onCancel.then(() => ctrl.abort());
+
   const heapsnapshotCwd = await fs.mkdtemp(
     path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
   );
