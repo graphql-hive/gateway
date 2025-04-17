@@ -56,25 +56,25 @@ export function isPromise(val: unknown): val is Promise<any> {
 /** Recursivelly unwrapps the lazy attributes and parses instances of classes. */
 export function parseAttrs(
   attrs: MaybeLazy<Attributes>,
-  depth = 0,
+  functionUnwrapDepth = 0,
 ): Attributes {
-  if (depth > 10) {
+  if (functionUnwrapDepth > 3) {
     throw new Error('Too much recursion while unwrapping function attributes');
   }
 
   if (typeof attrs === 'function') {
-    return parseAttrs(attrs(), depth + 1);
+    return parseAttrs(attrs(), functionUnwrapDepth + 1);
   }
 
   if (Array.isArray(attrs)) {
-    return attrs.map((val) => unwrapAttrVal(val, depth + 1));
+    return attrs.map((val) => unwrapAttrVal(val, functionUnwrapDepth));
   }
 
   if (Object.prototype.toString.call(attrs) === '[object Object]') {
     const unwrapped: Attributes = {};
     for (const key of Object.keys(attrs)) {
       const val = attrs[key as keyof typeof attrs];
-      unwrapped[key] = unwrapAttrVal(val, depth + 1);
+      unwrapped[key] = unwrapAttrVal(val, functionUnwrapDepth);
     }
     return unwrapped;
   }
@@ -84,9 +84,9 @@ export function parseAttrs(
 
 function unwrapAttrVal(
   attr: MaybeLazy<AttributeValue>,
-  depth = 0,
+  functionUnwrapDepth = 0,
 ): AttributeValue {
-  if (depth > 10) {
+  if (functionUnwrapDepth > 3) {
     throw new Error(
       'Too much recursion while unwrapping function attribute values',
     );
@@ -101,11 +101,11 @@ function unwrapAttrVal(
   }
 
   if (typeof attr === 'function') {
-    return unwrapAttrVal(attr(), depth + 1);
+    return unwrapAttrVal(attr(), functionUnwrapDepth + 1);
   }
 
   if (Array.isArray(attr)) {
-    return attr.map((val) => unwrapAttrVal(val, depth + 1));
+    return attr.map((val) => unwrapAttrVal(val, functionUnwrapDepth));
   }
 
   // plain object (not an instance of anything)
@@ -114,7 +114,7 @@ function unwrapAttrVal(
     const unwrapped: { [key: string | number]: AttributeValue } = {};
     for (const key of Object.keys(attr)) {
       const val = attr[key as keyof typeof attr];
-      unwrapped[key] = unwrapAttrVal(val, depth + 1);
+      unwrapped[key] = unwrapAttrVal(val, functionUnwrapDepth);
     }
     return unwrapped;
   }
