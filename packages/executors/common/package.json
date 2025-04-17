@@ -40,7 +40,8 @@
   },
   "dependencies": {
     "@envelop/core": "^5.2.3",
-    "@graphql-tools/utils": "^10.8.1"
+    "@graphql-tools/utils": "^10.8.1",
+    "react-fast-compare": "^3.2.2"
   },
   "devDependencies": {
     "graphql": "^16.9.0",
