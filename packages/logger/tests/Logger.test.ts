@@ -532,7 +532,74 @@ it('should serialise using the toJSON method', () => {
   `);
 });
 
-it.todo('should serialise error causes');
+it('should serialise error causes', () => {
+  const [log, writer] = createTLogger();
+
+  const cause = new Error('Cause');
+  cause.stack = '<cause stack>';
+
+  const err = new Error('Woah!', { cause });
+  err.stack = '<stack>';
+
+  log.info(err, 'hello');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "cause": {
+            "class": "Error",
+            "message": "Cause",
+            "name": "Error",
+            "stack": "<cause stack>",
+          },
+          "class": "Error",
+          "message": "Woah!",
+          "name": "Error",
+          "stack": "<stack>",
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
+
+it('should gracefully handle Object.create(null)', () => {
+  const [log, writer] = createTLogger();
+
+  class NullConst {
+    constructor() {
+      return Object.create(null);
+    }
+  }
+  class NullProp {
+    someprop = Object.create(null);
+  }
+
+  log.info({ class: new NullConst() }, 'hello');
+  log.info(new NullProp(), 'world');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "class": {},
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "attrs": {
+          "class": "NullProp",
+          "someprop": {},
+        },
+        "level": "info",
+        "msg": "world",
+      },
+    ]
+  `);
+});
 
 it.todo('should serialise aggregate errors');
 
