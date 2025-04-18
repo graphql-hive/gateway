@@ -20,7 +20,7 @@ export class MemoryLogWriter implements LogWriter {
   public logs: { level: LogLevel; msg?: string; attrs?: unknown }[] = [];
   write(
     level: LogLevel,
-    attrs: Record<string, any>,
+    attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void {
     this.logs.push({
