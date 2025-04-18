@@ -180,10 +180,7 @@ export class Logger implements LogWriter {
       msg = `${this.#prefix}${msg || ''}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
-    attrs = shallowMergeAttributes(
-      this.#attrs ? parseAttrs(this.#attrs) : undefined,
-      attrs ? parseAttrs(attrs) : undefined,
-    );
+    attrs = shallowMergeAttributes(parseAttrs(this.#attrs), parseAttrs(attrs));
 
     msg = msg ? format(msg, rest) : msg;
 
