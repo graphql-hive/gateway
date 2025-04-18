@@ -44,7 +44,7 @@ export interface LoggerOptions {
   writers?: [LogWriter, ...LogWriter[]];
 }
 
-export class Logger implements LogWriter, AsyncDisposable {
+export class Logger implements AsyncDisposable {
   #level: MaybeLazy<LogLevel | false>;
   #prefix: string | undefined;
   #attrs: Attributes | undefined;
