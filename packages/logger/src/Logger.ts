@@ -1,3 +1,4 @@
+import fastSafeStringify from 'fast-safe-stringify';
 import format from 'quick-format-unescaped';
 import {
   Attributes,
@@ -182,7 +183,7 @@ export class Logger implements LogWriter {
 
     attrs = shallowMergeAttributes(parseAttrs(this.#attrs), parseAttrs(attrs));
 
-    msg = msg ? format(msg, rest) : msg;
+    msg = msg ? format(msg, rest, { stringify: fastSafeStringify }) : msg;
 
     this.write(level, attrs, msg);
     if (truthyEnv('LOG_TRACE_LOGS')) {
