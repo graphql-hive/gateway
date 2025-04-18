@@ -84,6 +84,7 @@ export class ConsoleLogWriter implements LogWriter {
       let formattedLine = line;
 
       // remove the quotes from the keys and remove the opening bracket
+      // TODO: make sure keys with quotes are preserved
       formattedLine = formattedLine.replace(/"([^"]+)":/, '$1:');
 
       // replace all escaped new lines with a new line and append the indentation of the line
