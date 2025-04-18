@@ -86,7 +86,10 @@ export function parseAttrs(
   return objectifyClass(attrs);
 }
 
-function unwrapAttrVal(attr: AttributeValue): AttributeValue {
+function unwrapAttrVal(
+  attr: AttributeValue,
+  visited = new WeakSet(),
+): AttributeValue {
   if (!attr) {
     return attr;
   }
@@ -99,6 +102,11 @@ function unwrapAttrVal(attr: AttributeValue): AttributeValue {
     return `[Function: ${attr.name || '(anonymous)'}]`;
   }
 
+  if (visited.has(attr)) {
+    return '[Circular]';
+  }
+  visited.add(attr);
+
   if (Array.isArray(attr)) {
     return attr.map((val) => unwrapAttrVal(val));
   }
@@ -107,7 +115,7 @@ function unwrapAttrVal(attr: AttributeValue): AttributeValue {
     const unwrapped: { [key: string | number]: AttributeValue } = {};
     for (const key of Object.keys(attr)) {
       const val = attr[key as keyof typeof attr];
-      unwrapped[key] = unwrapAttrVal(val);
+      unwrapped[key] = unwrapAttrVal(val, visited);
     }
     return unwrapped;
   }
