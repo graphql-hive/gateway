@@ -68,10 +68,44 @@ export class ConsoleLogWriter implements LogWriter {
         this.color('timestamp', new Date().toISOString()),
         this.color(level, logLevelToString(level)),
         this.color('message', msg),
-        // we want to stringify because we want all properties (even nested ones)be properly displayed
-        attrs ? jsonStringify(attrs, truthyEnv('LOG_JSON_PRETTY')) : undefined,
+        attrs ? this.stringifyAttrs(attrs) : undefined,
       ].join(' '),
     );
+  }
+  stringifyAttrs(attrs: Attributes): string {
+    let log = '\n';
+
+    for (const line of jsonStringify(attrs, true).split('\n')) {
+      // remove the first and last line the opening and closing brackets
+      if (line === '{' || line === '}' || line === '[' || line === ']') {
+        continue;
+      }
+
+      let formattedLine = line;
+
+      // remove the quotes from the keys and remove the opening bracket
+      formattedLine = formattedLine.replace(/"([^"]+)":/, '$1:');
+
+      // replace all escaped new lines with a new line and append the indentation of the line
+      let indentationSize = line.match(/^\s*/)?.[0]?.length || 0;
+      if (indentationSize) indentationSize++;
+
+      // TODO: error stack traces will have 4 spaces of indentation, should we sanitize all 4 spaces / tabs to 2 space indentation?
+      formattedLine = formattedLine.replaceAll(
+        /\\n/g,
+        '\n' + [...Array(indentationSize)].join(' '),
+      );
+
+      // remove the ending comma
+      formattedLine = formattedLine.replace(/,$/, '');
+
+      log += formattedLine + '\n';
+    }
+
+    // remove last new line
+    log = log.slice(0, -1);
+
+    return log;
   }
 }
 
