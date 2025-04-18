@@ -11,14 +11,10 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
   ] as const;
 }
 
-it.skipIf(
-  // skip on bun because bun serialises errors differently from node (failing the snapshot)
-  globalThis.Bun,
-)('should write logs with levels, message and attributes', () => {
+it('should write logs with levels, message and attributes', () => {
   const [log, writter] = createTLogger();
 
-  const err = new Error('Woah!');
-  err.stack = '<stack>';
+  const err = stableError(new Error('Woah!'));
 
   log.log('info');
   log.log('info', { hello: 'world', err }, 'Hello, world!');
@@ -446,14 +442,10 @@ it('should format string', () => {
   `);
 });
 
-it.skipIf(
-  // skip on bun because bun serialises errors differently from node (failing the snapshot)
-  globalThis.Bun,
-)('should write logs with unexpected attributes', () => {
+it('should write logs with unexpected attributes', () => {
   const [log, writer] = createTLogger();
 
-  const err = new Error('Woah!');
-  err.stack = '<stack>';
+  const err = stableError(new Error('Woah!'));
 
   log.info(err);
 
@@ -535,11 +527,9 @@ it('should serialise using the toJSON method', () => {
 it('should serialise error causes', () => {
   const [log, writer] = createTLogger();
 
-  const cause = new Error('Cause');
-  cause.stack = '<cause stack>';
+  const cause = stableError(new Error('Cause'));
 
-  const err = new Error('Woah!', { cause });
-  err.stack = '<stack>';
+  const err = stableError(new Error('Woah!', { cause }));
 
   log.info(err, 'hello');
 
@@ -551,7 +541,7 @@ it('should serialise error causes', () => {
             "class": "Error",
             "message": "Cause",
             "name": "Error",
-            "stack": "<cause stack>",
+            "stack": "<stack>",
           },
           "class": "Error",
           "message": "Woah!",
@@ -635,14 +625,13 @@ it('should handle circular references', () => {
 it('should serialise aggregate errors', () => {
   const [log, writer] = createTLogger();
 
-  const err1 = new Error('Woah!');
-  err1.stack = '<1 stack>';
+  const err1 = stableError(new Error('Woah!'));
 
-  const err2 = new Error('Woah2!');
-  err2.stack = '<2 stack>';
+  const err2 = stableError(new Error('Woah2!'));
 
-  const aggErr = new AggregateError([err1, err2], 'Woah Aggregate!');
-  aggErr.stack = '<agg stack>';
+  const aggErr = stableError(
+    new AggregateError([err1, err2], 'Woah Aggregate!'),
+  );
 
   log.info(aggErr, 'aggregate');
 
@@ -656,18 +645,18 @@ it('should serialise aggregate errors', () => {
               "class": "Error",
               "message": "Woah!",
               "name": "Error",
-              "stack": "<1 stack>",
+              "stack": "<stack>",
             },
             {
               "class": "Error",
               "message": "Woah2!",
               "name": "Error",
-              "stack": "<2 stack>",
+              "stack": "<stack>",
             },
           ],
           "message": "Woah Aggregate!",
           "name": "AggregateError",
-          "stack": "<agg stack>",
+          "stack": "<stack>",
         },
         "level": "info",
         "msg": "aggregate",
@@ -745,3 +734,24 @@ it('should change child log level only on child', () => {
     ]
   `);
 });
+
+/** Stabilises the error for snapshot testing */
+function stableError<T extends Error>(err: T): T {
+  if (globalThis.Bun) {
+    // bun serialises errors differently from node
+    // we need to remove some properties to make the snapshots match
+    // @ts-expect-error
+    delete err.column;
+    // @ts-expect-error
+    delete err.line;
+    // @ts-expect-error
+    delete err.originalColumn;
+    // @ts-expect-error
+    delete err.originalLine;
+    // @ts-expect-error
+    delete err.sourceURL;
+  }
+  // we remove the stack to make the snapshot stable
+  err.stack = '<stack>';
+  return err;
+}
