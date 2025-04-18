@@ -1,3 +1,4 @@
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import fastSafeStringify from 'fast-safe-stringify';
 import format from 'quick-format-unescaped';
 import {
@@ -43,7 +44,7 @@ export interface LoggerOptions {
   writers?: [LogWriter, ...LogWriter[]];
 }
 
-export class Logger implements LogWriter {
+export class Logger implements LogWriter, AsyncDisposable {
   #level: MaybeLazy<LogLevel | false>;
   #prefix: string | undefined;
   #attrs: Attributes | undefined;
@@ -120,7 +121,9 @@ export class Logger implements LogWriter {
     return;
   }
 
-  // TODO: flush on dispose
+  async [DisposableSymbols.asyncDispose]() {
+    return this.flush();
+  }
 
   //
 
