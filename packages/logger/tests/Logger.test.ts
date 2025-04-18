@@ -601,6 +601,37 @@ it('should gracefully handle Object.create(null)', () => {
   `);
 });
 
+it('should handle circular references', () => {
+  const [log, writer] = createTLogger();
+
+  const obj = { circ: null as any };
+  const circ = {
+    hello: 'world',
+    obj,
+  };
+  obj.circ = circ;
+
+  log.info(circ, 'circular');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "hello": "world",
+          "obj": {
+            "circ": {
+              "hello": "world",
+              "obj": "[Circular]",
+            },
+          },
+        },
+        "level": "info",
+        "msg": "circular",
+      },
+    ]
+  `);
+});
+
 it.todo('should serialise aggregate errors');
 
 it('should change log level', () => {
