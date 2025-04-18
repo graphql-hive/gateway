@@ -208,6 +208,31 @@ it('should unwrap lazy attribute values', () => {
   `);
 });
 
+it('should not log lazy attributes returning nothing', () => {
+  const [log, writter] = createTLogger();
+
+  log.info(() => undefined, 'hello');
+  log.info(() => null, 'wor');
+  log.info(() => void 0, 'ld');
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "level": "info",
+        "msg": "wor",
+      },
+      {
+        "level": "info",
+        "msg": "ld",
+      },
+    ]
+  `);
+});
+
 it('should not unwrap lazy attribute values', () => {
   const [log, writter] = createTLogger();
 
