@@ -55,11 +55,15 @@ export function isPromise(val: unknown): val is Promise<any> {
 
 /** Recursivelly unwrapps the lazy attributes and parses instances of classes. */
 export function parseAttrs(
-  attrs: MaybeLazy<Attributes>,
+  attrs: MaybeLazy<Attributes | undefined> | undefined,
   functionUnwrapDepth = 0,
-): Attributes {
+): Attributes | undefined {
   if (functionUnwrapDepth > 3) {
     throw new Error('Too much recursion while unwrapping function attributes');
+  }
+
+  if (!attrs) {
+    return undefined;
   }
 
   if (typeof attrs === 'function') {
