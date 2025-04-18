@@ -67,14 +67,14 @@ export function parseAttrs(
   }
 
   if (Array.isArray(attrs)) {
-    return attrs.map((val) => unwrapAttrVal(val, functionUnwrapDepth));
+    return attrs.map((val) => unwrapAttrVal(val));
   }
 
   if (Object.prototype.toString.call(attrs) === '[object Object]') {
     const unwrapped: Attributes = {};
     for (const key of Object.keys(attrs)) {
       const val = attrs[key as keyof typeof attrs];
-      unwrapped[key] = unwrapAttrVal(val, functionUnwrapDepth);
+      unwrapped[key] = unwrapAttrVal(val);
     }
     return unwrapped;
   }
@@ -82,16 +82,7 @@ export function parseAttrs(
   return objectifyClass(attrs);
 }
 
-function unwrapAttrVal(
-  attr: MaybeLazy<AttributeValue>,
-  functionUnwrapDepth = 0,
-): AttributeValue {
-  if (functionUnwrapDepth > 3) {
-    throw new Error(
-      'Too much recursion while unwrapping function attribute values',
-    );
-  }
-
+function unwrapAttrVal(attr: AttributeValue): AttributeValue {
   if (!attr) {
     return attr;
   }
@@ -101,11 +92,11 @@ function unwrapAttrVal(
   }
 
   if (typeof attr === 'function') {
-    return unwrapAttrVal(attr(), functionUnwrapDepth + 1);
+    return `[Function: ${attr.name || '(anonymous)'}]`;
   }
 
   if (Array.isArray(attr)) {
-    return attr.map((val) => unwrapAttrVal(val, functionUnwrapDepth));
+    return attr.map((val) => unwrapAttrVal(val));
   }
 
   // plain object (not an instance of anything)
@@ -114,7 +105,7 @@ function unwrapAttrVal(
     const unwrapped: { [key: string | number]: AttributeValue } = {};
     for (const key of Object.keys(attr)) {
       const val = attr[key as keyof typeof attr];
-      unwrapped[key] = unwrapAttrVal(val, functionUnwrapDepth);
+      unwrapped[key] = unwrapAttrVal(val);
     }
     return unwrapped;
   }

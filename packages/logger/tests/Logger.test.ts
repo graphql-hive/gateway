@@ -179,7 +179,36 @@ it('should include attributes and prefix in nested child loggers', () => {
   `);
 });
 
-it('should unwrap lazy attributes', () => {
+it('should unwrap lazy attribute values', () => {
+  const [log, writter] = createTLogger();
+
+  log.info(
+    () => ({
+      every: 'thing',
+      nested: {
+        lazy: () => 'nested lazy not unwrapped',
+      },
+    }),
+    'hello',
+  );
+
+  expect(writter.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "every": "thing",
+          "nested": {
+            "lazy": "[Function: lazy]",
+          },
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
+
+it('should not unwrap lazy attribute values', () => {
   const [log, writter] = createTLogger();
 
   log.info(
@@ -193,37 +222,17 @@ it('should unwrap lazy attributes', () => {
     'hello',
   );
 
-  log.info(
-    () => ({
-      every: 'thing',
-      nested: {
-        lazy: () => 'nested lazy',
-      },
-    }),
-    'hello',
-  );
-
   expect(writter.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
           "arr": [
-            "0",
+            "[Function: (anonymous)]",
             "1",
           ],
-          "lazy": "lazy",
+          "lazy": "[Function: lazy]",
           "nested": {
-            "lazy": "nested lazy",
-          },
-        },
-        "level": "info",
-        "msg": "hello",
-      },
-      {
-        "attrs": {
-          "every": "thing",
-          "nested": {
-            "lazy": "nested lazy",
+            "lazy": "[Function: lazy]",
           },
         },
         "level": "info",
@@ -239,17 +248,6 @@ it('should not unwrap lazy attributes if level is not to be logged', () => {
   });
 
   const lazy = vi.fn(() => ({ la: 'zy' }));
-  log.debug(
-    {
-      lazy,
-      nested: {
-        lazy,
-      },
-      arr: [lazy, '1'],
-    },
-    'hello',
-  );
-
   log.debug(lazy, 'hello');
 
   expect(lazy).not.toHaveBeenCalled();
