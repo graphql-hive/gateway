@@ -121,8 +121,12 @@ function isPrimitive(val: unknown): val is string | number | boolean {
 }
 
 function objectifyClass(val: unknown): Record<string, unknown> {
-  if (!val) {
-    // TODO: this should never happen, objectify class should not be called on empty values
+  if (
+    // simply empty
+    !val ||
+    // Object.create(null)
+    Object(val).__proto__ == null
+  ) {
     return {};
   }
   if (
@@ -135,7 +139,7 @@ function objectifyClass(val: unknown): Record<string, unknown> {
   }
   const props: Record<string, unknown> = {};
   for (const propName of Object.getOwnPropertyNames(val)) {
-    props[propName] = val[propName as keyof typeof val];
+    props[propName] = unwrapAttrVal(val[propName as keyof typeof val]);
   }
   for (const protoPropName of Object.getOwnPropertyNames(
     Object.getPrototypeOf(val),
@@ -144,7 +148,7 @@ function objectifyClass(val: unknown): Record<string, unknown> {
     if (typeof propVal === 'function') {
       continue;
     }
-    props[protoPropName] = propVal;
+    props[protoPropName] = unwrapAttrVal(propVal);
   }
   return {
     ...props,
