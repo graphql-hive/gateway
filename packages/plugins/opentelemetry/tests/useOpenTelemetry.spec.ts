@@ -13,6 +13,7 @@ let gw: typeof import('../../../runtime/src');
 describe('useOpenTelemetry', () => {
   mockModule('@opentelemetry/sdk-trace-web', () => ({
     WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
+    AlwaysOnSampler: vi.fn(),
   }));
 
   beforeAll(async () => {
