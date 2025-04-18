@@ -1,3 +1,4 @@
+import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
@@ -12,6 +13,11 @@ import {
   type Context,
   type Tracer,
 } from '@opentelemetry/api';
+import {
+  SEMATTRS_EXCEPTION_MESSAGE,
+  SEMATTRS_EXCEPTION_STACKTRACE,
+  SEMATTRS_EXCEPTION_TYPE,
+} from '@opentelemetry/semantic-conventions';
 import type { ExecutionArgs } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
@@ -78,6 +84,10 @@ export function setResponseAttributes(ctx: Context, response: Response) {
   const span = trace.getSpan(ctx);
   if (span) {
     span.setAttribute(SEMATTRS_HTTP_STATUS_CODE, response.status);
+    span.setAttribute(
+      'gateway.cache.response_cache',
+      response.status === 304 && response.headers.get('ETag') ? 'hit' : 'miss',
+    );
     span.setStatus({
       code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
       message: response.ok ? undefined : response.statusText,
@@ -383,6 +393,46 @@ export function setUpstreamFetchResponseAttributes(input: {
     code: response.ok ? SpanStatusCode.OK : SpanStatusCode.ERROR,
     message: response.ok ? undefined : response.statusText,
   });
+}
+
+export function recordCacheEvent(
+  event: string,
+  payload: OnCacheGetHookEventPayload,
+) {
+  trace.getActiveSpan()?.addEvent('gateway.cache.' + event, {
+    'gateway.cache.key': payload.key,
+    'gateway.cache.ttl': payload.ttl,
+  });
+}
+
+export function recordCacheError(
+  action: 'read' | 'write',
+  error: Error,
+  payload: OnCacheGetHookEventPayload,
+) {
+  trace.getActiveSpan()?.addEvent('gateway.cache.error', {
+    'gateway.cache.key': payload.key,
+    'gateway.cache.ttl': payload.ttl,
+    'gateway.cache.action': action,
+    [SEMATTRS_EXCEPTION_TYPE]:
+      'code' in error ? (error.code as string) : error.message,
+    [SEMATTRS_EXCEPTION_MESSAGE]: error.message,
+    [SEMATTRS_EXCEPTION_STACKTRACE]: error.stack,
+  });
+}
+
+const responseCacheSymbol = Symbol.for('servedFromResponseCache');
+export function setExecutionResultAttributes(input: {
+  ctx: Context;
+  result?: any; // We don't need a proper type here because we rely on Symbol mark from response cache plugin
+}) {
+  const span = trace.getSpan(input.ctx);
+  if (input.result && span) {
+    span.setAttribute(
+      'gateway.cache.response_cache',
+      input.result[responseCacheSymbol] ? 'hit' : 'miss',
+    );
+  }
 }
 
 export function registerException(ctx: Context | undefined, error: any) {
