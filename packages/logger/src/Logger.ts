@@ -17,8 +17,6 @@ export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
 // TODO: explain what happens when attribute keys match existing keys from the logger (like "msg")
 
-// TODO: an "id" or "name" of a logger allowing us to create scoped loggers which on their own can be disabled/enabled
-
 export interface LoggerOptions {
   /**
    * The minimum log level to log.
