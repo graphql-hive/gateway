@@ -23,19 +23,13 @@ import {
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
-import type {
-  KeyValueCache,
-  OnDelegateHook,
-  OnFetchHook,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
   getHeadersObj,
   getInContextSDK,
   isDisposable,
   isUrl,
-  LogLevel,
-  wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
@@ -68,6 +62,7 @@ import {
   isSchema,
   parse,
 } from 'graphql';
+import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import {
   chain,
   createYoga,
@@ -78,9 +73,9 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
+import { LegacyLogger } from '../../logger/src/LegacyLogger';
+import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
-import { handleLoggingConfig } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
@@ -114,6 +109,7 @@ import type {
   OnCacheDeleteHook,
   OnCacheGetHook,
   OnCacheSetHook,
+  OnFetchHook,
   UnifiedGraphConfig,
 } from './types';
 import {
@@ -122,6 +118,7 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
+import { wrapFetchWithHooks } from './wrapFetchWithHooks';
 
 // TODO: this type export is not properly accessible from graphql-yoga
 //       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
@@ -146,7 +143,7 @@ export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   let fetchAPI = config.fetchAPI;
-  const logger = handleLoggingConfig(config.logging);
+  const log = createLoggerFromLogging(config.logging);
 
   let instrumentation: GatewayPlugin['instrumentation'];
 
@@ -156,8 +153,8 @@ export function createGatewayRuntime<
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
+    log,
     () => instrumentation,
-    logger,
   );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
@@ -172,7 +169,7 @@ export function createGatewayRuntime<
 
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
-    logger,
+    log,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
@@ -212,7 +209,7 @@ export function createGatewayRuntime<
     persistedDocumentsPlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
-      logger: configContext.logger.child({
+      log: configContext.log.child({
         plugin: 'Hive Persisted Documents',
       }),
       experimental__persistedDocuments: {
@@ -279,7 +276,9 @@ export function createGatewayRuntime<
       const fetcher = createSchemaFetcher({
         endpoint,
         key,
-        logger: configContext.logger.child({ source: 'Hive CDN' }),
+        logger: LegacyLogger.from(
+          configContext.log.child({ source: 'Hive CDN' }),
+        ),
       });
       schemaFetcher = function fetchSchemaFromCDN() {
         pausePolling();
@@ -348,7 +347,7 @@ export function createGatewayRuntime<
             return true;
           },
           (err) => {
-            configContext.logger.warn(`Failed to introspect schema`, err);
+            configContext.log.warn(`Failed to introspect schema`, err);
             return true;
           },
         );
@@ -464,7 +463,10 @@ export function createGatewayRuntime<
             const onSubgraphExecute = getOnSubgraphExecute({
               onSubgraphExecuteHooks,
               ...(config.transports ? { transports: config.transports } : {}),
-              transportContext: configContext,
+              transportContext: {
+                ...configContext,
+                logger: LegacyLogger.from(configContext.log),
+              },
               transportEntryMap,
               getSubgraphSchema() {
                 return unifiedGraph;
@@ -611,7 +613,7 @@ export function createGatewayRuntime<
                   unifiedGraph,
                   // @ts-expect-error - Typings are wrong in legacy Mesh
                   [subschemaConfig],
-                  configContext.logger,
+                  configContext.log,
                   onDelegateHooks,
                 ),
               );
@@ -645,7 +647,7 @@ export function createGatewayRuntime<
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
-          logger: configContext.logger.child({ source: 'Hive CDN' }),
+          log: configContext.log.child({ source: 'Hive CDN' }),
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
           fetchImplementation: configContext.fetch,
         });
@@ -670,10 +672,10 @@ export function createGatewayRuntime<
       // local or remote
       if (!isDynamicUnifiedGraphSchema(config.supergraph)) {
         // no polling for static schemas
-        logger.debug(`Disabling polling for static supergraph`);
+        log.debug(`Disabling polling for static supergraph`);
         delete config.pollingInterval;
       } else if (!config.pollingInterval) {
-        logger.debug(
+        log.debug(
           `Polling interval not set for supergraph, if you want to get updates of supergraph, we recommend setting a polling interval`,
         );
       }
@@ -701,7 +703,10 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: configContext,
+      transportContext: {
+        ...configContext,
+        logger: LegacyLogger.from(configContext.log),
+      },
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
@@ -713,24 +718,22 @@ export function createGatewayRuntime<
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
-      const logger = configContext.logger.child('readiness');
-      logger.debug(`checking`);
+      const log = configContext.log.child('readiness');
+      log.debug('checking');
       return handleMaybePromise(
         () => unifiedGraphManager.getUnifiedGraph(),
         (schema) => {
           if (!schema) {
-            logger.debug(
-              `failed because supergraph has not been loaded yet or failed to load`,
+            log.debug(
+              'failed because supergraph has not been loaded yet or failed to load',
             );
             return false;
           }
-          logger.debug('passed');
+          log.debug('passed');
           return true;
         },
         (err) => {
-          logger.error(
-            `failed due to errors on loading supergraph:\n${err.stack || err.message}`,
-          );
+          log.error(err, 'loading supergraph failed due to errors');
           return false;
         },
       );
@@ -989,7 +992,7 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     registryPlugin,
     persistedDocumentsPlugin,
-    useRetryOnSchemaReload({ logger }),
+    useRetryOnSchemaReload({ log }),
   ];
 
   if (config.subgraphErrors !== false) {
@@ -1112,34 +1115,22 @@ export function createGatewayRuntime<
     extraPlugins.push(useDemandControl(config.demandControl));
   }
 
-  let isDebug: boolean = false;
-
-  if ('level' in logger) {
-    if (logger.level === 'debug' || logger.level === LogLevel.debug) {
-      isDebug = true;
-    }
-  } else {
-    logger.debug(() => {
-      isDebug = true;
-      return 'Debug mode enabled';
-    });
-  }
-
-  if (isDebug) {
+  // TODO: adding extra plugins in a logger is not a good idea, what if the writer is async? refactor
+  log.debug(() => {
     extraPlugins.push(
-      useSubgraphExecuteDebug(configContext),
-      useFetchDebug(configContext),
-      useDelegationPlanDebug(configContext),
-      useCacheDebug(configContext),
+      useSubgraphExecuteDebug(),
+      useFetchDebug(),
+      useDelegationPlanDebug(),
+      useCacheDebug(),
     );
-  }
+  }, 'Debug mode enabled');
 
   const yoga = createYoga({
     // @ts-expect-error Types???
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: logger,
+    logging: log,
     plugins: [
       ...basePlugins,
       ...(config.plugins?.(configContext) || []),

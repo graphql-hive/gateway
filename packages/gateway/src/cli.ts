@@ -15,15 +15,15 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
+import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
 import parseDuration from 'parse-duration';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
@@ -104,7 +104,7 @@ export interface GatewayCLIProxyConfig
 }
 
 export type KeyValueCacheFactoryFn = (ctx: {
-  logger: Logger;
+  log: Logger;
   pubsub: HivePubSub;
   cwd: string;
 }) => KeyValueCache;
@@ -398,7 +398,7 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || getDefaultLogger(),
+    log: userCtx.log || new Logger(),
     productName: 'Hive Gateway',
     productDescription: 'Federated GraphQL Gateway',
     productPackageName: '@graphql-hive/gateway',

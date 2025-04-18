@@ -3,7 +3,7 @@ import 'dotenv/config'; // inject dotenv options to process.env
 
 import module from 'node:module';
 import type { InitializeData } from '@graphql-hive/importer/hooks';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
+import { Logger } from '@graphql-hive/logger';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // @inject-version globalThis.__VERSION__ here
@@ -20,7 +20,7 @@ module.register('@graphql-hive/importer/hooks', {
 enableModuleCachingIfPossible();
 handleNodeWarnings();
 
-const log = getDefaultLogger();
+const log = new Logger();
 
 run({ log }).catch((err) => {
   log.error(err);

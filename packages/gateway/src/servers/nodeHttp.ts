@@ -77,7 +77,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
 
   const url = `${protocol}://${host}:${port}`.replace('0.0.0.0', 'localhost');
 
-  log.debug(`Starting server on ${url}`);
+  log.debug('Starting server on %s', url);
   if (!disableWebsockets) {
     log.debug('Setting up WebSocket server');
     const { WebSocketServer } = await import('ws');
@@ -98,12 +98,12 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     gwRuntime.disposableStack.defer(
       () =>
         new Promise<void>((resolve, reject) => {
-          log.info(`Stopping the WebSocket server`);
+          log.info('Stopping the WebSocket server');
           wsServer.close((err) => {
             if (err) {
               return reject(err);
             }
-            log.info(`Stopped the WebSocket server successfully`);
+            log.info('Stopped the WebSocket server successfully');
             return resolve();
           });
         }),
@@ -112,15 +112,15 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => {
-      log.info(`Listening on ${url}`);
+      log.info('Listening on %s', url);
       gwRuntime.disposableStack.defer(
         () =>
           new Promise<void>((resolve) => {
             process.stderr.write('\n');
-            log.info(`Stopping the server`);
+            log.info('Stopping the server');
             server.closeAllConnections();
             server.close(() => {
-              log.info(`Stopped the server successfully`);
+              log.info('Stopped the server successfully');
               return resolve();
             });
           }),

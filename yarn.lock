@@ -3028,6 +3028,7 @@ __metadata:
     "@apollo/server": "npm:^4.10.3"
     "@apollo/subgraph": "npm:^2.9.3"
     "@graphql-hive/gateway": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
@@ -3934,7 +3935,9 @@ __metadata:
     "@envelop/core": "npm:^5.2.3"
     "@envelop/disable-introspection": "npm:^7.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
+    "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/core": "npm:^0.10.0"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/logger-json": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -3992,6 +3995,7 @@ __metadata:
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.0"
@@ -4115,6 +4119,17 @@ __metadata:
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
     winston: ^3.17.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/logger@workspace:packages/logger"
+  dependencies:
+    "@types/quick-format-unescaped": "npm:^4.0.3"
+    fast-safe-stringify: "npm:^2.1.1"
+    pkgroll: "npm:2.11.2"
+    quick-format-unescaped: "npm:^4.0.4"
   languageName: unknown
   linkType: soft
 
@@ -4351,6 +4366,7 @@ __metadata:
   dependencies:
     "@envelop/core": "npm:^5.2.3"
     "@envelop/instrumentation": "npm:^1.0.0"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.0"
@@ -4552,6 +4568,7 @@ __metadata:
   resolution: "@graphql-mesh/plugin-prometheus@workspace:packages/plugins/prometheus"
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-mesh/utils": "npm:^0.104.2"
@@ -4660,6 +4677,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
     "@envelop/core": "npm:^5.2.3"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
@@ -8566,6 +8584,13 @@ __metadata:
   version: 6.9.18
   resolution: "@types/qs@npm:6.9.18"
   checksum: 10c0/790b9091348e06dde2c8e4118b5771ab386a8c22a952139a2eb0675360a2070d0b155663bf6f75b23f258fd0a1f7ffc0ba0f059d99a719332c03c40d9e9cd63b
+  languageName: node
+  linkType: hard
+
+"@types/quick-format-unescaped@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@types/quick-format-unescaped@npm:4.0.3"
+  checksum: 10c0/e95ba1dfa68f9d1dee785905c3c648b9fe1514c5261160e566d9a19731013d138269937632dea79a73859988a90621c9653504170c6a7415cacb426343f2a11a
   languageName: node
   linkType: hard
 
@@ -13569,6 +13594,7 @@ __metadata:
     "@babel/plugin-proposal-explicit-resource-management": "npm:7.25.9"
     "@babel/plugin-transform-class-properties": "npm:7.25.9"
     "@babel/plugin-transform-class-static-block": "npm:7.26.0"
+    "@babel/plugin-transform-private-methods": "npm:^7.25.9"
     "@babel/preset-env": "npm:7.26.9"
     "@babel/preset-typescript": "npm:7.27.0"
     "@changesets/changelog-github": "npm:^0.5.0"
@@ -18180,7 +18206,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"quick-format-unescaped@npm:^4.0.3":
+"quick-format-unescaped@npm:^4.0.3, quick-format-unescaped@npm:^4.0.4":
   version: 4.0.4
   resolution: "quick-format-unescaped@npm:4.0.4"
   checksum: 10c0/fe5acc6f775b172ca5b4373df26f7e4fd347975578199e7d74b2ae4077f0af05baa27d231de1e80e8f72d88275ccc6028568a7a8c9ee5e7368ace0e18eff93a4
