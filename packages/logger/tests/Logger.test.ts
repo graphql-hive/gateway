@@ -265,15 +265,59 @@ it('should log array attributes with object child attributes', () => {
   log = log.child({ hello: 'world' });
   log.info(['hello', 'world']);
 
-  // TODO: should it be logged like this? maybe place the child attrs in the array as first child?
   expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
-        "attrs": {
-          "0": "hello",
-          "1": "world",
-          "hello": "world",
-        },
+        "attrs": [
+          {
+            "hello": "world",
+          },
+          "hello",
+          "world",
+        ],
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should log array child attributes with object attributes', () => {
+  let [log, writer] = createTLogger();
+
+  log = log.child(['hello', 'world']);
+  log.info({ hello: 'world' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": [
+          "hello",
+          "world",
+          {
+            "hello": "world",
+          },
+        ],
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should log array child attributes with array attributes', () => {
+  let [log, writer] = createTLogger();
+
+  log = log.child(['hello', 'world']);
+  log.info(['more', 'life']);
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": [
+          "hello",
+          "world",
+          "more",
+          "life",
+        ],
         "level": "info",
       },
     ]
