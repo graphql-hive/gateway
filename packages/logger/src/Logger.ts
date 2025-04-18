@@ -6,6 +6,7 @@ import {
   logLevel,
   MaybeLazy,
   parseAttrs,
+  shallowMergeAttributes,
   shouldLog,
   truthyEnv,
 } from './utils';
@@ -138,7 +139,7 @@ export class Logger implements LogWriter {
     return new Logger({
       level: () => this.level, // inherits the parent level (yet can be changed on child only when using setLevel)
       prefix: (this.#prefix || '') + (prefix || '') || undefined,
-      attrs: { ...this.#attrs, ...prefixOrAttrs },
+      attrs: shallowMergeAttributes(this.#attrs, prefixOrAttrs),
       writers: this.#writers,
     });
   }
@@ -179,8 +180,11 @@ export class Logger implements LogWriter {
       msg = `${this.#prefix}${msg || ''}`.trim(); // we trim everything because maybe the "msg" is empty
     }
 
-    attrs = attrs ? parseAttrs(attrs) : attrs;
-    attrs = this.#attrs ? { ...parseAttrs(this.#attrs), ...attrs } : attrs;
+    attrs = shallowMergeAttributes(
+      this.#attrs ? parseAttrs(this.#attrs) : undefined,
+      attrs ? parseAttrs(attrs) : undefined,
+    );
+
     msg = msg ? format(msg, rest) : msg;
 
     this.write(level, attrs, msg);
