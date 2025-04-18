@@ -47,8 +47,8 @@ export function useDelegationPlanDebug<
       }, 'delegation-plan-start');
       return ({ delegationPlan }) => {
         log.debug(
-          () =>
-            delegationPlan.map((plan) => {
+          () => ({
+            delegationPlan: delegationPlan.map((plan) => {
               const planObj: Record<string, string> = {};
               for (const [subschema, selectionSet] of plan) {
                 if (subschema.name) {
@@ -57,6 +57,7 @@ export function useDelegationPlanDebug<
               }
               return planObj;
             }),
+          }),
           'delegation-plan-done',
         );
       };
