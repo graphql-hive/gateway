@@ -632,7 +632,49 @@ it('should handle circular references', () => {
   `);
 });
 
-it.todo('should serialise aggregate errors');
+it('should serialise aggregate errors', () => {
+  const [log, writer] = createTLogger();
+
+  const err1 = new Error('Woah!');
+  err1.stack = '<1 stack>';
+
+  const err2 = new Error('Woah2!');
+  err2.stack = '<2 stack>';
+
+  const aggErr = new AggregateError([err1, err2], 'Woah Aggregate!');
+  aggErr.stack = '<agg stack>';
+
+  log.info(aggErr, 'aggregate');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "class": "AggregateError",
+          "errors": [
+            {
+              "class": "Error",
+              "message": "Woah!",
+              "name": "Error",
+              "stack": "<1 stack>",
+            },
+            {
+              "class": "Error",
+              "message": "Woah2!",
+              "name": "Error",
+              "stack": "<2 stack>",
+            },
+          ],
+          "message": "Woah Aggregate!",
+          "name": "AggregateError",
+          "stack": "<agg stack>",
+        },
+        "level": "info",
+        "msg": "aggregate",
+      },
+    ]
+  `);
+});
 
 it('should change log level', () => {
   const [log, writer] = createTLogger();
