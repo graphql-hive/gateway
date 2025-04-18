@@ -6,13 +6,14 @@ export function jsonStringify(val: unknown, pretty?: boolean): string {
   return fastSafeStringify(val, undefined, pretty ? 2 : undefined);
 }
 
+// TODO: decide whether logwriters need to have a flush method too or not (the logger will flush any pending writes)
+
 export interface LogWriter {
   write(
     level: LogLevel,
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void | Promise<void>;
-  flush(): void | Promise<void>;
 }
 
 export class MemoryLogWriter implements LogWriter {
@@ -27,9 +28,6 @@ export class MemoryLogWriter implements LogWriter {
       ...(msg ? { msg } : {}),
       ...(attrs ? { attrs } : {}),
     });
-  }
-  flush(): void {
-    // noop
   }
 }
 
@@ -75,9 +73,6 @@ export class ConsoleLogWriter implements LogWriter {
       ].join(' '),
     );
   }
-  flush() {
-    // noop
-  }
 }
 
 export class JSONLogWriter implements LogWriter {
@@ -97,8 +92,5 @@ export class JSONLogWriter implements LogWriter {
         truthyEnv('LOG_JSON_PRETTY'),
       ),
     );
-  }
-  flush() {
-    // noop
   }
 }
