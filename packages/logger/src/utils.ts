@@ -168,3 +168,26 @@ export function truthyEnv(key: string): boolean {
     getEnv(key)?.toLowerCase() || '',
   );
 }
+
+export function shallowMergeAttributes(
+  target: Attributes | undefined,
+  source: Attributes | undefined,
+): Attributes | undefined {
+  switch (true) {
+    case Array.isArray(source) && Array.isArray(target):
+      // both are arrays
+      return [...target, ...source];
+    case Array.isArray(source):
+      // only "source" is an array
+      return target ? [target, ...source] : source;
+    case Array.isArray(target):
+      // only "target" is an array
+      return source ? [...target, source] : target;
+    case !!(target || source):
+      // neither are arrays, but at least one is an object
+      return { ...target, ...source };
+    default:
+      // neither are provided
+      return undefined;
+  }
+}
