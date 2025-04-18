@@ -74,7 +74,7 @@ export function parseAttrs(
     return attrs.map((val) => unwrapAttrVal(val));
   }
 
-  if (Object.prototype.toString.call(attrs) === '[object Object]') {
+  if (isPlainObject(attrs)) {
     const unwrapped: Attributes = {};
     for (const key of Object.keys(attrs)) {
       const val = attrs[key as keyof typeof attrs];
@@ -103,9 +103,7 @@ function unwrapAttrVal(attr: AttributeValue): AttributeValue {
     return attr.map((val) => unwrapAttrVal(val));
   }
 
-  // plain object (not an instance of anything)
-  // NOTE: is valnurable to `Symbol.toStringTag` pollution, but the user would be sabotaging themselves
-  if (Object.prototype.toString.call(attr) === '[object Object]') {
+  if (isPlainObject(attr)) {
     const unwrapped: { [key: string | number]: AttributeValue } = {};
     for (const key of Object.keys(attr)) {
       const val = attr[key as keyof typeof attr];
@@ -126,6 +124,14 @@ function objectifyClass(val: unknown): Record<string, unknown> {
   if (!val) {
     // TODO: this should never happen, objectify class should not be called on empty values
     return {};
+  }
+  if (
+    typeof val === 'object' &&
+    'toJSON' in val &&
+    typeof val.toJSON === 'function'
+  ) {
+    // if the object has a toJSON method, use it - always
+    return val.toJSON();
   }
   const props: Record<string, unknown> = {};
   for (const propName of Object.getOwnPropertyNames(val)) {
@@ -185,4 +191,12 @@ export function shallowMergeAttributes(
       // neither are provided
       return undefined;
   }
+}
+
+/** Checks whether the value is a plan object and not an instance of any other class.  */
+function isPlainObject(val: unknown): val is Object {
+  return (
+    Object(val).constructor === Object &&
+    Object.getPrototypeOf(val) === Object.prototype
+  );
 }

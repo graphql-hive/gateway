@@ -498,6 +498,8 @@ it.skipIf(
       },
       {
         "attrs": {
+          "class": "MyClass",
+          "getsomeprop": "hey",
           "someprop": "hey",
         },
         "level": "info",
@@ -506,11 +508,33 @@ it.skipIf(
   `);
 });
 
-it.todo('should serialise aggregate errors');
+it('should serialise using the toJSON method', () => {
+  const [log, writer] = createTLogger();
+
+  class ToJSON {
+    toJSON() {
+      return { hello: 'world' };
+    }
+  }
+
+  log.info(new ToJSON(), 'hello');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "hello": "world",
+        },
+        "level": "info",
+        "msg": "hello",
+      },
+    ]
+  `);
+});
 
 it.todo('should serialise error causes');
 
-it.todo('should serialise using the toJSON method');
+it.todo('should serialise aggregate errors');
 
 it('should change log level', () => {
   const [log, writer] = createTLogger();
