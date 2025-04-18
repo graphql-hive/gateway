@@ -532,5 +532,59 @@ describe('useOpenTelemetry', () => {
         children.forEach(spanTree.expectChild);
       }
     });
+
+    it('should have a response cache attribute', async () => {
+      function checkCacheAttributes(attrs: {
+        http: 'hit' | 'miss';
+        operation?: 'hit' | 'miss';
+      }) {
+        const { span: httpSpan } = spanExporter.assertRoot('POST /graphql');
+        const operationSpan = spanExporter.spans.find(({ name }) =>
+          name.startsWith('graphql.operation'),
+        );
+
+        expect(httpSpan.attributes['gateway.cache.response_cache']).toBe(
+          attrs.http,
+        );
+        if (attrs.operation) {
+          expect(operationSpan).toBeDefined();
+          expect(
+            operationSpan!.attributes['gateway.cache.response_cache'],
+          ).toBe(attrs.operation);
+        }
+      }
+      await using gateway = await buildTestGateway({
+        gatewayOptions: {
+          cache: await import('@graphql-mesh/cache-localforage').then(
+            ({ default: Cache }) => new Cache(),
+          ),
+          responseCaching: {
+            session: () => '1',
+          },
+        },
+      });
+      await gateway.query();
+
+      checkCacheAttributes({ http: 'miss', operation: 'miss' });
+
+      spanExporter.reset();
+      await gateway.query();
+
+      checkCacheAttributes({ http: 'miss', operation: 'hit' });
+
+      spanExporter.reset();
+      const response = await gateway.fetch('http://gateway/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'If-None-Match':
+            'c2f6fb105ef60ccc99dd6725b55939742e69437d4f85d52bf4664af3799c49fa',
+          'If-Modified-Since': new Date(),
+        },
+      });
+      expect(response.status).toBe(304);
+
+      checkCacheAttributes({ http: 'hit' }); // There is no graphql operation span when cached by HTTP
+    });
   });
 });
