@@ -1,7 +1,7 @@
 import {
-  GatewayConfigContext,
   getRetryInfo,
   isRetryExecutionRequest,
+  type GatewayConfigContext,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -32,6 +32,7 @@ import {
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { YogaLogger } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import { getContextManager, OtelContextStack } from './context';
 import {
@@ -243,7 +244,7 @@ export type OpenTelemetryPlugin =
 
 export function useOpenTelemetry(
   options: OpenTelemetryGatewayPluginOptions & {
-    logger: GatewayConfigContext['logger'];
+    logger?: GatewayConfigContext['logger'];
   },
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
@@ -268,12 +269,18 @@ export function useOpenTelemetry(
       : (getMostSpecificState(state)?.otel?.current ?? ROOT_CONTEXT);
   }
 
-  const pluginLogger = options.logger.child({ plugin: 'OpenTelemetry' });
+  const yogaLogger = createDeferred<YogaLogger>();
+  let pluginLogger = options.logger
+    ? fakePromise(
+        options.logger.child({
+          plugin: 'OpenTelemetry',
+        }),
+      )
+    : yogaLogger.promise;
 
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
       if (options.contextManager === false) {
-        pluginLogger.debug('context manager disabled by user.');
         return fakePromise(false);
       }
 
@@ -326,23 +333,30 @@ export function useOpenTelemetry(
 
   let preparation$: Promise<void>;
   preparation$ = init().then((contextManager) => {
-    const diaLogger = pluginLogger.child('otel-diag');
-    diag.setLogger(
-      {
-        error: (message, ...args) => diaLogger.error(message, ...args),
-        warn: (message, ...args) => diaLogger.warn(message, ...args),
-        info: (message, ...args) => diaLogger.info(message, ...args),
-        debug: (message, ...args) => diaLogger.debug(message, ...args),
-        verbose: (message, ...args) => diaLogger.debug(message, ...args),
-      },
-      options.diagLevel ?? DiagLogLevel.VERBOSE,
-    );
     useContextManager = contextManager;
-    pluginLogger.debug(
-      `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
-    );
     tracer = options.tracer || trace.getTracer('gateway');
     preparation$ = fakePromise();
+    return pluginLogger.then((logger) => {
+      pluginLogger = fakePromise(logger);
+      logger.debug(
+        `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
+      );
+      diag.setLogger(
+        {
+          error: (message, ...args) =>
+            logger.error('[otel-diag] ' + message, ...args),
+          warn: (message, ...args) =>
+            logger.warn('[otel-diag] ' + message, ...args),
+          info: (message, ...args) =>
+            logger.info('[otel-diag] ' + message, ...args),
+          debug: (message, ...args) =>
+            logger.debug('[otel-diag] ' + message, ...args),
+          verbose: (message, ...args) =>
+            logger.debug('[otel-diag] ' + message, ...args),
+        },
+        options.diagLevel ?? DiagLogLevel.VERBOSE,
+      );
+    });
   });
 
   return withState<
@@ -651,6 +665,7 @@ export function useOpenTelemetry(
 
     onYogaInit({ yoga }) {
       yogaVersion.resolve(yoga.version);
+      yogaLogger.resolve(yoga.logger);
     },
 
     onEnveloped({ state, extendContext }) {
@@ -667,7 +682,7 @@ export function useOpenTelemetry(
         state.forRequest.otel &&
           setResponseAttributes(state.forRequest.otel.root, response);
       } catch (error) {
-        pluginLogger.error('Failed to end http span', { error });
+        pluginLogger.then((l) => l.error('Failed to end http span', { error }));
       }
     },
 
