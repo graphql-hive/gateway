@@ -56,19 +56,23 @@ export function withState<
   function addStateGetters(src: any) {
     const result: any = {};
     for (const [hookName, hook] of Object.entries(src) as any) {
-      result[hookName] =
-        typeof hook !== 'function'
-          ? hook
-          : (payload: any, ...args: any[]) =>
-              hook(
-                {
-                  ...payload,
-                  get state() {
-                    return getState(payload);
-                  },
+      if (typeof hook !== 'function') {
+        result[hookName] = hook;
+      } else {
+        result[hookName] = {
+          [hook.name](payload: any, ...args: any[]) {
+            return hook(
+              {
+                ...payload,
+                get state() {
+                  return getState(payload);
                 },
-                ...args,
-              );
+              },
+              ...args,
+            );
+          },
+        }[hook.name];
+      }
     }
     return result;
   }
