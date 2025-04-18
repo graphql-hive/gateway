@@ -81,15 +81,19 @@ export async function buildTestGateway(
 
   return {
     otelPlugin: otelPlugin!,
-    query: async (
-      body: GraphQLParams = {
+    query: async ({
+      shouldReturnErrors,
+      body = {
         query: /* GraphQL */ `
           query {
             hello
           }
         `,
       },
-    ) => {
+    }: {
+      body?: GraphQLParams;
+      shouldReturnErrors?: boolean;
+    } = {}) => {
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
         headers: {
@@ -97,8 +101,19 @@ export async function buildTestGateway(
         },
         body: JSON.stringify(body),
       });
-      return response.json();
+
+      const result = await response.json();
+      if (shouldReturnErrors) {
+        expect(result.errors).toBeDefined();
+      } else {
+        if (result.errors) {
+          console.error(result.errors);
+        }
+        expect(result.errors).not.toBeDefined();
+      }
+      return result;
     },
+    fetch: gateway.fetch,
     [Symbol.asyncDispose]: () => {
       diag.disable();
       return stack.disposeAsync();
