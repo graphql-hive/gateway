@@ -1,6 +1,7 @@
+import { setTimeout } from 'node:timers/promises';
 import { expect, it, vi } from 'vitest';
 import { Logger, LoggerOptions } from '../src/Logger';
-import { MemoryLogWriter } from '../src/writers';
+import { LogWriter, MemoryLogWriter } from '../src/writers';
 
 function createTLogger(opts?: Partial<LoggerOptions>) {
   const writer = new MemoryLogWriter();
@@ -278,9 +279,43 @@ it('should not unwrap lazy attributes if level is not to be logged', () => {
   expect(lazy).not.toHaveBeenCalled();
 });
 
-it.todo('should log to async writers');
+it('should wait for async writers on flush', async () => {
+  const logs: any[] = [];
+  const log = new Logger({
+    writers: [
+      {
+        async write(level, attrs, msg) {
+          await setTimeout(10);
+          logs.push({ level, attrs, msg });
+        },
+      },
+    ],
+  });
 
-it.todo('should wait for async writers on flush');
+  log.info('hello');
+  log.info('world');
+
+  // not flushed yet
+  expect(logs).toMatchInlineSnapshot(`[]`);
+
+  await log.flush();
+
+  // flushed
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": undefined,
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "attrs": undefined,
+        "level": "info",
+        "msg": "world",
+      },
+    ]
+  `);
+});
 
 it('should log array attributes with object child attributes', () => {
   let [log, writer] = createTLogger();
