@@ -33,3 +33,9 @@ export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
     return (context.active().getValue(symbol) as boolean) || false;
   });
 }
+
+export const getEnvVar =
+  'process' in globalThis
+    ? <T>(name: string, defaultValue: T): string | T =>
+        process.env[name] || defaultValue
+    : <T>(_name: string, defaultValue: T): string | T => defaultValue;
