@@ -30,7 +30,12 @@ import {
   resourceFromAttributes,
 } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import {
+  AlwaysOnSampler,
+  ParentBasedSampler,
+  TraceIdRatioBasedSampler,
+  WebTracerProvider,
+} from '@opentelemetry/sdk-trace-web';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import { YogaLogger } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
@@ -125,6 +130,13 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    *  - `ContextManager`: rely on this provided `ContextManger` instance.
    */
   contextManager?: ContextManager | boolean;
+  /**
+   * Sampling rate of spans. The value should be between 0 and 1.
+   * By default, all spans are recorded and exported, which correspond to a sampling rate of 1.
+   *
+   * Note: The sampling strategy used is parent based, meaning spans will be always sampled if a sampled parent span is found in the OTEL context.
+   */
+  samplingRate?: number;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -332,6 +344,12 @@ export function useOpenTelemetry(
 
     let contextManager$ = getContextManager(options.contextManager);
 
+    const sampler = options.samplingRate
+      ? new ParentBasedSampler({
+          root: new TraceIdRatioBasedSampler(options.samplingRate),
+        })
+      : new AlwaysOnSampler();
+
     setGlobalErrorHandler((err) => {
       diag.error('Uncaught Error', err);
     });
@@ -339,7 +357,7 @@ export function useOpenTelemetry(
     return exporters$
       .then((exporters) => {
         spanProcessors = exporters;
-        provider = new WebTracerProvider({ resource, spanProcessors });
+        provider = new WebTracerProvider({ resource, spanProcessors, sampler });
         return contextManager$;
       })
       .then((contextManager) => {
