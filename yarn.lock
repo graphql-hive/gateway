@@ -11955,8 +11955,8 @@ __metadata:
   linkType: hard
 
 "dockerode@npm:^4.0.2":
-  version: 4.0.5
-  resolution: "dockerode@npm:4.0.5"
+  version: 4.0.6
+  resolution: "dockerode@npm:4.0.6"
   dependencies:
     "@balena/dockerignore": "npm:^1.0.2"
     "@grpc/grpc-js": "npm:^1.11.1"
@@ -11965,7 +11965,7 @@ __metadata:
     protobufjs: "npm:^7.3.2"
     tar-fs: "npm:~2.1.2"
     uuid: "npm:^10.0.0"
-  checksum: 10c0/a9b9024d8afc40788a195740bf9cf60e92def44ee3e046c3497b0c6a0f49c46ea07e6e89d248daf3c391c66cb260aaf1111badb73f85db54e0d106b1e760aa19
+  checksum: 10c0/c0c974425fcca8c91c6c6419f0f06be13a63c17c38b73f78bd79cd35c8cb5699211727366747c7357fdfe749f5bf5823ab2896abd0db77fadab11001c294c1a4
   languageName: node
   linkType: hard
 
