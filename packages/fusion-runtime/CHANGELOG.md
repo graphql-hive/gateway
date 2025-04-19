@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.11
+
+### Patch Changes
+
+- [#1053](https://github.com/graphql-hive/gateway/pull/1053) [`e6dfbcd`](https://github.com/graphql-hive/gateway/commit/e6dfbcd4d1d2ebbdb7c5454b691b1be2b9c466b3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Lazy print GraphQL schema for logger
+
 ## 0.11.10
 
 ### Patch Changes
