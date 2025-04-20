@@ -134,6 +134,12 @@ export class ConsoleLogWriter implements LogWriter {
       // remove the ending comma
       formattedLine = formattedLine.replace(/,$/, '');
 
+      // color the opening and closing brackets
+      formattedLine = formattedLine.replace(
+        /(\[|\{|\]|\})$/,
+        this.color('key', '$1'),
+      );
+
       log += formattedLine + '\n';
     }
 
