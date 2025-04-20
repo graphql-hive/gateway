@@ -60,11 +60,11 @@ describe('ConsoleLogWriter', () => {
   it('should color levels and keys', () => {
     const [log, logs] = createTConsoleLogger({ noColor: false });
 
-    log.trace({ hello: 'world' }, 'hi');
-    log.debug({ hello: 'world' }, 'hi');
-    log.info({ hello: 'world' }, 'hi');
-    log.warn({ hello: 'world' }, 'hi');
-    log.error({ hello: 'world' }, 'hi');
+    log.trace({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.debug({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.info({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.warn({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.error({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
 
     expect(logs).toMatchSnapshot();
   });
