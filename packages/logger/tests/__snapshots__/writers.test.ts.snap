@@ -3,15 +3,50 @@
 exports[`ConsoleLogWriter should color levels and keys 1`] = `
 [
   "[36mTRC[0m [1mhi[0m 
-  [35mhello:[0m "world"",
+  [35mhello:[0m [35m{[0m
+    [35mdear:[0m "world"
+    [35mtry:[0m [35m[[0m
+      "num"
+      1
+      2
+    [35m][0m
+  [35m}[0m",
   "[90mDBG[0m [1mhi[0m 
-  [35mhello:[0m "world"",
+  [35mhello:[0m [35m{[0m
+    [35mdear:[0m "world"
+    [35mtry:[0m [35m[[0m
+      "num"
+      1
+      2
+    [35m][0m
+  [35m}[0m",
   "[32mINF[0m [1mhi[0m 
-  [35mhello:[0m "world"",
+  [35mhello:[0m [35m{[0m
+    [35mdear:[0m "world"
+    [35mtry:[0m [35m[[0m
+      "num"
+      1
+      2
+    [35m][0m
+  [35m}[0m",
   "[33mWRN[0m [1mhi[0m 
-  [35mhello:[0m "world"",
+  [35mhello:[0m [35m{[0m
+    [35mdear:[0m "world"
+    [35mtry:[0m [35m[[0m
+      "num"
+      1
+      2
+    [35m][0m
+  [35m}[0m",
   "[41;39mERR[0m [1mhi[0m 
-  [35mhello:[0m "world"",
+  [35mhello:[0m [35m{[0m
+    [35mdear:[0m "world"
+    [35mtry:[0m [35m[[0m
+      "num"
+      1
+      2
+    [35m][0m
+  [35m}[0m",
 ]
 `;
 
