@@ -253,7 +253,10 @@ INF Hello World!
 ```
 <!-- prettier-ignore-end -->
 
-### `JSONLogWriter` (default when `LOG_JSON=1`)
+### `JSONLogWriter`
+
+> [!NOTE]
+> Will be used then the `LOG_JSON=1` environment variable is provided.
 
 Built-in log writer that outputs each log entry as a structured JSON object. When used, it prints logs to the console in JSON format, including all provided attributes, the log level, message, and a timestamp.
 
