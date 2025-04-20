@@ -43,13 +43,40 @@ const asciMap = {
   reset: '\x1b[0m', // reset
 };
 
+export interface ConsoleLogWriterOptions {
+  /** @default globalThis.Console */
+  console?: Pick<Console, 'debug' | 'info' | 'warn' | 'error'>;
+  /**
+   * Whether to disable colors in the console output.
+   *
+   * @default env.NO_COLOR || false
+   */
+  noColor?: boolean;
+  /**
+   * Whether to include the timestamp at the beginning of the log message.
+   *
+   * @default false
+   */
+  noTimestamp?: boolean;
+}
+
 export class ConsoleLogWriter implements LogWriter {
-  #nocolor =
-    // no color if we're running in browser-like (edge) environments
-    // TODO: is this the most accurate way to detect it?
-    typeof process === 'undefined' ||
-    // no color if https://no-color.org/
-    truthyEnv('NO_COLOR');
+  #console: NonNullable<ConsoleLogWriterOptions['console']>;
+  #noColor: boolean;
+  #noTimestamp: boolean;
+  constructor(opts: ConsoleLogWriterOptions = {}) {
+    const {
+      console = globalThis.console,
+      // no color if we're running in browser-like (edge) environments
+      noColor = typeof process === 'undefined' ||
+        // or no color if https://no-color.org/
+        truthyEnv('NO_COLOR'),
+      noTimestamp = false,
+    } = opts;
+    this.#console = console;
+    this.#noColor = noColor;
+    this.#noTimestamp = noTimestamp;
+  }
   color<T extends string | null | undefined>(
     style: keyof typeof asciMap,
     text: T,
@@ -57,7 +84,7 @@ export class ConsoleLogWriter implements LogWriter {
     if (!text) {
       return text;
     }
-    if (this.#nocolor) {
+    if (this.#noColor) {
       return text;
     }
     return (asciMap[style] + text + asciMap.reset) as T;
@@ -67,13 +94,15 @@ export class ConsoleLogWriter implements LogWriter {
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void {
-    console[level === 'trace' ? 'debug' : level](
+    this.#console[level === 'trace' ? 'debug' : level](
       [
-        this.color('timestamp', new Date().toISOString()),
+        !this.#noTimestamp && this.color('timestamp', new Date().toISOString()),
         this.color(level, logLevelToString(level)),
         this.color('message', msg),
-        attrs ? this.stringifyAttrs(attrs) : undefined,
-      ].join(' '),
+        attrs && this.stringifyAttrs(attrs),
+      ]
+        .filter(Boolean)
+        .join(' '),
     );
   }
   stringifyAttrs(attrs: Attributes): string {
