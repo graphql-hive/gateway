@@ -6,8 +6,6 @@ export function jsonStringify(val: unknown, pretty?: boolean): string {
   return fastSafeStringify(val, undefined, pretty ? 2 : undefined);
 }
 
-// TODO: decide whether logwriters need to have a flush method too or not (the logger will flush any pending writes)
-
 export interface LogWriter {
   write(
     level: LogLevel,
