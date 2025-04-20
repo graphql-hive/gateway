@@ -39,6 +39,7 @@ const asciMap = {
   warn: '\x1b[33m', // yellow
   error: '\x1b[41;39m', // red; white
   message: '\x1b[1m', // bold
+  key: '\x1b[35m', // magenta
   reset: '\x1b[0m', // reset
 };
 
@@ -49,14 +50,17 @@ export class ConsoleLogWriter implements LogWriter {
     typeof process === 'undefined' ||
     // no color if https://no-color.org/
     truthyEnv('NO_COLOR');
-  color(style: keyof typeof asciMap, text: string | null | undefined) {
+  color<T extends string | null | undefined>(
+    style: keyof typeof asciMap,
+    text: T,
+  ): T {
     if (!text) {
       return text;
     }
     if (this.#nocolor) {
       return text;
     }
-    return asciMap[style] + text + asciMap.reset;
+    return (asciMap[style] + text + asciMap.reset) as T;
   }
   write(
     level: LogLevel,
@@ -85,7 +89,10 @@ export class ConsoleLogWriter implements LogWriter {
 
       // remove the quotes from the keys and remove the opening bracket
       // TODO: make sure keys with quotes are preserved
-      formattedLine = formattedLine.replace(/"([^"]+)":/, '$1:');
+      formattedLine = formattedLine.replace(
+        /"([^"]+)":/,
+        this.color('key', '$1:'),
+      );
 
       // replace all escaped new lines with a new line and append the indentation of the line
       let indentationSize = line.match(/^\s*/)?.[0]?.length || 0;
