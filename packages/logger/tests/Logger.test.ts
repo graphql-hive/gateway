@@ -456,6 +456,7 @@ it('should format string', () => {
 
   log.info('%o hello %s', { worldly: 1 }, 'world');
   log.info({ these: { are: 'attrs' } }, '%o hello %s', { worldly: 1 }, 'world');
+  log.info('hello %s %j %d %o', 'world', { obj: true }, 4, { another: 'obj' });
 
   expect(writer.logs).toMatchInlineSnapshot(`
     [
@@ -471,6 +472,10 @@ it('should format string', () => {
         },
         "level": "info",
         "msg": "{"worldly":1} hello world",
+      },
+      {
+        "level": "info",
+        "msg": "hello world {"obj":true} 4 {"another":"obj"}",
       },
     ]
   `);

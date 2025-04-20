@@ -72,6 +72,24 @@ $ LOG_JSON=1 node example.js
 ```
 <!-- prettier-ignore-end -->
 
+## Message Formatting
+
+The Hive Logger uses the [`quick-format-unescaped` library](https://github.com/pinojs/quick-format-unescaped) to format log messages that include interpolation (e.g., placeholders like %s, %d, etc.).
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+
+const log = new Logger();
+
+log.info('hello %s %j %d %o', 'world', { obj: true }, 4, { another: 'obj' });
+```
+
+Outputs:
+
+```sh
+2025-04-10T14:00:00.000Z INF hello world {"obj":true} 4 {"another":"obj"}
+```
+
 ## Logging Levels
 
 The default logger uses the `info` log level which will make sure to log only `info`+ logs. Available log levels are:
