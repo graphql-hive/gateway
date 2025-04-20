@@ -54,7 +54,14 @@ export function useRequestId<TContext extends Record<string, any>>(
     },
     onContextBuilding({ context, extendContext }) {
       // the request ID wont always be available because there's no request in websockets
-      const log = loggerForRequest(context.log, context.request);
+      const requestId = requestIdByRequest.get(context.request);
+      let log = context.log;
+      if (requestId) {
+        log = loggerForRequest(
+          context.log.child({ requestId }),
+          context.request,
+        );
+      }
       extendContext(
         // @ts-expect-error TODO: typescript is acting up here
         {
