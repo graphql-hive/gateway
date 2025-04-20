@@ -270,3 +270,48 @@ await log.flush(); // make sure all async writes settle
 The logger does not block when you log asynchronously. Instead, it tracks all pending async writes internally. When you call `log.flush()` or dispose the logger when using the [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), it waits for all pending writes to finish, ensuring no logs are lost on shutdown. During normal operation, logging remains fast and non-blocking, even if some writers are async.
 
 This design allows you to use async writers without impacting the performance of your application or blocking the main thread.
+
+##### Handling Async Write Errors
+
+The Logger handles write errors for asynchronous writers by tracking all write promises. When `await log.flush()` is called (including during async disposal), it waits for all pending writes to settle. If any writes fail (i.e., their promises reject), their errors are collected and after all writes have settled, if there were any errors, an `AggregateError` is thrown containing all the individual write errors.
+
+```ts
+import { Logger } from './Logger';
+
+let i = 0;
+const log = new Logger({
+  writers: [
+    {
+      async write() {
+        i++;
+        throw new Error('Write failed! #' + i);
+      },
+    },
+  ],
+});
+
+// no fail during logs
+log.info('hello');
+log.info('world');
+
+try {
+  await log.flush();
+} catch (e) {
+  // flush will fail with each individually failed writes
+  console.error(e);
+}
+```
+
+Outputs:
+
+```sh
+AggregateError: Failed to flush 2 writes
+    at async <anonymous> (/project/example.js:20:3) {
+  [errors]: [
+    Error: Write failed! #1
+        at Object.write (/project/example.js:9:15),
+    Error: Write failed! #2
+        at Object.write (/project/example.js:9:15)
+  ]
+}
+```

@@ -314,6 +314,39 @@ it('should wait for async writers on flush', async () => {
   `);
 });
 
+it('should handle async write errors on flush', async () => {
+  let i = 0;
+  const log = new Logger({
+    writers: [
+      {
+        async write() {
+          i++;
+          throw new Error('Write failed! #' + i);
+        },
+      },
+    ],
+  });
+
+  // no fail
+  log.info('hello');
+  log.info('world');
+
+  try {
+    await log.flush();
+    throw new Error('should not have reached here');
+  } catch (e) {
+    expect(e).toMatchInlineSnapshot(
+      `[AggregateError: Failed to flush 2 writes]`,
+    );
+    expect((e as AggregateError).errors).toMatchInlineSnapshot(`
+      [
+        [Error: Write failed! #1],
+        [Error: Write failed! #2],
+      ]
+    `);
+  }
+});
+
 it('should wait for async writers on async dispose', async () => {
   const logs: any[] = [];
 
