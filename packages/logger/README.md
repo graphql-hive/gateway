@@ -151,6 +151,52 @@ Outputs the following to the console:
 ```
 <!-- prettier-ignore-end -->
 
+## Child Loggers
+
+Child loggers in Hive Logger allow you to create new logger instances that inherit configuration (such as log level, writers, and attributes) from their parent logger. This is useful for associating contextual information (like request IDs or component names) with all logs from a specific part of your application.
+
+When you create a child logger using the child method, you can:
+
+- Add a prefix to all log messages from the child logger.
+- Add attributes that will be included in every log entry from the child logger.
+- Inherit the log level and writers from the parent logger, unless explicitly changed on the child.
+
+This makes it easy to organize and structure logs in complex applications, ensuring that related logs carry consistent context.
+
+> [!IMPORTANT]
+> In a child logger, attributes provided in individual log calls will overwrite any attributes inherited from the parent logger if they share the same keys. This allows you to override or add context-specific attributes for each log entry.
+
+For example, running this:
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+
+const log = new Logger();
+
+const child = log.child({ requestId: '123-456' }, '[child] ');
+
+child.info('Hello World!');
+child.info({ requestId: 'overwritten attribute' });
+
+const nestedChild = child.child({ traceId: '789-012' }, '[nestedChild] ');
+
+nestedChild.info('Hello Deep Down!');
+```
+
+Will output:
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z INF [child] Hello World!
+  requestId: "123-456"
+2025-04-10T14:00:00.000Z INF [child]
+  requestId: "overwritten attribute"
+2025-04-20T18:39:30.291Z INF [child] [nestedChild] Hello Deep Down!
+  requestId: "123-456"
+  traceId: "789-012"
+```
+<!-- prettier-ignore-end -->
+
 ## Writers
 
 Logger writers are responsible for handling how and where log messages are output. In Hive Logger, writers are pluggable components that receive structured log data and determine its final destination and format. This allows you to easily customize logging behavior, such as printing logs to the console, writing them as JSON, storing them in memory for testing, or sending them to external systems.
@@ -210,6 +256,8 @@ INF Hello World!
 ### `JSONLogWriter` (default when `LOG_JSON=1`)
 
 Built-in log writer that outputs each log entry as a structured JSON object. When used, it prints logs to the console in JSON format, including all provided attributes, the log level, message, and a timestamp.
+
+In the JSONLogWriter implementation, any attributes you provide with the keys `msg`, `timestamp`, or `level` will be overwritten in the final log output. This is because the writer explicitly sets these fields when constructing the log object. If you include these keys in your attributes, their values will be replaced by the logger's own values in the JSON output.
 
 If the `LOG_JSON_PRETTY=1` environment variable is provided, the output will be pretty-printed for readability; otherwise, it is compact.
 
