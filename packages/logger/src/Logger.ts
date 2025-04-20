@@ -12,7 +12,7 @@ import {
   shouldLog,
   truthyEnv,
 } from './utils';
-import { ConsoleLogWriter, LogWriter } from './writers';
+import { ConsoleLogWriter, JSONLogWriter, LogWriter } from './writers';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
@@ -39,7 +39,7 @@ export interface LoggerOptions {
   /**
    * The log writers to use when writing logs.
    *
-   * @default [new ConsoleLogWriter()]
+   * @default env.LOG_JSON ? [new JSONLogWriter()] : [new ConsoleLogWriter()]
    */
   writers?: [LogWriter, ...LogWriter[]];
 }
@@ -64,7 +64,11 @@ export class Logger implements AsyncDisposable {
       (truthyEnv('DEBUG') ? 'debug' : 'info');
     this.#prefix = opts.prefix;
     this.#attrs = opts.attrs;
-    this.#writers = opts.writers ?? [new ConsoleLogWriter()];
+    this.#writers =
+      opts.writers ??
+      (truthyEnv('LOG_JSON')
+        ? [new JSONLogWriter()]
+        : [new ConsoleLogWriter()]);
   }
 
   /** The prefix that's prepended to each log message. */
