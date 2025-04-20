@@ -105,23 +105,37 @@ export class Logger implements AsyncDisposable {
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void {
-    const pendingWrites = this.#writers
-      .map((writer) => writer.write(level, attrs, msg))
-      .filter(isPromise);
-
-    for (const pendingWrite of pendingWrites) {
-      this.#pendingWrites.add(pendingWrite);
-      pendingWrite.catch(() => {
-        // TODO: what to do if the async write failed?
-      });
-      pendingWrite.finally(() => this.#pendingWrites.delete(pendingWrite));
+    for (const w of this.#writers) {
+      const write$ = w.write(level, attrs, msg);
+      if (isPromise(write$)) {
+        this.#pendingWrites.add(write$);
+        write$
+          .then(() => {
+            // we remove from pending writes only if the write was successful
+            this.#pendingWrites.delete(write$);
+          })
+          .catch(() => {
+            // otherwise we keep in the pending write to throw on flush
+          });
+      }
     }
   }
 
   public flush() {
     if (this.#pendingWrites.size) {
-      return Promise.all(this.#pendingWrites).then(() => {
-        // void
+      const errs: unknown[] = [];
+      return Promise.allSettled(
+        this.#pendingWrites
+          .values()
+          .map((w) => w.catch((err) => errs.push(err))),
+      ).then(() => {
+        this.#pendingWrites.clear();
+        if (errs.length) {
+          throw new AggregateError(
+            errs,
+            `Failed to flush ${errs.length} writes`,
+          );
+        }
       });
     }
     return;
