@@ -14,6 +14,8 @@ import {
 } from './utils';
 import { ConsoleLogWriter, JSONLogWriter, LogWriter } from './writers';
 
+export type { Attributes } from './utils';
+
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
 // TODO: explain what happens when attribute keys match existing keys from the logger (like "msg")
