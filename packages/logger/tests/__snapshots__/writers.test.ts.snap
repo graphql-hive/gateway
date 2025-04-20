@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConsoleLogWriter should color levels and keys 1`] = `
+[
+  "[36mTRC[0m [1mhi[0m 
+  [35mhello:[0m "world"",
+  "[90mDBG[0m [1mhi[0m 
+  [35mhello:[0m "world"",
+  "[32mINF[0m [1mhi[0m 
+  [35mhello:[0m "world"",
+  "[33mWRN[0m [1mhi[0m 
+  [35mhello:[0m "world"",
+  "[41;39mERR[0m [1mhi[0m 
+  [35mhello:[0m "world"",
+]
+`;
+
+exports[`ConsoleLogWriter should pretty print the attributes 1`] = `
+[
+  "TRC obj 
+  a: 1
+  b: 2",
+  "DBG arr 
+  "a"
+  "b"
+  "c"",
+  "INF nested 
+  a: {
+    b: {
+      c: {
+        d: 1
+      }
+    }
+  }",
+  "WRN arr objs 
+  {
+    a: 1
+  }
+  {
+    b: 2
+  }",
+  "ERR multlinestring 
+  str: "a
+  b
+  c"
+  err: {
+    stack: "<stack>"
+    message: "woah!"
+    name: "Error"
+    class: "Error"
+  }",
+  "INF graphql 
+  query: "
+  {
+    hi(howMany: 1) {
+      hello
+      world
+    }
+  }
+  "",
+]
+`;
