@@ -2,6 +2,7 @@ import { setTimeout } from 'node:timers/promises';
 import { expect, it, vi } from 'vitest';
 import { Logger, LoggerOptions } from '../src/Logger';
 import { MemoryLogWriter } from '../src/writers';
+import { stableError } from './utils';
 
 function createTLogger(opts?: Partial<LoggerOptions>) {
   const writer = new MemoryLogWriter();
@@ -734,24 +735,3 @@ it('should change child log level only on child', () => {
     ]
   `);
 });
-
-/** Stabilises the error for snapshot testing */
-function stableError<T extends Error>(err: T): T {
-  if (globalThis.Bun) {
-    // bun serialises errors differently from node
-    // we need to remove some properties to make the snapshots match
-    // @ts-expect-error
-    delete err.column;
-    // @ts-expect-error
-    delete err.line;
-    // @ts-expect-error
-    delete err.originalColumn;
-    // @ts-expect-error
-    delete err.originalLine;
-    // @ts-expect-error
-    delete err.sourceURL;
-  }
-  // we remove the stack to make the snapshot stable
-  err.stack = '<stack>';
-  return err;
-}
