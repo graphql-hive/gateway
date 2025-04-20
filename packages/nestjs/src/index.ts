@@ -98,9 +98,6 @@ export class HiveGatewayDriver<
                   nestLog[level](msg, attrs);
               }
             },
-            flush() {
-              // noop
-            },
           },
         ],
       });
