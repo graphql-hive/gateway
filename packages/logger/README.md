@@ -415,7 +415,7 @@ The logger does not block when you log asynchronously. Instead, it tracks all pe
 
 This design allows you to use async writers without impacting the performance of your application or blocking the main thread.
 
-#### Explicit Resource Management
+##### Explicit Resource Management
 
 The Hive Logger also supports [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management). This allows you to ensure that all pending asynchronous log writes are properly flushed before your application exits or when the logger is no longer needed.
 
