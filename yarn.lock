@@ -4136,10 +4136,13 @@ __metadata:
     pino: "npm:^9.6.0"
     pkgroll: "npm:2.11.2"
     quick-format-unescaped: "npm:^4.0.4"
+    winston: "npm:^3.17.0"
   peerDependencies:
     pino: ^9.6.0
   peerDependenciesMeta:
     pino:
+      optional: true
+    winston:
       optional: true
   languageName: unknown
   linkType: soft
