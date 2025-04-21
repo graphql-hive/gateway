@@ -11,7 +11,7 @@ export function useFetchDebug<
     },
     onFetch({ url, options, context }) {
       const fetchId = fetchAPI.crypto.randomUUID();
-      const log = context.log.child({ fetchId });
+      const log = context.log.child({ fetchId }, '[useFetchDebug] ');
       log.debug(
         () => ({
           url,
@@ -19,7 +19,7 @@ export function useFetchDebug<
           headers: options?.headers,
           signal: options?.signal?.aborted ? options?.signal?.reason : false,
         }),
-        'http-fetch-request',
+        'Request',
       );
       const start = performance.now();
       return function onFetchDone({ response }) {
@@ -29,7 +29,7 @@ export function useFetchDebug<
             headers: Object.fromEntries(response.headers.entries()),
             duration: performance.now() - start,
           }),
-          'http-fetch-response',
+          'Response',
         );
       };
     },

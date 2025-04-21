@@ -21,7 +21,10 @@ export function useDelegationPlanDebug<
       info,
     }) {
       const planId = fetchAPI.crypto.randomUUID();
-      const log = context.log.child({ planId, typeName });
+      const log = context.log.child(
+        { planId, typeName },
+        '[useDelegationPlanDebug] ',
+      );
       log.debug(() => {
         const logObj: Record<string, any> = {};
         if (variables && Object.keys(variables).length) {
@@ -44,7 +47,7 @@ export function useDelegationPlanDebug<
           logObj['path'] = pathToArray(info.path).join(' | ');
         }
         return logObj;
-      }, 'delegation-plan-start');
+      }, 'Start');
       return ({ delegationPlan }) => {
         log.debug(
           () => ({
@@ -58,7 +61,7 @@ export function useDelegationPlanDebug<
               return planObj;
             }),
           }),
-          'delegation-plan-done',
+          'Done',
         );
       };
     },
@@ -97,10 +100,10 @@ export function useDelegationPlanDebug<
           ...log,
           path: pathToArray(info.path).join(' | '),
         }),
-        'delegation-plan-start',
+        'Stage start',
       );
       return ({ result }) => {
-        log.debug(() => result, 'delegation-stage-execute-done');
+        log.debug(() => result, 'Stage done');
       };
     },
   };
