@@ -94,6 +94,7 @@ Outputs:
 
 The default logger uses the `info` log level which will make sure to log only `info`+ logs. Available log levels are:
 
+- false (disables logging altogether)
 - `trace`
 - `debug`
 - `info` _default_
