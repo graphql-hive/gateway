@@ -72,6 +72,73 @@ $ LOG_JSON=1 node example.js
 ```
 <!-- prettier-ignore-end -->
 
+## Logging Methods and Their Arguments
+
+Hive Logger provides convenient methods for each log level: `trace`, `debug`, `info`, `warn`, and `error`.
+
+All logging methods support flexible argument patterns for structured and formatted logging:
+
+### No Arguments
+
+Logs an empty message at the specified level.
+
+```ts
+log.debug();
+```
+
+```sh
+2025-04-10T14:00:00.000Z DBG
+```
+
+### Attributes Only
+
+Logs structured attributes without a message.
+
+```ts
+log.info({ hello: 'world' });
+```
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z INF
+  hello: "world"
+```
+<!-- prettier-ignore-end -->
+
+### Message with Interpolation
+
+Logs a formatted message, similar to printf-style formatting. Read more about it in the [Message Formatting section](#message-formatting).
+
+```ts
+log.warn('Hello %s!', 'World');
+```
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z WRN Hello World!
+```
+<!-- prettier-ignore-end -->
+
+### Attributes and Message (with interpolation)
+
+Logs structured attributes and a formatted message. The attributes can be anything object-like, including classes.
+
+```ts
+const err = new Error('Something went wrong!');
+log.error(err, 'Problem occurred at %s', new Date());
+```
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z ERR Problem occurred at Thu Apr 10 2025 14:00:00 GMT+0200 (Central European Summer Time)
+  stack: "Error: Something went wrong!
+      at <anonymous> (/projects/example.ts:2:1)"
+  message: "Something went wrong!"
+  name: "Error"
+  class: "Error"
+```
+<!-- prettier-ignore-end -->
+
 ## Message Formatting
 
 The Hive Logger uses the [`quick-format-unescaped` library](https://github.com/pinojs/quick-format-unescaped) to format log messages that include interpolation (e.g., placeholders like %s, %d, etc.).
