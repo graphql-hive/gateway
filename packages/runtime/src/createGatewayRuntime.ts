@@ -1121,7 +1121,7 @@ export function createGatewayRuntime<
       useSubgraphExecuteDebug(),
       useFetchDebug(),
       useDelegationPlanDebug(),
-      useCacheDebug(),
+      useCacheDebug({ log: configContext.log }),
     );
   }, 'Debug mode enabled');
 
