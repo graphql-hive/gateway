@@ -100,7 +100,9 @@ The default logger uses the `info` log level which will make sure to log only `i
 - `warn`
 - `error`
 
-You can change the loggers logging level on creation or dynamically.
+### Change Logging Level on Creation
+
+When creating an instance of the logger, you can configure the logging level by configuring the `level` option. Like this:
 
 ```ts
 import { Logger } from '@graphql-hive/logger';
@@ -115,6 +117,35 @@ log.trace(
   }),
   'Wont be logged and attributes wont be evaluated',
 );
+
+log.debug('Hello world!');
+
+const child = log.child('[prefix] ');
+
+child.debug('Child loggers inherit the parent log level');
+```
+
+Outputs the following to the console:
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z DBG Hello world!
+2025-04-10T14:00:00.000Z DBG [prefix] Child loggers inherit the parent log level
+```
+<!-- prettier-ignore-end -->
+
+### Change Logging Level Dynamically
+
+Alternatively, you can change the logging level dynamically during runtime. There's two possible ways of doing that.
+
+#### Using `log.setLevel(level: LogLevel)`
+
+One way of doing it is by using the log's `setLevel` method.
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+
+const log = new Logger({ level: 'debug' });
 
 log.debug('Hello world!');
 
@@ -148,6 +179,49 @@ Outputs the following to the console:
 2025-04-10T14:00:00.000Z TRC [prefix] Also on the child logger
 2025-04-10T14:00:00.000Z TRC Still logging!
 2025-04-10T14:00:00.000Z INF Hello child!
+```
+<!-- prettier-ignore-end -->
+
+#### Using `LoggerOptions.level` Function
+
+Another way of doing it is to pass a function to the `level` option when creating a logger.
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+
+let isDebug = false;
+
+const log = new Logger({
+  level: () => {
+    if (isDebug) {
+      return 'debug';
+    }
+    return 'info';
+  },
+});
+
+log.debug('isDebug is false, so this wont be logged');
+
+log.info('Hello world!');
+
+const child = log.child('[scoped] ');
+
+child.debug(
+  'Child loggers inherit the parent log level function, so this wont be logged either',
+);
+
+// enable debug mode
+isDebug = true;
+
+child.debug('Now debug is enabled and logged');
+```
+
+Outputs the following:
+
+<!-- prettier-ignore-start -->
+```sh
+2025-04-10T14:00:00.000Z INF Hello world!
+2025-04-10T14:00:00.000Z DBG [scoped] Now debug is enabled and logged
 ```
 <!-- prettier-ignore-end -->
 
