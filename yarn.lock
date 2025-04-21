@@ -4133,8 +4133,14 @@ __metadata:
     "@types/quick-format-unescaped": "npm:^4.0.3"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     fast-safe-stringify: "npm:^2.1.1"
+    pino: "npm:^9.6.0"
     pkgroll: "npm:2.11.2"
     quick-format-unescaped: "npm:^4.0.4"
+  peerDependencies:
+    pino: ^9.6.0
+  peerDependenciesMeta:
+    pino:
+      optional: true
   languageName: unknown
   linkType: soft
 
