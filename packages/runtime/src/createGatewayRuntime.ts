@@ -1159,7 +1159,7 @@ export function createGatewayRuntime<
   if (config.logging === 'debug') {
     isDebug = true;
   } else {
-    // TODO: adding extra plugins in a logger is not a good idea, what if the writer is async? refactor
+    // we use the logger's debug option because the extra plugins only add more logs
     log.debug(() => {
       isDebug = true;
       return 'Debug mode enabled';
