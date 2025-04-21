@@ -3945,7 +3945,6 @@ __metadata:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/core": "npm:^0.12.0"
     "@graphql-hive/logger": "workspace:^"
-    "@graphql-hive/logger-json": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-hive/yoga": "npm:^0.42.1"
@@ -4074,55 +4073,6 @@ __metadata:
     glob: "npm:^11.0.0"
     pkgroll: "npm:2.12.2"
     sucrase: "npm:^3.35.0"
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/logger-json@workspace:^, @graphql-hive/logger-json@workspace:packages/logger-json":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-json@workspace:packages/logger-json"
-  dependencies:
-    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@graphql-mesh/utils": "npm:^0.104.2"
-    cross-inspect: "npm:^1.0.1"
-    graphql: "npm:^16.9.0"
-    pkgroll: "npm:2.12.2"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/logger-pino@workspace:packages/logger-pino":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-pino@workspace:packages/logger-pino"
-  dependencies:
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@graphql-mesh/utils": "npm:^0.104.2"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
-    graphql: "npm:16.11.0"
-    pino: "npm:^9.7.0"
-    pkgroll: "npm:2.12.2"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-    pino: ^9.7.0
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/logger-winston@workspace:packages/logger-winston":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-winston@workspace:packages/logger-winston"
-  dependencies:
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
-    graphql: "npm:16.11.0"
-    pkgroll: "npm:2.12.2"
-    tslib: "npm:^2.8.1"
-    winston: "npm:^3.17.0"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-    winston: ^3.17.0
   languageName: unknown
   linkType: soft
 
@@ -17870,7 +17820,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino@npm:^9.0.0, pino@npm:^9.7.0":
+"pino@npm:^9.0.0":
   version: 9.7.0
   resolution: "pino@npm:9.7.0"
   dependencies:
@@ -17888,6 +17838,27 @@ __metadata:
   bin:
     pino: bin.js
   checksum: 10c0/c7f8a83a9a9d728b4eff6d0f4b9367f031c91bcaa5806fbf0eedcc8e77faba593d59baf11a8fba0dd1c778bb17ca7ed01418ac1df4ec129faeedd4f3ecaff66f
+  languageName: node
+  linkType: hard
+
+"pino@npm:^9.6.0":
+  version: 9.6.0
+  resolution: "pino@npm:9.6.0"
+  dependencies:
+    atomic-sleep: "npm:^1.0.0"
+    fast-redact: "npm:^3.1.1"
+    on-exit-leak-free: "npm:^2.1.0"
+    pino-abstract-transport: "npm:^2.0.0"
+    pino-std-serializers: "npm:^7.0.0"
+    process-warning: "npm:^4.0.0"
+    quick-format-unescaped: "npm:^4.0.3"
+    real-require: "npm:^0.2.0"
+    safe-stable-stringify: "npm:^2.3.1"
+    sonic-boom: "npm:^4.0.1"
+    thread-stream: "npm:^3.0.0"
+  bin:
+    pino: bin.js
+  checksum: 10c0/bcd1e9d9b301bea13b95689ca9ad7105ae9451928fb6c0b67b3e58c5fe37cea1d40665f3d6641e3da00be0bbc17b89031e67abbc8ea6aac6164f399309fd78e7
   languageName: node
   linkType: hard
 

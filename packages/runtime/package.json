@@ -50,7 +50,6 @@
     "@envelop/instrumentation": "^1.0.0",
     "@graphql-hive/core": "^0.12.0",
     "@graphql-hive/logger": "workspace:^",
-    "@graphql-hive/logger-json": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
     "@graphql-hive/yoga": "^0.42.1",
