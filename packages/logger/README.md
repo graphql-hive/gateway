@@ -461,6 +461,74 @@ $ LOG_JSON_PRETTY=1 node example.js
 ```
 <!-- prettier-ignore-end -->
 
+### Optional Writers
+
+Hive Logger includes some writers for common loggers of the JavaScript ecosystem with optional peer dependencies.
+
+#### `PinoLogWriter`
+
+Use the [Node.js `pino` logger library](https://github.com/pinojs/pino) for writing Hive Logger's logs.
+
+`pino` is an optional peer dependency, so you must install it first.
+
+```sh
+npm i pino pino-pretty
+```
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
+import pino from 'pino';
+
+const pinoLogger = pino({
+  transport: {
+    target: 'pino-pretty',
+  },
+});
+
+const log = new Logger({ writers: [new PinoLogWriter(pinoLogger)] });
+
+log.info({ some: 'attributes' }, 'hello world');
+```
+
+<!-- prettier-ignore-start -->
+```sh
+[14:00:00.000] INFO (20744): hello world
+    some: "attributes"
+```
+<!-- prettier-ignore-end -->
+
+#### `WinstonLogWriter`
+
+Use the [`winston` logger library](https://github.com/winstonjs/winston) for writing Hive Logger's logs.
+
+`winston` is an optional peer dependency, so you must install it first.
+
+```sh
+npm i winston
+```
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+import { WinstonLogWriter } from '@graphql-hive/logger/writers/winston';
+import winston from 'winston';
+
+const winstonLogger = winston.createLogger({
+  transports: [new winston.transports.Console()],
+});
+
+const log = new Logger({ writers: [new WinstonLogWriter(winstonLogger)] });
+
+log.info({ some: 'attributes' }, 'hello world');
+```
+
+```sh
+{"level":"info","message":"hello world","some":"attributes"}
+```
+
+> [!IMPORTANT]
+> Winston logger does not have a "trace" log level. Hive Logger will instead use "verbose" when writing logs to Winston.
+
 ### Custom Writers
 
 You can implement custom log writers for the Hive Logger by creating a class that implements the `LogWriter` interface. This interface requires a single `write` method, which receives the log level, attributes, and message.
