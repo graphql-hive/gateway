@@ -1,6 +1,6 @@
 import { setTimeout } from 'node:timers/promises';
 import { expect, it, vi } from 'vitest';
-import { Logger, LoggerOptions } from '../src/Logger';
+import { Logger, LoggerOptions } from '../src/logger';
 import { MemoryLogWriter } from '../src/writers';
 import { stableError } from './utils';
 
