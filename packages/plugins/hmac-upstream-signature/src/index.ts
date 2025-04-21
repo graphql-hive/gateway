@@ -94,11 +94,12 @@ export function useHmacUpstreamSignature(
       fetchAPI = yoga.fetchAPI;
     },
     onSubgraphExecute({ subgraphName, subgraph, executionRequest, log }) {
+      log = log.child('[useHmacUpstreamSignature] ');
       log.debug('Running shouldSign for subgraph %s', subgraphName);
 
       if (shouldSign({ subgraphName, subgraph, executionRequest })) {
         log.debug(
-          'shouldSign is true for subgraph $s, signing request',
+          'shouldSign is true for subgraph %s, signing request',
           subgraphName,
         );
         textEncoder ||= new fetchAPI.TextEncoder();
@@ -124,7 +125,12 @@ export function useHmacUpstreamSignature(
                   String.fromCharCode(...new Uint8Array(signature)),
                 );
                 log.debug(
-                  `produced hmac signature for subgraph ${subgraphName}, signature: ${extensionValue}, signed payload: ${serializedExecutionRequest}`,
+                  {
+                    signature: extensionValue,
+                    payload: serializedExecutionRequest,
+                  },
+                  'Produced hmac signature for subgraph %s',
+                  subgraphName,
                 );
 
                 if (!executionRequest.extensions) {
@@ -167,7 +173,9 @@ export function useHmacSignatureValidation(
 
   return {
     onParams({ params, fetchAPI, request }) {
-      const log = loggerForRequest(options.log, request);
+      const log = loggerForRequest(options.log, request).child(
+        '[useHmacSignatureValidation] ',
+      );
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 

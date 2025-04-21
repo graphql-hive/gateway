@@ -51,7 +51,7 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
           )
         : rootLog;
       log.info(
-        'The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
+        '[useRetryOnSchemaReload] The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
       );
       if (execHandler) {
         return handleMaybePromise(execHandler, (newResult) =>
