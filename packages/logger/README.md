@@ -168,6 +168,28 @@ The default logger uses the `info` log level which will make sure to log only `i
 - `warn`
 - `error`
 
+### Lazy Arguments and Performance
+
+Hive Logger supports "lazy" attributes for log methods. If you pass a function as the attributes argument, it will only be evaluated if the log level is enabled and the log will actually be written. This avoids unnecessary computation for expensive attributes when the log would be ignored due to the current log level.
+
+```ts
+import { Logger } from '@graphql-hive/logger';
+
+const log = new Logger({ level: 'info' });
+
+log.debug(
+  // This function will NOT be called, since 'debug' is below the current log level.
+  () => ({ expensive: computeExpensiveValue() }),
+  'This will not be logged',
+);
+
+log.info(
+  // This function WILL be called, since 'info' log level is set.
+  () => ({ expensive: computeExpensiveValue() }),
+  'This will be logged',
+);
+```
+
 ### Change Logging Level on Creation
 
 When creating an instance of the logger, you can configure the logging level by configuring the `level` option. Like this:
