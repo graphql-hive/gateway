@@ -11,9 +11,12 @@ export function useSubgraphExecuteDebug<
       fetchAPI = yoga.fetchAPI;
     },
     onSubgraphExecute({ executionRequest }) {
-      const log = executionRequest.context?.log.child({
-        subgraphExecuteId: fetchAPI.crypto.randomUUID(),
-      });
+      const log = executionRequest.context?.log.child(
+        {
+          subgraphExecuteId: fetchAPI.crypto.randomUUID(),
+        },
+        '[useSubgraphExecuteDebug] ',
+      );
       if (!log) {
         throw new Error('Logger is not available in the execution context');
       }
@@ -29,25 +32,25 @@ export function useSubgraphExecuteDebug<
           logData['variables'] = executionRequest.variables;
         }
         return logData;
-      }, 'subgraph-execute-start');
+      }, 'Start');
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              log.debug(result, 'subgraph-execute-next');
+              log.debug(result, 'Next');
             },
             onEnd() {
               log.debug(
                 () => ({
                   duration: performance.now() - start,
                 }),
-                'subgraph-execute-end',
+                'End',
               );
             },
           };
         }
-        log.debug(result, 'subgraph-execute-done');
+        log.debug(result, 'Done');
         return void 0;
       };
     },

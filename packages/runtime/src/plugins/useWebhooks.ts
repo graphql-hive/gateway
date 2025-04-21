@@ -12,6 +12,7 @@ export function useWebhooks({
   log,
   pubsub,
 }: GatewayWebhooksPluginOptions): GatewayPlugin {
+  log = log.child('[useWebhooks] ');
   if (!pubsub) {
     throw new Error(`You must provide a pubsub instance to webhooks feature!
     Example:
@@ -38,9 +39,9 @@ export function useWebhooks({
             () => request.text(),
             function handleWebhookPayload(webhookPayload) {
               log.debug(
-                'Emitted webhook request for %s: %s',
+                { payload: webhookPayload },
+                'Emitted webhook request for %s',
                 pathname,
-                webhookPayload,
               );
               webhookPayload =
                 request.headers.get('content-type') === 'application/json'

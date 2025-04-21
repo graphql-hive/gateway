@@ -12,41 +12,41 @@ export function useCacheDebug<
       log = context.log;
     },
     onCacheGet({ key }) {
-      log = log.child({ key });
-      log.debug('cache get');
+      log = log.child({ key }, '[useCacheDebug] ');
+      log.debug('Get');
       return {
         onCacheGetError({ error }) {
-          log.error({ key, error }, 'error');
+          log.error({ key, error }, 'Error');
         },
         onCacheHit({ value }) {
-          log.debug({ key, value }, 'hit');
+          log.debug({ key, value }, 'Hit');
         },
         onCacheMiss() {
-          log.debug({ key }, 'miss');
+          log.debug({ key }, 'Miss');
         },
       };
     },
     onCacheSet({ key, value, ttl }) {
-      log = log.child({ key, value, ttl });
-      log.debug('cache set');
+      log = log.child({ key, value, ttl }, '[useCacheDebug] ');
+      log.debug('Set');
       return {
         onCacheSetError({ error }) {
-          log.error({ error }, 'error');
+          log.error({ error }, 'Error');
         },
         onCacheSetDone() {
-          log.debug('done');
+          log.debug('Done');
         },
       };
     },
     onCacheDelete({ key }) {
-      log = log.child({ key });
-      log.debug('cache delete');
+      log = log.child({ key }, '[useCacheDebug] ');
+      log.debug('Delete');
       return {
         onCacheDeleteError({ error }) {
-          log.error({ error }, 'error');
+          log.error({ error }, 'Error');
         },
         onCacheDeleteDone() {
-          log.debug('done');
+          log.debug('Done');
         },
       };
     },

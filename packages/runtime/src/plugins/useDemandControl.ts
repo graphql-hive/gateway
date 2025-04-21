@@ -87,7 +87,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
           operationCost,
           totalCost: costByContext,
         },
-        'demand-control',
+        '[useDemandControl]',
       );
       if (maxCost != null && costByContext > maxCost) {
         throw createGraphQLError(

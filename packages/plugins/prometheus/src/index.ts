@@ -391,7 +391,9 @@ function registryFromYamlConfig(
 
   registry$
     .then(() => registryProxy.revoke())
-    .catch((e) => config.log.error(e, 'Failed to load Prometheus registry'));
+    .catch((e) =>
+      config.log.error(e, '[usePrometheus] Failed to load Prometheus registry'),
+    );
 
   return registryProxy.proxy;
 }
