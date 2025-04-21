@@ -3,7 +3,10 @@ import { Logger } from '../src/Logger';
 import { ConsoleLogWriter, ConsoleLogWriterOptions } from '../src/writers';
 import { stableError } from './utils';
 
-describe('ConsoleLogWriter', () => {
+describe.skipIf(
+  // bun is serialising the snapshots differently. the object keys are out of order...
+  globalThis.Bun,
+)('ConsoleLogWriter', () => {
   function createTConsoleLogger(opts?: Partial<ConsoleLogWriterOptions>) {
     const logs: string[] = [];
     const writer = new ConsoleLogWriter({
