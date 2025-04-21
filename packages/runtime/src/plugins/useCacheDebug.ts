@@ -1,18 +1,18 @@
 import type { Logger } from '@graphql-hive/logger';
 import { GatewayPlugin } from '../types';
 
-export function useCacheDebug<
-  TContext extends Record<string, any>,
->(): GatewayPlugin<TContext> {
-  let log: Logger;
+export function useCacheDebug<TContext extends Record<string, any>>({
+  log: rootLog,
+}: {
+  log: Logger;
+}): GatewayPlugin<TContext> {
   return {
     onContextBuilding({ context }) {
-      // TODO: this one should execute last
-      // TODO: on contextBuilding might not execute at all
-      log = context.log;
+      // onContextBuilding might not execute at all so we use the root log
+      rootLog = context.log;
     },
     onCacheGet({ key }) {
-      log = log.child({ key }, '[useCacheDebug] ');
+      const log = rootLog.child({ key }, '[useCacheDebug] ');
       log.debug('Get');
       return {
         onCacheGetError({ error }) {
@@ -27,7 +27,7 @@ export function useCacheDebug<
       };
     },
     onCacheSet({ key, value, ttl }) {
-      log = log.child({ key, value, ttl }, '[useCacheDebug] ');
+      const log = rootLog.child({ key, value, ttl }, '[useCacheDebug] ');
       log.debug('Set');
       return {
         onCacheSetError({ error }) {
@@ -39,7 +39,7 @@ export function useCacheDebug<
       };
     },
     onCacheDelete({ key }) {
-      log = log.child({ key }, '[useCacheDebug] ');
+      const log = rootLog.child({ key }, '[useCacheDebug] ');
       log.debug('Delete');
       return {
         onCacheDeleteError({ error }) {
