@@ -123,9 +123,9 @@ export class Logger implements AsyncDisposable {
     if (this.#pendingWrites.size) {
       const errs: unknown[] = [];
       return Promise.allSettled(
-        this.#pendingWrites
-          .values()
-          .map((w) => w.catch((err) => errs.push(err))),
+        Array.from(this.#pendingWrites).map((w) =>
+          w.catch((err) => errs.push(err)),
+        ),
       ).then(() => {
         this.#pendingWrites.clear();
         if (errs.length) {
