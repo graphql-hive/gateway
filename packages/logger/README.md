@@ -500,7 +500,7 @@ log.info({ some: 'attributes' }, 'hello world');
 
 #### `WinstonLogWriter`
 
-Use the [`winston` logger library](https://github.com/winstonjs/winston) for writing Hive Logger's logs.
+Use the [Node.js `winston` logger library](https://github.com/winstonjs/winston) for writing Hive Logger's logs.
 
 `winston` is an optional peer dependency, so you must install it first.
 
