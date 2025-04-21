@@ -1,4 +1,4 @@
-import { LogLevel } from './Logger';
+import { LogLevel } from './logger';
 
 export type MaybeLazy<T> = T | (() => T);
 

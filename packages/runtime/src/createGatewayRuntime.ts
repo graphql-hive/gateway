@@ -9,6 +9,7 @@ import {
   createSchemaFetcher,
   createSupergraphSDLFetcher,
 } from '@graphql-hive/core';
+import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -78,7 +79,6 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import { LegacyLogger } from '../../logger/src/LegacyLogger';
 import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';

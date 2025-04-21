@@ -1,4 +1,4 @@
-import { Logger } from './Logger';
+import { Logger } from './logger';
 
 export const requestIdByRequest = new WeakMap<Request, string>();
 

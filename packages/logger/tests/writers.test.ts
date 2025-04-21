@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Logger } from '../src/Logger';
+import { Logger } from '../src/logger';
 import { ConsoleLogWriter, ConsoleLogWriterOptions } from '../src/writers';
 import { stableError } from './utils';
 

@@ -1,7 +1,7 @@
 import { LegacyLogger } from '@graphql-hive/logger';
 import { Logger as MeshLogger } from '@graphql-mesh/types';
 import { expect, it } from 'vitest';
-import { Logger, LoggerOptions } from '../src/Logger';
+import { Logger, LoggerOptions } from '../src/logger';
 import { MemoryLogWriter } from '../src/writers';
 
 // a type test making sure the LegacyLogger is compatible with the MeshLogger

@@ -1,33 +1,6 @@
-import fastSafeStringify from 'fast-safe-stringify';
-import { LogLevel } from './Logger';
-import { Attributes, logLevelToString, truthyEnv } from './utils';
-
-export function jsonStringify(val: unknown, pretty?: boolean): string {
-  return fastSafeStringify(val, undefined, pretty ? 2 : undefined);
-}
-
-export interface LogWriter {
-  write(
-    level: LogLevel,
-    attrs: Attributes | null | undefined,
-    msg: string | null | undefined,
-  ): void | Promise<void>;
-}
-
-export class MemoryLogWriter implements LogWriter {
-  public logs: { level: LogLevel; msg?: string; attrs?: unknown }[] = [];
-  write(
-    level: LogLevel,
-    attrs: Attributes | null | undefined,
-    msg: string | null | undefined,
-  ): void {
-    this.logs.push({
-      level,
-      ...(msg ? { msg } : {}),
-      ...(attrs ? { attrs } : {}),
-    });
-  }
-}
+import { LogLevel } from '../logger';
+import { Attributes, logLevelToString, truthyEnv } from '../utils';
+import { jsonStringify, LogWriter } from './common';
 
 const asciMap = {
   timestamp: '\x1b[90m', // bright black
@@ -147,25 +120,5 @@ export class ConsoleLogWriter implements LogWriter {
     log = log.slice(0, -1);
 
     return log;
-  }
-}
-
-export class JSONLogWriter implements LogWriter {
-  write(
-    level: LogLevel,
-    attrs: Attributes | null | undefined,
-    msg: string | null | undefined,
-  ): void {
-    console.log(
-      jsonStringify(
-        {
-          ...attrs,
-          level,
-          ...(msg ? { msg } : {}),
-          timestamp: new Date().toISOString(),
-        },
-        truthyEnv('LOG_JSON_PRETTY'),
-      ),
-    );
   }
 }
