@@ -39,6 +39,16 @@
         "default": "./dist/request.js"
       }
     },
+    "./writers/pino": {
+      "require": {
+        "types": "./dist/writers/pino.d.cts",
+        "default": "./dist/writers/pino.cjs"
+      },
+      "import": {
+        "types": "./dist/writers/pino.d.ts",
+        "default": "./dist/writers/pino.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -48,10 +58,19 @@
     "build": "pkgroll --clean-dist",
     "prepack": "yarn build"
   },
+  "peerDependencies": {
+    "pino": "^9.6.0"
+  },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/quick-format-unescaped": "^4.0.3",
     "@whatwg-node/disposablestack": "^0.0.6",
     "fast-safe-stringify": "^2.1.1",
+    "pino": "^9.6.0",
     "pkgroll": "2.11.2",
     "quick-format-unescaped": "^4.0.4"
   },
