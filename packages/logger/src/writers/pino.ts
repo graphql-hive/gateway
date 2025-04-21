@@ -1,4 +1,4 @@
-import type { Logger as PinoLogger } from 'pino';
+import type { BaseLogger as PinoLogger } from 'pino';
 import { LogLevel } from '../logger';
 import { Attributes } from '../utils';
 import { LogWriter } from './common';
