@@ -49,6 +49,16 @@
         "default": "./dist/writers/pino.js"
       }
     },
+    "./writers/winston": {
+      "require": {
+        "types": "./dist/writers/winston.d.cts",
+        "default": "./dist/writers/winston.cjs"
+      },
+      "import": {
+        "types": "./dist/writers/winston.d.ts",
+        "default": "./dist/writers/winston.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -64,6 +74,9 @@
   "peerDependenciesMeta": {
     "pino": {
       "optional": true
+    },
+    "winston": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -72,7 +85,8 @@
     "fast-safe-stringify": "^2.1.1",
     "pino": "^9.6.0",
     "pkgroll": "2.11.2",
-    "quick-format-unescaped": "^4.0.4"
+    "quick-format-unescaped": "^4.0.4",
+    "winston": "^3.17.0"
   },
   "sideEffects": false,
   "dependencies.info": "all of the dependencies are in devDependencies which will bundle them into the package using pkgroll making pkgroll ultimately zero-dep with a smaller footprint because of tree-shaking"
