@@ -69,11 +69,6 @@
       "@graphql-hive/logger/writers/winston": [
         "./packages/logger/src/writers/winston.ts"
       ],
-      "@graphql-hive/logger-json": ["./packages/logger-json/src/index.ts"],
-      "@graphql-hive/logger-winston": [
-        "./packages/logger-winston/src/index.ts"
-      ],
-      "@graphql-hive/logger-pino": ["./packages/logger-pino/src/index.ts"],
       "@graphql-hive/plugin-aws-sigv4": [
         "./packages/plugins/aws-sigv4/src/index.ts"
       ],
