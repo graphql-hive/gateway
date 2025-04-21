@@ -1,4 +1,4 @@
-import { Logger, LogLevel } from './Logger';
+import { Logger, LogLevel } from './logger';
 import { shouldLog } from './utils';
 
 // type comes from "@graphql-mesh/types" package, we're copying them over just to avoid including the whole package
