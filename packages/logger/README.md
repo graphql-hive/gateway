@@ -132,7 +132,7 @@ log.error(err, 'Problem occurred at %s', new Date());
 ```sh
 2025-04-10T14:00:00.000Z ERR Problem occurred at Thu Apr 10 2025 14:00:00 GMT+0200 (Central European Summer Time)
   stack: "Error: Something went wrong!
-      at <anonymous> (/projects/example.ts:2:1)"
+      at <anonymous> (/projects/example.js:2:1)"
   message: "Something went wrong!"
   name: "Error"
   class: "Error"
