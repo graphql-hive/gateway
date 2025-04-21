@@ -168,8 +168,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
         (err) => {
           this.opts.transportContext.log.error(
-            'Failed to poll Supergraph',
             err,
+            'Failed to poll Supergraph',
           );
           this.polling$ = undefined;
         },
@@ -182,13 +182,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         );
         if (this.opts.transportContext.cache) {
           this.opts.transportContext.log.debug(
-            `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
+            { key: UNIFIEDGRAPH_CACHE_KEY },
+            'Searching for Supergraph in cache...',
           );
           this.initialUnifiedGraph$ = handleMaybePromise(
             () => this.opts.transportContext.cache?.get(UNIFIEDGRAPH_CACHE_KEY),
             (cachedUnifiedGraph) => {
               if (cachedUnifiedGraph) {
                 this.opts.transportContext.log.debug(
+                  { key: UNIFIEDGRAPH_CACHE_KEY },
                   'Found Supergraph in cache',
                 );
                 return this.handleLoadedUnifiedGraph(cachedUnifiedGraph, true);
@@ -206,7 +208,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           () => this.initialUnifiedGraph$!,
           (v) => {
             this.initialUnifiedGraph$ = undefined;
-            this.opts.transportContext.log.debug('Initial Supergraph fetched');
+            this.opts.transportContext.log.debug(
+              { key: UNIFIEDGRAPH_CACHE_KEY },
+              'Initial Supergraph fetched',
+            );
             return v;
           },
         );
@@ -255,12 +260,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
                 // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
                 60;
             this.opts.transportContext.log.debug(
-              `Caching Supergraph with TTL ${ttl}s`,
+              { ttl, key: UNIFIEDGRAPH_CACHE_KEY },
+              'Caching Supergraph',
             );
-            const logCacheSetError = (e: unknown) => {
+            const logCacheSetError = (err: unknown) => {
               this.opts.transportContext.log.debug(
-                `Unable to store Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
-                e,
+                { err, ttl, key: UNIFIEDGRAPH_CACHE_KEY },
+                'Unable to cache Supergraph',
               );
             };
             try {
@@ -276,10 +282,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             } catch (e) {
               logCacheSetError(e);
             }
-          } catch (e) {
+          } catch (err: any) {
             this.opts.transportContext.log.error(
+              err,
               'Failed to initiate caching of Supergraph',
-              e,
             );
           }
         }
@@ -360,8 +366,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         (err) => {
           this.disposeReason = undefined;
           this.opts.transportContext.log.error(
-            'Failed to dispose the existing transports and executors',
             err,
+            'Failed to dispose the existing transports and executors',
           );
           return this.unifiedGraph!;
         },

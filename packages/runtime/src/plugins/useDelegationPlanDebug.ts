@@ -94,7 +94,7 @@ export function useDelegationPlanDebug<
         subgraph,
         typeName,
       };
-      const log = context.log.child(logMeta);
+      const log = context.log.child(logMeta, '[useDelegationPlanDebug] ');
       log.debug(
         () => ({
           ...log,
