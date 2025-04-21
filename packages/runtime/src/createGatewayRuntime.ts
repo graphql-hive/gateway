@@ -1115,7 +1115,7 @@ export function createGatewayRuntime<
     extraPlugins.push(useDemandControl(config.demandControl));
   }
 
-  // TODO: adding extra plugins in a logger is not a good idea, what if the writer is async? refactor
+  // we use the logger's debug option because the following plugins only log more
   log.debug(() => {
     extraPlugins.push(
       useSubgraphExecuteDebug(),
