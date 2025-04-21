@@ -613,7 +613,7 @@ export function createGatewayRuntime<
                   unifiedGraph,
                   // @ts-expect-error - Typings are wrong in legacy Mesh
                   [subschemaConfig],
-                  configContext.log,
+                  LegacyLogger.from(configContext.log),
                   onDelegateHooks,
                 ),
               );
