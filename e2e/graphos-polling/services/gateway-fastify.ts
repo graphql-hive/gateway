@@ -1,4 +1,5 @@
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { createGatewayRuntime, Logger } from '@graphql-hive/gateway-runtime';
+import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
 import {
   createOtlpHttpExporter,
   useOpenTelemetry,
@@ -42,6 +43,7 @@ export interface FastifyContext {
 }
 
 const gw = createGatewayRuntime<FastifyContext>({
+  logging: new Logger({ writers: [new PinoLogWriter(app.log)] }),
   // Align with Fastify
   requestId: {
     // Use the same header name as Fastify
