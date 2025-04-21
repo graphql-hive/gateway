@@ -410,9 +410,46 @@ await log.flush(); // make sure all async writes settle
 
 #### Flushing and Non-Blocking Logging
 
-The logger does not block when you log asynchronously. Instead, it tracks all pending async writes internally. When you call `log.flush()` or dispose the logger when using the [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), it waits for all pending writes to finish, ensuring no logs are lost on shutdown. During normal operation, logging remains fast and non-blocking, even if some writers are async.
+The logger does not block when you log asynchronously. Instead, it tracks all pending async writes internally. When you call `log.flush()` it waits for all pending writes to finish, ensuring no logs are lost on shutdown. During normal operation, logging remains fast and non-blocking, even if some writers are async.
 
 This design allows you to use async writers without impacting the performance of your application or blocking the main thread.
+
+#### Explicit Resource Management
+
+The Hive Logger also supports [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management). This allows you to ensure that all pending asynchronous log writes are properly flushed before your application exits or when the logger is no longer needed.
+
+You can use the logger with `await using` (in environments that support it) to wait for all log operations to complete. This is especially useful in serverless or short-lived environments where you want to guarantee that no logs are lost due to unfinished asynchronous operations.
+
+```ts
+import {
+  Attributes,
+  ConsoleLogWriter,
+  Logger,
+  LogLevel,
+  LogWriter,
+} from '@graphql-hive/logger';
+
+class HTTPLogWriter implements LogWriter {
+  async write(level: LogLevel, attrs: Attributes, msg: string) {
+    await fetch('https://my-log-service.com', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ level, attrs, msg }),
+    });
+  }
+}
+
+{
+  await using log = new Logger({
+    // send logs both to the HTTP loggging service and output them to the console
+    writers: [new HTTPLogWriter(), new ConsoleLogWriter()],
+  });
+
+  log.info('Hello World!');
+}
+
+// logger went out of scope and all of the logs have been flushed
+```
 
 ##### Handling Async Write Errors
 
