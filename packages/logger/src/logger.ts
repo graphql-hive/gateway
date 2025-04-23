@@ -112,8 +112,9 @@ export class Logger implements AsyncDisposable {
             // we remove from pending writes only if the write was successful
             this.#pendingWrites.delete(write$);
           })
-          .catch(() => {
+          .catch((e) => {
             // otherwise we keep in the pending write to throw on flush
+            console.error('Failed to write async log', e);
           });
       }
     }
