@@ -315,6 +315,16 @@ it('should wait for async writers on flush', async () => {
 });
 
 it('should handle async write errors on flush', async () => {
+  const origConsoleError = console.error;
+  console.error = vi.fn(() => {
+    // noop
+  });
+  using _ = {
+    [Symbol.dispose]() {
+      console.error = origConsoleError;
+    },
+  };
+
   let i = 0;
   const log = new Logger({
     writers: [
@@ -344,6 +354,7 @@ it('should handle async write errors on flush', async () => {
         [Error: Write failed! #2],
       ]
     `);
+    expect(console.error).toHaveBeenCalledTimes(2);
   }
 });
 
