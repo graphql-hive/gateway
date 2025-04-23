@@ -157,6 +157,14 @@ Outputs:
 2025-04-10T14:00:00.000Z INF hello world {"obj":true} 4 {"another":"obj"}
 ```
 
+Available interpolation placeholders are:
+
+- `%s` - string
+- `%d` and `%f` - number with(out) decimals
+- `%i` - integer number
+- `%o`,`%O` and `%j` - JSON stringified object
+- `%%` - escaped percentage sign
+
 ## Logging Levels
 
 The default logger uses the `info` log level which will make sure to log only `info`+ logs. Available log levels are:
