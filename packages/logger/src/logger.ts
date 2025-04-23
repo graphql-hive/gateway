@@ -49,7 +49,7 @@ export class Logger implements AsyncDisposable {
   #prefix: string | undefined;
   #attrs: Attributes | undefined;
   #writers: [LogWriter, ...LogWriter[]];
-  #pendingWrites = new Set<Promise<void>>();
+  #pendingWrites?: Set<Promise<void>>;
 
   constructor(opts: LoggerOptions = {}) {
     let logLevelEnv = getEnv('LOG_LEVEL');
@@ -106,11 +106,12 @@ export class Logger implements AsyncDisposable {
     for (const w of this.#writers) {
       const write$ = w.write(level, attrs, msg);
       if (isPromise(write$)) {
+        this.#pendingWrites ??= new Set();
         this.#pendingWrites.add(write$);
         write$
           .then(() => {
             // we remove from pending writes only if the write was successful
-            this.#pendingWrites.delete(write$);
+            this.#pendingWrites!.delete(write$);
           })
           .catch((e) => {
             // otherwise we keep in the pending write to throw on flush
@@ -121,14 +122,14 @@ export class Logger implements AsyncDisposable {
   }
 
   public flush() {
-    if (this.#pendingWrites.size) {
+    if (this.#pendingWrites?.size) {
       const errs: unknown[] = [];
       return Promise.allSettled(
         Array.from(this.#pendingWrites).map((w) =>
           w.catch((err) => errs.push(err)),
         ),
       ).then(() => {
-        this.#pendingWrites.clear();
+        this.#pendingWrites!.clear();
         if (errs.length) {
           throw new AggregateError(
             errs,
