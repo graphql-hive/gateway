@@ -9,10 +9,10 @@ export interface GatewayWebhooksPluginOptions {
 }
 
 export function useWebhooks({
-  log,
+  log: rootLog,
   pubsub,
 }: GatewayWebhooksPluginOptions): GatewayPlugin {
-  log = log.child('[useWebhooks] ');
+  const log = rootLog.child('[useWebhooks] ');
   if (!pubsub) {
     throw new Error(`You must provide a pubsub instance to webhooks feature!
     Example:

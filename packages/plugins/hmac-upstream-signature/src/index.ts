@@ -93,8 +93,13 @@ export function useHmacUpstreamSignature(
     onYogaInit({ yoga }) {
       fetchAPI = yoga.fetchAPI;
     },
-    onSubgraphExecute({ subgraphName, subgraph, executionRequest, log }) {
-      log = log.child('[useHmacUpstreamSignature] ');
+    onSubgraphExecute({
+      subgraphName,
+      subgraph,
+      executionRequest,
+      log: rootLog,
+    }) {
+      const log = rootLog.child('[useHmacUpstreamSignature] ');
       log.debug('Running shouldSign for subgraph %s', subgraphName);
 
       if (shouldSign({ subgraphName, subgraph, executionRequest })) {
