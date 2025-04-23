@@ -73,7 +73,7 @@ export default {
     transportEntry,
     fetch,
     pubsub,
-    log,
+    log: rootLog,
   }): DisposableExecutor {
     let headersInConfig: Record<string, string> | undefined;
     if (typeof transportEntry.headers === 'string') {
@@ -106,7 +106,7 @@ export default {
       executionRequest: ExecutionRequest,
     ) {
       const subscriptionId = crypto.randomUUID();
-      log = log.child({
+      const log = rootLog.child({
         executor: 'http-callback',
         subscription: subscriptionId,
       });
@@ -226,7 +226,7 @@ export default {
             },
           ),
         (e) => {
-          log.debug(e, `Subscription request failed`);
+          log.error(e, 'Subscription request failed');
           stopSubscription(e);
         },
       );
