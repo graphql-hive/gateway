@@ -158,7 +158,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  log,
+  log: rootLog,
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -230,7 +230,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
                     originalResolver,
                     typeName,
                     onDelegationStageExecuteHooks,
-                    log,
+                    rootLog,
                   );
                 }
               }
@@ -278,7 +278,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     executableUnifiedGraph,
     // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
     subschemas,
-    LegacyLogger.from(log),
+    LegacyLogger.from(rootLog),
     onDelegateHooks || [],
   );
   const stitchingInfo = executableUnifiedGraph.extensions?.[
