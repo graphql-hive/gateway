@@ -33,7 +33,7 @@ export interface WSTransportOptions {
 
 export default {
   getSubgraphExecutor(
-    { transportEntry, log },
+    { transportEntry, log: rootLog },
     /**
      * Do not use this option unless you know what you are doing.
      * @internal
@@ -76,7 +76,7 @@ export default {
 
       let wsExecutor = wsExecutorMap.get(hash);
       if (!wsExecutor) {
-        log = log.child({
+        const log = rootLog.child({
           executor: 'GraphQL WS',
           wsUrl,
           connectionParams,
