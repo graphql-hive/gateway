@@ -128,6 +128,8 @@ function isPrimitive(val: unknown): val is string | number | boolean {
   return val !== Object(val);
 }
 
+const nodejsCustomInspectSy = Symbol.for('nodejs.util.inspect.custom');
+
 function objectifyClass(val: unknown): Record<string, unknown> {
   if (
     // simply empty
@@ -144,6 +146,19 @@ function objectifyClass(val: unknown): Record<string, unknown> {
   ) {
     // if the object has a toJSON method, use it - always
     return val.toJSON();
+  }
+  if (
+    typeof val === 'object' &&
+    nodejsCustomInspectSy in val &&
+    typeof val[nodejsCustomInspectSy] === 'function'
+  ) {
+    // > Custom [util.inspect.custom](depth, opts, inspect) functions typically return a string but may return a value of any type that will be formatted accordingly by util.inspect().
+    return {
+      [nodejsCustomInspectSy.toString()]: unwrapAttrVal(
+        val[nodejsCustomInspectSy](Infinity, {}),
+      ),
+      class: val.constructor.name,
+    };
   }
   const props: Record<string, unknown> = {};
   for (const propName of Object.getOwnPropertyNames(val)) {

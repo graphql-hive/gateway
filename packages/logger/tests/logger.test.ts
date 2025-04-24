@@ -784,3 +784,28 @@ it('should change child log level only on child', () => {
     ]
   `);
 });
+
+it('should log using nodejs.util.inspect.custom symbol', () => {
+  const [log, writer] = createTLogger();
+
+  class Inspect {
+    [Symbol.for('nodejs.util.inspect.custom')]() {
+      return 'Ok good';
+    }
+  }
+
+  log.info(new Inspect(), 'sy');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "Symbol(nodejs.util.inspect.custom)": "Ok good",
+          "class": "Inspect",
+        },
+        "level": "info",
+        "msg": "sy",
+      },
+    ]
+  `);
+});
