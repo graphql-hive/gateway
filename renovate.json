@@ -24,6 +24,7 @@
         "!/opentelemetry/",
         "!/graphql-mesh/",
         "!/bun/",
+        "!/vitest/",
         "*"
       ]
     },
