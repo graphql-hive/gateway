@@ -19,10 +19,10 @@
   },
   "devDependencies": {
     "tsx": "^4.19.3",
-    "@apollo/rover": "^0.28.1"
+    "@apollo/rover": "^0.29.1"
   },
   "overrides": {
-    "esbuild": "^0.25.2"
+    "esbuild": "^0.25.3"
   },
   "scripts": {
     "service:products": "tsx services/products/index.ts",
