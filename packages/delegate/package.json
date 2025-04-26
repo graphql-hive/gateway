@@ -51,7 +51,7 @@
   "devDependencies": {
     "@types/lodash": "4.17.16",
     "graphql": "^16.9.0",
-    "pkgroll": "2.12.1"
+    "pkgroll": "2.12.2"
   },
   "sideEffects": false
 }
