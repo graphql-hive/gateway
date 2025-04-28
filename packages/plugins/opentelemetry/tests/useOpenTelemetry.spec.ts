@@ -326,7 +326,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace http requests if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { http: false, introspection: false },
+              spans: { http: false, schema: false },
             },
           });
           await gateway.query();
@@ -337,7 +337,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace graphql operation if disable', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphql: false, introspection: false },
+              spans: { graphql: false, schema: false },
             },
           });
           await gateway.query();
@@ -403,7 +403,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlExecute: false, introspection: false },
+              spans: { graphqlExecute: false, schema: false },
             },
           });
           await gateway.query();
@@ -426,7 +426,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace subgraph execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { subgraphExecute: false, introspection: false },
+              spans: { subgraphExecute: false, schema: false },
             },
           });
           await gateway.query();
@@ -459,34 +459,6 @@ describe('useOpenTelemetry', () => {
           allExpectedSpans
             .filter((name) => name !== 'http.fetch')
             .forEach(spanExporter.assertSpanWithName);
-        });
-
-        it('should trace introspection query', async () => {
-          await using gateway = await buildTestGatewayForCtx({
-            options: { spans: { http: false, introspection: true } },
-          });
-          await gateway.query();
-
-          const introspectionSpan = spanExporter.assertRoot(
-            expected.subgraphExecute.root,
-          );
-          expected.subgraphExecute.children.forEach(
-            introspectionSpan.expectChild,
-          );
-          expect(
-            (
-              introspectionSpan.span.attributes['graphql.document'] as string
-            ).includes('Introspection'),
-          );
-
-          const descendants = introspectionSpan.descendants.map(
-            ({ name }) => name,
-          );
-
-          expect(descendants).toEqual([
-            'subgraph.execute (upstream)',
-            'http.fetch',
-          ]);
         });
       });
     });
