@@ -479,10 +479,14 @@ describe('useOpenTelemetry', () => {
             ).includes('Introspection'),
           );
 
-          const introspectionSpans = introspectionSpan.descendants;
-          expect(
-            spanExporter.spans.filter((s) => !introspectionSpans.includes(s)),
-          ).toHaveLength(0);
+          const descendants = introspectionSpan.descendants.map(
+            ({ name }) => name,
+          );
+
+          expect(descendants).toEqual([
+            'subgraph.execute (upstream)',
+            'http.fetch',
+          ]);
         });
       });
     });
@@ -586,6 +590,25 @@ describe('useOpenTelemetry', () => {
       expect(response.status).toBe(304);
 
       checkCacheAttributes({ http: 'hit' }); // There is no graphql operation span when cached by HTTP
+    });
+
+    it('should register schema loading span', async () => {
+      await using gateway = await buildTestGateway({
+        options: { spans: { http: false, schema: true } },
+      });
+      await gateway.query();
+
+      const schemaSpan = spanExporter.assertRoot('gateway.schema');
+
+      const descendants = schemaSpan.descendants.map(({ name }) => name);
+
+      console.log(spanExporter.toString());
+
+      expect(descendants).toEqual([
+        'gateway.schema',
+        'subgraph.execute (upstream)',
+        'http.fetch',
+      ]);
     });
   });
 });

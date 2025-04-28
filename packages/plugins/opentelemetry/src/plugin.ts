@@ -18,6 +18,7 @@ import {
   DiagLogLevel,
   propagation,
   ROOT_CONTEXT,
+  Span,
   trace,
   type Context,
   type ContextManager,
@@ -179,13 +180,6 @@ export type OpenTelemetryGatewayPluginOptions =
      * You may specify a boolean value to enable/disable all spans, or a function to dynamically enable/disable spans based on the input.
      */
     spans?: {
-      /**
-       * Enable/disable Spans of internal introspection queries in proxy mode (default: true).
-       */
-      introspection?: BooleanOrPredicate<{
-        executionRequest: ExecutionRequest;
-        subgraphName: string;
-      }>;
       /**
        * Enable/disable HTTP request spans (default: true).
        *
@@ -470,23 +464,25 @@ export function useOpenTelemetry(
           return wrapped();
         }
 
-        const ctx = getContext(parentState);
-        forOperation.otel = new OtelContextStack(
-          createGraphQLSpan({ tracer, ctx }),
-        );
-
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel.current, wrapped);
-        }
-
         return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(forOperation.otel?.current, err);
-              throw err;
-            })
-            .finally(() => trace.getSpan(forOperation.otel!.current)?.end()),
+          preparation$.then(() => {
+            const ctx = getContext(parentState);
+            forOperation.otel = new OtelContextStack(
+              createGraphQLSpan({ tracer, ctx }),
+            );
+
+            if (useContextManager) {
+              wrapped = context.bind(forOperation.otel.current, wrapped);
+            }
+
+            return fakePromise()
+              .then(wrapped)
+              .catch((err) => {
+                registerException(forOperation.otel?.current, err);
+                throw err;
+              })
+              .finally(() => trace.getSpan(forOperation.otel!.current)?.end());
+          }),
         );
       },
 
@@ -627,7 +623,7 @@ export function useOpenTelemetry(
           parentState.forOperation?.skipExecuteSpan ||
           !shouldTrace(
             isIntrospection
-              ? options.spans?.introspection
+              ? options.spans?.schema
               : options.spans?.subgraphExecute,
             {
               subgraphName,
@@ -642,7 +638,7 @@ export function useOpenTelemetry(
         // (such as Introspection requests in proxy mode), we don't want to use the active context,
         // we want the span to be in it's own trace.
         const parentContext = isIntrospection
-          ? ROOT_CONTEXT
+          ? context.active()
           : getContext(parentState);
 
         forSubgraphExecution.otel = new OtelContextStack(
@@ -688,38 +684,52 @@ export function useOpenTelemetry(
           return wrapped();
         }
 
-        const { forSubgraphExecution } = state;
-        const ctx = createUpstreamHttpFetchSpan({
-          ctx: getContext(state),
-          tracer,
-        });
-
-        forSubgraphExecution?.otel!.push(ctx);
-
-        if (useContextManager) {
-          wrapped = context.bind(ctx, wrapped);
-        }
-
         return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(ctx, err);
-              throw err;
-            })
-            .finally(() => {
-              trace.getSpan(ctx)?.end();
-              forSubgraphExecution?.otel!.pop();
-            }),
+          preparation$.then(() => {
+            const { forSubgraphExecution } = state;
+            const ctx = createUpstreamHttpFetchSpan({
+              ctx: getContext(state),
+              tracer,
+            });
+
+            forSubgraphExecution?.otel!.push(ctx);
+
+            if (useContextManager) {
+              wrapped = context.bind(ctx, wrapped);
+            }
+
+            return fakePromise()
+              .then(wrapped)
+              .catch((err) => {
+                registerException(ctx, err);
+                throw err;
+              })
+              .finally(() => {
+                trace.getSpan(ctx)?.end();
+                forSubgraphExecution?.otel!.pop();
+              });
+          }),
         );
       },
 
       schema(_, wrapped) {
         if (!shouldTrace(options.spans?.schema, null)) {
-          return;
+          return wrapped();
         }
 
-        return context.with(createSchemaLoadingSpan({ tracer }), wrapped);
+        return unfakePromise(
+          preparation$.then(() => {
+            const ctx = createSchemaLoadingSpan({ tracer });
+            return fakePromise()
+              .then(() => context.with(ctx, wrapped))
+              .catch((err) => {
+                trace.getSpan(ctx)?.recordException(err);
+              })
+              .finally(() => {
+                trace.getSpan(ctx)?.end();
+              });
+          }),
+        );
       },
     },
 
