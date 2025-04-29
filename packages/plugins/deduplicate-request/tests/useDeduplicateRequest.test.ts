@@ -39,7 +39,7 @@ describe('useDeduplicateRequest', () => {
               'Content-Type': 'application/json',
             },
           },
-        ) as Response;
+        );
       }
 
       beforeEach(() => {
