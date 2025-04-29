@@ -283,29 +283,21 @@ export const dockerHostName = boolEnv('CI')
   ? '172.17.0.1'
   : 'host.docker.internal';
 
-export async function handleDockerHostName(
+export async function handleDockerHostNameInURLOrAtPath(
   supergraph: string,
   volumes: {
     host: string;
     container: string;
   }[],
 ) {
-  // we need to replace all local servers in the supergraph to use docker's local hostname.
-  // without this, the services running on the host wont be accessible by the docker container
   if (/^http(s?):\/\//.test(supergraph)) {
     // supergraph is a url
-    supergraph = supergraph
-      .replaceAll('0.0.0.0', dockerHostName)
-      .replaceAll('localhost', dockerHostName)
-      .replaceAll('127.0.0.1', dockerHostName);
+    supergraph = handleDockerHostNameInSDL(supergraph);
   } else {
     // supergraph is a path
     await fs.writeFile(
       supergraph,
-      (await fs.readFile(supergraph, 'utf8'))
-        .replaceAll('0.0.0.0', dockerHostName)
-        .replaceAll('localhost', dockerHostName)
-        .replaceAll('127.0.0.1', dockerHostName),
+      handleDockerHostNameInSDL(await fs.readFile(supergraph, 'utf8')),
     );
     volumes.push({
       host: supergraph,
@@ -314,6 +306,15 @@ export async function handleDockerHostName(
     supergraph = path.basename(supergraph);
   }
   return supergraph;
+}
+
+export function handleDockerHostNameInSDL(supergraph: string) {
+  // we need to replace all local servers in the supergraph to use docker's local hostname.
+  // without this, the services running on the host wont be accessible by the docker container
+  return supergraph
+    .replaceAll('0.0.0.0', dockerHostName)
+    .replaceAll('localhost', dockerHostName)
+    .replaceAll('127.0.0.1', dockerHostName);
 }
 
 export function createTenv(cwd: string): Tenv {
@@ -425,10 +426,16 @@ export function createTenv(cwd: string): Tenv {
             runner?.docker?.volumes || [];
 
           if (supergraph) {
-            supergraph = await handleDockerHostName(supergraph, volumes);
+            supergraph = await handleDockerHostNameInURLOrAtPath(
+              supergraph,
+              volumes,
+            );
           }
           if (subgraph) {
-            subgraph = await handleDockerHostName(subgraph, volumes);
+            subgraph = await handleDockerHostNameInURLOrAtPath(
+              subgraph,
+              volumes,
+            );
           }
 
           for (const configfile of await glob('gateway.config.*', {

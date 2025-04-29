@@ -1,4 +1,4 @@
-import { createTenv, handleDockerHostName } from '@internal/e2e';
+import { createTenv, handleDockerHostNameInURLOrAtPath } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('Polling', async () => {
@@ -13,7 +13,7 @@ describe('Polling', async () => {
     container: string;
   }[] = [];
   if (gatewayRunner.includes('docker')) {
-    output = await handleDockerHostName(output, volumes);
+    output = await handleDockerHostNameInURLOrAtPath(output, volumes);
   }
   const gw = await gateway({
     args: ['supergraph'],
