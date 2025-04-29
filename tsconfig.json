@@ -11,22 +11,42 @@
     "exactOptionalPropertyTypes": false,
     // packages
     "paths": {
-      "@internal/testing": ["./internal/testing/src/index.ts"],
-      "@internal/e2e": ["./internal/e2e/src/index.ts"],
-      "@internal/proc": ["./internal/proc/src/index.ts"],
-      "@internal/perf": ["./internal/perf/src/index.ts"],
-      "@internal/perf/memtest": ["./internal/perf/src/memtest.ts"],
+      "@internal/testing": [
+        "./internal/testing/src/index.ts"
+      ],
+      "@internal/e2e": [
+        "./internal/e2e/src/index.ts"
+      ],
+      "@internal/proc": [
+        "./internal/proc/src/index.ts"
+      ],
+      "@internal/perf": [
+        "./internal/perf/src/index.ts"
+      ],
+      "@internal/perf/memtest": [
+        "./internal/perf/src/memtest.ts"
+      ],
       "@internal/testing/to-be-similar-string": [
         "./internal/testing/src/to-be-similar-string.ts"
       ],
       "@internal/testing/to-be-similar-gql-doc": [
         "./internal/testing/src/to-be-similar-gql-doc.ts"
       ],
-      "@internal/testing/fixtures/*": ["./internal/testing/fixtures/*"],
-      "@graphql-hive/importer": ["./packages/importer/src/index.ts"],
-      "@graphql-hive/importer/*": ["./packages/importer/src/*"],
-      "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
-      "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
+      "@internal/testing/fixtures/*": [
+        "./internal/testing/fixtures/*"
+      ],
+      "@graphql-hive/importer": [
+        "./packages/importer/src/index.ts"
+      ],
+      "@graphql-hive/importer/*": [
+        "./packages/importer/src/*"
+      ],
+      "@graphql-hive/gateway": [
+        "./packages/gateway/src/index.ts"
+      ],
+      "@graphql-hive/gateway-runtime": [
+        "./packages/runtime/src/index.ts"
+      ],
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
       ],
@@ -39,12 +59,20 @@
       "@graphql-mesh/transport-http-callback": [
         "./packages/transports/http-callback/src/index.ts"
       ],
-      "@graphql-mesh/transport-ws": ["./packages/transports/ws/src/index.ts"],
+      "@graphql-mesh/transport-ws": [
+        "./packages/transports/ws/src/index.ts"
+      ],
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
       "@graphql-mesh/plugin-opentelemetry": [
         "./packages/plugins/opentelemetry/src/index.ts"
+      ],
+      "@graphql-mesh/plugin-opentelemetry/setup": [
+        "./packages/plugins/opentelemetry/src/setup.ts"
+      ],
+      "@graphql-mesh/plugin-opentelemetry/async-context-manager": [
+        "./packages/plugins/opentelemetry/src/async-context-manager.ts"
       ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"
@@ -52,17 +80,33 @@
       "@graphql-tools/batch-delegate": [
         "./packages/batch-delegate/src/index.ts"
       ],
-      "@graphql-tools/batch-execute": ["./packages/batch-execute/src/index.ts"],
-      "@graphql-tools/delegate": ["./packages/delegate/src/index.ts"],
-      "@graphql-tools/federation": ["./packages/federation/src/index.ts"],
-      "@graphql-tools/stitch": ["./packages/stitch/src/index.ts"],
+      "@graphql-tools/batch-execute": [
+        "./packages/batch-execute/src/index.ts"
+      ],
+      "@graphql-tools/delegate": [
+        "./packages/delegate/src/index.ts"
+      ],
+      "@graphql-tools/federation": [
+        "./packages/federation/src/index.ts"
+      ],
+      "@graphql-tools/stitch": [
+        "./packages/stitch/src/index.ts"
+      ],
       "@graphql-tools/stitching-directives": [
         "./packages/stitching-directives/src/index.ts"
       ],
-      "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
-      "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
-      "@graphql-hive/logger": ["./packages/logger/src/index.ts"],
-      "@graphql-hive/logger/request": ["./packages/logger/src/request.ts"],
+      "@graphql-tools/wrap": [
+        "./packages/wrap/src/index.ts"
+      ],
+      "@graphql-tools/executor-*": [
+        "./packages/executors/*/src/index.ts"
+      ],
+      "@graphql-hive/logger": [
+        "./packages/logger/src/index.ts"
+      ],
+      "@graphql-hive/logger/request": [
+        "./packages/logger/src/request.ts"
+      ],
       "@graphql-hive/logger/writers/pino": [
         "./packages/logger/src/writers/pino.ts"
       ],
@@ -78,9 +122,15 @@
       "@graphql-hive/plugin-deduplicate-request": [
         "./packages/plugins/deduplicate-request/src/index.ts"
       ],
-      "@graphql-hive/nestjs": ["./packages/nestjs/src/index.ts"],
-      "@graphql-hive/signal": ["./packages/signal/src/index.ts"],
-      "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"]
+      "@graphql-hive/nestjs": [
+        "./packages/nestjs/src/index.ts"
+      ],
+      "@graphql-hive/signal": [
+        "./packages/signal/src/index.ts"
+      ],
+      "@graphql-hive/pubsub": [
+        "./packages/pubsub/src/index.ts"
+      ]
     }
   },
   "include": [

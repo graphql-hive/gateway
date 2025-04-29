@@ -1,5 +1,6 @@
 {
   "name": "@e2e/opentelemetry",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@apollo/server": "^4.12.2",
