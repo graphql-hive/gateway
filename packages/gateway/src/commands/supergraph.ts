@@ -307,7 +307,7 @@ export async function runSupergraph(
               cluster.workers[workerId]!.send('invalidateUnifiedGraph');
             }
           } else {
-            // @ts-expect-error the runtime should've een
+            // @ts-expect-error the runtime should've been created at this time
             runtime.invalidateUnifiedGraph();
           }
         }
