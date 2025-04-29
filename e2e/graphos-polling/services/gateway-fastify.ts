@@ -1,10 +1,10 @@
+import './otel-setup.js';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { createLoggerFromPino } from '@graphql-hive/logger-pino';
-import {
-  createOtlpHttpExporter,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { Opts } from '@internal/testing';
+import { diag } from '@opentelemetry/api';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
 /* --- E2E TEST SPECIFIC CONFIGURATION START---  */
@@ -69,21 +69,18 @@ const gw = createGatewayRuntime<FastifyContext>({
     endpoint: `${upLink}/usage`,
   },
   // Use OpenTelemetry to report traces
-  plugins: (ctx) => [
-    useOpenTelemetry({
-      ...ctx,
-      exporters: [
-        createOtlpHttpExporter(
-          {
-            url: process.env['OTLP_EXPORTER_URL'],
-          },
-          {
-            scheduledDelayMillis: 1,
-          },
-        ),
-      ],
-    }),
-  ],
+  plugins: (ctx) => {
+    const otelLogger = ctx.logger.child('[otel-diag]');
+    diag.setLogger({ ...otelLogger, verbose: otelLogger.debug });
+    setGlobalErrorHandler((err) => otelLogger.error('Uncaught error', err));
+
+    return [
+      useOpenTelemetry({
+        ...ctx,
+        traces: true,
+      }),
+    ];
+  },
 });
 
 app.route({

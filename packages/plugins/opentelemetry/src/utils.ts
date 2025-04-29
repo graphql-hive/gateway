@@ -1,5 +1,4 @@
 import { context } from '@opentelemetry/api';
-import { getContextManager } from './context';
 
 export async function tryContextManagerSetup(
   useContextManager: true | undefined,
@@ -8,19 +7,11 @@ export async function tryContextManagerSetup(
     return true;
   }
 
-  const contextManager = await getContextManager(useContextManager);
-
-  if (!contextManager) {
-    return false;
-  }
-
-  if (!context.setGlobalContextManager(contextManager)) {
-    if (useContextManager) {
-      throw new Error(
-        '[OTEL] A Context Manager is already registered, but is not compatible with async calls.' +
-          ' Please use another context manager, such as `AsyncLocalStorageContextManager`.',
-      );
-    }
+  if (useContextManager) {
+    throw new Error(
+      '[OTEL] A Context Manager is already registered, but is not compatible with async calls.' +
+        ' Please use another context manager, such as `AsyncLocalStorageContextManager`.',
+    );
   }
 
   return true;

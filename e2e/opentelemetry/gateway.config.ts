@@ -1,11 +1,8 @@
-import {
-  createOtlpGrpcExporter,
-  createOtlpHttpExporter,
-  defineConfig,
-  GatewayPlugin,
-  OpenTelemetryDiagLogLevel,
-} from '@graphql-hive/gateway';
+import './otel-setup.js';
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
+import { diag } from '@opentelemetry/api';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -29,36 +26,19 @@ const useOnFetchTracer = (): GatewayPlugin => {
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {
-    diagLevel: OpenTelemetryDiagLogLevel.INFO,
-    exporters: [
-      process.env['OTLP_EXPORTER_TYPE'] === 'grpc'
-        ? createOtlpGrpcExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          )
-        : createOtlpHttpExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          ),
-    ],
-    serviceName: process.env['OTLP_SERVICE_NAME'],
+    traces: true,
   },
-  plugins: () =>
-    process.env['MEMTEST']
-      ? [
-          // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
-        ]
-      : [useOnFetchTracer()],
+  plugins: ({ logger }) => {
+    const otelLogger = logger.child('[otel-diag]');
+    diag.setLogger({ ...otelLogger, verbose: otelLogger.debug });
+    setGlobalErrorHandler((err) => otelLogger.error('Uncaught error', err));
+
+    return [
+      ...(process.env['MEMTEST']
+        ? [
+            // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
+          ]
+        : [useOnFetchTracer()]),
+    ];
+  },
 });
