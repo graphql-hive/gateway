@@ -3364,6 +3364,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/supergraph-file-watcher@workspace:e2e/supergraph-file-watcher":
+  version: 0.0.0-use.local
+  resolution: "@e2e/supergraph-file-watcher@workspace:e2e/supergraph-file-watcher"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/supergraph-url@workspace:e2e/supergraph-url":
   version: 0.0.0-use.local
   resolution: "@e2e/supergraph-url@workspace:e2e/supergraph-url"
