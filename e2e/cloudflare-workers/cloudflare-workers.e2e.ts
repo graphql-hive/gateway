@@ -41,13 +41,16 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
     type JaegerTracesApiResponse = {
       data: Array<{
         traceID: string;
-        spans: Array<{
-          traceID: string;
-          spanID: string;
-          operationName: string;
-          tags: Array<{ key: string; value: string; type: string }>;
-        }>;
+        spans: JaegerTraceSpan[];
       }>;
+    };
+
+    type JaegerTraceSpan = {
+      traceID: string;
+      spanID: string;
+      operationName: string;
+      tags: Array<{ key: string; value: string; type: string }>;
+      references: Array<{ refType: string; spanID: string; traceID: string }>;
     };
 
     async function getJaegerTraces(

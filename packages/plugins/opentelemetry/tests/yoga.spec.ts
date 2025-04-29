@@ -33,9 +33,8 @@ describe('useOpenTelemetry', () => {
         } = {},
       ) {
         const otelPlugin = useOpenTelemetry({
-          initializeNodeSDK: false,
-          contextManager,
           log: new Logger({ level: false }),
+          useContextManager: contextManager,
         });
 
         const yoga = createYoga({

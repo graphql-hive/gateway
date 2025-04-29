@@ -7,7 +7,7 @@ import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
-console.log('Bundling...');
+console.log('Bundling opentelemetry for browser...');
 
 /**
  * Dependencies that need to be bundled and placed in the bundled node_modules. Modules that
@@ -39,100 +39,32 @@ console.log('Bundling...');
  * @type {Record<string, string>}
  */
 const deps = {
-  'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
-  'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
-  // the hooks are dynamically registered on startup, we need to bundle them at path
-  'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',
-  // include envelop core for ease of usage in the config files
-  'node_modules/@envelop/core/index':
-    '../../node_modules/@envelop/core/esm/index.js',
-  // default transports should be in the container because they're dynamically imported
-  'node_modules/@graphql-mesh/transport-common/index':
-    '../transports/common/src/index.ts',
-  'node_modules/@graphql-mesh/transport-http/index':
-    '../transports/http/src/index.ts',
-  'node_modules/@graphql-mesh/transport-ws/index':
-    '../transports/ws/src/index.ts',
-  'node_modules/@graphql-mesh/transport-http-callback/index':
-    '../transports/http-callback/src/index.ts',
-  // security plugins are built-in but are dynamically imported
-  'node_modules/@escape.tech/graphql-armor-max-tokens/index':
-    '../../node_modules/@escape.tech/graphql-armor-max-tokens/dist/graphql-armor-max-tokens.esm.js',
-  'node_modules/@escape.tech/graphql-armor-max-depth/index':
-    '../../node_modules/@escape.tech/graphql-armor-max-depth/dist/graphql-armor-max-depth.esm.js',
-  'node_modules/@escape.tech/graphql-armor-block-field-suggestions/index':
-    '../../node_modules/@escape.tech/graphql-armor-block-field-suggestions/dist/graphql-armor-block-field-suggestions.esm.js',
-  // OpenTelemetry plugin is sometimes imported, and not re-used from the gateway itself. we therefore need to bundle it into node_modules
-  'node_modules/@graphql-mesh/plugin-opentelemetry/index':
-    '../plugins/opentelemetry/src/index.ts',
-  // The Async Local context manager of Opentelemetry can't be bundled, so we have our own
-  // Since `async_hooks` is not available in all runtime, it have to be bundle separately
-  'node_modules/@graphql-mesh/plugin-opentelemetry/async-context-manager':
-    '../plugins/opentelemetry/src/async-context-manager.ts',
-  'node_modules/@graphql-mesh/plugin-opentelemetry/setup':
-    '../plugins/opentelemetry/src/setup.ts',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.
     // Those are most used features.
     [
       // Common API base
-      ['api'],
-      ['core'],
       ['resources', 'esm/'],
       ['sdk-trace-base'],
       ['semantic-conventions'],
 
       // Exporters
       ['exporter-trace-otlp-http'],
-      ['exporter-trace-otlp-grpc', 'src'],
       ['exporter-zipkin'],
-      // ['exporter-jaeger', 'src'],
+      ['exporter-jaeger', 'src'],
 
       // Propagators
       ['propagator-b3'],
       ['propagator-jaeger'],
-
-      // Sampler
-      // 'sampler-jaeger-remote',
-
-      // Context Managers
-      // ['context-async-hooks', 'src'], // An async context manager usable in runtimes implementing async-hooks
-      ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
-
-      // Node Tracing SDK
-      // 'sdk-node',
-      // 'sdk-trace-node',
-      // 'auto-instrumentations-node',
-
-      // Cross-runtime tracing SDK
-      ['sdk-trace-web'],
     ].map(([otelPackage, buildDir = 'esm']) => [
       `node_modules/@opentelemetry/${otelPackage}/index`,
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
     ]),
   ),
-  // // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
-  // 'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
-  //   '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
 };
-
-if (
-  process.env['E2E_GATEWAY_RUNNER'] === 'docker' ||
-  process.env['E2E_GATEWAY_RUNNER'] === 'bun-docker'
-) {
-  // extras specific to the docker serve runner in e2e tests
-  console.warn('⚠️ Bundling extra modules for e2e tests!');
-  deps['e2e/node_modules/@internal/testing/index'] =
-    '../../internal/testing/src/index.ts';
-  deps['e2e/node_modules/@graphql-mesh/transport-rest/index'] =
-    '../../node_modules/@graphql-mesh/transport-rest/esm/index.js';
-  deps['e2e/node_modules/@graphql-mesh/plugin-live-query/index'] =
-    '../../node_modules/@graphql-mesh/plugin-live-query/esm/index.js';
-}
 
 export default defineConfig({
   input: {
-    'dist/bin': 'src/bin.ts',
     ...deps,
   },
   output: {
@@ -145,15 +77,12 @@ export default defineConfig({
     // system (`/node_modules`)
     chunkFileNames: 'node_modules/.chunk/[name]-[hash].mjs',
   },
-  external: ['tuql'],
   plugins: [
     tsConfigPaths(), // use tsconfig paths to resolve modules
     nodeResolve({
       preferBuiltins: true,
-      mainFields: ['esnext', 'module', 'main'],
-      exportConditions: ['esnext'],
+      mainFields: ['browser', 'module', 'main'],
     }), // resolve node_modules and bundle them too
-    graphql(), // handle graphql imports
     commonjs({ strictRequires: true }), // convert commonjs to esm
     json(), // support importing json files to esm (needed for commonjs() plugin)
     sucrase({ transforms: ['typescript'] }), // transpile typescript
