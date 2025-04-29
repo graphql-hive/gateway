@@ -19,7 +19,6 @@ export default defineConfig({
     inlineDynamicImports: true,
   },
   external: [
-    '@parcel/watcher',
     /node_modules\/graphql/, // will be packed as dep
     /node_modules\\graphql/, // will be packed as dep
   ],

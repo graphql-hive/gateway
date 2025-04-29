@@ -96,7 +96,7 @@ export default defineConfig({
     // system (`/node_modules`)
     chunkFileNames: 'node_modules/.chunk/[name]-[hash].mjs',
   },
-  external: ['tuql', '@parcel/watcher'],
+  external: ['tuql'],
   plugins: [
     tsConfigPaths(), // use tsconfig paths to resolve modules
     nodeResolve({ preferBuiltins: true }), // resolve node_modules and bundle them too

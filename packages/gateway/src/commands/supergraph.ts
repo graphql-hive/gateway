@@ -1,6 +1,6 @@
 import cluster from 'node:cluster';
-import { lstat } from 'node:fs/promises';
-import { dirname, isAbsolute, resolve } from 'node:path';
+import { lstat, watch as watchFile } from 'node:fs/promises';
+import { isAbsolute, resolve } from 'node:path';
 import { Option } from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
@@ -285,59 +285,40 @@ export async function runSupergraph(
     // Polling should not be enabled when watching the file
     delete config.pollingInterval;
     if (cluster.isPrimary) {
-      let watcher: typeof import('@parcel/watcher') | undefined;
-      try {
-        watcher = await import('@parcel/watcher');
-      } catch (e) {
-        if (Object(e).code !== 'MODULE_NOT_FOUND') {
-          log.debug('Problem while importing @parcel/watcher', e);
+      log.info(`Watching ${absSchemaPath} for changes`);
+
+      const ctrl = new AbortController();
+      registerTerminateHandler((signal) => {
+        log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
+        return ctrl.abort(`Process terminated on ${signal}`);
+      });
+
+      (async function watcher() {
+        for await (const f of watchFile(absSchemaPath, {
+          signal: ctrl.signal,
+        })) {
+          if (f.eventType === 'rename') {
+            // TODO: or should we just ignore?
+            throw new Error(`Supergraph file was renamed to "${f.filename}"`);
+          }
+          log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
+          if (config.fork && config.fork > 1) {
+            for (const workerId in cluster.workers) {
+              cluster.workers[workerId]!.send('invalidateUnifiedGraph');
+            }
+          } else {
+            // @ts-expect-error the runtime should've een
+            runtime.invalidateUnifiedGraph();
+          }
         }
-        log.warn(
-          `If you want to enable hot reloading when ${absSchemaPath} changes, make sure "@parcel/watcher" is available`,
-        );
-      }
-      if (watcher) {
-        try {
-          log.info(`Watching ${absSchemaPath} for changes`);
-          const absSupergraphDirname = dirname(absSchemaPath);
-          const subscription = await watcher.subscribe(
-            absSupergraphDirname,
-            (err, events) => {
-              if (err) {
-                log.error(err);
-                return;
-              }
-              if (
-                events.some(
-                  (event) =>
-                    event.path === absSchemaPath && event.type === 'update',
-                )
-              ) {
-                log.info(
-                  `${absSchemaPath} changed. Invalidating supergraph...`,
-                );
-                if (config.fork && config.fork > 1) {
-                  for (const workerId in cluster.workers) {
-                    cluster.workers[workerId]!.send('invalidateUnifiedGraph');
-                  }
-                } else {
-                  runtime.invalidateUnifiedGraph();
-                }
-              }
-            },
-          );
-          registerTerminateHandler((signal) => {
-            log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
-            return subscription.unsubscribe().catch((err) => {
-              // https://github.com/parcel-bundler/watcher/issues/129
-              log.error(`Failed to close watcher for ${absSchemaPath}!`, err);
-            });
-          });
-        } catch (err) {
-          log.error(`Failed to watch ${absSchemaPath}!`);
-          throw err;
-        }
-      }
+      })()
+        .catch((e) => {
+          if (e.name === 'AbortError') return;
+          log.error(`Watcher for ${absSchemaPath} closed with an error`, e);
+        })
+        .then(() => {
+          log.info(`Watcher for ${absSchemaPath} successfuly closed`);
+        });
     }
   }
 

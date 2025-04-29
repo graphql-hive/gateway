@@ -45,13 +45,7 @@
     "start": "tsx src/bin.ts"
   },
   "peerDependencies": {
-    "@parcel/watcher": "^2.1.0",
     "graphql": "^15.9.0 || ^16.9.0"
-  },
-  "peerDependenciesMeta": {
-    "@parcel/watcher": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@commander-js/extra-typings": "^13.1.0",
@@ -98,7 +92,6 @@
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/transport-soap": "^0.10.0",
     "@graphql-tools/executor": "^1.4.7",
-    "@parcel/watcher": "^2.3.0",
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
