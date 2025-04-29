@@ -1,11 +1,13 @@
 import {
-  createOtlpGrpcExporter,
-  createOtlpHttpExporter,
   defineConfig,
   GatewayPlugin,
-  OpenTelemetryDiagLogLevel,
+  SEMRESATTRS_SERVICE_NAME,
 } from '@graphql-hive/gateway';
+import { AsyncLocalStorageContextManager } from '@graphql-mesh/plugin-opentelemetry/async-context-manager';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
+import { trace } from '@opentelemetry/api';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -27,38 +29,39 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
+const exporterModule =
+  process.env['OTLP_EXPORTER_TYPE'] === 'http'
+    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
+
+const OTLPTraceExporter =
+  exporterModule.OTLPTraceExporter ?? exporterModule.default.OTLPTraceExporter;
+
+opentelemetrySetup({
+  contextManager: new AsyncLocalStorageContextManager(),
+  resource: resourceFromAttributes({
+    [SEMRESATTRS_SERVICE_NAME]: process.env['OTLP_SERVICE_NAME'],
+  }),
+  traces: {
+    exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
+    batching: { maxExportBatchSize: 1, scheduledDelayMillis: 1 },
+  },
+});
+
 export const gatewayConfig = defineConfig({
   openTelemetry: {
-    diagLevel: OpenTelemetryDiagLogLevel.INFO,
-    exporters: [
-      process.env['OTLP_EXPORTER_TYPE'] === 'grpc'
-        ? createOtlpGrpcExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          )
-        : createOtlpHttpExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          ),
-    ],
-    serviceName: process.env['OTLP_SERVICE_NAME'],
+    traces: true,
   },
-  plugins: () =>
-    process.env['MEMTEST']
+  plugins: () => [
+    {
+      onExecute() {
+        trace.getActiveSpan()?.setAttribute('custom.attribute', 'custom value');
+      },
+    },
+    ...(process.env['MEMTEST']
       ? [
           // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
         ]
-      : [useOnFetchTracer()],
+      : [useOnFetchTracer()]),
+  ],
 });
