@@ -1,147 +1,23 @@
 import { SpanStatusCode } from '@opentelemetry/api';
-import { createSchema, createYoga } from 'graphql-yoga';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpenTelemetryContextExtension } from '../src/plugin';
 import { buildTestGateway, spanExporter } from './utils';
 
-let mockModule = vi.mock;
-if (globalThis.Bun) {
-  mockModule = require('bun:test').mock.module;
-}
-const mockRegisterProvider = vi.fn();
-let gw: typeof import('../../../runtime/src');
 describe('useOpenTelemetry', () => {
-  mockModule('@opentelemetry/sdk-trace-web', () => ({
-    WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
-    AlwaysOnSampler: vi.fn(),
-  }));
-
-  beforeAll(async () => {
-    gw = await import('../../../runtime/src');
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     spanExporter.reset();
   });
-  describe('initialization', () => {
-    it('initializes and starts a new provider by default', async () => {
-      const { useOpenTelemetry } = await import('../src');
-      await using upstream = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello: () => 'World',
-            },
-          },
-        }),
-        logging: false,
-      });
-
-      await using gateway = gw.createGatewayRuntime({
-        proxy: {
-          endpoint: 'https://example.com/graphql',
-        },
-        plugins: (ctx) => [
-          gw.useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-          useOpenTelemetry({
-            exporters: [],
-            ...ctx,
-          }),
-        ],
-        logging: false,
-      });
-
-      const response = await gateway.fetch('http://localhost:4000/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              hello
-            }
-          `,
-        }),
-      });
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.data?.hello).toBe('World');
-      expect(mockRegisterProvider).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not initialize a new provider and does not start the provided provider instance', async () => {
-      const { useOpenTelemetry } = await import('../src');
-      await using upstream = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello: () => 'World',
-            },
-          },
-        }),
-        logging: false,
-      });
-
-      await using gateway = gw.createGatewayRuntime({
-        proxy: {
-          endpoint: 'https://example.com/graphql',
-        },
-        plugins: (ctx) => [
-          gw.useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-          useOpenTelemetry({ initializeNodeSDK: false, ...ctx }),
-        ],
-        logging: false,
-      });
-
-      const response = await gateway.fetch('http://localhost:4000/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              hello
-            }
-          `,
-        }),
-      });
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.data?.hello).toBe('World');
-      expect(mockRegisterProvider).not.toHaveBeenCalled();
-    });
-  });
 
   describe('tracing', () => {
     describe.each([
-      { name: 'with context manager', contextManager: undefined },
-      { name: 'without context manager', contextManager: false as const },
-    ])('$name', ({ contextManager }) => {
+      { name: 'with context manager', useContextManager: undefined },
+      { name: 'without context manager', useContextManager: false as const },
+    ])('$name', ({ useContextManager }) => {
       const buildTestGatewayForCtx: typeof buildTestGateway = (options) =>
         buildTestGateway({
           ...options,
-          options: { contextManager, ...options?.options },
+          options: { useContextManager, ...options?.options },
         });
 
       const expected = {
@@ -326,7 +202,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace http requests if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { http: false, schema: false },
+              traces: {
+                spans: { http: false, schema: false },
+              },
             },
           });
           await gateway.query();
@@ -337,7 +215,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace graphql operation if disable', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphql: false, schema: false },
+              traces: {
+                spans: { graphql: false, schema: false },
+              },
             },
           });
           await gateway.query();
@@ -358,7 +238,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace parse if disable', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlParse: false },
+              traces: {
+                spans: { graphqlParse: false },
+              },
             },
           });
           await gateway.query();
@@ -373,7 +255,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace validate if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlValidate: false },
+              traces: {
+                spans: { graphqlValidate: false },
+              },
             },
           });
           await gateway.query();
@@ -388,7 +272,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace context building if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlContextBuilding: false },
+              traces: {
+                spans: { graphqlContextBuilding: false },
+              },
             },
           });
           await gateway.query();
@@ -403,7 +289,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlExecute: false, schema: false },
+              traces: {
+                spans: { graphqlExecute: false, schema: false },
+              },
             },
           });
           await gateway.query();
@@ -426,7 +314,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace subgraph execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { subgraphExecute: false, schema: false },
+              traces: {
+                spans: { subgraphExecute: false, schema: false },
+              },
             },
           });
           await gateway.query();
@@ -449,7 +339,9 @@ describe('useOpenTelemetry', () => {
         it('should not trace fetch if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { upstreamFetch: false },
+              traces: {
+                spans: { upstreamFetch: false },
+              },
             },
           });
           await gateway.query();
@@ -584,7 +476,7 @@ describe('useOpenTelemetry', () => {
 
     it('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
-        options: { spans: { http: false, schema: true } },
+        options: { traces: { spans: { http: false, schema: true } } },
       });
       await gateway.query();
 

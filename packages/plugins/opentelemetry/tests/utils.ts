@@ -24,9 +24,7 @@ import type {
 export async function buildTestGateway(
   options: {
     gatewayOptions?: Omit<GatewayConfigProxy, 'proxy'>;
-    options?: Partial<
-      Extract<OpenTelemetryGatewayPluginOptions, { initializeNodeSDK: false }>
-    >;
+    options?: OpenTelemetryGatewayPluginOptions;
     plugins?: (
       otelPlugin: OpenTelemetryPlugin,
       ctx: GatewayConfigContext,
@@ -66,7 +64,6 @@ export async function buildTestGateway(
       maskedErrors: false,
       plugins: (ctx) => {
         otelPlugin = useOpenTelemetry({
-          initializeNodeSDK: false,
           ...ctx,
           ...options.options,
         });
