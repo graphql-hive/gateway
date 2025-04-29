@@ -4044,6 +4044,7 @@ __metadata:
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
+    "@graphql-hive/plugin-deduplicate-request": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.0"
     "@graphql-mesh/cache-localforage": "npm:^0.105.3"
@@ -4051,7 +4052,6 @@ __metadata:
     "@graphql-mesh/cache-upstash-redis": "npm:^0.1.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/hmac-upstream-signature": "workspace:^"
-    "@graphql-mesh/plugin-deduplicate-request": "npm:^0.104.0"
     "@graphql-mesh/plugin-http-cache": "npm:^0.105.2"
     "@graphql-mesh/plugin-jit": "npm:^0.2.0"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
@@ -4209,6 +4209,22 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/plugin-deduplicate-request@workspace:^, @graphql-hive/plugin-deduplicate-request@workspace:packages/plugins/deduplicate-request":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/plugin-deduplicate-request@workspace:packages/plugins/deduplicate-request"
+  dependencies:
+    "@graphql-hive/gateway-runtime": "workspace:*"
+    "@graphql-mesh/types": "npm:^0.104.3"
+    "@graphql-mesh/utils": "npm:^0.104.3"
+    "@graphql-tools/utils": "npm:^10.8.6"
+    "@whatwg-node/fetch": "npm:^0.10.6"
+    "@whatwg-node/promise-helpers": "npm:^1.3.1"
+    graphql: "npm:^16.9.0"
+  peerDependencies:
+    graphql: ^16.9.0
   languageName: unknown
   linkType: soft
 
@@ -4455,21 +4471,6 @@ __metadata:
   peerDependencies:
     graphql: "*"
   checksum: 10c0/dfcef4f72ad43249e06c0af77cae7277418e8b2e993512cd66c7d3ce308e57d65e00093e6fc00ac8935f02ed7c7f7b1ad435e21a0220f8097d663c41274a14a3
-  languageName: node
-  linkType: hard
-
-"@graphql-mesh/plugin-deduplicate-request@npm:^0.104.0":
-  version: 0.104.3
-  resolution: "@graphql-mesh/plugin-deduplicate-request@npm:0.104.3"
-  dependencies:
-    "@graphql-mesh/types": "npm:^0.104.3"
-    "@graphql-mesh/utils": "npm:^0.104.3"
-    "@graphql-tools/utils": "npm:^10.8.0"
-    "@whatwg-node/promise-helpers": "npm:^1.0.0"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: "*"
-  checksum: 10c0/0525cfcd6a89d9f992c69d9e2b9f2191f2a22e2e6b00a3bcd3533f817d63f412fecd79a5934f480091f1d2f2376618916c6cbe96ba6a24c92ed3919cd6d01e87
   languageName: node
   linkType: hard
 
