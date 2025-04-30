@@ -2,6 +2,9 @@ import cluster, { type Worker } from 'node:cluster';
 import type { Logger } from '@graphql-mesh/types';
 import { registerTerminateHandler } from '@graphql-mesh/utils';
 
+/**
+ * @returns `true` when the process is forked and the current one is the primary cluster; otherwise `false`.
+ */
 export function handleFork(log: Logger, config: { fork?: number }): boolean {
   try {
     if (cluster.isPrimary && config.fork && config.fork > 1) {
