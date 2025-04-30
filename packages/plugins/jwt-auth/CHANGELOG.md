@@ -1,5 +1,11 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 1.5.4
+
+### Patch Changes
+
+- [#1057](https://github.com/graphql-hive/gateway/pull/1057) [`20e120b`](https://github.com/graphql-hive/gateway/commit/20e120b2e3269907187ec0626c7651bc248efc53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - No code changes, the plugin has been moved from Mesh Compose to Hive Gateway
+
 ## 1.5.3
 
 ### Patch Changes
@@ -166,8 +172,8 @@
     defineConfig,
     extractFromConnectionParams,
     extractFromHeader,
-    useJWT
-  } from '@graphql-hive/gateway'
+    useJWT,
+  } from '@graphql-hive/gateway';
 
   export const gatewayConfig = defineConfig({
     jwt: {
@@ -175,10 +181,10 @@
       // It will check WS params and headers, and get the available one
       lookupLocations: [
         extractFromConnectionParams({ name: 'my-token' }),
-        extractFromHeader({ name: 'authorization', prefix: 'Bearer ' })
-      ]
-    }
-  })
+        extractFromHeader({ name: 'authorization', prefix: 'Bearer ' }),
+      ],
+    },
+  });
   ```
 
 ## 1.3.10
@@ -424,11 +430,11 @@
   For example;
 
   ```ts
-  productName = 'Mesh Gateway'
+  productName = 'Mesh Gateway';
   productDescription =
-    'Mesh Gateway is a GraphQL Gateway that can be used to serve a supergraph schema.'
-  productLogo = '<svg>...</svg>'
-  productPackageName = '@graphql-mesh/gateway'
+    'Mesh Gateway is a GraphQL Gateway that can be used to serve a supergraph schema.';
+  productLogo = '<svg>...</svg>';
+  productPackageName = '@graphql-mesh/gateway';
   ```
 
 ### Patch Changes

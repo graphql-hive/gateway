@@ -1,5 +1,31 @@
 # @graphql-hive/gateway
 
+## 1.14.0
+
+### Minor Changes
+
+- [#1083](https://github.com/graphql-hive/gateway/pull/1083) [`695251a`](https://github.com/graphql-hive/gateway/commit/695251a5e2eb565e325b48c8d79761149c5aa3b0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Support watching supergraph file out-of-box
+
+  No extra dependency of `@parcel/watcher` is needed. After upgrading, you can uninstall it.
+
+### Patch Changes
+
+- [#1057](https://github.com/graphql-hive/gateway/pull/1057) [`20e120b`](https://github.com/graphql-hive/gateway/commit/20e120b2e3269907187ec0626c7651bc248efc53) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-jwt-auth@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jwt-auth/v/workspace:^) (from `^1.5.0`, in `dependencies`)
+
+- [#1083](https://github.com/graphql-hive/gateway/pull/1083) [`695251a`](https://github.com/graphql-hive/gateway/commit/695251a5e2eb565e325b48c8d79761149c5aa3b0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Removed dependency [`@parcel/watcher@^2.1.0` ↗︎](https://www.npmjs.com/package/@parcel/watcher/v/2.1.0) (from `peerDependencies`)
+
+- Updated dependencies [[`20e120b`](https://github.com/graphql-hive/gateway/commit/20e120b2e3269907187ec0626c7651bc248efc53)]:
+  - @graphql-mesh/plugin-jwt-auth@1.5.4
+  - @graphql-hive/plugin-aws-sigv4@1.0.8
+  - @graphql-hive/gateway-runtime@1.8.1
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.55
+  - @graphql-mesh/plugin-prometheus@1.3.43
+
 ## 1.13.6
 
 ### Patch Changes
