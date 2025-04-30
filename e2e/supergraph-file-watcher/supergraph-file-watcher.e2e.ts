@@ -1,9 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import {
-  createTenv,
-  handleDockerHostNameInSDL,
-  handleDockerHostNameInURLOrAtPath,
-} from '@internal/e2e';
+import { createTenv, handleDockerHostNameInSDL } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
 const { gatewayRunner, gateway, service, composeWithMesh, fs } =
