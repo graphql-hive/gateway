@@ -72,6 +72,9 @@
       "@graphql-mesh/plugin-jwt-auth": [
         "./packages/plugins/jwt-auth/src/index.ts"
       ],
+      "@graphql-hive/plugin-deduplicate-request": [
+        "./packages/plugins/deduplicate-request/src/index.ts"
+      ],
       "@graphql-hive/nestjs": ["./packages/nestjs/src/index.ts"],
       "@graphql-hive/signal": ["./packages/signal/src/index.ts"],
       "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"]

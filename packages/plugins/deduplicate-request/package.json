@@ -1,0 +1,57 @@
+{
+  "name": "@graphql-hive/plugin-deduplicate-request",
+  "version": "0.0.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/plugins/deduplicate-request"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "graphql": "^16.9.0"
+  },
+  "dependencies": {
+    "@graphql-mesh/utils": "^0.104.3",
+    "@graphql-tools/utils": "^10.8.6",
+    "@whatwg-node/promise-helpers": "^1.3.1"
+  },
+  "devDependencies": {
+    "@graphql-hive/gateway-runtime": "workspace:*",
+    "@graphql-mesh/types": "^0.104.3",
+    "@whatwg-node/fetch": "^0.10.6",
+    "graphql": "^16.9.0",
+    "pkgroll": "2.12.2"
+  },
+  "sideEffects": false
+}

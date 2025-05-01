@@ -1142,8 +1142,8 @@ export function createGatewayRuntime<
     logging: logger,
     plugins: [
       ...basePlugins,
-      ...(config.plugins?.(configContext) || []),
       ...extraPlugins,
+      ...(config.plugins?.(configContext) || []),
     ],
     context({ request, params, req, connectionParams }) {
       let headers = // Maybe Node-like environment
