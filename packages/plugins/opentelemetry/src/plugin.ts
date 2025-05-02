@@ -18,6 +18,7 @@ import {
   DiagLogLevel,
   propagation,
   ROOT_CONTEXT,
+  SpanKind,
   trace,
   type Context,
   type ContextManager,
@@ -73,6 +74,9 @@ import {
   setUpstreamFetchResponseAttributes,
 } from './spans';
 import { getEnvVar, tryContextManagerSetup } from './utils';
+
+const initializationTime =
+  'performance' in globalThis ? performance.now() : undefined;
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -227,11 +231,15 @@ export type OpenTelemetryGatewayPluginOptions =
        */
       cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
       /**
-       * Enable/disable schema loading spans (default: true).
+       * Enable/disable schema loading spans (default: true if context manager available).
        *
        * Note: This span requires an Async compatible context manager
        */
       schema?: boolean;
+      /**
+       * Enable/disable initialization span (default: true).
+       */
+      initialization?: boolean;
     };
   };
 
@@ -284,6 +292,7 @@ export function useOpenTelemetry(
   let provider: WebTracerProvider;
 
   const yogaVersion = createDeferred<string>();
+  let initSpan: Context | null;
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -291,9 +300,17 @@ export function useOpenTelemetry(
   }
 
   function getContext(state?: State): Context {
-    return useContextManager
-      ? context.active()
-      : (getMostSpecificState(state)?.otel?.current ?? ROOT_CONTEXT);
+    const specificState = getMostSpecificState(state)?.otel;
+
+    if (initSpan && !specificState) {
+      return initSpan;
+    }
+
+    if (useContextManager) {
+      return context.active();
+    }
+
+    return specificState?.current ?? ROOT_CONTEXT;
   }
 
   const yogaLogger = createDeferred<YogaLogger>();
@@ -371,6 +388,12 @@ export function useOpenTelemetry(
   preparation$ = init().then((contextManager) => {
     useContextManager = contextManager;
     tracer = options.tracer || trace.getTracer('gateway');
+    initSpan = trace.setSpan(
+      context.active(),
+      tracer.startSpan('gateway.initialization', {
+        startTime: initializationTime,
+      }),
+    );
     preparation$ = fakePromise();
     return pluginLogger.then((logger) => {
       pluginLogger = fakePromise(logger);
@@ -900,6 +923,11 @@ export function useOpenTelemetry(
 
     onSchemaChange(payload) {
       setSchemaAttributes(payload);
+
+      if (initSpan) {
+        trace.getSpan(initSpan)?.end();
+        initSpan = null;
+      }
     },
 
     async onDispose() {

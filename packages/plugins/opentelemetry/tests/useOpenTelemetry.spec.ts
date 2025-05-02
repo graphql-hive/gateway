@@ -460,6 +460,24 @@ describe('useOpenTelemetry', () => {
             .filter((name) => name !== 'http.fetch')
             .forEach(spanExporter.assertSpanWithName);
         });
+
+        it('should not trace fetch if disabled', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            plugins: (_, { fetch }) => {
+              return [
+                {
+                  onPluginInit() {
+                    fetch('http://foo.bar', {});
+                  },
+                },
+              ];
+            },
+          });
+          await gateway.query();
+
+          const initSpan = spanExporter.assertRoot('gateway.initialization');
+          initSpan.expectChild('http.fetch');
+        });
       });
     });
     it('should allow to create custom spans without explicit context passing', async () => {
