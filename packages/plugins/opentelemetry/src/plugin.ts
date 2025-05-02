@@ -18,7 +18,6 @@ import {
   DiagLogLevel,
   propagation,
   ROOT_CONTEXT,
-  SpanKind,
   trace,
   type Context,
   type ContextManager,
