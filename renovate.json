@@ -25,6 +25,7 @@
         "!/graphql-mesh/",
         "!/bun/",
         "!/vitest/",
+        "!/tsx/",
         "*"
       ]
     },

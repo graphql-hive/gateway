@@ -2580,7 +2580,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/cli@patch:@changesets/cli@npm%3A2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch":
+"@changesets/cli@patch:@changesets/cli@2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch":
   version: 2.27.9
   resolution: "@changesets/cli@patch:@changesets/cli@npm%3A2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch::version=2.27.9&hash=b5de50"
   dependencies:
@@ -4078,7 +4078,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.4"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:1.2.10"
+    "@types/bun": "npm:1.2.11"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.6"
     adm-zip: "npm:^0.5.15"
@@ -6651,7 +6651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch":
+"@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch":
   version: 0.56.0
   resolution: "@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch::version=0.56.0&hash=fcdbb1"
   dependencies:
@@ -6708,7 +6708,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch":
+"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch":
   version: 0.56.0
   resolution: "@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch::version=0.56.0&hash=5c9582"
   dependencies:
@@ -6780,7 +6780,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/resources@patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch":
+"@opentelemetry/resources@patch:@opentelemetry/resources@1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch":
   version: 1.29.0
   resolution: "@opentelemetry/resources@patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch::version=1.29.0&hash=7be975"
   dependencies:
@@ -6895,79 +6895,79 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-darwin-aarch64@npm:1.2.10"
+"@oven/bun-darwin-aarch64@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-darwin-aarch64@npm:1.2.11"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64-baseline@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.2.10"
+"@oven/bun-darwin-x64-baseline@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.2.11"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-darwin-x64@npm:1.2.10"
+"@oven/bun-darwin-x64@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-darwin-x64@npm:1.2.11"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64-musl@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-aarch64-musl@npm:1.2.10"
+"@oven/bun-linux-aarch64-musl@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-aarch64-musl@npm:1.2.11"
   conditions: os=linux & cpu=aarch64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-aarch64@npm:1.2.10"
+"@oven/bun-linux-aarch64@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-aarch64@npm:1.2.11"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-baseline@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.2.10"
+"@oven/bun-linux-x64-baseline@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.2.11"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl-baseline@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.2.10"
+"@oven/bun-linux-x64-musl-baseline@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.2.11"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-x64-musl@npm:1.2.10"
+"@oven/bun-linux-x64-musl@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-x64-musl@npm:1.2.11"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-linux-x64@npm:1.2.10"
+"@oven/bun-linux-x64@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-linux-x64@npm:1.2.11"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64-baseline@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.2.10"
+"@oven/bun-windows-x64-baseline@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.2.11"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@oven/bun-windows-x64@npm:1.2.10"
+"@oven/bun-windows-x64@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@oven/bun-windows-x64@npm:1.2.11"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -8183,12 +8183,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:1.2.10":
-  version: 1.2.10
-  resolution: "@types/bun@npm:1.2.10"
+"@types/bun@npm:1.2.11":
+  version: 1.2.11
+  resolution: "@types/bun@npm:1.2.11"
   dependencies:
-    bun-types: "npm:1.2.10"
-  checksum: 10c0/222e56e306913f4c720b62bcd1a309ac60bc8f639015090c63325e8d9da3338753afea16609b919fcb368b0bc70663a9ea5b17ce38c6a7153b584b91837607f3
+    bun-types: "npm:1.2.11"
+  checksum: 10c0/5d0d2988208d2ee24a26cb51acf377e516a619897b0de8ad2701577b7e524003b0e17b35789577716a710cf92789d2fa5f49f87662aed6370a920b45c46f0177
   languageName: node
   linkType: hard
 
@@ -8840,7 +8840,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
+"@vitest/snapshot@patch:@vitest/snapshot@3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
   version: 3.1.2
   resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch::version=3.1.2&hash=2cf17b"
   dependencies:
@@ -10508,30 +10508,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.2.10":
-  version: 1.2.10
-  resolution: "bun-types@npm:1.2.10"
+"bun-types@npm:1.2.11":
+  version: 1.2.11
+  resolution: "bun-types@npm:1.2.11"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/e42fd8f0eccbd6c9d5cbdc2ab7bce7a61b0eca68a0243d90a9d86058239d7fb2d68437e051081cd10bbfa4678e59f7e5141e1bd460fbc56d4a55446ee6afc812
+  checksum: 10c0/00d92d8407ed1ec436815b680250a3c89e4f13fc695442cd8fcc29c1ed8f1180234257801aa7a350b2c0be58a9fcc6a3ec5520e1ce16cc5ea1ea370517512041
   languageName: node
   linkType: hard
 
-"bun@npm:1.2.10, bun@npm:^1.1.34":
-  version: 1.2.10
-  resolution: "bun@npm:1.2.10"
+"bun@npm:1.2.11, bun@npm:^1.1.34":
+  version: 1.2.11
+  resolution: "bun@npm:1.2.11"
   dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.2.10"
-    "@oven/bun-darwin-x64": "npm:1.2.10"
-    "@oven/bun-darwin-x64-baseline": "npm:1.2.10"
-    "@oven/bun-linux-aarch64": "npm:1.2.10"
-    "@oven/bun-linux-aarch64-musl": "npm:1.2.10"
-    "@oven/bun-linux-x64": "npm:1.2.10"
-    "@oven/bun-linux-x64-baseline": "npm:1.2.10"
-    "@oven/bun-linux-x64-musl": "npm:1.2.10"
-    "@oven/bun-linux-x64-musl-baseline": "npm:1.2.10"
-    "@oven/bun-windows-x64": "npm:1.2.10"
-    "@oven/bun-windows-x64-baseline": "npm:1.2.10"
+    "@oven/bun-darwin-aarch64": "npm:1.2.11"
+    "@oven/bun-darwin-x64": "npm:1.2.11"
+    "@oven/bun-darwin-x64-baseline": "npm:1.2.11"
+    "@oven/bun-linux-aarch64": "npm:1.2.11"
+    "@oven/bun-linux-aarch64-musl": "npm:1.2.11"
+    "@oven/bun-linux-x64": "npm:1.2.11"
+    "@oven/bun-linux-x64-baseline": "npm:1.2.11"
+    "@oven/bun-linux-x64-musl": "npm:1.2.11"
+    "@oven/bun-linux-x64-musl-baseline": "npm:1.2.11"
+    "@oven/bun-windows-x64": "npm:1.2.11"
+    "@oven/bun-windows-x64-baseline": "npm:1.2.11"
   dependenciesMeta:
     "@oven/bun-darwin-aarch64":
       optional: true
@@ -10558,7 +10558,7 @@ __metadata:
   bin:
     bun: bin/bun.exe
     bunx: bin/bun.exe
-  checksum: 10c0/45a598ab945779cfdcaa4549d4373ffa4535bac94e383f2ae4e12b56039d505b8d5579c816f1cb0dd4bf2e4ba68215984be1502b94513c82f2d6e08c66d2f451
+  checksum: 10c0/56935e83460847af99f7ba43db6fe5360d226e64465adac6011f1a3ed057697ba80b9119f040da3a69c8063db37a4058ef442b1e8b8cd710f06a1b91bb89a500
   conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64 | cpu=aarch64)
   languageName: node
   linkType: hard
@@ -13440,14 +13440,14 @@ __metadata:
     "@babel/preset-env": "npm:7.26.9"
     "@babel/preset-typescript": "npm:7.27.0"
     "@changesets/changelog-github": "npm:^0.5.0"
-    "@changesets/cli": "patch:@changesets/cli@npm%3A2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
+    "@changesets/cli": "patch:@changesets/cli@2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
     "@types/node": "npm:^22.9.0"
     "@yarnpkg/cli": "npm:^4.5.3"
     "@yarnpkg/core": "npm:^4.1.6"
     "@yarnpkg/plugin-pack": "npm:^4.0.0"
-    bun: "npm:1.2.10"
+    bun: "npm:1.2.11"
     cross-env: "npm:^7.0.3"
     eslint: "npm:^9.12.0"
     eslint-plugin-import: "npm:^2.31.0"
@@ -13463,7 +13463,7 @@ __metadata:
     typescript: "npm:^5.6.3"
     typescript-eslint: "npm:^8.9.0"
     vite: "npm:^6.0.0"
-    vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm%3A5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
+    vite-tsconfig-paths: "patch:vite-tsconfig-paths@5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:^3.0.1"
   languageName: unknown
   linkType: soft
@@ -14340,7 +14340,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis-mock@patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch":
+"ioredis-mock@patch:ioredis-mock@8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch":
   version: 8.9.0
   resolution: "ioredis-mock@patch:ioredis-mock@npm%3A8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch::version=8.9.0&hash=fabe2e"
   dependencies:
@@ -15142,7 +15142,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
+"jest-leak-detector@patch:jest-leak-detector@29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
   version: 29.7.0
   resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=bbbac3"
   dependencies:
@@ -17652,7 +17652,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch":
+"pkgroll@patch:pkgroll@2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch":
   version: 2.5.1
   resolution: "pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch::version=2.5.1&hash=7edda2"
   dependencies:
@@ -20809,7 +20809,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-tsconfig-paths@patch:vite-tsconfig-paths@npm%3A5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch":
+"vite-tsconfig-paths@patch:vite-tsconfig-paths@5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch":
   version: 5.1.3
   resolution: "vite-tsconfig-paths@patch:vite-tsconfig-paths@npm%3A5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch::version=5.1.3&hash=8280b2"
   dependencies:
