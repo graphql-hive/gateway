@@ -1,5 +1,14 @@
 # @graphql-hive/gateway-runtime
 
+## 1.8.2
+
+### Patch Changes
+
+- [#1088](https://github.com/graphql-hive/gateway/pull/1088) [`305dbc4`](https://github.com/graphql-hive/gateway/commit/305dbc4ce08f53508f400e8e2610cb32e68002bc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Core plugins take priority over user plugins
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+
 ## 1.8.1
 
 ### Patch Changes
