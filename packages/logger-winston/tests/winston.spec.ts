@@ -38,7 +38,7 @@ describe('Winston', () => {
         ];
         loggerAdapter[level](...testData);
         lastCallback();
-        const logJson = JSON.parse(log);
+        const logJson = JSON.parse(log, (_key, value) => value);
         expect(logJson).toEqual({
           level,
           foo: 'bar',
@@ -69,7 +69,7 @@ describe('Winston', () => {
         const childLogger = loggerAdapter.child('child');
         childLogger[level](...testData);
         lastCallback();
-        const logJson = JSON.parse(log);
+        const logJson = JSON.parse(log, (_key, value) => value);
         expect(logJson).toEqual({
           level,
           foo: 'bar',
@@ -101,7 +101,7 @@ describe('Winston', () => {
         const childLogger = loggerAdapter.child('child').child('child');
         childLogger[level](...testData);
         lastCallback();
-        const logJson = JSON.parse(log);
+        const logJson = JSON.parse(log, (_key, value) => value);
         expect(logJson).toEqual({
           level,
           foo: 'bar',
@@ -134,7 +134,7 @@ describe('Winston', () => {
         const nestedLogger = childLogger.child('nested');
         nestedLogger[level](...testData);
         lastCallback();
-        const logJson = JSON.parse(log);
+        const logJson = JSON.parse(log, (_key, value) => value);
         expect(logJson).toEqual({
           level,
           foo: 'bar',
