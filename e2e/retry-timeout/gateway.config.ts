@@ -11,7 +11,7 @@ export const gatewayConfig = defineConfig({
       {
         onFetch({ options }) {
           i++;
-          ctx.logger.info(`Fetching with ${options.body} for the ${i} time`);
+          ctx.logger.info(`[FETCHING] #${i} using ${options.body}`);
         },
       },
     ];

@@ -27,8 +27,7 @@ createServer(
       resolvers: {
         Query: {
           product: (_: unknown, { id }: { id: string }) => {
-            i++;
-            console.log(`${i} attempt`);
+            console.log(`${i + 1} attempt`);
             if (lastAttempt && Date.now() - lastAttempt < 1000) {
               const secondsToWait = Math.ceil(
                 (1000 - (Date.now() - lastAttempt)) / 1000,
@@ -44,6 +43,7 @@ createServer(
                 },
               });
             }
+            i++;
             lastAttempt = Date.now();
             // First attempt will fail with timeout
             if (i === 1) {
@@ -52,7 +52,7 @@ createServer(
                 reject = _reject;
               });
               setTimeout(() => {
-                reject('Timeout');
+                reject(new Error('Timeout'));
               }, 1000);
               return promise;
             }
