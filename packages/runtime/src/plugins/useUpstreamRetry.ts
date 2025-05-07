@@ -53,7 +53,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
 ): GatewayPlugin<TContext> {
   const timeouts = new Set<ReturnType<typeof setTimeout>>();
   const retryOptions = typeof opts === 'function' ? opts : () => opts;
-  const executionRequestResponseMap = new WeakMap<ExecutionRequest, Response>();
+  const requestSubgraphResponseMap = new WeakMap<Request, Response>();
   return {
     onSubgraphExecute({
       subgraphName,
@@ -109,10 +109,13 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                   (currRes) => {
                     executionResult = currRes;
                     let retryAfterSecondsFromHeader: number | undefined;
-                    const response =
-                      executionRequestResponseMap.get(executionRequest);
+                    const response = requestSubgraphResponseMap.get(
+                      executionRequest.context.request,
+                    );
                     // Remove the response from the map after used so we don't see it again
-                    executionRequestResponseMap.delete(executionRequest);
+                    requestSubgraphResponseMap.delete(
+                      executionRequest.context.request,
+                    );
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
@@ -164,10 +167,11 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         }
       }
     },
-    onFetch({ executionRequest }) {
-      if (executionRequest) {
+    onFetch({ context, info }) {
+      if (info && context.request) {
+        // if there's an info, it's a subgraph request
         return function onFetchDone({ response }) {
-          executionRequestResponseMap.set(executionRequest, response);
+          requestSubgraphResponseMap.set(context.request, response);
         };
       }
       return undefined;
