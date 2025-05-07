@@ -9,7 +9,7 @@ const opts = Opts(process.argv);
 let i = 0;
 let lastAttempt: number | undefined;
 
-const servicePort = opts.getServicePort('flakey');
+const servicePort = opts.getServicePort('gql-flakey');
 
 createServer(
   createYoga({

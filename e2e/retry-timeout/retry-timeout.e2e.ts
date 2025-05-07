@@ -3,11 +3,12 @@ import { expect, it } from 'vitest';
 
 const { service, gateway } = createTenv(__dirname);
 
-it('Retry & Timeout', async () => {
+it('should retry properly with a graphql upstream service', async () => {
   const gw = await gateway({
+    pipeLogs: 'gw.out',
     supergraph: {
-      with: 'apollo',
-      services: [await service('flakey')],
+      with: 'mesh',
+      services: [await service('gql-flakey'), await service('oai-flakey')],
     },
   });
 
@@ -40,4 +41,53 @@ it('Retry & Timeout', async () => {
   // 3rd will fail with 504
   // 4th will succeed
   expect(logs.match(/\[FETCHING\]/g)?.length).toBe(4);
+});
+
+it('should retry properly with an openapi upstream service', async () => {
+  const gw = await gateway({
+    pipeLogs: 'gw.out',
+    supergraph: {
+      with: 'mesh',
+      services: [await service('gql-flakey'), await service('oai-flakey')],
+    },
+  });
+
+  await expect(
+    gw.execute({
+      query: /* GraphQL */ `
+        query {
+          users {
+            id
+            name
+          }
+        }
+      `,
+    }),
+  ).resolves.toMatchInlineSnapshot(`
+    {
+      "data": {
+        "users": [
+          {
+            "id": "1",
+            "name": "Alice",
+          },
+          {
+            "id": "2",
+            "name": "Bob",
+          },
+          {
+            "id": "3",
+            "name": "Charlie",
+          },
+        ],
+      },
+    }
+  `);
+
+  const logs = gw.getStd('both');
+
+  // 1st will fail with 503
+  // 2nd will with 429 too early retry
+  // 3rd will succeed
+  expect(logs.match(/\[FETCHING\]/g)?.length).toBe(3);
 });

@@ -9,9 +9,9 @@ export const gatewayConfig = defineConfig({
   plugins(ctx) {
     return [
       {
-        onFetch({ options }) {
+        onFetch() {
           i++;
-          ctx.logger.info(`[FETCHING] #${i} using ${options.body}`);
+          ctx.logger.info(`[FETCHING] #${i}`);
         },
       },
     ];
