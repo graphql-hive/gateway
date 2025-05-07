@@ -299,6 +299,8 @@ declare module 'graphql' {
   }
 }
 
+export const executionRequestByRootValue = new WeakMap<{}, ExecutionRequest>();
+
 /**
  * This function wraps the executor created by the transport package
  * with `onSubgraphExecuteHooks` to hook into the execution phase of subgraphs
@@ -315,6 +317,12 @@ export function wrapExecutorWithHooks({
     baseExecutionRequest.info =
       baseExecutionRequest.info || ({} as GraphQLResolveInfo);
     baseExecutionRequest.info.executionRequest = baseExecutionRequest;
+    // TODO: Fix this in onFetch hook handler of @graphql-mesh/utils
+    // TODO: Also consider if a subgraph can ever rely on the gateway's rootValue?
+    baseExecutionRequest.rootValue = {
+      executionRequest: baseExecutionRequest,
+    };
+
     const requestId =
       baseExecutionRequest.context?.request &&
       requestIdByRequest.get(baseExecutionRequest.context.request);

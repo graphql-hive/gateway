@@ -1,4 +1,5 @@
 import { isOriginalGraphQLError } from '@envelop/core';
+import { executionRequestByRootValue } from '@graphql-mesh/fusion-runtime';
 import {
   ExecutionRequest,
   ExecutionResult,
@@ -53,7 +54,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
 ): GatewayPlugin<TContext> {
   const timeouts = new Set<ReturnType<typeof setTimeout>>();
   const retryOptions = typeof opts === 'function' ? opts : () => opts;
-  const requestSubgraphResponseMap = new WeakMap<Request, Response>();
+  const executionRequestResponseMap = new WeakMap<ExecutionRequest, Response>();
   return {
     onSubgraphExecute({
       subgraphName,
@@ -109,13 +110,10 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                   (currRes) => {
                     executionResult = currRes;
                     let retryAfterSecondsFromHeader: number | undefined;
-                    const response = requestSubgraphResponseMap.get(
-                      executionRequest.context.request,
-                    );
+                    const response =
+                      executionRequestResponseMap.get(executionRequest);
                     // Remove the response from the map after used so we don't see it again
-                    requestSubgraphResponseMap.delete(
-                      executionRequest.context.request,
-                    );
+                    executionRequestResponseMap.delete(executionRequest);
                     const retryAfterHeader =
                       response?.headers.get('Retry-After');
                     if (retryAfterHeader) {
@@ -167,11 +165,14 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         }
       }
     },
-    onFetch({ context, info }) {
-      if (info && context.request) {
+    onFetch({ info, executionRequest }) {
+      // if there's no execution request, it's a subgraph request
+      // @ts-expect-error - we know that it might have executionRequest property
+      executionRequest ||= info?.rootValue?.executionRequest;
+      if (executionRequest) {
         // if there's an info, it's a subgraph request
         return function onFetchDone({ response }) {
-          requestSubgraphResponseMap.set(context.request, response);
+          executionRequestResponseMap.set(executionRequest, response);
         };
       }
       return undefined;
