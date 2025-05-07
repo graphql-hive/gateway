@@ -5,7 +5,6 @@ const { service, gateway } = createTenv(__dirname);
 
 it('should retry properly with a graphql upstream service', async () => {
   const gw = await gateway({
-    pipeLogs: 'gw.out',
     supergraph: {
       with: 'mesh',
       services: [await service('gql-flakey'), await service('oai-flakey')],
@@ -45,7 +44,6 @@ it('should retry properly with a graphql upstream service', async () => {
 
 it('should retry properly with an openapi upstream service', async () => {
   const gw = await gateway({
-    pipeLogs: 'gw.out',
     supergraph: {
       with: 'mesh',
       services: [await service('gql-flakey'), await service('oai-flakey')],
