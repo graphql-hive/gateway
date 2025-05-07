@@ -1,5 +1,4 @@
 import { isOriginalGraphQLError } from '@envelop/core';
-import { executionRequestByRootValue } from '@graphql-mesh/fusion-runtime';
 import {
   ExecutionRequest,
   ExecutionResult,
@@ -167,6 +166,7 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
     },
     onFetch({ info, executionRequest }) {
       // if there's no execution request, it's a subgraph request
+      // TODO: Also consider what happens when there are multiple fetch calls for a single subgraph request
       // @ts-expect-error - we know that it might have executionRequest property
       executionRequest ||= info?.rootValue?.executionRequest;
       if (executionRequest) {

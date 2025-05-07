@@ -299,8 +299,6 @@ declare module 'graphql' {
   }
 }
 
-export const executionRequestByRootValue = new WeakMap<{}, ExecutionRequest>();
-
 /**
  * This function wraps the executor created by the transport package
  * with `onSubgraphExecuteHooks` to hook into the execution phase of subgraphs
