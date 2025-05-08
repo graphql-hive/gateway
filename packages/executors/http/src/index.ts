@@ -30,6 +30,7 @@ import {
   createResultForAbort,
   hashSHA256,
 } from './utils.js';
+import * as fs from 'fs';
 
 export type SyncFetchFn = (
   url: string,
@@ -439,6 +440,14 @@ export function buildHTTPExecutor(
                       }
                       return parsedResult;
                     } catch (e: any) {
+                      const currentTime = new Date().toISOString().replace(/[-:Z]/g, '');
+                      const logDir = `tmp/codegen`;
+                      const logFile = `${logDir}/${currentTime}_graphql_codegen_response.log`;
+                      if (!fs.existsSync(logDir)) {
+                        fs.mkdirSync(logDir, { recursive: true });
+                      }
+                      console.log(`Writing response to ${logFile}`);
+                      fs.writeFileSync(logFile, result);
                       return {
                         errors: [
                           createGraphQLError(
