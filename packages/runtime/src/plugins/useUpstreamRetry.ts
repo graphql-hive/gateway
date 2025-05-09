@@ -170,7 +170,6 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       // @ts-expect-error - we know that it might have executionRequest property
       executionRequest ||= info?.rootValue?.executionRequest;
       if (executionRequest) {
-        // if there's an info, it's a subgraph request
         return function onFetchDone({ response }) {
           executionRequestResponseMap.set(executionRequest, response);
         };
