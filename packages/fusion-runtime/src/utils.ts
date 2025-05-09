@@ -315,6 +315,12 @@ export function wrapExecutorWithHooks({
     baseExecutionRequest.info =
       baseExecutionRequest.info || ({} as GraphQLResolveInfo);
     baseExecutionRequest.info.executionRequest = baseExecutionRequest;
+    // TODO: Fix this in onFetch hook handler of @graphql-mesh/utils
+    // TODO: Also consider if a subgraph can ever rely on the gateway's rootValue?
+    baseExecutionRequest.rootValue = {
+      executionRequest: baseExecutionRequest,
+    };
+
     const requestId =
       baseExecutionRequest.context?.request &&
       requestIdByRequest.get(baseExecutionRequest.context.request);

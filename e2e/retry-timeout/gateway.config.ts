@@ -1,4 +1,4 @@
-import { defineConfig } from '@graphql-hive/gateway';
+import { defineConfig, useDeduplicateRequest } from '@graphql-hive/gateway';
 
 let i = 0;
 export const gatewayConfig = defineConfig({
@@ -8,10 +8,11 @@ export const gatewayConfig = defineConfig({
   upstreamTimeout: 300,
   plugins(ctx) {
     return [
+      ...(process.env['DEDUPLICATE_REQUEST'] ? [useDeduplicateRequest()] : []),
       {
-        onFetch({ options }) {
+        onFetch() {
           i++;
-          ctx.logger.info(`Fetching with ${options.body} for the ${i} time`);
+          ctx.logger.info(`[FETCHING] #${i}`);
         },
       },
     ];

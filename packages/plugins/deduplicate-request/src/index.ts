@@ -43,6 +43,11 @@ export function useDeduplicateRequest(): GatewayPlugin {
               dedupRes$ = handleMaybePromise(
                 () => fetchFn(url, options, context, info),
                 (res) => {
+                  if (res.status < 200 || res.status > 299) {
+                    // dont deduplicate non-2XX (failing) requests
+                    reqResMap.delete(dedupCacheKey);
+                    return res;
+                  }
                   let resPropMapByRes = resPropMap.get(res);
                   if (resPropMapByRes == null) {
                     resPropMapByRes = new Map();
