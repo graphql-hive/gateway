@@ -2579,7 +2579,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/cli@patch:@changesets/cli@2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch":
+"@changesets/cli@patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch":
   version: 2.27.9
   resolution: "@changesets/cli@patch:@changesets/cli@npm%3A2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch::version=2.27.9&hash=b5de50"
   dependencies:
@@ -6650,7 +6650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch":
+"@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@npm:0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch":
   version: 0.56.0
   resolution: "@opentelemetry/exporter-trace-otlp-http@patch:@opentelemetry/exporter-trace-otlp-http@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch::version=0.56.0&hash=fcdbb1"
   dependencies:
@@ -6707,7 +6707,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch":
+"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm:0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch":
   version: 0.56.0
   resolution: "@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch::version=0.56.0&hash=5c9582"
   dependencies:
@@ -6779,7 +6779,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/resources@patch:@opentelemetry/resources@1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch":
+"@opentelemetry/resources@patch:@opentelemetry/resources@npm:1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch":
   version: 1.29.0
   resolution: "@opentelemetry/resources@patch:@opentelemetry/resources@npm%3A1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch::version=1.29.0&hash=7be975"
   dependencies:
@@ -8839,7 +8839,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@patch:@vitest/snapshot@3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
+"@vitest/snapshot@patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
   version: 3.1.2
   resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch::version=3.1.2&hash=2cf17b"
   dependencies:
@@ -13439,7 +13439,7 @@ __metadata:
     "@babel/preset-env": "npm:7.27.1"
     "@babel/preset-typescript": "npm:7.27.1"
     "@changesets/changelog-github": "npm:^0.5.0"
-    "@changesets/cli": "patch:@changesets/cli@2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
+    "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@tsconfig/strictest": "npm:^2.0.5"
     "@types/node": "npm:^22.9.0"
@@ -13462,7 +13462,7 @@ __metadata:
     typescript: "npm:^5.6.3"
     typescript-eslint: "npm:^8.9.0"
     vite: "npm:^6.0.0"
-    vite-tsconfig-paths: "patch:vite-tsconfig-paths@5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
+    vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:^3.0.1"
   languageName: unknown
   linkType: soft
@@ -15141,7 +15141,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest-leak-detector@patch:jest-leak-detector@29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
+"jest-leak-detector@patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch":
   version: 29.7.0
   resolution: "jest-leak-detector@patch:jest-leak-detector@npm%3A29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch::version=29.7.0&hash=bbbac3"
   dependencies:
@@ -17651,7 +17651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pkgroll@patch:pkgroll@2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch":
+"pkgroll@patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch":
   version: 2.5.1
   resolution: "pkgroll@patch:pkgroll@npm%3A2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch::version=2.5.1&hash=7edda2"
   dependencies:
@@ -20226,7 +20226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@patch:tsx@4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch":
+"tsx@patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch":
   version: 4.19.3
   resolution: "tsx@patch:tsx@npm%3A4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch::version=4.19.3&hash=ccdea0"
   dependencies:
@@ -20799,7 +20799,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-tsconfig-paths@patch:vite-tsconfig-paths@5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch":
+"vite-tsconfig-paths@patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch":
   version: 5.1.3
   resolution: "vite-tsconfig-paths@patch:vite-tsconfig-paths@npm%3A5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch::version=5.1.3&hash=8280b2"
   dependencies:
