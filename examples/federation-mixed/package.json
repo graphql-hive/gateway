@@ -16,7 +16,7 @@
     "@apollo/rover": "^0.29.1"
   },
   "overrides": {
-    "esbuild": "^0.25.3"
+    "esbuild": "^0.25.4"
   },
   "scripts": {
     "service:accounts": "tsx services/accounts/index.ts",
