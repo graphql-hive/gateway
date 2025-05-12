@@ -15,10 +15,7 @@ it('should detect supergraph file change and reload schema', async () => {
   }
   const supergraph = await fs.tempfile('supergraph.graphql', compose.result);
 
-  const gw = await gateway({
-    supergraph,
-    pipeLogs: 'gw.out',
-  });
+  const gw = await gateway({ supergraph });
 
   await expect(
     gw.execute({
