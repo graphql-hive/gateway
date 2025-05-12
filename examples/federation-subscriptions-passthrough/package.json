@@ -22,7 +22,7 @@
     "@apollo/rover": "^0.29.1"
   },
   "overrides": {
-    "esbuild": "^0.25.3"
+    "esbuild": "^0.25.4"
   },
   "scripts": {
     "service:products": "tsx services/products/index.ts",
