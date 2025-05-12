@@ -3,10 +3,8 @@ import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
-  createDeferred,
   createGraphQLError,
   ExecutionRequest,
-  ExecutionResult,
   isAsyncIterable,
   isPromise,
 } from '@graphql-tools/utils';
@@ -59,19 +57,29 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           if (executionRequest.signal) {
             signals.push(executionRequest.signal);
           }
-          const timeoutDeferred = createDeferred<ExecutionResult>();
-          function rejectDeferred() {
-            timeoutDeferred.reject(timeoutSignal?.reason);
-          }
-          timeoutSignal.addEventListener('abort', rejectDeferred, {
-            once: true,
+          // we want to create a new executionrequest and not mutate the existing one becaus, when using
+          // this with useUpstreamRetry, the same executionRequest will be used for each retry and we need
+          // to timeoutSignalsByExecutionRequest.set(...) again above
+          const res$ = executor({
+            ...executionRequest,
+            signal: abortSignalAny(signals),
           });
-          executionRequest.signal = abortSignalAny(signals);
-          const res$ = executor(executionRequest);
           if (!isPromise(res$)) {
             return res$;
           }
-          return Promise.race([timeoutDeferred.promise, res$])
+          return Promise.race([
+            new Promise<never>((_, reject) => {
+              if (timeoutSignal.aborted) {
+                return reject(timeoutSignal.reason);
+              }
+              timeoutSignal.addEventListener(
+                'abort',
+                () => reject(timeoutSignal.reason),
+                { once: true },
+              );
+            }),
+            res$,
+          ])
             .then((result) => {
               if (isAsyncIterable(result)) {
                 return {
@@ -111,8 +119,6 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
-              timeoutDeferred.resolve(undefined as any);
-              timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again
               errorExtensionsByExecRequest.delete(executionRequest);
               timeoutSignalsByExecutionRequest.delete(executionRequest);
