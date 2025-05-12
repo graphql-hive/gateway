@@ -3,8 +3,10 @@ import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
+  createDeferred,
   createGraphQLError,
   ExecutionRequest,
+  ExecutionResult,
   isAsyncIterable,
   isPromise,
 } from '@graphql-tools/utils';
@@ -52,6 +54,13 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               timeoutSignal,
             );
           }
+          const timeoutDeferred = createDeferred<ExecutionResult>();
+          function rejectDeferred() {
+            timeoutDeferred.reject(timeoutSignal?.reason);
+          }
+          timeoutSignal.addEventListener('abort', rejectDeferred, {
+            once: true,
+          });
           const signals: AbortSignal[] = [];
           signals.push(timeoutSignal);
           if (executionRequest.signal) {
@@ -67,19 +76,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           if (!isPromise(res$)) {
             return res$;
           }
-          return Promise.race([
-            new Promise<never>((_, reject) => {
-              if (timeoutSignal.aborted) {
-                return reject(timeoutSignal.reason);
-              }
-              timeoutSignal.addEventListener(
-                'abort',
-                () => reject(timeoutSignal.reason),
-                { once: true },
-              );
-            }),
-            res$,
-          ])
+          return Promise.race([timeoutDeferred.promise, res$])
             .then((result) => {
               if (isAsyncIterable(result)) {
                 return {
@@ -119,6 +116,8 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               throw e;
             })
             .finally(() => {
+              timeoutDeferred.resolve(undefined as any);
+              timeoutSignal.removeEventListener('abort', rejectDeferred);
               // Remove from the map after used so we don't see it again
               errorExtensionsByExecRequest.delete(executionRequest);
               timeoutSignalsByExecutionRequest.delete(executionRequest);
