@@ -1,5 +1,24 @@
 # @graphql-hive/gateway
 
+## 1.14.1
+
+### Patch Changes
+
+- [#1088](https://github.com/graphql-hive/gateway/pull/1088) [`305dbc4`](https://github.com/graphql-hive/gateway/commit/305dbc4ce08f53508f400e8e2610cb32e68002bc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency [`@graphql-hive/plugin-deduplicate-request@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-deduplicate-request/v/workspace:^) (to `dependencies`)
+  - Removed dependency [`@graphql-mesh/plugin-deduplicate-request@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-deduplicate-request/v/0.104.0) (from `dependencies`)
+
+- [#1088](https://github.com/graphql-hive/gateway/pull/1088) [`305dbc4`](https://github.com/graphql-hive/gateway/commit/305dbc4ce08f53508f400e8e2610cb32e68002bc) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use request deduplication plugin specifically made for Hive Gateway
+
+- Updated dependencies [[`2dc5fd8`](https://github.com/graphql-hive/gateway/commit/2dc5fd89a292811e7ea845d14e0ddacecfa83e9f), [`305dbc4`](https://github.com/graphql-hive/gateway/commit/305dbc4ce08f53508f400e8e2610cb32e68002bc), [`305dbc4`](https://github.com/graphql-hive/gateway/commit/305dbc4ce08f53508f400e8e2610cb32e68002bc), [`2dc5fd8`](https://github.com/graphql-hive/gateway/commit/2dc5fd89a292811e7ea845d14e0ddacecfa83e9f)]:
+  - @graphql-hive/gateway-runtime@1.8.2
+  - @graphql-hive/plugin-deduplicate-request@1.0.0
+  - @graphql-hive/plugin-aws-sigv4@1.0.9
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.56
+  - @graphql-mesh/plugin-prometheus@1.3.44
+
 ## 1.14.0
 
 ### Minor Changes

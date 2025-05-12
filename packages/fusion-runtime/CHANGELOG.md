@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.12
+
+### Patch Changes
+
+- [#1095](https://github.com/graphql-hive/gateway/pull/1095) [`2dc5fd8`](https://github.com/graphql-hive/gateway/commit/2dc5fd89a292811e7ea845d14e0ddacecfa83e9f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Provide non-GraphQL upstream service responses to the retry mechanism configuration
+
 ## 0.11.11
 
 ### Patch Changes
