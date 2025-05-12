@@ -98,7 +98,7 @@
     "@rollup/plugin-sucrase": "^5.0.2",
     "@tsconfig/node18": "^18.2.4",
     "@types/adm-zip": "^0.5.5",
-    "@types/bun": "1.2.11",
+    "@types/bun": "1.2.13",
     "@types/ws": "^8.5.12",
     "@whatwg-node/fetch": "^0.10.6",
     "adm-zip": "^0.5.15",
