@@ -1,5 +1,7 @@
 import {
   DelegationContext,
+  isScalarType,
+  isSpecifiedScalarType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -15,8 +17,6 @@ import {
 import {
   GraphQLNamedType,
   GraphQLSchema,
-  isScalarType,
-  isSpecifiedScalarType,
   Kind,
   NamedTypeNode,
   visit,

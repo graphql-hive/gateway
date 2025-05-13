@@ -1,6 +1,7 @@
 import {
   defaultMergedResolver,
   DelegationContext,
+  isListType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -22,7 +23,6 @@ import {
   GraphQLList,
   GraphQLObjectType,
   GraphQLSchema,
-  isListType,
   Kind,
   OperationTypeNode,
 } from 'graphql';

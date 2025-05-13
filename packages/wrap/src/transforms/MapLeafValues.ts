@@ -1,5 +1,6 @@
 import {
   DelegationContext,
+  isLeafType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -17,7 +18,6 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   GraphQLSchema,
-  isLeafType,
   Kind,
   OperationDefinitionNode,
   TypeInfo,

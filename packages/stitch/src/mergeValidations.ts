@@ -1,4 +1,10 @@
 import {
+  isEnumType,
+  isListType,
+  isNonNullType,
+  isScalarType,
+} from '@graphql-tools/delegate';
+import {
   getNamedType,
   getNullableType,
   GraphQLArgumentConfig,
@@ -6,10 +12,6 @@ import {
   GraphQLFieldConfig,
   GraphQLInputFieldConfig,
   GraphQLType,
-  isEnumType,
-  isListType,
-  isNonNullType,
-  isScalarType,
 } from 'graphql';
 import {
   MergeFieldConfigCandidate,

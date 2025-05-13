@@ -1,5 +1,5 @@
 import { process } from '@graphql-mesh/cross-helpers';
-import { EMPTY_OBJECT } from '@graphql-tools/delegate';
+import { EMPTY_OBJECT, isCompositeType } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   isAsyncIterable,
@@ -8,7 +8,6 @@ import {
 import {
   FieldNode,
   GraphQLNamedOutputType,
-  isCompositeType,
   OperationTypeNode,
   TypeInfo,
 } from 'graphql';

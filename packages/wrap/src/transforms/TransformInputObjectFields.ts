@@ -1,6 +1,7 @@
 import {
   DelegationContext,
   getTypeInfo,
+  isInputType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -16,7 +17,6 @@ import {
   FragmentDefinitionNode,
   getNamedType,
   GraphQLSchema,
-  isInputType,
   Kind,
   NamedTypeNode,
   ObjectFieldNode,

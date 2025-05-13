@@ -1,4 +1,10 @@
 import {
+  isAbstractType,
+  isCompositeType,
+  isInterfaceType,
+  isObjectType,
+  isScalarType,
+  isUnionType,
   MergedFieldConfig,
   MergedTypeConfig,
   SubschemaConfig,
@@ -17,12 +23,6 @@ import {
   GraphQLNamedOutputType,
   GraphQLObjectType,
   GraphQLSchema,
-  isAbstractType,
-  isCompositeType,
-  isInterfaceType,
-  isObjectType,
-  isScalarType,
-  isUnionType,
 } from 'graphql';
 
 interface ComputedTypeConfig<K = any, V = any, TContext = Record<string, any>>

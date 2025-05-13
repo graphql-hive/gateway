@@ -1,4 +1,8 @@
-import { getTypeInfo } from '@graphql-tools/delegate';
+import {
+  getTypeInfo,
+  isIntrospectionType,
+  isListType,
+} from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   getDirective,
@@ -14,8 +18,6 @@ import {
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
-  isIntrospectionType,
-  isListType,
   OperationTypeNode,
   TypeInfo,
   visit,

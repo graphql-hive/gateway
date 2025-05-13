@@ -1,5 +1,6 @@
 import {
   extractUnavailableFields,
+  isAbstractType,
   StitchingInfo,
   Subschema,
 } from '@graphql-tools/delegate';
@@ -10,7 +11,6 @@ import {
   GraphQLField,
   GraphQLObjectType,
   GraphQLSchema,
-  isAbstractType,
   Kind,
 } from 'graphql';
 

@@ -17,13 +17,6 @@ import {
   GraphQLNamedType,
   GraphQLSchema,
   GraphQLType,
-  isAbstractType,
-  isCompositeType,
-  isInterfaceType,
-  isLeafType,
-  isNullableType,
-  isObjectType,
-  isUnionType,
   Kind,
   OperationDefinitionNode,
   SelectionNode,
@@ -35,6 +28,15 @@ import {
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { Subschema } from './Subschema.js';
+import {
+  isAbstractType,
+  isCompositeType,
+  isInterfaceType,
+  isLeafType,
+  isNullableType,
+  isObjectType,
+  isUnionType,
+} from './typeCheckers.js';
 import { DelegationContext, StitchingInfo } from './types.js';
 import {
   createVariableNameGenerator,

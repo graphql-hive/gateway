@@ -14,10 +14,6 @@ import {
   GraphQLOutputType,
   GraphQLSchema,
   InlineFragmentNode,
-  isAbstractType,
-  isInterfaceType,
-  isLeafType,
-  isObjectType,
   Kind,
   SelectionNode,
   SelectionSetNode,
@@ -27,6 +23,12 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
+import {
+  isAbstractType,
+  isInterfaceType,
+  isLeafType,
+  isObjectType,
+} from './typeCheckers.js';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(

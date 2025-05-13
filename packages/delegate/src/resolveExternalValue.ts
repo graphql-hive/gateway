@@ -8,10 +8,6 @@ import {
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLSchema,
-  isAbstractType,
-  isCompositeType,
-  isLeafType,
-  isListType,
   locatedError,
 } from 'graphql';
 import {
@@ -20,6 +16,12 @@ import {
   mergeFields,
 } from './mergeFields.js';
 import { Subschema } from './Subschema.js';
+import {
+  isAbstractType,
+  isCompositeType,
+  isLeafType,
+  isListType,
+} from './typeCheckers.js';
 import { MergedTypeInfo, StitchingInfo, SubschemaConfig } from './types.js';
 
 export function resolveExternalValue<TContext extends Record<string, any>>(

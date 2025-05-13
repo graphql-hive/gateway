@@ -1,4 +1,13 @@
-import { isSubschemaConfig } from '@graphql-tools/delegate';
+import {
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isNullableType,
+  isObjectType,
+  isScalarType,
+  isSubschemaConfig,
+  isUnionType,
+} from '@graphql-tools/delegate';
 import {
   mergeEnum,
   mergeInputType,
@@ -31,13 +40,6 @@ import {
   InputObjectTypeExtensionNode,
   InterfaceTypeDefinitionNode,
   InterfaceTypeExtensionNode,
-  isEnumType,
-  isInputObjectType,
-  isInterfaceType,
-  isNullableType,
-  isObjectType,
-  isScalarType,
-  isUnionType,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
   ScalarTypeDefinitionNode,

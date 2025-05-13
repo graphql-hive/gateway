@@ -1,6 +1,10 @@
-import { MergedTypeConfig, SubschemaConfig } from '@graphql-tools/delegate';
+import {
+  isInterfaceType,
+  MergedTypeConfig,
+  SubschemaConfig,
+} from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { GraphQLResolveInfo, isInterfaceType, Kind } from 'graphql';
+import { GraphQLResolveInfo, Kind } from 'graphql';
 
 const defaultRelayMergeConfig: MergedTypeConfig = {
   selectionSet: `{ id }`,

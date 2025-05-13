@@ -7,16 +7,18 @@ import {
   GraphQLNamedOutputType,
   GraphQLObjectType,
   GraphQLSchema,
-  isAbstractType,
-  isInterfaceType,
-  isLeafType,
-  isObjectType,
-  isUnionType,
   Kind,
   SelectionNode,
   SelectionSetNode,
   visit,
 } from 'graphql';
+import {
+  isAbstractType,
+  isInterfaceType,
+  isLeafType,
+  isObjectType,
+  isUnionType,
+} from './typeCheckers';
 
 export function extractUnavailableFieldsFromSelectionSet(
   schema: GraphQLSchema,

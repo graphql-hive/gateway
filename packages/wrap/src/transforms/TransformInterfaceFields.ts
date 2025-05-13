@@ -1,10 +1,11 @@
 import {
   DelegationContext,
+  isInterfaceType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
 import { ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
-import { GraphQLFieldConfig, GraphQLSchema, isInterfaceType } from 'graphql';
+import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import { FieldNodeTransformer, FieldTransformer } from '../types.js';
 import TransformCompositeFields from './TransformCompositeFields.js';
 

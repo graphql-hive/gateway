@@ -17,6 +17,7 @@ import {
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   DelegationPlanBuilder,
+  isEnumType,
   MergedTypeResolver,
   Subschema,
 } from '@graphql-tools/delegate';
@@ -39,7 +40,6 @@ import { constantCase } from 'change-case';
 import {
   FragmentDefinitionNode,
   GraphQLError,
-  isEnumType,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,

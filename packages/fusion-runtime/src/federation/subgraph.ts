@@ -1,5 +1,8 @@
 import { YamlConfig } from '@graphql-mesh/types';
-import type {
+import {
+  isInterfaceType,
+  isObjectType,
+  isOutputType,
   MergedTypeConfig,
   SubschemaConfig,
   Transform,
@@ -31,9 +34,6 @@ import {
   GraphQLDirective,
   GraphQLSchema,
   GraphQLString,
-  isInterfaceType,
-  isObjectType,
-  isOutputType,
   Kind,
   parseType,
   typeFromAST,
