@@ -1,6 +1,7 @@
 import {
   getDirective,
   getImplementingTypes,
+  getNullableType,
   isAbstractType,
   isInterfaceType,
   isListType,
@@ -11,7 +12,6 @@ import {
   MapperKind,
   mapSchema,
   parseSelectionSet,
-  getNullableType,
 } from '@graphql-tools/utils';
 import { GraphQLSchema, parseValue } from 'graphql';
 import { defaultStitchingDirectiveOptions } from './defaultStitchingDirectiveOptions.js';

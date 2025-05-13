@@ -8,6 +8,7 @@ import {
   mergeUnion,
 } from '@graphql-tools/merge';
 import {
+  getNullableType,
   isEnumType,
   isInputObjectType,
   isInterfaceType,
@@ -15,7 +16,6 @@ import {
   isObjectType,
   isScalarType,
   isUnionType,
-  getNullableType,
   Maybe,
 } from '@graphql-tools/utils';
 import {

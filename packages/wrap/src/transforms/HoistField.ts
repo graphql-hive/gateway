@@ -9,10 +9,10 @@ import {
   ExecutionRequest,
   ExecutionResult,
   getNamedType,
+  getNullableType,
   isListType,
   relocatedError,
   removeObjectFields,
-  getNullableType,
 } from '@graphql-tools/utils';
 import {
   FieldNode,
