@@ -11,8 +11,9 @@ import {
   MapperKind,
   mapSchema,
   parseSelectionSet,
+  getNullableType,
 } from '@graphql-tools/utils';
-import { getNullableType, GraphQLSchema, parseValue } from 'graphql';
+import { GraphQLSchema, parseValue } from 'graphql';
 import { defaultStitchingDirectiveOptions } from './defaultStitchingDirectiveOptions.js';
 import { parseMergeArgsExpr } from './parseMergeArgsExpr.js';
 import { StitchingDirectivesOptions } from './types.js';

@@ -15,12 +15,12 @@ import {
   isObjectType,
   isScalarType,
   isUnionType,
+  getNullableType,
   Maybe,
 } from '@graphql-tools/utils';
 import {
   EnumTypeDefinitionNode,
   EnumTypeExtensionNode,
-  getNullableType,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
   GraphQLFieldConfig,
