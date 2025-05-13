@@ -18,10 +18,10 @@ import {
   getDirectiveExtensions,
   getDocumentNodeFromSchema,
   IResolvers,
+  isEnumType,
   MapperKind,
   mapSchema,
   memoize1,
-  isEnumType,
   TypeSource,
 } from '@graphql-tools/utils';
 import {

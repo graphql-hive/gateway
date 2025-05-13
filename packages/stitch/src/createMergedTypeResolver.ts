@@ -4,13 +4,9 @@ import {
   MergedTypeResolver,
   MergedTypeResolverOptions,
 } from '@graphql-tools/delegate';
-import {
-  GraphQLList,
-  GraphQLOutputType,
-  OperationTypeNode,
-} from 'graphql';
-import { GraphQLResolveInfo } from 'graphql/type';
 import { getNamedType } from '@graphql-tools/utils';
+import { GraphQLList, GraphQLOutputType, OperationTypeNode } from 'graphql';
+import { GraphQLResolveInfo } from 'graphql/type';
 
 export function createMergedTypeResolver<
   TContext extends Record<string, any> = any,

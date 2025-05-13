@@ -1,10 +1,10 @@
 import {
+  getNamedType,
+  getNullableType,
   isEnumType,
   isListType,
   isNonNullType,
   isScalarType,
-  getNamedType,
-  getNullableType,
 } from '@graphql-tools/utils';
 import {
   GraphQLArgumentConfig,

@@ -7,10 +7,10 @@ import {
   astFromValueUntyped,
   ExecutionRequest,
   ExecutionResult,
+  isLeafType,
   ResultVisitorMap,
   transformInputValue,
   visitResult,
-  isLeafType,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,

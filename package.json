@@ -65,6 +65,10 @@
     "@graphql-mesh/types": "0.104.3",
     "@graphql-mesh/utils": "0.104.3",
     "@graphql-tools/delegate": "workspace:^",
+    "@graphql-tools/executor": "1.4.8-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/merge": "9.0.25-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/schema": "10.0.24-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/utils": "10.9.0-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
     "@opentelemetry/exporter-trace-otlp-http": "patch:@opentelemetry/exporter-trace-otlp-http@npm:0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch",
     "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm:0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch",
     "@opentelemetry/resources": "patch:@opentelemetry/resources@npm:1.29.0#~/.yarn/patches/@opentelemetry-resources-npm-1.29.0-112f89f0c5.patch",
@@ -78,10 +82,6 @@
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.8",
     "tsx": "patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
-    "vite": "6.3.5",
-    "@graphql-tools/executor": "1.4.8-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
-    "@graphql-tools/schema": "10.0.24-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
-    "@graphql-tools/merge": "9.0.25-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
-    "@graphql-tools/utils": "10.9.0-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed"
+    "vite": "6.3.5"
   }
 }

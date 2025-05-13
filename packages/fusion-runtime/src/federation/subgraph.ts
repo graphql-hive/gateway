@@ -5,11 +5,11 @@ import {
   Transform,
 } from '@graphql-tools/delegate';
 import {
+  astFromField,
+  getDirectiveExtensions,
   isInterfaceType,
   isObjectType,
   isOutputType,
-  astFromField,
-  getDirectiveExtensions,
   MapperKind,
   mapSchema,
   type TypeSource,

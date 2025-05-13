@@ -8,8 +8,12 @@ import {
   Subschema,
 } from '@graphql-tools/delegate';
 import {
-
-  getNamedType, isAbstractType, memoize1, memoize2, memoize3 } from '@graphql-tools/utils';
+  getNamedType,
+  isAbstractType,
+  memoize1,
+  memoize2,
+  memoize3,
+} from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,

@@ -1,5 +1,6 @@
 import {
   collectFields,
+  isAbstractType,
   memoize1,
   mergeDeep,
   pathToArray,
@@ -28,7 +29,6 @@ import {
   OBJECT_SUBSCHEMA_SYMBOL,
   UNPATHED_ERRORS_SYMBOL,
 } from './symbols.js';
-import { isAbstractType } from '@graphql-tools/utils';
 import { ExternalObject, MergedTypeInfo, SubschemaConfig } from './types.js';
 
 export function isExternalObject(data: any): data is ExternalObject {

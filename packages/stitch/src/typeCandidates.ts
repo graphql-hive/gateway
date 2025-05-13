@@ -9,13 +9,13 @@ import {
   getRootTypes,
   GraphQLParseOptions,
   inspect,
-  rewireTypes,
-  TypeSource,
   isDirective,
   isInterfaceType,
   isIntrospectionType,
   isNamedType,
   isSpecifiedScalarType,
+  rewireTypes,
+  TypeSource,
 } from '@graphql-tools/utils';
 import { wrapSchema } from '@graphql-tools/wrap';
 import {

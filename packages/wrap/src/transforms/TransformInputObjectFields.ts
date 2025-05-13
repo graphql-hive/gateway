@@ -5,13 +5,13 @@ import {
   Transform,
 } from '@graphql-tools/delegate';
 import {
-  isInputType,
   ExecutionRequest,
   getDefinedRootType,
+  getNamedType,
+  isInputType,
   MapperKind,
   mapSchema,
   transformInputValue,
-  getNamedType,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,

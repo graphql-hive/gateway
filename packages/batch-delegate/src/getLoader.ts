@@ -3,7 +3,12 @@ import {
   getActualFieldNodes,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
-import { getNamedType, memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
+import {
+  getNamedType,
+  memoize1,
+  memoize2,
+  relocatedError,
+} from '@graphql-tools/utils';
 import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
 import { GraphQLList, GraphQLSchema, print } from 'graphql';

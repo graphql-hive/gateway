@@ -4,18 +4,18 @@ import {
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
+  collectFields,
+  filterSchema,
+  getImplementingTypes,
+  getNamedType,
+  getRootTypeNames,
   isAbstractType,
   isCompositeType,
   isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
-  collectFields,
-  filterSchema,
-  getImplementingTypes,
-  getRootTypeNames,
   parseSelectionSet,
-  getNamedType,
 } from '@graphql-tools/utils';
 import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
 import type {

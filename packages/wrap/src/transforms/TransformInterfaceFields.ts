@@ -4,7 +4,10 @@ import {
   Transform,
 } from '@graphql-tools/delegate';
 import {
-  isInterfaceType, ExecutionRequest, ExecutionResult } from '@graphql-tools/utils';
+  ExecutionRequest,
+  ExecutionResult,
+  isInterfaceType,
+} from '@graphql-tools/utils';
 import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import { FieldNodeTransformer, FieldTransformer } from '../types.js';
 import TransformCompositeFields from './TransformCompositeFields.js';

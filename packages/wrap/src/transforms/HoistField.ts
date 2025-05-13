@@ -8,10 +8,10 @@ import {
   appendObjectFields,
   ExecutionRequest,
   ExecutionResult,
+  getNamedType,
+  isListType,
   relocatedError,
   removeObjectFields,
-  isListType,
-  getNamedType,
 } from '@graphql-tools/utils';
 import {
   FieldNode,

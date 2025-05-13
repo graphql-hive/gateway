@@ -1,16 +1,14 @@
-import {
-  getTypeInfo,
-} from '@graphql-tools/delegate';
+import { getTypeInfo } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
+  getArgumentValues,
   getDirective,
   getDirectiveExtensions,
-  memoize1,
-  memoize3,
+  getNamedType,
   isIntrospectionType,
   isListType,
-  getArgumentValues,
-  getNamedType,
+  memoize1,
+  memoize3,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,

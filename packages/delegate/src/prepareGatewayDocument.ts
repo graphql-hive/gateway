@@ -1,7 +1,12 @@
 import {
   ASTVisitorKeyMap,
+  getNamedType,
   getRootTypeNames,
   implementsAbstractType,
+  isAbstractType,
+  isInterfaceType,
+  isLeafType,
+  isObjectType,
   memoize2,
 } from '@graphql-tools/utils';
 import {
@@ -22,13 +27,6 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
-import {
-  isAbstractType,
-  isInterfaceType,
-  isLeafType,
-  isObjectType,
-  getNamedType,
-} from '@graphql-tools/utils';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(

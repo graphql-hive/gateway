@@ -4,9 +4,16 @@ import {
   createGraphQLError,
   ExecutionRequest,
   getDefinedRootType,
-  implementsAbstractType,
-  serializeInputValue,
   getNamedType,
+  implementsAbstractType,
+  isAbstractType,
+  isCompositeType,
+  isInterfaceType,
+  isLeafType,
+  isNullableType,
+  isObjectType,
+  isUnionType,
+  serializeInputValue,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,
@@ -28,15 +35,6 @@ import {
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { Subschema } from './Subschema.js';
-import {
-  isAbstractType,
-  isCompositeType,
-  isInterfaceType,
-  isLeafType,
-  isNullableType,
-  isObjectType,
-  isUnionType,
-} from '@graphql-tools/utils';
 import { DelegationContext, StitchingInfo } from './types.js';
 import {
   createVariableNameGenerator,

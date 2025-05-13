@@ -14,8 +14,8 @@ import type {
 import {
   createGraphQLError,
   isDocumentNode,
-  printSchemaWithDirectives,
   isSchema,
+  printSchemaWithDirectives,
 } from '@graphql-tools/utils';
 import {
   AsyncDisposableStack,

@@ -7,17 +7,17 @@ import {
 } from '@graphql-tools/delegate';
 import {
   collectFields,
+  getNamedType,
   IFieldResolverOptions,
   IResolvers,
-  isSome,
-  parseSelectionSet,
-  getNamedType,
   isAbstractType,
   isInputObjectType,
   isInterfaceType,
   isLeafType,
   isObjectType,
+  isSome,
   isUnionType,
+  parseSelectionSet,
 } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {

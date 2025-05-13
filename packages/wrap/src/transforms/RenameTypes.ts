@@ -6,6 +6,8 @@ import {
 import {
   ExecutionRequest,
   ExecutionResult,
+  isScalarType,
+  isSpecifiedScalarType,
   MapperKind,
   mapSchema,
   renameType,
@@ -19,10 +21,6 @@ import {
   NamedTypeNode,
   visit,
 } from 'graphql';
-import {
-  isScalarType,
-  isSpecifiedScalarType,
-} from '@graphql-tools/utils';
 
 interface RenameTypesTransformationContext extends Record<string, any> {}
 

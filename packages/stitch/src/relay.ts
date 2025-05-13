@@ -1,7 +1,4 @@
-import {
-  MergedTypeConfig,
-  SubschemaConfig,
-} from '@graphql-tools/delegate';
+import { MergedTypeConfig, SubschemaConfig } from '@graphql-tools/delegate';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { isInterfaceType } from '@graphql-tools/utils';
 import { GraphQLResolveInfo, Kind } from 'graphql';

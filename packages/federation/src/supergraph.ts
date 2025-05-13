@@ -27,12 +27,12 @@ import {
 import {
   ASTVisitorKeyMap,
   createGraphQLError,
-  memoize1,
-  mergeDeep,
-  parseSelectionSet,
   isInputObjectType,
   isInterfaceType,
   isObjectType,
+  memoize1,
+  mergeDeep,
+  parseSelectionSet,
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';

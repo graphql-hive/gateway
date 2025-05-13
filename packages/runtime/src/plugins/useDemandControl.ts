@@ -3,7 +3,8 @@ import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   isAsyncIterable,
-  mapAsyncIterator, isCompositeType,
+  isCompositeType,
+  mapAsyncIterator,
 } from '@graphql-tools/utils';
 import {
   FieldNode,

@@ -6,18 +6,18 @@ import {
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
+  getDirective,
+  getImplementingTypes,
+  getNamedType,
+  getNullableType,
   isInterfaceType,
   isListType,
   isObjectType,
   isUnionType,
-  getDirective,
-  getImplementingTypes,
   MapperKind,
   mapSchema,
   mergeDeep,
   parseSelectionSet,
-  getNamedType,
-  getNullableType,
 } from '@graphql-tools/utils';
 import {
   GraphQLNamedType,
