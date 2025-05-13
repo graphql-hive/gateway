@@ -5,7 +5,6 @@ import {
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
 import {
-  isEnumType,
   type DelegationPlanBuilder,
   type StitchingInfo,
   type SubschemaConfig,
@@ -22,6 +21,7 @@ import {
   MapperKind,
   mapSchema,
   memoize1,
+  isEnumType,
   TypeSource,
 } from '@graphql-tools/utils';
 import {

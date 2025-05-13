@@ -1,7 +1,6 @@
 import {
   FieldNode,
   FragmentDefinitionNode,
-  getNamedType,
   GraphQLField,
   GraphQLInterfaceType,
   GraphQLNamedOutputType,
@@ -18,7 +17,8 @@ import {
   isLeafType,
   isObjectType,
   isUnionType,
-} from './typeCheckers';
+  getNamedType,
+} from '@graphql-tools/utils';
 
 export function extractUnavailableFieldsFromSelectionSet(
   schema: GraphQLSchema,

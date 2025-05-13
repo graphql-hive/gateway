@@ -1,7 +1,6 @@
 import { Maybe } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
-  getNullableType,
   GraphQLCompositeType,
   GraphQLError,
   GraphQLList,
@@ -17,11 +16,12 @@ import {
 } from './mergeFields.js';
 import { Subschema } from './Subschema.js';
 import {
+  getNullableType,
   isAbstractType,
   isCompositeType,
   isLeafType,
   isListType,
-} from './typeCheckers.js';
+} from '@graphql-tools/utils';
 import { MergedTypeInfo, StitchingInfo, SubschemaConfig } from './types.js';
 
 export function resolveExternalValue<TContext extends Record<string, any>>(

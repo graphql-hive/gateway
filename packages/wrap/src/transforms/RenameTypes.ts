@@ -1,7 +1,5 @@
 import {
   DelegationContext,
-  isScalarType,
-  isSpecifiedScalarType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -21,6 +19,10 @@ import {
   NamedTypeNode,
   visit,
 } from 'graphql';
+import {
+  isScalarType,
+  isSpecifiedScalarType,
+} from '@graphql-tools/utils';
 
 interface RenameTypesTransformationContext extends Record<string, any> {}
 

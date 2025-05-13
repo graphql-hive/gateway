@@ -3,10 +3,10 @@ import {
   isListType,
   isNonNullType,
   isScalarType,
-} from '@graphql-tools/delegate';
-import {
   getNamedType,
   getNullableType,
+} from '@graphql-tools/utils';
+import {
   GraphQLArgumentConfig,
   GraphQLEnumType,
   GraphQLFieldConfig,

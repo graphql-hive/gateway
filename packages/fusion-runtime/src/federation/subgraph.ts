@@ -1,13 +1,13 @@
 import { YamlConfig } from '@graphql-mesh/types';
 import {
-  isInterfaceType,
-  isObjectType,
-  isOutputType,
   MergedTypeConfig,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
 import {
+  isInterfaceType,
+  isObjectType,
+  isOutputType,
   astFromField,
   getDirectiveExtensions,
   MapperKind,

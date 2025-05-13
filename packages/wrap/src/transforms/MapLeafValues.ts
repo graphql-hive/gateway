@@ -1,6 +1,5 @@
 import {
   DelegationContext,
-  isLeafType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -11,6 +10,7 @@ import {
   ResultVisitorMap,
   transformInputValue,
   visitResult,
+  isLeafType,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,

@@ -1,12 +1,5 @@
 import {
-  isEnumType,
-  isInputObjectType,
-  isInterfaceType,
-  isNullableType,
-  isObjectType,
-  isScalarType,
   isSubschemaConfig,
-  isUnionType,
 } from '@graphql-tools/delegate';
 import {
   mergeEnum,
@@ -16,7 +9,14 @@ import {
   mergeType,
   mergeUnion,
 } from '@graphql-tools/merge';
-import { Maybe } from '@graphql-tools/utils';
+import {
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isNullableType,
+  isObjectType,
+  isScalarType,
+  isUnionType, Maybe } from '@graphql-tools/utils';
 import {
   EnumTypeDefinitionNode,
   EnumTypeExtensionNode,

@@ -1,24 +1,24 @@
 import {
+  MergedFieldConfig,
+  MergedTypeConfig,
+  SubschemaConfig,
+} from '@graphql-tools/delegate';
+import {
   isAbstractType,
   isCompositeType,
   isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
-  MergedFieldConfig,
-  MergedTypeConfig,
-  SubschemaConfig,
-} from '@graphql-tools/delegate';
-import {
   collectFields,
   filterSchema,
   getImplementingTypes,
   getRootTypeNames,
   parseSelectionSet,
+  getNamedType,
 } from '@graphql-tools/utils';
 import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
-import {
-  getNamedType,
+import type {
   GraphQLInterfaceType,
   GraphQLNamedOutputType,
   GraphQLObjectType,

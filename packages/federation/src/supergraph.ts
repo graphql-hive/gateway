@@ -4,9 +4,6 @@ import {
   extractUnavailableFieldsFromSelectionSet,
   getTypeInfo,
   isExternalObject,
-  isInputObjectType,
-  isInterfaceType,
-  isObjectType,
   MergedFieldConfig,
   MergedTypeConfig,
   SubschemaConfig,
@@ -33,6 +30,9 @@ import {
   memoize1,
   mergeDeep,
   parseSelectionSet,
+  isInputObjectType,
+  isInterfaceType,
+  isObjectType,
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';

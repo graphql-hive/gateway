@@ -78,6 +78,10 @@
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.8",
     "tsx": "patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "@graphql-tools/executor": "1.4.8-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/schema": "10.0.24-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/merge": "9.0.25-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed",
+    "@graphql-tools/utils": "10.9.0-alpha-20250513164647-ea51b1066824101f1484a86d35eb9a2b83e3c7ed"
   }
 }

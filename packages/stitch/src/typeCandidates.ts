@@ -1,9 +1,4 @@
 import {
-  isDirective,
-  isInterfaceType,
-  isIntrospectionType,
-  isNamedType,
-  isSpecifiedScalarType,
   StitchingInfo,
   Subschema,
   SubschemaConfig,
@@ -16,6 +11,11 @@ import {
   inspect,
   rewireTypes,
   TypeSource,
+  isDirective,
+  isInterfaceType,
+  isIntrospectionType,
+  isNamedType,
+  isSpecifiedScalarType,
 } from '@graphql-tools/utils';
 import { wrapSchema } from '@graphql-tools/wrap';
 import {

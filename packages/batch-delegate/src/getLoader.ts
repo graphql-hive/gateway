@@ -3,10 +3,10 @@ import {
   getActualFieldNodes,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
-import { memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
+import { getNamedType, memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
 import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
-import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
+import { GraphQLList, GraphQLSchema, print } from 'graphql';
 import { BatchDelegateOptions } from './types.js';
 
 const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });

@@ -8,7 +8,6 @@ import {
   DocumentNode,
   FieldNode,
   FragmentDefinitionNode,
-  getNamedType,
   GraphQLNamedOutputType,
   GraphQLNamedType,
   GraphQLOutputType,
@@ -28,7 +27,8 @@ import {
   isInterfaceType,
   isLeafType,
   isObjectType,
-} from './typeCheckers.js';
+  getNamedType,
+} from '@graphql-tools/utils';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(

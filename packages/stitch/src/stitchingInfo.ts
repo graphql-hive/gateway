@@ -1,11 +1,4 @@
 import {
-  getNamedType,
-  isAbstractType,
-  isInputObjectType,
-  isInterfaceType,
-  isLeafType,
-  isObjectType,
-  isUnionType,
   MergedTypeInfo,
   MergedTypeResolver,
   StitchingInfo,
@@ -18,6 +11,13 @@ import {
   IResolvers,
   isSome,
   parseSelectionSet,
+  getNamedType,
+  isAbstractType,
+  isInputObjectType,
+  isInterfaceType,
+  isLeafType,
+  isObjectType,
+  isUnionType,
 } from '@graphql-tools/utils';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {

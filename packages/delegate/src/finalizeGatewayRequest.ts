@@ -6,13 +6,13 @@ import {
   getDefinedRootType,
   implementsAbstractType,
   serializeInputValue,
+  getNamedType,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,
   ASTNode,
   DocumentNode,
   FragmentDefinitionNode,
-  getNamedType,
   GraphQLField,
   GraphQLNamedType,
   GraphQLSchema,
@@ -36,7 +36,7 @@ import {
   isNullableType,
   isObjectType,
   isUnionType,
-} from './typeCheckers.js';
+} from '@graphql-tools/utils';
 import { DelegationContext, StitchingInfo } from './types.js';
 import {
   createVariableNameGenerator,

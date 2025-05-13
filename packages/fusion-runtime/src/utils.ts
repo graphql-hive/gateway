@@ -17,7 +17,6 @@ import {
 import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   DelegationPlanBuilder,
-  isEnumType,
   MergedTypeResolver,
   Subschema,
 } from '@graphql-tools/delegate';
@@ -27,6 +26,7 @@ import {
   isDocumentNode,
   mergeDeep,
   printSchemaWithDirectives,
+  isEnumType,
   type ExecutionRequest,
   type Executor,
   type Maybe,

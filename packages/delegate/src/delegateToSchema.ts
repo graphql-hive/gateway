@@ -6,6 +6,7 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
   isAsyncIterable,
+  isListType,
   Maybe,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
@@ -28,7 +29,6 @@ import { createRequest, getDelegatingOperation } from './createRequest.js';
 import { Subschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
 import { Transformer } from './Transformer.js';
-import { isListType } from './typeCheckers.js';
 import {
   DelegationContext,
   IDelegateRequestOptions,

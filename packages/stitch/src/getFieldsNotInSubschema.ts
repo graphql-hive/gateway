@@ -1,10 +1,10 @@
 import {
   extractUnavailableFields,
-  isAbstractType,
   StitchingInfo,
   Subschema,
 } from '@graphql-tools/delegate';
-import { collectSubFields } from '@graphql-tools/utils';
+import {
+  isAbstractType, collectSubFields } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,

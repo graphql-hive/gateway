@@ -5,8 +5,6 @@ import {
   isNamedType,
   isObjectType,
   isUnionType,
-} from '@graphql-tools/delegate';
-import {
   getDirective,
   getImplementingTypes,
   isSome,

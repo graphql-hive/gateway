@@ -1,25 +1,25 @@
 import {
   cloneSubschemaConfig,
-  isInterfaceType,
-  isListType,
-  isObjectType,
-  isUnionType,
   MergedFieldConfig,
   MergedTypeConfig,
   MergedTypeEntryPoint,
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import {
+  isInterfaceType,
+  isListType,
+  isObjectType,
+  isUnionType,
   getDirective,
   getImplementingTypes,
   MapperKind,
   mapSchema,
   mergeDeep,
   parseSelectionSet,
-} from '@graphql-tools/utils';
-import {
   getNamedType,
   getNullableType,
+} from '@graphql-tools/utils';
+import {
   GraphQLNamedType,
   GraphQLSchema,
   Kind,

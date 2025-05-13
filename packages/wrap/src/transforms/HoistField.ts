@@ -1,7 +1,6 @@
 import {
   defaultMergedResolver,
   DelegationContext,
-  isListType,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -11,10 +10,11 @@ import {
   ExecutionResult,
   relocatedError,
   removeObjectFields,
+  isListType,
+  getNamedType,
 } from '@graphql-tools/utils';
 import {
   FieldNode,
-  getNamedType,
   getNullableType,
   GraphQLArgument,
   GraphQLError,
@@ -113,7 +113,7 @@ export default class HoistField<
           }
         }
         const nullableType = getNullableType(field?.type);
-        if (isListType(nullableType)) {
+        if (nullableType != null && isListType(nullableType)) {
           isList = true;
           return getNamedType(nullableType) as any;
         }

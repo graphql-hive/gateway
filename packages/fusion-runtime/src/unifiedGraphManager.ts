@@ -15,6 +15,7 @@ import {
   createGraphQLError,
   isDocumentNode,
   printSchemaWithDirectives,
+  isSchema,
 } from '@graphql-tools/utils';
 import {
   AsyncDisposableStack,
@@ -26,7 +27,7 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
-import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
+import { buildASTSchema, buildSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,

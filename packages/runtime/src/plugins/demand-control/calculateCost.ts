@@ -1,7 +1,5 @@
 import {
   getTypeInfo,
-  isIntrospectionType,
-  isListType,
 } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
@@ -9,12 +7,14 @@ import {
   getDirectiveExtensions,
   memoize1,
   memoize3,
+  isIntrospectionType,
+  isListType,
+  getArgumentValues,
+  getNamedType,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
   FieldNode,
-  getArgumentValues,
-  getNamedType,
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
