@@ -4348,11 +4348,11 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/compose-cli@npm:^1.4.1":
-  version: 1.4.7
-  resolution: "@graphql-mesh/compose-cli@npm:1.4.7"
+  version: 1.4.8
+  resolution: "@graphql-mesh/compose-cli@npm:1.4.8"
   dependencies:
     "@commander-js/extra-typings": "npm:^13.0.0"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.6"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.7"
     "@graphql-mesh/include": "npm:^0.3.3"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.3"
@@ -4370,7 +4370,7 @@ __metadata:
     graphql: "*"
   bin:
     mesh-compose: esm/bin.js
-  checksum: 10c0/e14f09cac185e68a4dbf66621a2292daba460e029eeb0347361e594ac82fd2c84ef6ab3d7937ab25612301902309609b36e07457c7fe78c474fac0f32c01bdf4
+  checksum: 10c0/014f6cd3f5c83cc962ae26560a2079b5ca3698de0a1fd7f80c49ce490ac483fafbbbb43347f5082c8b6c870270abf78637347b6ce625370c2e4286ed1c0aad8e
   languageName: node
   linkType: hard
 
@@ -4386,15 +4386,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.6":
-  version: 0.8.6
-  resolution: "@graphql-mesh/fusion-composition@npm:0.8.6"
+"@graphql-mesh/fusion-composition@npm:^0.8.0, @graphql-mesh/fusion-composition@npm:^0.8.7":
+  version: 0.8.7
+  resolution: "@graphql-mesh/fusion-composition@npm:0.8.7"
   dependencies:
     "@graphql-mesh/utils": "npm:^0.104.3"
     "@graphql-tools/schema": "npm:^10.0.5"
     "@graphql-tools/stitching-directives": "npm:^3.1.9"
     "@graphql-tools/utils": "npm:^10.8.0"
-    "@theguild/federation-composition": "npm:^0.18.0"
+    "@theguild/federation-composition": "npm:^0.18.2"
     change-case: "npm:^4.1.2"
     graphql-scalars: "npm:^1.23.0"
     minimatch: "npm:^10.0.0"
@@ -4403,7 +4403,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/b090e80bb0cb4af18df9fc56cd09c82e79c6a2d0f2853f46ca5ba06491dfab27e5163b5457608bc1e4391dcfd30a93f780ee82480df2a9fab9cdef7effce0ea2
+  checksum: 10c0/bc094d030643e3a20acf3eeb5ee420f0ec6d1569f0c9dceb09b779955d974bd172325ae5230d5108b0f8e817644bcb5918d58ea820c11de15b1ea2a64381839b
   languageName: node
   linkType: hard
 
@@ -6577,11 +6577,11 @@ __metadata:
   linkType: hard
 
 "@omnigraph/openapi@npm:^0.109.0":
-  version: 0.109.7
-  resolution: "@omnigraph/openapi@npm:0.109.7"
+  version: 0.109.8
+  resolution: "@omnigraph/openapi@npm:0.109.8"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.6"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.7"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
     "@graphql-mesh/types": "npm:^0.104.3"
     "@graphql-mesh/utils": "npm:^0.104.3"
@@ -6593,7 +6593,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/6411dd68d52079f7988553e90e289e91fae0481fc3254702d795807f151cffec47a2c636fcc614acebb70b01c1d9c5bc2914c1c1c558d9af3352627fb8b7b7c1
+  checksum: 10c0/6fc07951d390525f15f18a7447caa8e61f10068a9ac3a6a8c06cc98b3bd2c8a10c922b6b5fbc1fadb6dc360628883ed8a6ace86e17993f9a35a102dcca84d15f
   languageName: node
   linkType: hard
 
@@ -8092,9 +8092,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/federation-composition@npm:^0.18.0":
-  version: 0.18.1
-  resolution: "@theguild/federation-composition@npm:0.18.1"
+"@theguild/federation-composition@npm:^0.18.2":
+  version: 0.18.3
+  resolution: "@theguild/federation-composition@npm:0.18.3"
   dependencies:
     constant-case: "npm:^3.0.4"
     debug: "npm:4.4.0"
@@ -8102,7 +8102,7 @@ __metadata:
     lodash.sortby: "npm:^4.7.0"
   peerDependencies:
     graphql: ^16.0.0
-  checksum: 10c0/4798c779ddcad0e8108d8c51051819a3d2b8fd86af9c292c193087db9079476ef21029bc3efc3ef44a92bfa610ebbbe498340125139dfbe847d34bb1e51e29e0
+  checksum: 10c0/2c8b055f87513bd4d3f1e2757c05ddd70f5699c1e65028ffe2421ec3b1aee599e2b804d4887aaf84b8cb4131a66f7331deb56ebe8a776e215033b88c9f30b8ad
   languageName: node
   linkType: hard
 
