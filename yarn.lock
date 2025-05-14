@@ -3319,6 +3319,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/regular-subgraph@workspace:e2e/regular-subgraph":
+  version: 0.0.0-use.local
+  resolution: "@e2e/regular-subgraph@workspace:e2e/regular-subgraph"
+  dependencies:
+    "@graphql-hive/gateway": "workspace:*"
+    "@graphql-mesh/compose-cli": "npm:^1.4.8"
+    graphql: "npm:16.11.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/retry-timeout@workspace:e2e/retry-timeout":
   version: 0.0.0-use.local
   resolution: "@e2e/retry-timeout@workspace:e2e/retry-timeout"
@@ -3336,16 +3346,6 @@ __metadata:
   resolution: "@e2e/self-hosting-hive@workspace:e2e/self-hosting-hive"
   dependencies:
     "@graphql-hive/gateway": "workspace:*"
-    graphql: "npm:16.11.0"
-  languageName: unknown
-  linkType: soft
-
-"@e2e/subgraph@workspace:e2e/subgraph":
-  version: 0.0.0-use.local
-  resolution: "@e2e/subgraph@workspace:e2e/subgraph"
-  dependencies:
-    "@graphql-hive/gateway": "workspace:*"
-    "@graphql-mesh/compose-cli": "npm:^1.4.8"
     graphql: "npm:16.11.0"
   languageName: unknown
   linkType: soft
