@@ -37,13 +37,14 @@ describe('openapi-subgraph', () => {
       replaceDockerHostNamesBack(result),
     );
   });
-  it('resolves entitites correctly', async () => {
+  it.only('resolves entitites correctly', async () => {
     const { execute } = await gateway({
       subgraph: {
         with: 'mesh',
         services: [OASService, GQLService],
         subgraphName: 'OAS',
       },
+      pipeLogs: true,
     });
     const entitiesQuery = /* GraphQL */ `
       query {

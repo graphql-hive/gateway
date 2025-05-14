@@ -551,7 +551,7 @@ export function handleFederationSubschema({
         entryPoints,
       };
     } else {
-      mergeConfig[entityName] = entryPoints[0] || {
+      mergeConfig[entityName] ||= entryPoints[0] || {
         selectionSet: `{ __typename }`,
       };
     }
