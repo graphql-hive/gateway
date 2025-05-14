@@ -56,7 +56,7 @@ export async function loadConfig<
         const importUrl = pathToFileURL(absoluteConfigPath).toString();
         const module = await import(importUrl);
         importedConfig = Object(module).gatewayConfig || null;
-        if (!importedConfig) {
+        if (!importedConfig && !configPath.includes('mesh.config')) {
           !opts.quiet &&
             opts.log.warn(
               `No "gatewayConfig" exported from config file at ${absoluteConfigPath}`,
