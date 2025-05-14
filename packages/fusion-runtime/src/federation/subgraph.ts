@@ -144,10 +144,22 @@ export function handleFederationSubschema({
     Record<string, Record<string, string>>
   > = {};
   const transforms: Transform[] = (subschemaConfig.transforms ||= []);
+  const entitiesWithKeys = new Set<[string, string[]]>();
   let mergeDirectiveUsed = false;
   subschemaConfig.schema = mapSchema(subschemaConfig.schema, {
     [MapperKind.TYPE]: (type) => {
       const typeDirectives = getDirectiveExtensions<TypeDirectives>(type);
+      const keyDirectives = typeDirectives['key'];
+      const keys: string[] = [];
+      if (keyDirectives?.length) {
+        for (const keyDirective of keyDirectives) {
+          const fields = keyDirective.fields;
+          if (fields) {
+            keys.push(fields);
+          }
+        }
+        entitiesWithKeys.add([type.name, keys]);
+      }
       const sourceDirectives = typeDirectives.source;
       const sourceDirective = sourceDirectives?.find((directive) =>
         compareSubgraphNames(directive.subgraph, subgraphName),
@@ -527,6 +539,21 @@ export function handleFederationSubschema({
         }));
       }
       subschemaConfig.merge = mergeConfig;
+    }
+  }
+  for (const [entityName, keys] of entitiesWithKeys) {
+    const mergeConfig = (subschemaConfig.merge ||= {});
+    const entryPoints = keys.map((key) => ({
+      selectionSet: `{ ${key} }`,
+    }));
+    if (entryPoints.length > 1) {
+      mergeConfig[entityName] ||= {
+        entryPoints,
+      };
+    } else {
+      mergeConfig[entityName] = entryPoints[0] || {
+        selectionSet: `{ __typename }`,
+      };
     }
   }
   subschemaConfig.executor = function subschemaExecutor(req) {

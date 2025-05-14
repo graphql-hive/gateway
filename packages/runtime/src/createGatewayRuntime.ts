@@ -525,7 +525,6 @@ export function createGatewayRuntime<
             if (entities.length) {
               additionalResolvers.push({
                 [queryTypeName]: {
-
                   _entities(_root, args, context, info) {
                     if (Array.isArray(args.representations)) {
                       return args.representations.map((representation: any) => {
@@ -558,20 +557,23 @@ export function createGatewayRuntime<
                                 batchDelegateToSchema({
                                   schema: subschemaConfig,
                                   ...(satisfiedEntryPoint.fieldName
-                                    ? { fieldName: satisfiedEntryPoint.fieldName }
+                                    ? {
+                                        fieldName:
+                                          satisfiedEntryPoint.fieldName,
+                                      }
                                     : {}),
                                   key: satisfiedEntryPoint.key!(representation),
                                   ...(satisfiedEntryPoint.argsFromKeys
                                     ? {
-                                      argsFromKeys:
-                                        satisfiedEntryPoint.argsFromKeys,
-                                    }
+                                        argsFromKeys:
+                                          satisfiedEntryPoint.argsFromKeys,
+                                      }
                                     : {}),
                                   ...(satisfiedEntryPoint.valuesFromResults
                                     ? {
-                                      valuesFromResults:
-                                        satisfiedEntryPoint.valuesFromResults,
-                                    }
+                                        valuesFromResults:
+                                          satisfiedEntryPoint.valuesFromResults,
+                                      }
                                     : {}),
                                   context,
                                   info,
@@ -585,9 +587,14 @@ export function createGatewayRuntime<
                                 delegateToSchema({
                                   schema: subschemaConfig,
                                   ...(satisfiedEntryPoint.fieldName
-                                    ? { fieldName: satisfiedEntryPoint.fieldName }
+                                    ? {
+                                        fieldName:
+                                          satisfiedEntryPoint.fieldName,
+                                      }
                                     : {}),
-                                  args: satisfiedEntryPoint.args!(representation),
+                                  args: satisfiedEntryPoint.args!(
+                                    representation,
+                                  ),
                                   context,
                                   info,
                                 }),
@@ -600,8 +607,8 @@ export function createGatewayRuntime<
                     }
                     return [];
                   },
-                }
-              })
+                },
+              });
             }
             unifiedGraph = mergeSchemas({
               assumeValid: true,

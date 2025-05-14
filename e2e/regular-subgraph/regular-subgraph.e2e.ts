@@ -12,7 +12,6 @@ describe('Subgraph Regular', async () => {
                 ],
                 subgraphName: "regular",
             },
-            pipeLogs: true,
         });
         const result = await gateway.execute({
             query: /* GraphQL */ `
@@ -29,6 +28,40 @@ describe('Subgraph Regular', async () => {
         expect(result).toEqual({
             data: {
                 greeting: {
+                    from: "Alice",
+                    to: "Bob",
+                    message: "Hello",
+                    fullMessage: "Hello Bob from Alice"
+                }
+            }
+        })
+    })
+
+    it('callable as is with federation transform', async () => {
+        const gateway = await tenv.gateway({
+            subgraph: {
+                with: "mesh",
+                services: [
+                    await tenv.service('regular'),
+                ],
+                subgraphName: "notRegular",
+            },
+        });
+        const result = await gateway.execute({
+            query: /* GraphQL */ `
+                query {
+                    NotRegular_greeting(from: "Alice", to: "Bob") {
+                        from
+                        to
+                        message
+                        fullMessage
+                    }
+                }
+            `
+        });
+        expect(result).toEqual({
+            data: {
+                NotRegular_greeting: {
                     from: "Alice",
                     to: "Bob",
                     message: "Hello",
