@@ -3319,6 +3319,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/regular-subgraph@workspace:e2e/regular-subgraph":
+  version: 0.0.0-use.local
+  resolution: "@e2e/regular-subgraph@workspace:e2e/regular-subgraph"
+  dependencies:
+    "@graphql-hive/gateway": "workspace:*"
+    "@graphql-mesh/compose-cli": "npm:^1.4.8"
+    graphql: "npm:16.11.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/retry-timeout@workspace:e2e/retry-timeout":
   version: 0.0.0-use.local
   resolution: "@e2e/retry-timeout@workspace:e2e/retry-timeout"
@@ -4347,7 +4357,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/compose-cli@npm:^1.4.1":
+"@graphql-mesh/compose-cli@npm:^1.4.1, @graphql-mesh/compose-cli@npm:^1.4.8":
   version: 1.4.8
   resolution: "@graphql-mesh/compose-cli@npm:1.4.8"
   dependencies:

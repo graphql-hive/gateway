@@ -488,15 +488,16 @@ export function createGatewayRuntime<
             const additionalResolvers: IResolvers[] = asArray(
               'additionalResolvers' in config ? config.additionalResolvers : [],
             ).filter((r) => r != null);
+            const queryTypeName = unifiedGraph.getQueryType()?.name || 'Query';
             const finalTypeDefs = handleResolveToDirectives(
               parse(/* GraphQL */ `
-                type Query {
-                  _entities(representations: [_Any!]!): [_Entity]!
+                type ${queryTypeName} {
+                  ${entities.length ? '_entities(representations: [_Any!]!): [_Entity]!' : ''}
                   _service: _Service!
                 }
 
                 scalar _Any
-                ${entitiesDef}
+                ${entities.length ? entitiesDef : ''}
                 type _Service {
                   sdl: String
                 }
@@ -505,81 +506,7 @@ export function createGatewayRuntime<
               additionalResolvers,
             );
             additionalResolvers.push({
-              Query: {
-                _entities(_root, args, context, info) {
-                  if (Array.isArray(args.representations)) {
-                    return args.representations.map((representation: any) => {
-                      const typeName = representation.__typename;
-                      const mergeConfig = subschemaConfig.merge?.[typeName];
-                      const entryPoints = mergeConfig?.entryPoints || [
-                        mergeConfig,
-                      ];
-                      const satisfiedEntryPoint = entryPoints.find(
-                        (entryPoint) => {
-                          if (entryPoint?.selectionSet) {
-                            const selectionSet = parseSelectionSet(
-                              entryPoint.selectionSet,
-                              {
-                                noLocation: true,
-                              },
-                            );
-                            return checkIfDataSatisfiesSelectionSet(
-                              selectionSet,
-                              representation,
-                            );
-                          }
-                          return true;
-                        },
-                      );
-                      if (satisfiedEntryPoint) {
-                        if (satisfiedEntryPoint.key) {
-                          return handleMaybePromise(
-                            () =>
-                              batchDelegateToSchema({
-                                schema: subschemaConfig,
-                                ...(satisfiedEntryPoint.fieldName
-                                  ? { fieldName: satisfiedEntryPoint.fieldName }
-                                  : {}),
-                                key: satisfiedEntryPoint.key!(representation),
-                                ...(satisfiedEntryPoint.argsFromKeys
-                                  ? {
-                                      argsFromKeys:
-                                        satisfiedEntryPoint.argsFromKeys,
-                                    }
-                                  : {}),
-                                ...(satisfiedEntryPoint.valuesFromResults
-                                  ? {
-                                      valuesFromResults:
-                                        satisfiedEntryPoint.valuesFromResults,
-                                    }
-                                  : {}),
-                                context,
-                                info,
-                              }),
-                            (res) => mergeDeep([representation, res]),
-                          );
-                        }
-                        if (satisfiedEntryPoint.args) {
-                          return handleMaybePromise(
-                            () =>
-                              delegateToSchema({
-                                schema: subschemaConfig,
-                                ...(satisfiedEntryPoint.fieldName
-                                  ? { fieldName: satisfiedEntryPoint.fieldName }
-                                  : {}),
-                                args: satisfiedEntryPoint.args!(representation),
-                                context,
-                                info,
-                              }),
-                            (res) => mergeDeep([representation, res]),
-                          );
-                        }
-                      }
-                      return representation;
-                    });
-                  }
-                  return [];
-                },
+              [queryTypeName]: {
                 _service() {
                   return {
                     sdl() {
@@ -595,6 +522,94 @@ export function createGatewayRuntime<
                 },
               },
             });
+            if (entities.length) {
+              additionalResolvers.push({
+                [queryTypeName]: {
+                  _entities(_root, args, context, info) {
+                    if (Array.isArray(args.representations)) {
+                      return args.representations.map((representation: any) => {
+                        const typeName = representation.__typename;
+                        const mergeConfig = subschemaConfig.merge?.[typeName];
+                        const entryPoints = mergeConfig?.entryPoints || [
+                          mergeConfig,
+                        ];
+                        const satisfiedEntryPoint = entryPoints.find(
+                          (entryPoint) => {
+                            if (entryPoint?.selectionSet) {
+                              const selectionSet = parseSelectionSet(
+                                entryPoint.selectionSet,
+                                {
+                                  noLocation: true,
+                                },
+                              );
+                              return checkIfDataSatisfiesSelectionSet(
+                                selectionSet,
+                                representation,
+                              );
+                            }
+                            return true;
+                          },
+                        );
+                        if (satisfiedEntryPoint) {
+                          if (satisfiedEntryPoint.key) {
+                            return handleMaybePromise(
+                              () =>
+                                batchDelegateToSchema({
+                                  schema: subschemaConfig,
+                                  ...(satisfiedEntryPoint.fieldName
+                                    ? {
+                                        fieldName:
+                                          satisfiedEntryPoint.fieldName,
+                                      }
+                                    : {}),
+                                  key: satisfiedEntryPoint.key!(representation),
+                                  ...(satisfiedEntryPoint.argsFromKeys
+                                    ? {
+                                        argsFromKeys:
+                                          satisfiedEntryPoint.argsFromKeys,
+                                      }
+                                    : {}),
+                                  ...(satisfiedEntryPoint.valuesFromResults
+                                    ? {
+                                        valuesFromResults:
+                                          satisfiedEntryPoint.valuesFromResults,
+                                      }
+                                    : {}),
+                                  context,
+                                  info,
+                                }),
+                              (res) => mergeDeep([representation, res]),
+                            );
+                          }
+                          if (satisfiedEntryPoint.args) {
+                            return handleMaybePromise(
+                              () =>
+                                delegateToSchema({
+                                  schema: subschemaConfig,
+                                  ...(satisfiedEntryPoint.fieldName
+                                    ? {
+                                        fieldName:
+                                          satisfiedEntryPoint.fieldName,
+                                      }
+                                    : {}),
+                                  args: satisfiedEntryPoint.args!(
+                                    representation,
+                                  ),
+                                  context,
+                                  info,
+                                }),
+                              (res) => mergeDeep([representation, res]),
+                            );
+                          }
+                        }
+                        return representation;
+                      });
+                    }
+                    return [];
+                  },
+                },
+              });
+            }
             unifiedGraph = mergeSchemas({
               assumeValid: true,
               assumeValidSDL: true,

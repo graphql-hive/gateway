@@ -1,0 +1,9 @@
+{
+  "name": "@e2e/regular-subgraph",
+  "private": true,
+  "dependencies": {
+    "@graphql-hive/gateway": "workspace:*",
+    "@graphql-mesh/compose-cli": "^1.4.8",
+    "graphql": "16.11.0"
+  }
+}
