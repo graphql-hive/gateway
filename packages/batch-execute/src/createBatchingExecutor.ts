@@ -49,7 +49,7 @@ function createLoadFn(
   ): PromiseLike<Array<ExecutionResult>> {
     if (requests.length === 1 && requests[0]) {
       const request = requests[0];
-      return fakePromise<any>(
+      return fakePromise(
         handleMaybePromise(
           () => executor(request),
           (result) => [result],
@@ -58,7 +58,7 @@ function createLoadFn(
       );
     }
     const mergedRequests = mergeRequests(requests, extensionsReducer);
-    return fakePromise<any>(
+    return fakePromise(
       handleMaybePromise(
         () => executor(mergedRequests),
         (resultBatches) => {
@@ -69,6 +69,7 @@ function createLoadFn(
           }
           return splitResult(resultBatches, requests.length);
         },
+        (err) => requests.map(() => err),
       ),
     );
   };
