@@ -3972,18 +3972,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.10.1, @graphql-hive/core@npm:^0.10.0":
-  version: 0.10.1
-  resolution: "@graphql-hive/core@npm:0.10.1"
+"@graphql-hive/core@npm:0.11.0, @graphql-hive/core@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "@graphql-hive/core@npm:0.11.0"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:^0.10.1"
+    "@whatwg-node/fetch": "npm:^0.10.6"
     async-retry: "npm:^1.3.3"
     lodash.sortby: "npm:^4.7.0"
     tiny-lru: "npm:^8.0.2"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/29979cbfc9650db278f2542e15a1aa116ec52c1b02b1d82c706ff339cc19751fdafbbb24093bd07818618c7b3480016830341ab27bdbd1739cf75419d782c171
+  checksum: 10c0/3b921b411501bbaf8bd1886f815fa8b0ddb1ece58eab8f1913d9b233d788441e2c274e554db7a3af69df098a5d3f64b8671e94f8b2a8c67bdf1c939204ab3a28
   languageName: node
   linkType: hard
 
@@ -3994,11 +3994,11 @@ __metadata:
     "@envelop/core": "npm:^5.2.3"
     "@envelop/disable-introspection": "npm:^7.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
-    "@graphql-hive/core": "npm:^0.10.0"
+    "@graphql-hive/core": "npm:^0.11.0"
     "@graphql-hive/logger-json": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
-    "@graphql-hive/yoga": "npm:^0.41.0"
+    "@graphql-hive/yoga": "npm:^0.42.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.8.0"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -4180,10 +4180,10 @@ __metadata:
     "@graphql-hive/gateway": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.0"
     "@graphql-tools/utils": "npm:^10.8.1"
-    "@nestjs/common": "npm:11.1.0"
-    "@nestjs/core": "npm:11.1.0"
+    "@nestjs/common": "npm:11.1.1"
+    "@nestjs/core": "npm:11.1.1"
     "@nestjs/graphql": "npm:13.1.0"
-    "@nestjs/testing": "npm:11.1.0"
+    "@nestjs/testing": "npm:11.1.1"
     "@types/supertest": "npm:6.0.3"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     fastify: "npm:5.3.3"
@@ -4256,16 +4256,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:^0.41.0":
-  version: 0.41.1
-  resolution: "@graphql-hive/yoga@npm:0.41.1"
+"@graphql-hive/yoga@npm:^0.42.0":
+  version: 0.42.0
+  resolution: "@graphql-hive/yoga@npm:0.42.0"
   dependencies:
-    "@graphql-hive/core": "npm:0.10.1"
+    "@graphql-hive/core": "npm:0.11.0"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/e7ce87f5635cf03395e7eb1fab7a3177ef5a5f8cf3f4eb64890f367398f920af76aa034894ed574680e286bcb0e59a73b29541eb78c851c2d769fb7cd2d8fc6f
+  checksum: 10c0/ec86939c45b87e41aa779f3c76e21cf5f4b3229a6d51ea3fc7845032841fa1273e0f597dcd379394f074949575c4f8ec67baa99e44eb78620ca0f8b63247c413
   languageName: node
   linkType: hard
 
@@ -6336,18 +6336,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/common@npm:11.1.0, @nestjs/common@npm:^11.0.10":
-  version: 11.1.0
-  resolution: "@nestjs/common@npm:11.1.0"
+"@nestjs/common@npm:11.1.1, @nestjs/common@npm:^11.0.10":
+  version: 11.1.1
+  resolution: "@nestjs/common@npm:11.1.1"
   dependencies:
-    file-type: "npm:20.4.1"
+    file-type: "npm:20.5.0"
     iterare: "npm:1.2.1"
     load-esm: "npm:1.0.2"
     tslib: "npm:2.8.1"
     uid: "npm:2.0.2"
   peerDependencies:
-    class-transformer: "*"
-    class-validator: "*"
+    class-transformer: ">=0.4.1"
+    class-validator: ">=0.13.2"
     reflect-metadata: ^0.1.12 || ^0.2.0
     rxjs: ^7.1.0
   peerDependenciesMeta:
@@ -6355,13 +6355,13 @@ __metadata:
       optional: true
     class-validator:
       optional: true
-  checksum: 10c0/828665a91d75aa237e871173e9ec70a9a331839fef85d1c1c009c16bc2e94a627ee39f65fe0e560db043345293122657b86a66236459ed219ebcd96ebe14b7e0
+  checksum: 10c0/e619a9795fc0c771eafb83fc9ddecfa61d3b36ddd57a4b4bab9aef47981a16cecd4de758e82303b4adfc9cbd1df9d598f501b5101982fe3f73cd2758278ec502
   languageName: node
   linkType: hard
 
-"@nestjs/core@npm:11.1.0, @nestjs/core@npm:^11.0.10":
-  version: 11.1.0
-  resolution: "@nestjs/core@npm:11.1.0"
+"@nestjs/core@npm:11.1.1, @nestjs/core@npm:^11.0.10":
+  version: 11.1.1
+  resolution: "@nestjs/core@npm:11.1.1"
   dependencies:
     "@nuxt/opencollective": "npm:0.4.1"
     fast-safe-stringify: "npm:2.1.1"
@@ -6383,7 +6383,7 @@ __metadata:
       optional: true
     "@nestjs/websockets":
       optional: true
-  checksum: 10c0/6e3be86059c61def3bab943641496275daf2659005620c87b397736a7e3eab88ec25c47d088566b34c16a2c2af2a26a40642635bd2c95780ba9983fe19e8edd4
+  checksum: 10c0/4966258172c2722fd3e827eed3d96536e134b36e2b18d7daef4e4f9aefb1c38a1b59dc420e88e98aee48cdc223df868f57d7d71347cb015b1ed942b08411e415
   languageName: node
   linkType: hard
 
@@ -6444,8 +6444,8 @@ __metadata:
   linkType: hard
 
 "@nestjs/platform-express@npm:^11.0.10":
-  version: 11.1.0
-  resolution: "@nestjs/platform-express@npm:11.1.0"
+  version: 11.1.1
+  resolution: "@nestjs/platform-express@npm:11.1.1"
   dependencies:
     cors: "npm:2.8.5"
     express: "npm:5.1.0"
@@ -6455,13 +6455,13 @@ __metadata:
   peerDependencies:
     "@nestjs/common": ^11.0.0
     "@nestjs/core": ^11.0.0
-  checksum: 10c0/a01aecdc8c70cd6a0f49c5cb85b22371e2b0e15941171df64983c3642c99f7c21a1423a3057dd6a2dbd4e985c20cd0e285d3e321e771d81f2042c16a65561aa7
+  checksum: 10c0/df38fa726a62a6d5e9469ba52ccb3de94a4415a2a5df7313accd763f7579f1f4bb59548e593e68cf0b660ad8f03e5ac8f29ec55943bb338b0366db37d880b1f0
   languageName: node
   linkType: hard
 
-"@nestjs/testing@npm:11.1.0":
-  version: 11.1.0
-  resolution: "@nestjs/testing@npm:11.1.0"
+"@nestjs/testing@npm:11.1.1":
+  version: 11.1.1
+  resolution: "@nestjs/testing@npm:11.1.1"
   dependencies:
     tslib: "npm:2.8.1"
   peerDependencies:
@@ -6474,7 +6474,7 @@ __metadata:
       optional: true
     "@nestjs/platform-express":
       optional: true
-  checksum: 10c0/21bdad85d718f51c86ceb56ae09f7d0c1ee6da2548c07997a890893741d628438cac05dcb503d0f53e30e2e823992be179c1ebb0e9bc45b14169a5c94b76b499
+  checksum: 10c0/bc689c35d1c70e2537f8d92173e55116ecf7b90ddc9d7a444cad21fbb8b42870a0931f42e9506fc041619ffb40d52af918212727b2f6f6688785fc6fc8bbe0a2
   languageName: node
   linkType: hard
 
@@ -8561,12 +8561,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:22.15.17, @types/node@npm:>=13.7.0, @types/node@npm:^22.7.5, @types/node@npm:^22.7.6":
-  version: 22.15.17
-  resolution: "@types/node@npm:22.15.17"
+"@types/node@npm:*, @types/node@npm:22.15.18, @types/node@npm:>=13.7.0, @types/node@npm:^22.7.5, @types/node@npm:^22.7.6":
+  version: 22.15.18
+  resolution: "@types/node@npm:22.15.18"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/fb92aa10b628683c5b965749f955bc2322485ecb0ea6c2f4cae5f2c7537a16834607e67083a9e9281faaae8d7dee9ada8d6a5c0de9a52c17d82912ef00c0fdd4
+  checksum: 10c0/e23178c568e2dc6b93b6aa3b8dfb45f9556e527918c947fe7406a4c92d2184c7396558912400c3b1b8d0fa952ec63819aca2b8e4d3545455fc6f1e9623e09ca6
   languageName: node
   linkType: hard
 
@@ -9013,7 +9013,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.1, @whatwg-node/fetch@npm:^0.10.6, @whatwg-node/fetch@npm:^0.10.7":
+"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.6, @whatwg-node/fetch@npm:^0.10.7":
   version: 0.10.7
   resolution: "@whatwg-node/fetch@npm:0.10.7"
   dependencies:
@@ -13216,19 +13216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-type@npm:20.4.1":
-  version: 20.4.1
-  resolution: "file-type@npm:20.4.1"
-  dependencies:
-    "@tokenizer/inflate": "npm:^0.2.6"
-    strtok3: "npm:^10.2.0"
-    token-types: "npm:^6.0.0"
-    uint8array-extras: "npm:^1.4.0"
-  checksum: 10c0/ae6f65e537205a9a3e07ae574de74ed5210aa78899d6478351a466f97e3f17096b93d74cb97f3fce7488bc8486a21e449ab076ec358ed06984f4a9a8f48a9f55
-  languageName: node
-  linkType: hard
-
-"file-type@npm:^20.4.1":
+"file-type@npm:20.5.0, file-type@npm:^20.4.1":
   version: 20.5.0
   resolution: "file-type@npm:20.5.0"
   dependencies:
@@ -13583,7 +13571,7 @@ __metadata:
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.4.1"
     "@tsconfig/strictest": "npm:2.0.5"
-    "@types/node": "npm:22.15.17"
+    "@types/node": "npm:22.15.18"
     "@yarnpkg/cli": "npm:4.9.1"
     "@yarnpkg/core": "npm:4.4.1"
     "@yarnpkg/plugin-pack": "npm:4.0.1"
