@@ -44,7 +44,6 @@ describe('openapi-subgraph', () => {
         services: [OASService, GQLService],
         subgraphName: 'OAS',
       },
-      pipeLogs: true,
     });
     const entitiesQuery = /* GraphQL */ `
       query {
