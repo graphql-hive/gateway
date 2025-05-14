@@ -37,7 +37,7 @@ describe('openapi-subgraph', () => {
       replaceDockerHostNamesBack(result),
     );
   });
-  it.only('resolves entitites correctly', async () => {
+  it('resolves entitites correctly', async () => {
     const { execute } = await gateway({
       subgraph: {
         with: 'mesh',
