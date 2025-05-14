@@ -8917,15 +8917,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:^0.7.19":
-  version: 0.7.19
-  resolution: "@whatwg-node/node-fetch@npm:0.7.19"
+"@whatwg-node/node-fetch@npm:0.7.20-alpha-20250513235048-f0d1b73cf44dc6870290e4a0cbd4b996a4225a62":
+  version: 0.7.20-alpha-20250513235048-f0d1b73cf44dc6870290e4a0cbd4b996a4225a62
+  resolution: "@whatwg-node/node-fetch@npm:0.7.20-alpha-20250513235048-f0d1b73cf44dc6870290e4a0cbd4b996a4225a62"
   dependencies:
     "@fastify/busboy": "npm:^3.1.1"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/6a9cdefa144add1b1519c9c6b9813032d48b076e621c08fbe3b2249c64cd8c6beb17a085891cb2f036a9b05179fe81e965b906556542e95f2e03fcde0203877e
+  checksum: 10c0/521cc9e19b7622d4d6cd114bcdb38a659e052464d0f9c0ab6bd7e01548856365c2de3fd428288efeaf6975f19df513126a6b004f933fa9c8e103ddd5930cd32d
   languageName: node
   linkType: hard
 

@@ -22,9 +22,9 @@ describe('Gateway', async () => {
     }),
     'Hive Gateway': await gateway({
       supergraph,
-      args: ['--jit'],
+      args: ['--fork=1'],
       env: {
-        JIT: 'true',
+        // JIT: 'true',
         NODE_ENV: 'production',
       },
     }),
