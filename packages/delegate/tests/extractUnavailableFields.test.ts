@@ -254,9 +254,6 @@ describe('extractUnavailableFields', () => {
         name
       }
     }
-    notifications {
-      settings
-    }
   }
 }
     `.trim(),
