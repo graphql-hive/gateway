@@ -120,7 +120,11 @@ describe('handleEventStreamResponse', () => {
     });
   });
 
-  it('should gracefully report stream cancel with aborted signal', async () => {
+  it.skipIf(
+    // we skip bun because we cant cancel the stream while reading it (it's locked)
+    // however, the same test from nodejs applies in bun
+    globalThis.Bun,
+  )('should gracefully report stream cancel with aborted signal', async () => {
     const ctrl = new AbortController();
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
@@ -168,7 +172,11 @@ describe('handleEventStreamResponse', () => {
     `);
   });
 
-  it('should gracefully report stream errors', async () => {
+  it.skipIf(
+    // we skip bun because we cant cancel the stream while reading it (it's locked)
+    // however, the same test from nodejs applies in bun
+    globalThis.Bun,
+  )('should gracefully report stream errors', async () => {
     const readableStream = new ReadableStream<Uint8Array>({
       start() {
         // dont enqueue anything, to hang on iterator.next()
