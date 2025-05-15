@@ -2,6 +2,7 @@ import {
   extractUnavailableFields,
   StitchingInfo,
   Subschema,
+  subtractSelectionSets,
 } from '@graphql-tools/delegate';
 import { collectSubFields } from '@graphql-tools/utils';
 import {
@@ -12,6 +13,8 @@ import {
   GraphQLSchema,
   isAbstractType,
   Kind,
+  SelectionSetNode,
+  TypeNameMetaFieldDef,
 } from 'graphql';
 
 export function getFieldsNotInSubschema(
@@ -23,6 +26,7 @@ export function getFieldsNotInSubschema(
   fragments: Record<string, FragmentDefinitionNode>,
   variableValues: Record<string, any>,
   subschema: Subschema,
+  providedSelectionNode: SelectionSetNode | undefined,
 ): Array<FieldNode> {
   const sourceSchema = subschema.transformedSchema;
   let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
@@ -115,11 +119,29 @@ export function getFieldsNotInSubschema(
   for (const [, subFieldNodes] of subFieldNodesByResponseKey) {
     let fieldNotInSchema = false;
     const fieldName = subFieldNodes[0]?.name.value!;
-    const field = fields[fieldName];
+    const field =
+      fieldName === '__typename' ? TypeNameMetaFieldDef : fields[fieldName];
     if (!field) {
-      fieldNotInSchema = true;
-      for (const subFieldNode of subFieldNodes) {
-        fieldsNotInSchema.add(subFieldNode);
+      if (providedSelectionNode) {
+        const subFieldSelection: SelectionSetNode = {
+          kind: Kind.SELECTION_SET,
+          selections: subFieldNodes,
+        };
+        const subtracted = subtractSelectionSets(
+          subFieldSelection,
+          providedSelectionNode,
+        );
+        if (subtracted?.selections?.length) {
+          fieldNotInSchema = true;
+          for (const subFieldNode of subtracted.selections) {
+            fieldsNotInSchema.add(subFieldNode as FieldNode);
+          }
+        }
+      } else {
+        fieldNotInSchema = true;
+        for (const subFieldNode of subFieldNodes) {
+          fieldsNotInSchema.add(subFieldNode);
+        }
       }
     } else {
       for (const subFieldNode of subFieldNodes) {
