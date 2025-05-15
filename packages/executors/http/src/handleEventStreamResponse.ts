@@ -31,7 +31,10 @@ export function handleEventStreamResponse(
     const decoder = new TextDecoder();
 
     const reader = body.getReader();
-    reader.closed.then(stop).catch(stop); // we dont use `finally` because we want to catch errors
+    let closed: any = false; // reader.closed reason or true
+    reader.closed
+      .then(() => (closed = true))
+      .catch((reason) => (closed = reason)); // we dont use `finally` because we want to catch errors
     stop
       .then(() => {
         subscriptionCtrl?.abort();
@@ -100,6 +103,11 @@ export function handleEventStreamResponse(
           // when we receive a "complete", we dont care about the data - we just stop
           return stop();
         }
+      }
+
+      if (closed) {
+        // only after flushing all the data do we stop
+        return stop();
       }
 
       return pump();

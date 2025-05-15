@@ -261,4 +261,11 @@ data:
       }
     `);
   });
+
+  it.todo('should consume messages on an immediately closed stream', () => {
+    // the order of execution in handleEventStreamResponse should be:
+    // 1. start waiting for `reader.read()`
+    // 2. reader.closed is resolved
+    // 3. `reader.read()` resolves with data that should be flushed before closing
+  });
 });
