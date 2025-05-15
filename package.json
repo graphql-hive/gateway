@@ -81,7 +81,9 @@
     "jest-leak-detector": "patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.8",
-    "@whatwg-node/node-fetch": "0.7.20-alpha-20250513235048-f0d1b73cf44dc6870290e4a0cbd4b996a4225a62",
+    "@whatwg-node/node-fetch": "0.7.20-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501",
+    "@whatwg-node/fetch": "0.10.8-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501",
+    "@whatwg-node/server": "0.10.7-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501",
     "tsx": "patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
     "vite": "6.3.5"
   }
