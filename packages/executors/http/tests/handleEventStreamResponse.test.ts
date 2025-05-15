@@ -119,4 +119,94 @@ describe('handleEventStreamResponse', () => {
       value: undefined,
     });
   });
+
+  it('should gracefully report stream cancel with aborted signal', async () => {
+    const ctrl = new AbortController();
+    const readableStream = new ReadableStream<Uint8Array>({
+      start() {
+        // dont enqueue anything, to hang on iterator.next()
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(
+      response,
+      undefined,
+      ctrl.signal,
+    );
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    setTimeout(0).then(() => {
+      ctrl.abort(); // we abort
+      readableStream.cancel(); // then cancel
+      // so that the error reported is the abort error
+    });
+
+    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": false,
+        "value": {
+          "errors": [
+            [GraphQLError: This operation was aborted],
+          ],
+        },
+      }
+    `);
+
+    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+
+    await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+  });
+
+  it('should gracefully report stream errors', async () => {
+    const readableStream = new ReadableStream<Uint8Array>({
+      start() {
+        // dont enqueue anything, to hang on iterator.next()
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    const originalError = new Error('Oops!');
+    setTimeout(0).then(() => {
+      readableStream.cancel(originalError); // this will throw in reader.read()
+    });
+
+    const { value, done } = await iterator.next();
+    expect(done).toBeFalsy();
+    expect(value).toMatchInlineSnapshot(`
+      {
+        "errors": [
+          [GraphQLError: Oops!],
+        ],
+      }
+    `);
+    expect(value.errors[0].originalError).toBe(originalError);
+
+    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+
+    await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+  });
 });

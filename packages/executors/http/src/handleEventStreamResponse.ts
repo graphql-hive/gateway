@@ -1,4 +1,8 @@
-import { ExecutionResult, inspect } from '@graphql-tools/utils';
+import {
+  createGraphQLError,
+  ExecutionResult,
+  inspect,
+} from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import { TextDecoder } from '@whatwg-node/fetch';
 import { createResultForAbort } from './utils';
@@ -48,7 +52,24 @@ export function handleEventStreamResponse(
       if (!body?.locked) {
         return stop();
       }
-      const { done, value: chunk } = await reader.read();
+      let done: boolean, chunk: Uint8Array<ArrayBufferLike> | undefined;
+      try {
+        const result = await reader.read();
+        done = result.done;
+        chunk = result.value;
+      } catch (err) {
+        if (signal?.aborted) {
+          await push(createResultForAbort(signal.reason));
+          return stop();
+        }
+        const errErr = err instanceof Error ? err : new Error(String(err));
+        await push({
+          errors: [
+            createGraphQLError(errErr.message, { originalError: errErr }),
+          ],
+        });
+        return stop();
+      }
       if (done) {
         return stop();
       }
