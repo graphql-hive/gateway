@@ -322,9 +322,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:^0.30.0":
-  version: 0.30.0
-  resolution: "@apollo/rover@npm:0.30.0"
+"@apollo/rover@npm:^0.31.0":
+  version: 0.31.0
+  resolution: "@apollo/rover@npm:0.31.0"
   dependencies:
     axios: "npm:^1.6.5"
     axios-proxy-builder: "npm:^0.1.1"
@@ -333,7 +333,7 @@ __metadata:
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/11492bfd35e4c2b0a9cd8abb38472e98dba3dc043a695a3e4c0184af08b83d7bdaf39a6761e192bf4b5c7060ac3e3e155bc8282c13b1a9c37f3cfc0b35e2c85d
+  checksum: 10c0/6aeb1733b77521283d258a1a7afd1c522f0a0bd5d04f7a707c1fdc959b4efa9e88a21c746a97cf2f86c513f69ea3c82df1a27a0b7f21e080408a9a7cb16d7696
   languageName: node
   linkType: hard
 
@@ -2837,9 +2837,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20241112.0":
-  version: 4.20250514.0
-  resolution: "@cloudflare/workers-types@npm:4.20250514.0"
-  checksum: 10c0/5c540b7068e98f78e59e53cb55d2fa22d8b3d6c23a5e5952c06604cd49aa83e3c425170925b8f105f29bb51ef6d1c2c216ef1f8d422116c5a414ef3e71fbda86
+  version: 4.20250515.0
+  resolution: "@cloudflare/workers-types@npm:4.20250515.0"
+  checksum: 10c0/a1f020a7822fb461b1007c76a54a38e0970cb9e72e92797bbd47901841eff768f571c07b5835ab6fb1ce9955d96bc745d0aef5fc67478e39d785bf9f5a87d2f8
   languageName: node
   linkType: hard
 
@@ -5705,7 +5705,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:^0.30.0"
+    "@apollo/rover": "npm:^0.31.0"
     "@babel/parser": "npm:^7.26.3"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
