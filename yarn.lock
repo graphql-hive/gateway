@@ -8907,25 +8907,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:0.10.8-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501":
-  version: 0.10.8-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501
-  resolution: "@whatwg-node/fetch@npm:0.10.8-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501"
+"@whatwg-node/fetch@npm:0.10.8-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e":
+  version: 0.10.8-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e
+  resolution: "@whatwg-node/fetch@npm:0.10.8-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e"
   dependencies:
-    "@whatwg-node/node-fetch": "npm:0.7.20-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501"
+    "@whatwg-node/node-fetch": "npm:0.7.20-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e"
     urlpattern-polyfill: "npm:^10.0.0"
-  checksum: 10c0/369b053d3c8fe27d04ca407786a66af909b758be962cadfd7b7fb03054dca6ec80556d485aac692d0c473c47ae1dbc76ddc2634e8ea74d5ee3fb438567d1a401
+  checksum: 10c0/b37f0072cffc640afeb8be4c4d3e61dd52c7ab19a36d7d6ae4773cfabaaed7f3a6dcb88349748fa0d1a677b75e63185ec6e24033df5e4cd9282013e996d954d9
   languageName: node
   linkType: hard
 
-"@whatwg-node/node-fetch@npm:0.7.20-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501":
-  version: 0.7.20-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501
-  resolution: "@whatwg-node/node-fetch@npm:0.7.20-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501"
+"@whatwg-node/node-fetch@npm:0.7.20-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e":
+  version: 0.7.20-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e
+  resolution: "@whatwg-node/node-fetch@npm:0.7.20-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e"
   dependencies:
     "@fastify/busboy": "npm:^3.1.1"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/329ba555c65c065668c3b44734073b87046aab93854784384d47e7b4e7c69a69f3ffdc22f5d18a657d2b4439e749576ed21b7f038f7e844c5e9dd9e04445a723
+  checksum: 10c0/30019cfc4d41450706432148cffe357e3ff630d5de6d88176b9141fa3a415f57e1252d72beabb0e29719659c0112497bf65a29b1eba0bd7ce63b8ad5b04b43fd
   languageName: node
   linkType: hard
 
@@ -8949,16 +8949,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.10.7-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501":
-  version: 0.10.7-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501
-  resolution: "@whatwg-node/server@npm:0.10.7-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501"
+"@whatwg-node/server@npm:0.10.7-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e":
+  version: 0.10.7-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e
+  resolution: "@whatwg-node/server@npm:0.10.7-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
-    "@whatwg-node/fetch": "npm:0.10.8-alpha-20250515134817-51db29f9612b508f027ee304f02356f5e6961501"
+    "@whatwg-node/fetch": "npm:0.10.8-alpha-20250515141543-0efb6cb46a612a1ff96be6c90b9e99917fd5800e"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/3123a0ca92807d534b07d807a302d00f2f40cc412e889119b1ea79d1e4214d10941c00e9fcafe02439c7bb60a207c2bbe4a051e4befb58667572e2f7e6d8ae9a
+  checksum: 10c0/54fd4e56a29ba1e6d6519dbe1befc56bd6c56651cc53000a1293134fd776488dd796691fe3e7f24c574e46133bb3be52f11dde601219cecdb21fe2788af5a811
   languageName: node
   linkType: hard
 
