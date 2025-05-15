@@ -4,4 +4,7 @@
 '@graphql-tools/stitch': patch
 ---
 
-Optimize `@provides` handling, so do not plan new queries if it is already provided by the parent subgraph
+Optimizes `@provides` handling by avoiding the generation of new query plans when a parent subgraph already supplies the requested fields.  
+- Refactors and inlines `subtractSelectionSets` to compute leftover selections.  
+- Threads a `providedSelectionNode` through planning to subtract out provided fields early.  
+- Updates stitching and federation logic to conditionally skip planning when selections are already available.
