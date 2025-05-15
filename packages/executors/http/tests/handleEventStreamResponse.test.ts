@@ -140,7 +140,7 @@ describe('handleEventStreamResponse', () => {
     );
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    setTimeout(0).then(() => {
+    Promise.resolve().then(() => {
       ctrl.abort(); // we abort
       readableStream.cancel(); // then cancel
       // so that the error reported is the abort error
@@ -188,7 +188,7 @@ describe('handleEventStreamResponse', () => {
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
     const originalError = new Error('Oops!');
-    setTimeout(0).then(() => {
+    Promise.resolve().then(() => {
       readableStream.cancel(originalError); // this will throw in reader.read()
     });
 
