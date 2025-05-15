@@ -34,7 +34,7 @@ export function handleEventStreamResponse(
     let closed: any = false; // reader.closed reason or true
     reader.closed
       .then(() => (closed = true))
-      .catch((reason) => (closed = reason)); // we dont use `finally` because we want to catch errors
+      .catch((reason) => (closed = reason)); // we don't use `finally` because we want to catch errors
     stop
       .then(() => {
         subscriptionCtrl?.abort();
