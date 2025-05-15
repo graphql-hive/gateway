@@ -93,8 +93,11 @@ export function handleEventStreamResponse(
         }
 
         // event
-        const event = msg.split('event:')[1]?.trim();
+        // we split twice in order to extract the event name even in cases
+        // where event has data too. like this: "event: complete\ndata:\n\n"
+        const event = msg.split('event:')[1]?.trim().split('\n')[0]?.trim();
         if (event === 'complete') {
+          // when we receive a "complete", we dont care about the data - we just stop
           return stop();
         }
       }
