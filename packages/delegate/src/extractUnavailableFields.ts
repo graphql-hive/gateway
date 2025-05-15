@@ -198,15 +198,12 @@ export function subtractSelectionSets(
     switch (selectionA.kind) {
       case Kind.FIELD: {
         const fieldA = selectionA as FieldNode;
-        const responseKey = fieldA.alias?.value || fieldA.name.value;
         const fieldsInOtherSelectionSet = selectionSetB.selections.filter(
           (subselectionB) => {
             if (subselectionB.kind !== Kind.FIELD) {
               return false;
             }
-            const responseKeyB =
-              subselectionB.alias?.value || subselectionB.name.value;
-            return responseKey === responseKeyB;
+            return fieldA.name.value === subselectionB.name.value;
           },
         ) as FieldNode[];
         if (
@@ -286,8 +283,7 @@ export function subtractSelectionSets(
           !selectionSetB.selections.some(
             (subselectionB) =>
               subselectionB.kind === Kind.FRAGMENT_SPREAD &&
-              (subselectionB as FragmentSpreadNode).name.value ===
-                fragmentSpreadA.name.value,
+              subselectionB.name.value === fragmentSpreadA.name.value,
           )
         ) {
           newSelections.push(selectionA);

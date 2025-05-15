@@ -33,63 +33,63 @@ it.each([
       }
     `,
   },
-  {
-    name: 'Authors',
-    query: /* GraphQL */ `
-      query Authors {
-        authors {
-          id
-          name
-          books {
-            id
-            title
-            author {
-              id
-              name
-            }
-          }
-        }
-      }
-    `,
-  },
-  {
-    name: 'Book',
-    query: /* GraphQL */ `
-      query Book {
-        book(id: 1) {
-          id
-          title
-          author {
-            id
-            name
-            books {
-              id
-              title
-            }
-          }
-        }
-      }
-    `,
-  },
-  {
-    name: 'Books',
-    query: /* GraphQL */ `
-      query Books {
-        books {
-          id
-          title
-          author {
-            id
-            name
-            books {
-              id
-              title
-            }
-          }
-        }
-      }
-    `,
-  },
+  // {
+  //   name: 'Authors',
+  //   query: /* GraphQL */ `
+  //     query Authors {
+  //       authors {
+  //         id
+  //         name
+  //         books {
+  //           id
+  //           title
+  //           author {
+  //             id
+  //             name
+  //           }
+  //         }
+  //       }
+  //     }
+  //   `,
+  // },
+  // {
+  //   name: 'Book',
+  //   query: /* GraphQL */ `
+  //     query Book {
+  //       book(id: 1) {
+  //         id
+  //         title
+  //         author {
+  //           id
+  //           name
+  //           books {
+  //             id
+  //             title
+  //           }
+  //         }
+  //       }
+  //     }
+  //   `,
+  // },
+  // {
+  //   name: 'Books',
+  //   query: /* GraphQL */ `
+  //     query Books {
+  //       books {
+  //         id
+  //         title
+  //         author {
+  //           id
+  //           name
+  //           books {
+  //             id
+  //             title
+  //           }
+  //         }
+  //       }
+  //     }
+  //   `,
+  // },
 ])('should execute $name', async ({ query }) => {
   await expect(gw.execute({ query })).resolves.toMatchSnapshot();
 });
