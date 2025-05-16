@@ -626,6 +626,7 @@ it('should consistently explain the query plan', async () => {
             author {
               username
               __typename
+              __typename
               ...User
               id
               reviews {
@@ -724,6 +725,7 @@ it('should consistently explain the query plan', async () => {
                 id
                 author {
                   username
+                  __typename
                   __typename
                   ...User
                   id
