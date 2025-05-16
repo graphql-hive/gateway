@@ -217,4 +217,55 @@ describe('handleEventStreamResponse', () => {
       }
     `);
   });
+
+  it('should handle multiple events in a single chunk', async () => {
+    const readableStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `:
+
+event: next
+data: {"errors":[{"message":"Oops!","locations":[{"line":1,"column":14}],"path":["testErrorSubscription"],"extensions":{"code":"BAD_REQUEST"}}]}
+
+event: complete
+data:
+
+`,
+          ),
+        );
+      },
+    });
+
+    const response = new Response(readableStream);
+    const asyncIterable = handleEventStreamResponse(response);
+    const iterator = asyncIterable[Symbol.asyncIterator]();
+
+    await expect(iterator.next().then(({ value }) => value)).resolves.toEqual({
+      errors: [
+        expect.objectContaining({
+          message: 'Oops!',
+        }),
+      ],
+    });
+    await expect(iterator.next()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+    await expect(iterator.return()).resolves.toMatchInlineSnapshot(`
+      {
+        "done": true,
+        "value": undefined,
+      }
+    `);
+  });
+
+  it.todo('should consume messages on an immediately closed stream', () => {
+    // the order of execution in handleEventStreamResponse should be:
+    // 1. start waiting for `reader.read()`
+    // 2. reader.closed is resolved
+    // 3. `reader.read()` resolves with data that should be flushed before closing
+  });
 });
