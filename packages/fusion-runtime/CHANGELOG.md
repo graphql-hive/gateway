@@ -1,5 +1,21 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.13
+
+### Patch Changes
+
+- [#1113](https://github.com/graphql-hive/gateway/pull/1113) [`88c9369`](https://github.com/graphql-hive/gateway/commit/88c9369abfdcb8e5ed8331c12a42a90e3b6b211b) Thanks [@ardatan](https://github.com/ardatan)! - Handle serving subgraphs when;
+  - No entity is found
+  - Query root type has a different name than `Query`
+  - Federation transform by adding `@key` directive to a type but without a resolver
+- Updated dependencies [[`faffc17`](https://github.com/graphql-hive/gateway/commit/faffc17e72f8893e7e717d5a425205a6364e4d44), [`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578)]:
+  - @graphql-tools/batch-execute@9.0.16
+  - @graphql-tools/delegate@10.2.18
+  - @graphql-tools/federation@3.2.2
+  - @graphql-tools/stitch@9.4.23
+  - @graphql-tools/stitching-directives@3.1.33
+  - @graphql-tools/wrap@10.0.36
+
 ## 0.11.12
 
 ### Patch Changes

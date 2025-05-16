@@ -1,5 +1,36 @@
 # @graphql-hive/gateway-runtime
 
+## 1.8.3
+
+### Patch Changes
+
+- [#1115](https://github.com/graphql-hive/gateway/pull/1115) [`162693e`](https://github.com/graphql-hive/gateway/commit/162693ebceca9dba0eb748d36549e4af0cbfd91b) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency [`@graphql-hive/core@^0.11.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.11.0) (from `^0.10.0`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.42.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.42.0) (from `^0.41.0`, in `dependencies`)
+
+- [#1128](https://github.com/graphql-hive/gateway/pull/1128) [`4acd5ca`](https://github.com/graphql-hive/gateway/commit/4acd5ca8d591c442eed151d2dcf2fffee55f57e8) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/server@^0.10.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.8) (from `^0.10.5`, in `dependencies`)
+
+- [#1113](https://github.com/graphql-hive/gateway/pull/1113) [`88c9369`](https://github.com/graphql-hive/gateway/commit/88c9369abfdcb8e5ed8331c12a42a90e3b6b211b) Thanks [@ardatan](https://github.com/ardatan)! - Handle serving subgraphs when;
+
+  - No entity is found
+  - Query root type has a different name than `Query`
+  - Federation transform by adding `@key` directive to a type but without a resolver
+
+- [#1027](https://github.com/graphql-hive/gateway/pull/1027) [`faffc17`](https://github.com/graphql-hive/gateway/commit/faffc17e72f8893e7e717d5a425205a6364e4d44) Thanks [@ardatan](https://github.com/ardatan)! - If metadata is included the result with `includeExtensionMetadata`, `cost.estimated` should always be added to the result extensions even if no cost is calculated.
+
+- Updated dependencies [[`88c9369`](https://github.com/graphql-hive/gateway/commit/88c9369abfdcb8e5ed8331c12a42a90e3b6b211b), [`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173), [`ef0e24c`](https://github.com/graphql-hive/gateway/commit/ef0e24c55ed26320d139a83b1de5b75d5c1bfe4e), [`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578), [`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173)]:
+  - @graphql-mesh/fusion-runtime@0.11.13
+  - @graphql-tools/executor-http@2.0.1
+  - @graphql-tools/delegate@10.2.18
+  - @graphql-tools/federation@3.2.2
+  - @graphql-tools/stitch@9.4.23
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-tools/batch-delegate@9.0.36
+  - @graphql-tools/wrap@10.0.36
+
 ## 1.8.2
 
 ### Patch Changes

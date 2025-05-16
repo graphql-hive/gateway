@@ -1,5 +1,18 @@
 # @graphql-tools/stitch
 
+## 9.4.23
+
+### Patch Changes
+
+- [#1117](https://github.com/graphql-hive/gateway/pull/1117) [`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578) Thanks [@ardatan](https://github.com/ardatan)! - Optimizes `@provides` handling by avoiding the generation of new query plans when a parent subgraph already supplies the requested fields.
+  - Refactors and inlines `subtractSelectionSets` to compute leftover selections.
+  - Threads a `providedSelectionNode` through planning to subtract out provided fields early.
+  - Updates stitching and federation logic to conditionally skip planning when selections are already available.
+- Updated dependencies [[`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578)]:
+  - @graphql-tools/delegate@10.2.18
+  - @graphql-tools/batch-delegate@9.0.36
+  - @graphql-tools/wrap@10.0.36
+
 ## 9.4.22
 
 ### Patch Changes
