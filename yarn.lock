@@ -3309,6 +3309,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/subscriptions-data-other-subgraph@workspace:e2e/subscriptions-data-other-subgraph":
+  version: 0.0.0-use.local
+  resolution: "@e2e/subscriptions-data-other-subgraph@workspace:e2e/subscriptions-data-other-subgraph"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
+    graphql: "npm:^16.9.0"
+    graphql-sse: "npm:^2.5.3"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms"
