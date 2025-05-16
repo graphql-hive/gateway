@@ -1,5 +1,15 @@
 # @graphql-tools/executor-http
 
+## 2.0.1
+
+### Patch Changes
+
+- [#1124](https://github.com/graphql-hive/gateway/pull/1124) [`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Handle server sent events stream chunk containing multiple events
+
+- [#1121](https://github.com/graphql-hive/gateway/pull/1121) [`ef0e24c`](https://github.com/graphql-hive/gateway/commit/ef0e24c55ed26320d139a83b1de5b75d5c1bfe4e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Gracefully handle event stream reading errors and cancellations
+
+- [#1124](https://github.com/graphql-hive/gateway/pull/1124) [`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Flush incoming chunk before closing the stream
+
 ## 2.0.0
 
 ### Major Changes

@@ -1,5 +1,11 @@
 # @graphql-tools/batch-execute
 
+## 9.0.16
+
+### Patch Changes
+
+- [#1027](https://github.com/graphql-hive/gateway/pull/1027) [`faffc17`](https://github.com/graphql-hive/gateway/commit/faffc17e72f8893e7e717d5a425205a6364e4d44) Thanks [@ardatan](https://github.com/ardatan)! - Spread sync errors into an array with the same size of the requests to satisfy underlying DataLoader implementation to throw the error correctly
+
 ## 9.0.15
 
 ### Patch Changes

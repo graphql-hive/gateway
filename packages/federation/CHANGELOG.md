@@ -1,5 +1,19 @@
 # @graphql-tools/federation
 
+## 3.2.2
+
+### Patch Changes
+
+- [#1117](https://github.com/graphql-hive/gateway/pull/1117) [`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578) Thanks [@ardatan](https://github.com/ardatan)! - Optimizes `@provides` handling by avoiding the generation of new query plans when a parent subgraph already supplies the requested fields.
+  - Refactors and inlines `subtractSelectionSets` to compute leftover selections.
+  - Threads a `providedSelectionNode` through planning to subtract out provided fields early.
+  - Updates stitching and federation logic to conditionally skip planning when selections are already available.
+- Updated dependencies [[`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173), [`ef0e24c`](https://github.com/graphql-hive/gateway/commit/ef0e24c55ed26320d139a83b1de5b75d5c1bfe4e), [`0512be3`](https://github.com/graphql-hive/gateway/commit/0512be32399268eb7926db48675ddb5763fd8578), [`b7627d3`](https://github.com/graphql-hive/gateway/commit/b7627d3cc29e54a048085a79a07a7906f2994173)]:
+  - @graphql-tools/executor-http@2.0.1
+  - @graphql-tools/delegate@10.2.18
+  - @graphql-tools/stitch@9.4.23
+  - @graphql-tools/wrap@10.0.36
+
 ## 3.2.1
 
 ### Patch Changes

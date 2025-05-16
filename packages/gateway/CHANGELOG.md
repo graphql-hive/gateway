@@ -1,5 +1,20 @@
 # @graphql-hive/gateway
 
+## 1.14.2
+
+### Patch Changes
+
+- [#1113](https://github.com/graphql-hive/gateway/pull/1113) [`88c9369`](https://github.com/graphql-hive/gateway/commit/88c9369abfdcb8e5ed8331c12a42a90e3b6b211b) Thanks [@ardatan](https://github.com/ardatan)! - Do not print warnings for missing `gatewayConfig` export for `mesh.config` files
+
+- Updated dependencies [[`162693e`](https://github.com/graphql-hive/gateway/commit/162693ebceca9dba0eb748d36549e4af0cbfd91b), [`4acd5ca`](https://github.com/graphql-hive/gateway/commit/4acd5ca8d591c442eed151d2dcf2fffee55f57e8), [`88c9369`](https://github.com/graphql-hive/gateway/commit/88c9369abfdcb8e5ed8331c12a42a90e3b6b211b), [`faffc17`](https://github.com/graphql-hive/gateway/commit/faffc17e72f8893e7e717d5a425205a6364e4d44)]:
+  - @graphql-hive/gateway-runtime@1.8.3
+  - @graphql-hive/plugin-aws-sigv4@1.0.10
+  - @graphql-hive/plugin-deduplicate-request@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.57
+  - @graphql-mesh/plugin-prometheus@1.3.45
+  - @graphql-mesh/transport-http@0.6.41
+
 ## 1.14.1
 
 ### Patch Changes
