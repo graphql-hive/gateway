@@ -1,21 +1,21 @@
 import { getTypeInfo } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
+  getArgumentValues,
   getDirective,
   getDirectiveExtensions,
+  getNamedType,
+  isIntrospectionType,
+  isListType,
   memoize1,
   memoize3,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
   FieldNode,
-  getArgumentValues,
-  getNamedType,
   GraphQLNamedOutputType,
   GraphQLOutputType,
   GraphQLSchema,
-  isIntrospectionType,
-  isListType,
   OperationTypeNode,
   TypeInfo,
   visit,

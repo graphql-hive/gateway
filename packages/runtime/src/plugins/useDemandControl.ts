@@ -3,12 +3,12 @@ import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   isAsyncIterable,
+  isCompositeType,
   mapAsyncIterator,
 } from '@graphql-tools/utils';
 import {
   FieldNode,
   GraphQLNamedOutputType,
-  isCompositeType,
   OperationTypeNode,
   TypeInfo,
 } from 'graphql';

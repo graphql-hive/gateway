@@ -8,13 +8,14 @@ import {
   appendObjectFields,
   ExecutionRequest,
   ExecutionResult,
+  getNamedType,
+  getNullableType,
+  isListType,
   relocatedError,
   removeObjectFields,
 } from '@graphql-tools/utils';
 import {
   FieldNode,
-  getNamedType,
-  getNullableType,
   GraphQLArgument,
   GraphQLError,
   GraphQLFieldConfig,
@@ -22,7 +23,6 @@ import {
   GraphQLList,
   GraphQLObjectType,
   GraphQLSchema,
-  isListType,
   Kind,
   OperationTypeNode,
 } from 'graphql';
@@ -112,8 +112,8 @@ export default class HoistField<
             this.argLevels[arg.name] = index;
           }
         }
-        const nullableType = getNullableType(field?.type);
-        if (isListType(nullableType)) {
+        const nullableType = field?.type && getNullableType(field?.type);
+        if (nullableType != null && isListType(nullableType)) {
           isList = true;
           return getNamedType(nullableType) as any;
         }

@@ -1,5 +1,5 @@
 import { YamlConfig } from '@graphql-mesh/types';
-import type {
+import {
   MergedTypeConfig,
   SubschemaConfig,
   Transform,
@@ -7,6 +7,9 @@ import type {
 import {
   astFromField,
   getDirectiveExtensions,
+  isInterfaceType,
+  isObjectType,
+  isOutputType,
   MapperKind,
   mapSchema,
   type TypeSource,
@@ -31,9 +34,6 @@ import {
   GraphQLDirective,
   GraphQLSchema,
   GraphQLString,
-  isInterfaceType,
-  isObjectType,
-  isOutputType,
   Kind,
   parseType,
   typeFromAST,

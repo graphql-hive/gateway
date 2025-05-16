@@ -7,6 +7,8 @@ import {
 import {
   ExecutionRequest,
   getDefinedRootType,
+  getNamedType,
+  isInputType,
   MapperKind,
   mapSchema,
   transformInputValue,
@@ -14,9 +16,7 @@ import {
 import {
   DocumentNode,
   FragmentDefinitionNode,
-  getNamedType,
   GraphQLSchema,
-  isInputType,
   Kind,
   NamedTypeNode,
   ObjectFieldNode,

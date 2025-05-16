@@ -6,6 +6,7 @@ import {
   getDefinedRootType,
   getOperationASTFromRequest,
   isAsyncIterable,
+  isListType,
   Maybe,
   MaybeAsyncIterable,
 } from '@graphql-tools/utils';
@@ -20,7 +21,6 @@ import {
   FieldDefinitionNode,
   GraphQLOutputType,
   GraphQLSchema,
-  isListType,
   OperationTypeNode,
   validate,
 } from 'graphql';

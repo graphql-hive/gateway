@@ -1,15 +1,17 @@
 import {
   getNamedType,
   getNullableType,
+  isEnumType,
+  isListType,
+  isNonNullType,
+  isScalarType,
+} from '@graphql-tools/utils';
+import {
   GraphQLArgumentConfig,
   GraphQLEnumType,
   GraphQLFieldConfig,
   GraphQLInputFieldConfig,
   GraphQLType,
-  isEnumType,
-  isListType,
-  isNonNullType,
-  isScalarType,
 } from 'graphql';
 import {
   MergeFieldConfigCandidate,

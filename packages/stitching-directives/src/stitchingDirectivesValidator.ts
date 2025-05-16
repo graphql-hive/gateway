@@ -1,22 +1,19 @@
 import {
   getDirective,
   getImplementingTypes,
-  isSome,
-  MapperKind,
-  mapSchema,
-  parseSelectionSet,
-} from '@graphql-tools/utils';
-import {
   getNullableType,
-  GraphQLSchema,
   isAbstractType,
   isInterfaceType,
   isListType,
   isNamedType,
   isObjectType,
+  isSome,
   isUnionType,
-  parseValue,
-} from 'graphql';
+  MapperKind,
+  mapSchema,
+  parseSelectionSet,
+} from '@graphql-tools/utils';
+import { GraphQLSchema, parseValue } from 'graphql';
 import { defaultStitchingDirectiveOptions } from './defaultStitchingDirectiveOptions.js';
 import { parseMergeArgsExpr } from './parseMergeArgsExpr.js';
 import { StitchingDirectivesOptions } from './types.js';

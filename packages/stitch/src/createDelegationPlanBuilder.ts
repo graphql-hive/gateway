@@ -7,16 +7,20 @@ import {
   StitchingInfo,
   Subschema,
 } from '@graphql-tools/delegate';
-import { memoize1, memoize2, memoize3 } from '@graphql-tools/utils';
+import {
+  getNamedType,
+  isAbstractType,
+  memoize1,
+  memoize2,
+  memoize3,
+} from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
-  getNamedType,
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
   InlineFragmentNode,
-  isAbstractType,
   Kind,
   SelectionNode,
   SelectionSetNode,

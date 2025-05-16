@@ -6,6 +6,8 @@ import {
 import {
   ExecutionRequest,
   ExecutionResult,
+  isScalarType,
+  isSpecifiedScalarType,
   MapperKind,
   mapSchema,
   renameType,
@@ -15,8 +17,6 @@ import {
 import {
   GraphQLNamedType,
   GraphQLSchema,
-  isScalarType,
-  isSpecifiedScalarType,
   Kind,
   NamedTypeNode,
   visit,

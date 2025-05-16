@@ -4,12 +4,8 @@ import {
   MergedTypeResolver,
   MergedTypeResolverOptions,
 } from '@graphql-tools/delegate';
-import {
-  getNamedType,
-  GraphQLList,
-  GraphQLOutputType,
-  OperationTypeNode,
-} from 'graphql';
+import { getNamedType } from '@graphql-tools/utils';
+import { GraphQLList, GraphQLOutputType, OperationTypeNode } from 'graphql';
 import { GraphQLResolveInfo } from 'graphql/type';
 
 export function createMergedTypeResolver<

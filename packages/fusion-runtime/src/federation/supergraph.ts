@@ -4,10 +4,10 @@ import {
   requestIdByRequest,
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
-import type {
-  DelegationPlanBuilder,
-  StitchingInfo,
-  SubschemaConfig,
+import {
+  type DelegationPlanBuilder,
+  type StitchingInfo,
+  type SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
 import { mergeTypeDefs } from '@graphql-tools/merge';
@@ -18,13 +18,13 @@ import {
   getDirectiveExtensions,
   getDocumentNodeFromSchema,
   IResolvers,
+  isEnumType,
   MapperKind,
   mapSchema,
   memoize1,
   TypeSource,
 } from '@graphql-tools/utils';
 import {
-  isEnumType,
   Kind,
   visit,
   type GraphQLSchema,

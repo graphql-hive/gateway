@@ -1,17 +1,19 @@
-import { Maybe } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   getNullableType,
+  isAbstractType,
+  isCompositeType,
+  isLeafType,
+  isListType,
+  Maybe,
+} from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import {
   GraphQLCompositeType,
   GraphQLError,
   GraphQLList,
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLSchema,
-  isAbstractType,
-  isCompositeType,
-  isLeafType,
-  isListType,
   locatedError,
 } from 'graphql';
 import {

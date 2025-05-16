@@ -3,14 +3,13 @@ import {
   StitchingInfo,
   Subschema,
 } from '@graphql-tools/delegate';
-import { collectSubFields } from '@graphql-tools/utils';
+import { collectSubFields, isAbstractType } from '@graphql-tools/utils';
 import {
   FieldNode,
   FragmentDefinitionNode,
   GraphQLField,
   GraphQLObjectType,
   GraphQLSchema,
-  isAbstractType,
   Kind,
 } from 'graphql';
 

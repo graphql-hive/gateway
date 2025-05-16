@@ -7,11 +7,20 @@ import {
   mergeType,
   mergeUnion,
 } from '@graphql-tools/merge';
-import { Maybe } from '@graphql-tools/utils';
+import {
+  getNullableType,
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isNullableType,
+  isObjectType,
+  isScalarType,
+  isUnionType,
+  Maybe,
+} from '@graphql-tools/utils';
 import {
   EnumTypeDefinitionNode,
   EnumTypeExtensionNode,
-  getNullableType,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
   GraphQLFieldConfig,
@@ -31,13 +40,6 @@ import {
   InputObjectTypeExtensionNode,
   InterfaceTypeDefinitionNode,
   InterfaceTypeExtensionNode,
-  isEnumType,
-  isInputObjectType,
-  isInterfaceType,
-  isNullableType,
-  isObjectType,
-  isScalarType,
-  isUnionType,
   ObjectTypeDefinitionNode,
   ObjectTypeExtensionNode,
   ScalarTypeDefinitionNode,

@@ -7,22 +7,22 @@ import {
   collectFields,
   filterSchema,
   getImplementingTypes,
-  getRootTypeNames,
-  parseSelectionSet,
-} from '@graphql-tools/utils';
-import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
-import {
   getNamedType,
-  GraphQLInterfaceType,
-  GraphQLNamedOutputType,
-  GraphQLObjectType,
-  GraphQLSchema,
+  getRootTypeNames,
   isAbstractType,
   isCompositeType,
   isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
+  parseSelectionSet,
+} from '@graphql-tools/utils';
+import { FilterTypes, TransformCompositeFields } from '@graphql-tools/wrap';
+import type {
+  GraphQLInterfaceType,
+  GraphQLNamedOutputType,
+  GraphQLObjectType,
+  GraphQLSchema,
 } from 'graphql';
 
 interface ComputedTypeConfig<K = any, V = any, TContext = Record<string, any>>

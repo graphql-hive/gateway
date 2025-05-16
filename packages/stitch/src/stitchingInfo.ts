@@ -7,25 +7,25 @@ import {
 } from '@graphql-tools/delegate';
 import {
   collectFields,
+  getNamedType,
   IFieldResolverOptions,
   IResolvers,
-  isSome,
-  parseSelectionSet,
-} from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import {
-  FieldNode,
-  getNamedType,
-  GraphQLInterfaceType,
-  GraphQLNamedType,
-  GraphQLObjectType,
-  GraphQLSchema,
   isAbstractType,
   isInputObjectType,
   isInterfaceType,
   isLeafType,
   isObjectType,
+  isSome,
   isUnionType,
+  parseSelectionSet,
+} from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  FieldNode,
+  GraphQLInterfaceType,
+  GraphQLNamedType,
+  GraphQLObjectType,
+  GraphQLSchema,
   Kind,
   print,
   SelectionSetNode,

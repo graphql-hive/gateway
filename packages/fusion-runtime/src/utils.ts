@@ -24,6 +24,7 @@ import {
   getDirectiveExtensions,
   isAsyncIterable,
   isDocumentNode,
+  isEnumType,
   mergeDeep,
   printSchemaWithDirectives,
   type ExecutionRequest,
@@ -39,7 +40,6 @@ import { constantCase } from 'change-case';
 import {
   FragmentDefinitionNode,
   GraphQLError,
-  isEnumType,
   SelectionNode,
   SelectionSetNode,
   type DocumentNode,

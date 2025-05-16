@@ -1,5 +1,6 @@
 import {
   collectFields,
+  isAbstractType,
   memoize1,
   mergeDeep,
   pathToArray,
@@ -17,7 +18,6 @@ import {
   GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
-  isAbstractType,
   locatedError,
   SelectionSetNode,
 } from 'graphql';
