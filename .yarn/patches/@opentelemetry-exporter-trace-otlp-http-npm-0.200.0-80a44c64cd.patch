@@ -1,9 +1,9 @@
 diff --git a/package.json b/package.json
-index 8494583b1604d739d2120da81dee9c6f5e053eeb..d1edafb9303aa18a5e617321ae81e237c3a6118e 100644
+index d90fb5e21da07efdc8c645cae1327495235910d2..869ab86b744a36da0192da14b638208451d7c147 100644
 --- a/package.json
 +++ b/package.json
 @@ -3,13 +3,13 @@
-   "version": "0.56.0",
+   "version": "0.200.0",
    "description": "OpenTelemetry Collector Trace Exporter allows user to send collected traces to the OpenTelemetry Collector",
    "main": "build/src/index.js",
 -  "module": "build/esm/index.js",

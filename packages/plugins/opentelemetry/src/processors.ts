@@ -1,4 +1,3 @@
-import type { AzureMonitorExporterOptions } from '@azure/monitor-opentelemetry-exporter';
 import { OTLPTraceExporter as OtlpHttpExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   ZipkinExporter,
@@ -40,14 +39,14 @@ export function createStdoutExporter(
 }
 
 export function createZipkinExporter(
-  config: ZipkinExporterConfig,
+  config?: ZipkinExporterConfig,
   batchingConfig?: BatchingConfig,
 ): SpanProcessor {
   return resolveBatchingConfig(new ZipkinExporter(config), batchingConfig);
 }
 
 export function createOtlpHttpExporter(
-  config: OTLPExporterNodeConfigBase,
+  config?: OTLPExporterNodeConfigBase,
   batchingConfig?: BatchingConfig,
 ): SpanProcessor {
   return resolveBatchingConfig(new OtlpHttpExporter(config), batchingConfig);
@@ -87,7 +86,7 @@ function loadExporterLazily<
 }
 
 export function createOtlpGrpcExporter(
-  config: OTLPGRPCExporterConfigNode,
+  config?: OTLPGRPCExporterConfigNode,
   batchingConfig?: BatchingConfig,
 ): MaybePromise<SpanProcessor> {
   return handleMaybePromise(
@@ -100,26 +99,6 @@ export function createOtlpGrpcExporter(
     (OTLPTraceExporter) => {
       return resolveBatchingConfig(
         new OTLPTraceExporter(config),
-        batchingConfig,
-      );
-    },
-  );
-}
-
-export function createAzureMonitorExporter(
-  config: AzureMonitorExporterOptions,
-  batchingConfig?: BatchingConfig,
-): MaybePromise<SpanProcessor> {
-  return handleMaybePromise(
-    () =>
-      loadExporterLazily(
-        'Azure Monitor',
-        '@azure/monitor-opentelemetry-exporter',
-        'AzureMonitorTraceExporter',
-      ),
-    (AzureMonitorTraceExporter) => {
-      return resolveBatchingConfig(
-        new AzureMonitorTraceExporter(config),
         batchingConfig,
       );
     },
