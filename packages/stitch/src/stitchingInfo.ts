@@ -210,9 +210,9 @@ function createMergedTypes<
                           },
                         },
                       ],
-                    }
-                  }
-                })
+                    };
+                  },
+                });
                 let providedSelectionsForSubschema =
                   providedSelectionsByField.get(subschema);
                 if (providedSelectionsForSubschema == null) {
