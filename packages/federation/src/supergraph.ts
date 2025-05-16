@@ -1292,12 +1292,14 @@ export function getStitchingOptionsFromSupergraphSdl(
                       currentUnavailableSelectionSet,
                       unavailableInFriendSelectionSet,
                     );
-                    currentFriendSubschemas.set(
-                      friendCandidate.transformedSubschema,
-                      subschemaSelectionSet,
-                    );
-                    currentUnavailableSelectionSet =
-                      unavailableInFriendSelectionSet;
+                    if (subschemaSelectionSet.selections.length) {
+                      currentFriendSubschemas.set(
+                        friendCandidate.transformedSubschema,
+                        subschemaSelectionSet,
+                      );
+                      currentUnavailableSelectionSet =
+                        unavailableInFriendSelectionSet;
+                    }
                   }
                 }
               }

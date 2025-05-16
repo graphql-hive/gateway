@@ -280,6 +280,8 @@ export function createDelegationPlanBuilder(
       variableValues: Record<string, any>,
       fragments: Record<string, FragmentDefinitionNode>,
       fieldNodes: FieldNode[],
+      _context?: any,
+      info?: GraphQLResolveInfo,
     ): Array<Map<Subschema, SelectionSetNode>> {
       const stitchingInfo = getStitchingInfo(schema);
       const targetSubschemas =
@@ -292,6 +294,19 @@ export function createDelegationPlanBuilder(
       const typeInSubschema = sourceSubschema.transformedSchema.getType(
         typeName,
       ) as GraphQLObjectType;
+
+      let providedSelectionNode: SelectionSetNode | undefined;
+
+      const parentFieldName = fieldNodes[0]?.name.value;
+
+      if (info?.parentType && parentFieldName) {
+        const providedSelectionsByField =
+          stitchingInfo.mergedTypes[
+            info.parentType.name
+          ]?.providedSelectionsByField?.get(sourceSubschema);
+        providedSelectionNode = providedSelectionsByField?.[parentFieldName];
+      }
+
       const fieldsNotInSubschema = getFieldsNotInSubschema(
         schema,
         stitchingInfo,
@@ -303,6 +318,7 @@ export function createDelegationPlanBuilder(
         fragments,
         variableValues,
         sourceSubschema,
+        providedSelectionNode,
       );
 
       if (!fieldsNotInSubschema.length) {

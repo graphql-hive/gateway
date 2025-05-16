@@ -626,6 +626,7 @@ it('should consistently explain the query plan', async () => {
             author {
               username
               __typename
+              __typename
               ...User
               id
               reviews {
@@ -685,6 +686,31 @@ it('should consistently explain the query plan', async () => {
         __typename
         ... on User {
           id
+          name
+        }
+      }
+    }",
+            "subgraphName": "accounts",
+            "variables": {
+              "representations": [
+                {
+                  "__typename": "User",
+                  "id": "1",
+                },
+                {
+                  "__typename": "User",
+                  "id": "2",
+                },
+              ],
+            },
+          },
+          {
+            "query": "query TestQuery($representations: [_Any!]!) {
+      __typename
+      _entities(representations: $representations) {
+        __typename
+        ... on User {
+          id
           reviews {
             __typename
             ...Review
@@ -699,6 +725,7 @@ it('should consistently explain the query plan', async () => {
                 id
                 author {
                   username
+                  __typename
                   __typename
                   ...User
                   id
@@ -737,32 +764,6 @@ it('should consistently explain the query plan', async () => {
       body
     }",
             "subgraphName": "reviews",
-            "variables": {
-              "representations": [
-                {
-                  "__typename": "User",
-                  "id": "1",
-                },
-                {
-                  "__typename": "User",
-                  "id": "2",
-                },
-              ],
-            },
-          },
-          {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      __typename
-      _entities(representations: $representations) {
-        __typename
-        ... on User {
-          id
-          username
-          name
-        }
-      }
-    }",
-            "subgraphName": "accounts",
             "variables": {
               "representations": [
                 {

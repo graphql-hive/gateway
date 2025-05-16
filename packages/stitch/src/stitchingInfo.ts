@@ -29,6 +29,7 @@ import {
   Kind,
   print,
   SelectionSetNode,
+  visit,
 } from 'graphql';
 import { createDelegationPlanBuilder } from './createDelegationPlanBuilder.js';
 import { createMergedTypeResolver } from './createMergedTypeResolver.js';
@@ -184,7 +185,34 @@ function createMergedTypes<
                     })
                   : undefined;
               }
-              if (mergedTypeConfig.fields[fieldName]?.provides) {
+              let providedSelectionSet =
+                mergedTypeConfig.fields[fieldName]?.provides;
+              if (providedSelectionSet) {
+                providedSelectionSet = visit(providedSelectionSet, {
+                  [Kind.SELECTION_SET](node) {
+                    const typeNameField = node.selections.find(
+                      (selection) =>
+                        selection.kind === Kind.FIELD &&
+                        selection.name.value === '__typename',
+                    );
+                    if (typeNameField) {
+                      return node;
+                    }
+                    return {
+                      ...node,
+                      selections: [
+                        ...node.selections,
+                        {
+                          kind: Kind.FIELD,
+                          name: {
+                            kind: Kind.NAME,
+                            value: '__typename',
+                          },
+                        },
+                      ],
+                    };
+                  },
+                });
                 let providedSelectionsForSubschema =
                   providedSelectionsByField.get(subschema);
                 if (providedSelectionsForSubschema == null) {
@@ -198,7 +226,7 @@ function createMergedTypes<
                   );
                 }
                 providedSelectionsForSubschema[fieldName] =
-                  mergedTypeConfig.fields[fieldName].provides;
+                  providedSelectionSet;
               }
             }
             fieldSelectionSets.set(subschema, parsedFieldSelectionSets);

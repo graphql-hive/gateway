@@ -1,12 +1,14 @@
 import {
   FieldNode,
   FragmentDefinitionNode,
+  FragmentSpreadNode,
   getNamedType,
   GraphQLField,
   GraphQLInterfaceType,
   GraphQLNamedOutputType,
   GraphQLObjectType,
   GraphQLSchema,
+  InlineFragmentNode,
   isAbstractType,
   isInterfaceType,
   isLeafType,
@@ -15,7 +17,6 @@ import {
   Kind,
   SelectionNode,
   SelectionSetNode,
-  visit,
 } from 'graphql';
 
 export function extractUnavailableFieldsFromSelectionSet(
@@ -188,98 +189,111 @@ export function extractUnavailableFields(
   return [];
 }
 
-function fieldExistsInSelectionSet(
-  node: SelectionSetNode,
-  path: readonly [segment: string | number, fieldName?: string][],
-): boolean {
-  let currentNode:
-    | ((SelectionSetNode | SelectionNode) & Record<string | number, any>)
-    | SelectionNode[]
-    | undefined = node;
-  const isArrayOfSelectionNodes = (node: unknown): node is SelectionNode[] =>
-    Array.isArray(node);
-
-  for (const [segment, fieldName] of path) {
-    if (!currentNode) {
-      return false;
-    }
-
-    if (isArrayOfSelectionNodes(currentNode) && fieldName) {
-      currentNode = currentNode.find((selectionNode) => {
-        return (<Partial<FieldNode>>selectionNode).name?.value === fieldName;
-      });
-    } else {
-      currentNode = currentNode[segment as any];
-    }
-  }
-
-  return !!currentNode;
-}
-
-function getPathWithFieldNames(
-  node: SelectionSetNode,
-  path: readonly (string | number)[],
-): readonly [segment: string | number, fieldName?: string][] {
-  const pathWithFieldNames: [segment: string | number, fieldName?: string][] =
-    [];
-  let currentNode:
-    | ((SelectionSetNode | SelectionNode) & Record<string | number, any>)
-    | SelectionNode[] = node;
-  const isArrayOfSelectionNodes = (node: unknown): node is SelectionNode[] =>
-    Array.isArray(node);
-
-  for (const segment of path) {
-    currentNode = currentNode[segment as any];
-
-    if (
-      !isArrayOfSelectionNodes(currentNode) &&
-      currentNode.kind === Kind.FIELD
-    ) {
-      pathWithFieldNames.push([segment, currentNode.name.value]);
-    } else {
-      pathWithFieldNames.push([segment]);
-    }
-  }
-
-  return pathWithFieldNames;
-}
-
 export function subtractSelectionSets(
   selectionSetA: SelectionSetNode,
   selectionSetB: SelectionSetNode,
-) {
-  return visit(selectionSetA, {
-    [Kind.FIELD]: {
-      enter(node, _key, _parent, path) {
-        if (!node.selectionSet) {
-          const pathWithFieldNames = getPathWithFieldNames(selectionSetA, path);
-          const fieldExists = fieldExistsInSelectionSet(
-            selectionSetB,
-            pathWithFieldNames,
+): SelectionSetNode {
+  const newSelections: SelectionNode[] = [];
+  for (const selectionA of selectionSetA.selections) {
+    switch (selectionA.kind) {
+      case Kind.FIELD: {
+        const fieldA = selectionA as FieldNode;
+        const fieldsInOtherSelectionSet = selectionSetB.selections.filter(
+          (subselectionB) => {
+            if (subselectionB.kind !== Kind.FIELD) {
+              return false;
+            }
+            return fieldA.name.value === subselectionB.name.value;
+          },
+        ) as FieldNode[];
+        if (
+          fieldsInOtherSelectionSet.length > 0 &&
+          fieldA.selectionSet?.selections?.length
+        ) {
+          const newSubSelection = fieldsInOtherSelectionSet.reduce(
+            (acc, fieldB) =>
+              fieldB.selectionSet
+                ? subtractSelectionSets(acc, fieldB.selectionSet)
+                : acc,
+            {
+              kind: Kind.SELECTION_SET,
+              selections: fieldA.selectionSet.selections,
+            } as SelectionSetNode,
           );
-
-          if (fieldExists) {
-            return null;
+          if (newSubSelection.selections.length) {
+            newSelections.push({
+              ...fieldA,
+              selectionSet: newSubSelection,
+            });
           }
+        } else if (fieldsInOtherSelectionSet.length === 0) {
+          newSelections.push(selectionA);
         }
-        return undefined;
-      },
-    },
-    [Kind.SELECTION_SET]: {
-      leave(node) {
-        if (node.selections.length === 0) {
-          return null;
+        break;
+      }
+      case Kind.INLINE_FRAGMENT: {
+        const inlineFragmentA = selectionA as InlineFragmentNode;
+        const inlineFragmentsFromB = selectionSetB.selections.filter(
+          (subselectionB) => {
+            if (subselectionB.kind !== Kind.INLINE_FRAGMENT) {
+              return false;
+            }
+            const inlineFragmentB = subselectionB as InlineFragmentNode;
+            return (
+              inlineFragmentA.typeCondition?.name.value ===
+              inlineFragmentB.typeCondition?.name.value
+            );
+          },
+        ) as InlineFragmentNode[];
+        if (inlineFragmentsFromB.length > 0) {
+          const newSubSelection = inlineFragmentsFromB.reduce(
+            (acc, subselectionB) =>
+              subselectionB.selectionSet
+                ? subtractSelectionSets(acc, subselectionB.selectionSet)
+                : acc,
+            {
+              kind: Kind.SELECTION_SET,
+              selections: inlineFragmentA.selectionSet.selections,
+            } as SelectionSetNode,
+          );
+          if (newSubSelection.selections.length) {
+            if (newSubSelection.selections.length === 1) {
+              const onlySelection = newSubSelection.selections[0];
+              if (onlySelection?.kind === Kind.FIELD) {
+                const responseKey =
+                  onlySelection.alias?.value || onlySelection.name.value;
+                if (responseKey === '__typename') {
+                  continue;
+                }
+              }
+            }
+            newSelections.push({
+              ...inlineFragmentA,
+              selectionSet: newSubSelection,
+            });
+          }
+        } else {
+          newSelections.push(selectionA);
         }
-        return undefined;
-      },
-    },
-    [Kind.INLINE_FRAGMENT]: {
-      leave(node) {
-        if (node.selectionSet?.selections.length === 0) {
-          return null;
+        break;
+      }
+      case Kind.FRAGMENT_SPREAD: {
+        const fragmentSpreadA = selectionA as FragmentSpreadNode;
+        if (
+          !selectionSetB.selections.some(
+            (subselectionB) =>
+              subselectionB.kind === Kind.FRAGMENT_SPREAD &&
+              subselectionB.name.value === fragmentSpreadA.name.value,
+          )
+        ) {
+          newSelections.push(selectionA);
         }
-        return undefined;
-      },
-    },
-  });
+        break;
+      }
+    }
+  }
+  return {
+    kind: Kind.SELECTION_SET,
+    selections: newSelections,
+  };
 }
