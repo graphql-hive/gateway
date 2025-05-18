@@ -7,31 +7,31 @@ import { parseKey, parseKeyFromPath } from './prefix.js';
  * Split and transform result of the query produced by the `merge` function
  */
 export function splitResult(
-  mergedResult: ExecutionResult,
+  { data, errors }: ExecutionResult,
   numResults: number,
 ): Array<ExecutionResult> {
   const splitResults = new Array<ExecutionResult>(numResults);
 
-  if (mergedResult.data) {
-    for (const prefixedKey in mergedResult.data) {
+  if (data) {
+    for (const prefixedKey in data) {
       const { index, originalKey } = parseKey(prefixedKey);
       const result = splitResults[index];
       if (result == null) {
         splitResults[index] = {
           data: {
-            [originalKey]: mergedResult.data[prefixedKey],
+            [originalKey]: data[prefixedKey],
           },
         };
       } else if (result.data == null) {
-        result.data = { [originalKey]: mergedResult.data[prefixedKey] };
+        result.data = { [originalKey]: data[prefixedKey] };
       } else {
-        result.data[originalKey] = mergedResult.data[prefixedKey];
+        result.data[originalKey] = data[prefixedKey];
       }
     }
   }
 
-  if (mergedResult.errors) {
-    for (const error of mergedResult.errors) {
+  if (errors) {
+    for (const error of errors) {
       if (error.path) {
         const { index, originalKey, keyOffset } = parseKeyFromPath(error.path);
         const newError = relocatedError(error, [
