@@ -1311,19 +1311,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           const jobs: Promise<void>[] = [];
           let hasPromise = false;
           const fieldNames = new Set<string>();
-          currentAvailableSelectionSet?.selections.forEach((selection) => {
-            if (
-              selection.kind === Kind.FIELD &&
-              selection.name.value === info.fieldName
-            ) {
-              selection.selectionSet?.selections.forEach((selection) => {
-                if (selection.kind === Kind.FIELD) {
-                  fieldNames.add(selection.name.value);
-                }
-              });
-            }
-          });
-          currentUnavailableSelectionSet?.selections.forEach((selection) => {
+          originalSelectionSet?.selections.forEach((selection) => {
             if (
               selection.kind === Kind.FIELD &&
               selection.name.value === info.fieldName
