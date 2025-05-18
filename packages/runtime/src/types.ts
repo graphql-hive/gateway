@@ -667,6 +667,18 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Subgraph error handling
    */
   subgraphErrors?: SubgraphErrorPluginOptions | false;
+
+  /**
+   * Process cookie headers
+   *
+   * Now [`request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object in the GraphQL Context will have [`cookieStore`](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore).
+   *
+   * This feature flag needs to be enabled for the plugins like;
+   * [JWT Plugin with cookies](https://the-guild.dev/graphql/hive/docs/gateway/authorization-authentication#token-lookup)
+   *
+   * You can learn more about the underlying GraphQL Yoga plugin [here](https://the-guild.dev/graphql/yoga-server/docs/features/cookies)
+   */
+  cookies?: boolean;
 }
 
 interface DisableIntrospectionOptions {
