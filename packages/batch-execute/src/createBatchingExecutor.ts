@@ -3,9 +3,8 @@ import {
   ExecutionResult,
   Executor,
   getOperationASTFromRequest,
-  isAsyncIterable,
 } from '@graphql-tools/utils';
-import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
 import { mergeRequests } from './mergeRequests.js';
 import { splitResult } from './splitResult.js';
@@ -49,29 +48,18 @@ function createLoadFn(
   ): PromiseLike<Array<ExecutionResult>> {
     if (requests.length === 1 && requests[0]) {
       const request = requests[0];
-      return fakePromise(
-        handleMaybePromise(
-          () => executor(request),
-          (result) => [result],
-          (err) => [err],
-        ),
-      );
+      return fakePromise()
+        .then(() => executor(request))
+        .catch((err) => err)
+        .then((res) => [res]);
     }
     const mergedRequests = mergeRequests(requests, extensionsReducer);
-    return fakePromise(
-      handleMaybePromise(
-        () => executor(mergedRequests),
-        (resultBatches) => {
-          if (isAsyncIterable(resultBatches)) {
-            throw new Error(
-              'Executor must not return incremental results for batching',
-            );
-          }
-          return splitResult(resultBatches, requests.length);
-        },
-        (err) => requests.map(() => err),
-      ),
-    );
+    return fakePromise()
+      .then(() => executor(mergedRequests))
+      .then((resultBatches) =>
+        splitResult(resultBatches as ExecutionResult, requests.length),
+      )
+      .catch((err) => requests.map(() => err));
   };
 }
 
