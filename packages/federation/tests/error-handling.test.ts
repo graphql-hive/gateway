@@ -107,13 +107,20 @@ describe('Error handling', () => {
     if (isAsyncIterable(result)) {
       throw new Error('Expected result to be an ExecutionResult');
     }
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({
-      foo: {
-        id: '1',
-        bar: null,
-        baz: 'Baz',
+    expect(result).toEqual({
+      data: {
+        foo: {
+          id: '1',
+          bar: null,
+          baz: 'Baz',
+        },
       },
+      errors: [
+        expect.objectContaining({
+          message: 'A failed',
+          path: ['foo'],
+        }),
+      ],
     });
   });
   it('merges errors from shared root fields', async () => {
