@@ -1,7 +1,6 @@
-import EventEmitter from 'events';
 import { createServer } from 'http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { Opts } from '@internal/testing';
+import { createDeferredPromise, Opts } from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga, Repeater } from 'graphql-yoga';
 
@@ -22,7 +21,7 @@ const typeDefs = parse(/* GraphQL */ `
   }
 `);
 
-const userPostChangedEmitter = new EventEmitter();
+const emitter = createDeferredPromise<() => Promise<unknown>>();
 
 const resolvers = {
   Query: {
@@ -32,7 +31,7 @@ const resolvers = {
     userPostChanged: {
       subscribe: () =>
         new Repeater(async (push, stop) => {
-          function emit() {
+          emitter.resolve(() =>
             push({
               userPostChanged: {
                 id: '1',
@@ -43,11 +42,9 @@ const resolvers = {
                   },
                 ],
               },
-            });
-          }
-          userPostChangedEmitter.on('userPostChanged', emit);
+            }),
+          );
           await stop;
-          userPostChangedEmitter.off('userPostChanged', emit);
         }),
     },
   },
@@ -57,9 +54,10 @@ const yoga = createYoga({
   schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
   plugins: [
     {
-      onRequest({ request }) {
+      async onRequest({ request }) {
         if (request.url.endsWith('userPostChanged')) {
-          userPostChangedEmitter.emit('userPostChanged');
+          const emit = await emitter.promise;
+          await emit();
         }
       },
     },

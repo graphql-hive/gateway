@@ -22,13 +22,6 @@ it('should pull related data from other subgraph after emit', async () => {
     retryAttempts: 0,
   });
 
-  const emitter = (async () => {
-    for (let i = 0; i <= 3; i++) {
-      await setTimeout(100);
-      await fetch(`http://localhost:${users.port}/userPostChanged`);
-    }
-  })();
-
   const iter = client.iterate({
     query: /* GraphQL */ `
       subscription {
@@ -43,14 +36,22 @@ it('should pull related data from other subgraph after emit', async () => {
     `,
   });
 
-  emitter.then(() => {
-    iter.return!();
-  });
+  const msgsCount = 3;
+
+  (async () => {
+    for (let i = 0; i <= msgsCount; i++) {
+      await fetch(`http://localhost:${users.port}/userPostChanged`);
+    }
+  })();
 
   const msgs: unknown[] = [];
   for await (const msg of iter) {
     msgs.push(msg);
+    if (msgs.length >= msgsCount) {
+      break;
+    }
   }
+
   expect(msgs).toMatchInlineSnapshot(`
     [
       {
