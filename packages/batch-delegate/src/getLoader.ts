@@ -106,7 +106,7 @@ export function getLoader<K = any, V = any, C = K>(
     context ?? GLOBAL_CONTEXT,
   );
   if (iterableNextCounter != null) {
-    // TODO: should we prettyfy the cacheKey? is it relevant?
+    // TODO: should we prettify the cacheKey? is it relevant?
     cacheKey = `(#${iterableNextCounter})${cacheKey}`;
   }
 
