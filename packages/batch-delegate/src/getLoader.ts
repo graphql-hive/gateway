@@ -1,4 +1,5 @@
 import {
+  delegatedResponseIterableNextCounter,
   delegateToSchema,
   getActualFieldNodes,
   SubschemaConfig,
@@ -98,6 +99,16 @@ export function getLoader<K = any, V = any, C = K>(
   const loaders = getLoadersMap<K, V, C>(context ?? GLOBAL_CONTEXT, schema);
 
   let cacheKey = fieldName;
+
+  // we break the cache key for each of the next results of an iterable (stream/subscription/defer)
+  // this makes sure that we don't use the cached results for the subscription
+  const iterableNextCounter = delegatedResponseIterableNextCounter.get(
+    context ?? GLOBAL_CONTEXT,
+  );
+  if (iterableNextCounter != null) {
+    // TODO: should we prettyfy the cacheKey? is it relevant?
+    cacheKey = `(#${iterableNextCounter})${cacheKey}`;
+  }
 
   if (returnType) {
     const namedType = getNamedType(returnType);

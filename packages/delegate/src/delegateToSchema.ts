@@ -90,6 +90,20 @@ function getDelegationReturnType(
   return rootFieldType.type;
 }
 
+/**
+ * A weak map of {@link DelegationContext.context delegation request execution contexts} to the number of times the next result was emitted.
+ *
+ * Counts how many times the next result was emitted from a {@link delegateRequest delegated request} iterable result.
+ * this is useful for breaking the dataloader cache in streaming operations, likes subscriptions or queries with
+ * `@defer` or `@stream` directives.
+ *
+ * @see /packages/batch-delegate/src/getLoader.ts#getLoader
+ */
+export const delegatedResponseIterableNextCounter = new WeakMap<
+  NonNullable<DelegationContext['context']>,
+  number
+>();
+
 export function delegateRequest<
   TContext extends Record<string, any> = Record<string, any>,
   TArgs extends Record<string, any> = any,
@@ -110,6 +124,17 @@ export function delegateRequest<
       executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
     ) {
       if (isAsyncIterable(executorResult)) {
+        const ctx = delegationContext.context;
+        function incrementNextCounter() {
+          if (!ctx) {
+            return; // should never be undefined
+          }
+          delegatedResponseIterableNextCounter.set(
+            ctx,
+            (delegatedResponseIterableNextCounter.get(ctx) || 0) + 1,
+          );
+        }
+
         // This might be a stream
         if (
           delegationContext.operation === 'query' &&
@@ -126,6 +151,7 @@ export function delegateRequest<
                 if (stopped) {
                   break;
                 }
+                incrementNextCounter();
                 if (result.incremental) {
                   const data = {};
                   for (const incrementalRes of result.incremental) {
@@ -171,9 +197,10 @@ export function delegateRequest<
             }
           });
         }
-        return mapAsyncIterator(executorResult, (result) =>
-          transformer.transformResult(result),
-        );
+        return mapAsyncIterator(executorResult, (result) => {
+          incrementNextCounter();
+          return transformer.transformResult(result);
+        });
       }
       return transformer.transformResult(executorResult);
     },
