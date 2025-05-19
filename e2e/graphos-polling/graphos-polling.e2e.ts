@@ -1,11 +1,10 @@
 import { platform } from 'os';
-import { Container, createTenv, dockerHostName } from '@internal/e2e';
-import { boolEnv, getLocalhost } from '@internal/testing';
+import { Container, createTenv } from '@internal/e2e';
+import { getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
-const { service, composeWithApollo, gatewayRunner, container } =
-  createTenv(__dirname);
+const { service, composeWithApollo, container } = createTenv(__dirname);
 
 let interval: ReturnType<typeof setInterval> | undefined;
 
@@ -33,13 +32,6 @@ afterAll(() => {
   }
 });
 
-const JAEGER_HOSTNAME =
-  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
-    ? boolEnv('CI')
-      ? '172.17.0.1'
-      : 'host.docker.internal'
-    : '0.0.0.0';
-
 /**
  * First supergraph has a subgraph never returns a value,
  * and in the meanwhile the schema reloads then we expect it to retry the request
@@ -49,9 +41,7 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
   const graphos = await service('graphos');
   const upstreamStuck = await service('upstream_stuck');
   const upstreamGood = await service('upstream_good');
-  const hostname = gatewayRunner.includes('docker')
-    ? `http://${dockerHostName}`
-    : await getLocalhost(graphos.port);
+  const hostname = await getLocalhost(graphos.port);
   function pushSchema(schema: string) {
     return fetch(`${hostname}:${graphos.port}/graphql`, {
       method: 'POST',
@@ -75,8 +65,9 @@ it('refreshes the schema, and retries the request when the schema reloads', asyn
   });
   await pushSchema(compositionWithStuck.result);
   const gw = await service('gateway-fastify', {
+    pipeLogs: 'gw.out',
     env: {
-      OTLP_EXPORTER_URL: `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`,
+      OTLP_EXPORTER_URL: `http://0.0.0.0:${jaeger.port}/v1/traces`,
     },
     services: [graphos],
   });

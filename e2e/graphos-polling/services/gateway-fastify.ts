@@ -4,20 +4,14 @@ import {
   createOtlpHttpExporter,
   useOpenTelemetry,
 } from '@graphql-mesh/plugin-opentelemetry';
-import { boolEnv, Opts } from '@internal/testing';
+import { Opts } from '@internal/testing';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
 /* --- E2E TEST SPECIFIC CONFIGURATION START---  */
 
-const uplinkHost = String(process.env['E2E_GATEWAY_RUNNER']).includes('docker')
-  ? boolEnv('CI')
-    ? '172.17.0.1'
-    : 'host.docker.internal'
-  : '0.0.0.0';
-
 const opts = Opts(process.argv);
 
-const upLink = `http://${uplinkHost}:${opts.getServicePort('graphos')}`;
+const upLink = `http://0.0.0.0:${opts.getServicePort('graphos')}`;
 
 const port = opts.getServicePort('gateway-fastify');
 
