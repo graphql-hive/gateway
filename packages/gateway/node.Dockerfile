@@ -10,7 +10,10 @@ RUN npm i graphql@^16.9.0
 
 FROM node:24-slim
 
-RUN apt-get update && apt-get install -y \
+# `passwd` is vulnerable out of the bax, updating for a fix.
+RUN apt-get update && apt-get upgrade -y passwd
+
+RUN apt-get install -y \
   # for healthchecks
   wget curl \
   # for proper signal propagation
