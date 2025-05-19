@@ -1,4 +1,3 @@
-import { setTimeout } from 'node:timers/promises';
 import { createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
