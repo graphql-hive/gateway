@@ -61,6 +61,7 @@ import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
   buildASTSchema,
   buildSchema,
@@ -1125,6 +1126,10 @@ export function createGatewayRuntime<
 
   if (config.demandControl) {
     extraPlugins.push(useDemandControl(config.demandControl));
+  }
+
+  if (config.cookies) {
+    extraPlugins.push(useCookies());
   }
 
   let isDebug: boolean = false;
