@@ -214,9 +214,7 @@ export function createGatewayRuntime<
     persistedDocumentsPlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
-      log: configContext.log.child({
-        plugin: 'Hive Persisted Documents',
-      }),
+      log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
       experimental__persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
