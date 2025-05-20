@@ -1163,8 +1163,7 @@ export function createGatewayRuntime<
     // we use the logger's debug option because the extra plugins only add more logs
     log.debug(() => {
       isDebug = true;
-      return 'Debug mode enabled';
-    });
+    }, 'Debug mode enabled');
   }
 
   if (isDebug) {
