@@ -38,7 +38,7 @@ it('should pull related data from other subgraph after emit', async () => {
   const msgsCount = 3;
 
   (async () => {
-    for (let i = 0; i <= msgsCount; i++) {
+    for (let i = 0; i < msgsCount; i++) {
       await fetch(`http://localhost:${users.port}/userPostChanged`);
     }
   })();
