@@ -313,11 +313,7 @@ export function useOpenTelemetry(
 
   const logger = createDeferred<Logger>();
   let pluginLogger = options.log
-    ? fakePromise(
-        options.log.child({
-          plugin: 'OpenTelemetry',
-        }),
-      )
+    ? fakePromise(options.log.child('[useOpenTelemetry] '))
     : logger.promise;
 
   function init(): Promise<boolean> {
