@@ -1,6 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
-import { ExecutionRequest } from '@graphql-tools/utils';
+import { createGraphQLError, ExecutionRequest } from '@graphql-tools/utils';
 import { assertAsyncIterable } from '@internal/testing';
 import { ExecutionResult, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
@@ -532,6 +532,118 @@ describe('Shared Root Fields', () => {
     );
     expect(subgraphCalls).toEqual({
       EVENTSWITHTIME: 1,
+    });
+  });
+
+  it('returns the correct error for non-nullable fields when it is a shared root field', async () => {
+    const subgraph1 = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          testNestedField: TestNestedField
+        }
+
+        type TestNestedField {
+          subgraph1: TestUser1
+          nonNullableFail: TestUser1!
+          nullableFail: TestUser1
+        }
+
+        type TestUser1 {
+          id: String!
+          email: String!
+          sub1: Boolean!
+        }
+      `),
+      resolvers: {
+        Query: {
+          testNestedField: () => ({
+            subgraph1: () => ({
+              id: 'user1',
+              email: 'user1@example.com',
+              sub1: true,
+            }),
+            nonNullableFail: () => {
+              throw createGraphQLError('My original subgraph error!', {
+                extensions: {
+                  code: 'BAD_REQUEST',
+                },
+              });
+            },
+            nullableFail: () => {
+              throw createGraphQLError('My original subgraph error!', {
+                extensions: {
+                  code: 'BAD_REQUEST',
+                },
+              });
+            },
+          }),
+        },
+      },
+    });
+
+    const subgraph2 = buildSubgraphSchema({
+      typeDefs: parse(/* GraphQL */ `
+        type Query {
+          testNestedField: TestNestedField
+        }
+
+        type TestNestedField {
+          subgraph2: TestUser2
+        }
+
+        type TestUser2 {
+          id: String!
+          email: String!
+          sub2: Boolean!
+        }
+      `),
+      resolvers: {
+        Query: {
+          testNestedField: () => ({
+            subgraph2: () => ({
+              id: 'user2',
+              email: 'user2@example.com',
+              sub2: true,
+            }),
+          }),
+        },
+      },
+    });
+    const stitchedSchema = await getStitchedSchemaFromLocalSchemas({
+      localSchemas: {
+        subgraph1,
+        subgraph2,
+      },
+    });
+    const result = await normalizedExecutor({
+      schema: stitchedSchema,
+      document: parse(/* GraphQL */ `
+        query {
+          testNestedField {
+            nonNullableFail {
+              id
+              email
+              sub1
+            }
+            subgraph2 {
+              id
+              email
+              sub2
+            }
+          }
+        }
+      `),
+    });
+    expect(result).toEqual({
+      data: {
+        testNestedField: null,
+      },
+      errors: [
+        expect.objectContaining({
+          message: 'My original subgraph error!',
+          path: ['testNestedField', 'nonNullableFail'],
+        }),
+      ],
     });
   });
 });

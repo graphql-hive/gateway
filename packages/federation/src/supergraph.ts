@@ -1310,31 +1310,6 @@ export function getStitchingOptionsFromSupergraphSdl(
           }
           const jobs: Promise<void>[] = [];
           let hasPromise = false;
-          const fieldNames = new Set<string>();
-          currentAvailableSelectionSet?.selections.forEach((selection) => {
-            if (
-              selection.kind === Kind.FIELD &&
-              selection.name.value === info.fieldName
-            ) {
-              selection.selectionSet?.selections.forEach((selection) => {
-                if (selection.kind === Kind.FIELD) {
-                  fieldNames.add(selection.name.value);
-                }
-              });
-            }
-          });
-          currentUnavailableSelectionSet?.selections.forEach((selection) => {
-            if (
-              selection.kind === Kind.FIELD &&
-              selection.name.value === info.fieldName
-            ) {
-              selection.selectionSet?.selections.forEach((selection) => {
-                if (selection.kind === Kind.FIELD) {
-                  fieldNames.add(selection.name.value);
-                }
-              });
-            }
-          });
           const mainJob = delegateToSchema({
             schema: currentSubschema,
             operation:
@@ -1384,12 +1359,28 @@ export function getStitchingOptionsFromSupergraphSdl(
           if (jobs.length === 1) {
             return jobs[0];
           }
+          function getFieldNames() {
+            const fieldNames = new Set<string>();
+            originalSelectionSet?.selections.forEach((selection) => {
+              if (
+                selection.kind === Kind.FIELD &&
+                selection.name.value === info.fieldName
+              ) {
+                selection.selectionSet?.selections.forEach((selection) => {
+                  if (selection.kind === Kind.FIELD) {
+                    fieldNames.add(selection.name.value);
+                  }
+                });
+              }
+            });
+            return fieldNames;
+          }
           if (hasPromise) {
             return Promise.all(jobs).then((results) =>
-              mergeResults(results, fieldNames),
+              mergeResults(results, getFieldNames),
             );
           }
-          return mergeResults(jobs, fieldNames);
+          return mergeResults(jobs, getFieldNames);
         };
       if (operationType === 'subscription') {
         return {
@@ -1606,7 +1597,7 @@ const specifiedTypeNames = [
 function makeExternalObject(
   data: any,
   errors: Error[],
-  fieldNames: Set<string>,
+  getFieldNames: () => Set<string>,
 ) {
   if (!isExternalObject(data) && typeof data === 'object' && data != null) {
     data[UNPATHED_ERRORS_SYMBOL] = errors;
@@ -1614,7 +1605,7 @@ function makeExternalObject(
   if (errors.length) {
     const errorsToPop = [...errors];
     const fieldNamesToPop: string[] = [];
-    for (const fieldName of fieldNames) {
+    for (const fieldName of getFieldNames()) {
       if (data?.[fieldName] == null) {
         fieldNamesToPop.push(fieldName);
       }
@@ -1646,7 +1637,7 @@ function makeExternalObject(
   return data;
 }
 
-function mergeResults(results: unknown[], fieldNames: Set<string>) {
+function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
   const errors: Error[] = [];
   const datas: unknown[] = [];
   for (const result of results) {
@@ -1660,12 +1651,12 @@ function mergeResults(results: unknown[], fieldNames: Set<string>) {
   }
   if (datas.length) {
     if (datas.length === 1) {
-      return makeExternalObject(datas[0], errors, fieldNames);
+      return makeExternalObject(datas[0], errors, getFieldNames);
     }
     return makeExternalObject(
       mergeDeep(datas, undefined, true, true),
       errors,
-      fieldNames,
+      getFieldNames,
     );
   }
   if (errors.length) {
