@@ -28,6 +28,7 @@ import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
 import { Subschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
+import { DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER } from './symbols.js';
 import { Transformer } from './Transformer.js';
 import {
   DelegationContext,
@@ -90,20 +91,6 @@ function getDelegationReturnType(
   return rootFieldType.type;
 }
 
-/**
- * A weak map of {@link DelegationContext.context delegation request execution contexts} to the number of times the next result was emitted.
- *
- * Counts how many times the next result was emitted from a {@link delegateRequest delegated request} iterable result.
- * this is useful for breaking the dataloader cache in streaming operations, likes subscriptions or queries with
- * `@defer` or `@stream` directives.
- *
- * @see /packages/batch-delegate/src/getLoader.ts#getLoader
- */
-export const delegatedResponseIterableNextCounter = new WeakMap<
-  NonNullable<DelegationContext['context']>,
-  number
->();
-
 export function delegateRequest<
   TContext extends Record<string, any> = Record<string, any>,
   TArgs extends Record<string, any> = any,
@@ -124,15 +111,15 @@ export function delegateRequest<
       executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
     ) {
       if (isAsyncIterable(executorResult)) {
-        const ctx = delegationContext.context;
         function incrementNextCounter() {
-          if (!ctx) {
-            return; // should never be undefined
+          const ctx = delegationContext.context;
+          if (ctx) {
+            const counter =
+              DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER in ctx
+                ? (ctx[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER] as number)
+                : 0;
+            Object(ctx)[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER] = counter + 1;
           }
-          delegatedResponseIterableNextCounter.set(
-            ctx,
-            (delegatedResponseIterableNextCounter.get(ctx) || 0) + 1,
-          );
         }
 
         // This might be a stream

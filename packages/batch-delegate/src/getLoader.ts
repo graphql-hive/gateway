@@ -1,5 +1,5 @@
 import {
-  delegatedResponseIterableNextCounter,
+  DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER,
   delegateToSchema,
   getActualFieldNodes,
   SubschemaConfig,
@@ -102,10 +102,9 @@ export function getLoader<K = any, V = any, C = K>(
 
   // we break the cache key for each of the next results of an iterable (stream/subscription/defer)
   // this makes sure that we don't use the cached results for the subscription
-  const iterableNextCounter = delegatedResponseIterableNextCounter.get(
-    context ?? GLOBAL_CONTEXT,
-  );
-  if (iterableNextCounter != null) {
+  if (context && DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER in context) {
+    const iterableNextCounter =
+      context[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER];
     // TODO: should we prettify the cacheKey? is it relevant?
     cacheKey = `(#${iterableNextCounter})${cacheKey}`;
   }
