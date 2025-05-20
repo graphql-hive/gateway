@@ -282,7 +282,7 @@ export function createGatewayRuntime<
         endpoint,
         key,
         logger: LegacyLogger.from(
-          configContext.log.child({ source: 'Hive CDN' }),
+          configContext.log.child('[hiveSchemaFetcher] '),
         ),
       });
       schemaFetcher = function fetchSchemaFromCDN() {
@@ -675,7 +675,8 @@ export function createGatewayRuntime<
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
-          log: configContext.log.child({ source: 'Hive CDN' }),
+          log: configContext.log.child('[hiveSupergraphFetcher] '),
+
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
           fetchImplementation: configContext.fetch,
         });
@@ -753,7 +754,7 @@ export function createGatewayRuntime<
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
-      const log = configContext.log.child('readiness');
+      const log = configContext.log.child('[readiness] ');
       log.debug('checking');
       return handleMaybePromise(
         () => unifiedGraphManager.getUnifiedGraph(),
