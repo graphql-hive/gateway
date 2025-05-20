@@ -6,7 +6,7 @@ export function useUpstreamCancel(): GatewayPlugin {
   return {
     onFetch({ context, options, executionRequest, info }) {
       const signals: AbortSignal[] = [];
-      if ('request' in context) {
+      if ('request' in context && context.request.signal) {
         signals.push(context.request.signal);
       }
       const execRequestSignal =
