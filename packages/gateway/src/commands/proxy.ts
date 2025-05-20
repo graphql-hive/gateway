@@ -69,11 +69,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const hiveCdnEndpointOpt =
         // TODO: take schema from optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
         this.opts().schema || hiveCdnEndpoint;
-      const hiveCdnLogger = ctx.log.child({ source: 'Hive CDN' });
       if (hiveCdnEndpointOpt) {
         if (hiveCdnKey) {
           if (!isUrl(hiveCdnEndpointOpt)) {
-            hiveCdnLogger.error(
+            ctx.log.error(
               'Endpoint must be a URL when providing --hive-cdn-key but got ' +
                 hiveCdnEndpointOpt,
             );

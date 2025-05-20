@@ -56,8 +56,8 @@ export function createGraphOSFetcher({
     graphosOpts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
   const uplinks =
     uplinksParam?.split(',').map((uplink) => uplink.trim()) || DEFAULT_UPLINKS;
-  const log = configContext.log.child({ source: 'GraphOS' });
-  log.info({ uplinks }, 'Using GraphOS with uplinks');
+  const log = configContext.log.child('[apolloGraphOSSupergraphFetcher] ');
+  log.info({ uplinks }, 'Using uplinks');
   let supergraphLoadedPlace = defaultLoadedPlacePrefix;
   if (graphosOpts.graphRef) {
     supergraphLoadedPlace += ` <br>${graphosOpts.graphRef}`;
