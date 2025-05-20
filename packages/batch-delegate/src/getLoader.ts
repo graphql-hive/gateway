@@ -4,7 +4,7 @@ import {
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
-import { fakePromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
 import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
 import { BatchDelegateOptions } from './types.js';
@@ -17,47 +17,44 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
   const { valuesFromResults, lazyOptionsFn } = options;
 
   return function batchFn(keys: ReadonlyArray<K>) {
-    return fakePromise<any>(
-      handleMaybePromise(
-        () =>
-          delegateToSchema({
-            returnType: new GraphQLList(
-              getNamedType(options.returnType || options.info.returnType),
-            ),
-            onLocatedError: (originalError) => {
-              if (originalError.path == null) {
-                return originalError;
-              }
+    return fakePromise()
+      .then(() =>
+        delegateToSchema({
+          returnType: new GraphQLList(
+            getNamedType(options.returnType || options.info.returnType),
+          ),
+          onLocatedError: (originalError) => {
+            if (originalError.path == null) {
+              return originalError;
+            }
 
-              const [pathFieldName, pathNumber, ...rest] = originalError.path;
+            const [pathFieldName, pathNumber, ...rest] = originalError.path;
 
-              if (pathFieldName !== fieldName) {
-                return originalError;
-              }
-              const pathNumberType = typeof pathNumber;
-              if (pathNumberType !== 'number') {
-                return originalError;
-              }
+            if (pathFieldName !== fieldName) {
+              return originalError;
+            }
+            const pathNumberType = typeof pathNumber;
+            if (pathNumberType !== 'number') {
+              return originalError;
+            }
 
-              return relocatedError(originalError, [fieldName, ...rest]);
-            },
-            args: argsFromKeys(keys),
-            ...(lazyOptionsFn == null ? options : lazyOptionsFn(options, keys)),
-          }),
-        (results) => {
-          if (results instanceof Error) {
-            return keys.map(() => results);
-          }
-
-          const values =
-            valuesFromResults == null
-              ? results
+            return relocatedError(originalError, [fieldName, ...rest]);
+          },
+          args: argsFromKeys(keys),
+          ...(lazyOptionsFn == null ? options : lazyOptionsFn(options, keys)),
+        }),
+      )
+      .then((results) => {
+        const values =
+          valuesFromResults == null
+            ? results
+            : results instanceof Error
+              ? keys.map(() => results)
               : valuesFromResults(results, keys);
 
-          return Array.isArray(values) ? values : keys.map(() => values);
-        },
-      ),
-    );
+        return Array.isArray(values) ? values : keys.map(() => values);
+      })
+      .catch((error) => keys.map(() => error));
   };
 }
 
