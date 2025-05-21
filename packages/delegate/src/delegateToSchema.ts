@@ -28,7 +28,6 @@ import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
 import { Subschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
-import { DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER } from './symbols.js';
 import { Transformer } from './Transformer.js';
 import {
   DelegationContext,
@@ -111,17 +110,6 @@ export function delegateRequest<
       executorResult: MaybeAsyncIterable<ExecutionResult<any>>,
     ) {
       if (isAsyncIterable(executorResult)) {
-        function incrementNextCounter() {
-          const ctx = delegationContext.context;
-          if (ctx) {
-            const counter =
-              DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER in ctx
-                ? (ctx[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER] as number)
-                : 0;
-            Object(ctx)[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER] = counter + 1;
-          }
-        }
-
         // This might be a stream
         if (
           delegationContext.operation === 'query' &&
@@ -138,7 +126,6 @@ export function delegateRequest<
                 if (stopped) {
                   break;
                 }
-                incrementNextCounter();
                 if (result.incremental) {
                   const data = {};
                   for (const incrementalRes of result.incremental) {
@@ -184,10 +171,9 @@ export function delegateRequest<
             }
           });
         }
-        return mapAsyncIterator(executorResult, (result) => {
-          incrementNextCounter();
-          return transformer.transformResult(result);
-        });
+        return mapAsyncIterator(executorResult, (result) =>
+          transformer.transformResult(result),
+        );
       }
       return transformer.transformResult(executorResult);
     },

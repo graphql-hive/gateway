@@ -1,5 +1,4 @@
 import {
-  DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER,
   delegateToSchema,
   getActualFieldNodes,
   SubschemaConfig,
@@ -7,7 +6,13 @@ import {
 import { memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
-import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
+import {
+  getNamedType,
+  GraphQLList,
+  GraphQLSchema,
+  OperationTypeNode,
+  print,
+} from 'graphql';
 import { BatchDelegateOptions } from './types.js';
 
 const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
@@ -96,18 +101,13 @@ export function getLoader<K = any, V = any, C = K>(
     argsFromKeys = DEFAULT_ARGS_FROM_KEYS,
     key,
   } = options;
-  const loaders = getLoadersMap<K, V, C>(context ?? GLOBAL_CONTEXT, schema);
+  const contextKey =
+    info.operation.operation === OperationTypeNode.SUBSCRIPTION
+      ? info.rootValue
+      : context;
+  const loaders = getLoadersMap<K, V, C>(contextKey || GLOBAL_CONTEXT, schema);
 
   let cacheKey = fieldName;
-
-  // we break the cache key for each of the next results of an iterable (stream/subscription/defer)
-  // this makes sure that we don't use the cached results for the subscription
-  if (context && DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER in context) {
-    const iterableNextCounter =
-      context[DELEGATED_RESPONSE_ITERABLE_NEXT_COUNTER];
-    // TODO: should we prettify the cacheKey? is it relevant?
-    cacheKey = `(#${iterableNextCounter})${cacheKey}`;
-  }
 
   if (returnType) {
     const namedType = getNamedType(returnType);
