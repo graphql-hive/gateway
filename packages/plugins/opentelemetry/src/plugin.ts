@@ -54,6 +54,7 @@ import {
   createGraphQLSpan,
   createGraphQLValidateSpan,
   createHttpSpan,
+  createSchemaLoadingSpan,
   startSubgraphExecuteFetchSpan as createSubgraphExecuteFetchSpan,
   createUpstreamHttpFetchSpan,
   recordCacheError,
@@ -67,10 +68,14 @@ import {
   setGraphQLValidateAttributes,
   setParamsAttributes,
   setResponseAttributes,
+  setSchemaAttributes,
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
 import { getEnvVar, tryContextManagerSetup } from './utils';
+
+const initializationTime =
+  'performance' in globalThis ? performance.now() : undefined;
 
 type BooleanOrPredicate<TInput = never> =
   | boolean
@@ -178,13 +183,6 @@ export type OpenTelemetryGatewayPluginOptions =
      */
     spans?: {
       /**
-       * Enable/disable Spans of internal introspection queries in proxy mode (default: true).
-       */
-      introspection?: BooleanOrPredicate<{
-        executionRequest: ExecutionRequest;
-        subgraphName: string;
-      }>;
-      /**
        * Enable/disable HTTP request spans (default: true).
        *
        * Disabling the HTTP span will also disable all other child spans.
@@ -231,6 +229,16 @@ export type OpenTelemetryGatewayPluginOptions =
        * Enable/Disable cache related span events (default: true).
        */
       cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
+      /**
+       * Enable/disable schema loading spans (default: true if context manager available).
+       *
+       * Note: This span requires an Async compatible context manager
+       */
+      schema?: boolean;
+      /**
+       * Enable/disable initialization span (default: true).
+       */
+      initialization?: boolean;
     };
   };
 
@@ -283,6 +291,7 @@ export function useOpenTelemetry(
   let provider: WebTracerProvider;
 
   const yogaVersion = createDeferred<string>();
+  let initSpan: Context | null;
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -290,9 +299,17 @@ export function useOpenTelemetry(
   }
 
   function getContext(state?: State): Context {
-    return useContextManager
-      ? context.active()
-      : (getMostSpecificState(state)?.otel?.current ?? ROOT_CONTEXT);
+    const specificState = getMostSpecificState(state)?.otel;
+
+    if (initSpan && !specificState) {
+      return initSpan;
+    }
+
+    if (useContextManager) {
+      return context.active();
+    }
+
+    return specificState?.current ?? ROOT_CONTEXT;
   }
 
   const yogaLogger = createDeferred<YogaLogger>();
@@ -370,12 +387,27 @@ export function useOpenTelemetry(
   preparation$ = init().then((contextManager) => {
     useContextManager = contextManager;
     tracer = options.tracer || trace.getTracer('gateway');
+    initSpan = trace.setSpan(
+      context.active(),
+      tracer.startSpan('gateway.initialization', {
+        startTime: initializationTime,
+      }),
+    );
     preparation$ = fakePromise();
     return pluginLogger.then((logger) => {
       pluginLogger = fakePromise(logger);
       logger.debug(
         `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
+      if (!useContextManager) {
+        if (options.spans?.schema) {
+          logger.warn(
+            'Schema loading spans are disabled because no context manager is available',
+          );
+        }
+        options.spans = options.spans ?? {};
+        options.spans.schema = false;
+      }
       diag.setLogger(
         {
           error: (message, ...args) =>
@@ -453,23 +485,25 @@ export function useOpenTelemetry(
           return wrapped();
         }
 
-        const ctx = getContext(parentState);
-        forOperation.otel = new OtelContextStack(
-          createGraphQLSpan({ tracer, ctx }),
-        );
-
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel.current, wrapped);
-        }
-
         return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(forOperation.otel?.current, err);
-              throw err;
-            })
-            .finally(() => trace.getSpan(forOperation.otel!.current)?.end()),
+          preparation$.then(() => {
+            const ctx = getContext(parentState);
+            forOperation.otel = new OtelContextStack(
+              createGraphQLSpan({ tracer, ctx }),
+            );
+
+            if (useContextManager) {
+              wrapped = context.bind(forOperation.otel.current, wrapped);
+            }
+
+            return fakePromise()
+              .then(wrapped)
+              .catch((err) => {
+                registerException(forOperation.otel?.current, err);
+                throw err;
+              })
+              .finally(() => trace.getSpan(forOperation.otel!.current)?.end());
+          }),
         );
       },
 
@@ -610,7 +644,7 @@ export function useOpenTelemetry(
           parentState.forOperation?.skipExecuteSpan ||
           !shouldTrace(
             isIntrospection
-              ? options.spans?.introspection
+              ? options.spans?.schema
               : options.spans?.subgraphExecute,
             {
               subgraphName,
@@ -625,7 +659,7 @@ export function useOpenTelemetry(
         // (such as Introspection requests in proxy mode), we don't want to use the active context,
         // we want the span to be in it's own trace.
         const parentContext = isIntrospection
-          ? ROOT_CONTEXT
+          ? context.active()
           : getContext(parentState);
 
         forSubgraphExecution.otel = new OtelContextStack(
@@ -671,29 +705,51 @@ export function useOpenTelemetry(
           return wrapped();
         }
 
-        const { forSubgraphExecution } = state;
-        const ctx = createUpstreamHttpFetchSpan({
-          ctx: getContext(state),
-          tracer,
-        });
+        return unfakePromise(
+          preparation$.then(() => {
+            const { forSubgraphExecution } = state;
+            const ctx = createUpstreamHttpFetchSpan({
+              ctx: getContext(state),
+              tracer,
+            });
 
-        forSubgraphExecution?.otel!.push(ctx);
+            forSubgraphExecution?.otel!.push(ctx);
 
-        if (useContextManager) {
-          wrapped = context.bind(ctx, wrapped);
+            if (useContextManager) {
+              wrapped = context.bind(ctx, wrapped);
+            }
+
+            return fakePromise()
+              .then(wrapped)
+              .catch((err) => {
+                registerException(ctx, err);
+                throw err;
+              })
+              .finally(() => {
+                trace.getSpan(ctx)?.end();
+                forSubgraphExecution?.otel!.pop();
+              });
+          }),
+        );
+      },
+
+      schema(_, wrapped) {
+        if (!shouldTrace(options.spans?.schema, null)) {
+          return wrapped();
         }
 
         return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(ctx, err);
-              throw err;
-            })
-            .finally(() => {
-              trace.getSpan(ctx)?.end();
-              forSubgraphExecution?.otel!.pop();
-            }),
+          preparation$.then(() => {
+            const ctx = createSchemaLoadingSpan({ tracer });
+            return fakePromise()
+              .then(() => context.with(ctx, wrapped))
+              .catch((err) => {
+                trace.getSpan(ctx)?.recordException(err);
+              })
+              .finally(() => {
+                trace.getSpan(ctx)?.end();
+              });
+          }),
         );
       },
     },
@@ -863,6 +919,16 @@ export function useOpenTelemetry(
         setUpstreamFetchResponseAttributes({ ctx, response });
       };
     },
+
+    onSchemaChange(payload) {
+      setSchemaAttributes(payload);
+
+      if (initSpan) {
+        trace.getSpan(initSpan)?.end();
+        initSpan = null;
+      }
+    },
+
     async onDispose() {
       if (options.initializeNodeSDK) {
         await provider?.forceFlush?.();
