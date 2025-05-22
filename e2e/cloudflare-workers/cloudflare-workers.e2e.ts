@@ -137,7 +137,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
     `);
 
       const traces = await getJaegerTraces(serviceName, 2);
-      expect(traces.data.length).toBe(3);
+      expect(traces.data.length).toBe(2);
       const relevantTraces = traces.data.filter((trace) =>
         trace.spans.some((span) => span.operationName === 'POST /graphql'),
       );
@@ -236,7 +236,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       );
 
       const traces = await getJaegerTraces(serviceName, 3);
-      expect(traces.data.length).toBe(4);
+      expect(traces.data.length).toBe(3);
 
       const relevantTraces = traces.data.filter((trace) =>
         trace.spans.some((span) => span.operationName === 'POST /graphql'),

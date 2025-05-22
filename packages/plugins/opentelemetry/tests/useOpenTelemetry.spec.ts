@@ -326,7 +326,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace http requests if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { http: false, introspection: false },
+              spans: { http: false, schema: false },
             },
           });
           await gateway.query();
@@ -337,7 +337,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace graphql operation if disable', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphql: false, introspection: false },
+              spans: { graphql: false, schema: false },
             },
           });
           await gateway.query();
@@ -403,7 +403,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { graphqlExecute: false, introspection: false },
+              spans: { graphqlExecute: false, schema: false },
             },
           });
           await gateway.query();
@@ -426,7 +426,7 @@ describe('useOpenTelemetry', () => {
         it('should not trace subgraph execute if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
-              spans: { subgraphExecute: false, introspection: false },
+              spans: { subgraphExecute: false, schema: false },
             },
           });
           await gateway.query();
@@ -461,28 +461,22 @@ describe('useOpenTelemetry', () => {
             .forEach(spanExporter.assertSpanWithName);
         });
 
-        it('should trace introspection query', async () => {
+        it('should not trace fetch if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
-            options: { spans: { http: false, introspection: true } },
+            plugins: (_, { fetch }) => {
+              return [
+                {
+                  onPluginInit() {
+                    fetch('http://foo.bar', {});
+                  },
+                },
+              ];
+            },
           });
           await gateway.query();
 
-          const introspectionSpan = spanExporter.assertRoot(
-            expected.subgraphExecute.root,
-          );
-          expected.subgraphExecute.children.forEach(
-            introspectionSpan.expectChild,
-          );
-          expect(
-            (
-              introspectionSpan.span.attributes['graphql.document'] as string
-            ).includes('Introspection'),
-          );
-
-          const introspectionSpans = introspectionSpan.descendants;
-          expect(
-            spanExporter.spans.filter((s) => !introspectionSpans.includes(s)),
-          ).toHaveLength(0);
+          const initSpan = spanExporter.assertRoot('gateway.initialization');
+          initSpan.expectChild('http.fetch');
         });
       });
     });
@@ -586,6 +580,25 @@ describe('useOpenTelemetry', () => {
       expect(response.status).toBe(304);
 
       checkCacheAttributes({ http: 'hit' }); // There is no graphql operation span when cached by HTTP
+    });
+
+    it('should register schema loading span', async () => {
+      await using gateway = await buildTestGateway({
+        options: { spans: { http: false, schema: true } },
+      });
+      await gateway.query();
+
+      const schemaSpan = spanExporter.assertRoot('gateway.schema');
+
+      const descendants = schemaSpan.descendants.map(({ name }) => name);
+
+      console.log(spanExporter.toString());
+
+      expect(descendants).toEqual([
+        'gateway.schema',
+        'subgraph.execute (upstream)',
+        'http.fetch',
+      ]);
     });
   });
 });
