@@ -1007,9 +1007,7 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo({ services = [], pipeLogs = isDebug() }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
-        const hostname = gatewayRunner.includes('docker')
-          ? `${service.protocol}://${dockerHostName}`
-          : await getLocalhost(service.port, service.protocol);
+        const hostname = await getLocalhost(service.port, service.protocol);
         subgraphs.push({
           name: service.name,
           url: `${hostname}:${service.port}/graphql`,

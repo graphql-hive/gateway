@@ -95,7 +95,11 @@ export function getLoader<K = any, V = any, C = K>(
     argsFromKeys = DEFAULT_ARGS_FROM_KEYS,
     key,
   } = options;
-  const loaders = getLoadersMap<K, V, C>(context ?? GLOBAL_CONTEXT, schema);
+  // we want to use the rootvalue because on streaming results it will be available
+  // and will always change for the next value in the iterable. this makes sure
+  // that the data loader does not use the same cache for each streaming value
+  const contextKey = info?.rootValue || context || GLOBAL_CONTEXT;
+  const loaders = getLoadersMap<K, V, C>(contextKey, schema);
 
   let cacheKey = fieldName;
 
