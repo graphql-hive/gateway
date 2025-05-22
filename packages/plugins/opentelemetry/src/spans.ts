@@ -7,6 +7,7 @@ import {
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
+  ROOT_CONTEXT,
   SpanKind,
   SpanStatusCode,
   trace,
@@ -18,7 +19,7 @@ import {
   SEMATTRS_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_TYPE,
 } from '@opentelemetry/semantic-conventions';
-import type { ExecutionArgs } from 'graphql';
+import { printSchema, type ExecutionArgs, type GraphQLSchema } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
   getRetryInfo,
@@ -433,6 +434,24 @@ export function setExecutionResultAttributes(input: {
       input.result[responseCacheSymbol] ? 'hit' : 'miss',
     );
   }
+}
+
+export function createSchemaLoadingSpan(inputs: { tracer: Tracer }) {
+  const span = inputs.tracer.startSpan(
+    'gateway.schema',
+    { attributes: { 'gateway.schema.changed': false } },
+    ROOT_CONTEXT,
+  );
+  return trace.setSpan(ROOT_CONTEXT, span);
+}
+
+export function setSchemaAttributes(inputs: { schema: GraphQLSchema }) {
+  const span = trace.getActiveSpan();
+  if (!span) {
+    return;
+  }
+  span.setAttribute('gateway.schema.changed', true);
+  span.setAttribute('graphql.schema', printSchema(inputs.schema));
 }
 
 export function registerException(ctx: Context | undefined, error: any) {
