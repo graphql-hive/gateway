@@ -6,13 +6,7 @@ import {
 import { memoize1, memoize2, relocatedError } from '@graphql-tools/utils';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
-import {
-  getNamedType,
-  GraphQLList,
-  GraphQLSchema,
-  OperationTypeNode,
-  print,
-} from 'graphql';
+import { getNamedType, GraphQLList, GraphQLSchema, print } from 'graphql';
 import { BatchDelegateOptions } from './types.js';
 
 const DEFAULT_ARGS_FROM_KEYS = (keys: ReadonlyArray<any>) => ({ ids: keys });
@@ -101,11 +95,11 @@ export function getLoader<K = any, V = any, C = K>(
     argsFromKeys = DEFAULT_ARGS_FROM_KEYS,
     key,
   } = options;
-  const contextKey =
-    info.operation.operation === OperationTypeNode.SUBSCRIPTION
-      ? info.rootValue
-      : context;
-  const loaders = getLoadersMap<K, V, C>(contextKey || GLOBAL_CONTEXT, schema);
+  // we want to use the rootvalue because on streaming results it will be available
+  // and will always change for the next value in the iterable. this makes sure
+  // that the data loader does not use the same cache for each streaming value
+  const contextKey = info?.rootValue || context || GLOBAL_CONTEXT;
+  const loaders = getLoadersMap<K, V, C>(contextKey, schema);
 
   let cacheKey = fieldName;
 
