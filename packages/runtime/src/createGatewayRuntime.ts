@@ -1,4 +1,8 @@
-import { OnExecuteEventPayload, OnSubscribeEventPayload } from '@envelop/core';
+import {
+  getInstrumented,
+  OnExecuteEventPayload,
+  OnSubscribeEventPayload,
+} from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import {
@@ -343,6 +347,14 @@ export function createGatewayRuntime<
         );
       };
     }
+
+    const instrumentedFetcher = schemaFetcher;
+    schemaFetcher = (...args) =>
+      getInstrumented(null).asyncFn(
+        instrumentation?.schema,
+        instrumentedFetcher,
+      )(...args);
+
     getSchema = () => {
       if (unifiedGraph != null) {
         return unifiedGraph;
@@ -703,6 +715,13 @@ export function createGatewayRuntime<
         supergraphLoadedPlace = config.supergraph;
       }
     }
+
+    const instrumentedGraphFetcher = unifiedGraphFetcher;
+    unifiedGraphFetcher = (...args) =>
+      getInstrumented(null).asyncFn(
+        instrumentation?.schema,
+        instrumentedGraphFetcher,
+      )(...args);
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
