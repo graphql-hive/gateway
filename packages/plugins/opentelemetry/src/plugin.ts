@@ -396,7 +396,7 @@ export function useOpenTelemetry(
       );
       if (!useContextManager) {
         if (options.spans?.schema) {
-          logger.warn(
+          log.warn(
             'Schema loading spans are disabled because no context manager is available',
           );
         }
