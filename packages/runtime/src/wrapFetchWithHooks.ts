@@ -45,7 +45,11 @@ export function wrapFetchWithHooks<TContext>(
               // @ts-expect-error TODO: why?
               info,
               get executionRequest() {
-                return info?.executionRequest;
+                return (
+                  info?.executionRequest ||
+                  // @ts-expect-error might be in the root value, see packages/fusion-runtime/src/utils.ts
+                  info?.rootValue?.executionRequest
+                );
               },
               endResponse(newResponse) {
                 response$ = newResponse;
