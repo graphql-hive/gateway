@@ -300,7 +300,7 @@ export function wrapExecutorWithHooks({
     baseExecutionRequest.info =
       baseExecutionRequest.info || ({} as GraphQLResolveInfo);
     baseExecutionRequest.info.executionRequest = baseExecutionRequest;
-    // TODO: Fix this in onFetch hook handler of @graphql-mesh/utils
+    // this rootValue will be set in the info value for field.resolvers in non-graphql requests
     // TODO: Also consider if a subgraph can ever rely on the gateway's rootValue?
     baseExecutionRequest.rootValue = {
       executionRequest: baseExecutionRequest,
