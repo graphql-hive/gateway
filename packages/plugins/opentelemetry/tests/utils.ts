@@ -1,4 +1,8 @@
-import { GatewayConfigProxy, GatewayPlugin } from '@graphql-hive/gateway';
+import {
+  GatewayConfigContext,
+  GatewayConfigProxy,
+  GatewayPlugin,
+} from '@graphql-hive/gateway';
 import { MeshFetch } from '@graphql-mesh/types';
 import { diag, TraceState } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
@@ -25,6 +29,7 @@ export async function buildTestGateway(
     >;
     plugins?: (
       otelPlugin: OpenTelemetryPlugin,
+      ctx: GatewayConfigContext,
     ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
     fetch?: (upstreamFetch: MeshFetch) => MeshFetch;
   } = {},
@@ -71,7 +76,7 @@ export async function buildTestGateway(
             options.fetch ? options.fetch(upstream.fetch) : upstream.fetch,
           ),
           otelPlugin,
-          ...(options.plugins?.(otelPlugin) ?? []),
+          ...(options.plugins?.(otelPlugin, ctx) ?? []),
         ];
       },
       logging: false,
