@@ -8,6 +8,17 @@ import {
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 
+export const RETRY_SYMBOL = Symbol.for('@hive-gateway/runtime/upstreamRetry');
+
+type RetryExecutionRequest = ExecutionRequest & {
+  [RETRY_SYMBOL]: RetryInfo;
+};
+
+type RetryInfo = {
+  attempt: number;
+  executionRequest: ExecutionRequest;
+};
+
 export interface UpstreamRetryOptions {
   /**
    * The maximum number of retries to attempt.
@@ -104,6 +115,13 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
                 }
                 const requestTime = Date.now();
                 attemptsLeft--;
+
+                // @ts-expect-error we rather mutatate the executionRequest because we strict compare it
+                executionRequest[RETRY_SYMBOL] = {
+                  attempt: maxRetries - attemptsLeft,
+                  executionRequest,
+                };
+
                 return handleMaybePromise(
                   () => executor(executionRequest),
                   (currRes) => {
@@ -183,4 +201,16 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
       }
     },
   };
+}
+
+export function isRetryExecutionRequest(
+  executionRequest?: ExecutionRequest,
+): executionRequest is RetryExecutionRequest {
+  return !!(executionRequest as any)?.[RETRY_SYMBOL];
+}
+
+export function getRetryInfo(
+  executionRequest: RetryExecutionRequest,
+): RetryInfo {
+  return executionRequest[RETRY_SYMBOL];
 }
