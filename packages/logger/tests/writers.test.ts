@@ -1,27 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { Logger } from '../src/logger';
-import { ConsoleLogWriter, ConsoleLogWriterOptions } from '../src/writers';
-import { stableError } from './utils';
+import {
+  ConsoleLogWriter,
+  ConsoleLogWriterOptions,
+  jsonStringify,
+} from '../src/writers';
 
-describe.skipIf(
-  // bun is serialising the snapshots differently. the object keys are out of order...
-  globalThis.Bun,
-)('ConsoleLogWriter', () => {
+describe('ConsoleLogWriter', () => {
   function createTConsoleLogger(opts?: Partial<ConsoleLogWriterOptions>) {
     const logs: string[] = [];
     const writer = new ConsoleLogWriter({
       console: {
         debug: (...args: unknown[]) => {
-          logs.push(args.join(' '));
+          logs.push(args.map((arg) => jsonStringify(arg)).join(' '));
         },
         info: (...args: unknown[]) => {
-          logs.push(args.join(' '));
+          logs.push(args.map((arg) => jsonStringify(arg)).join(' '));
         },
         warn: (...args: unknown[]) => {
-          logs.push(args.join(' '));
+          logs.push(args.map((arg) => jsonStringify(arg)).join(' '));
         },
         error: (...args: unknown[]) => {
-          logs.push(args.join(' '));
+          logs.push(args.map((arg) => jsonStringify(arg)).join(' '));
         },
       },
       noTimestamp: true,
@@ -38,10 +38,7 @@ describe.skipIf(
     log.debug(['a', 'b', 'c'], 'arr');
     log.info({ a: { b: { c: { d: 1 } } } }, 'nested');
     log.warn([{ a: 1 }, { b: 2 }], 'arr objs');
-    log.error(
-      { str: 'a\nb\nc', err: stableError(new Error('woah!')) },
-      'multlinestring',
-    );
+    log.error({ str: 'a\nb\nc', err: { message: 'woah!' } }, 'multlinestring');
 
     log.info(
       {
