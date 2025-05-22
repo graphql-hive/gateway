@@ -117,6 +117,15 @@ export type Instrumentation = {
     payload: { executionRequest: ExecutionRequest; subgraphName: string },
     wrapped: () => MaybePromise<void>,
   ) => MaybePromise<void>;
+  /**
+   * Wrap each supergraph schema loading.
+   *
+   * Note: this span is only available when an Async compatible context manager is available
+   */
+  schema?: (
+    payload: null,
+    wrapped: () => MaybePromise<void>,
+  ) => MaybePromise<void>;
 };
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
