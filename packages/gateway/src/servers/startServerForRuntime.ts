@@ -20,7 +20,7 @@ export function startServerForRuntime<
 ): MaybePromise<void> {
   process.on('message', (message) => {
     if (message === 'invalidateUnifiedGraph') {
-      log.info(`Invalidating Supergraph`);
+      log.info('Invalidating Supergraph');
       runtime.invalidateUnifiedGraph();
     }
   });
