@@ -448,6 +448,10 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    */
   graphiql?: YogaServerOptions<unknown, GatewayContext & TContext>['graphiql'];
   /**
+   * Use GraphiQL provided by local installation.
+   */
+  renderGraphiQL?: YogaServerOptions<unknown, GatewayContext & TContext>['renderGraphiQL'];
+  /**
    * Whether the landing page should be shown.
    */
   landingPage?: boolean;
