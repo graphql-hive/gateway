@@ -1,11 +1,11 @@
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { MaybePromise } from '@graphql-tools/utils';
 import { defaultOptions } from '../cli';
 import { startBunServer } from './bun';
 import { startNodeHttpServer } from './nodeHttp';
 import { ServerForRuntimeOptions } from './types';
+import { createUWSStartFn } from './uws';
 
-export function startServerForRuntime<
+export async function startServerForRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(
   runtime: GatewayRuntime<TContext>,
@@ -17,7 +17,7 @@ export function startServerForRuntime<
     maxHeaderSize = 16_384,
     disableWebsockets = false,
   }: ServerForRuntimeOptions,
-): MaybePromise<void> {
+): Promise<void> {
   process.on('message', (message) => {
     if (message === 'invalidateUnifiedGraph') {
       log.info(`Invalidating Supergraph`);
@@ -34,7 +34,19 @@ export function startServerForRuntime<
     ...(sslCredentials ? { sslCredentials } : {}),
   };
 
-  const startServer = globalThis.Bun ? startBunServer : startNodeHttpServer;
+  let startServer;
+
+  if (globalThis.Bun) {
+    startServer = startBunServer;
+  } else {
+    try {
+      const uws = await import('uWebSockets.js');
+      log.info('uWebSockets.js is available, using it for the server');
+      startServer = createUWSStartFn(uws);
+    } catch {
+      startServer = startNodeHttpServer;
+    }
+  }
 
   return startServer(runtime, serverOpts);
 }
