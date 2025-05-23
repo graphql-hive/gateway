@@ -34,6 +34,10 @@ interface WrapFieldsTransformationContext {
   paths: Record<string, { pathToField: Array<string>; alias: string }>;
 }
 
+interface WrapFieldsConfig {
+  isNullable?: boolean;
+}
+
 export default class WrapFields<TContext extends Record<string, any>>
   implements Transform<WrapFieldsTransformationContext, TContext>
 {
@@ -43,6 +47,7 @@ export default class WrapFields<TContext extends Record<string, any>>
   private readonly numWraps: number;
   private readonly fieldNames: Array<string> | undefined;
   private readonly transformer: MapFields<TContext>;
+  private readonly config: WrapFieldsConfig;
 
   constructor(
     outerTypeName: string,
@@ -50,12 +55,14 @@ export default class WrapFields<TContext extends Record<string, any>>
     wrappingTypeNames: Array<string>,
     fieldNames?: Array<string>,
     prefix = 'gqtld',
+    config: WrapFieldsConfig = { isNullable: false },
   ) {
     this.outerTypeName = outerTypeName;
     this.wrappingFieldNames = wrappingFieldNames;
     this.wrappingTypeNames = wrappingTypeNames;
     this.numWraps = wrappingFieldNames.length;
     this.fieldNames = fieldNames;
+    this.config = config;
 
     const remainingWrappingFieldNames = this.wrappingFieldNames.slice();
     const outerMostWrappingFieldName = remainingWrappingFieldNames.shift();
@@ -167,9 +174,11 @@ export default class WrapFields<TContext extends Record<string, any>>
       resolve = defaultMergedResolver;
     }
 
-    const wrappingType = new GraphQLNonNull(
-      newSchema.getType(wrappingTypeName) as GraphQLObjectType,
-    );
+    const baseType = newSchema.getType(wrappingTypeName) as GraphQLObjectType;
+    const wrappingType = this.config.isNullable
+      ? baseType
+      : new GraphQLNonNull(baseType);
+
     const newFieldConfig: GraphQLFieldConfig<any, any> =
       wrappingOperation === 'subscription'
         ? {
