@@ -64,11 +64,9 @@ jobs:
         runtime: [Node, Bun]
     name: ${{ matrix.runtime }} Docker image
     needs: [stable, snapshot]
-    if: always() && (
+    if: always() && github.actor != 'dependabot[bot]' && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
-      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway') ||
-      github.actor != 'dependabot[bot]' ||
-      github.actor != 'dependabot-preview[bot]'
+      contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
       )
     steps:
       - name: Version

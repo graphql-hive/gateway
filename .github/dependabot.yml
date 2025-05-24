@@ -76,7 +76,7 @@ updates:
           - 'patch'
       commanderjs:
         patterns:
-          - '@commanderjs/*'
+          - '@commander-js/*'
           - 'commander'
         update-types:
           - 'major'
