@@ -1,5 +1,34 @@
 # @graphql-hive/gateway
 
+## 1.14.3
+
+### Patch Changes
+
+- [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.13.5` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.5) (from `^5.13.4`, in `dependencies`)
+
+- [#1158](https://github.com/graphql-hive/gateway/pull/1158) [`a5d18da`](https://github.com/graphql-hive/gateway/commit/a5d18da95716c8e5ed231244c7dcae4f11843c08) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@commander-js/extra-typings@^14.0.0` ↗︎](https://www.npmjs.com/package/@commander-js/extra-typings/v/14.0.0) (from `^13.1.0`, in `dependencies`)
+
+- [#1161](https://github.com/graphql-hive/gateway/pull/1161) [`3be8206`](https://github.com/graphql-hive/gateway/commit/3be82065790f1cb24cbe0655d7e8b90207fff52e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@commander-js/extra-typings@^13.1.0` ↗︎](https://www.npmjs.com/package/@commander-js/extra-typings/v/13.1.0) (from `^14.0.0`, in `dependencies`)
+
+- [#1141](https://github.com/graphql-hive/gateway/pull/1141) [`d8892f2`](https://github.com/graphql-hive/gateway/commit/d8892f2713388fcea37dfa74a8ae42294f07d362) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - **Security Update:** The Docker image have been updated to fix a CVE affecting `passwd` command. This CVE was not directly affecting Hive Gateway software, since it's not using impacted components.
+
+- Updated dependencies [[`11cff4f`](https://github.com/graphql-hive/gateway/commit/11cff4f8ff28ca7d709b5b962029e17d5843110e), [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451), [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451), [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451), [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451), [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`11cff4f`](https://github.com/graphql-hive/gateway/commit/11cff4f8ff28ca7d709b5b962029e17d5843110e)]:
+  - @graphql-hive/gateway-runtime@1.9.0
+  - @graphql-hive/plugin-aws-sigv4@1.0.11
+  - @graphql-mesh/plugin-jwt-auth@1.5.5
+  - @graphql-mesh/plugin-prometheus@1.3.46
+  - @graphql-mesh/transport-http-callback@0.6.1
+  - @graphql-hive/plugin-deduplicate-request@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.58
+  - @graphql-mesh/transport-http@0.6.42
+
 ## 1.14.2
 
 ### Patch Changes

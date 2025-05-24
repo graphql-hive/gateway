@@ -1,5 +1,21 @@
 # @graphql-mesh/fusion-runtime
 
+## 0.11.14
+
+### Patch Changes
+
+- [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`graphql-yoga@^5.13.5` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.5) (from `^5.13.4`, in `dependencies`)
+
+- Updated dependencies [[`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`511ba36`](https://github.com/graphql-hive/gateway/commit/511ba36d9c8b81f83cf4cb37c03c9fbb9c5c9c9d), [`dca6529`](https://github.com/graphql-hive/gateway/commit/dca6529b234f1e178ad87a8992c5a7de12831128)]:
+  - @graphql-tools/federation@3.2.3
+  - @graphql-tools/batch-execute@9.0.17
+  - @graphql-tools/stitch@9.4.24
+  - @graphql-tools/delegate@10.2.19
+  - @graphql-tools/stitching-directives@3.1.34
+  - @graphql-tools/wrap@10.0.37
+
 ## 0.11.13
 
 ### Patch Changes

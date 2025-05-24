@@ -1,5 +1,13 @@
 # @graphql-hive/logger-pino
 
+## 1.0.1
+
+### Patch Changes
+
+- [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`pino@^9.7.0` ↗︎](https://www.npmjs.com/package/pino/v/9.7.0) (from `^9.6.0`, in `peerDependencies`)
+
 ## 1.0.0
 
 ### Major Changes

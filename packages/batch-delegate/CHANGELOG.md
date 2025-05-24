@@ -1,5 +1,16 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.37
+
+### Patch Changes
+
+- [#1140](https://github.com/graphql-hive/gateway/pull/1140) [`f634b53`](https://github.com/graphql-hive/gateway/commit/f634b53478199c2b783a608e22fbe51401942039) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use delegated response iterable next iterations for accurate cache key construction in external value loaders
+
+- [#1134](https://github.com/graphql-hive/gateway/pull/1134) [`dca6529`](https://github.com/graphql-hive/gateway/commit/dca6529b234f1e178ad87a8992c5a7de12831128) Thanks [@ardatan](https://github.com/ardatan)! - Small improvements on usage of promise helpers
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@10.2.19
+
 ## 9.0.36
 
 ### Patch Changes

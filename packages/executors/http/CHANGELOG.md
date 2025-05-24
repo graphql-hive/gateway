@@ -1,5 +1,13 @@
 # @graphql-tools/executor-http
 
+## 2.0.2
+
+### Patch Changes
+
+- [#1144](https://github.com/graphql-hive/gateway/pull/1144) [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/fetch@^0.10.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.8) (from `^0.10.6`, in `dependencies`)
+
 ## 2.0.1
 
 ### Patch Changes

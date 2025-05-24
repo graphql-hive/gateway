@@ -1,5 +1,12 @@
 # @graphql-tools/wrap
 
+## 10.0.37
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@10.2.19
+
 ## 10.0.36
 
 ### Patch Changes
