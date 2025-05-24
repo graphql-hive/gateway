@@ -4554,14 +4554,14 @@ __metadata:
     "@graphql-tools/utils": "npm:^10.8.1"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/core": "npm:^1.30.0"
-    "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.57.2"
-    "@opentelemetry/exporter-trace-otlp-http": "npm:^0.56.0"
+    "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.57.0"
+    "@opentelemetry/exporter-trace-otlp-http": "npm:^0.57.0"
     "@opentelemetry/exporter-zipkin": "npm:^1.29.0"
-    "@opentelemetry/instrumentation": "npm:^0.57.2"
+    "@opentelemetry/instrumentation": "npm:^0.57.0"
     "@opentelemetry/resources": "npm:^1.29.0"
     "@opentelemetry/sdk-trace-base": "npm:^1.29.0"
     "@opentelemetry/sdk-trace-web": "npm:^1.29.0"
-    "@opentelemetry/semantic-conventions": "npm:^1.33.0"
+    "@opentelemetry/semantic-conventions": "npm:^1.28.0"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.5"
@@ -6605,7 +6605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/exporter-trace-otlp-grpc@npm:^0.57.2":
+"@opentelemetry/exporter-trace-otlp-grpc@npm:^0.57.0":
   version: 0.57.2
   resolution: "@opentelemetry/exporter-trace-otlp-grpc@npm:0.57.2"
   dependencies:
@@ -6666,7 +6666,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/instrumentation@npm:^0.57.2":
+"@opentelemetry/instrumentation@npm:^0.57.0":
   version: 0.57.2
   resolution: "@opentelemetry/instrumentation@npm:0.57.2"
   dependencies:
@@ -6874,7 +6874,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/semantic-conventions@npm:^1.30.0, @opentelemetry/semantic-conventions@npm:^1.33.0":
+"@opentelemetry/semantic-conventions@npm:^1.28.0, @opentelemetry/semantic-conventions@npm:^1.30.0":
   version: 1.34.0
   resolution: "@opentelemetry/semantic-conventions@npm:1.34.0"
   checksum: 10c0/a51a32a5cf5c803bd2125a680d0abacbff632f3b255d0fe52379dac191114a0e8d72a34f9c46c5483ccfe91c4061c309f3cf61a19d11347e2a69779e82cfefd0
