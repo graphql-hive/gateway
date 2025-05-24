@@ -14,7 +14,7 @@
     "@graphql-hive/pubsub": "workspace:*",
     "@graphql-mesh/types": "^0.104.0",
     "@graphql-tools/utils": "^10.7.2",
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.15.21",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.8",
     "@whatwg-node/promise-helpers": "^1.2.5",

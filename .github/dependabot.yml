@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: 'daily'
     groups:
-      actions-deps:
+      docker-deps:
         patterns:
           - '*'
   - package-ecosystem: 'github-actions' # See documentation for possible values
@@ -26,17 +26,17 @@ updates:
     schedule:
       interval: 'daily'
     groups:
-      actions-deps:
+      all-minor-patch:
         patterns:
           - '*'
         exclude-patterns:
-          - '^@changesets/'
+          - '@changesets/*'
           - 'typescript'
-          - '^@theguild/'
-          - '^@whatwg-node/'
+          - '@theguild/*'
+          - '@whatwg-node/*'
           - 'graphql-jit'
-          - '^@opentelemetry/'
-          - '^@graphql-mesh/'
+          - '@opentelemetry/*'
+          - '@graphql-mesh/*'
           - 'bun'
           - 'vitest'
           - 'tsx'
@@ -45,14 +45,14 @@ updates:
           - 'patch'
       graphql-mesh:
         patterns:
-          - '^@graphql-mesh/'
+          - '@graphql-mesh/*'
         update-types:
           - 'major'
           - 'minor'
           - 'patch'
       opentelemetry:
         patterns:
-          - '^@opentelemetry/'
+          - '@opentelemetry/*'
         update-types:
           - 'major'
           - 'minor'
@@ -66,7 +66,7 @@ updates:
           - 'patch'
       whatwg-node:
         patterns:
-          - '^@whatwg-node/'
+          - '@whatwg-node/*'
         update-types:
           - 'major'
           - 'minor'
