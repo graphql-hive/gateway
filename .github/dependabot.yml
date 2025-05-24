@@ -43,3 +43,31 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+      graphql-mesh:
+        patterns:
+          - '^@graphql-mesh/'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      opentelemetry:
+        patterns:
+          - '^@opentelemetry/'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      bun:
+        patterns:
+          - 'bun'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      whatwg-node:
+        patterns:
+          - '^@whatwg-node/'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
