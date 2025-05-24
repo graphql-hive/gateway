@@ -9,7 +9,7 @@
     "@nestjs/core": "^11.0.10",
     "@nestjs/graphql": "^13.0.3",
     "@nestjs/platform-express": "^11.0.10",
-    "file-type": "^20.4.1",
+    "file-type": "^21.0.0",
     "graphql": "^16.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
