@@ -41,6 +41,8 @@ updates:
           - 'vitest'
           - 'tsx'
           - 'rollup'
+          - '@commanderjs/*'
+          - 'commander'
         update-types:
           - 'minor'
           - 'patch'
@@ -68,6 +70,14 @@ updates:
       whatwg-node:
         patterns:
           - '@whatwg-node/*'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      commanderjs:
+        patterns:
+          - '@commanderjs/*'
+          - 'commander'
         update-types:
           - 'major'
           - 'minor'
