@@ -11,6 +11,7 @@ export function useContentEncoding<TContext extends Record<string, any>>({
   subgraphs,
 }: UseContentEncodingOpts = {}): GatewayPlugin<TContext> {
   if (!subgraphs?.length) {
+    // @ts-expect-error - Return types are not compatible
     return useOrigContentEncoding();
   }
   const compressionAlgorithm: CompressionFormat = 'gzip';
@@ -21,7 +22,10 @@ export function useContentEncoding<TContext extends Record<string, any>>({
       fetchAPI = yoga.fetchAPI;
     },
     onPluginInit({ addPlugin }) {
-      addPlugin(useOrigContentEncoding());
+      addPlugin(
+        // @ts-expect-error - Plugin types do not match
+        useOrigContentEncoding(),
+      );
     },
     onSubgraphExecute({ subgraphName, executionRequest }) {
       if (subgraphs.includes(subgraphName) || subgraphs.includes('*')) {
