@@ -11,7 +11,6 @@ export function useContentEncoding<TContext extends Record<string, any>>({
   subgraphs,
 }: UseContentEncodingOpts = {}): GatewayPlugin<TContext> {
   if (!subgraphs?.length) {
-    // @ts-expect-error - Return types are not compatible
     return useOrigContentEncoding();
   }
   const compressionAlgorithm: CompressionFormat = 'gzip';
@@ -23,7 +22,6 @@ export function useContentEncoding<TContext extends Record<string, any>>({
     },
     onPluginInit({ addPlugin }) {
       addPlugin(
-        // @ts-expect-error - Plugin types do not match
         useOrigContentEncoding(),
       );
     },
