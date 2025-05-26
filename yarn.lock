@@ -3356,6 +3356,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/relay-additional-resolvers@workspace:e2e/relay-additional-resolvers":
+  version: 0.0.0-use.local
+  resolution: "@e2e/relay-additional-resolvers@workspace:e2e/relay-additional-resolvers"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
+    graphql: "npm:^16.9.0"
+    graphql-sse: "npm:^2.5.3"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/retry-timeout@workspace:e2e/retry-timeout":
   version: 0.0.0-use.local
   resolution: "@e2e/retry-timeout@workspace:e2e/retry-timeout"
