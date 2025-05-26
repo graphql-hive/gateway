@@ -158,7 +158,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
 export type SubgraphConfig = GatewayConfigSubgraph & GatewayCLIConfig;
 
-export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
+export async function runSubgraph(
+  { log, productName, version }: CLIContext,
+  config: SubgraphConfig,
+) {
   let absSchemaPath: string | null = null;
   if (
     typeof config.subgraph === 'string' &&
@@ -179,6 +182,8 @@ export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
   if (handleFork(log, config)) {
     return;
   }
+
+  log.info(`Starting ${productName} ${version} as subgraph`);
 
   const runtime = createGatewayRuntime(config);
 
