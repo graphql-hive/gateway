@@ -573,7 +573,7 @@ export function useOpenTelemetry(
       },
 
       schema(_, wrapped) {
-        if (!shouldTrace(options.spans?.schema, null)) {
+        if (!shouldTrace(traces.spans?.schema, null)) {
           return wrapped();
         }
 
