@@ -64,7 +64,7 @@ jobs:
         runtime: [Node, Bun]
     name: ${{ matrix.runtime }} Docker image
     needs: [stable, snapshot]
-    if: always() && (
+    if: always() && github.actor != 'dependabot[bot]' && (
       contains(needs.stable.outputs.publishedPackages, '@graphql-hive/gateway') ||
       contains(needs.snapshot.outputs.publishedPackages, '@graphql-hive/gateway')
       )
@@ -125,7 +125,7 @@ jobs:
           push: true
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
@@ -217,7 +217,7 @@ jobs:
           path: ${{ steps.binary.outputs.path }}
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}

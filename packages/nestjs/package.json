@@ -58,7 +58,7 @@
     "@nestjs/testing": "11.1.1",
     "@types/supertest": "6.0.3",
     "fastify": "5.3.3",
-    "file-type": "^20.4.1",
+    "file-type": "^21.0.0",
     "graphql": "^16.9.0",
     "pkgroll": "2.12.2",
     "reflect-metadata": "0.2.2",
