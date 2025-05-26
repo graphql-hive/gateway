@@ -3,8 +3,6 @@ import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { createLoggerFromPino } from '@graphql-hive/logger-pino';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { Opts } from '@internal/testing';
-import { diag } from '@opentelemetry/api';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
 /* --- E2E TEST SPECIFIC CONFIGURATION START---  */
