@@ -1,0 +1,173 @@
+[2025-05-26T14:55:36.564Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fshFt7ol/supergraph.graphql [0m
+[2025-05-26T14:55:36.566Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fshFt7ol/supergraph.graphql [0m
+[2025-05-26T14:55:36.566Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fshFt7ol/supergraph.graphql for changes [0m
+[2025-05-26T14:55:36.569Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fshFt7ol/supergraph.graphql [0m
+[2025-05-26T14:55:36.579Z] INFO  [36m Listening on http://localhost:60575 [0m
+[2025-05-26T14:56:42.380Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T14:56:42.387Z] INFO  [36m Loaded config [0m
+[2025-05-26T14:56:42.387Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsdxRzJ4/supergraph.graphql [0m
+[2025-05-26T14:56:42.388Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsdxRzJ4/supergraph.graphql [0m
+[2025-05-26T14:56:42.388Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsdxRzJ4/supergraph.graphql for changes [0m
+[2025-05-26T14:56:42.390Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsdxRzJ4/supergraph.graphql [0m
+[2025-05-26T14:56:42.397Z] INFO  [36m Listening on http://localhost:60714 [0m
+[2025-05-26T14:56:42.610Z] ERROR [31m Error: Query.node defined in resolvers, but not in schema
+    at addResolversToSchema (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/schema/esm/addResolversToSchema.js:80:39)
+    at stitchSchemas (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/stitch/src/stitchSchemas.ts:136:12)
+    at getStitchedSchemaFromSupergraphSdl (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/federation/src/supergraph.ts:1524:26)
+    at UnifiedGraphManager.handleFederationSupergraph (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/federation/supergraph.ts:188:32)
+    at UnifiedGraphManager.handleLoadedUnifiedGraph (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/unifiedGraphManager.ts:302:16)
+    at <anonymous> (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/unifiedGraphManager.ts:388:14) [0m
+[2025-05-26T14:56:42.614Z] ERROR [31m Error: Query.node defined in resolvers, but not in schema
+    at addResolversToSchema (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/schema/esm/addResolversToSchema.js:80:39)
+    at stitchSchemas (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/stitch/src/stitchSchemas.ts:136:12)
+    at getStitchedSchemaFromSupergraphSdl (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/federation/src/supergraph.ts:1524:26)
+    at UnifiedGraphManager.handleFederationSupergraph (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/federation/supergraph.ts:188:32)
+    at UnifiedGraphManager.handleLoadedUnifiedGraph (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/unifiedGraphManager.ts:302:16)
+    at <anonymous> (/Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/packages/fusion-runtime/src/unifiedGraphManager.ts:388:14) [0m
+[2025-05-26T14:57:52.746Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T14:57:52.753Z] INFO  [36m Loaded config [0m
+[2025-05-26T14:57:52.753Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsYpodCQ/supergraph.graphql [0m
+[2025-05-26T14:57:52.754Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsYpodCQ/supergraph.graphql [0m
+[2025-05-26T14:57:52.754Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsYpodCQ/supergraph.graphql for changes [0m
+[2025-05-26T14:57:52.756Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsYpodCQ/supergraph.graphql [0m
+[2025-05-26T14:57:52.762Z] INFO  [36m Listening on http://localhost:60826 [0m
+[2025-05-26T14:57:53.026Z] ERROR [31m Error: Cannot query field "node" on type "Query".
+    at Object.node (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts:13:15)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:351:24)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18)
+    at file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:64:37
+    at Promise.then (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@whatwg-node/promise-helpers/esm/index.js:34:40)
+    at handleMaybePromise (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@whatwg-node/promise-helpers/esm/index.js:10:33)
+    at executeImpl (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:64:12)
+    at execute (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:49:12)
+    at file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/normalizedExecutor.js:13:37 {
+  path: [ 'node' ],
+  locations: [ { line: 3, column: 11 } ],
+  extensions: [Object: null prototype] {}
+} [0m
+[2025-05-26T15:01:11.667Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:01:11.674Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:01:11.674Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsJCufQu/supergraph.graphql [0m
+[2025-05-26T15:01:11.675Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsJCufQu/supergraph.graphql [0m
+[2025-05-26T15:01:11.675Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsJCufQu/supergraph.graphql for changes [0m
+[2025-05-26T15:01:11.678Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsJCufQu/supergraph.graphql [0m
+[2025-05-26T15:01:11.685Z] INFO  [36m Listening on http://localhost:61090 [0m
+[2025-05-26T15:02:08.930Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:02:08.939Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:02:08.939Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fs9Hcusc/supergraph.graphql [0m
+[2025-05-26T15:02:08.940Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fs9Hcusc/supergraph.graphql [0m
+[2025-05-26T15:02:08.940Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fs9Hcusc/supergraph.graphql for changes [0m
+[2025-05-26T15:02:08.942Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fs9Hcusc/supergraph.graphql [0m
+[2025-05-26T15:02:08.948Z] INFO  [36m Listening on http://localhost:61194 [0m
+[2025-05-26T15:02:30.927Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:02:30.935Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:02:30.935Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfZc8xM/supergraph.graphql [0m
+[2025-05-26T15:02:30.936Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfZc8xM/supergraph.graphql [0m
+[2025-05-26T15:02:30.936Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfZc8xM/supergraph.graphql for changes [0m
+[2025-05-26T15:02:30.938Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfZc8xM/supergraph.graphql [0m
+[2025-05-26T15:02:30.944Z] INFO  [36m Listening on http://localhost:61257 [0m
+{ id: 'VXNlcjp1c2VyLTI=' }
+[2025-05-26T15:02:31.187Z] ERROR [31m Error: Cannot query field "node" on type "Query".
+    at Object.node (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts:14:15)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:351:24)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18)
+    at file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:64:37
+    at Promise.then (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@whatwg-node/promise-helpers/esm/index.js:34:40)
+    at handleMaybePromise (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@whatwg-node/promise-helpers/esm/index.js:10:33)
+    at executeImpl (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:64:12)
+    at execute (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:49:12)
+    at file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/normalizedExecutor.js:13:37 {
+  path: [ 'node' ],
+  locations: [ { line: 3, column: 11 } ],
+  extensions: [Object: null prototype] {}
+} [0m
+[2025-05-26T15:04:08.181Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:04:08.191Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:04:08.191Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fstEv1aL/supergraph.graphql [0m
+[2025-05-26T15:04:08.191Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fstEv1aL/supergraph.graphql [0m
+[2025-05-26T15:04:08.191Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fstEv1aL/supergraph.graphql for changes [0m
+[2025-05-26T15:04:08.194Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fstEv1aL/supergraph.graphql [0m
+[2025-05-26T15:04:08.200Z] INFO  [36m Listening on http://localhost:61412 [0m
+[2025-05-26T15:04:08.458Z] ERROR [31m Error: Cannot return null for non-nullable field User.name.
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:467:19)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at collectAndExecuteSubfields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:736:23)
+    at completeObjectValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:726:12)
+    at completeAbstractValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:675:12)
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:487:16)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18) {
+  path: [ 'node', 'name' ],
+  locations: [ { line: 5, column: 15 } ],
+  extensions: [Object: null prototype] {}
+} [0m
+[2025-05-26T15:05:46.728Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:05:46.738Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:05:46.738Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fskLgGRP/supergraph.graphql [0m
+[2025-05-26T15:05:46.739Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fskLgGRP/supergraph.graphql [0m
+[2025-05-26T15:05:46.739Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fskLgGRP/supergraph.graphql for changes [0m
+[2025-05-26T15:05:46.741Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fskLgGRP/supergraph.graphql [0m
+[2025-05-26T15:05:46.747Z] INFO  [36m Listening on http://localhost:61572 [0m
+[2025-05-26T15:05:47.016Z] ERROR [31m Error: Cannot return null for non-nullable field User.name.
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:467:19)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at collectAndExecuteSubfields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:736:23)
+    at completeObjectValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:726:12)
+    at completeAbstractValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:675:12)
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:487:16)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18) {
+  path: [ 'node', 'name' ],
+  locations: [ { line: 5, column: 15 } ],
+  extensions: [Object: null prototype] {}
+} [0m
+[2025-05-26T15:09:42.499Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:09:42.508Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:09:42.508Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsOwxhFd/supergraph.graphql [0m
+[2025-05-26T15:09:42.509Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsOwxhFd/supergraph.graphql [0m
+[2025-05-26T15:09:42.509Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsOwxhFd/supergraph.graphql for changes [0m
+[2025-05-26T15:09:42.511Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsOwxhFd/supergraph.graphql [0m
+[2025-05-26T15:09:42.517Z] INFO  [36m Listening on http://localhost:61887 [0m
+[2025-05-26T15:09:42.786Z] ERROR [31m Error: Cannot return null for non-nullable field User.name.
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:467:19)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at collectAndExecuteSubfields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:736:23)
+    at completeObjectValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:726:12)
+    at completeAbstractValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:675:12)
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:487:16)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18) {
+  path: [ 'node', 'name' ],
+  locations: [ { line: 5, column: 15 } ],
+  extensions: [Object: null prototype] {}
+} [0m
+[2025-05-26T15:12:09.330Z] INFO  [36m Found default config file /Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/e2e/relay-additional-resolvers/gateway.config.ts [0m
+[2025-05-26T15:12:09.342Z] INFO  [36m Loaded config [0m
+[2025-05-26T15:12:09.343Z] INFO  [36m Supergraph will be loaded from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfAkQmK/supergraph.graphql [0m
+[2025-05-26T15:12:09.343Z] INFO  [36m Reading supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfAkQmK/supergraph.graphql [0m
+[2025-05-26T15:12:09.343Z] INFO  [36m Watching /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfAkQmK/supergraph.graphql for changes [0m
+[2025-05-26T15:12:09.346Z] INFO  [36m Serving local supergraph from /var/folders/x_/ly8bj5d97ks505gzsxc49_vr0000gn/T/hive-gateway_e2e_fsfAkQmK/supergraph.graphql [0m
+[2025-05-26T15:12:09.352Z] INFO  [36m Listening on http://localhost:62107 [0m
+[2025-05-26T15:12:09.626Z] ERROR [31m Error: Cannot return null for non-nullable field User.name.
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:467:19)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at collectAndExecuteSubfields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:736:23)
+    at completeObjectValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:726:12)
+    at completeAbstractValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:675:12)
+    at completeValue (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:487:16)
+    at executeField (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:357:25)
+    at executeFields (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:296:28)
+    at executeOperation (file:///Users/enisdenjo/Develop/src/github.com/graphql-hive/gateway/node_modules/@graphql-tools/executor/esm/execution/execute.js:260:18) {
+  path: [ 'node', 'name' ],
+  locations: [ { line: 5, column: 15 } ],
+  extensions: [Object: null prototype] {}
+} [0m
