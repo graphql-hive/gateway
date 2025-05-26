@@ -262,6 +262,17 @@ export function useOpenTelemetry(
         startTime: initializationTime,
       }),
     );
+
+    if (!useContextManager) {
+      if (traces.spans?.schema) {
+        pluginLogger.warn(
+          'Schema loading spans are disabled because no context manager is available',
+        );
+      }
+
+      traces.spans = traces.spans ?? {};
+      traces.spans.schema = false;
+    }
   }
 
   return withState<
@@ -602,16 +613,6 @@ export function useOpenTelemetry(
       pluginLogger.debug(
         `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
-
-      if (!useContextManager) {
-        if (traces.spans?.schema) {
-          pluginLogger.warn(
-            'Schema loading spans are disabled because no context manager is available',
-          );
-        }
-        traces.spans = traces.spans ?? {};
-        traces.spans.schema = false;
-      }
     },
 
     onEnveloped({ state, extendContext }) {
