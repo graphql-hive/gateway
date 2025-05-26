@@ -204,7 +204,10 @@ export class Logger implements AsyncDisposable {
 
     attrs = shallowMergeAttributes(parseAttrs(this.#attrs), parseAttrs(attrs));
 
-    msg = msg ? format(msg, rest, { stringify: fastSafeStringify }) : msg;
+    msg =
+      msg && rest.length
+        ? format(msg, rest, { stringify: fastSafeStringify })
+        : msg;
 
     this.write(level, attrs, msg);
     if (truthyEnv('LOG_TRACE_LOGS')) {
