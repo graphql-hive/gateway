@@ -1,5 +1,5 @@
 import cluster, { type Worker } from 'node:cluster';
-import type { Logger } from '@graphql-mesh/types';
+import type { Logger } from '@graphql-hive/logger';
 import { registerTerminateHandler } from '@graphql-mesh/utils';
 
 /**
@@ -22,25 +22,23 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
             logData['code'] = code;
           }
           if (expectedToExit) {
-            workerLogger.debug('exited', logData);
+            workerLogger.debug(logData, 'exited');
           } else {
             workerLogger.error(
-              'exited unexpectedly. A restart is recommended to ensure the stability of the service',
               logData,
+              'Exited unexpectedly. A restart is recommended to ensure the stability of the service',
             );
           }
           workers.delete(worker);
           if (!expectedToExit && workers.size === 0) {
-            log.error(`All workers exited unexpectedly. Exiting`, logData);
+            log.error(logData, 'All workers exited unexpectedly. Exiting...');
             process.exit(1);
           }
         });
         workers.add(worker);
       }
       registerTerminateHandler((signal) => {
-        log.info('Killing workers', {
-          signal,
-        });
+        log.info(`Killing workers on ${signal}`);
         expectedToExit = true;
         workers.forEach((w) => {
           w.kill(signal);
@@ -49,7 +47,11 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
       return true;
     }
   } catch (e) {
-    log.error(`Error while forking workers: `, e);
+    log.error(
+      // @ts-expect-error very likely an instanceof error
+      e,
+      'Error while forking workers',
+    );
   }
   return false;
 }
