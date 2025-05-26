@@ -259,7 +259,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 export type SupergraphConfig = GatewayConfigSupergraph & GatewayCLIConfig;
 
 export async function runSupergraph(
-  { log }: CLIContext,
+  { productName, version, log }: CLIContext,
   config: SupergraphConfig,
 ) {
   let absSchemaPath: string | null = null;
@@ -328,6 +328,8 @@ export async function runSupergraph(
   if (handleFork(log, config)) {
     return;
   }
+
+  log.info(`Starting ${productName} ${version} with supergraph`);
 
   if (config.additionalTypeDefs) {
     const loaders = [new GraphQLFileLoader(), new CodeFileLoader()];
