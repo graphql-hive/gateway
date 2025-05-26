@@ -8,6 +8,7 @@ import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import {
   context,
+  diag,
   propagation,
   ROOT_CONTEXT,
   trace,
@@ -88,6 +89,18 @@ export type OpenTelemetryGatewayPluginOptions = {
    * See https://opentelemetry.io/docs/languages/js/propagation/
    */
   propagateContext?: boolean;
+  /**
+   * Configure Opentelemetry `diag` API to use Gateway's logger.
+   * @default true
+   */
+  configureDiag?: boolean;
+  /**
+   * The TraceProvider method to call on Gateway's disposal. By default, it tries to run `forceFlush` method on
+   * the registered trace provider if it exists.
+   * Set to `false` to disable this behavior.
+   * @default 'forceFlush'
+   */
+  flushOnDispose?: string | false;
   /**
    * Tracing configuration
    */
@@ -610,6 +623,16 @@ export function useOpenTelemetry(
           })
         : yoga.logger;
 
+      if (options.configureDiag !== false) {
+        diag.setLogger({
+          debug: (message, ...args) => pluginLogger.debug(message, ...args),
+          error: (message, ...args) => pluginLogger.error(message, ...args),
+          warn: (message, ...args) => pluginLogger.warn(message, ...args),
+          info: (message, ...args) => pluginLogger.info(message, ...args),
+          verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+        });
+      }
+
       pluginLogger.debug(
         `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
@@ -785,15 +808,16 @@ export function useOpenTelemetry(
     },
 
     onDispose() {
-      // Most Trace provider are asynchronous and batched.
-      // When it is the case, they have a `forceFlush` that allows to forcefully send traces
-      // and wait for them to be written.
-      const provider = trace.getTracerProvider();
-      if (
-        'forceFlush' in provider &&
-        typeof provider.forceFlush === 'function'
-      ) {
-        return provider.forceFlush();
+      if (options.flushOnDispose !== false) {
+        const flushMethod = options.flushOnDispose ?? 'forceFlush';
+
+        const provider = trace.getTracerProvider() as Record<string, any>;
+        if (
+          flushMethod in provider &&
+          typeof provider[flushMethod] === 'function'
+        ) {
+          return provider[flushMethod]();
+        }
       }
     },
   }));
