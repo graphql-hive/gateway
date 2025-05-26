@@ -106,13 +106,6 @@ export type OpenTelemetryGatewayPluginOptions = {
          */
         spans?: {
           /**
-           * Enable/disable Spans of internal introspection queries in proxy mode (default: true).
-           */
-          introspection?: BooleanOrPredicate<{
-            executionRequest: ExecutionRequest;
-            subgraphName: string;
-          }>;
-          /**
            * Enable/disable HTTP request spans (default: true).
            *
            * Disabling the HTTP span will also disable all other child spans.
@@ -159,6 +152,12 @@ export type OpenTelemetryGatewayPluginOptions = {
            * Enable/Disable cache related span events (default: true).
            */
           cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
+          /**
+           * Enable/disable schema loading spans (default: true if context manager available).
+           *
+           * Note: This span requires an Async compatible context manager
+           */
+          schema?: boolean;
           /**
            * Enable/disable initialization span (default: true).
            */
