@@ -476,7 +476,7 @@ describe('useOpenTelemetry', () => {
 
     it('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
-        options: { spans: { http: false, schema: true } },
+        options: { traces: { spans: { http: false, schema: true } } },
       });
       await gateway.query();
 

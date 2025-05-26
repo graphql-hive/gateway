@@ -604,13 +604,13 @@ export function useOpenTelemetry(
       );
 
       if (!useContextManager) {
-        if (options.spans?.schema) {
+        if (traces.spans?.schema) {
           pluginLogger.warn(
             'Schema loading spans are disabled because no context manager is available',
           );
         }
-        options.spans = options.spans ?? {};
-        options.spans.schema = false;
+        traces.spans = traces.spans ?? {};
+        traces.spans.schema = false;
       }
     },
 
