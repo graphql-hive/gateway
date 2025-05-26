@@ -1,10 +1,14 @@
-import './otel-setup.js';
+// prettier-ignore
+import { resource } from './otel-setup.js';
 import { ExportedHandler, Response } from '@cloudflare/workers-types';
 import {
   createGatewayRuntime,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
+import {
+  SEMRESATTRS_SERVICE_NAME,
+  useOpenTelemetry,
+} from '@graphql-mesh/plugin-opentelemetry';
 import http from '@graphql-mesh/transport-http';
 import { diag } from '@opentelemetry/api';
 import { setGlobalErrorHandler } from '@opentelemetry/core';
@@ -39,6 +43,7 @@ let runtime: ReturnType<typeof createGatewayRuntime>;
 function getRuntime(env: Env) {
   if (!runtime) {
     console.log(env);
+    resource.attributes[SEMRESATTRS_SERVICE_NAME] = env.OTLP_SERVICE_NAME;
     runtime = createGatewayRuntime({
       proxy: { endpoint: 'https://countries.trevorblades.com' },
       transports: { http },
@@ -59,6 +64,7 @@ function getRuntime(env: Env) {
   }
   return runtime;
 }
+
 export default {
   async fetch(req, env, ctx) {
     const res = await getRuntime(env)(req, env, ctx);

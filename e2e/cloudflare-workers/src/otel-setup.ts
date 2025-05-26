@@ -1,4 +1,3 @@
-import { SEMRESATTRS_SERVICE_NAME } from '@graphql-mesh/plugin-opentelemetry';
 import { type ContextManager } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
@@ -11,10 +10,10 @@ import {
 // We don't want to bundle node only deps in non-node compatible envs
 const doNotBundleThisModule = '@opentelemetry';
 
+const resource = resourceFromAttributes({});
+
 const tracerProvider = new WebTracerProvider({
-  resource: resourceFromAttributes({
-    [SEMRESATTRS_SERVICE_NAME]: process.env['OTLP_SERVICE_NAME'],
-  }),
+  resource,
   spanProcessors: [
     // Do not batch for test
     new SimpleSpanProcessor(
@@ -36,4 +35,4 @@ export function getContextManager(): Promise<ContextManager | undefined> {
     .catch(() => undefined);
 }
 
-export { tracerProvider };
+export { tracerProvider, resource };
