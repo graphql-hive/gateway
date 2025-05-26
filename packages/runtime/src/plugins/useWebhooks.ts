@@ -34,14 +34,13 @@ export function useWebhooks({
       const expectedEventName = `webhook:${requestMethod}:${pathname}`;
       for (const eventName of eventNames) {
         if (eventName === expectedEventName) {
-          log.debug('Received webhook request for %s', pathname);
+          log.debug({ pathname }, 'Received webhook request');
           return handleMaybePromise(
             () => request.text(),
             function handleWebhookPayload(webhookPayload) {
               log.debug(
-                { payload: webhookPayload },
-                'Emitted webhook request for %s',
-                pathname,
+                { pathname, payload: webhookPayload },
+                'Emitted webhook request',
               );
               webhookPayload =
                 request.headers.get('content-type') === 'application/json'

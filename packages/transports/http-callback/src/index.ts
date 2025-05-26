@@ -139,9 +139,8 @@ export default {
         }, heartbeatIntervalMs),
       );
       log.debug(
-        'Subscribing to %s with callbackUrl: %s',
-        transportEntry.location,
-        callbackUrl,
+        { location: transportEntry.location, callbackUrl },
+        'Subscribing using callback',
       );
       let pushFn: Push<ExecutionResult> = () => {
         throw new Error(
@@ -248,14 +247,13 @@ export default {
         pushFn = push;
         stopSubscription = stop;
         stopFnSet.add(stop);
-        log.debug('Listening to %s', subscriptionCallbackPath);
+        log.debug(`Listening to ${subscriptionCallbackPath}`);
         const subId = pubsub.subscribe(
           `webhook:post:${subscriptionCallbackPath}`,
           (message: HTTPCallbackMessage) => {
             log.debug(
               message,
-              'Received message from %s',
-              subscriptionCallbackPath,
+              `Received message from ${subscriptionCallbackPath}`,
             );
             if (message.verifier !== verifier) {
               return;
