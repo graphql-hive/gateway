@@ -4041,6 +4041,7 @@ __metadata:
     "@graphql-tools/graphql-file-loader": "npm:^8.0.14"
     "@graphql-tools/load": "npm:^8.0.14"
     "@graphql-tools/utils": "npm:^10.8.1"
+    "@graphql-yoga/render-graphiql": "npm:^5.13.5"
     "@rollup/plugin-commonjs": "npm:^28.0.0"
     "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-node-resolve": "npm:^16.0.0"
@@ -5348,6 +5349,15 @@ __metadata:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.13.4
   checksum: 10c0/022979d5f19119d281fab581e4782a67f9cdfb951bdb189da0efe25e6abf58dbb6424a1f72fb9a1c552e744d7a5d9c9dec5db8b0bd341a66d7d6927ca9981738
+  languageName: node
+  linkType: hard
+
+"@graphql-yoga/render-graphiql@npm:^5.13.5":
+  version: 5.13.5
+  resolution: "@graphql-yoga/render-graphiql@npm:5.13.5"
+  peerDependencies:
+    graphql-yoga: ^5.13.5
+  checksum: 10c0/c9c008291e2c27a33cae8cd70bd64b1cd07310f5fb70ce98be3307317a100dcc57f5bbabd2e953ce5196f4ca765bf1cb69b87d078746a838c678037e312e8013
   languageName: node
   linkType: hard
 

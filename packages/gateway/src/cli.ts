@@ -22,6 +22,7 @@ import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
+import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
 import parseDuration from 'parse-duration';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
@@ -262,6 +263,7 @@ export const defaultOptions = {
       : '0.0.0.0',
   port: 4000,
   pollingInterval: 10_000,
+  renderGraphiQL,
 };
 
 /** Root cli for the gateway. */
