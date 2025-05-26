@@ -44,6 +44,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsToken,
         ...opts
       } = this.optsWithGlobals();
+
+      ctx.log.info(`Starting ${ctx.productName} ${ctx.version} in proxy mode`);
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -198,15 +201,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
 export type ProxyConfig = GatewayConfigProxy & GatewayCLIConfig;
 
-export async function runProxy(
-  { log, productName, version }: CLIContext,
-  config: ProxyConfig,
-) {
+export async function runProxy({ log }: CLIContext, config: ProxyConfig) {
   if (handleFork(log, config)) {
     return;
   }
-
-  log.info(`Starting ${productName} ${version} in proxy mode`);
 
   log.info(`Proxying requests to ${config.proxy.endpoint}`);
 
