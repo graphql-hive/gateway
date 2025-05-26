@@ -61,12 +61,10 @@ describe('Polling', () => {
 
     const disposeFn = vi.fn();
 
-    const log = new Logger({ level: false });
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
-      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -201,12 +199,10 @@ describe('Polling', () => {
         },
       ]);
     });
-    const log = new Logger({ level: false });
     await using manager = new UnifiedGraphManager({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: pollingInterval,
       batch: false,
-      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
@@ -299,11 +295,9 @@ describe('Polling', () => {
       ]);
     });
     let disposeFn = vi.fn();
-    const log = new Logger({ level: false });
     await using executor = getExecutorForUnifiedGraph({
       getUnifiedGraph: unifiedGraphFetcher,
       pollingInterval: 1000,
-      transportContext: { log, logger: LegacyLogger.from(log) },
       transports() {
         return {
           getSubgraphExecutor() {
