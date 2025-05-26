@@ -2,7 +2,9 @@ import {
   ATTR_SERVICE_VERSION,
   SEMRESATTRS_SERVICE_NAME,
 } from '@graphql-mesh/plugin-opentelemetry';
-import { type ContextManager } from '@opentelemetry/api';
+import { diag } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import {
@@ -11,14 +13,14 @@ import {
 } from '@opentelemetry/sdk-trace-web';
 import { version } from './package.json' with { type: 'json' };
 
-// We don't want to bundle node only deps in non-node compatible envs
-const doNotBundleThisModule = '@opentelemetry';
+setGlobalErrorHandler((err) => diag.error('Uncaught Error', err));
 
 const { OTLPTraceExporter } =
   process.env['OTLP_EXPORTER_TYPE'] === 'http'
-    ? await import(`${doNotBundleThisModule}/exporter-trace-otlp-http`)
-    : await import(`${doNotBundleThisModule}/exporter-trace-otlp-grpc`);
+    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
 
+// AsyncLocalStorage is not always available
 const tracerProvider = new WebTracerProvider({
   resource: resourceFromAttributes({
     [SEMRESATTRS_SERVICE_NAME]: process.env['OTLP_SERVICE_NAME'],
@@ -40,13 +42,7 @@ const tracerProvider = new WebTracerProvider({
 });
 
 tracerProvider.register({
-  contextManager: await getContextManager(),
+  contextManager: new AsyncLocalStorageContextManager(),
 });
-
-export function getContextManager(): Promise<ContextManager | undefined> {
-  return import(`${doNotBundleThisModule}/context-async-hooks`)
-    .then((module) => new module.AsyncLocalStorageContextManager())
-    .catch(() => undefined);
-}
 
 export { tracerProvider };

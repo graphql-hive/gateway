@@ -1,5 +1,7 @@
 import { SEMRESATTRS_SERVICE_NAME } from '@graphql-mesh/plugin-opentelemetry';
-import { type ContextManager } from '@opentelemetry/api';
+import { diag } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -8,8 +10,7 @@ import {
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web';
 
-// We don't want to bundle node only deps in non-node compatible envs
-const doNotBundleThisModule = '@opentelemetry';
+setGlobalErrorHandler((err) => diag.error('Uncaught Error', err));
 
 const tracerProvider = new WebTracerProvider({
   resource: resourceFromAttributes({
@@ -27,13 +28,7 @@ const tracerProvider = new WebTracerProvider({
 });
 
 tracerProvider.register({
-  contextManager: await getContextManager(),
+  contextManager: new AsyncLocalStorageContextManager(),
 });
-
-export function getContextManager(): Promise<ContextManager | undefined> {
-  return import(`${doNotBundleThisModule}/context-async-hooks`)
-    .then((module) => new module.AsyncLocalStorageContextManager())
-    .catch(() => undefined);
-}
 
 export { tracerProvider };

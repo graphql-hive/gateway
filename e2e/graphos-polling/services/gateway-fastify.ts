@@ -69,18 +69,12 @@ const gw = createGatewayRuntime<FastifyContext>({
     endpoint: `${upLink}/usage`,
   },
   // Use OpenTelemetry to report traces
-  plugins: (ctx) => {
-    const otelLogger = ctx.logger.child('[otel-diag]');
-    diag.setLogger({ ...otelLogger, verbose: otelLogger.debug });
-    setGlobalErrorHandler((err) => otelLogger.error('Uncaught error', err));
-
-    return [
-      useOpenTelemetry({
-        ...ctx,
-        traces: true,
-      }),
-    ];
-  },
+  plugins: (ctx) => [
+    useOpenTelemetry({
+      ...ctx,
+      traces: true,
+    }),
+  ],
 });
 
 app.route({

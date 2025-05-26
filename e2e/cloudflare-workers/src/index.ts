@@ -10,8 +10,6 @@ import {
   useOpenTelemetry,
 } from '@graphql-mesh/plugin-opentelemetry';
 import http from '@graphql-mesh/transport-http';
-import { diag } from '@opentelemetry/api';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
@@ -47,19 +45,13 @@ function getRuntime(env: Env) {
     runtime = createGatewayRuntime({
       proxy: { endpoint: 'https://countries.trevorblades.com' },
       transports: { http },
-      plugins: (ctx) => {
-        const otelLogger = ctx.logger.child('[otel-diag]');
-        diag.setLogger({ ...otelLogger, verbose: otelLogger.debug });
-        setGlobalErrorHandler((err) => otelLogger.error('Uncaught error', err));
-
-        return [
-          useOpenTelemetry({
-            ...ctx,
-            traces: true,
-          }),
-          useOnFetchTracer(),
-        ];
-      },
+      plugins: (ctx) => [
+        useOpenTelemetry({
+          ...ctx,
+          traces: true,
+        }),
+        useOnFetchTracer(),
+      ],
     });
   }
   return runtime;

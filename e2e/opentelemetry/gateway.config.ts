@@ -1,8 +1,6 @@
 import './otel-setup.js';
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
-import { diag } from '@opentelemetry/api';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -28,17 +26,10 @@ export const gatewayConfig = defineConfig({
   openTelemetry: {
     traces: true,
   },
-  plugins: ({ logger }) => {
-    const otelLogger = logger.child('[otel-diag]');
-    diag.setLogger({ ...otelLogger, verbose: otelLogger.debug });
-    setGlobalErrorHandler((err) => otelLogger.error('Uncaught error', err));
-
-    return [
-      ...(process.env['MEMTEST']
-        ? [
-            // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
-          ]
-        : [useOnFetchTracer()]),
-    ];
-  },
+  plugins: () =>
+    process.env['MEMTEST']
+      ? [
+          // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
+        ]
+      : [useOnFetchTracer()],
 });
