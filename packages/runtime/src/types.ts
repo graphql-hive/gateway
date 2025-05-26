@@ -448,6 +448,15 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    */
   graphiql?: YogaServerOptions<unknown, GatewayContext & TContext>['graphiql'];
   /**
+   * Accepts a factory function that returns GraphiQL HTML, this replaces the existing GraphiQL
+   * So this option can be also used to provide an offline GraphiQL
+   * @see https://the-guild.dev/graphql/yoga-server/docs/features/graphiql#offline-usage
+   */
+  renderGraphiQL?: YogaServerOptions<
+    unknown,
+    GatewayContext & TContext
+  >['renderGraphiQL'];
+  /**
    * Whether the landing page should be shown.
    */
   landingPage?: boolean;
