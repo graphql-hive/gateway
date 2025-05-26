@@ -65,6 +65,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
       // TODO: move to optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
       const { apolloUplink } = this.opts();
 
+      ctx.log.info(
+        `Starting ${ctx.productName} ${ctx.version} with supergraph`,
+      );
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -259,7 +263,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 export type SupergraphConfig = GatewayConfigSupergraph & GatewayCLIConfig;
 
 export async function runSupergraph(
-  { productName, version, log }: CLIContext,
+  { log }: CLIContext,
   config: SupergraphConfig,
 ) {
   let absSchemaPath: string | null = null;
@@ -328,8 +332,6 @@ export async function runSupergraph(
   if (handleFork(log, config)) {
     return;
   }
-
-  log.info(`Starting ${productName} ${version} with supergraph`);
 
   if (config.additionalTypeDefs) {
     const loaders = [new GraphQLFileLoader(), new CodeFileLoader()];
