@@ -22,13 +22,8 @@ import {
 } from '../src/unifiedGraphManager';
 
 export function composeAndGetPublicSchema(subgraphs: SubgraphConfig[]) {
-  const log = new Logger({ level: false });
   const manager = new UnifiedGraphManager({
     getUnifiedGraph: () => getUnifiedGraphGracefully(subgraphs),
-    transportContext: {
-      log,
-      logger: LegacyLogger.from(log),
-    },
     transports() {
       return {
         getSubgraphExecutor({ subgraphName }) {

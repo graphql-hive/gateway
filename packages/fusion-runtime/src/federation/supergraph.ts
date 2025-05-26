@@ -158,7 +158,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  log: rootLog,
+  // no logger was provided, use a muted logger for consistency across plugin hooks
+  log: rootLog = new Logger({ level: false }),
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
