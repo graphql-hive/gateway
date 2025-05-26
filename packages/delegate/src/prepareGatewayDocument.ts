@@ -3,6 +3,7 @@ import {
   getRootTypeNames,
   implementsAbstractType,
   memoize2,
+  memoize2of4,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
@@ -29,84 +30,86 @@ import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
 import { StitchingInfo } from './types.js';
 
-export function prepareGatewayDocument(
-  originalDocument: DocumentNode,
-  transformedSchema: GraphQLSchema,
-  returnType: GraphQLOutputType,
-  infoSchema?: GraphQLSchema,
-): DocumentNode {
-  const wrappedConcreteTypesDocument = wrapConcreteTypes(
-    returnType,
-    transformedSchema,
-    originalDocument,
-  );
+export const prepareGatewayDocument = memoize2of4(
+  function prepareGatewayDocument(
+    originalDocument: DocumentNode,
+    transformedSchema: GraphQLSchema,
+    returnType: GraphQLOutputType,
+    infoSchema?: GraphQLSchema,
+  ): DocumentNode {
+    const wrappedConcreteTypesDocument = wrapConcreteTypes(
+      returnType,
+      transformedSchema,
+      originalDocument,
+    );
 
-  if (infoSchema == null) {
-    return wrappedConcreteTypesDocument;
-  }
+    if (infoSchema == null) {
+      return wrappedConcreteTypesDocument;
+    }
 
-  const visitedSelections = new WeakSet<SelectionNode>();
+    const visitedSelections = new WeakSet<SelectionNode>();
 
-  const {
-    possibleTypesMap,
-    reversePossibleTypesMap,
-    interfaceExtensionsMap,
-    fieldNodesByType,
-    fieldNodesByField,
-    dynamicSelectionSetsByField,
-  } = getSchemaMetaData(infoSchema, transformedSchema);
+    const {
+      possibleTypesMap,
+      reversePossibleTypesMap,
+      interfaceExtensionsMap,
+      fieldNodesByType,
+      fieldNodesByField,
+      dynamicSelectionSetsByField,
+    } = getSchemaMetaData(infoSchema, transformedSchema);
 
-  const { operations, fragments, fragmentNames } = getDocumentMetadata(
-    wrappedConcreteTypesDocument,
-  );
+    const { operations, fragments, fragmentNames } = getDocumentMetadata(
+      wrappedConcreteTypesDocument,
+    );
 
-  const { expandedFragments, fragmentReplacements } = getExpandedFragments(
-    fragments,
-    fragmentNames,
-    possibleTypesMap,
-  );
+    const { expandedFragments, fragmentReplacements } = getExpandedFragments(
+      fragments,
+      fragmentNames,
+      possibleTypesMap,
+    );
 
-  const typeInfo = getTypeInfo(transformedSchema);
+    const typeInfo = getTypeInfo(transformedSchema);
 
-  const expandedDocument: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: [...operations, ...fragments, ...expandedFragments],
-  };
+    const expandedDocument: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [...operations, ...fragments, ...expandedFragments],
+    };
 
-  const visitorKeyMap: ASTVisitorKeyMap = {
-    Document: ['definitions'],
-    OperationDefinition: ['selectionSet'],
-    SelectionSet: ['selections'],
-    Field: ['selectionSet'],
-    InlineFragment: ['selectionSet'],
-    FragmentDefinition: ['selectionSet'],
-  };
+    const visitorKeyMap: ASTVisitorKeyMap = {
+      Document: ['definitions'],
+      OperationDefinition: ['selectionSet'],
+      SelectionSet: ['selections'],
+      Field: ['selectionSet'],
+      InlineFragment: ['selectionSet'],
+      FragmentDefinition: ['selectionSet'],
+    };
 
-  return visit(
-    expandedDocument,
-    visitWithTypeInfo(typeInfo, {
-      [Kind.SELECTION_SET]: (node) =>
-        visitSelectionSet(
-          node,
-          fragmentReplacements,
-          transformedSchema,
-          typeInfo,
-          possibleTypesMap,
-          reversePossibleTypesMap,
-          interfaceExtensionsMap,
-          fieldNodesByType,
-          fieldNodesByField,
-          dynamicSelectionSetsByField,
-          infoSchema,
-          visitedSelections,
-        ),
-    }),
-    // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
-    // empty keys cannot be removed only because of typescript errors
-    // will hopefully be fixed in future version of graphql-js to be optional
-    visitorKeyMap as any,
-  );
-}
+    return visit(
+      expandedDocument,
+      visitWithTypeInfo(typeInfo, {
+        [Kind.SELECTION_SET]: (node) =>
+          visitSelectionSet(
+            node,
+            fragmentReplacements,
+            transformedSchema,
+            typeInfo,
+            possibleTypesMap,
+            reversePossibleTypesMap,
+            interfaceExtensionsMap,
+            fieldNodesByType,
+            fieldNodesByField,
+            dynamicSelectionSetsByField,
+            infoSchema,
+            visitedSelections,
+          ),
+      }),
+      // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
+      // empty keys cannot be removed only because of typescript errors
+      // will hopefully be fixed in future version of graphql-js to be optional
+      visitorKeyMap as any,
+    );
+  },
+);
 
 const getExtraPossibleTypesFn = memoize2(function getExtraPossibleTypes(
   transformedSchema: GraphQLSchema,
