@@ -77,7 +77,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
 
   const url = `${protocol}://${host}:${port}`.replace('0.0.0.0', 'localhost');
 
-  log.debug('Starting server on %s', url);
+  log.debug(`Starting server on ${url}`);
   if (!disableWebsockets) {
     log.debug('Setting up WebSocket server');
     const { WebSocketServer } = await import('ws');
@@ -112,7 +112,7 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => {
-      log.info('Listening on %s', url);
+      log.info(`Listening on ${url}`);
       gwRuntime.disposableStack.defer(
         () =>
           new Promise<void>((resolve) => {

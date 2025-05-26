@@ -100,12 +100,11 @@ export function useHmacUpstreamSignature(
       log: rootLog,
     }) {
       const log = rootLog.child('[useHmacUpstreamSignature] ');
-      log.debug('Running shouldSign for subgraph %s', subgraphName);
+      log.debug(`Running shouldSign for subgraph ${subgraphName}`);
 
       if (shouldSign({ subgraphName, subgraph, executionRequest })) {
         log.debug(
-          'shouldSign is true for subgraph %s, signing request',
-          subgraphName,
+          `shouldSign is true for subgraph ${subgraphName}, signing request`,
         );
         textEncoder ||= new fetchAPI.TextEncoder();
         return handleMaybePromise(
@@ -134,8 +133,7 @@ export function useHmacUpstreamSignature(
                     signature: extensionValue,
                     payload: serializedExecutionRequest,
                   },
-                  'Produced hmac signature for subgraph %s',
-                  subgraphName,
+                  `Produced hmac signature for subgraph ${subgraphName}`,
                 );
 
                 if (!executionRequest.extensions) {
@@ -205,8 +203,8 @@ export function useHmacSignatureValidation(
           );
           const serializedParams = paramsSerializer(params);
           log.debug(
-            'HMAC signature will be calculate based on serialized params %s',
-            serializedParams,
+            { serializedParams },
+            'HMAC signature will be calculate based on serialized params',
           );
 
           return handleMaybePromise(

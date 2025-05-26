@@ -81,8 +81,7 @@ export function createGraphOSFetcher({
           if (nextFetchTime >= currentTime) {
             const delay = nextFetchTime - currentTime;
             log.info(
-              'Fetching supergraph with delay %s',
-              millisecondsToStr(delay),
+              `Fetching supergraph with delay ${millisecondsToStr(delay)}`,
             );
             nextFetchTime = 0;
             return delayInMs(delay).then(fetchSupergraph);

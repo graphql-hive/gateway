@@ -10,7 +10,7 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
     if (cluster.isPrimary && config.fork && config.fork > 1) {
       const workers = new Set<Worker>();
       let expectedToExit = false;
-      log.debug('Forking %d workers', config.fork);
+      log.debug(`Forking ${config.fork} workers`);
       for (let i = 0; i < config.fork; i++) {
         const worker = cluster.fork();
         const workerLogger = log.child({ worker: worker.id });
@@ -38,7 +38,7 @@ export function handleFork(log: Logger, config: { fork?: number }): boolean {
         workers.add(worker);
       }
       registerTerminateHandler((signal) => {
-        log.info('Killing workers on %s', signal);
+        log.info(`Killing workers on ${signal}`);
         expectedToExit = true;
         workers.forEach((w) => {
           w.kill(signal);

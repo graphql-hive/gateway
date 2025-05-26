@@ -88,8 +88,7 @@ export function useJWT(
 
         log.debug(
           { payload: jwtData.payload },
-          '[useJWT] Forwarding JWT payload to subgraph %s',
-          subgraphName,
+          `[useJWT] Forwarding JWT payload to subgraph ${subgraphName}`,
         );
 
         setExecutionRequest({

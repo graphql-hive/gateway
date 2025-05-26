@@ -64,6 +64,6 @@ export async function startBunServer<TContext extends Record<string, any>>(
     };
   }
   const server = Bun.serve(serverOptions);
-  opts.log.info('Listening on %s', server.url);
+  opts.log.info(`Listening on ${server.url}`);
   gwRuntime.disposableStack.use(server);
 }
