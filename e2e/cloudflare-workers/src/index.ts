@@ -13,10 +13,7 @@ import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import {
-  AlwaysOnSampler,
-  WebTracerProvider,
-} from '@opentelemetry/sdk-trace-web';
+import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
@@ -61,7 +58,6 @@ function getRuntime(env: Env) {
           }),
         ),
       ],
-      sampler: new AlwaysOnSampler(),
     }).register();
 
     console.log(env);

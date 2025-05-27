@@ -20,8 +20,15 @@ export async function tryContextManagerSetup(
 export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
   const symbol = Symbol();
   const root = context.active();
-  return context.with(root.setValue(symbol, true), async () => {
-    return (context.active().getValue(symbol) as boolean) || false;
+  return context.with(root.setValue(symbol, true), () => {
+    return new Promise<boolean>((resolve) => {
+      // Use timeout to ensure that we yield to the event loop.
+      // Some runtimes are optimized and doesn't yield for straight forward async functions
+      // without actual async work.
+      setTimeout(() => {
+        resolve((context.active().getValue(symbol) as boolean) || false);
+      });
+    });
   });
 }
 
