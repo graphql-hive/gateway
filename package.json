@@ -27,9 +27,9 @@
     "test:mem": "vitest --project memtest"
   },
   "devDependencies": {
-    "@babel/core": "7.27.1",
+    "@babel/core": "7.27.3",
     "@babel/plugin-proposal-decorators": "7.27.1",
-    "@babel/plugin-proposal-explicit-resource-management": "7.27.1",
+    "@babel/plugin-proposal-explicit-resource-management": "7.27.3",
     "@babel/plugin-transform-class-properties": "7.27.1",
     "@babel/plugin-transform-class-static-block": "7.27.1",
     "@babel/preset-env": "7.27.2",
