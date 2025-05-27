@@ -8,14 +8,14 @@
   },
   "devDependencies": {
     "@apollo/rover": "^0.31.2",
-    "@babel/parser": "^7.26.3",
+    "@babel/parser": "^7.27.3",
     "@types/jscodeshift": "^17.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
     "dedent": "^1.5.3",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.25.5",
     "glob": "^11.0.0",
     "jscodeshift": "^17.1.1",
     "tsx": "^4.19.2",
-    "zod": "^3.25.28"
+    "zod": "^3.25.30"
   }
 }
