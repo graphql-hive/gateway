@@ -12,6 +12,7 @@ interface Subscribe<T> {
 
 export class WsClient {
   private readonly client: Client;
+  private connected: boolean = false;
 
   constructor() {
     this.client = createClient({
@@ -20,6 +21,14 @@ export class WsClient {
       retryAttempts: 0,
       lazy: true,
       lazyCloseTimeout: 500,
+      on: {
+        connected: () => {
+          this.connected = true;
+        },
+        closed: () => {
+          this.connected = false;
+        },
+      },
     });
   }
 
@@ -83,7 +92,13 @@ export class WsClient {
       dispose,
     };
 
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      if (this.connected) {
+        // same as above, we need to wait a bit to ensure that the subscription is ready
+        await setTimeout(30);
+        resolve(subscribe);
+        return;
+      }
       emitter.once('connected', () => resolve(subscribe));
       emitter.once('next', () => resolve(subscribe));
       emitter.once('error', () => resolve(subscribe));
