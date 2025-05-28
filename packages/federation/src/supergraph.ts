@@ -797,12 +797,35 @@ export function getStitchingOptionsFromSupergraphSdl(
           const fieldsConfig: Record<string, MergedFieldConfig> =
             (mergedTypeConfig.fields = {});
           for (const [fieldName, fieldNameKey] of fieldsKeyMap) {
-            const aliasedFieldNameKey = fieldNameKey.includes('(')
-              ? `_${fieldNameKey.split('(')[0]}: ${fieldNameKey}`
-              : fieldNameKey;
-            extraKeys.add(aliasedFieldNameKey);
+            const selectionSetNode = parseSelectionSet(`{${fieldNameKey}}`);
+            (function aliasFieldsWithArgs(selectionSetNode: SelectionSetNode) {
+              for (const selection of selectionSetNode.selections) {
+                if (
+                  selection.kind === Kind.FIELD &&
+                  selection.arguments?.length
+                ) {
+                  // @ts-expect-error it's ok we're mutating consciously
+                  selection.alias = {
+                    kind: Kind.NAME,
+                    value: '_' + selection.name.value,
+                  };
+                }
+                if ('selectionSet' in selection && selection.selectionSet) {
+                  aliasFieldsWithArgs(selection.selectionSet);
+                }
+              }
+            })(selectionSetNode);
+            const selectionSet = print(selectionSetNode)
+              // remove new lines
+              .replaceAll(/\n/g, ' ')
+              // remove extra spaces (only one space between tokens)
+              .replaceAll(/\s+/g, ' ');
+            extraKeys.add(
+              // remove first and last characters (curly braces)
+              selectionSet.slice(1, -1),
+            );
             fieldsConfig[fieldName] = {
-              selectionSet: `{ ${aliasedFieldNameKey} }`,
+              selectionSet,
               computed: true,
             };
           }
