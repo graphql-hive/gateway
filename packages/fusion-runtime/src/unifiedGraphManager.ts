@@ -403,6 +403,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   }
 
   public getUnifiedGraph(): MaybePromise<GraphQLSchema> {
+    // TODO: error is not bubbled up here
     return handleMaybePromise(
       () => this.ensureUnifiedGraph(),
       () => {
