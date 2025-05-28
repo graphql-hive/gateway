@@ -1,0 +1,8 @@
+{
+  "name": "@e2e/nested-requires-with-arguments",
+  "private": true,
+  "dependencies": {
+    "@apollo/subgraph": "^2.10.0",
+    "graphql": "^16.9.0"
+  }
+}

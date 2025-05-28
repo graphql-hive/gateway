@@ -3214,6 +3214,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/nested-requires-with-arguments@workspace:e2e/nested-requires-with-arguments":
+  version: 0.0.0-use.local
+  resolution: "@e2e/nested-requires-with-arguments@workspace:e2e/nested-requires-with-arguments"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.10.0"
+    graphql: "npm:^16.9.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/nestjs@workspace:e2e/nestjs":
   version: 0.0.0-use.local
   resolution: "@e2e/nestjs@workspace:e2e/nestjs"
