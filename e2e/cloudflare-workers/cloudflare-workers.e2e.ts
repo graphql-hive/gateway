@@ -7,7 +7,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 const { spawn, container, gatewayRunner } = createTenv(__dirname);
 
-describe.skipIf(gatewayRunner !== 'node' && process.version.startsWith('v1'))(
+describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
   'Cloudflare Workers',
   () => {
     let jaeger: Container;
