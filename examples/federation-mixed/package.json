@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "tsx": "^4.19.3",
-    "@apollo/rover": "^0.31.2"
+    "@apollo/rover": "^0.32.0"
   },
   "overrides": {
     "esbuild": "^0.25.4"
