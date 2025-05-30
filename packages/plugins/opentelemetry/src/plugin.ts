@@ -23,7 +23,7 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import { setGlobalErrorHandler } from '@opentelemetry/core';
-import { Resource } from '@opentelemetry/resources';
+import { Resource, type ResourceAttributes } from '@opentelemetry/resources';
 import { type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
@@ -68,6 +68,21 @@ interface OpenTelemetryGatewayPluginOptionsWithInit {
    * Does not apply when `initializeNodeSDK` is `false`.
    */
   serviceName?: string;
+  /**
+   * Resource attributes to use for OpenTelemetry NodeSDK resource option.
+   * These attributes will be merged with the default resource attributes (service.name and service.version).
+   * If `service.name` is provided in resource attributes, it will override the `serviceName` option.
+   *
+   * Does not apply when `initializeNodeSDK` is `false`.
+   *
+   * @example
+   * resource: {
+   *   'deployment.environment': 'production',
+   *   'service.instance.id': 'instance-123',
+   *   'custom.attribute': 'value'
+   * }
+   */
+  resource?: ResourceAttributes;
 }
 
 type OpenTelemetryGatewayPluginOptionsInit =
@@ -202,11 +217,21 @@ export function useOpenTelemetry(
           if (options.exporters) {
             spanProcessors = await Promise.all(options.exporters);
           }
+
+          let resourceAttributes = {
+            [SEMRESATTRS_SERVICE_NAME]: serviceName,
+            [ATTR_SERVICE_VERSION]: yoga.version,
+          };
+
+          if (options.resource) {
+            resourceAttributes = {
+              ...resourceAttributes,
+              ...options.resource,
+            };
+          }
+
           const webProvider = new WebTracerProvider({
-            resource: new Resource({
-              [SEMRESATTRS_SERVICE_NAME]: serviceName,
-              [ATTR_SERVICE_VERSION]: yoga.version,
-            }),
+            resource: new Resource(resourceAttributes),
             spanProcessors,
           });
           webProvider.register();
