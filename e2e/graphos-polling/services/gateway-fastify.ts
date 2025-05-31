@@ -1,9 +1,7 @@
+import './otel-setup.js';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { createLoggerFromPino } from '@graphql-hive/logger-pino';
-import {
-  createOtlpHttpExporter,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { Opts } from '@internal/testing';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
@@ -72,16 +70,7 @@ const gw = createGatewayRuntime<FastifyContext>({
   plugins: (ctx) => [
     useOpenTelemetry({
       ...ctx,
-      exporters: [
-        createOtlpHttpExporter(
-          {
-            url: process.env['OTLP_EXPORTER_URL'],
-          },
-          {
-            scheduledDelayMillis: 1,
-          },
-        ),
-      ],
+      traces: true,
     }),
   ],
 });

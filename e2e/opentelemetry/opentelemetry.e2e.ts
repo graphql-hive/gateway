@@ -17,6 +17,17 @@ const JAEGER_HOSTNAME =
 
 const exampleSetup = createExampleSetup(__dirname);
 
+const runner = {
+  docker: {
+    volumes: [
+      {
+        host: __dirname + '/otel-setup.ts',
+        container: `/gateway/otel-setup.ts`,
+      },
+    ],
+  },
+};
+
 beforeAll(async () => {
   supergraph = await exampleSetup.supergraph();
 });
@@ -125,6 +136,7 @@ describe('OpenTelemetry', () => {
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -654,6 +666,7 @@ describe('OpenTelemetry', () => {
       it('should report parse failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-2';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -728,6 +741,7 @@ describe('OpenTelemetry', () => {
       it('should report validate failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-3';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -806,6 +820,7 @@ describe('OpenTelemetry', () => {
       it('should report http failures', async () => {
         const serviceName = 'mesh-e2e-test-4';
         const { port } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -848,6 +863,7 @@ describe('OpenTelemetry', () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         const serviceName = 'mesh-e2e-test-5';
         const { execute, port } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
