@@ -1,5 +1,13 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 1.5.5
+
+### Patch Changes
+
+- [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-jwt@^3.7.6` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-jwt/v/3.7.6) (from `^3.4.9`, in `dependencies`)
+
 ## 1.5.4
 
 ### Patch Changes
