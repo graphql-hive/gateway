@@ -3943,6 +3943,7 @@ __metadata:
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/auto-instrumentations-node": "npm:^0.59.0"
     "@opentelemetry/context-zone": "npm:^2.0.1"
+    "@opentelemetry/core": "npm:^2.0.0"
     "@opentelemetry/exporter-jaeger": "npm:^2.0.1"
     "@opentelemetry/exporter-zipkin": "npm:^2.0.1"
     "@opentelemetry/propagator-b3": "npm:^2.0.1"
