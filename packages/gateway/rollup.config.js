@@ -65,6 +65,47 @@ const deps = {
   // OpenTelemetry plugin is sometimes imported, and not re-used from the gateway itself. we therefore need to bundle it into node_modules
   'node_modules/@graphql-mesh/plugin-opentelemetry/index':
     '../plugins/opentelemetry/src/index.ts',
+  ...Object.fromEntries(
+    // To ease the OTEL setup, we need to bundle some important OTEL packages.
+    // Those are most used features.
+    [
+      // Common API base
+      ['api'],
+      ['core'],
+      ['resources'],
+      ['sdk-logs'],
+      ['sdk-trace-base'],
+      ['semantic-conventions'],
+
+      // Exporters
+      ['exporter-trace-otlp-http'],
+      ['exporter-trace-otlp-grpc'],
+      // 'exporter-zipkin',
+      // 'exporter-jaeger',
+
+      // Propagators
+      // 'propagator-b3',
+      // 'propagator-jaeger',
+
+      // Sampler
+      // 'sampler-jaeger-remote',
+
+      // Context Managers
+      ['context-async-hooks', 'src'], // An async context manager usable in runtimes implementing async-hooks
+      // 'context-zone', // An incomplete but Web compatible async context manager based on zone.js
+
+      // Node Tracing SDK
+      // 'sdk-node',
+      // 'sdk-trace-node',
+      // 'auto-instrumentations-node',
+
+      // Cross-runtime tracing SDK
+      ['sdk-trace-web'],
+    ].map(([otelPackage, buildDir = 'esm']) => [
+      `node_modules/@opentelemetry/${otelPackage}/index`,
+      `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
+    ]),
+  ),
   // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
