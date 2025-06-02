@@ -63,7 +63,8 @@ const deps = {
   'node_modules/@escape.tech/graphql-armor-block-field-suggestions/index':
     '../../node_modules/@escape.tech/graphql-armor-block-field-suggestions/dist/graphql-armor-block-field-suggestions.esm.js',
   // OpenTelemetry api should be accessible in `gateway.config.ts` so that users can make custom spans/attributes
-  'node_modules/@opentelemetry/api/index': '../../node_modules/@opentelemetry/api/build/esm/index.js',
+  'node_modules/@opentelemetry/api/index':
+    '../../node_modules/@opentelemetry/api/build/esm/index.js',
   // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
