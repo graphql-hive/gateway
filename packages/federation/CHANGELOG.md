@@ -1,5 +1,23 @@
 # @graphql-tools/federation
 
+## 3.2.3
+
+### Patch Changes
+
+- [#1144](https://github.com/graphql-hive/gateway/pull/1144) [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/fetch@^0.10.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.8) (from `^0.10.6`, in `dependencies`)
+
+- [#1187](https://github.com/graphql-hive/gateway/pull/1187) [`85d7c95`](https://github.com/graphql-hive/gateway/commit/85d7c95cfe90773daf7680f2308ff4f52f0f7fa9) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Handle nested keys with arguments
+
+- [#1136](https://github.com/graphql-hive/gateway/pull/1136) [`511ba36`](https://github.com/graphql-hive/gateway/commit/511ba36d9c8b81f83cf4cb37c03c9fbb9c5c9c9d) Thanks [@ardatan](https://github.com/ardatan)! - Handle errors on non-nullable fields in shared root fields correctly
+
+- Updated dependencies [[`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`4a80de1`](https://github.com/graphql-hive/gateway/commit/4a80de1a2884dc42a5f09202b6215c3e6780efc4)]:
+  - @graphql-tools/executor-http@2.0.2
+  - @graphql-tools/wrap@10.1.0
+  - @graphql-tools/stitch@9.4.24
+  - @graphql-tools/delegate@10.2.19
+
 ## 3.2.2
 
 ### Patch Changes
