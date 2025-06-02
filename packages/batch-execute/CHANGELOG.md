@@ -1,5 +1,11 @@
 # @graphql-tools/batch-execute
 
+## 9.0.17
+
+### Patch Changes
+
+- [#1134](https://github.com/graphql-hive/gateway/pull/1134) [`dca6529`](https://github.com/graphql-hive/gateway/commit/dca6529b234f1e178ad87a8992c5a7de12831128) Thanks [@ardatan](https://github.com/ardatan)! - Small improvements on usage of promise helpers
+
 ## 9.0.16
 
 ### Patch Changes

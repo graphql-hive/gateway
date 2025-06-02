@@ -1,5 +1,16 @@
 # @graphql-tools/wrap
 
+## 10.1.0
+
+### Minor Changes
+
+- [#1150](https://github.com/graphql-hive/gateway/pull/1150) [`4a80de1`](https://github.com/graphql-hive/gateway/commit/4a80de1a2884dc42a5f09202b6215c3e6780efc4) Thanks [@MkMan](https://github.com/MkMan)! - Allow making the new wrapper field type Nullable
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@10.2.19
+
 ## 10.0.36
 
 ### Patch Changes

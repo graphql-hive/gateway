@@ -1,5 +1,53 @@
 # @graphql-hive/gateway-runtime
 
+## 1.9.0
+
+### Minor Changes
+
+- [#1148](https://github.com/graphql-hive/gateway/pull/1148) [`b4ba778`](https://github.com/graphql-hive/gateway/commit/b4ba778776140b66b8368daf0299105fd8035e46) Thanks [@maon-fp](https://github.com/maon-fp)! - Introducing `renderGraphiQL` feature to provide GraphiQL without a CDN involved
+
+- [#1139](https://github.com/graphql-hive/gateway/pull/1139) [`11cff4f`](https://github.com/graphql-hive/gateway/commit/11cff4f8ff28ca7d709b5b962029e17d5843110e) Thanks [@ardatan](https://github.com/ardatan)! - Add `cookies` property to the configuration for cookies processing which is already documented in [here](https://the-guild.dev/graphql/hive/docs/gateway/authorization-authentication#token-lookup)
+
+### Patch Changes
+
+- [#1139](https://github.com/graphql-hive/gateway/pull/1139) [`11cff4f`](https://github.com/graphql-hive/gateway/commit/11cff4f8ff28ca7d709b5b962029e17d5843110e) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency [`@whatwg-node/server-plugin-cookies@^1.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/server-plugin-cookies/v/1.0.5) (to `dependencies`)
+
+- [#1144](https://github.com/graphql-hive/gateway/pull/1144) [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency [`@whatwg-node/server@^0.10.9` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.9) (from `^0.10.8`, in `dependencies`)
+
+- [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@graphql-hive/core@^0.12.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.12.0) (from `^0.11.0`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.42.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.42.1) (from `^0.42.0`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.8.6` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.8.6) (from `^0.8.0`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-csrf-prevention@^3.13.5` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-csrf-prevention/v/3.13.5) (from `^3.12.0`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-defer-stream@^3.13.5` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-defer-stream/v/3.13.5) (from `^3.12.0`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-persisted-operations@^3.13.6` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-persisted-operations/v/3.13.6) (from `^3.12.0`, in `dependencies`)
+  - Updated dependency [`@types/node@^22.15.21` ↗︎](https://www.npmjs.com/package/@types/node/v/22.15.21) (from `^22.7.5`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/server@^0.10.10` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.10) (from `^0.10.9`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.13.5` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.13.5) (from `^5.13.4`, in `dependencies`)
+
+- [#1182](https://github.com/graphql-hive/gateway/pull/1182) [`f3615ca`](https://github.com/graphql-hive/gateway/commit/f3615cab4e8b596e5ba21b03fddb66e9a3090e31) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@types/node@^22.15.23` ↗︎](https://www.npmjs.com/package/@types/node/v/22.15.23) (from `^22.15.21`, in `dependencies`)
+
+- [#1188](https://github.com/graphql-hive/gateway/pull/1188) [`d459f37`](https://github.com/graphql-hive/gateway/commit/d459f3702c500c321164abec826700120649c180) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@types/node@^22.15.27` ↗︎](https://www.npmjs.com/package/@types/node/v/22.15.27) (from `^22.15.23`, in `dependencies`)
+
+- Updated dependencies [[`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451), [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`54beb7a`](https://github.com/graphql-hive/gateway/commit/54beb7acde7558eee81ec0e20c123717865b8e18), [`4a80de1`](https://github.com/graphql-hive/gateway/commit/4a80de1a2884dc42a5f09202b6215c3e6780efc4), [`f634b53`](https://github.com/graphql-hive/gateway/commit/f634b53478199c2b783a608e22fbe51401942039), [`85d7c95`](https://github.com/graphql-hive/gateway/commit/85d7c95cfe90773daf7680f2308ff4f52f0f7fa9), [`511ba36`](https://github.com/graphql-hive/gateway/commit/511ba36d9c8b81f83cf4cb37c03c9fbb9c5c9c9d), [`dca6529`](https://github.com/graphql-hive/gateway/commit/dca6529b234f1e178ad87a8992c5a7de12831128)]:
+  - @graphql-mesh/fusion-runtime@0.11.14
+  - @graphql-tools/executor-http@2.0.2
+  - @graphql-tools/federation@3.2.3
+  - @graphql-tools/wrap@10.1.0
+  - @graphql-tools/batch-delegate@9.0.37
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-tools/stitch@9.4.24
+  - @graphql-tools/delegate@10.2.19
+
 ## 1.8.3
 
 ### Patch Changes
