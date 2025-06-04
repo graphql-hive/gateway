@@ -45,7 +45,7 @@
     "@envelop/core": "^5.2.3",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
-    "@graphql-mesh/types": "^0.104.0",
+    "@graphql-mesh/types": "^0.104.4",
     "@graphql-tools/executor": "^1.4.7",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.8.1",
@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.10",
-    "@graphql-mesh/utils": "^0.104.2",
+    "@graphql-mesh/utils": "^0.104.4",
     "graphql": "^16.9.0",
     "pkgroll": "2.12.2"
   },
