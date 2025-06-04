@@ -13,7 +13,7 @@
     "tsx": "^4.19.3"
   },
   "overrides": {
-    "esbuild": "^0.25.4"
+    "esbuild": "^0.25.5"
   },
   "scripts": {
     "service:Wiki": "tsx services/Wiki.ts",
