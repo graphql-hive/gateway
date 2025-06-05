@@ -2863,10 +2863,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20250604.0":
-  version: 4.20250604.0
-  resolution: "@cloudflare/workers-types@npm:4.20250604.0"
-  checksum: 10c0/6718cf38a127d725a84f02ce7048c467bf248afbd80d12c8470a4ec40c1b48d3c1e11de139df2084c73a0e8679ae0aeebba970b1102e7ee683253056b1869ff3
+"@cloudflare/workers-types@npm:^4.20250605.0":
+  version: 4.20250605.0
+  resolution: "@cloudflare/workers-types@npm:4.20250605.0"
+  checksum: 10c0/dcf7e75c40f5540dfb84d543adf50c6b01982f9141aa316012bb6d1eba0177707044cff7efe36e9d8b4e975718795ac3228e8f580f9cd7af1c0855259ad27f8d
   languageName: node
   linkType: hard
 
@@ -2952,7 +2952,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
   dependencies:
-    "@cloudflare/workers-types": "npm:^4.20250604.0"
+    "@cloudflare/workers-types": "npm:^4.20250605.0"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.9.0"
     wrangler: "npm:^4.19.1"
@@ -13797,7 +13797,7 @@ __metadata:
     graphql: "npm:16.11.0"
     jest: "npm:29.7.0"
     prettier: "npm:3.5.3"
-    prettier-plugin-pkg: "npm:0.19.1"
+    prettier-plugin-pkg: "npm:0.20.0"
     prettier-plugin-sh: "npm:0.17.4"
     ts-jest: "npm:29.3.4"
     ts-node: "npm:10.9.2"
@@ -18144,12 +18144,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-pkg@npm:0.19.1":
-  version: 0.19.1
-  resolution: "prettier-plugin-pkg@npm:0.19.1"
+"prettier-plugin-pkg@npm:0.20.0":
+  version: 0.20.0
+  resolution: "prettier-plugin-pkg@npm:0.20.0"
   peerDependencies:
     prettier: ^3.0.3
-  checksum: 10c0/8c157f3e68fb229ac96aa28b511a615725abdce96a80814259c78838b4b174e4907082974ea5a8736c9b4b4763a72457e6bca3d8db63168024c5f21788ccb795
+  checksum: 10c0/70d8a4540f2a1b4fb8491fe784b2d02e1e6d6dc8cd2545aac4e65ce4b599f04094cc6710c0adbb8047de53809bdf09bd9266e06eeac7af053ffdb7a29fd88f84
   languageName: node
   linkType: hard
 
