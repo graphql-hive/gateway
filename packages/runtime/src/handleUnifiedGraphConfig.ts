@@ -1,3 +1,4 @@
+import { LegacyLogger } from '@graphql-hive/logger';
 import { UnifiedGraphManagerOptions } from '@graphql-mesh/fusion-runtime';
 import { defaultImportFn, isUrl, readFileOrUrl } from '@graphql-mesh/utils';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
@@ -51,7 +52,7 @@ export function handleUnifiedGraphSchema(
     return readFileOrUrl<string>(unifiedGraphSchema, {
       fetch: configContext.fetch,
       cwd: configContext.cwd,
-      logger: configContext.logger,
+      logger: LegacyLogger.from(configContext.log),
       allowUnknownExtensions: true,
       importFn: defaultImportFn,
     });

@@ -1,7 +1,7 @@
 import {
   getRetryInfo,
   isRetryExecutionRequest,
-  type GatewayConfigContext,
+  Logger,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
@@ -37,7 +37,6 @@ import {
   WebTracerProvider,
 } from '@opentelemetry/sdk-trace-web';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
-import { YogaLogger } from 'graphql-yoga';
 import { ATTR_SERVICE_VERSION, SEMRESATTRS_SERVICE_NAME } from './attributes';
 import { getContextManager, OtelContextStack } from './context';
 import {
@@ -278,7 +277,7 @@ export type OpenTelemetryPlugin =
 
 export function useOpenTelemetry(
   options: OpenTelemetryGatewayPluginOptions & {
-    logger?: GatewayConfigContext['logger'];
+    log: Logger;
   },
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
@@ -312,14 +311,10 @@ export function useOpenTelemetry(
     return specificState?.current ?? ROOT_CONTEXT;
   }
 
-  const yogaLogger = createDeferred<YogaLogger>();
-  let pluginLogger = options.logger
-    ? fakePromise(
-        options.logger.child({
-          plugin: 'OpenTelemetry',
-        }),
-      )
-    : yogaLogger.promise;
+  const logger = createDeferred<Logger>();
+  let pluginLogger = options.log
+    ? fakePromise(options.log.child('[useOpenTelemetry] '))
+    : logger.promise;
 
   function init(): Promise<boolean> {
     if ('initializeNodeSDK' in options && options.initializeNodeSDK === false) {
@@ -394,14 +389,14 @@ export function useOpenTelemetry(
       }),
     );
     preparation$ = fakePromise();
-    return pluginLogger.then((logger) => {
-      pluginLogger = fakePromise(logger);
-      logger.debug(
+    return pluginLogger.then((log) => {
+      pluginLogger = fakePromise(log);
+      log.debug(
         `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
       if (!useContextManager) {
         if (options.spans?.schema) {
-          logger.warn(
+          log.warn(
             'Schema loading spans are disabled because no context manager is available',
           );
         }
@@ -411,15 +406,15 @@ export function useOpenTelemetry(
       diag.setLogger(
         {
           error: (message, ...args) =>
-            logger.error('[otel-diag] ' + message, ...args),
+            log.error('[otel-diag] ' + message, ...args),
           warn: (message, ...args) =>
-            logger.warn('[otel-diag] ' + message, ...args),
+            log.warn('[otel-diag] ' + message, ...args),
           info: (message, ...args) =>
-            logger.info('[otel-diag] ' + message, ...args),
+            log.info('[otel-diag] ' + message, ...args),
           debug: (message, ...args) =>
-            logger.debug('[otel-diag] ' + message, ...args),
+            log.debug('[otel-diag] ' + message, ...args),
           verbose: (message, ...args) =>
-            logger.debug('[otel-diag] ' + message, ...args),
+            log.debug('[otel-diag] ' + message, ...args),
         },
         options.diagLevel ?? DiagLogLevel.VERBOSE,
       );
@@ -756,7 +751,7 @@ export function useOpenTelemetry(
 
     onYogaInit({ yoga }) {
       yogaVersion.resolve(yoga.version);
-      yogaLogger.resolve(yoga.logger);
+      logger.resolve(options.log);
     },
 
     onEnveloped({ state, extendContext }) {
