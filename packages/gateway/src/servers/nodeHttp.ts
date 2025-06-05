@@ -98,12 +98,12 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
     gwRuntime.disposableStack.defer(
       () =>
         new Promise<void>((resolve, reject) => {
-          log.info(`Stopping the WebSocket server`);
+          log.info('Stopping the WebSocket server');
           wsServer.close((err) => {
             if (err) {
               return reject(err);
             }
-            log.info(`Stopped the WebSocket server successfully`);
+            log.info('Stopped the WebSocket server successfully');
             return resolve();
           });
         }),
@@ -117,10 +117,10 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
         () =>
           new Promise<void>((resolve) => {
             process.stderr.write('\n');
-            log.info(`Stopping the server`);
+            log.info('Stopping the server');
             server.closeAllConnections();
             server.close(() => {
-              log.info(`Stopped the server successfully`);
+              log.info('Stopped the server successfully');
               return resolve();
             });
           }),

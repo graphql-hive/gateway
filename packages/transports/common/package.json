@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@envelop/core": "^5.2.3",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
     "@graphql-mesh/types": "^0.104.5",
