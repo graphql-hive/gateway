@@ -10,17 +10,26 @@ RUN bun i graphql@^16.9.0
 
 FROM oven/bun:1.2.15-slim
 
-RUN rm /var/lib/dpkg/info/libc-bin.*
-RUN apt-get clean
-RUN apt-get update
-RUN apt-get install libc-bin
-RUN apt-get update && apt-get install -y \
-    # for healthchecks
-    wget curl \
-    # for proper signal propagation
-    dumb-init && \
-    # clean
-    apt-get clean
+# use the upcoming debian release (trixie) to get the latest security updates
+RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
+  apt-get update
+
+# some packaged libraries are vulnerable out of the box, upgrade everything
+# we use "dist-upgrade" to ensure that the latest versions are installed even if they require new dependencies
+RUN apt-get dist-upgrade -y
+
+RUN apt-get install -y \
+  # necessary for the gateway to run
+  libc-bin \
+  # for healthchecks
+  curl \
+  # for proper signal propagation
+  dumb-init
+
+# cleanup
+RUN apt-get autoremove -y && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 WORKDIR /gateway
 
