@@ -181,7 +181,6 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
           # we must load so that the e2e tests can use the cached image
-          # also, in order for loading to work - we must define the platform above
           load: true
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
@@ -225,7 +224,9 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
+            *.platform=linux/amd64
           # we must load so that the created image can be scanned
+          # also, in order for loading to work - we must define the platform above
           load: true
       - name: Scan
         uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
