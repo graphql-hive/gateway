@@ -1,5 +1,5 @@
-import { Logger } from '@graphql-mesh/types';
-import { requestIdByRequest } from '@graphql-mesh/utils';
+import type { Logger } from '@graphql-hive/logger';
+import { loggerForRequest } from '@graphql-hive/logger/request';
 import type { MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -12,9 +12,9 @@ import type { GatewayPlugin } from '../types';
 type ExecHandler = () => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
 export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
-  logger,
+  log: rootLog,
 }: {
-  logger: Logger;
+  log: Logger;
 }): GatewayPlugin<TContext> {
   const execHandlerByContext = new WeakMap<{}, ExecHandler>();
   function handleOnExecute(args: ExecutionArgs) {
@@ -26,6 +26,7 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
       }
     }
   }
+  const logForRequest = new WeakMap<Request, Logger>();
   function handleExecutionResult({
     context,
     result,
@@ -35,20 +36,22 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
     context: {};
     result?: ExecutionResult;
     setResult: (result: MaybeAsyncIterable<ExecutionResult>) => void;
-    request: Request;
+    // request wont be available over websockets
+    request: Request | undefined;
   }) {
     const execHandler = execHandlerByContext.get(context);
     if (
       execHandler &&
       result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
     ) {
-      let requestLogger = logger;
-      const requestId = requestIdByRequest.get(request);
-      if (requestId) {
-        requestLogger = logger.child({ requestId });
-      }
-      requestLogger.info(
-        'The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
+      const log = request
+        ? loggerForRequest(
+            logForRequest.get(request)!, // must exist at this point
+            request,
+          )
+        : rootLog;
+      log.info(
+        '[useRetryOnSchemaReload] The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
       );
       if (execHandler) {
         return handleMaybePromise(execHandler, (newResult) =>
@@ -67,10 +70,20 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
         }),
       );
     },
-    onExecute({ args }) {
+    onExecute({ args, context }) {
+      // we set the logger here because it most likely contains important attributes (like the request-id)
+      if (context.request) {
+        // the request wont be available over websockets
+        logForRequest.set(context.request, context.log);
+      }
       handleOnExecute(args);
     },
-    onSubscribe({ args }) {
+    onSubscribe({ args, context }) {
+      // we set the logger here because it most likely contains important attributes (like the request-id)
+      if (context.request) {
+        // the request wont be available over websockets
+        logForRequest.set(context.request, context.log);
+      }
       handleOnExecute(args);
     },
     onExecutionResult({ request, context, result, setResult }) {

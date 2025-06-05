@@ -1,5 +1,6 @@
 import {
   createGatewayRuntime,
+  createLoggerFromLogging,
   GatewayCLIBuiltinPluginConfig,
   GatewayConfigProxy,
   GatewayConfigSubgraph,
@@ -11,10 +12,7 @@ import {
   PubSub,
   type GatewayRuntime,
 } from '@graphql-hive/gateway';
-import {
-  Logger as GatewayLogger,
-  type LazyLoggerMessage,
-} from '@graphql-mesh/types';
+import { Logger as HiveLogger } from '@graphql-hive/logger';
 import {
   asArray,
   type IResolvers,
@@ -63,6 +61,7 @@ export class HiveGatewayDriver<
   private async ensureGatewayRuntime({
     typeDefs,
     resolvers,
+    logging,
     ...options
   }: HiveGatewayDriverConfig<TContext>) {
     if (this._gatewayRuntime) {
@@ -78,14 +77,34 @@ export class HiveGatewayDriver<
     if (resolvers) {
       additionalResolvers.push(...asArray(resolvers));
     }
-    const logger = new NestJSLoggerAdapter(
-      'Hive Gateway',
-      {},
-      new NestLogger('Hive Gateway'),
-      options.debug ?? truthy(process.env['DEBUG']),
-    );
+
+    let log: HiveLogger;
+    if (logging != null) {
+      log = createLoggerFromLogging(logging);
+    } else {
+      const nestLog = new NestLogger('Hive Gateway');
+      log = new HiveLogger({
+        writers: [
+          {
+            write(level, attrs, msg) {
+              switch (level) {
+                case 'trace':
+                  nestLog.verbose(msg, attrs);
+                  break;
+                case 'info':
+                  nestLog.log(msg, attrs);
+                  break;
+                default:
+                  nestLog[level](msg, attrs);
+              }
+            },
+          },
+        ],
+      });
+    }
+
     const configCtx = {
-      logger,
+      log,
       cwd: process.cwd(),
       pubsub: options.pubsub || new PubSub(),
     };
@@ -96,7 +115,7 @@ export class HiveGatewayDriver<
     });
     this._gatewayRuntime = createGatewayRuntime({
       ...options,
-      logging: configCtx.logger,
+      logging: configCtx.log,
       cache,
       graphqlEndpoint: options.path,
       additionalTypeDefs,
@@ -286,101 +305,4 @@ export class HiveGatewayDriver<
         return reply;
       });
   }
-}
-
-class NestJSLoggerAdapter implements GatewayLogger {
-  constructor(
-    public name: string,
-    private meta: Record<string, any>,
-    private logger: NestLogger,
-    private isDebug: boolean,
-  ) {}
-  private prepareMessage(args: LazyLoggerMessage[]) {
-    const obj = {
-      ...(this.meta || {}),
-    };
-    const strs: string[] = [];
-    const flattenedArgs = args
-      .flatMap((arg) => (typeof arg === 'function' ? arg() : arg))
-      .flat(Number.POSITIVE_INFINITY);
-    for (const arg of flattenedArgs) {
-      if (typeof arg === 'string' || typeof arg === 'number') {
-        strs.push(arg.toString());
-      } else {
-        Object.assign(obj, arg);
-      }
-    }
-    return { obj, str: strs.join(', ') };
-  }
-  log(...args: any[]) {
-    const { obj, str } = this.prepareMessage(args);
-    if (Object.keys(obj).length) {
-      this.logger.log(obj, str);
-    } else {
-      this.logger.log(str);
-    }
-  }
-  info(...args: any[]) {
-    const { obj, str } = this.prepareMessage(args);
-    if (Object.keys(obj).length) {
-      this.logger.log(obj, str);
-    } else {
-      this.logger.log(str);
-    }
-  }
-  error(...args: any[]) {
-    const { obj, str } = this.prepareMessage(args);
-    if (Object.keys(obj).length) {
-      this.logger.error(obj, str);
-    } else {
-      this.logger.error(str);
-    }
-  }
-  warn(...args: any[]) {
-    const { obj, str } = this.prepareMessage(args);
-    if (Object.keys(obj).length) {
-      this.logger.warn(obj, str);
-    } else {
-      this.logger.warn(str);
-    }
-  }
-  debug(...args: any[]) {
-    if (!this.isDebug) {
-      return;
-    }
-    const { obj, str } = this.prepareMessage(args);
-    if (Object.keys(obj).length) {
-      this.logger.debug(obj, str);
-    } else {
-      this.logger.debug(str);
-    }
-  }
-  child(
-    newNameOrMeta: string | Record<string, string | number>,
-  ): NestJSLoggerAdapter {
-    const newName =
-      typeof newNameOrMeta === 'string'
-        ? this.name
-          ? `${this.name}, ${newNameOrMeta}`
-          : newNameOrMeta
-        : this.name;
-    const newMeta =
-      typeof newNameOrMeta === 'string'
-        ? this.meta
-        : { ...this.meta, ...newNameOrMeta };
-    return new NestJSLoggerAdapter(
-      newName,
-      newMeta,
-      new NestLogger(newName),
-      this.isDebug,
-    );
-  }
-}
-
-function truthy(val: unknown) {
-  return (
-    val === true ||
-    val === 1 ||
-    ['1', 't', 'true', 'y', 'yes'].includes(String(val))
-  );
 }
