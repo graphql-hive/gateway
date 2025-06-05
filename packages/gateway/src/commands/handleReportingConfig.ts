@@ -37,28 +37,28 @@ export function handleReportingConfig(
 
   if (cliOpts.hiveRegistryToken && cliOpts.hiveUsageAccessToken) {
     ctx.log.error(
-      `Cannot use "--hive-registry-token" with "--hive-usage-access-token". Please use "--hive-usage-target" and "--hive-usage-access-token" or the config instead.`,
+      'Cannot use "--hive-registry-token" with "--hive-usage-access-token". Please use "--hive-usage-target" and "--hive-usage-access-token" or the config instead.',
     );
     process.exit(1);
   }
 
   if (cliOpts.hiveRegistryToken && opts.hiveUsageTarget) {
     ctx.log.error(
-      `Cannot use "--hive-registry-token" with a target. Please use "--hive-usage-target" and "--hive-usage-access-token" or the config instead.`,
+      'Cannot use "--hive-registry-token" with a target. Please use "--hive-usage-target" and "--hive-usage-access-token" or the config instead.',
     );
     process.exit(1);
   }
 
   if (opts.hiveUsageTarget && !opts.hiveUsageAccessToken) {
     ctx.log.error(
-      `Hive usage target needs an access token. Please provide it through the "--hive-usage-access-token <token>" option or the config.`,
+      'Hive usage target needs an access token. Please provide it through the "--hive-usage-access-token <token>" option or the config.',
     );
     process.exit(1);
   }
 
   if (opts.hiveUsageAccessToken && !opts.hiveUsageTarget) {
     ctx.log.error(
-      `Hive usage access token needs a target. Please provide it through the "--hive-usage-target <target>" option or the config.`,
+      'Hive usage access token needs a target. Please provide it through the "--hive-usage-target <target>" option or the config.',
     );
     process.exit(1);
   }
@@ -68,9 +68,9 @@ export function handleReportingConfig(
   if (hiveUsageAccessToken) {
     // different logs w and w/o the target to disambiguate
     if (opts.hiveUsageTarget) {
-      ctx.log.info(`Configuring Hive usage reporting`);
+      ctx.log.info('Configuring Hive usage reporting');
     } else {
-      ctx.log.info(`Configuring Hive registry reporting`);
+      ctx.log.info('Configuring Hive registry reporting');
     }
     return {
       ...loadedConfig.reporting,
@@ -81,7 +81,7 @@ export function handleReportingConfig(
   }
 
   if (opts.apolloKey) {
-    ctx.log.info(`Configuring Apollo GraphOS registry reporting`);
+    ctx.log.info('Configuring Apollo GraphOS registry reporting');
     if (!opts.apolloGraphRef?.includes('@')) {
       ctx.log.error(
         `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant>. Please provide a valid graph ref ${opts.apolloGraphRef ? `not ${opts.apolloGraphRef}` : ''}.`,

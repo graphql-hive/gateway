@@ -1,48 +1,52 @@
-import { Logger } from '@graphql-mesh/types';
+import type { Logger } from '@graphql-hive/logger';
 import { GatewayPlugin } from '../types';
 
-export function useCacheDebug<TContext extends Record<string, any>>(opts: {
-  logger: Logger;
+export function useCacheDebug<TContext extends Record<string, any>>({
+  log: rootLog,
+}: {
+  log: Logger;
 }): GatewayPlugin<TContext> {
   return {
+    onContextBuilding({ context }) {
+      // onContextBuilding might not execute at all so we use the root log
+      rootLog = context.log;
+    },
     onCacheGet({ key }) {
+      const log = rootLog.child({ key }, '[useCacheDebug] ');
+      log.debug('Get');
       return {
         onCacheGetError({ error }) {
-          const cacheGetErrorLogger = opts.logger.child('cache-get-error');
-          cacheGetErrorLogger.error({ key, error });
+          log.error({ key, error }, 'Error');
         },
         onCacheHit({ value }) {
-          const cacheHitLogger = opts.logger.child('cache-hit');
-          cacheHitLogger.debug({ key, value });
+          log.debug({ key, value }, 'Hit');
         },
         onCacheMiss() {
-          const cacheMissLogger = opts.logger.child('cache-miss');
-          cacheMissLogger.debug({ key });
+          log.debug({ key }, 'Miss');
         },
       };
     },
     onCacheSet({ key, value, ttl }) {
+      const log = rootLog.child({ key, value, ttl }, '[useCacheDebug] ');
+      log.debug('Set');
       return {
         onCacheSetError({ error }) {
-          const cacheSetErrorLogger = opts.logger.child('cache-set-error');
-          cacheSetErrorLogger.error({ key, value, ttl, error });
+          log.error({ error }, 'Error');
         },
         onCacheSetDone() {
-          const cacheSetDoneLogger = opts.logger.child('cache-set-done');
-          cacheSetDoneLogger.debug({ key, value, ttl });
+          log.debug('Done');
         },
       };
     },
     onCacheDelete({ key }) {
+      const log = rootLog.child({ key }, '[useCacheDebug] ');
+      log.debug('Delete');
       return {
         onCacheDeleteError({ error }) {
-          const cacheDeleteErrorLogger =
-            opts.logger.child('cache-delete-error');
-          cacheDeleteErrorLogger.error({ key, error });
+          log.error({ error }, 'Error');
         },
         onCacheDeleteDone() {
-          const cacheDeleteDoneLogger = opts.logger.child('cache-delete-done');
-          cacheDeleteDoneLogger.debug({ key });
+          log.debug('Done');
         },
       };
     },

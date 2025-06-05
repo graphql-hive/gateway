@@ -69,8 +69,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
   });
   const costByContextMap = new WeakMap<any, number>();
   return {
-    onSubgraphExecute({ subgraph, executionRequest, logger }) {
-      const demandControlLogger = logger?.child('demand-control');
+    onSubgraphExecute({ subgraph, executionRequest, log }) {
       let costByContext = executionRequest.context
         ? costByContextMap.get(executionRequest.context) || 0
         : 0;
@@ -83,10 +82,13 @@ export function useDemandControl<TContext extends Record<string, any>>({
       if (executionRequest.context) {
         costByContextMap.set(executionRequest.context, costByContext);
       }
-      demandControlLogger?.debug({
-        operationCost,
-        totalCost: costByContext,
-      });
+      log.debug(
+        {
+          operationCost,
+          totalCost: costByContext,
+        },
+        '[useDemandControl]',
+      );
       if (maxCost != null && costByContext > maxCost) {
         throw createGraphQLError(
           `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,

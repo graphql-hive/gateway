@@ -1,6 +1,7 @@
 import cluster from 'node:cluster';
 import {
   createGatewayRuntime,
+  createLoggerFromLogging,
   type GatewayConfigProxy,
 } from '@graphql-hive/gateway-runtime';
 import { PubSub } from '@graphql-hive/pubsub';
@@ -18,7 +19,6 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleLoggingConfig } from './handleLoggingOption';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -44,6 +44,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hivePersistedDocumentsToken,
         ...opts
       } = this.optsWithGlobals();
+
+      ctx.log.info(`Starting ${ctx.productName} ${ctx.version} in proxy mode`);
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -69,11 +72,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const hiveCdnEndpointOpt =
         // TODO: take schema from optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
         this.opts().schema || hiveCdnEndpoint;
-      const hiveCdnLogger = ctx.log.child({ source: 'Hive CDN' });
       if (hiveCdnEndpointOpt) {
         if (hiveCdnKey) {
           if (!isUrl(hiveCdnEndpointOpt)) {
-            hiveCdnLogger.error(
+            ctx.log.error(
               'Endpoint must be a URL when providing --hive-cdn-key but got ' +
                 hiveCdnEndpointOpt,
             );
@@ -115,11 +117,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const pubsub = loadedConfig.pubsub || new PubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
-        handleLoggingConfig(loadedConfig.logging, ctx);
+        ctx.log = createLoggerFromLogging(loadedConfig.logging);
       }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
-        logger: ctx.log,
+        log: ctx.log,
         cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(
@@ -128,7 +130,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           ...opts,
         },
         {
-          logger: ctx.log,
+          log: ctx.log,
           cache,
           pubsub,
           cwd,

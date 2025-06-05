@@ -182,11 +182,8 @@ export function useUpstreamRetry<TContext extends Record<string, any>>(
         }
       }
     },
-    onFetch({ info, executionRequest }) {
-      // if there's no execution request, it's a subgraph request
+    onFetch({ executionRequest }) {
       // TODO: Also consider what happens when there are multiple fetch calls for a single subgraph request
-      // @ts-expect-error - we know that it might have executionRequest property
-      executionRequest ||= info?.rootValue?.executionRequest;
       if (executionRequest) {
         return function onFetchDone({ response }) {
           executionRequestResponseMap.set(executionRequest, response);

@@ -1,16 +1,18 @@
+import type { Logger } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
-import type { Logger } from '@graphql-mesh/types';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { Plugin } from 'graphql-yoga';
+import { GatewayPlugin } from '../types';
 
 export interface GatewayWebhooksPluginOptions {
+  log: Logger;
   pubsub?: HivePubSub;
-  logger: Logger;
 }
+
 export function useWebhooks({
+  log: rootLog,
   pubsub,
-  logger,
-}: GatewayWebhooksPluginOptions): Plugin {
+}: GatewayWebhooksPluginOptions): GatewayPlugin {
+  const log = rootLog.child('[useWebhooks] ');
   if (!pubsub) {
     throw new Error(`You must provide a pubsub instance to webhooks feature!
     Example:
@@ -32,13 +34,13 @@ export function useWebhooks({
       const expectedEventName = `webhook:${requestMethod}:${pathname}`;
       for (const eventName of eventNames) {
         if (eventName === expectedEventName) {
-          logger?.debug(() => `Received webhook request for ${pathname}`);
+          log.debug({ pathname }, 'Received webhook request');
           return handleMaybePromise(
             () => request.text(),
             function handleWebhookPayload(webhookPayload) {
-              logger?.debug(
-                () =>
-                  `Emitted webhook request for ${pathname}: ${webhookPayload}`,
+              log.debug(
+                { pathname, payload: webhookPayload },
+                'Emitted webhook request',
               );
               webhookPayload =
                 request.headers.get('content-type') === 'application/json'
