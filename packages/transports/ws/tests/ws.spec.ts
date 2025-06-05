@@ -1,4 +1,4 @@
-import { JSONLogger } from '@graphql-hive/logger-json';
+import { Logger } from '@graphql-hive/logger';
 import type {
   TransportEntry,
   TransportGetSubgraphExecutorOptions,
@@ -79,7 +79,7 @@ async function createTServer(
         ...transportEntry,
         options,
       },
-      logger: new JSONLogger(),
+      log: new Logger({ level: false }),
     } as unknown as TransportGetSubgraphExecutorOptions<WSTransportOptions>,
     onClient,
   );
