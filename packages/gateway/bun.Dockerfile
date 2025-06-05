@@ -22,7 +22,7 @@ RUN apt-get install -y \
   # necessary for the gateway to run
   libc-bin \
   # for healthchecks
-  curl \
+  wget curl \
   # for proper signal propagation
   dumb-init
 

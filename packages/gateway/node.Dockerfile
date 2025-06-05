@@ -20,7 +20,7 @@ RUN apt-get dist-upgrade -y
 
 RUN apt-get install -y \
   # for healthchecks
-  curl \
+  wget curl \
   # for proper signal propagation
   dumb-init
 
