@@ -1,0 +1,93 @@
+{
+  "name": "@graphql-hive/logger",
+  "version": "0.0.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graphql-hive/gateway.git",
+    "directory": "packages/logger"
+  },
+  "author": {
+    "email": "contact@the-guild.dev",
+    "name": "The Guild",
+    "url": "https://the-guild.dev"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./request": {
+      "require": {
+        "types": "./dist/request.d.cts",
+        "default": "./dist/request.cjs"
+      },
+      "import": {
+        "types": "./dist/request.d.ts",
+        "default": "./dist/request.js"
+      }
+    },
+    "./writers/pino": {
+      "require": {
+        "types": "./dist/writers/pino.d.cts",
+        "default": "./dist/writers/pino.cjs"
+      },
+      "import": {
+        "types": "./dist/writers/pino.d.ts",
+        "default": "./dist/writers/pino.js"
+      }
+    },
+    "./writers/winston": {
+      "require": {
+        "types": "./dist/writers/winston.d.cts",
+        "default": "./dist/writers/winston.cjs"
+      },
+      "import": {
+        "types": "./dist/writers/winston.d.ts",
+        "default": "./dist/writers/winston.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pkgroll --clean-dist",
+    "prepack": "yarn build"
+  },
+  "peerDependencies": {
+    "pino": "^9.6.0"
+  },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    },
+    "winston": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/quick-format-unescaped": "^4.0.3",
+    "@whatwg-node/disposablestack": "^0.0.6",
+    "fast-safe-stringify": "^2.1.1",
+    "pino": "^9.6.0",
+    "pkgroll": "2.11.2",
+    "quick-format-unescaped": "^4.0.4",
+    "winston": "^3.17.0"
+  },
+  "sideEffects": false,
+  "dependencies.info": "all of the dependencies are in devDependencies which will bundle them into the package using pkgroll making pkgroll ultimately zero-dep with a smaller footprint because of tree-shaking"
+}

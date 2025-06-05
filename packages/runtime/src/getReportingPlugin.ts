@@ -30,7 +30,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
     return {
       name: 'Hive',
       plugin: useHiveConsole({
-        logger: configContext.logger.child({ reporting: 'Hive' }),
+        log: configContext.log.child('[useHiveConsole] '),
         enabled: true,
         ...reporting,
         ...(usage ? { usage } : {}),

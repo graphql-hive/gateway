@@ -5,8 +5,9 @@ import type {
   GatewayConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
+import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
-import type { KeyValueCache, Logger } from '@graphql-mesh/types';
+import type { KeyValueCache } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -105,7 +106,7 @@ export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: {
     cache: KeyValueCache;
-    logger: Logger;
+    log: Logger;
     pubsub: HivePubSub;
     cwd: string;
   },
@@ -125,12 +126,7 @@ export async function getBuiltinPluginsFromConfig(
     const { useOpenTelemetry } = await import(
       '@graphql-mesh/plugin-opentelemetry'
     );
-    plugins.push(
-      useOpenTelemetry({
-        logger: ctx.logger,
-        ...config.openTelemetry,
-      }),
-    );
+    plugins.push(useOpenTelemetry({ ...config.openTelemetry, log: ctx.log }));
   }
 
   if (config.rateLimiting) {
@@ -204,7 +200,7 @@ export async function getBuiltinPluginsFromConfig(
  */
 export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
-  ctx: { logger: Logger; pubsub: HivePubSub; cwd: string },
+  ctx: { log: Logger; pubsub: HivePubSub; cwd: string },
 ): Promise<KeyValueCache> {
   if (typeof config.cache === 'function') {
     return config.cache(ctx);
@@ -219,6 +215,8 @@ export async function getCacheInstanceFromConfig(
         return new RedisCache({
           ...ctx,
           ...config.cache,
+          // TODO: use new logger
+          logger: LegacyLogger.from(ctx.log),
         }) as KeyValueCache;
       }
       case 'cfw-kv': {
@@ -241,7 +239,7 @@ export async function getCacheInstanceFromConfig(
       }
     }
     if (config.cache.type !== 'localforage') {
-      ctx.logger.warn(
+      ctx.log.warn(
         'Unknown cache type, falling back to localforage',
         config.cache,
       );

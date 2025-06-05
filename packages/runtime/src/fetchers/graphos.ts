@@ -56,8 +56,8 @@ export function createGraphOSFetcher({
     graphosOpts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
   const uplinks =
     uplinksParam?.split(',').map((uplink) => uplink.trim()) || DEFAULT_UPLINKS;
-  const graphosLogger = configContext.logger.child({ source: 'GraphOS' });
-  graphosLogger.info('Using GraphOS with uplinks ', ...uplinks);
+  const log = configContext.log.child('[apolloGraphOSSupergraphFetcher] ');
+  log.info({ uplinks }, 'Using uplinks');
   let supergraphLoadedPlace = defaultLoadedPlacePrefix;
   if (graphosOpts.graphRef) {
     supergraphLoadedPlace += ` <br>${graphosOpts.graphRef}`;
@@ -80,8 +80,8 @@ export function createGraphOSFetcher({
           const currentTime = Date.now();
           if (nextFetchTime >= currentTime) {
             const delay = nextFetchTime - currentTime;
-            graphosLogger.info(
-              `Fetching supergraph with delay: ${millisecondsToStr(delay)}`,
+            log.info(
+              `Fetching supergraph with delay ${millisecondsToStr(delay)}`,
             );
             nextFetchTime = 0;
             return delayInMs(delay).then(fetchSupergraph);
@@ -101,8 +101,8 @@ export function createGraphOSFetcher({
         if (maxRetries > 1) {
           attemptMetadata['attempt'] = `${maxRetries - retries}/${maxRetries}`;
         }
-        const attemptLogger = graphosLogger.child(attemptMetadata);
-        attemptLogger.debug(`Fetching supergraph`);
+        const attemptLogger = log.child(attemptMetadata);
+        attemptLogger.debug('Fetching supergraph');
         return handleMaybePromise(
           () =>
             fetchSupergraphSdlFromManagedFederation({
