@@ -55,6 +55,7 @@
     "@escape.tech/graphql-armor-max-tokens": "^2.5.0",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/importer": "workspace:^",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/plugin-aws-sigv4": "workspace:^",
     "@graphql-hive/plugin-deduplicate-request": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
