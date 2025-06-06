@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 1.9.2
+
+### Patch Changes
+
+- [#1217](https://github.com/graphql-hive/gateway/pull/1217) [`931d576`](https://github.com/graphql-hive/gateway/commit/931d5763c1f8c6d7fdc299bd87a634fecdd70b15) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@types/node@^22.15.30` ↗︎](https://www.npmjs.com/package/@types/node/v/22.15.30) (from `^22.15.29`, in `dependencies`)
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+
 ## 1.9.1
 
 ### Patch Changes

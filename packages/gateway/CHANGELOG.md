@@ -1,5 +1,17 @@
 # @graphql-hive/gateway
 
+## 1.15.2
+
+### Patch Changes
+
+- Updated dependencies [[`931d576`](https://github.com/graphql-hive/gateway/commit/931d5763c1f8c6d7fdc299bd87a634fecdd70b15), [`931d576`](https://github.com/graphql-hive/gateway/commit/931d5763c1f8c6d7fdc299bd87a634fecdd70b15)]:
+  - @graphql-hive/gateway-runtime@1.9.2
+  - @graphql-hive/plugin-aws-sigv4@1.0.13
+  - @graphql-hive/plugin-deduplicate-request@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.60
+  - @graphql-mesh/plugin-prometheus@1.3.48
+
 ## 1.15.1
 
 ### Patch Changes
