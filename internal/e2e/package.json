@@ -5,10 +5,10 @@
   "devDependencies": {
     "@apollo/gateway": "^2.11.0",
     "@types/dockerode": "^3.3.39",
-    "@types/node": "^22.15.29",
+    "@types/node": "^22.15.30",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.8",
-    "dockerode": "^4.0.2",
+    "dockerode": "^4.0.7",
     "glob": "^11.0.0",
     "graphql": "^16.9.0",
     "terminate": "^2.8.0"
