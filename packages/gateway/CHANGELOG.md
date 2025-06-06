@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 1.15.1
+
+### Patch Changes
+
+- [#1215](https://github.com/graphql-hive/gateway/pull/1215) [`33b7f35`](https://github.com/graphql-hive/gateway/commit/33b7f355df25d03069ed3836336c71334c5ba20c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Upgrade Debian dependencies containing CVEs in Docker image
+
+- Updated dependencies [[`cdc959c`](https://github.com/graphql-hive/gateway/commit/cdc959c57dd770fd5f0bcd05a5de7e3102dacfe2), [`cdc959c`](https://github.com/graphql-hive/gateway/commit/cdc959c57dd770fd5f0bcd05a5de7e3102dacfe2), [`4bab6a3`](https://github.com/graphql-hive/gateway/commit/4bab6a3048cd6a9b20b221d625ed94a1e2cf8689)]:
+  - @graphql-hive/gateway-runtime@1.9.1
+  - @graphql-hive/plugin-aws-sigv4@1.0.12
+  - @graphql-hive/plugin-deduplicate-request@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.27
+  - @graphql-mesh/plugin-opentelemetry@1.3.59
+  - @graphql-mesh/plugin-prometheus@1.3.47
+
 ## 1.15.0
 
 ### Minor Changes
