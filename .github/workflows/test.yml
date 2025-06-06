@@ -181,7 +181,6 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
           # we must load so that the e2e tests can use the cached image
-          # also, in order for loading to work - we must define the platform above
           load: true
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
@@ -196,3 +195,46 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
           E2E_TEST_APOLLO_GRAPH_REF: ${{secrets.E2E_TEST_APOLLO_GRAPH_REF}}
           E2E_TEST_APOLLO_KEY: ${{secrets.E2E_TEST_APOLLO_KEY}}
+
+  security:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [Node, Bun]
+    name: Security / ${{matrix.runtime}} Docker Image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3
+      - name: Set up env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          node-version-file: .node-version
+      - name: Build
+        run: yarn build
+      - name: Bundle
+        env:
+          E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
+        run: yarn workspace @graphql-hive/gateway bundle
+      - name: Bake
+        uses: docker/bake-action@37816e747588cb137173af99ab33873600c46ea8 # v6
+        with:
+          source: .
+          # we build the e2e image because the release image cant be loaded due to annotations and platforms
+          # but the e2e image builds _from_ the release image, so it's actually the same
+          targets: e2e${{ matrix.runtime == 'Bun' && '_bun' || '' }}
+          set: |
+            *.cache-from=type=gha
+            *.cache-to=type=gha,mode=max
+          # we must load so that the created image can be scanned
+          load: true
+      - name: Scan
+        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
+        with:
+          image-ref: ghcr.io/graphql-hive/gateway:e2e${{ matrix.runtime == 'Bun' && '-bun' || '' }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH,MEDIUM # fail if the following severity vulnerabilities are found
+          ignore-unfixed: true # there really nothing we can do about unfixed cves

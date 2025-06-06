@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:24-slim AS install
+FROM node:24-bookworm-slim AS install
 
 WORKDIR /install
 
@@ -8,18 +8,26 @@ RUN npm i graphql@^16.9.0
 
 #
 
-FROM node:24-slim
+FROM node:24-bookworm-slim
 
-# `passwd` is vulnerable out of the bax, updating for a fix.
-RUN apt-get update && apt-get upgrade -y passwd
+# use the upcoming debian release (trixie) to get the latest security updates
+RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
+  apt-get update
+
+# some packaged libraries are vulnerable out of the box, upgrade everything
+# we use "dist-upgrade" to ensure that the latest versions are installed even if they require new dependencies
+RUN apt-get dist-upgrade -y
 
 RUN apt-get install -y \
   # for healthchecks
   wget curl \
   # for proper signal propagation
-  dumb-init && \
-  # clean
-  apt-get clean
+  dumb-init
+
+# cleanup
+RUN apt-get autoremove -y && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 WORKDIR /gateway
 
