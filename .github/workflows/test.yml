@@ -215,6 +215,8 @@ jobs:
       - name: Build
         run: yarn build
       - name: Bundle
+        env:
+          E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
         uses: docker/bake-action@37816e747588cb137173af99ab33873600c46ea8 # v6
