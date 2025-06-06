@@ -1,5 +1,17 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 1.0.12
+
+### Patch Changes
+
+- [#1195](https://github.com/graphql-hive/gateway/pull/1195) [`cdc959c`](https://github.com/graphql-hive/gateway/commit/cdc959c57dd770fd5f0bcd05a5de7e3102dacfe2) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@aws-sdk/client-sts@^3.821.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.821.0) (from `^3.817.0`, in `dependencies`)
+
+- [#1203](https://github.com/graphql-hive/gateway/pull/1203) [`4bab6a3`](https://github.com/graphql-hive/gateway/commit/4bab6a3048cd6a9b20b221d625ed94a1e2cf8689) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@aws-sdk/client-sts@^3.823.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.823.0) (from `^3.821.0`, in `dependencies`)
+
 ## 1.0.11
 
 ### Patch Changes
