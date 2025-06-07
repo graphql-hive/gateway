@@ -1,6 +1,12 @@
-import './otel-setup.js';
-import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
+import {
+  defineConfig,
+  GatewayPlugin,
+  SEMRESATTRS_SERVICE_NAME,
+} from '@graphql-hive/gateway';
+import { AsyncLocalStorageContextManager } from '@graphql-mesh/plugin-opentelemetry/async-context-manager';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -21,6 +27,27 @@ const useOnFetchTracer = (): GatewayPlugin => {
     },
   };
 };
+
+console.log('OTLP Exporter type: ', process.env['OTLP_EXPORTER_TYPE']);
+
+const exporterModule =
+  process.env['OTLP_EXPORTER_TYPE'] === 'http'
+    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
+
+const OTLPTraceExporter =
+  exporterModule.OTLPTraceExporter ?? exporterModule.default.OTLPTraceExporter;
+
+opentelemetrySetup({
+  contextManager: new AsyncLocalStorageContextManager(),
+  resource: resourceFromAttributes({
+    [SEMRESATTRS_SERVICE_NAME]: process.env['OTLP_SERVICE_NAME'],
+  }),
+  traces: {
+    exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
+    batching: { maxExportBatchSize: 1, scheduledDelayMillis: 1 },
+  },
+});
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {
