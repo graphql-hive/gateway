@@ -95,15 +95,15 @@ const deps = {
       ['propagator-jaeger'],
 
       // Sampler
-      // 'sampler-jaeger-remote',
+      ['sampler-jaeger-remote', 'src'],
 
       // Context Managers
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
 
       // Node Tracing SDK
-      // 'sdk-node',
-      // 'sdk-trace-node',
-      // 'auto-instrumentations-node',
+      // ['sdk-node', 'src'],
+      // ['sdk-trace-node', 'src'],
+      // ['auto-instrumentations-node', 'src'],
 
       // Cross-runtime tracing SDK
       ['sdk-trace-web'],
