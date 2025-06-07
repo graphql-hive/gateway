@@ -3,10 +3,10 @@ import {
   GatewayPlugin,
   SEMRESATTRS_SERVICE_NAME,
 } from '@graphql-hive/gateway';
-import { AsyncLocalStorageContextManager } from '@graphql-mesh/plugin-opentelemetry/async-context-manager';
 import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import { trace } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
@@ -29,13 +29,10 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
-const exporterModule =
+const { OTLPTraceExporter } =
   process.env['OTLP_EXPORTER_TYPE'] === 'http'
     ? await import(`@opentelemetry/exporter-trace-otlp-http`)
     : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
-
-const OTLPTraceExporter =
-  exporterModule.OTLPTraceExporter ?? exporterModule.default.OTLPTraceExporter;
 
 opentelemetrySetup({
   contextManager: new AsyncLocalStorageContextManager(),
