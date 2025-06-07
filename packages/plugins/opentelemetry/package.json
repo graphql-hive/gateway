@@ -29,16 +29,6 @@
         "default": "./dist/index.js"
       }
     },
-    "./async-context-manager": {
-      "require": {
-        "types": "./dist/async-context-manager.d.cts",
-        "default": "./dist/async-context-manager.cjs"
-      },
-      "import": {
-        "types": "./dist/async-context-manager.d.ts",
-        "default": "./dist/async-context-manager.js"
-      }
-    },
     "./setup": {
       "require": {
         "types": "./dist/setup.d.cts",

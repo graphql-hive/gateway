@@ -65,10 +65,13 @@ const deps = {
   // OpenTelemetry plugin is sometimes imported, and not re-used from the gateway itself. we therefore need to bundle it into node_modules
   'node_modules/@graphql-mesh/plugin-opentelemetry/index':
     '../plugins/opentelemetry/src/index.ts',
-  // The Async Local context manager of Opentelemetry can't be bundled, so we have our own
   // Since `async_hooks` is not available in all runtime, it have to be bundle separately
-  'node_modules/@graphql-mesh/plugin-opentelemetry/async-context-manager':
+  // The Async Local context manager of Opentelemetry can't be bundled correctly, so we use our own
+  // proxy export file. It just re-export otel's package, which makes rollup happy
+  'node_modules/@opentelemetry/context-async-hooks/index':
     '../plugins/opentelemetry/src/async-context-manager.ts',
+  'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
+    '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
   'node_modules/@graphql-mesh/plugin-opentelemetry/setup':
     '../plugins/opentelemetry/src/setup.ts',
   ...Object.fromEntries(
@@ -84,7 +87,6 @@ const deps = {
 
       // Exporters
       ['exporter-trace-otlp-http'],
-      ['exporter-trace-otlp-grpc', 'src'],
       ['exporter-zipkin'],
       // ['exporter-jaeger', 'src'],
 
@@ -96,7 +98,6 @@ const deps = {
       // 'sampler-jaeger-remote',
 
       // Context Managers
-      // ['context-async-hooks', 'src'], // An async context manager usable in runtimes implementing async-hooks
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
 
       // Node Tracing SDK
@@ -111,9 +112,6 @@ const deps = {
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
     ]),
   ),
-  // // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
-  // 'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
-  //   '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
 };
 
 if (
