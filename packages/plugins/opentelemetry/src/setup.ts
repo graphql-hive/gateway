@@ -30,6 +30,8 @@ import {
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { getEnvVar } from './utils';
 
+export * from './attributes';
+
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
 type TracingOptions = {
@@ -78,24 +80,22 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
     }
   }
 
+  const baseResource = resourceFromAttributes({
+    [SEMRESATTRS_SERVICE_NAME]:
+      options.resource && 'serviceName' in options.resource
+        ? options.resource?.serviceName
+        : getEnvVar('OTEL_SERVICE_NAME', '@graphql-mesh/plugin-opentelemetry'),
+    [ATTR_SERVICE_VERSION]:
+      options.resource && 'serviceVersion' in options.resource
+        ? options.resource?.serviceVersion
+        : getEnvVar('OTEL_SERVICE_VERSION', globalThis.__OTEL_PLUGIN_VERSION__),
+  });
+
   const provider = new WebTracerProvider({
     resource:
       options.resource && !('serviceName' in options.resource)
-        ? options.resource
-        : resourceFromAttributes({
-            [SEMRESATTRS_SERVICE_NAME]:
-              options.resource?.serviceName ??
-              getEnvVar(
-                'OTEL_SERVICE_NAME',
-                '@graphql-mesh/plugin-opentelemetry',
-              ),
-            [ATTR_SERVICE_VERSION]:
-              options.resource?.serviceVersion ??
-              getEnvVar(
-                'OTEL_SERVICE_VERSION',
-                globalThis.__OTEL_PLUGIN_VERSION__,
-              ),
-          }),
+        ? baseResource.merge(options.resource)
+        : baseResource,
     sampler:
       options.sampler ??
       (options.samplingRate
