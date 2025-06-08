@@ -1,8 +1,4 @@
-import {
-  defineConfig,
-  GatewayPlugin,
-  SEMRESATTRS_SERVICE_NAME,
-} from '@graphql-hive/gateway';
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import { trace } from '@opentelemetry/api';
@@ -36,9 +32,7 @@ const { OTLPTraceExporter } =
 
 opentelemetrySetup({
   contextManager: new AsyncLocalStorageContextManager(),
-  resource: resourceFromAttributes({
-    [SEMRESATTRS_SERVICE_NAME]: process.env['OTLP_SERVICE_NAME'],
-  }),
+  resource: resourceFromAttributes({ 'custom.resource': 'custom value' }),
   traces: {
     exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
     batching: { maxExportBatchSize: 1, scheduledDelayMillis: 1 },

@@ -141,7 +141,8 @@ describe('OpenTelemetry', () => {
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -677,7 +678,8 @@ describe('OpenTelemetry', () => {
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -752,7 +754,8 @@ describe('OpenTelemetry', () => {
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -831,7 +834,8 @@ describe('OpenTelemetry', () => {
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
         const path = '/non-existing';
@@ -874,7 +878,8 @@ describe('OpenTelemetry', () => {
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 

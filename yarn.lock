@@ -10909,10 +10909,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ansi-color@npm:^0.2.1":
+"ansi-color@npm:0.2.1":
   version: 0.2.1
   resolution: "ansi-color@npm:0.2.1"
   checksum: 10c0/0ccfb57aadd3a955d1bbdc8392fb24e7e13b247812955b0182a3bea3f733d757e49f0b8faa00a6d2c619613f2d2a3136096f91e1fb4d688c39cf24b4f776a0d3
+  languageName: node
+  linkType: hard
+
+"ansi-color@patch:ansi-color@npm%3A0.2.1#~/.yarn/patches/ansi-color-npm-0.2.1-f7243d10a4.patch":
+  version: 0.2.1
+  resolution: "ansi-color@patch:ansi-color@npm%3A0.2.1#~/.yarn/patches/ansi-color-npm-0.2.1-f7243d10a4.patch::version=0.2.1&hash=de9957"
+  checksum: 10c0/b23a96f3c448e8dc1db58d4a5c2f21608a39d3a886784642395496828ece114d54e5690320ef89b8faa0d9dc824c7dbd9f40beec958336e2aab6709c1c984388
   languageName: node
   linkType: hard
 
