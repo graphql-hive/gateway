@@ -366,7 +366,9 @@ export function createTenv(cwd: string): Tenv {
         port = await getAvailablePort(),
         supergraph: supergraphOpt,
         subgraph: subgraphOpt,
-        pipeLogs = isDebug(),
+        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS')
+          ? 'gateway.out'
+          : false,
         env,
         runner,
         args = [],
@@ -635,7 +637,7 @@ export function createTenv(cwd: string): Tenv {
         services = [],
         trimHostPaths,
         maskServicePorts,
-        pipeLogs = isDebug(),
+        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? 'mesh.out' : false,
         env,
         args = [],
       } = opts || {};
@@ -715,7 +717,9 @@ export function createTenv(cwd: string): Tenv {
       {
         port,
         gatewayPort,
-        pipeLogs = isDebug(),
+        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS')
+          ? `${name}.out`
+          : false,
         args = [],
         protocol = 'http',
         env,
@@ -774,7 +778,7 @@ export function createTenv(cwd: string): Tenv {
       hostPort,
       additionalContainerPorts: containerAdditionalPorts,
       healthcheck,
-      pipeLogs = boolEnv('DEBUG'),
+      pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? `${name}.out` : false,
       cmd = [],
       volumes = [],
       args = [],
@@ -1004,7 +1008,10 @@ export function createTenv(cwd: string): Tenv {
       }
       return container;
     },
-    async composeWithApollo({ services = [], pipeLogs = isDebug() }) {
+    async composeWithApollo({
+      services = [],
+      pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? 'rover.out' : false,
+    }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
         const hostname = await getLocalhost(service.port, service.protocol);
