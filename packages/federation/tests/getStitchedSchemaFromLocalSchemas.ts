@@ -1,17 +1,13 @@
 import { createDefaultExecutor } from '@graphql-tools/delegate';
-import { executorFromSchema } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
   ExecutionResult,
   getDocumentNodeFromSchema,
 } from '@graphql-tools/utils';
-import {
-  assertSingleExecutionValue,
-  composeLocalSchemasWithApollo,
-} from '@internal/testing';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { composeServices } from '@theguild/federation-composition';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { GraphQLSchema, parse } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
@@ -20,7 +16,13 @@ export interface LocalSchemaItem {
   schema: GraphQLSchema;
 }
 
-export interface StitchedSchemaFromLocalSchemasOptions {
+export async function getStitchedSchemaFromLocalSchemas({
+  localSchemas,
+  onSubgraphExecute,
+  composeWith = 'apollo',
+  ignoreRules,
+  globalObjectIdentification,
+}: {
   localSchemas: Record<string, GraphQLSchema>;
   onSubgraphExecute?: (
     subgraph: string,
@@ -30,15 +32,7 @@ export interface StitchedSchemaFromLocalSchemasOptions {
   composeWith?: 'apollo' | 'guild';
   ignoreRules?: string[];
   globalObjectIdentification?: boolean;
-}
-
-export async function getStitchedSchemaFromLocalSchemas({
-  localSchemas,
-  onSubgraphExecute,
-  composeWith = 'apollo',
-  ignoreRules,
-  globalObjectIdentification,
-}: StitchedSchemaFromLocalSchemasOptions): Promise<GraphQLSchema> {
+}): Promise<GraphQLSchema> {
   let supergraphSdl: string;
   if (composeWith === 'apollo') {
     supergraphSdl = await composeLocalSchemasWithApollo(
@@ -89,30 +83,9 @@ export async function getStitchedSchemaFromLocalSchemas({
         ) || [];
       if (name && localSchema) {
         subschemaConfig.executor = createTracedExecutor(name, localSchema);
-      } else {
+      } else if (!globalObjectIdentification) {
         throw new Error(`Unknown subgraph ${subschemaConfig.name}`);
       }
     },
   });
-}
-
-export async function stitchLocalSchemas(
-  opts: StitchedSchemaFromLocalSchemasOptions,
-) {
-  const schema = await getStitchedSchemaFromLocalSchemas(opts);
-  const executor = executorFromSchema(schema);
-  return {
-    schema,
-    async execute({
-      query,
-      variables,
-    }: {
-      query: string;
-      variables?: Record<string, any>;
-    }) {
-      const result = await executor({ document: parse(query), variables });
-      assertSingleExecutionValue(result);
-      return result;
-    },
-  };
 }
