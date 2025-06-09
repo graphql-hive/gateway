@@ -1,6 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { normalizedExecutor } from '@graphql-tools/executor';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { parse } from 'graphql';
+import { toGlobalId } from 'graphql-relay';
 import { describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
@@ -71,6 +73,46 @@ describe('Global Object Identification', () => {
         """
         nodeId: ID!
       }"
+    `);
+  });
+
+  it('should resolve object from globally unique node', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        accounts,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+        {
+          node(nodeId: "${toGlobalId('Person', 'a1')}") {
+            nodeId
+            ... on Person {
+              id
+              name
+              email
+            }
+          }
+        }
+      `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "node": {
+            "email": "john@doe.com",
+            "id": "a1",
+            "name": "John Doe",
+            "nodeId": "UGVyc29uOmEx",
+          },
+        },
+      }
     `);
   });
 });

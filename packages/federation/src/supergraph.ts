@@ -43,7 +43,10 @@ import {
   FieldDefinitionNode,
   FieldNode,
   GraphQLFieldResolver,
+  GraphQLID,
   GraphQLInterfaceType,
+  GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLOutputType,
   GraphQLSchema,
   InputValueDefinitionNode,
@@ -68,7 +71,12 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
-import { fromGlobalId } from 'graphql-relay';
+import {
+  fromGlobalId,
+  globalIdField,
+  nodeDefinitions,
+  toGlobalId,
+} from 'graphql-relay';
 import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
@@ -1256,60 +1264,87 @@ export function getStitchingOptionsFromSupergraphSdl(
 
   if (opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size) {
     const nodeIdField = 'nodeId';
-    const typeDefs = `
-      type Query {
-        """Fetches an object given its globally unique \`ID\`."""
-        node(
-          """The globally unique \`ID\`."""
-          ${nodeIdField}: ID!
-        ): Node
-      }
-      interface Node {
-        """
-        A globally unique identifier. Can be used in various places throughout the system to identify this single value.
-        """
-        ${nodeIdField}: ID!
-      }
-      ${typeNameKeysBySubgraphMap
-        .values()
-        .flatMap((type) =>
-          type.keys().map(
-            (typeName) => `
-      type ${typeName} implements Node {
-        """
-        A globally unique identifier. Can be used in various places throughout the system to identify this single value.
-        """
-        ${nodeIdField}: ID!
-      }`,
-          ),
-        )
-        .toArray()
-        .join('\n')}
-    `;
-    const globalObjectIdentSubschema: SubschemaConfig = {
-      name: 'global-object-identification',
-      schema: makeExecutableSchema({
-        typeDefs,
-        resolvers: {
-          Query: {
-            node: (_source, args: { [nodeIdField]: string }) => {
-              const id = args[nodeIdField];
-              if (!fromGlobalId(args[nodeIdField]).type) {
-                return null;
-              }
-              return {
-                [nodeIdField]: id,
-              };
-            },
-          },
-          Node: {
-            __resolveType: (source: { [nodeIdField]: string }) => {
-              return fromGlobalId(source[nodeIdField]).type;
-            },
-          },
+
+    const nodeInterface = new GraphQLInterfaceType({
+      name: 'Node',
+      fields: () => ({
+        [nodeIdField]: {
+          type: new GraphQLNonNull(GraphQLID),
+          description:
+            'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
         },
       }),
+      resolveType: (source: { [nodeIdField]: string }) => {
+        // TODO: check when runs and with what source, do some logging
+        return fromGlobalId(source[nodeIdField]).type;
+      },
+    });
+
+    const types: GraphQLObjectType[] = [];
+    for (const [typeName, keys] of typeNameKeysBySubgraphMap
+      .values()
+      .flatMap((m) => m)) {
+      // TODO: distinct types with least keys (or respect canonical)
+      const type = new GraphQLObjectType({
+        name: typeName,
+        interfaces: [nodeInterface],
+        fields: () => ({
+          [nodeIdField]: {
+            description:
+              'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
+            type: new GraphQLNonNull(GraphQLID),
+            resolve: (source) =>
+              toGlobalId(
+                typeName,
+                // TODO: use keys
+                source.id,
+              ),
+          },
+          // TODO: use keys
+          id: {
+            type: new GraphQLNonNull(GraphQLID),
+          },
+        }),
+      });
+      types.push(type);
+    }
+
+    const globalObjectIdentSubschema: SubschemaConfig = {
+      name: 'global-object-identification',
+      schema: new GraphQLSchema({
+        types,
+        query: new GraphQLObjectType({
+          name: 'Query',
+          fields: () => ({
+            node: {
+              type: nodeInterface,
+              description: 'Fetches an object given its globally unique `ID`.',
+              args: {
+                [nodeIdField]: {
+                  type: new GraphQLNonNull(GraphQLID),
+                  description: 'The globally unique `ID`.',
+                },
+              },
+              resolve: (_source, args: { [nodeIdField]: string }) => {
+                const nodeId = args[nodeIdField];
+                const { id, type } = fromGlobalId(args[nodeIdField]);
+                if (!type) {
+                  return null;
+                }
+                return {
+                  __typename: type,
+                  [nodeIdField]: nodeId,
+                  // TODO: as keys
+                  id,
+                };
+              },
+            },
+            // TODO: nodes
+          }),
+        }),
+      }),
     };
+
     subschemas.push(globalObjectIdentSubschema);
   }
 
