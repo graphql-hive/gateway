@@ -1,8 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { normalizedExecutor } from '@graphql-tools/executor';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { parse } from 'graphql';
-import { toGlobalId } from 'graphql-relay';
 import { describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
