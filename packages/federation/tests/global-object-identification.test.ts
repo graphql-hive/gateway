@@ -28,7 +28,7 @@ describe('Relay Object Identification', () => {
     });
 
     const { execute } = await stitchLocalSchemas({
-      relayObjectIdentification: true,
+      globalObjectIdentification: true,
       localSchemas: {
         accounts,
       },
