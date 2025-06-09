@@ -1,13 +1,17 @@
 import { createDefaultExecutor } from '@graphql-tools/delegate';
+import { executorFromSchema } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
   ExecutionResult,
   getDocumentNodeFromSchema,
 } from '@graphql-tools/utils';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
+import {
+  assertSingleExecutionValue,
+  composeLocalSchemasWithApollo,
+} from '@internal/testing';
 import { composeServices } from '@theguild/federation-composition';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, parse } from 'graphql';
 import { kebabCase } from 'lodash';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
@@ -16,13 +20,7 @@ export interface LocalSchemaItem {
   schema: GraphQLSchema;
 }
 
-export async function getStitchedSchemaFromLocalSchemas({
-  localSchemas,
-  onSubgraphExecute,
-  composeWith = 'apollo',
-  ignoreRules,
-  relayObjectIdentification,
-}: {
+export interface StitchedSchemaFromLocalSchemasOptions {
   localSchemas: Record<string, GraphQLSchema>;
   onSubgraphExecute?: (
     subgraph: string,
@@ -32,7 +30,15 @@ export async function getStitchedSchemaFromLocalSchemas({
   composeWith?: 'apollo' | 'guild';
   ignoreRules?: string[];
   relayObjectIdentification?: boolean;
-}): Promise<GraphQLSchema> {
+}
+
+export async function getStitchedSchemaFromLocalSchemas({
+  localSchemas,
+  onSubgraphExecute,
+  composeWith = 'apollo',
+  ignoreRules,
+  relayObjectIdentification,
+}: StitchedSchemaFromLocalSchemasOptions): Promise<GraphQLSchema> {
   let supergraphSdl: string;
   if (composeWith === 'apollo') {
     supergraphSdl = await composeLocalSchemasWithApollo(
@@ -88,4 +94,25 @@ export async function getStitchedSchemaFromLocalSchemas({
       }
     },
   });
+}
+
+export async function stitchLocalSchemas(
+  opts: StitchedSchemaFromLocalSchemasOptions,
+) {
+  const schema = await getStitchedSchemaFromLocalSchemas(opts);
+  const executor = executorFromSchema(schema);
+  return {
+    schema,
+    async execute({
+      query,
+      variables,
+    }: {
+      query: string;
+      variables?: Record<string, any>;
+    }) {
+      const result = await executor({ document: parse(query), variables });
+      assertSingleExecutionValue(result);
+      return result;
+    },
+  };
 }

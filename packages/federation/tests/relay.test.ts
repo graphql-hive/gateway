@@ -1,13 +1,15 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { normalizedExecutor } from '@graphql-tools/executor';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
+import { stitchLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
 describe('Relay Object Identification', () => {
   it('should resolve node by id', async () => {
     const accounts = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
+        type Query {
+          people: [Person!]!
+        }
         type Person @key(fields: "id") {
           id: ID!
           name: String!
@@ -25,16 +27,16 @@ describe('Relay Object Identification', () => {
       },
     });
 
-    const supergraph = await getStitchedSchemaFromLocalSchemas({
+    const { execute } = await stitchLocalSchemas({
+      relayObjectIdentification: true,
       localSchemas: {
         accounts,
       },
     });
 
     await expect(
-      normalizedExecutor({
-        schema: supergraph,
-        document: parse(/* GraphQL */ `
+      execute({
+        query: /* GraphQL */ `
           query ($id: ID!) {
             node(id: $id) {
               ... on Person {
@@ -44,8 +46,13 @@ describe('Relay Object Identification', () => {
               }
             }
           }
-        `),
+        `,
+        variables: { id: '1' },
       }),
-    ).resolves.toMatchInlineSnapshot();
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {},
+      }
+    `);
   });
 });
