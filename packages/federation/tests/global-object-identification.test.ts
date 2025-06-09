@@ -1,33 +1,41 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { normalizedExecutor } from '@graphql-tools/executor';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { parse } from 'graphql';
+import { toGlobalId } from 'graphql-relay';
 import { describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
 describe('Global Object Identification', () => {
-  it('should resolve node by id', async () => {
-    const accounts = buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
-        type Query {
-          people: [Person!]!
-        }
-        type Person @key(fields: "id") {
-          id: ID!
-          name: String!
-          email: String!
-        }
-      `),
-      resolvers: {
-        Person: {
-          __resolveReference: (ref) => ({
-            id: ref.id,
-            name: 'John Doe',
-            email: 'john@doe.com',
-          }),
-        },
+  const data = {
+    accounts: [
+      {
+        id: 'a1',
+        name: 'John Doe',
+        email: 'john@doe.com',
       },
-    });
+    ],
+  };
 
+  const accounts = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        people: [Person!]!
+      }
+      type Person @key(fields: "id") {
+        id: ID!
+        name: String!
+        email: String!
+      }
+    `),
+    resolvers: {
+      Person: {
+        __resolveReference: (ref) => data.accounts.find((a) => a.id === ref.id),
+      },
+    },
+  });
+
+  it('should generate stitched schema with node interface', async () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
