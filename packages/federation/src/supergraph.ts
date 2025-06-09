@@ -129,6 +129,11 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
+  /**
+   * Add support for Relay's spec of Node interface aka.
+   * Global Object Identification.
+   */
+  relayObjectIdentification?: boolean;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
