@@ -5090,7 +5090,6 @@ __metadata:
     "@graphql-tools/wrap": "workspace:^"
     "@graphql-yoga/typed-event-target": "npm:^3.0.1"
     "@types/lodash": "npm:4.17.18"
-    "@wayfair/node-froid": "npm:^3.2.2"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/events": "npm:^0.1.2"
     "@whatwg-node/fetch": "npm:^0.10.8"
@@ -9263,16 +9262,6 @@ __metadata:
     loupe: "npm:^3.1.3"
     tinyrainbow: "npm:^2.0.0"
   checksum: 10c0/c7a785a73bc0d7c0202ced0d9912639b9deb6f05dd6c25700a13d97e13320ccec57660f11ad1f9225419ac485339fdf7af28c8d77456bcb9558e6c7d73ad538a
-  languageName: node
-  linkType: hard
-
-"@wayfair/node-froid@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "@wayfair/node-froid@npm:3.2.2"
-  peerDependencies:
-    graphql: ^16
-    graphql-relay: ^0.10
-  checksum: 10c0/e3cf2762757308896e2a0965b466905eacf5215c0c257df3695a815279c9186dfce56882ca95363d315a552711a426c6b35c6564be0c60e3f2eb3fe12d929543
   languageName: node
   linkType: hard
 
