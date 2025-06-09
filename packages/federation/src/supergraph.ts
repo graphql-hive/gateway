@@ -68,6 +68,7 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
+import { fromGlobalId } from 'graphql-relay';
 import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
@@ -1289,7 +1290,24 @@ export function getStitchingOptionsFromSupergraphSdl(
       name: 'global-object-identification',
       schema: makeExecutableSchema({
         typeDefs,
-        // TODO: resolvers
+        resolvers: {
+          Query: {
+            node: (_source, args: { [nodeIdField]: string }) => {
+              const id = args[nodeIdField];
+              if (!fromGlobalId(args[nodeIdField]).type) {
+                return null;
+              }
+              return {
+                [nodeIdField]: id,
+              };
+            },
+          },
+          Node: {
+            __resolveType: (source: { [nodeIdField]: string }) => {
+              return fromGlobalId(source[nodeIdField]).type;
+            },
+          },
+        },
       }),
     };
     subschemas.push(globalObjectIdentSubschema);
