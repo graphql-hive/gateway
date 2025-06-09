@@ -16,6 +16,7 @@ import {
   buildHTTPExecutor,
   HTTPExecutorOptions,
 } from '@graphql-tools/executor-http';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
   calculateSelectionScore,
   getDefaultFieldConfigMerger,
@@ -1250,6 +1251,48 @@ export function getStitchingOptionsFromSupergraphSdl(
       batchingOptions: opts.batchingOptions,
     };
     subschemas.push(subschemaConfig);
+  }
+
+  if (opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size) {
+    const nodeIdField = 'nodeId';
+    const typeDefs = `
+      type Query {
+        """Fetches an object given its globally unique \`ID\`."""
+        node(
+          """The globally unique \`ID\`."""
+          ${nodeIdField}: ID!
+        ): Node
+      }
+      interface Node {
+        """
+        A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+        """
+        ${nodeIdField}: ID!
+      }
+      ${typeNameKeysBySubgraphMap
+        .values()
+        .flatMap((type) =>
+          type.keys().map(
+            (typeName) => `
+      type ${typeName} implements Node {
+        """
+        A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+        """
+        ${nodeIdField}: ID!
+      }`,
+          ),
+        )
+        .toArray()
+        .join('\n')}
+    `;
+    const globalObjectIdentSubschema: SubschemaConfig = {
+      name: 'global-object-identification',
+      schema: makeExecutableSchema({
+        typeDefs,
+        // TODO: resolvers
+      }),
+    };
+    subschemas.push(globalObjectIdentSubschema);
   }
 
   const defaultMerger = getDefaultFieldConfigMerger(true);
