@@ -161,7 +161,7 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * }
    * ```
    *
-   * @see https://relay.dev/graphql/objectidentification.htm
+   * @see https://graphql.org/learn/global-object-identification/
    */
   globalObjectIdentification?: boolean;
 }
