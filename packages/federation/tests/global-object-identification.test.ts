@@ -15,6 +15,18 @@ describe('Global Object Identification', () => {
         email: 'john@doe.com',
       },
     ],
+    people: [
+      {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@doe.com',
+      },
+      {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'jane@doe.com',
+      },
+    ],
   };
 
   const accounts = buildSubgraphSchema({
@@ -34,6 +46,30 @@ describe('Global Object Identification', () => {
       },
       Account: {
         __resolveReference: (ref) => data.accounts.find((a) => a.id === ref.id),
+      },
+    },
+  });
+
+  const people = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        people: [Person!]!
+      }
+      type Person @key(fields: "firstName lastName") {
+        firstName: String!
+        lastName: String!
+        email: String!
+      }
+    `),
+    resolvers: {
+      Query: {
+        people: () => data.people,
+      },
+      Person: {
+        __resolveReference: (ref) =>
+          data.people.find(
+            (a) => a.firstName === ref.firstName && a.lastName === ref.lastName,
+          ),
       },
     },
   });
@@ -79,7 +115,7 @@ describe('Global Object Identification', () => {
     `);
   });
 
-  it('should resolve object from globally unique node', async () => {
+  it('should resolve single field key object from globally unique node', async () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
@@ -113,6 +149,44 @@ describe('Global Object Identification', () => {
             "id": "a1",
             "name": "John Doe",
             "nodeId": "QWNjb3VudDphMQ==",
+          },
+        },
+      }
+    `);
+  });
+
+  it('should resolve multiple fields key object from globally unique node', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        people,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+        {
+          node(nodeId: "${toGlobalId('Person', JSON.stringify({ firstName: 'John', lastName: 'Doe' }))}") {
+            nodeId
+            ... on Person {
+              firstName
+              lastName
+            }
+          }
+        }
+      `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "node": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "nodeId": "UGVyc29uOnsiZmlyc3ROYW1lIjoiSm9obiIsImxhc3ROYW1lIjoiRG9lIn0=",
           },
         },
       }
