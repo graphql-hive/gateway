@@ -42,6 +42,7 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   FieldNode,
+  GraphQLFieldConfig,
   GraphQLFieldResolver,
   GraphQLID,
   GraphQLInterfaceType,
@@ -1280,39 +1281,105 @@ export function getStitchingOptionsFromSupergraphSdl(
       },
     });
 
-    const types: GraphQLObjectType[] = [];
-    for (const [typeName, keys] of typeNameKeysBySubgraphMap
-      .values()
-      .flatMap((m) => m)) {
-      // TODO: distinct types with least keys (or respect canonical)
-      const type = new GraphQLObjectType({
-        name: typeName,
-        interfaces: [nodeInterface],
-        fields: () => ({
-          [nodeIdField]: {
-            description:
-              'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
-            type: new GraphQLNonNull(GraphQLID),
-            resolve: (source) =>
-              toGlobalId(
-                typeName,
-                // TODO: use keys
-                source.id,
+    const types = new Map<string, GraphQLObjectType>();
+    for (const [subgraphName, typeNameKeys] of typeNameKeysBySubgraphMap) {
+      typeNames: for (const [typeName, keys] of typeNameKeys) {
+        for (const key of keys.sort(
+          (a, b) =>
+            // sort by shorter keys first
+            // TODO: respect canonical keys
+            a.length - b.length,
+        )) {
+          if (types.has(typeName)) {
+            // type already constructed to be resolved by global object identification
+            // with the best key, skip it in all other occurrences
+            continue typeNames;
+          }
+
+          if (
+            // the key for fetching this object contains other objects,
+            key.includes('{') ||
+            // the key for fetching this object contains arguments,
+            key.includes('(')
+          ) {
+            // it's too complex to use global object identification
+            // TODO: do it anyways when need arises
+            continue;
+          }
+          if (key.includes(':')) {
+            throw new Error(
+              'Aliases in @key fields are not supported by Global Object Identification yet.',
+            );
+          }
+
+          // what we're left in the "key" are simple field(s) like "id" or "email"
+          const fieldNames = key.trim().split(/\s+/);
+          if (fieldNames.includes(nodeIdField)) {
+            throw new Error(
+              `The field "${nodeIdField}" is reserved for Global Object Identification and cannot be used in @key fields for type "${typeName}".`,
+            );
+          }
+
+          const schema = subschemas.find(
+            (s) => s.name === subgraphName,
+          )?.schema;
+          if (!schema) {
+            throw new Error(
+              `Subgraph "${subgraphName}" not found for Global Object Identification.`,
+            );
+          }
+
+          const objectInSubgraph = schema.getType(
+            typeName,
+          ) as GraphQLObjectType;
+          const fieldsOfObjectInSubgraph = objectInSubgraph.getFields();
+
+          // TODO: distinct types with least keys (or respect canonical)
+          const object = new GraphQLObjectType({
+            name: typeName,
+            interfaces: [nodeInterface],
+            fields: () => ({
+              [nodeIdField]: {
+                description:
+                  'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
+                type: new GraphQLNonNull(GraphQLID),
+                resolve: (source) =>
+                  toGlobalId(
+                    typeName,
+                    // TODO: use keys
+                    source.id,
+                  ),
+              },
+              ...fieldNames.reduce(
+                (acc, fieldName) => {
+                  const fieldInSubgraph = fieldsOfObjectInSubgraph[fieldName];
+                  if (!fieldInSubgraph) {
+                    throw new Error(
+                      `Field "${fieldName}" not found in type "${typeName}" in subgraph "${subgraphName}".`,
+                    );
+                  }
+                  return {
+                    ...acc,
+                    [fieldName]: {
+                      // TODO: other config? necessary?
+                      type: fieldInSubgraph.type,
+                    },
+                  };
+                },
+                {} as Record<string, GraphQLFieldConfig<unknown, unknown>>,
               ),
-          },
-          // TODO: use keys
-          id: {
-            type: new GraphQLNonNull(GraphQLID),
-          },
-        }),
-      });
-      types.push(type);
+            }),
+          });
+
+          types.set(typeName, object);
+        }
+      }
     }
 
     const globalObjectIdentSubschema: SubschemaConfig = {
       name: 'global-object-identification',
       schema: new GraphQLSchema({
-        types,
+        types: types.values().toArray(),
         query: new GraphQLObjectType({
           name: 'Query',
           fields: () => ({
