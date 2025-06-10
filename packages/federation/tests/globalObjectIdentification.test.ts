@@ -155,6 +155,41 @@ describe('Global Object Identification', () => {
     `);
   });
 
+  it('should not resolve single field key object from globally unique node when doesnt exist', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        accounts,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+        {
+          node(nodeId: "${toGlobalId('Account', 'dontexist1')}") {
+            nodeId
+            ... on Account {
+              id
+              name
+              email
+            }
+          }
+        }
+      `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "node": null,
+        },
+      }
+    `);
+  });
+
   it('should resolve multiple fields key object from globally unique node', async () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
