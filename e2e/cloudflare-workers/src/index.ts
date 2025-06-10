@@ -3,21 +3,14 @@ import {
   createGatewayRuntime,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import {
-  SEMRESATTRS_SERVICE_NAME,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import http from '@graphql-mesh/transport-http';
-import { diag } from '@opentelemetry/api';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
-  OTLP_SERVICE_NAME: string;
+  OTEL_SERVICE_NAME: string;
   DEBUG: string;
 }
 
@@ -44,31 +37,20 @@ const useOnFetchTracer = (): GatewayPlugin => {
 let runtime: ReturnType<typeof createGatewayRuntime>;
 function getRuntime(env: Env) {
   if (!runtime) {
-    setGlobalErrorHandler((err) => diag.error('Uncaught Error', err));
+    opentelemetrySetup({
+      contextManager: false,
+      resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
+      traces: {
+        exporter: new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] }),
+        batching: false, // Disable batching to speedup tests
+      },
+    });
 
-    new WebTracerProvider({
-      resource: resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: env.OTLP_SERVICE_NAME,
-      }),
-      spanProcessors: [
-        // Do not batch for test
-        new SimpleSpanProcessor(
-          new OTLPTraceExporter({
-            url: env.OTLP_EXPORTER_URL,
-          }),
-        ),
-      ],
-    }).register();
-
-    console.log(env);
     runtime = createGatewayRuntime({
       proxy: { endpoint: 'https://countries.trevorblades.com' },
       transports: { http },
       plugins: (ctx) => [
-        useOpenTelemetry({
-          ...ctx,
-          traces: true,
-        }),
+        useOpenTelemetry({ ...ctx, traces: true }),
         useOnFetchTracer(),
       ],
     });

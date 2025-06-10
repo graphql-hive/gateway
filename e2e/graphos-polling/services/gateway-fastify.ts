@@ -1,8 +1,10 @@
-import './otel-setup.js';
 import { createGatewayRuntime, Logger } from '@graphql-hive/gateway-runtime';
 import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import { Opts } from '@internal/testing';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
 /* --- E2E TEST SPECIFIC CONFIGURATION START---  */
@@ -14,6 +16,15 @@ const upLink = `http://0.0.0.0:${opts.getServicePort('graphos')}`;
 const port = opts.getServicePort('gateway-fastify');
 
 /*---  E2E TEST SPECIFIC CONFIGURATION END---  */
+
+opentelemetrySetup({
+  contextManager: new AsyncLocalStorageContextManager(),
+  traces: {
+    exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
+    // Do not batch for test
+    batching: false,
+  },
+});
 
 const requestIdHeader = 'x-guild-request-id';
 

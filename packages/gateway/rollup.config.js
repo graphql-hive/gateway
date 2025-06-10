@@ -72,6 +72,10 @@ const deps = {
     '../plugins/opentelemetry/src/async-context-manager.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
     '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
+  'node_modules/@opentelemetry/sdk-node/index':
+    '../plugins/opentelemetry/src/sdk-node.ts',
+  'node_modules/@opentelemetry/auto-instrumentations-node/index':
+    '../plugins/opentelemetry/src/auto-instrumentations.ts',
   'node_modules/@graphql-mesh/plugin-opentelemetry/setup':
     '../plugins/opentelemetry/src/setup.ts',
   ...Object.fromEntries(
@@ -83,12 +87,14 @@ const deps = {
       ['core'],
       ['resources', 'esm/'],
       ['sdk-trace-base'],
+      ['sdk-metrics-base'],
       ['semantic-conventions'],
+      ['instrumentation'],
 
       // Exporters
       ['exporter-trace-otlp-http'],
       ['exporter-zipkin'],
-      // ['exporter-jaeger', 'src'],
+      ['exporter-jaeger', 'src'],
 
       // Propagators
       ['propagator-b3'],
@@ -99,11 +105,6 @@ const deps = {
 
       // Context Managers
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
-
-      // Node Tracing SDK
-      // ['sdk-node', 'src'],
-      // ['sdk-trace-node', 'src'],
-      // ['auto-instrumentations-node', 'src'],
 
       // Cross-runtime tracing SDK
       ['sdk-trace-web'],

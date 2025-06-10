@@ -17,7 +17,6 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
-import { YogaLogger } from 'graphql-yoga';
 import { OtelContextStack } from './context';
 import {
   getMostSpecificState,
@@ -51,7 +50,10 @@ import {
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
-import { isContextManagerCompatibleWithAsync } from './utils';
+import {
+  diagLogLevelFromEnv,
+  isContextManagerCompatibleWithAsync,
+} from './utils';
 
 const initializationTime =
   'performance' in globalThis ? performance.now() : undefined;
@@ -91,9 +93,13 @@ export type OpenTelemetryGatewayPluginOptions = {
   propagateContext?: boolean;
   /**
    * Configure Opentelemetry `diag` API to use Gateway's logger.
+   *
    * @default true
+   
+   * Note: Logger configuration respects OTEL environment variables standard.
+   *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
    */
-  configureDiag?: boolean;
+  configureDiagLogger?: boolean;
   /**
    * The TraceProvider method to call on Gateway's disposal. By default, it tries to run `forceFlush` method on
    * the registered trace provider if it exists.
@@ -224,7 +230,7 @@ export function useOpenTelemetry(
   const traces = typeof options.traces === 'object' ? options.traces : {};
 
   let tracer: Tracer;
-  let pluginLogger: YogaLogger;
+  let pluginLogger: Logger;
   let initSpan: Context | null;
 
   function isParentEnabled(state: State): boolean {
@@ -617,18 +623,31 @@ export function useOpenTelemetry(
     },
 
     onYogaInit({ yoga }) {
-      pluginLogger = options.log
-        ? options.log.child('[useOpenTelemetry] ')
-        : yoga.logger;
-
-      if (options.configureDiag !== false) {
-        diag.setLogger({
-          debug: (message, ...args) => pluginLogger.debug(message, ...args),
-          error: (message, ...args) => pluginLogger.error(message, ...args),
-          warn: (message, ...args) => pluginLogger.warn(message, ...args),
-          info: (message, ...args) => pluginLogger.info(message, ...args),
-          verbose: (message, ...args) => pluginLogger.debug(message, ...args),
+      const log =
+        options.log ??
+        //TODO remove this when Yoga will also use the new Logger API
+        new Logger({
+          writers: [
+            {
+              write(level, attrs, msg) {
+                level = level === 'trace' ? 'debug' : level;
+                yoga.logger[level](msg, attrs);
+              },
+            },
+          ],
         });
+
+      pluginLogger = log.child('[useOpenTelemetry]');
+
+      if (options.configureDiagLogger !== false) {
+        const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
+        if (logLevel) {
+          const diagLog = pluginLogger.child('[diag] ') as Logger & {
+            verbose: Logger['trace'];
+          };
+          diagLog.verbose = diagLog.trace;
+          diag.setLogger(diagLog, logLevel);
+        }
       }
 
       pluginLogger.debug(
