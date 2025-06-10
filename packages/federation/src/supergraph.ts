@@ -1269,15 +1269,17 @@ export function getStitchingOptionsFromSupergraphSdl(
             'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
         },
       }),
-      resolveType: (source: { [nodeIdField]: string }) => {
-        // TODO: check when runs and with what source, do some logging
-        return fromGlobalId(source[nodeIdField]).type;
-      },
+      // NOTE: resolve type from the nodeId is not necessary because Query.node will do that
+      resolveType: ({ __typename }: { __typename: string }) => __typename,
     });
 
     const types = new Map<
       string,
-      { object: GraphQLObjectType; keyFieldNames: string[] }
+      {
+        object: GraphQLObjectType;
+        keySelectionSet: string;
+        keyFieldNames: string[];
+      }
     >();
     for (const [subgraphName, typeNameKeys] of typeNameKeysBySubgraphMap) {
       typeNames: for (const [typeName, keys] of typeNameKeys) {
@@ -1339,19 +1341,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 description:
                   'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
                 type: new GraphQLNonNull(GraphQLID),
-                resolve: (source) => {
-                  if (keyFieldNames.length === 1) {
-                    // single field key
-                    return toGlobalId(typeName, source[keyFieldNames[0]!]);
-                  }
-                  // multiple fields key
-                  const fields: Record<string, unknown> = {};
-                  for (const fieldName of keyFieldNames) {
-                    // loop is faster than reduce
-                    fields[fieldName] = source[fieldName];
-                  }
-                  return toGlobalId(typeName, JSON.stringify(fields));
-                },
+                // NOTE: resolve function is not necessary here because Query.node will provide all fields
               },
               ...keyFieldNames.reduce(
                 (acc, fieldName) => {
@@ -1364,8 +1354,8 @@ export function getStitchingOptionsFromSupergraphSdl(
                   return {
                     ...acc,
                     [fieldName]: {
-                      // TODO: copy other field config from subgraph type? necessary?
                       type: fieldInSubgraph.type,
+                      // NOTE: resolve function is not necessary for the rest of fields because this subgraph will never resolve them
                     },
                   };
                 },
@@ -1374,13 +1364,50 @@ export function getStitchingOptionsFromSupergraphSdl(
             }),
           });
 
-          types.set(typeName, { object, keyFieldNames });
+          types.set(typeName, {
+            object,
+            keySelectionSet: `{ ${key} }`,
+            keyFieldNames,
+          });
         }
       }
     }
 
     const globalObjectIdentSubschema: SubschemaConfig = {
+      // TODO: make sure there is no conflict with other subschemas
       name: 'global-object-identification',
+      merge: {
+        ...types.entries().reduce(
+          (acc, [typeName, { keySelectionSet, keyFieldNames }]) => ({
+            ...acc,
+            [typeName]: {
+              fieldName: 'node',
+              selectionSet: keySelectionSet,
+              args: (source) => {
+                if (keyFieldNames.length === 1) {
+                  // single field key
+                  return {
+                    [nodeIdField]: toGlobalId(
+                      typeName,
+                      source[keyFieldNames[0]!],
+                    ),
+                  };
+                }
+                // multiple fields key
+                const fields: Record<string, unknown> = {};
+                for (const fieldName of keyFieldNames) {
+                  // loop is faster than reduce
+                  fields[fieldName] = source[fieldName];
+                }
+                return {
+                  [nodeIdField]: toGlobalId(typeName, JSON.stringify(fields)),
+                };
+              },
+            },
+          }),
+          {} as Record<string, MergedTypeConfig>,
+        ),
+      },
       schema: new GraphQLSchema({
         types: types
           .values()
