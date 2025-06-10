@@ -41,12 +41,8 @@ import {
   EnumValueDefinitionNode,
   FieldDefinitionNode,
   FieldNode,
-  GraphQLFieldConfig,
   GraphQLFieldResolver,
-  GraphQLID,
   GraphQLInterfaceType,
-  GraphQLNonNull,
-  GraphQLObjectType,
   GraphQLOutputType,
   GraphQLSchema,
   InputValueDefinitionNode,
@@ -71,7 +67,10 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
-import { fromGlobalId, toGlobalId } from 'graphql-relay';
+import {
+  createNodeDefinitions,
+  createResolvers,
+} from './globalObjectIdentification.js';
 import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
@@ -872,7 +871,9 @@ export function getStitchingOptionsFromSupergraphSdl(
           mergedTypeConfig.canonical = true;
         }
 
-        function getMergedTypeConfigFromKey(key: string) {
+        function getMergedTypeConfigFromKey(
+          key: string,
+        ): MergedTypeConfigFromEntities {
           return {
             selectionSet: `{ ${key} }`,
             argsFromKeys: getArgsFromKeysForFederation,
@@ -1257,221 +1258,6 @@ export function getStitchingOptionsFromSupergraphSdl(
     subschemas.push(subschemaConfig);
   }
 
-  if (opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size) {
-    const nodeIdField = 'nodeId';
-
-    const nodeInterface = new GraphQLInterfaceType({
-      name: 'Node',
-      fields: () => ({
-        [nodeIdField]: {
-          type: new GraphQLNonNull(GraphQLID),
-          description:
-            'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
-        },
-      }),
-      // NOTE: resolve type from the nodeId is not necessary because Query.node will do that
-      resolveType: ({ __typename }: { __typename: string }) => __typename,
-    });
-
-    const types = new Map<
-      string,
-      {
-        object: GraphQLObjectType;
-        keySelectionSet: string;
-        keyFieldNames: string[];
-      }
-    >();
-    for (const [subgraphName, typeNameKeys] of typeNameKeysBySubgraphMap) {
-      typeNames: for (const [typeName, keys] of typeNameKeys) {
-        for (const key of keys.sort(
-          (a, b) =>
-            // sort by shorter keys first
-            // TODO: respect canonical keys
-            a.length - b.length,
-        )) {
-          if (types.has(typeName)) {
-            // type already constructed to be resolved by global object identification
-            // with the best key, skip it in all other occurrences
-            continue typeNames;
-          }
-
-          if (
-            // the key for fetching this object contains other objects
-            key.includes('{') ||
-            // the key for fetching this object contains arguments
-            key.includes('(')
-          ) {
-            // it's too complex to use global object identification
-            // TODO: do it anyways when need arises
-            continue;
-          }
-          if (key.includes(':')) {
-            throw new Error(
-              'Aliases in @key fields are not supported by Global Object Identification yet.',
-            );
-          }
-
-          // what we're left in the "key" are simple field(s) like "id" or "email"
-          const keyFieldNames = key.trim().split(/\s+/);
-          if (keyFieldNames.includes(nodeIdField)) {
-            throw new Error(
-              `The field "${nodeIdField}" is reserved for Global Object Identification and cannot be used in @key fields for type "${typeName}".`,
-            );
-          }
-
-          const schema = subschemas.find(
-            (s) => s.name === subgraphName,
-          )?.schema;
-          if (!schema) {
-            throw new Error(
-              `Subgraph "${subgraphName}" not found for Global Object Identification.`,
-            );
-          }
-
-          const objectInSubgraph = schema.getType(
-            typeName,
-          ) as GraphQLObjectType;
-          const fieldsOfObjectInSubgraph = objectInSubgraph.getFields();
-
-          const object = new GraphQLObjectType({
-            name: typeName,
-            interfaces: [nodeInterface],
-            fields: () => ({
-              [nodeIdField]: {
-                description:
-                  'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
-                type: new GraphQLNonNull(GraphQLID),
-                // NOTE: resolve function is not necessary here because Query.node will provide all fields
-              },
-              ...keyFieldNames.reduce(
-                (acc, fieldName) => {
-                  const fieldInSubgraph = fieldsOfObjectInSubgraph[fieldName];
-                  if (!fieldInSubgraph) {
-                    throw new Error(
-                      `Field "${fieldName}" not found in type "${typeName}" in subgraph "${subgraphName}".`,
-                    );
-                  }
-                  return {
-                    ...acc,
-                    [fieldName]: {
-                      type: fieldInSubgraph.type,
-                      // NOTE: resolve function is not necessary for the rest of fields because this subgraph will never resolve them
-                    },
-                  };
-                },
-                {} as Record<string, GraphQLFieldConfig<unknown, unknown>>,
-              ),
-            }),
-          });
-
-          types.set(typeName, {
-            object,
-            keySelectionSet: `{ ${key} }`,
-            keyFieldNames,
-          });
-        }
-      }
-    }
-
-    const globalObjectIdentSubschema: SubschemaConfig = {
-      // TODO: make sure there is no conflict with other subschemas
-      name: 'global-object-identification',
-      merge: {
-        ...types.entries().reduce(
-          (acc, [typeName, { keySelectionSet, keyFieldNames }]) => ({
-            ...acc,
-            [typeName]: {
-              fieldName: 'node',
-              selectionSet: keySelectionSet,
-              args: (source) => {
-                if (keyFieldNames.length === 1) {
-                  // single field key
-                  return {
-                    [nodeIdField]: toGlobalId(
-                      typeName,
-                      source[keyFieldNames[0]!],
-                    ),
-                  };
-                }
-                // multiple fields key
-                const fields: Record<string, unknown> = {};
-                for (const fieldName of keyFieldNames) {
-                  // loop is faster than reduce
-                  fields[fieldName] = source[fieldName];
-                }
-                return {
-                  [nodeIdField]: toGlobalId(typeName, JSON.stringify(fields)),
-                };
-              },
-            },
-          }),
-          {} as Record<string, MergedTypeConfig>,
-        ),
-      },
-      schema: new GraphQLSchema({
-        types: types
-          .values()
-          .map(({ object }) => object)
-          .toArray(),
-        query: new GraphQLObjectType({
-          name: 'Query',
-          fields: () => ({
-            // TODO: nodes(ids: [ID!]!): [Node!]!
-            node: {
-              type: nodeInterface,
-              description: 'Fetches an object given its globally unique `ID`.',
-              args: {
-                [nodeIdField]: {
-                  type: new GraphQLNonNull(GraphQLID),
-                  description: 'The globally unique `ID`.',
-                },
-              },
-              resolve: (_source, args: { [nodeIdField]: string }) => {
-                const nodeId = args[nodeIdField];
-                const { id: idOrFields, type } = fromGlobalId(
-                  args[nodeIdField],
-                );
-                if (!idOrFields || !type) {
-                  return null;
-                }
-                const { keyFieldNames } = types.get(type) || {};
-                if (!keyFieldNames) {
-                  return null;
-                }
-                if (keyFieldNames.length === 1) {
-                  // single field key
-                  return {
-                    __typename: type,
-                    [nodeIdField]: nodeId,
-                    [keyFieldNames[0]!]: idOrFields,
-                  };
-                }
-                // multiple fields key
-                try {
-                  const fields: Record<string, unknown> = {};
-                  const idFields = JSON.parse(idOrFields);
-                  for (const fieldName of keyFieldNames) {
-                    // loop is faster than reduce
-                    fields[fieldName] = idFields[fieldName];
-                  }
-                  return {
-                    __typename: type,
-                    [nodeIdField]: nodeId,
-                    ...fields,
-                  };
-                } catch {
-                  return null;
-                }
-              },
-            },
-          }),
-        }),
-      }),
-    };
-
-    subschemas.push(globalObjectIdentSubschema);
-  }
-
   const defaultMerger = getDefaultFieldConfigMerger(true);
   const fieldConfigMerger: TypeMergingOptions['fieldConfigMerger'] = function (
     candidates: MergeFieldConfigCandidate[],
@@ -1759,20 +1545,35 @@ export function getStitchingOptionsFromSupergraphSdl(
       extraDefinitions.push(definition);
     }
   }
-  const additionalTypeDefs: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: extraDefinitions,
-  };
   if (opts.onSubschemaConfig) {
     for (const subschema of subschemas) {
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
+  const shouldGlobalObjectIdent =
+    opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size;
   return {
     subschemas,
-    typeDefs: additionalTypeDefs,
+    typeDefs: {
+      kind: Kind.DOCUMENT,
+      definitions: !shouldGlobalObjectIdent
+        ? extraDefinitions
+        : [
+            ...extraDefinitions,
+            ...createNodeDefinitions({
+              nodeIdField: 'nodeId',
+              subschemas,
+            }),
+          ],
+    } as DocumentNode,
     assumeValid: true,
     assumeValidSDL: true,
+    resolvers: !shouldGlobalObjectIdent
+      ? undefined
+      : createResolvers({
+          nodeIdField: 'nodeId',
+          subschemas,
+        }),
     typeMergingOptions: {
       useNonNullableFieldOnConflict: true,
       validationSettings: {
@@ -1946,3 +1747,10 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
   }
   return null;
 }
+
+export type MergedTypeConfigFromEntities = Required<
+  Pick<
+    MergedTypeConfig,
+    'selectionSet' | 'argsFromKeys' | 'key' | 'fieldName' | 'dataLoaderOptions'
+  >
+>;
