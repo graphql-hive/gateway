@@ -90,6 +90,7 @@
     "@opentelemetry/propagator-b3": "^2.0.1",
     "@opentelemetry/propagator-jaeger": "^2.0.1",
     "@opentelemetry/sampler-jaeger-remote": "^0.202.0",
+    "@opentelemetry/sdk-metrics-base": "^0.31.0",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "graphql-ws": "^6.0.4",
