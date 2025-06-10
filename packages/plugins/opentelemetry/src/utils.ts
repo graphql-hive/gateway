@@ -1,4 +1,4 @@
-import { context } from '@opentelemetry/api';
+import { context, diag, DiagLogLevel } from '@opentelemetry/api';
 
 export async function tryContextManagerSetup(
   useContextManager: true | undefined,
@@ -37,3 +37,30 @@ export const getEnvVar =
     ? <T>(name: string, defaultValue: T): string | T =>
         process.env[name] || defaultValue
     : <T>(_name: string, defaultValue: T): string | T => defaultValue;
+
+const logLevelMap: Record<string, DiagLogLevel> = {
+  ALL: DiagLogLevel.ALL,
+  VERBOSE: DiagLogLevel.VERBOSE,
+  DEBUG: DiagLogLevel.DEBUG,
+  INFO: DiagLogLevel.INFO,
+  WARN: DiagLogLevel.WARN,
+  ERROR: DiagLogLevel.ERROR,
+  NONE: DiagLogLevel.NONE,
+};
+
+export function diagLogLevelFromEnv(): DiagLogLevel | undefined {
+  const value = getEnvVar('OTEL_LOG_LEVEL', null);
+
+  if (value == null) {
+    return undefined;
+  }
+
+  const resolvedLogLevel = logLevelMap[value.toUpperCase()];
+  if (resolvedLogLevel == null) {
+    diag.warn(
+      `Unknown log level "${value}", expected one of ${Object.keys(logLevelMap)}, using default`,
+    );
+    return DiagLogLevel.INFO;
+  }
+  return resolvedLogLevel;
+}
