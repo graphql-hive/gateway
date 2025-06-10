@@ -1,9 +1,11 @@
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
-import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import { trace } from '@opentelemetry/api';
-import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import { resourceFromAttributes } from '@opentelemetry/resources';
+import {
+  getNodeAutoInstrumentations,
+  getResourceDetectors,
+} from '@opentelemetry/auto-instrumentations-node';
+import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -30,14 +32,22 @@ const { OTLPTraceExporter } =
     ? await import(`@opentelemetry/exporter-trace-otlp-http`)
     : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
 
-opentelemetrySetup({
-  contextManager: new AsyncLocalStorageContextManager(),
-  resource: resourceFromAttributes({ 'custom.resource': 'custom value' }),
-  traces: {
-    exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
-    batching: { maxExportBatchSize: 1, scheduledDelayMillis: 1 },
-  },
+const sdk = new NodeSDK({
+  // Use spanProcessor instead of spanExporter to remove batching for test speed
+  spanProcessors: [
+    new tracing.SimpleSpanProcessor(
+      new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
+    ),
+  ],
+  resource: resources.resourceFromAttributes({
+    'custom.resource': 'custom value',
+  }),
+  instrumentations: getNodeAutoInstrumentations(),
+  resourceDetectors: getResourceDetectors(),
 });
+
+sdk.start();
+['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {

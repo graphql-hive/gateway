@@ -36,14 +36,26 @@ type JaegerTracesApiResponse = {
   data: Array<{
     traceID: string;
     spans: JaegerTraceSpan[];
+    processes: { [key: string]: JaegerTraceResource };
   }>;
+};
+
+type JaegerTraceTag = {
+  key: string;
+  type: string;
+  value: string;
+};
+
+type JaegerTraceResource = {
+  serviceName: string;
+  tags: JaegerTraceTag[];
 };
 
 type JaegerTraceSpan = {
   traceID: string;
   spanID: string;
   operationName: string;
-  tags: Array<{ key: string; value: string; type: string }>;
+  tags: Array<JaegerTraceTag>;
   references: Array<{ refType: string; spanID: string; traceID: string }>;
 };
 
@@ -612,6 +624,26 @@ describe('OpenTelemetry', () => {
           const relevantTrace = relevantTraces[0];
           expect(relevantTrace).toBeDefined();
           expect(relevantTrace!.spans.length).toBe(20);
+
+          const resource = relevantTrace!.processes['p1'];
+          expect(resource).toBeDefined();
+
+          const tags = resource!.tags.map(({ key, value }) => ({ key, value }));
+          const tagKeys = resource!.tags.map(({ key }) => key);
+          expect(resource!.serviceName).toBe(serviceName);
+          [
+            ['custom.resource', 'custom value'],
+            ['os.type', 'linux'],
+            ['process.owner', 'node'],
+            ['otel.library.name', 'gateway'],
+          ].forEach(([key, value]) => {
+            return expect(tags).toContainEqual({ key, value });
+          });
+          ['host.arch', 'container.id', 'service.instance.id'].forEach(
+            (key) => {
+              return expect(tagKeys).toContain(key);
+            },
+          );
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
