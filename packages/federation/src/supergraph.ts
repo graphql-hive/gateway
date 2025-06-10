@@ -16,7 +16,6 @@ import {
   buildHTTPExecutor,
   HTTPExecutorOptions,
 } from '@graphql-tools/executor-http';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import {
   calculateSelectionScore,
   getDefaultFieldConfigMerger,
@@ -72,12 +71,7 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
-import {
-  fromGlobalId,
-  globalIdField,
-  nodeDefinitions,
-  toGlobalId,
-} from 'graphql-relay';
+import { fromGlobalId, toGlobalId } from 'graphql-relay';
 import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
@@ -1281,7 +1275,10 @@ export function getStitchingOptionsFromSupergraphSdl(
       },
     });
 
-    const types = new Map<string, GraphQLObjectType>();
+    const types = new Map<
+      string,
+      { object: GraphQLObjectType; keyFieldNames: string[] }
+    >();
     for (const [subgraphName, typeNameKeys] of typeNameKeysBySubgraphMap) {
       typeNames: for (const [typeName, keys] of typeNameKeys) {
         for (const key of keys.sort(
@@ -1297,9 +1294,9 @@ export function getStitchingOptionsFromSupergraphSdl(
           }
 
           if (
-            // the key for fetching this object contains other objects,
+            // the key for fetching this object contains other objects
             key.includes('{') ||
-            // the key for fetching this object contains arguments,
+            // the key for fetching this object contains arguments
             key.includes('(')
           ) {
             // it's too complex to use global object identification
@@ -1313,8 +1310,8 @@ export function getStitchingOptionsFromSupergraphSdl(
           }
 
           // what we're left in the "key" are simple field(s) like "id" or "email"
-          const fieldNames = key.trim().split(/\s+/);
-          if (fieldNames.includes(nodeIdField)) {
+          const keyFieldNames = key.trim().split(/\s+/);
+          if (keyFieldNames.includes(nodeIdField)) {
             throw new Error(
               `The field "${nodeIdField}" is reserved for Global Object Identification and cannot be used in @key fields for type "${typeName}".`,
             );
@@ -1334,7 +1331,6 @@ export function getStitchingOptionsFromSupergraphSdl(
           ) as GraphQLObjectType;
           const fieldsOfObjectInSubgraph = objectInSubgraph.getFields();
 
-          // TODO: distinct types with least keys (or respect canonical)
           const object = new GraphQLObjectType({
             name: typeName,
             interfaces: [nodeInterface],
@@ -1343,14 +1339,21 @@ export function getStitchingOptionsFromSupergraphSdl(
                 description:
                   'A globally unique identifier. Can be used in various places throughout the system to identify this single value.',
                 type: new GraphQLNonNull(GraphQLID),
-                resolve: (source) =>
-                  toGlobalId(
-                    typeName,
-                    // TODO: use keys
-                    source.id,
-                  ),
+                resolve: (source) => {
+                  if (keyFieldNames.length === 1) {
+                    // single field key
+                    return toGlobalId(typeName, source[keyFieldNames[0]!]);
+                  }
+                  // multiple fields key
+                  const fields: Record<string, unknown> = {};
+                  for (const fieldName of keyFieldNames) {
+                    // loop is faster than reduce
+                    fields[fieldName] = source[fieldName];
+                  }
+                  return toGlobalId(typeName, JSON.stringify(fields));
+                },
               },
-              ...fieldNames.reduce(
+              ...keyFieldNames.reduce(
                 (acc, fieldName) => {
                   const fieldInSubgraph = fieldsOfObjectInSubgraph[fieldName];
                   if (!fieldInSubgraph) {
@@ -1361,7 +1364,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                   return {
                     ...acc,
                     [fieldName]: {
-                      // TODO: other config? necessary?
+                      // TODO: copy other field config from subgraph type? necessary?
                       type: fieldInSubgraph.type,
                     },
                   };
@@ -1371,7 +1374,7 @@ export function getStitchingOptionsFromSupergraphSdl(
             }),
           });
 
-          types.set(typeName, object);
+          types.set(typeName, { object, keyFieldNames });
         }
       }
     }
@@ -1379,10 +1382,14 @@ export function getStitchingOptionsFromSupergraphSdl(
     const globalObjectIdentSubschema: SubschemaConfig = {
       name: 'global-object-identification',
       schema: new GraphQLSchema({
-        types: types.values().toArray(),
+        types: types
+          .values()
+          .map(({ object }) => object)
+          .toArray(),
         query: new GraphQLObjectType({
           name: 'Query',
           fields: () => ({
+            // TODO: nodes(ids: [ID!]!): [Node!]!
             node: {
               type: nodeInterface,
               description: 'Fetches an object given its globally unique `ID`.',
@@ -1394,19 +1401,42 @@ export function getStitchingOptionsFromSupergraphSdl(
               },
               resolve: (_source, args: { [nodeIdField]: string }) => {
                 const nodeId = args[nodeIdField];
-                const { id, type } = fromGlobalId(args[nodeIdField]);
-                if (!type) {
+                const { id: idOrFields, type } = fromGlobalId(
+                  args[nodeIdField],
+                );
+                if (!idOrFields || !type) {
                   return null;
                 }
-                return {
-                  __typename: type,
-                  [nodeIdField]: nodeId,
-                  // TODO: as keys
-                  id,
-                };
+                const { keyFieldNames } = types.get(type) || {};
+                if (!keyFieldNames) {
+                  return null;
+                }
+                if (keyFieldNames.length === 1) {
+                  // single field key
+                  return {
+                    __typename: type,
+                    [nodeIdField]: nodeId,
+                    [keyFieldNames[0]!]: idOrFields,
+                  };
+                }
+                // multiple fields key
+                try {
+                  const fields: Record<string, unknown> = {};
+                  const idFields = JSON.parse(idOrFields);
+                  for (const fieldName of keyFieldNames) {
+                    // loop is faster than reduce
+                    fields[fieldName] = idFields[fieldName];
+                  }
+                  return {
+                    __typename: type,
+                    [nodeIdField]: nodeId,
+                    ...fields,
+                  };
+                } catch {
+                  return null;
+                }
               },
             },
-            // TODO: nodes
           }),
         }),
       }),
