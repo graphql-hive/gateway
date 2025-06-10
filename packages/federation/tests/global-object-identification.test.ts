@@ -118,4 +118,44 @@ describe('Global Object Identification', () => {
       }
     `);
   });
+
+  it('should resolve node id from object', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        people,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+            {
+              people {
+                nodeId
+                id
+                name
+                email
+              }
+            }
+          `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "people": [
+            {
+              "email": "john@doe.com",
+              "id": "a1",
+              "name": "John Doe",
+              "nodeId": "UGVyc29uOmEx",
+            },
+          ],
+        },
+      }
+    `);
+  });
 });
