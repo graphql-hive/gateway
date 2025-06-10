@@ -105,9 +105,6 @@ const deps = {
 
       // Context Managers
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
-
-      // Cross-runtime tracing SDK
-      ['sdk-trace-web'],
     ].map(([otelPackage, buildDir = 'esm']) => [
       `node_modules/@opentelemetry/${otelPackage}/index`,
       `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
