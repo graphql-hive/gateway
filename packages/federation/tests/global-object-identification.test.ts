@@ -17,12 +17,12 @@ describe('Global Object Identification', () => {
     ],
   };
 
-  const people = buildSubgraphSchema({
+  const accounts = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Query {
-        people: [Person!]!
+        accounts: [Account!]!
       }
-      type Person @key(fields: "id") {
+      type Account @key(fields: "id") {
         id: ID!
         name: String!
         email: String!
@@ -30,9 +30,9 @@ describe('Global Object Identification', () => {
     `),
     resolvers: {
       Query: {
-        people: () => data.accounts,
+        accounts: () => data.accounts,
       },
-      Person: {
+      Account: {
         __resolveReference: (ref) => data.accounts.find((a) => a.id === ref.id),
       },
     },
@@ -42,7 +42,7 @@ describe('Global Object Identification', () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
-        people,
+        accounts,
       },
     });
 
@@ -52,7 +52,7 @@ describe('Global Object Identification', () => {
       }
 
       type Query {
-        people: [Person!]!
+        accounts: [Account!]!
         """Fetches an object given its globally unique \`ID\`."""
         node(
           """The globally unique \`ID\`."""
@@ -60,7 +60,7 @@ describe('Global Object Identification', () => {
         ): Node
       }
 
-      type Person implements Node {
+      type Account implements Node {
         id: ID!
         name: String!
         email: String!
@@ -83,7 +83,7 @@ describe('Global Object Identification', () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
-        people,
+        accounts,
       },
     });
 
@@ -93,9 +93,9 @@ describe('Global Object Identification', () => {
           schema,
           document: parse(/* GraphQL */ `
         {
-          node(nodeId: "${toGlobalId('Person', 'a1')}") {
+          node(nodeId: "${toGlobalId('Account', 'a1')}") {
             nodeId
-            ... on Person {
+            ... on Account {
               id
               name
               email
@@ -112,7 +112,7 @@ describe('Global Object Identification', () => {
             "email": "john@doe.com",
             "id": "a1",
             "name": "John Doe",
-            "nodeId": "UGVyc29uOmEx",
+            "nodeId": "QWNjb3VudDphMQ==",
           },
         },
       }
@@ -123,7 +123,7 @@ describe('Global Object Identification', () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
-        people,
+        accounts,
       },
     });
 
@@ -133,7 +133,7 @@ describe('Global Object Identification', () => {
           schema,
           document: parse(/* GraphQL */ `
             {
-              people {
+              accounts {
                 nodeId
                 id
                 name
@@ -146,12 +146,12 @@ describe('Global Object Identification', () => {
     ).resolves.toMatchInlineSnapshot(`
       {
         "data": {
-          "people": [
+          "accounts": [
             {
               "email": "john@doe.com",
               "id": "a1",
               "name": "John Doe",
-              "nodeId": "UGVyc29uOmEx",
+              "nodeId": "QWNjb3VudDphMQ==",
             },
           ],
         },
