@@ -12,3 +12,4 @@ dependencies updates:
 - Added dependency [`@opentelemetry/propagator-b3@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.0.1) (to `dependencies`)
 - Added dependency [`@opentelemetry/propagator-jaeger@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.0.1) (to `dependencies`)
 - Added dependency [`@opentelemetry/sampler-jaeger-remote@^0.202.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.202.0) (to `dependencies`)
+- Added dependency [`@opentelemetry/sdk-metrics-base@^0.31.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics-base/v/0.31.0) (to `dependencies`)
