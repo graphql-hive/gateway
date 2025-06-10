@@ -72,7 +72,6 @@ it.skipIf(
     });
     await pushSchema(compositionWithStuck.result);
     const gw = await service('gateway-fastify', {
-      pipeLogs: 'gw.out',
       env: {
         OTLP_EXPORTER_URL: `http://0.0.0.0:${jaeger.port}/v1/traces`,
       },
