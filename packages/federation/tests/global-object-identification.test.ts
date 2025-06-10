@@ -17,7 +17,7 @@ describe('Global Object Identification', () => {
     ],
   };
 
-  const accounts = buildSubgraphSchema({
+  const people = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Query {
         people: [Person!]!
@@ -29,6 +29,9 @@ describe('Global Object Identification', () => {
       }
     `),
     resolvers: {
+      Query: {
+        people: () => data.accounts,
+      },
       Person: {
         __resolveReference: (ref) => data.accounts.find((a) => a.id === ref.id),
       },
@@ -39,7 +42,7 @@ describe('Global Object Identification', () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
-        accounts,
+        people,
       },
     });
 
@@ -80,7 +83,7 @@ describe('Global Object Identification', () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
-        accounts,
+        people,
       },
     });
 
