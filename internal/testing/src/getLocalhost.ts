@@ -8,11 +8,11 @@ export async function getLocalhost(
   protocol = 'http',
 ): Promise<string> {
   const timeoutSignal = AbortSignal.timeout(5000);
-  console.log(`getLocalhost(port): Trying ${protocol} on port ${port}`);
   while (!timeoutSignal.aborted) {
     for (const hostname of hostnames) {
       const url = `${protocol}://${hostname}:${port}`;
       if (isDebug()) {
+        console.log(`getLocalhost(port): Trying ${protocol} on port ${port}`);
       }
       try {
         await fetch(url, { signal: timeoutSignal });

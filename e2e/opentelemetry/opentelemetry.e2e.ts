@@ -633,17 +633,28 @@ describe('OpenTelemetry', () => {
           expect(resource!.serviceName).toBe(serviceName);
           [
             ['custom.resource', 'custom value'],
-            ['os.type', 'linux'],
-            ['process.owner', 'node'],
             ['otel.library.name', 'gateway'],
           ].forEach(([key, value]) => {
             return expect(tags).toContainEqual({ key, value });
           });
-          ['host.arch', 'container.id', 'service.instance.id'].forEach(
-            (key) => {
+
+          if (
+            process.env['E2E_GATEWAY_RUNNER'] === 'node' ||
+            process.env['E2E_GATEWAY_RUNNER'] === 'docker'
+          ) {
+            const expectedTags = [
+              'process.owner',
+              'host.arch',
+              'os.type',
+              'service.instance.id',
+            ];
+            if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+              expectedTags.push('container.id');
+            }
+            expectedTags.forEach((key) => {
               return expect(tagKeys).toContain(key);
-            },
-          );
+            });
+          }
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();

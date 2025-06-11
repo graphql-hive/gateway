@@ -1,4 +1,5 @@
 import {
+  Attributes,
   getRetryInfo,
   isRetryExecutionRequest,
   Logger,
@@ -16,6 +17,7 @@ import {
   type TextMapGetter,
   type Tracer,
 } from '@opentelemetry/api';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import { OtelContextStack } from './context';
 import {
@@ -647,6 +649,7 @@ export function useOpenTelemetry(
           };
           diagLog.verbose = diagLog.trace;
           diag.setLogger(diagLog, logLevel);
+          setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
         }
       }
 
