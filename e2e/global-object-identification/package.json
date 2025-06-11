@@ -1,0 +1,7 @@
+{
+  "name": "@e2e/global-object-identification",
+  "private": true,
+  "dependencies": {
+    "graphql-relay": "^0.10.2"
+  }
+}
