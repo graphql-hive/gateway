@@ -484,8 +484,6 @@ describe('useOpenTelemetry', () => {
 
       const descendants = schemaSpan.descendants.map(({ name }) => name);
 
-      console.log(spanExporter.toString());
-
       expect(descendants).toEqual([
         'gateway.schema',
         'subgraph.execute (upstream)',
