@@ -726,6 +726,7 @@ export function createGatewayRuntime<
       additionalResolvers: config.additionalResolvers as IResolvers[],
       instrumentation: () => instrumentation,
       batch: config.__experimental__batchDelegation,
+      globalObjectIdentification: config.globalObjectIdentification,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {

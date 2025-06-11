@@ -159,6 +159,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
   logger,
+  globalObjectIdentification,
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -273,6 +274,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         },
       });
     },
+    globalObjectIdentification,
   });
   const inContextSDK = getInContextSDK(
     executableUnifiedGraph,
