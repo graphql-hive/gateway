@@ -322,9 +322,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:^0.32.1":
-  version: 0.32.1
-  resolution: "@apollo/rover@npm:0.32.1"
+"@apollo/rover@npm:^0.33.0":
+  version: 0.33.0
+  resolution: "@apollo/rover@npm:0.33.0"
   dependencies:
     axios: "npm:^1.6.5"
     axios-proxy-builder: "npm:^0.1.1"
@@ -333,7 +333,7 @@ __metadata:
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/606ae374300189cb5b3838cb2006f97c38efe1b2feb2d1424e5c5dd9735b2814136d47bf656da4b76a8eee4954e7186d0e652b291c91cc92aca897a7f1fba49a
+  checksum: 10c0/b6c591485135c7758f6bfde9acc33e95ea907bdc96a51b0fa82a30693d2a44fa3b7b9adf518d23104f46adbc339fba3f4e0a27e813060676903e908c43f0fc2b
   languageName: node
   linkType: hard
 
@@ -2828,37 +2828,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-64@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250525.0"
+"@cloudflare/workerd-darwin-64@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250604.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-arm64@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250525.0"
+"@cloudflare/workerd-darwin-arm64@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250604.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-64@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "@cloudflare/workerd-linux-64@npm:1.20250525.0"
+"@cloudflare/workerd-linux-64@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "@cloudflare/workerd-linux-64@npm:1.20250604.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-arm64@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250525.0"
+"@cloudflare/workerd-linux-arm64@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250604.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-windows-64@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "@cloudflare/workerd-windows-64@npm:1.20250525.0"
+"@cloudflare/workerd-windows-64@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "@cloudflare/workerd-windows-64@npm:1.20250604.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -2928,7 +2928,7 @@ __metadata:
   resolution: "@e2e/auto-type-merging@workspace:e2e/auto-type-merging"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.5"
     tslib: "npm:^2.8.1"
@@ -2955,7 +2955,7 @@ __metadata:
     "@cloudflare/workers-types": "npm:^4.20250610.0"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.9.0"
-    wrangler: "npm:^4.19.1"
+    wrangler: "npm:^4.19.2"
   languageName: unknown
   linkType: soft
 
@@ -3019,7 +3019,7 @@ __metadata:
     "@apollo/server": "npm:^4.12.2"
     "@apollo/subgraph": "npm:^2.11.0"
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     tslib: "npm:^2.8.1"
@@ -3168,7 +3168,7 @@ __metadata:
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
     "@graphql-mesh/transport-rest": "npm:^0.9.0"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
   languageName: unknown
@@ -3179,7 +3179,7 @@ __metadata:
   resolution: "@e2e/naming-convention-additional-typedefs@workspace:e2e/naming-convention-additional-typedefs"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:16.11.0"
   languageName: unknown
@@ -3206,7 +3206,7 @@ __metadata:
   resolution: "@e2e/openapi-additional-resolvers@workspace:e2e/openapi-additional-resolvers"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3218,7 +3218,7 @@ __metadata:
   resolution: "@e2e/openapi-arg-rename@workspace:e2e/openapi-arg-rename"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:16.11.0"
     moment: "npm:2.30.1"
     tslib: "npm:^2.8.1"
@@ -3230,7 +3230,7 @@ __metadata:
   resolution: "@e2e/openapi-javascript-wiki@workspace:e2e/openapi-javascript-wiki"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3242,7 +3242,7 @@ __metadata:
   resolution: "@e2e/openapi-min-length@workspace:e2e/openapi-min-length"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3254,7 +3254,7 @@ __metadata:
   resolution: "@e2e/openapi-naming-convention@workspace:e2e/openapi-naming-convention"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3266,7 +3266,7 @@ __metadata:
   resolution: "@e2e/openapi-prune@workspace:e2e/openapi-prune"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3278,7 +3278,7 @@ __metadata:
   resolution: "@e2e/openapi-subgraph@workspace:e2e/openapi-subgraph"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     tslib: "npm:^2.8.1"
@@ -3290,7 +3290,7 @@ __metadata:
   resolution: "@e2e/openapi-subscriptions@workspace:e2e/openapi-subscriptions"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3339,7 +3339,7 @@ __metadata:
   resolution: "@e2e/programmatic-batching-example@workspace:e2e/programmatic-batching"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     fets: "npm:^0.8.4"
     graphql: "npm:16.11.0"
     tslib: "npm:^2.8.1"
@@ -4057,7 +4057,7 @@ __metadata:
     "@graphql-yoga/plugin-csrf-prevention": "npm:^3.13.5"
     "@graphql-yoga/plugin-defer-stream": "npm:^3.13.5"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.13.6"
-    "@omnigraph/openapi": "npm:^0.109.10"
+    "@omnigraph/openapi": "npm:^0.109.11"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^22.15.30"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -5038,7 +5038,7 @@ __metadata:
     extract-files: "npm:13.0.0"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.5"
-    meros: "npm:^1.2.1"
+    meros: "npm:^1.3.1"
     pkgroll: "npm:2.12.2"
     tslib: "npm:^2.8.1"
   peerDependencies:
@@ -5753,7 +5753,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:^0.32.1"
+    "@apollo/rover": "npm:^0.33.0"
     "@babel/parser": "npm:^7.27.5"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -5762,7 +5762,7 @@ __metadata:
     glob: "npm:^11.0.0"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"
-    zod: "npm:^3.25.57"
+    zod: "npm:^3.25.61"
   languageName: unknown
   linkType: soft
 
@@ -6616,9 +6616,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@omnigraph/openapi@npm:^0.109.10":
-  version: 0.109.10
-  resolution: "@omnigraph/openapi@npm:0.109.10"
+"@omnigraph/openapi@npm:^0.109.11":
+  version: 0.109.11
+  resolution: "@omnigraph/openapi@npm:0.109.11"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.8.8"
@@ -6633,7 +6633,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/121bd85b34fc95ee69475699a43c8fe75957e3cd00f42b64a2e8514b942050ab358ad8d2306ae4487cd72ed02393d7d6ccdc74991df8c0702c9fb02fc44efd97
+  checksum: 10c0/c3eb4c7c5c27a8074b56d735621b65207784dcccc9629d27336dd7c4eee778b6d32e4f58a76b18f31c26ca5f0fc543f160caa10bcb7d7c010bb4136839f7e86b
   languageName: node
   linkType: hard
 
@@ -16738,15 +16738,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"meros@npm:^1.2.1":
-  version: 1.3.0
-  resolution: "meros@npm:1.3.0"
+"meros@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "meros@npm:1.3.1"
   peerDependencies:
     "@types/node": ">=13"
   peerDependenciesMeta:
     "@types/node":
       optional: true
-  checksum: 10c0/2cf9a31228ae6441428a750b67beafec062cc0d693942045336dbe6bfb44507e0ca42854a46f483ebd97e4d78cbc31322b3b85f9648b60fa7a4b28fc0f858f51
+  checksum: 10c0/a3af0702b3086fc7394b38af0f35c2abb445b5e486d6810380d60f6ac241fb114b5423eb55898f8b86b73d58c91f6b4e961087f841e8ba86a0538d2ff249e877
   languageName: node
   linkType: hard
 
@@ -16847,9 +16847,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"miniflare@npm:4.20250525.1":
-  version: 4.20250525.1
-  resolution: "miniflare@npm:4.20250525.1"
+"miniflare@npm:4.20250604.0":
+  version: 4.20250604.0
+  resolution: "miniflare@npm:4.20250604.0"
   dependencies:
     "@cspotcode/source-map-support": "npm:0.8.1"
     acorn: "npm:8.14.0"
@@ -16859,13 +16859,13 @@ __metadata:
     sharp: "npm:^0.33.5"
     stoppable: "npm:1.1.0"
     undici: "npm:^5.28.5"
-    workerd: "npm:1.20250525.0"
+    workerd: "npm:1.20250604.0"
     ws: "npm:8.18.0"
     youch: "npm:3.3.4"
     zod: "npm:3.22.3"
   bin:
     miniflare: bootstrap.js
-  checksum: 10c0/898baa0aa2992364f90cb6878b5e1251e6152852dd90d6362c7c1782828f486c795138449fbfcc75438dd43d1c20df5efea07e498a5e9dd1f4a608ae8c5fe021
+  checksum: 10c0/89e7e7c73a3318ac1a6941f5433bc6b1783cc460a6a7975d8ee18adfc98049af0b169aa86048169f38c8c4179d6a6b77c3fde3b37d45c5678d8f692e80c18120
   languageName: node
   linkType: hard
 
@@ -21640,15 +21640,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"workerd@npm:1.20250525.0":
-  version: 1.20250525.0
-  resolution: "workerd@npm:1.20250525.0"
+"workerd@npm:1.20250604.0":
+  version: 1.20250604.0
+  resolution: "workerd@npm:1.20250604.0"
   dependencies:
-    "@cloudflare/workerd-darwin-64": "npm:1.20250525.0"
-    "@cloudflare/workerd-darwin-arm64": "npm:1.20250525.0"
-    "@cloudflare/workerd-linux-64": "npm:1.20250525.0"
-    "@cloudflare/workerd-linux-arm64": "npm:1.20250525.0"
-    "@cloudflare/workerd-windows-64": "npm:1.20250525.0"
+    "@cloudflare/workerd-darwin-64": "npm:1.20250604.0"
+    "@cloudflare/workerd-darwin-arm64": "npm:1.20250604.0"
+    "@cloudflare/workerd-linux-64": "npm:1.20250604.0"
+    "@cloudflare/workerd-linux-arm64": "npm:1.20250604.0"
+    "@cloudflare/workerd-windows-64": "npm:1.20250604.0"
   dependenciesMeta:
     "@cloudflare/workerd-darwin-64":
       optional: true
@@ -21662,25 +21662,25 @@ __metadata:
       optional: true
   bin:
     workerd: bin/workerd
-  checksum: 10c0/09856a4b4865969402d3890fb4e80387d5f8e9018f2c234c9703b5eecac30317a5d573671869b7d7348c4074dba206977c11bb13139f91c55f4054f23045d7e1
+  checksum: 10c0/e29ef6b3534eac176e362fe68b39dc94ec1576a354ecd65186afe563316e375fb8744680c1590e90b05cdc7a8795188aab5d9058e1c3d3ba54a3b999d8440bc0
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.19.1":
-  version: 4.19.1
-  resolution: "wrangler@npm:4.19.1"
+"wrangler@npm:^4.19.2":
+  version: 4.19.2
+  resolution: "wrangler@npm:4.19.2"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.4.0"
     "@cloudflare/unenv-preset": "npm:2.3.2"
     blake3-wasm: "npm:2.1.5"
     esbuild: "npm:0.25.4"
     fsevents: "npm:~2.3.2"
-    miniflare: "npm:4.20250525.1"
+    miniflare: "npm:4.20250604.0"
     path-to-regexp: "npm:6.3.0"
     unenv: "npm:2.0.0-rc.17"
-    workerd: "npm:1.20250525.0"
+    workerd: "npm:1.20250604.0"
   peerDependencies:
-    "@cloudflare/workers-types": ^4.20250525.0
+    "@cloudflare/workers-types": ^4.20250604.0
   dependenciesMeta:
     fsevents:
       optional: true
@@ -21690,7 +21690,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/ab1162a7afd69b2bff88802245c5f6a33129b3932b13742d9150e9ce2bc450661f8af4356af19efead64d93dcd67524ca9be2eb9e1685bd5fa04998c566b7ea4
+  checksum: 10c0/919f41a450e9a5ee4517fbf3d1a1fdc09e675f55cb23b2fd37bfb32cf6c45796c491ab6996f9b18914baed08d84f259040a1cf03f8240281db78d12db12ac210
   languageName: node
   linkType: hard
 
@@ -21941,9 +21941,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.57":
-  version: 3.25.57
-  resolution: "zod@npm:3.25.57"
-  checksum: 10c0/3b3d98bf31d4ca9ce92e151ec6a69f6d63a9a7e4e74ce2bd0dfac87a1955d77934fc0fd5caf0017c9c9746e86cdcd27c63b0e3378bbf5e8b62ec5833f94395ac
+"zod@npm:^3.25.61":
+  version: 3.25.61
+  resolution: "zod@npm:3.25.61"
+  checksum: 10c0/45386e88c52b5946dbe22c95fe45f3e7c1c90c4fba8cd7b8ce4e6cf0a79c987026990cbb082c54bb2926be35ed49947f351f05b35d6507aa17c23c088a5f4667
   languageName: node
   linkType: hard
