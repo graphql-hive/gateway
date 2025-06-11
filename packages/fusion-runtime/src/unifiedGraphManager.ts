@@ -68,6 +68,7 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
+  globalObjectIdentification?: boolean;
 
   logger?: Logger;
 }
@@ -107,6 +108,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
   instrumentation?: () => Instrumentation | undefined;
 
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
+
+  globalObjectIdentification?: boolean;
 }
 
 export type Instrumentation = {
@@ -137,6 +140,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private lastLoadTime?: number;
   private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
+  private globalObjectIdentification: boolean;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
@@ -152,6 +156,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
       );
     }
+    this.globalObjectIdentification = opts.globalObjectIdentification ?? false;
   }
 
   private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -310,6 +315,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
         logger: this.opts.transportContext?.logger,
+        globalObjectIdentification: this.globalObjectIdentification,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
