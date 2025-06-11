@@ -397,7 +397,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:^2.10.0, @apollo/subgraph@npm:^2.11.0":
+"@apollo/subgraph@npm:^2.11.0":
   version: 2.11.0
   resolution: "@apollo/subgraph@npm:2.11.0"
   dependencies:
@@ -3062,6 +3062,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/global-object-identification@workspace:e2e/global-object-identification":
+  version: 0.0.0-use.local
+  resolution: "@e2e/global-object-identification@workspace:e2e/global-object-identification"
+  dependencies:
+    graphql-relay: "npm:^0.10.2"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown":
   version: 0.0.0-use.local
   resolution: "@e2e/graceful-shutdown@workspace:e2e/graceful-shutdown"
@@ -3353,16 +3361,6 @@ __metadata:
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.4.10"
     graphql: "npm:16.11.0"
-  languageName: unknown
-  linkType: soft
-
-"@e2e/relay-additional-resolvers@workspace:e2e/relay-additional-resolvers":
-  version: 0.0.0-use.local
-  resolution: "@e2e/relay-additional-resolvers@workspace:e2e/relay-additional-resolvers"
-  dependencies:
-    "@apollo/subgraph": "npm:^2.10.0"
-    graphql: "npm:^16.9.0"
-    graphql-sse: "npm:^2.5.3"
   languageName: unknown
   linkType: soft
 
