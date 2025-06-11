@@ -10,7 +10,7 @@ import type {
   SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
-import { mergeTypeDefs } from '@graphql-tools/merge';
+import { mergeResolvers, mergeTypeDefs } from '@graphql-tools/merge';
 import { createMergedTypeResolver } from '@graphql-tools/stitch';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import {
@@ -212,7 +212,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         additionalResolvers,
       );
       // @ts-expect-error - Typings are wrong
-      opts.resolvers = additionalResolvers;
+      opts.resolvers = mergeResolvers(opts.resolvers, additionalResolvers);
       // @ts-expect-error - Typings are wrong
       opts.inheritResolversFromInterfaces = true;
 
