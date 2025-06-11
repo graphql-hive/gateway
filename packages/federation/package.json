@@ -38,6 +38,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
+    "@graphql-tools/batch-delegate": "workspace:^",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/executor": "^1.4.7",
     "@graphql-tools/executor-http": "workspace:^",
