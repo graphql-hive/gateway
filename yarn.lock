@@ -5080,6 +5080,7 @@ __metadata:
     "@apollo/server": "npm:^4.12.2"
     "@apollo/server-gateway-interface": "npm:^1.1.1"
     "@apollo/subgraph": "npm:^2.11.0"
+    "@graphql-tools/batch-delegate": "workspace:^"
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.7"
     "@graphql-tools/executor-http": "workspace:^"
