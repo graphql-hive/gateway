@@ -75,7 +75,6 @@
     "graphql": "16.11.0",
     "ioredis-mock": "patch:ioredis-mock@8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
     "jest-leak-detector": "patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
-    "multer": "2.0.0",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.9",
     "tsx": "patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",
