@@ -4,15 +4,15 @@ import {
   GatewayPlugin,
 } from '@graphql-hive/gateway';
 import { MeshFetch } from '@graphql-mesh/types';
-import { diag, TraceState } from '@opentelemetry/api';
+import { context, diag, trace, TraceState } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import {
+  BasicTracerProvider,
   SimpleSpanProcessor,
   type ReadableSpan,
   type SpanExporter,
 } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
@@ -230,9 +230,9 @@ export type Span = ReadableSpan & {
 };
 
 export const spanExporter = new MockSpanExporter();
-const traceProvider = new WebTracerProvider({
+const traceProvider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
-traceProvider.register({
-  contextManager: new AsyncLocalStorageContextManager(),
-});
+
+trace.setGlobalTracerProvider(traceProvider);
+context.setGlobalContextManager(new AsyncLocalStorageContextManager());

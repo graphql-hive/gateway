@@ -1,7 +1,6 @@
 import {
   context,
   ContextManager,
-  diag,
   propagation,
   TextMapPropagator,
   trace,
@@ -9,7 +8,6 @@ import {
 } from '@opentelemetry/api';
 import {
   CompositePropagator,
-  setGlobalErrorHandler,
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
 } from '@opentelemetry/core';
@@ -75,10 +73,6 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
   if (getEnvVar('OTEL_SDK_DISABLED', false) === 'true') {
     return;
   }
-
-  setGlobalErrorHandler((err) => {
-    diag.error('Uncaught Error', err);
-  });
 
   if (options.traces) {
     if (options.traces.tracerProvider) {
