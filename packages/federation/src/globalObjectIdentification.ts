@@ -62,7 +62,7 @@ export function createNodeDefinitions({
 
   // extend type X implements Node
 
-  for (const { typeName } of getResolveableTypes(subschemas)) {
+  for (const { typeName } of getDistinctResolvableTypes(subschemas)) {
     const typeExtensionDef: ObjectTypeExtensionNode = {
       kind: Kind.OBJECT_TYPE_EXTENSION,
       name: {
@@ -145,22 +145,61 @@ export function createResolvers({
   nodeIdField,
   subschemas,
 }: GlobalObjectIdentificationOptions): IResolvers {
-  const types = getResolveableTypesMap(subschemas);
+  const types = getDistinctResolvableTypes(subschemas).toArray();
   return {
+    ...types.reduce(
+      (resolvers, { typeName, keyFieldNames }) => ({
+        ...resolvers,
+        [typeName]: {
+          [nodeIdField](source) {
+            if (keyFieldNames.length === 1) {
+              // single field key
+              return toGlobalId(typeName, source[keyFieldNames[0]!]);
+            }
+            // multiple fields key
+            const keyFields: Record<string, unknown> = {};
+            for (const fieldName of keyFieldNames) {
+              // loop is faster than reduce
+              keyFields[fieldName] = source[fieldName];
+            }
+            return toGlobalId(typeName, JSON.stringify(keyFields));
+          },
+        },
+      }),
+      {} as Record<string, IResolvers>,
+    ),
     Query: {
       node(_source, { nodeId }, context, info) {
-        const { id, type: typeName } = fromGlobalId(nodeId);
-        const { subschema, merge } = types[typeName] || {};
-        if (!subschema || !merge) {
-          return null;
+        const { id: idOrFields, type: typeName } = fromGlobalId(nodeId);
+        const type = types.find((t) => t.typeName === typeName);
+        if (!type) {
+          return null; // unknown type
         }
-        const { key, selectionSet, ...batchOpts } = merge;
+
+        const keyFields: Record<string, unknown> = {};
+        if (type.keyFieldNames.length === 1) {
+          // single field key
+          keyFields[type.keyFieldNames[0]!] = idOrFields;
+        } else {
+          // multiple fields key
+          try {
+            const idFields = JSON.parse(idOrFields);
+            for (const fieldName of type.keyFieldNames) {
+              // loop is faster than reduce
+              keyFields[fieldName] = idFields[fieldName];
+            }
+          } catch {
+            return null; // invalid JSON i.e. invalid global ID
+          }
+        }
+
         return batchDelegateToSchema({
-          ...batchOpts,
-          schema: subschema,
-          key: { __typename: typeName, id }, // TODO: use keys
+          ...type.merge,
           info,
           context,
+          schema: type.subschema,
+          selectionSet: undefined, // selectionSet is not needed here
+          key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
           valuesFromResults: (results) =>
             // add the nodeId field to the results
             results.map((r: any) =>
@@ -169,17 +208,27 @@ export function createResolvers({
         });
       },
     },
-    Account: {
-      [nodeIdField](source) {
-        return toGlobalId('Account', source.id); // TODO: use keys
-      },
-    },
   };
 }
 
-function* getResolveableTypes(subschemas: Iterable<SubschemaConfig>) {
+function* getDistinctResolvableTypes(subschemas: Iterable<SubschemaConfig>) {
+  const yieldedTypes = new Set<string>();
   for (const subschema of subschemas) {
-    for (const [typeName, merge] of Object.entries(subschema.merge || {})) {
+    // TODO: respect canonical types
+    for (const [typeName, merge] of Object.entries(subschema.merge || {})
+      .filter(
+        // make sure selectionset is defined for the sort to work
+        ([, merge]) => merge.selectionSet,
+      )
+      .sort(
+        // sort by shortest keys first
+        ([, a], [, b]) => a.selectionSet!.length - b.selectionSet!.length,
+      )) {
+      if (yieldedTypes.has(typeName)) {
+        // already yielded this type, all types can only have one resolution
+        continue;
+      }
+
       if (
         !merge.selectionSet ||
         !merge.argsFromKeys ||
@@ -187,27 +236,33 @@ function* getResolveableTypes(subschemas: Iterable<SubschemaConfig>) {
         !merge.fieldName ||
         !merge.dataLoaderOptions
       ) {
+        // cannot be resolved globally
         continue;
       }
-      // TODO: provide the best and shortest path type
+
+      // remove first and last characters from the selection set making up the key (curly braces, `{ id } -> id`)
+      const key = merge.selectionSet.trim().slice(1, -1).trim();
+      if (
+        // the key for fetching this object contains other objects
+        key.includes('{') ||
+        // the key for fetching this object contains arguments
+        key.includes('(') ||
+        // the key contains aliases
+        key.includes(':')
+      ) {
+        // it's too complex to use global object identification
+        // TODO: do it anyways when need arises
+        continue;
+      }
+      // what we're left in the "key" are simple field(s) like "id" or "email"
+
+      yieldedTypes.add(typeName);
       yield {
         typeName,
         subschema,
         merge: merge as MergedTypeConfigFromEntities,
+        keyFieldNames: key.trim().split(/\s+/),
       };
     }
   }
-}
-
-function getResolveableTypesMap(subschemas: Iterable<SubschemaConfig>) {
-  const types: Record<
-    string,
-    { subschema: SubschemaConfig; merge: MergedTypeConfigFromEntities }
-  > = {};
-  for (const { typeName, merge, subschema } of getResolveableTypes(
-    subschemas,
-  )) {
-    types[typeName] = { subschema, merge };
-  }
-  return types;
 }
