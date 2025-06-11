@@ -4,6 +4,7 @@ import { IResolvers } from '@graphql-tools/utils';
 import {
   DefinitionNode,
   FieldDefinitionNode,
+  GraphQLObjectType,
   InterfaceTypeDefinitionNode,
   Kind,
   ObjectTypeExtensionNode,
@@ -198,6 +199,9 @@ export function createResolvers({
           info,
           context,
           schema: type.subschema,
+          returnType: type.subschema.schema.getType(typeName) as
+            | GraphQLObjectType
+            | undefined, // shouldnt ever be undefined
           selectionSet: undefined, // selectionSet is not needed here
           key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
           valuesFromResults: (results) =>
