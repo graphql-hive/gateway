@@ -219,6 +219,40 @@ describe('Global Object Identification', () => {
     `);
   });
 
+  it('should resolve node id without requesting key fields in client query', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        accounts,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+            {
+              accounts {
+                nodeId
+              }
+            }
+          `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "accounts": [
+            {
+              "nodeId": "QWNjb3VudDphMQ==",
+            },
+          ],
+        },
+      }
+    `);
+  });
+
   it('should not resolve single field key object from globally unique node when doesnt exist', async () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
@@ -287,6 +321,43 @@ describe('Global Object Identification', () => {
             "lastName": "Doe",
             "nodeId": "UGVyc29uOnsiZmlyc3ROYW1lIjoiSm9obiIsImxhc3ROYW1lIjoiRG9lIn0=",
           },
+        },
+      }
+    `);
+  });
+
+  it('should resolve node id without requesting key fields in client query', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        people,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+            {
+              people {
+                nodeId
+              }
+            }
+          `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "people": [
+            {
+              "nodeId": "UGVyc29uOnsiZmlyc3ROYW1lIjoiSm9obiIsImxhc3ROYW1lIjoiRG9lIn0=",
+            },
+            {
+              "nodeId": "UGVyc29uOnsiZmlyc3ROYW1lIjoiSmFuZSIsImxhc3ROYW1lIjoiRG9lIn0=",
+            },
+          ],
         },
       }
     `);
