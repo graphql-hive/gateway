@@ -154,6 +154,7 @@ export function createResolvers({
         ...resolvers,
         [typeName]: {
           [nodeIdField]: {
+            selectionSet: `{ ${keyFieldNames.join(' ')} }`,
             resolve(source) {
               if (keyFieldNames.length === 1) {
                 // single field key
