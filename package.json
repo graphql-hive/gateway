@@ -52,7 +52,7 @@
     "prettier": "3.5.3",
     "prettier-plugin-pkg": "0.21.1",
     "prettier-plugin-sh": "0.17.4",
-    "ts-jest": "29.3.4",
+    "ts-jest": "29.4.0",
     "ts-node": "10.9.2",
     "tsx": "4.19.4",
     "typescript": "5.8.3",
