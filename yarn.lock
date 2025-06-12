@@ -4080,6 +4080,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:
+    "@logtape/logtape": "npm:^0.11.0"
     "@types/quick-format-unescaped": "npm:^4.0.3"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     fast-safe-stringify: "npm:^2.1.1"
@@ -4088,8 +4089,11 @@ __metadata:
     quick-format-unescaped: "npm:^4.0.4"
     winston: "npm:^3.17.0"
   peerDependencies:
+    "@logtape/logtape": ^0.11.0
     pino: ^9.6.0
   peerDependenciesMeta:
+    "@logtape/logtape":
+      optional: true
     pino:
       optional: true
     winston:
@@ -6071,6 +6075,13 @@ __metadata:
   version: 0.3.4
   resolution: "@kurkle/color@npm:0.3.4"
   checksum: 10c0/0e9fd55c614b005c5f0c4c755bca19ec0293bc7513b4ea3ec1725234f9c2fa81afbc78156baf555c8b9cb0d305619253c3f5bca016067daeebb3d00ebb4ea683
+  languageName: node
+  linkType: hard
+
+"@logtape/logtape@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "@logtape/logtape@npm:0.11.0"
+  checksum: 10c0/62feba454a057eade5e0068858e0fdb7bca13d330b9f53e3484ed24e28158d9528e740ef31f826297c7529f7739f705c790ca7f85262e2f7c41d88a3607ef154
   languageName: node
   linkType: hard
 
