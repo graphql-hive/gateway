@@ -1,9 +1,10 @@
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
-import { SubschemaConfig } from '@graphql-tools/delegate';
+import { StitchingInfo, SubschemaConfig } from '@graphql-tools/delegate';
 import { IResolvers } from '@graphql-tools/utils';
 import {
   DefinitionNode,
   FieldDefinitionNode,
+  GraphQLList,
   GraphQLObjectType,
   InterfaceTypeDefinitionNode,
   Kind,
@@ -171,6 +172,18 @@ export function createResolvers({
     ),
     Query: {
       node(_source, { nodeId }, context, info) {
+        const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as
+          | StitchingInfo
+          | undefined;
+        if (!stitchingInfo) {
+          return null; // no stitching info, something went wrong // TODO: throw instead?
+        }
+
+        // we must use otherwise different schema
+        const types = getDistinctResolvableTypes(
+          stitchingInfo.subschemaMap.values(),
+        );
+
         const { id: idOrFields, type: typeName } = fromGlobalId(nodeId);
         const type = types.find((t) => t.typeName === typeName);
         if (!type) {
@@ -199,16 +212,12 @@ export function createResolvers({
           info,
           context,
           schema: type.subschema,
-          returnType: type.subschema.schema.getType(typeName) as
-            | GraphQLObjectType
-            | undefined, // shouldnt ever be undefined
+          returnType: new GraphQLList(
+            // wont ever be undefined, we ensured the subschema has the type above
+            type.subschema.schema.getType(typeName) as GraphQLObjectType,
+          ),
           selectionSet: undefined, // selectionSet is not needed here
           key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
-          valuesFromResults: (results) =>
-            // add the nodeId field to the results
-            results.map((r: any) =>
-              !r ? null : { ...r, [nodeIdField]: nodeId },
-            ),
         });
       },
     },
