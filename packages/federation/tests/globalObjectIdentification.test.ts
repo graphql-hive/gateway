@@ -26,9 +26,13 @@ describe('Global Object Identification', () => {
         ): Node
       }
 
-      interface Actor {
+      interface Actor implements Node {
         id: ID!
         name: String!
+        """
+        A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+        """
+        nodeId: ID!
       }
 
       type Organization implements Actor & Node {
@@ -152,6 +156,34 @@ describe('Global Object Identification', () => {
             "dateOfBirth": "2001-01-01",
             "name": "John Doe",
             "nodeId": "UGVyc29uOnAx",
+          },
+        },
+      }
+    `);
+  });
+
+  it('should resolve single field key interface', async () => {
+    const { data, execute } = await getSchema();
+
+    await expect(
+      execute({
+        query: /* GraphQL */ `
+        {
+          node(nodeId: "${toGlobalId('Organization', data.organizations[0].id)}") {
+            ... on Actor {
+              nodeId
+              name
+            }
+          }
+        }
+      `,
+      }),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "node": {
+            "name": "Foo Inc.",
+            "nodeId": "T3JnYW5pemF0aW9uOm8z",
           },
         },
       }
