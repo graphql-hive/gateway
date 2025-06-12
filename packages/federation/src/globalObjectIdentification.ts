@@ -147,7 +147,7 @@ export function createResolvers({
   nodeIdField,
   subschemas,
 }: GlobalObjectIdentificationOptions): IResolvers {
-  const types = getDistinctResolvableTypes(subschemas).toArray();
+  const types = getDistinctResolvableTypes(subschemas);
   return {
     ...types.reduce(
       (resolvers, { typeName, keyFieldNames }) => ({
@@ -227,8 +227,18 @@ export function createResolvers({
   };
 }
 
-function* getDistinctResolvableTypes(subschemas: Iterable<SubschemaConfig>) {
-  const yieldedTypes = new Set<string>();
+interface DistinctResolvableType {
+  typeName: string;
+  subschema: SubschemaConfig;
+  merge: MergedTypeConfigFromEntities;
+  keyFieldNames: string[];
+}
+
+function getDistinctResolvableTypes(
+  subschemas: Iterable<SubschemaConfig>,
+): DistinctResolvableType[] {
+  const visitedTypeNames = new Set<string>();
+  const types: DistinctResolvableType[] = [];
   for (const subschema of subschemas) {
     // TODO: respect canonical types
     for (const [typeName, merge] of Object.entries(subschema.merge || {})
@@ -240,7 +250,7 @@ function* getDistinctResolvableTypes(subschemas: Iterable<SubschemaConfig>) {
         // sort by shortest keys first
         ([, a], [, b]) => a.selectionSet!.length - b.selectionSet!.length,
       )) {
-      if (yieldedTypes.has(typeName)) {
+      if (visitedTypeNames.has(typeName)) {
         // already yielded this type, all types can only have one resolution
         continue;
       }
@@ -272,13 +282,14 @@ function* getDistinctResolvableTypes(subschemas: Iterable<SubschemaConfig>) {
       }
       // what we're left in the "key" are simple field(s) like "id" or "email"
 
-      yieldedTypes.add(typeName);
-      yield {
+      visitedTypeNames.add(typeName);
+      types.push({
         typeName,
         subschema,
         merge: merge as MergedTypeConfigFromEntities,
         keyFieldNames: key.trim().split(/\s+/),
-      };
+      });
     }
   }
+  return types;
 }
