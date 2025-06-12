@@ -15,6 +15,12 @@ describe('Global Object Identification', () => {
         email: 'john@doe.com',
       },
     ],
+    auth: [
+      {
+        id: 'a1',
+        isVerified: true,
+      },
+    ],
     people: [
       {
         firstName: 'John',
@@ -46,6 +52,20 @@ describe('Global Object Identification', () => {
       },
       Account: {
         __resolveReference: (ref) => data.accounts.find((a) => a.id === ref.id),
+      },
+    },
+  });
+
+  const auth = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Account @key(fields: "id") {
+        id: ID!
+        isVerified: Boolean!
+      }
+    `),
+    resolvers: {
+      Account: {
+        __resolveReference: (ref) => data.auth.find((a) => a.id === ref.id),
       },
     },
   });
@@ -115,11 +135,53 @@ describe('Global Object Identification', () => {
     `);
   });
 
+  it('should resolve without node as usual', async () => {
+    const schema = await getStitchedSchemaFromLocalSchemas({
+      globalObjectIdentification: true,
+      localSchemas: {
+        accounts,
+        auth,
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        normalizedExecutor({
+          schema,
+          document: parse(/* GraphQL */ `
+            {
+              accounts {
+                id
+                name
+                email
+                isVerified
+              }
+            }
+          `),
+        }),
+      ),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "accounts": [
+            {
+              "email": "john@doe.com",
+              "id": "a1",
+              "isVerified": true,
+              "name": "John Doe",
+            },
+          ],
+        },
+      }
+    `);
+  });
+
   it('should resolve single field key object from globally unique node', async () => {
     const schema = await getStitchedSchemaFromLocalSchemas({
       globalObjectIdentification: true,
       localSchemas: {
         accounts,
+        auth,
       },
     });
 
@@ -135,6 +197,7 @@ describe('Global Object Identification', () => {
               id
               name
               email
+              isVerified
             }
           }
         }
@@ -147,6 +210,7 @@ describe('Global Object Identification', () => {
           "node": {
             "email": "john@doe.com",
             "id": "a1",
+            "isVerified": true,
             "name": "John Doe",
             "nodeId": "QWNjb3VudDphMQ==",
           },
