@@ -153,18 +153,20 @@ export function createResolvers({
       (resolvers, { typeName, keyFieldNames }) => ({
         ...resolvers,
         [typeName]: {
-          [nodeIdField](source) {
-            if (keyFieldNames.length === 1) {
-              // single field key
-              return toGlobalId(typeName, source[keyFieldNames[0]!]);
-            }
-            // multiple fields key
-            const keyFields: Record<string, unknown> = {};
-            for (const fieldName of keyFieldNames) {
-              // loop is faster than reduce
-              keyFields[fieldName] = source[fieldName];
-            }
-            return toGlobalId(typeName, JSON.stringify(keyFields));
+          [nodeIdField]: {
+            resolve(source) {
+              if (keyFieldNames.length === 1) {
+                // single field key
+                return toGlobalId(typeName, source[keyFieldNames[0]!]);
+              }
+              // multiple fields key
+              const keyFields: Record<string, unknown> = {};
+              for (const fieldName of keyFieldNames) {
+                // loop is faster than reduce
+                keyFields[fieldName] = source[fieldName];
+              }
+              return toGlobalId(typeName, JSON.stringify(keyFields));
+            },
           },
         },
       }),
