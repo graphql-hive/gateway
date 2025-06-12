@@ -212,10 +212,9 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         additionalResolvers,
       );
       // @ts-expect-error - Typings are wrong
-      opts.resolvers =
-        opts.resolvers && additionalResolvers
-          ? [opts.resolvers, ...additionalResolvers]
-          : additionalResolvers;
+      opts.resolvers = opts.resolvers
+        ? [opts.resolvers, ...additionalResolvers]
+        : additionalResolvers;
       // opts.resolvers = additionalResolvers;
       // @ts-expect-error - Typings are wrong
       opts.inheritResolversFromInterfaces = true;
