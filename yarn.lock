@@ -3066,6 +3066,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/global-object-identification@workspace:e2e/global-object-identification"
   dependencies:
+    graphql: "npm:^16.11.0"
     graphql-relay: "npm:^0.10.2"
   languageName: unknown
   linkType: soft
