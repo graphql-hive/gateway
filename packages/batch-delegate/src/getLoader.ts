@@ -21,7 +21,10 @@ function createBatchFn<K = any>(options: BatchDelegateOptions) {
       .then(() =>
         delegateToSchema({
           returnType: new GraphQLList(
-            getNamedType(options.returnType || options.info.returnType),
+            getNamedType(
+              // options.returnType || // if the returnType is provided by options, it'll override this property because of the spread below. it was like this since forever, so lets keep it for backwards compatibility
+              options.info.returnType,
+            ),
           ),
           onLocatedError: (originalError) => {
             if (originalError.path == null) {

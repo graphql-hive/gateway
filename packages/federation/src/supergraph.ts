@@ -68,6 +68,10 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import {
+  createNodeDefinitions,
+  createResolvers,
+} from './globalObjectIdentification.js';
+import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
@@ -129,6 +133,39 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
+  /**
+   * Add support for GraphQL Global Object Identification Specification  by adding a `Node`
+   * interface, `node(id: ID!): Node` and `nodes(ids: [ID!]!): [Node!]!` fields to the `Query` type.
+   *
+   * The `Node` interface will have a `nodeId` (not `id`!) field used as the global identifier. It
+   * is intentionally not `id` to avoid collisions with existing `id` fields in subgraphs.
+   *
+   * ```graphql
+   * """An object with a globally unique `ID`."""
+   * interface Node {
+   *   """
+   *   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+   *   """
+   *   nodeId: ID!
+   * }
+   *
+   * extend type Query {
+   *   """Fetches an object given its globally unique `ID`."""
+   *   node(
+   *     """The globally unique `ID`."""
+   *     nodeId: ID!
+   *   ): Node
+   *   """Fetches objects given their globally unique `ID`s."""
+   *   nodes(
+   *     """The globally unique `ID`s."""
+   *     nodeIds: [ID!]!
+   *   ): [Node!]!
+   * }
+   * ```
+   *
+   * @see https://graphql.org/learn/global-object-identification/
+   */
+  globalObjectIdentification?: boolean;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
@@ -834,7 +871,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           mergedTypeConfig.canonical = true;
         }
 
-        function getMergedTypeConfigFromKey(key: string) {
+        function getMergedTypeConfigFromKey(key: string): MergedEntityConfig {
           return {
             selectionSet: `{ ${key} }`,
             argsFromKeys: getArgsFromKeysForFederation,
@@ -1506,20 +1543,35 @@ export function getStitchingOptionsFromSupergraphSdl(
       extraDefinitions.push(definition);
     }
   }
-  const additionalTypeDefs: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: extraDefinitions,
-  };
   if (opts.onSubschemaConfig) {
     for (const subschema of subschemas) {
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
+  const shouldGlobalObjectIdent =
+    opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size;
   return {
     subschemas,
-    typeDefs: additionalTypeDefs,
+    typeDefs: {
+      kind: Kind.DOCUMENT,
+      definitions: !shouldGlobalObjectIdent
+        ? extraDefinitions
+        : [
+            ...extraDefinitions,
+            ...createNodeDefinitions({
+              nodeIdField: 'nodeId',
+              subschemas,
+            }),
+          ],
+    } as DocumentNode,
     assumeValid: true,
     assumeValidSDL: true,
+    resolvers: !shouldGlobalObjectIdent
+      ? undefined
+      : createResolvers({
+          nodeIdField: 'nodeId',
+          subschemas,
+        }),
     typeMergingOptions: {
       useNonNullableFieldOnConflict: true,
       validationSettings: {
@@ -1692,4 +1744,32 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     );
   }
   return null;
+}
+
+/**
+ * A merge type configuration for resolving types that are Apollo Federation entities.
+ * @see https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/entities/intro
+ */
+export type MergedEntityConfig = MergedTypeConfig &
+  Required<
+    Pick<
+      MergedTypeConfig,
+      | 'selectionSet'
+      | 'argsFromKeys'
+      | 'key'
+      | 'fieldName'
+      | 'dataLoaderOptions'
+    >
+  >;
+
+export function isMergedEntityConfig(
+  merge: MergedTypeConfig,
+): merge is MergedEntityConfig {
+  return (
+    'selectionSet' in merge &&
+    'argsFromKeys' in merge &&
+    'key' in merge &&
+    'fieldName' in merge &&
+    'dataLoaderOptions' in merge
+  );
 }

@@ -159,6 +159,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
   logger,
+  globalObjectIdentification,
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -211,7 +212,10 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         additionalResolvers,
       );
       // @ts-expect-error - Typings are wrong
-      opts.resolvers = additionalResolvers;
+      opts.resolvers = opts.resolvers
+        ? [opts.resolvers, ...additionalResolvers]
+        : additionalResolvers;
+      // opts.resolvers = additionalResolvers;
       // @ts-expect-error - Typings are wrong
       opts.inheritResolversFromInterfaces = true;
 
@@ -273,6 +277,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         },
       });
     },
+    globalObjectIdentification,
   });
   const inContextSDK = getInContextSDK(
     executableUnifiedGraph,
