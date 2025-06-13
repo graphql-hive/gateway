@@ -1,17 +1,19 @@
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import { StitchingInfo, SubschemaConfig } from '@graphql-tools/delegate';
-import { IResolvers } from '@graphql-tools/utils';
+import { IResolvers, parseSelectionSet } from '@graphql-tools/utils';
 import {
   DefinitionNode,
   FieldDefinitionNode,
   GraphQLList,
   GraphQLObjectType,
   InterfaceTypeDefinitionNode,
+  isObjectType,
   Kind,
   ObjectTypeExtensionNode,
+  SelectionSetNode,
 } from 'graphql';
 import { fromGlobalId, toGlobalId } from 'graphql-relay';
-import { MergedTypeConfigFromEntities } from './supergraph';
+import { isMergedEntityConfig, MergedEntityConfig } from './supergraph';
 
 export interface GlobalObjectIdentificationOptions {
   nodeIdField: string;
@@ -64,7 +66,7 @@ export function createNodeDefinitions({
 
   // extend type X implements Node
 
-  for (const { typeName } of getDistinctResolvableTypes(subschemas)) {
+  for (const { typeName } of getDistinctEntities(subschemas)) {
     const typeExtensionDef: ObjectTypeExtensionNode = {
       kind: Kind.OBJECT_TYPE_EXTENSION,
       name: {
@@ -147,14 +149,14 @@ export function createResolvers({
   nodeIdField,
   subschemas,
 }: GlobalObjectIdentificationOptions): IResolvers {
-  const types = getDistinctResolvableTypes(subschemas);
+  const types = getDistinctEntities(subschemas);
   return {
     ...types.reduce(
-      (resolvers, { typeName, keyFieldNames }) => ({
+      (resolvers, { typeName, merge, keyFieldNames }) => ({
         ...resolvers,
         [typeName]: {
           [nodeIdField]: {
-            selectionSet: `{ ${keyFieldNames.join(' ')} }`,
+            selectionSet: merge.selectionSet,
             resolve(source) {
               if (keyFieldNames.length === 1) {
                 // single field key
@@ -183,9 +185,7 @@ export function createResolvers({
         }
 
         // we must use otherwise different schema
-        const types = getDistinctResolvableTypes(
-          stitchingInfo.subschemaMap.values(),
-        );
+        const types = getDistinctEntities(stitchingInfo.subschemaMap.values());
 
         const { id: idOrFields, type: typeName } = fromGlobalId(nodeId);
         const type = types.find((t) => t.typeName === typeName);
@@ -211,85 +211,106 @@ export function createResolvers({
         }
 
         return batchDelegateToSchema({
-          ...type.merge,
-          info,
           context,
+          info,
           schema: type.subschema,
+          fieldName: type.merge.fieldName,
+          argsFromKeys: type.merge.argsFromKeys,
+          key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
           returnType: new GraphQLList(
             // wont ever be undefined, we ensured the subschema has the type above
             type.subschema.schema.getType(typeName) as GraphQLObjectType,
           ),
-          selectionSet: undefined, // selectionSet is not needed here
-          key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
+          dataLoaderOptions: type.merge.dataLoaderOptions,
         });
       },
     },
   };
 }
 
-interface DistinctResolvableType {
+interface DistinctEntity {
   typeName: string;
   subschema: SubschemaConfig;
-  merge: MergedTypeConfigFromEntities;
+  merge: MergedEntityConfig;
   keyFieldNames: string[];
 }
 
-function getDistinctResolvableTypes(
-  subschemas: Iterable<SubschemaConfig>,
-): DistinctResolvableType[] {
-  const visitedTypeNames = new Set<string>();
-  const types: DistinctResolvableType[] = [];
-  for (const subschema of subschemas) {
-    // TODO: respect canonical types
-    for (const [typeName, merge] of Object.entries(subschema.merge || {})
-      .filter(
-        // make sure selectionset is defined for the sort to work
-        ([, merge]) => merge.selectionSet,
+function getDistinctEntities(
+  subschemasIter: Iterable<SubschemaConfig>,
+): DistinctEntity[] {
+  const distinctEntities: DistinctEntity[] = [];
+
+  const subschemas = Array.from(subschemasIter);
+  const types = subschemas.flatMap((subschema) =>
+    Object.values(subschema.schema.getTypeMap()),
+  );
+
+  const objects = types.filter(isObjectType);
+  for (const obj of objects) {
+    if (
+      distinctEntities.find(
+        (distinctType) => distinctType.typeName === obj.name,
       )
-      .sort(
-        // sort by shortest keys first
-        ([, a], [, b]) => a.selectionSet!.length - b.selectionSet!.length,
-      )) {
-      if (visitedTypeNames.has(typeName)) {
-        // already yielded this type, all types can only have one resolution
-        continue;
-      }
-
-      if (
-        !merge.selectionSet ||
-        !merge.argsFromKeys ||
-        !merge.key ||
-        !merge.fieldName ||
-        !merge.dataLoaderOptions
-      ) {
-        // cannot be resolved globally
-        continue;
-      }
-
-      // remove first and last characters from the selection set making up the key (curly braces, `{ id } -> id`)
-      const key = merge.selectionSet.trim().slice(1, -1).trim();
-      if (
-        // the key for fetching this object contains other objects
-        key.includes('{') ||
-        // the key for fetching this object contains arguments
-        key.includes('(') ||
-        // the key contains aliases
-        key.includes(':')
-      ) {
-        // it's too complex to use global object identification
-        // TODO: do it anyways when need arises
-        continue;
-      }
-      // what we're left in the "key" are simple field(s) like "id" or "email"
-
-      visitedTypeNames.add(typeName);
-      types.push({
-        typeName,
-        subschema,
-        merge: merge as MergedTypeConfigFromEntities,
-        keyFieldNames: key.trim().split(/\s+/),
-      });
+    ) {
+      // already added this type
+      continue;
     }
+    let candidate: {
+      subschema: SubschemaConfig;
+      merge: MergedEntityConfig;
+    } | null = null;
+    for (const subschema of subschemas) {
+      const merge = subschema.merge?.[obj.name];
+      if (!merge) {
+        // not resolvable from this subschema
+        continue;
+      }
+      if (!isMergedEntityConfig(merge)) {
+        // not a merged entity config, cannot be resolved globally
+        continue;
+      }
+      if (merge.canonical) {
+        // this subschema is canonical (owner) for this type, no need to check other schemas
+        candidate = { subschema, merge };
+        break;
+      }
+      if (!candidate) {
+        // first merge candidate
+        candidate = { subschema, merge };
+        continue;
+      }
+      if (merge.selectionSet.length < candidate.merge.selectionSet.length) {
+        // found a better candidate
+        candidate = { subschema, merge };
+      }
+    }
+    if (!candidate) {
+      // no merge candidate found, cannot be resolved globally
+      continue;
+    }
+    // is an entity that can efficiently be resolved globally
+    distinctEntities.push({
+      ...candidate,
+      typeName: obj.name,
+      keyFieldNames: (function getRootFieldNames(
+        selectionSet: SelectionSetNode,
+      ): string[] {
+        const fieldNames: string[] = [];
+        for (const sel of selectionSet.selections) {
+          if (sel.kind === Kind.FRAGMENT_SPREAD) {
+            throw new Error('Fragment spreads cannot appear in @key fields');
+          }
+          if (sel.kind === Kind.INLINE_FRAGMENT) {
+            fieldNames.push(...getRootFieldNames(sel.selectionSet));
+            continue;
+          }
+          // Kind.FIELD
+          fieldNames.push(sel.alias?.value || sel.name.value);
+        }
+        return fieldNames;
+      })(parseSelectionSet(candidate.merge.selectionSet)),
+    });
   }
-  return types;
+
+  return distinctEntities;
 }
