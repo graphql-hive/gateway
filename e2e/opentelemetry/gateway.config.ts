@@ -6,8 +6,8 @@ import {
   getNodeAutoInstrumentations,
   getResourceDetectors,
 } from '@opentelemetry/auto-instrumentations-node';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
-import { AsyncLocalStorageContextManager } from '../../packages/plugins/opentelemetry/src/async-context-manager';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
