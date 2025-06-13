@@ -13,9 +13,9 @@
     "@whatwg-node/disposablestack": "^0.0.6",
     "dedent": "^1.5.3",
     "esbuild": "^0.25.5",
-    "glob": "^11.0.0",
+    "glob": "^11.0.3",
     "jscodeshift": "^17.1.1",
     "tsx": "^4.19.2",
-    "zod": "^3.25.63"
+    "zod": "^3.25.64"
   }
 }
