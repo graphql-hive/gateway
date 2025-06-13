@@ -12,14 +12,11 @@ export async function getLocalhost(
     for (const hostname of hostnames) {
       const url = `${protocol}://${hostname}:${port}`;
       if (isDebug()) {
-        console.log(`getLocalhost(port): Trying ${url}`);
+        console.log(`getLocalhost(port): Trying ${protocol} on port ${port}`);
       }
       try {
         await fetch(url, { signal: timeoutSignal });
       } catch (e) {
-        if (isDebug()) {
-          console.log(`getLocalhost(port): Failed to connect on ${url}`);
-        }
         continue;
       }
       if (isDebug()) {

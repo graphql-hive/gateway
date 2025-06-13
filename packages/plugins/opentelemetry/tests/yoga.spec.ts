@@ -1,22 +1,11 @@
 import { Logger } from '@graphql-hive/logger';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { spanExporter } from './utils';
 
-let mockModule = vi.mock;
-if (globalThis.Bun) {
-  mockModule = require('bun:test').mock.module;
-}
-const mockRegisterProvider = vi.fn();
-
 describe('useOpenTelemetry', () => {
-  mockModule('@opentelemetry/sdk-trace-web', () => ({
-    WebTracerProvider: vi.fn(() => ({ register: mockRegisterProvider })),
-  }));
-
   beforeEach(() => {
-    vi.clearAllMocks();
     spanExporter.reset();
   });
 
@@ -33,9 +22,8 @@ describe('useOpenTelemetry', () => {
         } = {},
       ) {
         const otelPlugin = useOpenTelemetry({
-          initializeNodeSDK: false,
-          contextManager,
           log: new Logger({ level: false }),
+          useContextManager: contextManager,
         });
 
         const yoga = createYoga({
