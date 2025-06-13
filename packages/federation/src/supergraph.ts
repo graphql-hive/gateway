@@ -871,9 +871,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           mergedTypeConfig.canonical = true;
         }
 
-        function getMergedTypeConfigFromKey(
-          key: string,
-        ): MergedTypeConfigFromEntities {
+        function getMergedTypeConfigFromKey(key: string): MergedEntityConfig {
           return {
             selectionSet: `{ ${key} }`,
             argsFromKeys: getArgsFromKeysForFederation,
@@ -1748,9 +1746,30 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
   return null;
 }
 
-export type MergedTypeConfigFromEntities = Required<
-  Pick<
-    MergedTypeConfig,
-    'selectionSet' | 'argsFromKeys' | 'key' | 'fieldName' | 'dataLoaderOptions'
-  >
->;
+/**
+ * A merge type configuration for resolving types that are Apollo Federation entities.
+ * @see https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/entities/intro
+ */
+export type MergedEntityConfig = MergedTypeConfig &
+  Required<
+    Pick<
+      MergedTypeConfig,
+      | 'selectionSet'
+      | 'argsFromKeys'
+      | 'key'
+      | 'fieldName'
+      | 'dataLoaderOptions'
+    >
+  >;
+
+export function isMergedEntityConfig(
+  merge: MergedTypeConfig,
+): merge is MergedEntityConfig {
+  return (
+    'selectionSet' in merge &&
+    'argsFromKeys' in merge &&
+    'key' in merge &&
+    'fieldName' in merge &&
+    'dataLoaderOptions' in merge
+  );
+}
