@@ -1,4 +1,5 @@
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import { trace } from '@opentelemetry/api';
 import {
@@ -6,6 +7,7 @@ import {
   getResourceDetectors,
 } from '@opentelemetry/auto-instrumentations-node';
 import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
+import { AsyncLocalStorageContextManager } from '../../packages/plugins/opentelemetry/src/async-context-manager';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -32,22 +34,37 @@ const { OTLPTraceExporter } =
     ? await import(`@opentelemetry/exporter-trace-otlp-http`)
     : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
 
-const sdk = new NodeSDK({
-  // Use spanProcessor instead of spanExporter to remove batching for test speed
-  spanProcessors: [
-    new tracing.SimpleSpanProcessor(
-      new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
-    ),
-  ],
-  resource: resources.resourceFromAttributes({
-    'custom.resource': 'custom value',
-  }),
-  instrumentations: getNodeAutoInstrumentations(),
-  resourceDetectors: getResourceDetectors(),
+const exporter = new OTLPTraceExporter({
+  url: process.env['OTLP_EXPORTER_URL'],
 });
 
-sdk.start();
-['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
+const resource = resources.resourceFromAttributes({
+  'custom.resource': 'custom value',
+});
+
+const runner = process.env['E2E_GATEWAY_RUNNER'];
+if (runner === 'node' || runner === 'docker') {
+  const sdk = new NodeSDK({
+    // Use spanProcessor instead of spanExporter to remove batching for test speed
+    spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
+    resource,
+    instrumentations: getNodeAutoInstrumentations(),
+    resourceDetectors: getResourceDetectors(),
+  });
+
+  sdk.start();
+  ['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
+} else {
+  opentelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    resource,
+    traces: {
+      exporter,
+      // Disable batching to speedup tests
+      batching: false,
+    },
+  });
+}
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {
