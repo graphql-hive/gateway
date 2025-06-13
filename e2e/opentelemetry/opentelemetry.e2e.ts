@@ -145,7 +145,7 @@ describe('OpenTelemetry', () => {
         }
         throw err;
       }
-      it.only('should report telemetry metrics correctly to jaeger', async () => {
+      it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({
           runner,

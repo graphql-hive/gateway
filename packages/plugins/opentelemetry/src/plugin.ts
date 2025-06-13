@@ -1,8 +1,8 @@
 import {
+  Attributes,
   getRetryInfo,
   isRetryExecutionRequest,
   Logger,
-  Attributes,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
