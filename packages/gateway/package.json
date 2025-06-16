@@ -106,10 +106,10 @@
     "bun": "^1.2.15",
     "graphql": "^16.9.0",
     "parse-duration": "^2.0.0",
-    "pkgroll": "2.12.2",
+    "pkgroll": "2.13.1",
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.0.1",
-    "rollup": "4.40.2",
+    "rollup": "4.43.0",
     "rollup-plugin-tsconfig-paths": "^1.5.2",
     "tsx": "4.19.4"
   },
