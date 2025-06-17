@@ -309,6 +309,7 @@ export async function getStitchedSchemaFromManagedFederation(
         httpExecutorOpts: options.httpExecutorOpts,
         onSubschemaConfig: options.onSubschemaConfig,
         batch: options.batch,
+        globalObjectIdentification: options.globalObjectIdentification,
       }),
     };
   }

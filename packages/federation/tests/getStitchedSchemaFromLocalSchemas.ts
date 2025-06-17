@@ -21,6 +21,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   onSubgraphExecute,
   composeWith = 'apollo',
   ignoreRules,
+  globalObjectIdentification,
 }: {
   localSchemas: Record<string, GraphQLSchema>;
   onSubgraphExecute?: (
@@ -30,6 +31,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   ) => void;
   composeWith?: 'apollo' | 'guild';
   ignoreRules?: string[];
+  globalObjectIdentification?: boolean;
 }): Promise<GraphQLSchema> {
   let supergraphSdl: string;
   if (composeWith === 'apollo') {
@@ -73,6 +75,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   }
   return getStitchedSchemaFromSupergraphSdl({
     supergraphSdl,
+    globalObjectIdentification,
     onSubschemaConfig(subschemaConfig) {
       const [name, localSchema] =
         Object.entries(localSchemas).find(
@@ -80,7 +83,7 @@ export async function getStitchedSchemaFromLocalSchemas({
         ) || [];
       if (name && localSchema) {
         subschemaConfig.executor = createTracedExecutor(name, localSchema);
-      } else {
+      } else if (!globalObjectIdentification) {
         throw new Error(`Unknown subgraph ${subschemaConfig.name}`);
       }
     },
