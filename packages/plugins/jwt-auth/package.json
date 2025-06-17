@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@graphql-mesh/types": "^0.104.3",
-    "@graphql-mesh/utils": "^0.104.3",
+    "@graphql-mesh/utils": "^0.104.5",
     "@graphql-yoga/plugin-jwt": "^3.7.6",
     "tslib": "^2.4.0"
   },
