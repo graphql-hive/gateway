@@ -1,4 +1,6 @@
+import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import useHttpCache from '@graphql-mesh/plugin-http-cache';
 import { isDebug } from '@internal/testing';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -169,6 +171,7 @@ describe('usePropagateHeaders', () => {
       plugins: [
         {
           onResponse: ({ response }) => {
+            response.headers.set('cache-control', 'max-age=60, private');
             response.headers.set('upstream1', 'upstream1');
             response.headers.append('set-cookie', 'cookie1=value1');
             response.headers.append('set-cookie', 'cookie2=value2');
@@ -280,6 +283,94 @@ describe('usePropagateHeaders', () => {
       expect(response.headers.get('set-cookie')).toBe(
         'cookie1=value1, cookie2=value2, cookie3=value3, cookie4=value4',
       );
+    });
+    it('should propagate headers when caching upstream', async () => {
+      await using cache = new InMemoryLRUCache();
+
+      await using gateway = createGatewayRuntime({
+        cache,
+        supergraph: () => {
+          return getUnifiedGraphGracefully([
+            {
+              name: 'upstream1',
+              schema: upstream1,
+              url: 'http://localhost:4001/graphql',
+            },
+            {
+              name: 'upstream2',
+              schema: upstream2,
+              url: 'http://localhost:4002/graphql',
+            },
+          ]);
+        },
+        propagateHeaders: {
+          fromSubgraphsToClient({ response }) {
+            const cookies = response.headers.getSetCookie();
+
+            const returns: Record<string, string | string[]> = {
+              'set-cookie': cookies,
+            };
+
+            const up1 = response.headers.get('upstream1');
+            if (up1) {
+              returns['upstream1'] = up1;
+            }
+
+            const up2 = response.headers.get('upstream2');
+            if (up2) {
+              returns['upstream2'] = up2;
+            }
+
+            return returns;
+          },
+        },
+        plugins: (context) => [
+          useHttpCache(context),
+          useCustomFetch((url, options, context, info) => {
+            switch (url) {
+              case 'http://localhost:4001/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream1Fetch(url, options, context, info);
+              case 'http://localhost:4002/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream2Fetch(url, options, context, info);
+              default:
+                throw new Error('Invalid URL');
+            }
+          }),
+        ],
+        logging: isDebug(),
+      });
+
+      for (let i = 0; i < 3; i++) {
+        const res = await gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                hello1
+                hello2
+              }
+            `,
+          }),
+        });
+
+        await expect(res.json()).resolves.toEqual({
+          data: {
+            hello1: 'world1',
+            hello2: 'world2',
+          },
+        });
+
+        expect(res.headers.get('upstream1')).toBe('upstream1');
+        expect(res.headers.get('upstream2')).toBe('upstream2');
+        expect(res.headers.get('set-cookie')).toBe(
+          'cookie1=value1, cookie2=value2, cookie3=value3, cookie4=value4',
+        );
+      }
     });
   });
 });
