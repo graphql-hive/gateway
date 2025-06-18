@@ -58,7 +58,7 @@
     "@apollo/server": "^4.12.2",
     "@apollo/server-gateway-interface": "^1.1.1",
     "@apollo/subgraph": "^2.11.0",
-    "@types/lodash": "4.17.17",
+    "@types/lodash": "4.17.18",
     "graphql": "^16.9.0",
     "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#main",
     "pkgroll": "2.13.1"

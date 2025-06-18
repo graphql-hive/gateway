@@ -2815,58 +2815,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/unenv-preset@npm:2.3.2":
-  version: 2.3.2
-  resolution: "@cloudflare/unenv-preset@npm:2.3.2"
+"@cloudflare/unenv-preset@npm:2.3.3":
+  version: 2.3.3
+  resolution: "@cloudflare/unenv-preset@npm:2.3.3"
   peerDependencies:
     unenv: 2.0.0-rc.17
     workerd: ^1.20250508.0
   peerDependenciesMeta:
     workerd:
       optional: true
-  checksum: 10c0/6c821bf8e903e7698ef8b23fa43fff1dffc95014879a9fa4880d745b272ae9f164021b4102a4eef4ae82c698a1d629b5661a745cd309eda7920a64dfbb9a5438
+  checksum: 10c0/2bd12ce921d5da7df74fa24bea016dab8c17cc65c5f5a1b39a985ba687bcd39885fbbffb90297135a311bcfb054422241b9988224bd2fc9a0f3eb0730d3cf402
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-64@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250604.0"
+"@cloudflare/workerd-darwin-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250617.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-arm64@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250604.0"
+"@cloudflare/workerd-darwin-arm64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250617.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-64@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "@cloudflare/workerd-linux-64@npm:1.20250604.0"
+"@cloudflare/workerd-linux-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-linux-64@npm:1.20250617.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-arm64@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250604.0"
+"@cloudflare/workerd-linux-arm64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250617.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-windows-64@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "@cloudflare/workerd-windows-64@npm:1.20250604.0"
+"@cloudflare/workerd-windows-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-windows-64@npm:1.20250617.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20250613.0":
-  version: 4.20250617.0
-  resolution: "@cloudflare/workers-types@npm:4.20250617.0"
-  checksum: 10c0/5a95cb1aad3d724da185fb514623a1f67edab591df8a5829d1397193ff33be65c898cdaa190262b478f3b7a9cf4f9f9729aa0ba63935ea6de97becf0dd6ad7f7
+"@cloudflare/workers-types@npm:^4.20250618.0":
+  version: 4.20250618.0
+  resolution: "@cloudflare/workers-types@npm:4.20250618.0"
+  checksum: 10c0/154468c96cb9664014660f6f28d819f2ecfe2d0134e97320ecb0d114e777042a967a0969ae87eb7731452c1ad92ea27dbad0b1d3498321dfa34467db313d95d6
   languageName: node
   linkType: hard
 
@@ -2928,7 +2928,7 @@ __metadata:
   resolution: "@e2e/auto-type-merging@workspace:e2e/auto-type-merging"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.13.5"
     tslib: "npm:^2.8.1"
@@ -2952,10 +2952,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
   dependencies:
-    "@cloudflare/workers-types": "npm:^4.20250613.0"
+    "@cloudflare/workers-types": "npm:^4.20250618.0"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.9.0"
-    wrangler: "npm:^4.20.0"
+    wrangler: "npm:^4.20.2"
   languageName: unknown
   linkType: soft
 
@@ -3019,7 +3019,7 @@ __metadata:
     "@apollo/server": "npm:^4.12.2"
     "@apollo/subgraph": "npm:^2.11.0"
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     tslib: "npm:^2.8.1"
@@ -3154,7 +3154,7 @@ __metadata:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/plugin-live-query": "npm:^0.104.0"
-    "@omnigraph/json-schema": "npm:^0.109.5"
+    "@omnigraph/json-schema": "npm:^0.109.6"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3168,7 +3168,7 @@ __metadata:
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
     "@graphql-mesh/transport-rest": "npm:^0.9.0"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
   languageName: unknown
@@ -3179,7 +3179,7 @@ __metadata:
   resolution: "@e2e/naming-convention-additional-typedefs@workspace:e2e/naming-convention-additional-typedefs"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:16.11.0"
   languageName: unknown
@@ -3206,7 +3206,7 @@ __metadata:
   resolution: "@e2e/openapi-additional-resolvers@workspace:e2e/openapi-additional-resolvers"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3218,7 +3218,7 @@ __metadata:
   resolution: "@e2e/openapi-arg-rename@workspace:e2e/openapi-arg-rename"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:16.11.0"
     moment: "npm:2.30.1"
     tslib: "npm:^2.8.1"
@@ -3230,7 +3230,7 @@ __metadata:
   resolution: "@e2e/openapi-javascript-wiki@workspace:e2e/openapi-javascript-wiki"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3242,7 +3242,7 @@ __metadata:
   resolution: "@e2e/openapi-min-length@workspace:e2e/openapi-min-length"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3254,7 +3254,7 @@ __metadata:
   resolution: "@e2e/openapi-naming-convention@workspace:e2e/openapi-naming-convention"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3266,7 +3266,7 @@ __metadata:
   resolution: "@e2e/openapi-prune@workspace:e2e/openapi-prune"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     graphql: "npm:^16.9.0"
     moment: "npm:^2.30.1"
     tslib: "npm:^2.8.1"
@@ -3278,7 +3278,7 @@ __metadata:
   resolution: "@e2e/openapi-subgraph@workspace:e2e/openapi-subgraph"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     tslib: "npm:^2.8.1"
@@ -3290,7 +3290,7 @@ __metadata:
   resolution: "@e2e/openapi-subscriptions@workspace:e2e/openapi-subscriptions"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
@@ -3339,7 +3339,7 @@ __metadata:
   resolution: "@e2e/programmatic-batching-example@workspace:e2e/programmatic-batching"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.1"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     fets: "npm:^0.8.4"
     graphql: "npm:16.11.0"
     tslib: "npm:^2.8.1"
@@ -4057,7 +4057,7 @@ __metadata:
     "@graphql-yoga/plugin-csrf-prevention": "npm:^3.13.5"
     "@graphql-yoga/plugin-defer-stream": "npm:^3.13.5"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.13.6"
-    "@omnigraph/openapi": "npm:^0.109.11"
+    "@omnigraph/openapi": "npm:^0.109.12"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^22.15.30"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -4456,6 +4456,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-mesh/fusion-composition@npm:^0.8.9":
+  version: 0.8.9
+  resolution: "@graphql-mesh/fusion-composition@npm:0.8.9"
+  dependencies:
+    "@graphql-mesh/utils": "npm:^0.104.5"
+    "@graphql-tools/schema": "npm:^10.0.5"
+    "@graphql-tools/stitching-directives": "npm:^3.1.9"
+    "@graphql-tools/utils": "npm:^10.8.0"
+    "@theguild/federation-composition": "npm:^0.18.2"
+    change-case: "npm:^4.1.2"
+    graphql-scalars: "npm:^1.23.0"
+    minimatch: "npm:^10.0.0"
+    pluralize: "npm:^8.0.0"
+    snake-case: "npm:^3.0.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/ea48ae5ba2a7d83ee224930e700f0acf220291dbb8afe433696cc4e385458ca939b3402f1d4043a98ef6bd18430d96416c8c40064612fa41f3f15502a83d8a56
+  languageName: node
+  linkType: hard
+
 "@graphql-mesh/fusion-runtime@workspace:^, @graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
@@ -4814,7 +4835,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/transport-rest@npm:^0.9.0, @graphql-mesh/transport-rest@npm:^0.9.5":
+"@graphql-mesh/transport-rest@npm:^0.9.0":
   version: 0.9.5
   resolution: "@graphql-mesh/transport-rest@npm:0.9.5"
   dependencies:
@@ -4834,6 +4855,29 @@ __metadata:
   peerDependencies:
     graphql: "*"
   checksum: 10c0/cdc1feb14c4fae23b570545b40cfd1c8e96bf66fb6dfe9142c2f1dd90dbc0aaabe7a37acd3cae4530b2d8e183cf400f03a64bee82c79891afc81bfe45faaa2a9
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/transport-rest@npm:^0.9.6":
+  version: 0.9.6
+  resolution: "@graphql-mesh/transport-rest@npm:0.9.6"
+  dependencies:
+    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.8"
+    "@graphql-mesh/transport-common": "npm:^0.7.13"
+    "@graphql-mesh/types": "npm:^0.104.5"
+    "@graphql-mesh/utils": "npm:^0.104.5"
+    "@graphql-tools/utils": "npm:^10.8.0"
+    "@whatwg-node/fetch": "npm:^0.10.6"
+    dset: "npm:^3.1.3"
+    graphql-fields: "npm:^2.0.3"
+    graphql-scalars: "npm:^1.22.4"
+    qs: "npm:^6.14.0"
+    tslib: "npm:^2.4.0"
+    url-join: "npm:4.0.1"
+  peerDependencies:
+    graphql: "*"
+  checksum: 10c0/14d13b81a8a09b1d432d8253f024e1b4ed43fdc8161607065cc6dbac410ac49a2bad3fea64b74a6ef0d6b0444c5f7620b68f504bbacb6cf3ad17fb074c0968b3
   languageName: node
   linkType: hard
 
@@ -4978,7 +5022,7 @@ __metadata:
     "@graphql-tools/schema": "npm:^10.0.11"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@repeaterjs/repeater": "npm:^3.0.6"
-    "@types/lodash": "npm:4.17.17"
+    "@types/lodash": "npm:4.17.18"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
     dataloader: "npm:^2.2.3"
     dset: "npm:^3.1.2"
@@ -5079,7 +5123,7 @@ __metadata:
     "@graphql-tools/utils": "npm:^10.8.1"
     "@graphql-tools/wrap": "workspace:^"
     "@graphql-yoga/typed-event-target": "npm:^3.0.1"
-    "@types/lodash": "npm:4.17.17"
+    "@types/lodash": "npm:4.17.18"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/events": "npm:^0.1.2"
     "@whatwg-node/fetch": "npm:^0.10.8"
@@ -5762,7 +5806,7 @@ __metadata:
     glob: "npm:^11.0.3"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"
-    zod: "npm:^3.25.64"
+    zod: "npm:^3.25.67"
   languageName: unknown
   linkType: soft
 
@@ -6600,16 +6644,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@omnigraph/json-schema@npm:^0.109.5":
-  version: 0.109.5
-  resolution: "@omnigraph/json-schema@npm:0.109.5"
+"@omnigraph/json-schema@npm:^0.109.6":
+  version: 0.109.6
+  resolution: "@omnigraph/json-schema@npm:0.109.6"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:0.5.8"
     "@graphql-mesh/transport-common": "npm:^0.7.13"
-    "@graphql-mesh/transport-rest": "npm:^0.9.5"
-    "@graphql-mesh/types": "npm:^0.104.4"
-    "@graphql-mesh/utils": "npm:^0.104.4"
+    "@graphql-mesh/transport-rest": "npm:^0.9.6"
+    "@graphql-mesh/types": "npm:^0.104.5"
+    "@graphql-mesh/utils": "npm:^0.104.5"
     "@graphql-tools/delegate": "npm:^10.0.28"
     "@graphql-tools/utils": "npm:^10.8.0"
     "@json-schema-tools/meta-schema": "npm:^1.7.5"
@@ -6628,28 +6672,28 @@ __metadata:
     url-join: "npm:4.0.1"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/1fd9cb84d2fb72668354a73cdda046a039b63bb2b5e1a60c3b43483a86ac1f9b082f5fbf3ff8c8d4c8e474c427730e83f1a231ecb597b2fd57e0f4687e59c8e0
+  checksum: 10c0/a0fbe8be4b9766e083a6f6bb201a4593cbdc4a273f40ccbc5c8752532d23e6fe5abb38dd8bc6fb87d4b3e84c390b90a07147abb16d3ff34f74bc05b6196003ef
   languageName: node
   linkType: hard
 
-"@omnigraph/openapi@npm:^0.109.11":
-  version: 0.109.11
-  resolution: "@omnigraph/openapi@npm:0.109.11"
+"@omnigraph/openapi@npm:^0.109.12":
+  version: 0.109.12
+  resolution: "@omnigraph/openapi@npm:0.109.12"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/fusion-composition": "npm:^0.8.8"
+    "@graphql-mesh/fusion-composition": "npm:^0.8.9"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
-    "@graphql-mesh/types": "npm:^0.104.4"
-    "@graphql-mesh/utils": "npm:^0.104.4"
+    "@graphql-mesh/types": "npm:^0.104.5"
+    "@graphql-mesh/utils": "npm:^0.104.5"
     "@graphql-tools/utils": "npm:^10.6.4"
-    "@omnigraph/json-schema": "npm:^0.109.5"
+    "@omnigraph/json-schema": "npm:^0.109.6"
     change-case: "npm:^4.1.2"
     json-machete: "npm:^0.97.6"
     openapi-types: "npm:^12.1.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/c3eb4c7c5c27a8074b56d735621b65207784dcccc9629d27336dd7c4eee778b6d32e4f58a76b18f31c26ca5f0fc543f160caa10bcb7d7c010bb4136839f7e86b
+  checksum: 10c0/de8723fb74d1e5bd65b1d08daa209ba7ea6ab327466df7901efb4ba5835ecc5473c911d2a000402aacc21a9233a17c223fd9afe3cf93329b2344a6ebb616d14a
   languageName: node
   linkType: hard
 
@@ -8662,10 +8706,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:4.17.17":
-  version: 4.17.17
-  resolution: "@types/lodash@npm:4.17.17"
-  checksum: 10c0/8e75df02a15f04d4322c5a503e4efd0e7a92470570ce80f17e9f11ce2b1f1a7c994009c9bcff39f07e0f9ffd8ccaff09b3598997c404b801abd5a7eee5a639dc
+"@types/lodash@npm:4.17.18":
+  version: 4.17.18
+  resolution: "@types/lodash@npm:4.17.18"
+  checksum: 10c0/d25f86941990403d59dcaae42b42fc9fef55a0a7f398790517e7189300183e425a94127594cbeaf9b5fcdc4f6c2b285e34f4301fb56c92f81ccd8505a41ab5f5
   languageName: node
   linkType: hard
 
@@ -8906,40 +8950,40 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/eslint-plugin@npm:8.34.0"
+"@typescript-eslint/eslint-plugin@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/eslint-plugin@npm:8.34.1"
   dependencies:
     "@eslint-community/regexpp": "npm:^4.10.0"
-    "@typescript-eslint/scope-manager": "npm:8.34.0"
-    "@typescript-eslint/type-utils": "npm:8.34.0"
-    "@typescript-eslint/utils": "npm:8.34.0"
-    "@typescript-eslint/visitor-keys": "npm:8.34.0"
+    "@typescript-eslint/scope-manager": "npm:8.34.1"
+    "@typescript-eslint/type-utils": "npm:8.34.1"
+    "@typescript-eslint/utils": "npm:8.34.1"
+    "@typescript-eslint/visitor-keys": "npm:8.34.1"
     graphemer: "npm:^1.4.0"
     ignore: "npm:^7.0.0"
     natural-compare: "npm:^1.4.0"
     ts-api-utils: "npm:^2.1.0"
   peerDependencies:
-    "@typescript-eslint/parser": ^8.34.0
+    "@typescript-eslint/parser": ^8.34.1
     eslint: ^8.57.0 || ^9.0.0
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/905a05d15f4b0367838ec445f9890321d87470198bf7a589278fc0f38c82cf3ccc1efce4acd3c9c94ee6149d5579ef58606fb7c50f4db50c830de65af8c27c6d
+  checksum: 10c0/f1c9f25e4fe4b59622312dfa0ca1e80fa7945296ba5c04362a5fda084a17e23a6b98dac331f5a13bcb1ba34a2b598a3f5c41aa288f0c51fe60196e912954e56a
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/parser@npm:8.34.0"
+"@typescript-eslint/parser@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/parser@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/scope-manager": "npm:8.34.0"
-    "@typescript-eslint/types": "npm:8.34.0"
-    "@typescript-eslint/typescript-estree": "npm:8.34.0"
-    "@typescript-eslint/visitor-keys": "npm:8.34.0"
+    "@typescript-eslint/scope-manager": "npm:8.34.1"
+    "@typescript-eslint/types": "npm:8.34.1"
+    "@typescript-eslint/typescript-estree": "npm:8.34.1"
+    "@typescript-eslint/visitor-keys": "npm:8.34.1"
     debug: "npm:^4.3.4"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/a829be00ea3455c1e50983c8b44476fbfc9329d019764e407c4d591a95dbd168f83f13e309751242bb4fdc02f89cb51ca5cdc912a12b10f69eebcb1c46dcc39b
+  checksum: 10c0/bf8070245d53ef6926ff6630bb72f245923f545304e2a61508fb944802a83fed8eab961d9010956d07999d51afdfbbec82aea9d6185295551a7c17c00d759183
   languageName: node
   linkType: hard
 
@@ -8954,16 +8998,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/project-service@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/project-service@npm:8.34.0"
+"@typescript-eslint/project-service@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/project-service@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/tsconfig-utils": "npm:^8.34.0"
-    "@typescript-eslint/types": "npm:^8.34.0"
+    "@typescript-eslint/tsconfig-utils": "npm:^8.34.1"
+    "@typescript-eslint/types": "npm:^8.34.1"
     debug: "npm:^4.3.4"
   peerDependencies:
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/88e64b8daf7db9603277fcbeb9e585e70ec6d6e34fa10d4b60f421e48081cc7c1f6acb01e1ee9dd95e10c0601f164c1defbfe6c9d1edc9822089bb72dbb0fc80
+  checksum: 10c0/9333a890625f6777054db17a6b299281ae7502bb7615261d15b885a75b8cf65fc91591389c93b37ecd14b651d8e94851dac8718e5dcc8ed0600533535dae855c
   languageName: node
   linkType: hard
 
@@ -8977,13 +9021,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/scope-manager@npm:8.34.0"
+"@typescript-eslint/scope-manager@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/scope-manager@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/types": "npm:8.34.0"
-    "@typescript-eslint/visitor-keys": "npm:8.34.0"
-  checksum: 10c0/35af36bddc4c227cb0bac42192c40b38179ced30866b6aac642781e21c3f3b1c72051eb4f685d7c99517c3296dd6ba83dd8360e4072e8dcf604aae266eece1b4
+    "@typescript-eslint/types": "npm:8.34.1"
+    "@typescript-eslint/visitor-keys": "npm:8.34.1"
+  checksum: 10c0/2af608fa3900f4726322e33bf4f3a376fdace3ac0f310cf7d9256bbc2905c3896138176a47dd195d2c2229f27fe43f5deb4bc7729db2eb18389926dedea78077
   languageName: node
   linkType: hard
 
@@ -8996,27 +9040,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/tsconfig-utils@npm:8.34.0, @typescript-eslint/tsconfig-utils@npm:^8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/tsconfig-utils@npm:8.34.0"
+"@typescript-eslint/tsconfig-utils@npm:8.34.1, @typescript-eslint/tsconfig-utils@npm:^8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/tsconfig-utils@npm:8.34.1"
   peerDependencies:
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/98246f89d169d3feb453a6a8552c51d10225cb00c4ff1501549b7846e564ad0e218b644cd94ce779dceed07dcb9035c53fd32186b4c0223b7b2a1f7295b120c3
+  checksum: 10c0/8d1ead8b7c279b48e2ed96f083ec119a9aeea1ca9cdd40576ec271b996b9fd8cfa0ddb0aafbb4e14bc27fc62c69c5be66d39b1de68eab9ddd7f1861da267423d
   languageName: node
   linkType: hard
 
-"@typescript-eslint/type-utils@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/type-utils@npm:8.34.0"
+"@typescript-eslint/type-utils@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/type-utils@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/typescript-estree": "npm:8.34.0"
-    "@typescript-eslint/utils": "npm:8.34.0"
+    "@typescript-eslint/typescript-estree": "npm:8.34.1"
+    "@typescript-eslint/utils": "npm:8.34.1"
     debug: "npm:^4.3.4"
     ts-api-utils: "npm:^2.1.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/7c25d7f4186411190142390467160e81384d400cfb21183d8a305991c723da0a74e5528cdce30b5f2cb6d9d2f6af7c0981c20c18b45fc084b35632429270ae80
+  checksum: 10c0/502a2cdfe47f1f34206c747b5a70e0242dd99f570511db3dda9c5f999d9abadfbbb1dfa82a1fa437a1689d232715412e61c97d95f19c9314ba5ad23196b4096d
   languageName: node
   linkType: hard
 
@@ -9027,10 +9071,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:8.34.0, @typescript-eslint/types@npm:^8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/types@npm:8.34.0"
-  checksum: 10c0/5d32b2ac03e4cbc1ac1777a53ee83d6d7887a783363bab4f0a6f7550a9e9df0254971cdf71e13b988e2215f2939e7592404856b8acb086ec63c4479c0225c742
+"@typescript-eslint/types@npm:8.34.1, @typescript-eslint/types@npm:^8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/types@npm:8.34.1"
+  checksum: 10c0/db1b3dce6a70b28ddb13c76fbb5983240d9395656df5f7cbd99bfd9905e39c0dab2132870f01dbc406b48739c437f7d344a879a824cedaba81b91a53110dc23a
   languageName: node
   linkType: hard
 
@@ -9054,14 +9098,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/typescript-estree@npm:8.34.0"
+"@typescript-eslint/typescript-estree@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/typescript-estree@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/project-service": "npm:8.34.0"
-    "@typescript-eslint/tsconfig-utils": "npm:8.34.0"
-    "@typescript-eslint/types": "npm:8.34.0"
-    "@typescript-eslint/visitor-keys": "npm:8.34.0"
+    "@typescript-eslint/project-service": "npm:8.34.1"
+    "@typescript-eslint/tsconfig-utils": "npm:8.34.1"
+    "@typescript-eslint/types": "npm:8.34.1"
+    "@typescript-eslint/visitor-keys": "npm:8.34.1"
     debug: "npm:^4.3.4"
     fast-glob: "npm:^3.3.2"
     is-glob: "npm:^4.0.3"
@@ -9070,22 +9114,22 @@ __metadata:
     ts-api-utils: "npm:^2.1.0"
   peerDependencies:
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/e678982b0009e895aee2b4ccc55bb9ea5473a32e846a97c63d0c6a978c72e1a29e506e6a5f9dda45e9b7803e6c3e3abcdf4c316af1c59146abef4e10e0e94129
+  checksum: 10c0/4ee7249db91b9840361f34f80b7b6d646a3af159c7298d79a33d8a11c98792fd3a395343e5e17e0fa29529e8f0113bac8baadcef90d1e140bd736a48f0485042
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/utils@npm:8.34.0"
+"@typescript-eslint/utils@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/utils@npm:8.34.1"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.7.0"
-    "@typescript-eslint/scope-manager": "npm:8.34.0"
-    "@typescript-eslint/types": "npm:8.34.0"
-    "@typescript-eslint/typescript-estree": "npm:8.34.0"
+    "@typescript-eslint/scope-manager": "npm:8.34.1"
+    "@typescript-eslint/types": "npm:8.34.1"
+    "@typescript-eslint/typescript-estree": "npm:8.34.1"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/d759cf6f1b1b23d7d8ab922345e7b68b7c829f4bad841164312cfa3a3e8e818b962dd0d96c1aca7fd7c10248d56538d9714df5f3cfec9f159ca0a139feac60b9
+  checksum: 10c0/e3085877f7940c02a37653e6bc52ac6cde115e755b1f788fe4331202f371b3421cc4d0878c7d3eb054e14e9b3a064496a707a73eac471cb2b73593b9e9d4b998
   languageName: node
   linkType: hard
 
@@ -9114,13 +9158,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:8.34.0":
-  version: 8.34.0
-  resolution: "@typescript-eslint/visitor-keys@npm:8.34.0"
+"@typescript-eslint/visitor-keys@npm:8.34.1":
+  version: 8.34.1
+  resolution: "@typescript-eslint/visitor-keys@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/types": "npm:8.34.0"
-    eslint-visitor-keys: "npm:^4.2.0"
-  checksum: 10c0/d50997e921a178589913d08ffe14d02eba40666c90bdc0c9751f2b87ce500598f64027e2d866dfc975647b2f8b907158503d0722d6b1976c8f1cf5dd8e1d6d69
+    "@typescript-eslint/types": "npm:8.34.1"
+    eslint-visitor-keys: "npm:^4.2.1"
+  checksum: 10c0/0e5a9b3d93905d16d3cf8cb5fb346dcc6f760482eb7d0ac209aefc09a32f78ef28a687634df6ad08e81fb3e1083e8805f34472de6bbc501c0105ad654d518f40
   languageName: node
   linkType: hard
 
@@ -13849,7 +13893,7 @@ __metadata:
     ts-node: "npm:10.9.2"
     tsx: "npm:4.19.4"
     typescript: "npm:5.8.3"
-    typescript-eslint: "npm:8.34.0"
+    typescript-eslint: "npm:8.34.1"
     vite: "npm:6.3.5"
     vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:3.2.3"
@@ -16901,9 +16945,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"miniflare@npm:4.20250604.1":
-  version: 4.20250604.1
-  resolution: "miniflare@npm:4.20250604.1"
+"miniflare@npm:4.20250617.0":
+  version: 4.20250617.0
+  resolution: "miniflare@npm:4.20250617.0"
   dependencies:
     "@cspotcode/source-map-support": "npm:0.8.1"
     acorn: "npm:8.14.0"
@@ -16913,13 +16957,13 @@ __metadata:
     sharp: "npm:^0.33.5"
     stoppable: "npm:1.1.0"
     undici: "npm:^5.28.5"
-    workerd: "npm:1.20250604.0"
+    workerd: "npm:1.20250617.0"
     ws: "npm:8.18.0"
     youch: "npm:3.3.4"
     zod: "npm:3.22.3"
   bin:
     miniflare: bootstrap.js
-  checksum: 10c0/76cb7c283709774479a8dee400d62a7c169d01add667e70f86c4e2c98d1d766826304043f625d98f399a62b27b38ee7eedcdf6dd3ca8e0f81c22f5a6fa5fca56
+  checksum: 10c0/1342f839b7829b6af0e433c1c7352c624c55e6722d5a08a25ec9f1963832abcb676a7da65da22ed82ede6bece44e6cb1dcb4bbbf53fc07d4256d966454082a5b
   languageName: node
   linkType: hard
 
@@ -20944,17 +20988,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript-eslint@npm:8.34.0":
-  version: 8.34.0
-  resolution: "typescript-eslint@npm:8.34.0"
+"typescript-eslint@npm:8.34.1":
+  version: 8.34.1
+  resolution: "typescript-eslint@npm:8.34.1"
   dependencies:
-    "@typescript-eslint/eslint-plugin": "npm:8.34.0"
-    "@typescript-eslint/parser": "npm:8.34.0"
-    "@typescript-eslint/utils": "npm:8.34.0"
+    "@typescript-eslint/eslint-plugin": "npm:8.34.1"
+    "@typescript-eslint/parser": "npm:8.34.1"
+    "@typescript-eslint/utils": "npm:8.34.1"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0
     typescript: ">=4.8.4 <5.9.0"
-  checksum: 10c0/20c748b714267836bf47b9ed71b02ab256083d889528857732d559bf85ba4924c60623eb158fe0f5704bb75d9f20fbb54bc79b4cb978883093c6071a484fc390
+  checksum: 10c0/6de5d2ce180d1609a8a5383557a2787f17620ebc9a4d84fba9d9240db8005cc3084a7840ebafe532fba9970fe12822ee415615041f3527334fdfc45c411d35b6
   languageName: node
   linkType: hard
 
@@ -21674,15 +21718,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"workerd@npm:1.20250604.0":
-  version: 1.20250604.0
-  resolution: "workerd@npm:1.20250604.0"
+"workerd@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "workerd@npm:1.20250617.0"
   dependencies:
-    "@cloudflare/workerd-darwin-64": "npm:1.20250604.0"
-    "@cloudflare/workerd-darwin-arm64": "npm:1.20250604.0"
-    "@cloudflare/workerd-linux-64": "npm:1.20250604.0"
-    "@cloudflare/workerd-linux-arm64": "npm:1.20250604.0"
-    "@cloudflare/workerd-windows-64": "npm:1.20250604.0"
+    "@cloudflare/workerd-darwin-64": "npm:1.20250617.0"
+    "@cloudflare/workerd-darwin-arm64": "npm:1.20250617.0"
+    "@cloudflare/workerd-linux-64": "npm:1.20250617.0"
+    "@cloudflare/workerd-linux-arm64": "npm:1.20250617.0"
+    "@cloudflare/workerd-windows-64": "npm:1.20250617.0"
   dependenciesMeta:
     "@cloudflare/workerd-darwin-64":
       optional: true
@@ -21696,25 +21740,25 @@ __metadata:
       optional: true
   bin:
     workerd: bin/workerd
-  checksum: 10c0/e29ef6b3534eac176e362fe68b39dc94ec1576a354ecd65186afe563316e375fb8744680c1590e90b05cdc7a8795188aab5d9058e1c3d3ba54a3b999d8440bc0
+  checksum: 10c0/3f3342840a4d439232f86d88019601071f18470c37582a2b7de1273346785aa090d0259e674be1f4d59f898d38d5b6d276da2cc4625de1609e0966e9405bdf7a
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.20.0":
-  version: 4.20.0
-  resolution: "wrangler@npm:4.20.0"
+"wrangler@npm:^4.20.2":
+  version: 4.20.2
+  resolution: "wrangler@npm:4.20.2"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.4.0"
-    "@cloudflare/unenv-preset": "npm:2.3.2"
+    "@cloudflare/unenv-preset": "npm:2.3.3"
     blake3-wasm: "npm:2.1.5"
     esbuild: "npm:0.25.4"
     fsevents: "npm:~2.3.2"
-    miniflare: "npm:4.20250604.1"
+    miniflare: "npm:4.20250617.0"
     path-to-regexp: "npm:6.3.0"
     unenv: "npm:2.0.0-rc.17"
-    workerd: "npm:1.20250604.0"
+    workerd: "npm:1.20250617.0"
   peerDependencies:
-    "@cloudflare/workers-types": ^4.20250604.0
+    "@cloudflare/workers-types": ^4.20250617.0
   dependenciesMeta:
     fsevents:
       optional: true
@@ -21724,7 +21768,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/bc5b16d1ca79e8696f2f8d02b28dba8ef163ca2b3787a15458e6716350fbbd63caae5a61f5f83f71fa1c7e783cececc70d5de594e21e33c66b1e8a67f6a3cc32
+  checksum: 10c0/4baec23ccb40ba79eff8a832fdda21466d60bb71883094526b8aadc37d104c821eb2adec085c0f78f416fea61cad169a0a3dfffe252dd0ba7b5bacb0f7b83cf0
   languageName: node
   linkType: hard
 
@@ -21975,9 +22019,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.64":
-  version: 3.25.64
-  resolution: "zod@npm:3.25.64"
-  checksum: 10c0/00d76093a999e377e4ffd037fa7185e861c35917e8c4272f514115c206a0654995168f57fb71708b11e0a9243206d988b7f63b543404e1796402e50d346a6bd7
+"zod@npm:^3.25.67":
+  version: 3.25.67
+  resolution: "zod@npm:3.25.67"
+  checksum: 10c0/80a0cab3033272c4ab9312198081f0c4ea88e9673c059aa36dc32024906363729db54bdb78f3dc9d5529bd1601f74974d5a56c0a23e40c6f04a9270c9ff22336
   languageName: node
   linkType: hard
