@@ -17,13 +17,13 @@ export interface PropagateHeadersOpts {
   fromClientToSubgraphs?: (
     payload: FromClientToSubgraphsPayload,
   ) =>
-    | Record<string, string>
+    | Record<string, string | null | undefined>
     | void
     | Promise<Record<string, string | null | undefined> | void>;
   fromSubgraphsToClient?: (
     payload: FromSubgraphsToClientPayload,
   ) =>
-    | Record<string, string | string[]>
+    | Record<string, string | string[] | null | undefined>
     | void
     | Promise<Record<string, string | string[] | null | undefined> | void>;
 }
@@ -46,15 +46,21 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
                   request,
                   subgraphName,
                 }),
-              (headers) =>
+              (propagatingHeaders) => {
+                const headers = options.headers || {};
+                for (const key in propagatingHeaders) {
+                  const value = propagatingHeaders[key];
+                  if (value != null && headers[key] == null) {
+                    // we want to propagate only headers that are not nullish
+                    // we also want to avoid overwriting existing headers
+                    headers[key] = value;
+                  }
+                }
                 setOptions({
                   ...options,
-                  // @ts-expect-error TODO: headers can contain null and undefined values. the types are incorrect
-                  headers: {
-                    ...headers,
-                    ...options.headers,
-                  },
-                }),
+                  headers,
+                });
+              },
             ),
           (): OnFetchHookDone | void => {
             if (opts.fromSubgraphsToClient) {
@@ -76,7 +82,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
                       // Merge headers across multiple subgraph calls
                       for (const key in headers) {
                         const value = headers[key];
-                        if (value) {
+                        if (value != null) {
                           const headerAsArray = Array.isArray(value)
                             ? value
                             : [value];
