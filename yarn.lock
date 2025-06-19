@@ -4076,55 +4076,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/logger-json@workspace:packages/logger-json":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-json@workspace:packages/logger-json"
-  dependencies:
-    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@graphql-mesh/utils": "npm:^0.104.5"
-    cross-inspect: "npm:^1.0.1"
-    graphql: "npm:^16.9.0"
-    pkgroll: "npm:2.13.1"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/logger-pino@workspace:packages/logger-pino":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-pino@workspace:packages/logger-pino"
-  dependencies:
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@graphql-mesh/utils": "npm:^0.104.5"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
-    graphql: "npm:16.11.0"
-    pino: "npm:^9.7.0"
-    pkgroll: "npm:2.13.1"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-    pino: ^9.7.0
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/logger-winston@workspace:packages/logger-winston":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/logger-winston@workspace:packages/logger-winston"
-  dependencies:
-    "@graphql-mesh/types": "npm:^0.104.0"
-    "@whatwg-node/disposablestack": "npm:^0.0.6"
-    graphql: "npm:16.11.0"
-    pkgroll: "npm:2.13.1"
-    tslib: "npm:^2.8.1"
-    winston: "npm:^3.17.0"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-    winston: ^3.17.0
-  languageName: unknown
-  linkType: soft
-
 "@graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
@@ -17941,7 +17892,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pino@npm:^9.0.0, pino@npm:^9.7.0":
+"pino@npm:^9.0.0":
   version: 9.7.0
   resolution: "pino@npm:9.7.0"
   dependencies:
