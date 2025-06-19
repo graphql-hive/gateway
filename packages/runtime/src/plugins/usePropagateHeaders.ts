@@ -17,13 +17,13 @@ export interface PropagateHeadersOpts {
   fromClientToSubgraphs?: (
     payload: FromClientToSubgraphsPayload,
   ) =>
-    | Record<string, string>
+    | Record<string, string | null | undefined>
     | void
     | Promise<Record<string, string | null | undefined> | void>;
   fromSubgraphsToClient?: (
     payload: FromSubgraphsToClientPayload,
   ) =>
-    | Record<string, string | string[]>
+    | Record<string, string | string[] | null | undefined>
     | void
     | Promise<Record<string, string | string[] | null | undefined> | void>;
 }
