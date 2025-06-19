@@ -152,7 +152,7 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-extra-header']).toBe('extra-value');
       expect(headersObj['x-my-other']).toBe('other-value');
     });
-    it('won\'t forward empty headers', async () => {
+    it("won't forward empty headers", async () => {
       await using gateway = createGatewayRuntime({
         proxy: {
           endpoint: 'http://localhost:4001/graphql',
