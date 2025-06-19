@@ -14,7 +14,8 @@ import {
 } from './utils';
 import { ConsoleLogWriter, JSONLogWriter, LogWriter } from './writers';
 
-export type { Attributes } from './utils';
+export type { Attributes };
+export type { MaybeLazy, AttributeValue } from './utils';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
