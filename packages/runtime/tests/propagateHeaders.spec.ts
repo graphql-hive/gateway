@@ -152,6 +152,60 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-extra-header']).toBe('extra-value');
       expect(headersObj['x-my-other']).toBe('other-value');
     });
+    it('won\'t forward empty headers', async () => {
+      await using gateway = createGatewayRuntime({
+        proxy: {
+          endpoint: 'http://localhost:4001/graphql',
+        },
+        propagateHeaders: {
+          fromClientToSubgraphs({ request }) {
+            return {
+              'x-empty-header': request.headers.get('x-empty-header')!,
+            };
+          },
+        },
+        plugins: () => [
+          useCustomFetch(
+            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+            upstream.fetch,
+          ),
+        ],
+        logging: isDebug(),
+      });
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello
+            }
+          `,
+          extensions: {
+            randomThing: 'randomValue',
+          },
+        }),
+      });
+
+      const resJson = await response.json();
+      expect(resJson).toEqual({
+        data: {
+          hello: 'world',
+        },
+      });
+
+      // The first call is for the introspection
+      expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(2);
+      const onParamsPayload = requestTrackerPlugin.onParams.mock.calls[1]?.[0]!;
+      // Do not pass extensions
+      expect(onParamsPayload.params.extensions).toBeUndefined();
+      const headersObj = Object.fromEntries(
+        onParamsPayload.request.headers.entries(),
+      );
+      expect(headersObj['x-empty-header']).toBeUndefined();
+    });
   });
   describe('From Subgraphs to the Client', () => {
     const upstream1 = createSchema({
