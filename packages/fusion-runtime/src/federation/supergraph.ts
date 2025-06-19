@@ -1,7 +1,7 @@
+import { LegacyLogger, Logger } from '@graphql-hive/logger';
 import type { YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
-  requestIdByRequest,
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
 import type {
@@ -158,7 +158,8 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegateHooks,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
-  logger,
+  // no logger was provided, use a muted logger for consistency across plugin hooks
+  log: rootLog = new Logger({ level: false }),
 }: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
@@ -230,7 +231,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
                     originalResolver,
                     typeName,
                     onDelegationStageExecuteHooks,
-                    logger,
+                    rootLog,
                   );
                 }
               }
@@ -278,7 +279,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     executableUnifiedGraph,
     // @ts-expect-error Legacy Mesh RawSource is not compatible with new Mesh
     subschemas,
-    logger,
+    LegacyLogger.from(rootLog),
     onDelegateHooks || [],
   );
   const stitchingInfo = executableUnifiedGraph.extensions?.[
@@ -306,16 +307,9 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
             delegationPlanBuilder = newDelegationPlanBuilder;
           }
           const onDelegationPlanDoneHooks: OnDelegationPlanDoneHook[] = [];
-          let currentLogger = logger;
-          let requestId: string | undefined;
-          if (context?.request) {
-            requestId = requestIdByRequest.get(context.request);
-            if (requestId) {
-              currentLogger = currentLogger?.child({ requestId });
-            }
-          }
+          let log = context.log as Logger;
           if (sourceSubschema.name) {
-            currentLogger = currentLogger?.child({
+            log = log.child({
               subgraph: sourceSubschema.name,
             });
           }
@@ -328,7 +322,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
               variables,
               fragments,
               fieldNodes,
-              logger: currentLogger,
+              log,
               context,
               info,
               delegationPlanBuilder,
