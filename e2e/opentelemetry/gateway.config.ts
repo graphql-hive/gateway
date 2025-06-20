@@ -42,6 +42,7 @@ const resource = resources.resourceFromAttributes({
   'custom.resource': 'custom value',
 });
 
+// The NodeSDK only actually work in Node. For other envs, it's better to use our own configurator
 const runner = process.env['E2E_GATEWAY_RUNNER'];
 if (runner === 'node' || runner === 'docker') {
   const sdk = new NodeSDK({
