@@ -28,7 +28,7 @@ describe.skipIf(process.env['LEAK_TEST'])('Transpile', () => {
     const url = pathToFileURL(
       path.join(__dirname, 'fixtures', 'syntax-error.ts'),
     );
-    await expect(transpileTypeScriptFile(url.toString())).rejects.toThrowError(
+    await expect(transpileTypeScriptFile(url.toString())).rejects.toThrow(
       // we include the starting forwardslash and the project path because we want to make sure the absolute path is reported
       /Error transforming \/(.*)\/packages\/importer\/tests\/fixtures\/syntax-error.ts: Unexpected token, expected ";" \(2:11\)/,
     );
