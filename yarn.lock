@@ -4073,7 +4073,7 @@ __metadata:
     html-minifier-terser: "npm:7.2.0"
     pkgroll: "npm:2.13.1"
     tslib: "npm:^2.8.1"
-    tsx: "npm:4.19.4"
+    tsx: "npm:4.20.3"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
@@ -4143,7 +4143,7 @@ __metadata:
     rollup: "npm:4.44.0"
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.1"
-    tsx: "npm:4.19.4"
+    tsx: "npm:4.20.3"
     ws: "npm:^8.18.0"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
@@ -5761,7 +5761,7 @@ __metadata:
     esbuild: "npm:^0.25.5"
     glob: "npm:^11.0.3"
     jscodeshift: "npm:^17.1.1"
-    tsx: "npm:^4.19.2"
+    tsx: "npm:^4.20.3"
     zod: "npm:^3.25.64"
   languageName: unknown
   linkType: soft
@@ -13854,7 +13854,7 @@ __metadata:
     prettier-plugin-sh: "npm:0.17.4"
     ts-jest: "npm:29.4.0"
     ts-node: "npm:10.9.2"
-    tsx: "npm:4.19.4"
+    tsx: "npm:4.20.3"
     typescript: "npm:5.8.3"
     typescript-eslint: "npm:8.34.1"
     vite: "npm:6.3.5"
