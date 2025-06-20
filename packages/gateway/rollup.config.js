@@ -94,14 +94,10 @@ const deps = {
       // Exporters
       ['exporter-trace-otlp-http'],
       ['exporter-zipkin'],
-      ['exporter-jaeger', 'src'],
 
       // Propagators
       ['propagator-b3'],
       ['propagator-jaeger'],
-
-      // Sampler
-      ['sampler-jaeger-remote', 'src'],
 
       // Context Managers
       ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
