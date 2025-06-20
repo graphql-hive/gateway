@@ -1,3 +1,4 @@
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { getEnvBool } from '~internal/env';
 import { LogLevel } from '../logger';
 import { Attributes, logLevelToString } from '../utils';
@@ -30,12 +31,25 @@ export interface ConsoleLogWriterOptions {
    * @default false
    */
   noTimestamp?: boolean;
+  /**
+   * Asynchronously write the logs to the {@link console}. Will not block the main thread,
+   * but has potential to spam the event loop with log promises. Use with caution.
+   *
+   * Note that all of the logs will be written in the order they were called, only not immedietely.
+   *
+   * The logs are queued in a macrotask, so they will not block the main thread and will have lower
+   * priority than microtasks (promises will have priority).
+   *
+   * @default false
+   */
+  async?: boolean;
 }
 
 export class ConsoleLogWriter implements LogWriter {
   #console: NonNullable<ConsoleLogWriterOptions['console']>;
   #noColor: boolean;
   #noTimestamp: boolean;
+  #async: boolean;
   constructor(opts: ConsoleLogWriterOptions = {}) {
     const {
       console = globalThis.console,
@@ -44,10 +58,12 @@ export class ConsoleLogWriter implements LogWriter {
         // or no color if https://no-color.org/
         getEnvBool('NO_COLOR'),
       noTimestamp = false,
+      async = false,
     } = opts;
     this.#console = console;
     this.#noColor = noColor;
     this.#noTimestamp = noTimestamp;
+    this.#async = async;
   }
   color<T extends string | null | undefined>(
     style: keyof typeof asciMap,
@@ -61,11 +77,11 @@ export class ConsoleLogWriter implements LogWriter {
     }
     return (asciMap[style] + text + asciMap.reset) as T;
   }
-  write(
+  #writeToConsole(
     level: LogLevel,
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
-  ): void {
+  ) {
     this.#console[level === 'trace' ? 'debug' : level](
       [
         !this.#noTimestamp && this.color('timestamp', new Date().toISOString()),
@@ -76,6 +92,23 @@ export class ConsoleLogWriter implements LogWriter {
         .filter(Boolean)
         .join(' '),
     );
+  }
+
+  write(
+    level: LogLevel,
+    attrs: Attributes | null | undefined,
+    msg: string | null | undefined,
+  ): void | Promise<void> {
+    if (this.#async) {
+      const { promise, resolve } = createDeferredPromise();
+      setTimeout(() => {
+        // queue a macrotask to avoid blocking the main thread and promises
+        this.#writeToConsole(level, attrs, msg);
+        resolve();
+      }, 0);
+      return promise;
+    }
+    this.#writeToConsole(level, attrs, msg);
   }
   stringifyAttrs(attrs: Attributes): string {
     let log = '\n';
