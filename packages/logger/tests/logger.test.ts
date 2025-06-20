@@ -314,10 +314,56 @@ it('should wait for async writers on flush', async () => {
   `);
 });
 
+it('should wait for flushable writers on flush', async () => {
+  const logs: any[] = [];
+  const pendingWrites: Promise<void>[] = [];
+  const log = new Logger({
+    writers: [
+      {
+        write(level, attrs, msg) {
+          pendingWrites.push(
+            (async () => {
+              await setTimeout(10);
+              logs.push({ level, attrs, msg });
+            })(),
+          );
+        },
+        async flush() {
+          await Promise.all(pendingWrites);
+        },
+      },
+    ],
+  });
+
+  log.info('hello');
+  log.info('world');
+
+  // not flushed yet
+  expect(logs).toMatchInlineSnapshot(`[]`);
+
+  await log.flush();
+
+  // flushed
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": undefined,
+        "level": "info",
+        "msg": "hello",
+      },
+      {
+        "attrs": undefined,
+        "level": "info",
+        "msg": "world",
+      },
+    ]
+  `);
+});
+
 it('should handle async write errors on flush', async () => {
   const origConsoleError = console.error;
   console.error = vi.fn(() => {
-    // noop
+    // failed writes will be logged to the error console
   });
   using _ = {
     [Symbol.dispose]() {
@@ -346,10 +392,85 @@ it('should handle async write errors on flush', async () => {
     throw new Error('should not have reached here');
   } catch (e) {
     expect(e).toMatchInlineSnapshot(
-      `[AggregateError: Failed to flush 2 writes]`,
+      `[AggregateError: Failed to flush with 2 errors]`,
     );
     expect((e as AggregateError).errors).toMatchInlineSnapshot(`
       [
+        [Error: Write failed! #1],
+        [Error: Write failed! #2],
+      ]
+    `);
+    expect(console.error).toHaveBeenCalledTimes(2);
+  }
+});
+
+it('should handle writer flush errors on flush', async () => {
+  const log = new Logger({
+    writers: [
+      {
+        write() {
+          // noop
+        },
+        flush() {
+          throw new Error('Whoops!');
+        },
+      },
+    ],
+  });
+
+  // no fail
+  log.info('hello');
+  log.info('world');
+
+  try {
+    await log.flush();
+    throw new Error('should not have reached here');
+  } catch (e) {
+    expect(e).toMatchInlineSnapshot(`[Error: Failed to flush]`);
+    expect((e as Error).cause).toMatchInlineSnapshot(`[Error: Whoops!]`);
+  }
+});
+
+it('should handle both async write and writer flush errors on flush', async () => {
+  const origConsoleError = console.error;
+  console.error = vi.fn(() => {
+    // failed writes will be logged to the error console
+  });
+  using _ = {
+    [Symbol.dispose]() {
+      console.error = origConsoleError;
+    },
+  };
+
+  let i = 0;
+  const log = new Logger({
+    writers: [
+      {
+        async write() {
+          i++;
+          throw new Error('Write failed! #' + i);
+        },
+        flush() {
+          throw new Error('Whoops!');
+        },
+      },
+    ],
+  });
+
+  // no fail
+  log.info('hello');
+  log.info('world');
+
+  try {
+    await log.flush();
+    throw new Error('should not have reached here');
+  } catch (e) {
+    expect(e).toMatchInlineSnapshot(
+      `[AggregateError: Failed to flush with 3 errors]`,
+    );
+    expect((e as AggregateError).errors).toMatchInlineSnapshot(`
+      [
+        [Error: Whoops!],
         [Error: Write failed! #1],
         [Error: Write failed! #2],
       ]
