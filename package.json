@@ -62,8 +62,8 @@
     "vitest": "3.2.3"
   },
   "resolutions": {
-    "@graphql-mesh/types": "0.104.4",
-    "@graphql-mesh/utils": "0.104.5",
+    "@graphql-mesh/types": "0.104.6",
+    "@graphql-mesh/utils": "0.104.6",
     "@graphql-tools/delegate": "workspace:^",
     "@opentelemetry/exporter-trace-otlp-http": "patch:@opentelemetry/exporter-trace-otlp-http@npm:0.56.0#~/.yarn/patches/@opentelemetry-exporter-trace-otlp-http-npm-0.56.0-dddd282e41.patch",
     "@opentelemetry/otlp-exporter-base": "patch:@opentelemetry/otlp-exporter-base@npm:0.56.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.56.0-ba3dc5f5c5.patch",
@@ -74,7 +74,6 @@
     "esbuild": "0.25.5",
     "graphql": "16.11.0",
     "ioredis-mock": "patch:ioredis-mock@8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
-    "jest-leak-detector": "patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.10",
     "tsx": "patch:tsx@npm:4.19.3#~/.yarn/patches/tsx-npm-4.19.2-a8f2312a2f.patch",

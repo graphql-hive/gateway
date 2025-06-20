@@ -7,19 +7,19 @@ import {
 
 describe('can preparse merge arguments', () => {
   test('throws if nested key expansions used', () => {
-    expect(() => preparseMergeArgsExpr(`[[[[]]]]`)).toThrowError(
+    expect(() => preparseMergeArgsExpr(`[[[[]]]]`)).toThrow(
       'Each opening "[[" must be matched by a closing "]]" without nesting.',
     );
   });
 
   test('throws with extra opening double brackets', () => {
-    expect(() => preparseMergeArgsExpr(`[[[[]]`)).toThrowError(
+    expect(() => preparseMergeArgsExpr(`[[[[]]`)).toThrow(
       'Each opening "[[" must be matched by a closing "]]" without nesting.',
     );
   });
 
   test('throws with extra closing double brackets', () => {
-    expect(() => preparseMergeArgsExpr(`[[]]]]`)).toThrowError(
+    expect(() => preparseMergeArgsExpr(`[[]]]]`)).toThrow(
       'Each opening "[[" must be matched by a closing "]]" without nesting.',
     );
   });

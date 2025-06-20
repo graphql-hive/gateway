@@ -4,7 +4,7 @@ import { parseMergeArgsExpr } from '../src/parseMergeArgsExpr.js';
 
 describe('can parse merge arguments', () => {
   test('throws if no key declared', () => {
-    expect(() => parseMergeArgsExpr(`test: "test"`)).toThrowError(
+    expect(() => parseMergeArgsExpr(`test: "test"`)).toThrow(
       'Merge arguments must declare a key.',
     );
   });
@@ -12,10 +12,10 @@ describe('can parse merge arguments', () => {
   test('throws if expansions are mixed with key declarations', () => {
     expect(() =>
       parseMergeArgsExpr(`expansion: [[$key]], single: $key`),
-    ).toThrowError('Expansions cannot be mixed with single key declarations.');
+    ).toThrow('Expansions cannot be mixed with single key declarations.');
     expect(() =>
       parseMergeArgsExpr(`expansion: [[$key.test]], single: $key.test`),
-    ).toThrowError('Expansions cannot be mixed with single key declarations.');
+    ).toThrow('Expansions cannot be mixed with single key declarations.');
   });
 
   test('can parseMergeArgsExpr with key', () => {

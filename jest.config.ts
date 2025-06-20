@@ -5,7 +5,7 @@ import JSON5 from 'json5';
 import { pathsToModuleNameMapper } from 'ts-jest';
 
 const isCI = !!process.env['CI'];
-const rootDir = __dirname;
+const rootDir = process.cwd();
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
 const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
 const tsconfig = JSON5.parse(tsconfigContents);
