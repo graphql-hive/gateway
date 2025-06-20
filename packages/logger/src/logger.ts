@@ -14,8 +14,8 @@ import {
 } from './utils';
 import { ConsoleLogWriter, JSONLogWriter, LogWriter } from './writers';
 
+export type { AttributeValue, MaybeLazy } from './utils';
 export type { Attributes };
-export type { MaybeLazy, AttributeValue } from './utils';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
@@ -123,18 +123,28 @@ export class Logger implements AsyncDisposable {
   }
 
   public flush() {
-    if (this.#pendingWrites?.size) {
+    const writerFlushes = this.#writers.map((w) => w.flush).filter((f) => !!f);
+    if (this.#pendingWrites?.size || writerFlushes.length) {
       const errs: unknown[] = [];
-      return Promise.allSettled(
-        Array.from(this.#pendingWrites).map((w) =>
+      return Promise.allSettled([
+        ...Array.from(this.#pendingWrites || []).map((w) =>
           w.catch((err) => errs.push(err)),
         ),
-      ).then(() => {
-        this.#pendingWrites!.clear();
-        if (errs.length) {
+        ...Array.from(writerFlushes || []).map(async (f) => {
+          try {
+            await f();
+          } catch (err) {
+            errs.push(err);
+          }
+        }),
+      ]).then(() => {
+        this.#pendingWrites?.clear();
+        if (errs.length === 1) {
+          throw new Error('Failed to flush', { cause: errs[0] });
+        } else if (errs.length) {
           throw new AggregateError(
             errs,
-            `Failed to flush ${errs.length} writes`,
+            `Failed to flush with ${errs.length} errors`,
           );
         }
       });

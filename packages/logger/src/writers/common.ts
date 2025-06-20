@@ -11,4 +11,5 @@ export interface LogWriter {
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void | Promise<void>;
+  flush?(): void | Promise<void>;
 }
