@@ -1,6 +1,6 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM oven/bun:1.2.15-slim AS install
+FROM oven/bun:1.2.16-slim AS install
 
 WORKDIR /install
 
@@ -8,7 +8,7 @@ RUN bun i graphql@^16.9.0
 
 #
 
-FROM oven/bun:1.2.15-slim
+FROM oven/bun:1.2.16-slim
 
 # use the upcoming debian release (trixie) to get the latest security updates
 RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
