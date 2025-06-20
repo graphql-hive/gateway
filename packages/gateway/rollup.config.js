@@ -87,7 +87,7 @@ const deps = {
       ['core'],
       ['resources', 'esm/'],
       ['sdk-trace-base'],
-      ['sdk-metrics-base'],
+      ['sdk-metrics'],
       ['semantic-conventions'],
       ['instrumentation'],
 
