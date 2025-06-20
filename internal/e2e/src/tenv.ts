@@ -425,7 +425,7 @@ export function createTenv(cwd: string): Tenv {
         case 'bun-docker':
         case 'docker': {
           const volumes: ContainerOptions['volumes'] =
-            runner?.docker?.volumes || [];
+            runner?.docker?.volumes?.concat() || [];
 
           if (supergraph) {
             supergraph = await handleDockerHostNameInURLOrAtPath(
