@@ -10,6 +10,16 @@ exports[`ConsoleLogWriter should color levels and keys 1`] = `
 ]
 `;
 
+exports[`ConsoleLogWriter should flush async logs 1`] = `
+[
+  ""TRC hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""DBG hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""INF hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""WRN hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""ERR hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+]
+`;
+
 exports[`ConsoleLogWriter should pretty print the attributes 1`] = `
 [
   ""TRC obj \\n  a: 1\\n  b: 2"",
