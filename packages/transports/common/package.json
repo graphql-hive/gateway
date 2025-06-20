@@ -45,7 +45,7 @@
     "@envelop/core": "^5.2.3",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
-    "@graphql-mesh/types": "^0.104.0",
+    "@graphql-mesh/types": "^0.104.5",
     "@graphql-tools/executor": "^1.4.7",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.8.1",
