@@ -1,5 +1,38 @@
 # @graphql-hive/gateway-runtime
 
+## 1.9.2
+
+### Patch Changes
+
+- [#1217](https://github.com/graphql-hive/gateway/pull/1217) [`931d576`](https://github.com/graphql-hive/gateway/commit/931d5763c1f8c6d7fdc299bd87a634fecdd70b15) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@types/node@^22.15.30` ↗︎](https://www.npmjs.com/package/@types/node/v/22.15.30) (from `^22.15.29`, in `dependencies`)
+
+- [#1245](https://github.com/graphql-hive/gateway/pull/1245) [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/utils@^0.104.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.5) (from `^0.104.2`, in `dependencies`)
+
+- [#1258](https://github.com/graphql-hive/gateway/pull/1258) [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.6` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.6) (from `^0.104.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.5) (from `^0.104.0`, in `dependencies`)
+
+- [#1245](https://github.com/graphql-hive/gateway/pull/1245) [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Propagate headers even from cache
+
+- [#1261](https://github.com/graphql-hive/gateway/pull/1261) [`1023f3d`](https://github.com/graphql-hive/gateway/commit/1023f3db8bdca8b0a9004841c7341dc3d18b1858) Thanks [@comatory](https://github.com/comatory)! - Forward only defined headers to subgraphs from clients
+
+- [#1245](https://github.com/graphql-hive/gateway/pull/1245) [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Propagate headers even from cache
+
+- [#1261](https://github.com/graphql-hive/gateway/pull/1261) [`1023f3d`](https://github.com/graphql-hive/gateway/commit/1023f3db8bdca8b0a9004841c7341dc3d18b1858) Thanks [@comatory](https://github.com/comatory)! - Correct header propagation return types allowing nullish values
+
+- Updated dependencies [[`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741), [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741), [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741), [`ed323fa`](https://github.com/graphql-hive/gateway/commit/ed323fa06d196c1df128a493006238078bf69fc6)]:
+  - @graphql-hive/logger-json@0.0.5
+  - @graphql-mesh/fusion-runtime@0.11.15
+  - @graphql-mesh/hmac-upstream-signature@1.2.28
+  - @graphql-mesh/transport-common@0.7.35
+  - @graphql-tools/executor-http@2.0.3
+  - @graphql-tools/federation@3.2.4
+
 ## 1.9.1
 
 ### Patch Changes

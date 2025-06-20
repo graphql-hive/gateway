@@ -1,5 +1,13 @@
 # @graphql-tools/executor-http
 
+## 2.0.3
+
+### Patch Changes
+
+- [#1233](https://github.com/graphql-hive/gateway/pull/1233) [`ed323fa`](https://github.com/graphql-hive/gateway/commit/ed323fa06d196c1df128a493006238078bf69fc6) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+
+  - Updated dependency [`meros@^1.3.1` ↗︎](https://www.npmjs.com/package/meros/v/1.3.1) (from `^1.2.1`, in `dependencies`)
+
 ## 2.0.2
 
 ### Patch Changes
