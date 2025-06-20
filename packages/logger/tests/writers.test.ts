@@ -68,4 +68,18 @@ describe('ConsoleLogWriter', () => {
 
     expect(logs).toMatchSnapshot();
   });
+
+  it('should flush async logs', async () => {
+    const [log, logs] = createTConsoleLogger({ noColor: true, async: true });
+
+    log.trace({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.debug({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.info({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.warn({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+    log.error({ hello: { dear: 'world', try: ['num', 1, 2] } }, 'hi');
+
+    expect(logs).toHaveLength(0);
+    await log.flush();
+    expect(logs).toMatchSnapshot();
+  });
 });
