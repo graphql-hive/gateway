@@ -49,6 +49,13 @@ type TracingOptions = {
         exporter: SpanExporter;
         batching?: BatchingConfig | boolean;
         console?: boolean;
+      }
+    | {
+        tracerProvider?: never;
+        processors?: never;
+        exporter?: never;
+        batching?: never;
+        console: boolean;
       };
 };
 
@@ -80,12 +87,16 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
     } else {
       let spanProcessors = options.traces.processors;
       if (!options.traces.processors) {
-        spanProcessors = [
-          resolveBatchingConfig(
-            options.traces.exporter,
-            options.traces.batching,
-          ),
-        ];
+        spanProcessors = [];
+
+        if (options.traces.exporter) {
+          spanProcessors.push(
+            resolveBatchingConfig(
+              options.traces.exporter,
+              options.traces.batching,
+            ),
+          );
+        }
 
         if (options.traces.console) {
           spanProcessors.push(
