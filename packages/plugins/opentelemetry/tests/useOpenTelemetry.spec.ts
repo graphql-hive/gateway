@@ -1,7 +1,45 @@
-import { SpanStatusCode } from '@opentelemetry/api';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import {
+  context,
+  propagation,
+  SpanStatusCode,
+  TextMapPropagator,
+  trace,
+} from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import {
+  CompositePropagator,
+  W3CBaggagePropagator,
+  W3CTraceContextPropagator,
+} from '@opentelemetry/core';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import {
+  AlwaysOnSampler,
+  BasicTracerProvider,
+  BatchSpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import type { OpenTelemetryContextExtension } from '../src/plugin';
-import { buildTestGateway, spanExporter } from './utils';
+import {
+  buildTestGateway,
+  disableAll,
+  getContextManager,
+  getPropagator,
+  getResource,
+  getSampler,
+  getSpanProcessors,
+  getTracerProvider,
+  setupOtelForTests,
+  spanExporter,
+} from './utils';
 
 describe('useOpenTelemetry', () => {
   beforeEach(() => {
@@ -9,7 +47,68 @@ describe('useOpenTelemetry', () => {
     spanExporter.reset();
   });
 
+  describe('setup', () => {
+    beforeEach(() => {
+      // Unregister all global OTEL apis, so that each tests can check for different setups
+      disableAll();
+    });
+    afterAll(() => {
+      // Unregister all global OTEL apis, so that each tests can check for different setups
+      disableAll();
+    });
+
+    it('should setup OTEL with sain default', () => {
+      opentelemetrySetup({
+        contextManager: new AsyncLocalStorageContextManager(),
+        traces: {
+          exporter: new OTLPTraceExporter(),
+        },
+      });
+
+      // Check context manager
+      expect(getTracerProvider()).toBeInstanceOf(BasicTracerProvider);
+      expect(getContextManager()).toBeInstanceOf(
+        AsyncLocalStorageContextManager,
+      );
+
+      // Check processor. Should be a batched HTTP OTLP exporter
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(1);
+      expect(processors![0]).toBeInstanceOf(BatchSpanProcessor);
+      const processor = processors![0] as BatchSpanProcessor;
+      // @ts-ignore access private field
+      const exporter = processor._exporter as OTLPTraceExporter;
+      expect(exporter).toBeInstanceOf(OTLPTraceExporter);
+
+      // Check Sampler
+      expect(getSampler()).toBeInstanceOf(AlwaysOnSampler);
+
+      // Check Propagators
+      const propagator = getPropagator();
+      expect(propagator).toBeInstanceOf(CompositePropagator);
+      // @ts-expect-error Access of private field
+      const propagators = propagator._propagators as TextMapPropagator[];
+      expect(propagators).toContainEqual(expect.any(W3CBaggagePropagator));
+      expect(propagators).toContainEqual(expect.any(W3CTraceContextPropagator));
+
+      const resource = getResource();
+      expect(resource?.attributes).toMatchObject({
+        'service.name': '@graphql-mesh/plugin-opentelemetry',
+      });
+    });
+  });
+
   describe('tracing', () => {
+    beforeAll(() => {
+      // Register testing OTEL api with a custom Span processor and an Async Context Manager
+      disableAll();
+      setupOtelForTests();
+    });
+
+    afterAll(() => {
+      disableAll();
+    });
+
     describe.each([
       { name: 'with context manager', useContextManager: undefined },
       { name: 'without context manager', useContextManager: false as const },

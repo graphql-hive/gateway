@@ -1,10 +1,15 @@
 import { Logger } from '@graphql-hive/logger';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { spanExporter } from './utils';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { disableAll, setupOtelForTests, spanExporter } from './utils';
 
 describe('useOpenTelemetry', () => {
+  beforeAll(() => {
+    disableAll();
+    setupOtelForTests();
+  });
+
   beforeEach(() => {
     spanExporter.reset();
   });
