@@ -28,7 +28,10 @@ export class LogTapeLogWriter implements LogWriter {
     const properties = this.options.getProperties
       ? this.options.getProperties(level, attrs, msg)
       : attrs
-        ? { ...attrs }
+        ? {
+            // TODO: attrs can be an array too
+            ...attrs,
+          }
         : undefined;
     if (msg != null) log(msg, properties);
     else if (properties) log(properties);
