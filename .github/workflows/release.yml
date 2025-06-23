@@ -36,6 +36,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
         id: choose-tag
         with:
+          result-encoding: string
           script: |
             const prBody = context.payload.pull_request.body || '';
             // having #snapshot-npm-tag "next" in the PR body will set the npm tag to "next"
