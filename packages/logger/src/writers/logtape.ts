@@ -16,7 +16,7 @@ export class LogTapeLogWriter implements LogWriter {
   #logTapeLogger: LogTapeLogger;
 
   constructor(public options: LogTapeLogWriterOptions) {
-    this.#logTapeLogger = getLogger(this.options.category ?? ['graphql-hive']);
+    this.#logTapeLogger = getLogger(this.options.category ?? ['hive-gateway']);
   }
 
   write(
