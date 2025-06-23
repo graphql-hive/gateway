@@ -25,7 +25,7 @@ jobs:
   snapshot-npm-tag:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    name: Snapshot NPM tag
+    name: Choose snapshot NPM tag
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-snapshot-npm-tag
       cancel-in-progress: true
