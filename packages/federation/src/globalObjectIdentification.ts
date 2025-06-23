@@ -312,6 +312,17 @@ function getDistinctEntities(
     Object.values(subschema.schema.getTypeMap()),
   );
 
+  for (const type of types) {
+    if (type.name === 'Node') {
+      throw new Error(
+        `The "Node" interface is reserved for Automatic Global Object Identification and should not be defined in subgraphs. Interface is found in the following subgraphs: ${subschemas
+          .filter((s) => s.schema.getType('Node'))
+          .map((s) => `"${s.name!}"`)
+          .join(', ')}`,
+      );
+    }
+  }
+
   const objects = types.filter(isObjectType);
   for (const obj of objects) {
     if (entityExists(obj.name)) {
