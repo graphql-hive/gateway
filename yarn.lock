@@ -322,9 +322,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:^0.33.0":
-  version: 0.33.0
-  resolution: "@apollo/rover@npm:0.33.0"
+"@apollo/rover@npm:^0.34.0":
+  version: 0.34.0
+  resolution: "@apollo/rover@npm:0.34.0"
   dependencies:
     axios: "npm:^1.6.5"
     axios-proxy-builder: "npm:^0.1.1"
@@ -333,7 +333,7 @@ __metadata:
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/b6c591485135c7758f6bfde9acc33e95ea907bdc96a51b0fa82a30693d2a44fa3b7b9adf518d23104f46adbc339fba3f4e0a27e813060676903e908c43f0fc2b
+  checksum: 10c0/b9f3ffcdef756b81d7ff866f9d9227f6c9b56c2db213e735d17d42790bfa71c5dda8c19a130187548b62ba55259474527f784a451244c5317f84cc5da335a640
   languageName: node
   linkType: hard
 
@@ -2955,7 +2955,7 @@ __metadata:
     "@cloudflare/workers-types": "npm:^4.20250613.0"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.9.0"
-    wrangler: "npm:^4.20.0"
+    wrangler: "npm:^4.20.5"
   languageName: unknown
   linkType: soft
 
@@ -3316,7 +3316,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/operation-field-permissions@workspace:e2e/operation-field-permissions"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@envelop/operation-field-permissions": "npm:^7.0.0"
     "@graphql-mesh/compose-cli": "npm:^1.4.10"
     graphql: "npm:^16.10.0"
@@ -3454,7 +3454,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/core@npm:5.2.3, @envelop/core@npm:^5.0.0, @envelop/core@npm:^5.1.0, @envelop/core@npm:^5.2.3":
+"@envelop/core@npm:5.3.0, @envelop/core@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@envelop/core@npm:5.3.0"
+  dependencies:
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@envelop/types": "npm:^5.2.1"
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/002aacab9089c18a6b7d55c96d2cfc71fd1c6077d2f5dbbc81a317b594664b809b64cf2c017c3c0d3f4425c441c1f19a45127666da1aadcc63727f900201ee6b
+  languageName: node
+  linkType: hard
+
+"@envelop/core@npm:^5.0.0, @envelop/core@npm:^5.1.0, @envelop/core@npm:^5.2.3":
   version: 5.2.3
   resolution: "@envelop/core@npm:5.2.3"
   dependencies:
@@ -4028,7 +4040,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@envelop/disable-introspection": "npm:^7.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.12.0"
@@ -4084,7 +4096,7 @@ __metadata:
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
     "@commander-js/extra-typings": "npm:^13.1.0"
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@escape.tech/graphql-armor-block-field-suggestions": "npm:^3.0.0"
     "@escape.tech/graphql-armor-max-depth": "npm:^2.4.0"
     "@escape.tech/graphql-armor-max-tokens": "npm:^2.5.0"
@@ -4460,7 +4472,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/fusion-runtime@workspace:packages/fusion-runtime"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
@@ -4558,7 +4570,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/plugin-jwt-auth@workspace:packages/plugins/jwt-auth"
   dependencies:
-    "@envelop/core": "npm:5.2.3"
+    "@envelop/core": "npm:5.3.0"
     "@envelop/generic-auth": "npm:9.1.3"
     "@graphql-mesh/types": "npm:^0.104.5"
     "@graphql-mesh/utils": "npm:^0.104.5"
@@ -4754,7 +4766,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
@@ -4994,7 +5006,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-tools/executor-common@workspace:packages/executors/common"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
+    "@envelop/core": "npm:^5.3.0"
     "@graphql-tools/utils": "npm:^10.8.1"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.13.1"
@@ -5753,7 +5765,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:^0.33.0"
+    "@apollo/rover": "npm:^0.34.0"
     "@babel/parser": "npm:^7.27.5"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -5762,7 +5774,7 @@ __metadata:
     glob: "npm:^11.0.3"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:^4.19.2"
-    zod: "npm:^3.25.64"
+    zod: "npm:^3.25.67"
   languageName: unknown
   linkType: soft
 
@@ -10244,17 +10256,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array-includes@npm:^3.1.8":
-  version: 3.1.8
-  resolution: "array-includes@npm:3.1.8"
+"array-includes@npm:^3.1.9":
+  version: 3.1.9
+  resolution: "array-includes@npm:3.1.9"
   dependencies:
-    call-bind: "npm:^1.0.7"
+    call-bind: "npm:^1.0.8"
+    call-bound: "npm:^1.0.4"
     define-properties: "npm:^1.2.1"
-    es-abstract: "npm:^1.23.2"
-    es-object-atoms: "npm:^1.0.0"
-    get-intrinsic: "npm:^1.2.4"
-    is-string: "npm:^1.0.7"
-  checksum: 10c0/5b1004d203e85873b96ddc493f090c9672fd6c80d7a60b798da8a14bff8a670ff95db5aafc9abc14a211943f05220dacf8ea17638ae0af1a6a47b8c0b48ce370
+    es-abstract: "npm:^1.24.0"
+    es-object-atoms: "npm:^1.1.1"
+    get-intrinsic: "npm:^1.3.0"
+    is-string: "npm:^1.1.1"
+    math-intrinsics: "npm:^1.1.0"
+  checksum: 10c0/0235fa69078abeac05ac4250699c44996bc6f774a9cbe45db48674ce6bd142f09b327d31482ff75cf03344db4ea03eae23edb862d59378b484b47ed842574856
   languageName: node
   linkType: hard
 
@@ -10265,7 +10279,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array.prototype.findlastindex@npm:^1.2.5":
+"array.prototype.findlastindex@npm:^1.2.6":
   version: 1.2.6
   resolution: "array.prototype.findlastindex@npm:1.2.6"
   dependencies:
@@ -10280,7 +10294,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array.prototype.flat@npm:^1.3.2":
+"array.prototype.flat@npm:^1.3.3":
   version: 1.3.3
   resolution: "array.prototype.flat@npm:1.3.3"
   dependencies:
@@ -10292,7 +10306,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array.prototype.flatmap@npm:^1.3.2":
+"array.prototype.flatmap@npm:^1.3.3":
   version: 1.3.3
   resolution: "array.prototype.flatmap@npm:1.3.3"
   dependencies:
@@ -12502,6 +12516,68 @@ __metadata:
   languageName: node
   linkType: hard
 
+"es-abstract@npm:^1.24.0":
+  version: 1.24.0
+  resolution: "es-abstract@npm:1.24.0"
+  dependencies:
+    array-buffer-byte-length: "npm:^1.0.2"
+    arraybuffer.prototype.slice: "npm:^1.0.4"
+    available-typed-arrays: "npm:^1.0.7"
+    call-bind: "npm:^1.0.8"
+    call-bound: "npm:^1.0.4"
+    data-view-buffer: "npm:^1.0.2"
+    data-view-byte-length: "npm:^1.0.2"
+    data-view-byte-offset: "npm:^1.0.1"
+    es-define-property: "npm:^1.0.1"
+    es-errors: "npm:^1.3.0"
+    es-object-atoms: "npm:^1.1.1"
+    es-set-tostringtag: "npm:^2.1.0"
+    es-to-primitive: "npm:^1.3.0"
+    function.prototype.name: "npm:^1.1.8"
+    get-intrinsic: "npm:^1.3.0"
+    get-proto: "npm:^1.0.1"
+    get-symbol-description: "npm:^1.1.0"
+    globalthis: "npm:^1.0.4"
+    gopd: "npm:^1.2.0"
+    has-property-descriptors: "npm:^1.0.2"
+    has-proto: "npm:^1.2.0"
+    has-symbols: "npm:^1.1.0"
+    hasown: "npm:^2.0.2"
+    internal-slot: "npm:^1.1.0"
+    is-array-buffer: "npm:^3.0.5"
+    is-callable: "npm:^1.2.7"
+    is-data-view: "npm:^1.0.2"
+    is-negative-zero: "npm:^2.0.3"
+    is-regex: "npm:^1.2.1"
+    is-set: "npm:^2.0.3"
+    is-shared-array-buffer: "npm:^1.0.4"
+    is-string: "npm:^1.1.1"
+    is-typed-array: "npm:^1.1.15"
+    is-weakref: "npm:^1.1.1"
+    math-intrinsics: "npm:^1.1.0"
+    object-inspect: "npm:^1.13.4"
+    object-keys: "npm:^1.1.1"
+    object.assign: "npm:^4.1.7"
+    own-keys: "npm:^1.0.1"
+    regexp.prototype.flags: "npm:^1.5.4"
+    safe-array-concat: "npm:^1.1.3"
+    safe-push-apply: "npm:^1.0.0"
+    safe-regex-test: "npm:^1.1.0"
+    set-proto: "npm:^1.0.0"
+    stop-iteration-iterator: "npm:^1.1.0"
+    string.prototype.trim: "npm:^1.2.10"
+    string.prototype.trimend: "npm:^1.0.9"
+    string.prototype.trimstart: "npm:^1.0.8"
+    typed-array-buffer: "npm:^1.0.3"
+    typed-array-byte-length: "npm:^1.0.3"
+    typed-array-byte-offset: "npm:^1.0.4"
+    typed-array-length: "npm:^1.0.7"
+    unbox-primitive: "npm:^1.1.0"
+    which-typed-array: "npm:^1.1.19"
+  checksum: 10c0/b256e897be32df5d382786ce8cce29a1dd8c97efbab77a26609bd70f2ed29fbcfc7a31758cb07488d532e7ccccdfca76c1118f2afe5a424cdc05ca007867c318
+  languageName: node
+  linkType: hard
+
 "es-array-method-boxes-properly@npm:^1.0.0":
   version: 1.0.0
   resolution: "es-array-method-boxes-properly@npm:1.0.0"
@@ -12742,15 +12818,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-module-utils@npm:^2.12.0":
-  version: 2.12.0
-  resolution: "eslint-module-utils@npm:2.12.0"
+"eslint-module-utils@npm:^2.12.1":
+  version: 2.12.1
+  resolution: "eslint-module-utils@npm:2.12.1"
   dependencies:
     debug: "npm:^3.2.7"
   peerDependenciesMeta:
     eslint:
       optional: true
-  checksum: 10c0/4d8b46dcd525d71276f9be9ffac1d2be61c9d54cc53c992e6333cf957840dee09381842b1acbbb15fc6b255ebab99cd481c5007ab438e5455a14abe1a0468558
+  checksum: 10c0/6f4efbe7a91ae49bf67b4ab3644cb60bc5bd7db4cb5521de1b65be0847ffd3fb6bce0dd68f0995e1b312d137f768e2a1f842ee26fe73621afa05f850628fdc40
   languageName: node
   linkType: hard
 
@@ -12767,32 +12843,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:2.31.0":
-  version: 2.31.0
-  resolution: "eslint-plugin-import@npm:2.31.0"
+"eslint-plugin-import@npm:2.32.0":
+  version: 2.32.0
+  resolution: "eslint-plugin-import@npm:2.32.0"
   dependencies:
     "@rtsao/scc": "npm:^1.1.0"
-    array-includes: "npm:^3.1.8"
-    array.prototype.findlastindex: "npm:^1.2.5"
-    array.prototype.flat: "npm:^1.3.2"
-    array.prototype.flatmap: "npm:^1.3.2"
+    array-includes: "npm:^3.1.9"
+    array.prototype.findlastindex: "npm:^1.2.6"
+    array.prototype.flat: "npm:^1.3.3"
+    array.prototype.flatmap: "npm:^1.3.3"
     debug: "npm:^3.2.7"
     doctrine: "npm:^2.1.0"
     eslint-import-resolver-node: "npm:^0.3.9"
-    eslint-module-utils: "npm:^2.12.0"
+    eslint-module-utils: "npm:^2.12.1"
     hasown: "npm:^2.0.2"
-    is-core-module: "npm:^2.15.1"
+    is-core-module: "npm:^2.16.1"
     is-glob: "npm:^4.0.3"
     minimatch: "npm:^3.1.2"
     object.fromentries: "npm:^2.0.8"
     object.groupby: "npm:^1.0.3"
-    object.values: "npm:^1.2.0"
+    object.values: "npm:^1.2.1"
     semver: "npm:^6.3.1"
-    string.prototype.trimend: "npm:^1.0.8"
+    string.prototype.trimend: "npm:^1.0.9"
     tsconfig-paths: "npm:^3.15.0"
   peerDependencies:
     eslint: ^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9
-  checksum: 10c0/e21d116ddd1900e091ad120b3eb68c5dd5437fe2c930f1211781cd38b246f090a6b74d5f3800b8255a0ed29782591521ad44eb21c5534960a8f1fb4040fd913a
+  checksum: 10c0/bfb1b8fc8800398e62ddfefbf3638d185286edfed26dfe00875cc2846d954491b4f5112457831588b757fa789384e1ae585f812614c4797f0499fa234fd4a48b
   languageName: node
   linkType: hard
 
@@ -13845,11 +13921,11 @@ __metadata:
     bun: "npm:1.2.16"
     cross-env: "npm:7.0.3"
     eslint: "npm:9.29.0"
-    eslint-plugin-import: "npm:2.31.0"
+    eslint-plugin-import: "npm:2.32.0"
     eslint-plugin-n: "npm:17.20.0"
     graphql: "npm:16.11.0"
     jest: "npm:29.7.0"
-    prettier: "npm:3.5.3"
+    prettier: "npm:3.6.0"
     prettier-plugin-pkg: "npm:0.21.1"
     prettier-plugin-sh: "npm:0.17.4"
     ts-jest: "npm:29.4.0"
@@ -14952,7 +15028,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-core-module@npm:^2.13.0, is-core-module@npm:^2.15.1, is-core-module@npm:^2.16.0":
+"is-core-module@npm:^2.13.0, is-core-module@npm:^2.16.0, is-core-module@npm:^2.16.1":
   version: 2.16.1
   resolution: "is-core-module@npm:2.16.1"
   dependencies:
@@ -15071,6 +15147,13 @@ __metadata:
   version: 1.0.0
   resolution: "is-module@npm:1.0.0"
   checksum: 10c0/795a3914bcae7c26a1c23a1e5574c42eac13429625045737bf3e324ce865c0601d61aee7a5afbca1bee8cb300c7d9647e7dc98860c9bdbc3b7fdc51d8ac0bffc
+  languageName: node
+  linkType: hard
+
+"is-negative-zero@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "is-negative-zero@npm:2.0.3"
+  checksum: 10c0/bcdcf6b8b9714063ffcfa9929c575ac69bfdabb8f4574ff557dfc086df2836cf07e3906f5bbc4f2a5c12f8f3ba56af640c843cdfc74da8caed86c7c7d66fd08e
   languageName: node
   linkType: hard
 
@@ -15227,7 +15310,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-weakref@npm:^1.0.2, is-weakref@npm:^1.1.0":
+"is-weakref@npm:^1.0.2, is-weakref@npm:^1.1.0, is-weakref@npm:^1.1.1":
   version: 1.1.1
   resolution: "is-weakref@npm:1.1.1"
   dependencies:
@@ -16908,9 +16991,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"miniflare@npm:4.20250617.1":
-  version: 4.20250617.1
-  resolution: "miniflare@npm:4.20250617.1"
+"miniflare@npm:4.20250617.3":
+  version: 4.20250617.3
+  resolution: "miniflare@npm:4.20250617.3"
   dependencies:
     "@cspotcode/source-map-support": "npm:0.8.1"
     acorn: "npm:8.14.0"
@@ -16926,7 +17009,7 @@ __metadata:
     zod: "npm:3.22.3"
   bin:
     miniflare: bootstrap.js
-  checksum: 10c0/7d5ef3db2938c2d36e1e1a0d90231b7c2b8951ac990d445afc0c61acd5b5861caf3c344a7e4df101352ba7b8a92002b31b582de6f33dd7520b291337170524fb
+  checksum: 10c0/ed4ede8ed849819c27ed3ce4187c777cef822a6733861120db0bac5a33acce35927240babd4ca669a5d6ce56a735424e25df33af4d66d805d7ed41c3819d898e
   languageName: node
   linkType: hard
 
@@ -17435,7 +17518,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object-inspect@npm:^1.13.3":
+"object-inspect@npm:^1.13.3, object-inspect@npm:^1.13.4":
   version: 1.13.4
   resolution: "object-inspect@npm:1.13.4"
   checksum: 10c0/d7f8711e803b96ea3191c745d6f8056ce1f2496e530e6a19a0e92d89b0fa3c76d910c31f0aa270432db6bd3b2f85500a376a83aaba849a8d518c8845b3211692
@@ -17511,7 +17594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object.values@npm:^1.2.0":
+"object.values@npm:^1.2.1":
   version: 1.2.1
   resolution: "object.values@npm:1.2.1"
   dependencies:
@@ -18253,12 +18336,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.5.3":
-  version: 3.5.3
-  resolution: "prettier@npm:3.5.3"
+"prettier@npm:3.6.0":
+  version: 3.6.0
+  resolution: "prettier@npm:3.6.0"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/3880cb90b9dc0635819ab52ff571518c35bd7f15a6e80a2054c05dbc8a3aa6e74f135519e91197de63705bcb38388ded7e7230e2178432a1468005406238b877
+  checksum: 10c0/636897c8084b71ef1f740a46199df0d8f6ed896aa497212cc8cc229d3026b9dca82fa92f61e55924c4708cea11e39a88478e2d93c4818741c55b7408a9ac6d91
   languageName: node
   linkType: hard
 
@@ -18732,7 +18815,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"regexp.prototype.flags@npm:^1.5.1, regexp.prototype.flags@npm:^1.5.3":
+"regexp.prototype.flags@npm:^1.5.1, regexp.prototype.flags@npm:^1.5.3, regexp.prototype.flags@npm:^1.5.4":
   version: 1.5.4
   resolution: "regexp.prototype.flags@npm:1.5.4"
   dependencies:
@@ -19916,7 +19999,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stop-iteration-iterator@npm:^1.0.0":
+"stop-iteration-iterator@npm:^1.0.0, stop-iteration-iterator@npm:^1.1.0":
   version: 1.1.0
   resolution: "stop-iteration-iterator@npm:1.1.0"
   dependencies:
@@ -20010,7 +20093,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"string.prototype.trimend@npm:^1.0.8, string.prototype.trimend@npm:^1.0.9":
+"string.prototype.trimend@npm:^1.0.9":
   version: 1.0.9
   resolution: "string.prototype.trimend@npm:1.0.9"
   dependencies:
@@ -21586,7 +21669,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"which-typed-array@npm:^1.1.13, which-typed-array@npm:^1.1.16, which-typed-array@npm:^1.1.18":
+"which-typed-array@npm:^1.1.13, which-typed-array@npm:^1.1.16, which-typed-array@npm:^1.1.18, which-typed-array@npm:^1.1.19":
   version: 1.1.19
   resolution: "which-typed-array@npm:1.1.19"
   dependencies:
@@ -21707,16 +21790,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.20.0":
-  version: 4.20.3
-  resolution: "wrangler@npm:4.20.3"
+"wrangler@npm:^4.20.5":
+  version: 4.20.5
+  resolution: "wrangler@npm:4.20.5"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.4.0"
     "@cloudflare/unenv-preset": "npm:2.3.3"
     blake3-wasm: "npm:2.1.5"
     esbuild: "npm:0.25.4"
     fsevents: "npm:~2.3.2"
-    miniflare: "npm:4.20250617.1"
+    miniflare: "npm:4.20250617.3"
     path-to-regexp: "npm:6.3.0"
     unenv: "npm:2.0.0-rc.17"
     workerd: "npm:1.20250617.0"
@@ -21731,7 +21814,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/3e453c71d803e20cc75f09a7932eed8365628d4c1646a9c515250741a129299b0d9b9cf0571ee7fc1d6f426613cfca1fd217139710cf9d8c871255c3879d6e66
+  checksum: 10c0/8f8d397b6878b5b767abc98ed6cfcb5119aef5dcb7db25832cf1f056cf378afa79efe787668f4caf8bc6f88e88253dc1676d05e8ef2d820cd964dbde1b529a55
   languageName: node
   linkType: hard
 
@@ -21982,9 +22065,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.64":
-  version: 3.25.64
-  resolution: "zod@npm:3.25.64"
-  checksum: 10c0/00d76093a999e377e4ffd037fa7185e861c35917e8c4272f514115c206a0654995168f57fb71708b11e0a9243206d988b7f63b543404e1796402e50d346a6bd7
+"zod@npm:^3.25.67":
+  version: 3.25.67
+  resolution: "zod@npm:3.25.67"
+  checksum: 10c0/80a0cab3033272c4ab9312198081f0c4ea88e9673c059aa36dc32024906363729db54bdb78f3dc9d5529bd1601f74974d5a56c0a23e40c6f04a9270c9ff22336
   languageName: node
   linkType: hard
