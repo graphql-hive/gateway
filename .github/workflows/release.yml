@@ -156,7 +156,7 @@ jobs:
           push: true
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2
+        uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943 # v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
@@ -230,7 +230,7 @@ jobs:
           echo "path=${{ steps.binary.outputs.path }}.gz" >> ${{ runner.os == 'Windows' && '$ENV:GITHUB_OUTPUT' || '$GITHUB_OUTPUT' }}
       - if: github.ref == 'refs/heads/main'
         name: Upload release
-        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd # v2
+        uses: svenstaro/upload-release-action@ebd922b779f285dafcac6410a0710daee9c12b82 # v2
         with:
           repo_token: ${{ secrets.BOT_GITHUB_TOKEN }}
           tag: hive-gateway@${{ steps.ver-gateway.outputs.result }}
@@ -248,7 +248,7 @@ jobs:
           path: ${{ steps.binary.outputs.path }}
       - if: github.event_name == 'pull_request'
         name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2
+        uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943 # v2
         with:
           # match pr comment like with changesets-snapshot-action from the guild's shared-config
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
