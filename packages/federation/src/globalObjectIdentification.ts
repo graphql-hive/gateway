@@ -14,8 +14,15 @@ import {
   ObjectTypeExtensionNode,
   SelectionSetNode,
 } from 'graphql';
-import { fromGlobalId, toGlobalId } from 'graphql-relay';
+import * as graphqlRelay from 'graphql-relay';
 import { isMergedEntityConfig, MergedEntityConfig } from './supergraph';
+
+export interface ResolvedGlobalId {
+  /** The concrete type of the globally identifiable node. */
+  type: string;
+  /** The actual ID of the concrete type in the relevant source. */
+  id: string;
+}
 
 export interface GlobalObjectIdentificationOptions {
   /**
@@ -26,12 +33,29 @@ export interface GlobalObjectIdentificationOptions {
    *
    * @default nodeId
    */
-  nodeIdField: string;
+  nodeIdField?: string;
+  /**
+   * Takes a type name and an ID specific to that type name, and returns a
+   * "global ID" that is unique among all types.
+   *
+   * Note that the global ID can contain a JSON stringified object which
+   * contains multiple key fields needed to identify the object.
+   *
+   * @default import('graphql-relay').toGlobalId
+   */
+  toGlobalId?(type: string, id: string | number): string;
+  /**
+   * Takes the "global ID" created by toGlobalID, and returns the type name and ID
+   * used to create it.
+   *
+   * @default import('graphql-relay').fromGlobalId
+   */
+  fromGlobalId?(globalId: string): ResolvedGlobalId;
 }
 
 export function createNodeDefinitions(
   subschemas: SubschemaConfig[],
-  { nodeIdField }: GlobalObjectIdentificationOptions,
+  { nodeIdField = 'nodeId' }: GlobalObjectIdentificationOptions,
 ) {
   const defs: DefinitionNode[] = [];
 
@@ -161,7 +185,11 @@ export function createNodeDefinitions(
 
 export function createResolvers(
   subschemas: SubschemaConfig[],
-  { nodeIdField }: GlobalObjectIdentificationOptions,
+  {
+    nodeIdField = 'nodeId',
+    fromGlobalId = graphqlRelay.fromGlobalId,
+    toGlobalId = graphqlRelay.toGlobalId,
+  }: GlobalObjectIdentificationOptions,
 ): IResolvers {
   // we can safely skip interfaces here because the concrete type will be known
   // when resolving and the type will always be an object

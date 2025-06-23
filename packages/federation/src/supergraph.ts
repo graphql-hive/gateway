@@ -1544,9 +1544,7 @@ export function getStitchingOptionsFromSupergraphSdl(
   const globalObjectIdentification: GlobalObjectIdentificationOptions | null =
     opts.globalObjectIdentification === true
       ? // defaults
-        {
-          nodeIdField: 'nodeId',
-        }
+        {}
       : typeof opts.globalObjectIdentification === 'object'
         ? // user configuration
           opts.globalObjectIdentification
