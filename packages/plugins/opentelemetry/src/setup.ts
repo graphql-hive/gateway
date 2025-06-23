@@ -83,7 +83,14 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
 
   if (options.traces) {
     if (options.traces.tracerProvider) {
-      trace.setGlobalTracerProvider(options.traces.tracerProvider);
+      if (
+        'register' in options.traces.tracerProvider &&
+        typeof options.traces.tracerProvider.register === 'function'
+      ) {
+        options.traces.tracerProvider.register();
+      } else {
+        trace.setGlobalTracerProvider(options.traces.tracerProvider);
+      }
     } else {
       let spanProcessors = options.traces.processors;
       if (!options.traces.processors) {
