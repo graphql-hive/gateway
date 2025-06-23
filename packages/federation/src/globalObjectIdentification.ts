@@ -7,6 +7,8 @@ import {
   GraphQLList,
   GraphQLObjectType,
   InterfaceTypeDefinitionNode,
+  InterfaceTypeExtensionNode,
+  isInterfaceType,
   isObjectType,
   Kind,
   ObjectTypeExtensionNode,
@@ -66,9 +68,14 @@ export function createNodeDefinitions({
 
   // extend type X implements Node
 
-  for (const { typeName } of getDistinctEntities(subschemas)) {
-    const typeExtensionDef: ObjectTypeExtensionNode = {
-      kind: Kind.OBJECT_TYPE_EXTENSION,
+  for (const { typeName, kind } of getDistinctEntities(subschemas)) {
+    const typeExtensionDef:
+      | ObjectTypeExtensionNode
+      | InterfaceTypeExtensionNode = {
+      kind:
+        kind === 'object'
+          ? Kind.OBJECT_TYPE_EXTENSION
+          : Kind.INTERFACE_TYPE_EXTENSION,
       name: {
         kind: Kind.NAME,
         value: typeName,
@@ -149,7 +156,13 @@ export function createResolvers({
   nodeIdField,
   subschemas,
 }: GlobalObjectIdentificationOptions): IResolvers {
-  const types = getDistinctEntities(subschemas);
+  // we can safely skip interfaces here because the concrete type will be known
+  // when resolving and the type will always be an object
+  //
+  // the nodeIdField will ALWAYS be the global ID identifying the concrete object
+  const types = getDistinctEntities(subschemas).filter(
+    (t) => t.kind === 'object',
+  );
   return {
     ...types.reduce(
       (resolvers, { typeName, merge, keyFieldNames }) => ({
@@ -184,24 +197,28 @@ export function createResolvers({
           return null; // no stitching info, something went wrong // TODO: throw instead?
         }
 
-        // we must use otherwise different schema
-        const types = getDistinctEntities(stitchingInfo.subschemaMap.values());
+        // TODO: potential performance bottleneck, memoize
+        const entities = getDistinctEntities(
+          // the stitchingInfo.subschemaMap.values() is different from subschemas. it
+          // contains the actual source of truth with all resolvers prepared - use it
+          stitchingInfo.subschemaMap.values(),
+        ).filter((t) => t.kind === 'object');
 
         const { id: idOrFields, type: typeName } = fromGlobalId(nodeId);
-        const type = types.find((t) => t.typeName === typeName);
-        if (!type) {
-          return null; // unknown type
+        const entity = entities.find((t) => t.typeName === typeName);
+        if (!entity) {
+          return null; // unknown object type
         }
 
         const keyFields: Record<string, unknown> = {};
-        if (type.keyFieldNames.length === 1) {
+        if (entity.keyFieldNames.length === 1) {
           // single field key
-          keyFields[type.keyFieldNames[0]!] = idOrFields;
+          keyFields[entity.keyFieldNames[0]!] = idOrFields;
         } else {
           // multiple fields key
           try {
             const idFields = JSON.parse(idOrFields);
-            for (const fieldName of type.keyFieldNames) {
+            for (const fieldName of entity.keyFieldNames) {
               // loop is faster than reduce
               keyFields[fieldName] = idFields[fieldName];
             }
@@ -213,32 +230,45 @@ export function createResolvers({
         return batchDelegateToSchema({
           context,
           info,
-          schema: type.subschema,
-          fieldName: type.merge.fieldName,
-          argsFromKeys: type.merge.argsFromKeys,
+          schema: entity.subschema,
+          fieldName: entity.merge.fieldName,
+          argsFromKeys: entity.merge.argsFromKeys,
           key: { ...keyFields, __typename: typeName }, // we already have all the necessary keys
           returnType: new GraphQLList(
             // wont ever be undefined, we ensured the subschema has the type above
-            type.subschema.schema.getType(typeName) as GraphQLObjectType,
+            entity.subschema.schema.getType(typeName) as GraphQLObjectType,
           ),
-          dataLoaderOptions: type.merge.dataLoaderOptions,
+          dataLoaderOptions: entity.merge.dataLoaderOptions,
         });
       },
     },
   };
 }
 
-interface DistinctEntity {
+interface DistinctEntityInterface {
+  kind: 'interface';
+  typeName: string;
+}
+
+interface DistinctEntityObject {
+  kind: 'object';
   typeName: string;
   subschema: SubschemaConfig;
   merge: MergedEntityConfig;
   keyFieldNames: string[];
 }
 
+type DistinctEntity = DistinctEntityObject | DistinctEntityInterface;
+
 function getDistinctEntities(
   subschemasIter: Iterable<SubschemaConfig>,
 ): DistinctEntity[] {
   const distinctEntities: DistinctEntity[] = [];
+  function entityExists(typeName: string): boolean {
+    return distinctEntities.some(
+      (distinctType) => distinctType.typeName === typeName,
+    );
+  }
 
   const subschemas = Array.from(subschemasIter);
   const types = subschemas.flatMap((subschema) =>
@@ -247,11 +277,7 @@ function getDistinctEntities(
 
   const objects = types.filter(isObjectType);
   for (const obj of objects) {
-    if (
-      distinctEntities.find(
-        (distinctType) => distinctType.typeName === obj.name,
-      )
-    ) {
+    if (entityExists(obj.name)) {
       // already added this type
       continue;
     }
@@ -291,6 +317,7 @@ function getDistinctEntities(
     // is an entity that can efficiently be resolved globally
     distinctEntities.push({
       ...candidate,
+      kind: 'object',
       typeName: obj.name,
       keyFieldNames: (function getRootFieldNames(
         selectionSet: SelectionSetNode,
@@ -310,6 +337,36 @@ function getDistinctEntities(
         return fieldNames;
       })(parseSelectionSet(candidate.merge.selectionSet)),
     });
+  }
+
+  // object entities must exist in order to support interfaces
+  if (distinctEntities.length) {
+    const interfaces = types.filter(isInterfaceType);
+    Interfaces: for (const inter of interfaces) {
+      if (entityExists(inter.name)) {
+        // already added this interface
+        continue;
+      }
+      // check if this interface is implemented exclusively by the entity objects
+      for (const subschema of subschemas) {
+        const impls = subschema.schema.getImplementations(inter);
+        if (impls.interfaces.length) {
+          // this interface is implemented by other interfaces, we wont be handling those atm
+          // TODO: handle interfaces that implement other interfaces
+          continue Interfaces;
+        }
+        if (!impls.objects.every(({ name }) => entityExists(name))) {
+          // implementing objects of this interface are not all distinct entities
+          // i.e. some implementing objects don't have the node id field
+          continue Interfaces;
+        }
+      }
+      // all subschemas entities implement exclusively this interface
+      distinctEntities.push({
+        kind: 'interface',
+        typeName: inter.name,
+      });
+    }
   }
 
   return distinctEntities;

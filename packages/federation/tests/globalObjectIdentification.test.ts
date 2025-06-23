@@ -162,7 +162,7 @@ describe('Global Object Identification', () => {
     `);
   });
 
-  it('should resolve single field key interface', async () => {
+  it('should resolve single field key interface with implementing object node id', async () => {
     const { data, execute } = await getSchema();
 
     await expect(
@@ -171,7 +171,7 @@ describe('Global Object Identification', () => {
         {
           node(nodeId: "${toGlobalId('Organization', data.organizations[0].id)}") {
             ... on Actor {
-              nodeId
+              nodeId # even though on Actor, the nodeId will be the global ID of the implementing type
               name
             }
           }
@@ -188,6 +188,37 @@ describe('Global Object Identification', () => {
         },
       }
     `);
+  });
+
+  it('should not resolve single field key interface with interface node id', async () => {
+    const { data, execute } = await getSchema();
+
+    await expect(
+      execute({
+        query: /* GraphQL */ `
+        {
+          node(nodeId: "${toGlobalId('Actor', data.organizations[0].id)}") {
+            ... on Actor {
+              nodeId
+              name
+            }
+          }
+        }
+      `,
+      }),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "node": null,
+        },
+      }
+    `);
+
+    // the node here will be always null because Actor is an interface and we cannot resolve it by id
+    // we can only resolve it by the implementing type id, which is Organization or Person in this case.
+    //
+    // we can also safely assume that the nodeId in an interface will never be generated a global ID for
+    // the interface itself - it will always be the global ID of the implementing type that got resolved
   });
 
   it('should resolve multiple fields key object', async () => {
