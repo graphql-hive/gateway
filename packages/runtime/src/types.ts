@@ -195,8 +195,8 @@ export interface GatewayConfigSupergraph<
    */
   pollingInterval?: number;
   /**
-   * Add support for GraphQL Global Object Identification Specification  by adding a `Node`
-   * interface, `node(nodeId: ID!): Node` and `nodes(nodeIds: [ID!]!): [Node!]!` fields to the `Query` type.
+   * Add support for GraphQL Global Object Identification Specification by adding a `Node`
+   * interface and `node(nodeId: ID!): Node` field to the `Query` type.
    *
    * ```graphql
    * """An object with a globally unique `ID`."""
@@ -213,11 +213,6 @@ export interface GatewayConfigSupergraph<
    *     """The globally unique `ID`."""
    *     nodeId: ID!
    *   ): Node
-   *   """Fetches objects given their globally unique `ID`s."""
-   *   nodes(
-   *     """The globally unique `ID`s."""
-   *     nodeIds: [ID!]!
-   *   ): [Node!]!
    * }
    * ```
    *
