@@ -49,7 +49,7 @@ jobs:
               console.log('Using "rc" tag for upcoming release');
               return 'rc';
             }
-            consle.log('Using "alpha" tag for snapshot release');
+            console.log('Using "alpha" tag for snapshot release');
             return 'alpha';
   snapshot:
     needs: [snapshot-npm-tag]
