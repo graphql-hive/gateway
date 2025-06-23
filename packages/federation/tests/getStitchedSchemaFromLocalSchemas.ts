@@ -9,6 +9,7 @@ import { composeServices } from '@theguild/federation-composition';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GraphQLSchema } from 'graphql';
 import { kebabCase } from 'lodash';
+import { GlobalObjectIdentificationOptions } from '../src/globalObjectIdentification';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
 export interface LocalSchemaItem {
@@ -31,7 +32,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   ) => void;
   composeWith?: 'apollo' | 'guild';
   ignoreRules?: string[];
-  globalObjectIdentification?: boolean;
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }): Promise<GraphQLSchema> {
   let supergraphSdl: string;
   if (composeWith === 'apollo') {

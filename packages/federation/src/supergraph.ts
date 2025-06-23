@@ -70,6 +70,7 @@ import {
 import {
   createNodeDefinitions,
   createResolvers,
+  GlobalObjectIdentificationOptions,
 } from './globalObjectIdentification.js';
 import {
   filterInternalFieldsAndTypes,
@@ -135,10 +136,7 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
   /**
    * Add support for GraphQL Global Object Identification Specification  by adding a `Node`
-   * interface, `node(id: ID!): Node` and `nodes(ids: [ID!]!): [Node!]!` fields to the `Query` type.
-   *
-   * The `Node` interface will have a `nodeId` (not `id`!) field used as the global identifier. It
-   * is intentionally not `id` to avoid collisions with existing `id` fields in subgraphs.
+   * interface, `node(nodeId: ID!): Node` and `nodes(nodeIds: [ID!]!): [Node!]!` fields to the `Query` type.
    *
    * ```graphql
    * """An object with a globally unique `ID`."""
@@ -165,7 +163,7 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    *
    * @see https://graphql.org/learn/global-object-identification/
    */
-  globalObjectIdentification?: boolean;
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
@@ -1548,30 +1546,37 @@ export function getStitchingOptionsFromSupergraphSdl(
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
-  const shouldGlobalObjectIdent =
-    opts.globalObjectIdentification && typeNameKeysBySubgraphMap.size;
+  const globalObjectIdentification: GlobalObjectIdentificationOptions | null =
+    opts.globalObjectIdentification === true
+      ? // defaults
+        {
+          nodeIdField: 'nodeId',
+        }
+      : typeof opts.globalObjectIdentification === 'object'
+        ? // user configuration
+          opts.globalObjectIdentification
+        : null;
+  if (globalObjectIdentification && !typeNameKeysBySubgraphMap.size) {
+    throw new Error(
+      'Automatic Global Object Identification is enabled, but no subgraphs have entities defined with defined keys. Please ensure that at least one subgraph has a type with the `@key` directive making it an entity.',
+    );
+  }
   return {
     subschemas,
     typeDefs: {
       kind: Kind.DOCUMENT,
-      definitions: !shouldGlobalObjectIdent
+      definitions: !globalObjectIdentification
         ? extraDefinitions
         : [
             ...extraDefinitions,
-            ...createNodeDefinitions({
-              nodeIdField: 'nodeId',
-              subschemas,
-            }),
+            ...createNodeDefinitions(subschemas, globalObjectIdentification),
           ],
     } as DocumentNode,
     assumeValid: true,
     assumeValidSDL: true,
-    resolvers: !shouldGlobalObjectIdent
+    resolvers: !globalObjectIdentification
       ? undefined
-      : createResolvers({
-          nodeIdField: 'nodeId',
-          subschemas,
-        }),
+      : createResolvers(subschemas, globalObjectIdentification),
     typeMergingOptions: {
       useNonNullableFieldOnConflict: true,
       validationSettings: {

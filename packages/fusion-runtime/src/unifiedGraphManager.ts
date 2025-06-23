@@ -5,6 +5,7 @@ import type {
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
+import type { GlobalObjectIdentificationOptions } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   Executor,
@@ -68,7 +69,7 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
-  globalObjectIdentification?: boolean;
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 
   logger?: Logger;
 }
@@ -109,7 +110,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
 
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
 
-  globalObjectIdentification?: boolean;
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }
 
 export type Instrumentation = {
@@ -140,7 +141,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private lastLoadTime?: number;
   private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
-  private globalObjectIdentification: boolean;
+  private globalObjectIdentification:
+    | boolean
+    | GlobalObjectIdentificationOptions;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;

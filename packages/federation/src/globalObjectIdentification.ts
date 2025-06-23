@@ -18,14 +18,21 @@ import { fromGlobalId, toGlobalId } from 'graphql-relay';
 import { isMergedEntityConfig, MergedEntityConfig } from './supergraph';
 
 export interface GlobalObjectIdentificationOptions {
+  /**
+   * The field name of the global ID on the Node interface.
+   *
+   * The `Node` interface defaults to `nodeId`, not `id`! It is intentionally not
+   * `id` to avoid collisions with existing `id` fields in subgraphs.
+   *
+   * @default nodeId
+   */
   nodeIdField: string;
-  subschemas: SubschemaConfig[];
 }
 
-export function createNodeDefinitions({
-  nodeIdField,
-  subschemas,
-}: GlobalObjectIdentificationOptions) {
+export function createNodeDefinitions(
+  subschemas: SubschemaConfig[],
+  { nodeIdField }: GlobalObjectIdentificationOptions,
+) {
   const defs: DefinitionNode[] = [];
 
   // nodeId: ID
@@ -152,10 +159,10 @@ export function createNodeDefinitions({
   return defs;
 }
 
-export function createResolvers({
-  nodeIdField,
-  subschemas,
-}: GlobalObjectIdentificationOptions): IResolvers {
+export function createResolvers(
+  subschemas: SubschemaConfig[],
+  { nodeIdField }: GlobalObjectIdentificationOptions,
+): IResolvers {
   // we can safely skip interfaces here because the concrete type will be known
   // when resolving and the type will always be an object
   //
