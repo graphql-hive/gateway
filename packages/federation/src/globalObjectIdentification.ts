@@ -196,7 +196,7 @@ export function createResolvers(
       {} as Record<string, IResolvers>,
     ),
     Query: {
-      node(_source, { nodeId }, context, info) {
+      node(_source, args, context, info) {
         const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as
           | StitchingInfo
           | undefined;
@@ -211,7 +211,9 @@ export function createResolvers(
           stitchingInfo.subschemaMap.values(),
         ).filter((t) => t.kind === 'object');
 
-        const { id: idOrFields, type: typeName } = fromGlobalId(nodeId);
+        const { id: idOrFields, type: typeName } = fromGlobalId(
+          args[nodeIdField],
+        );
         const entity = entities.find((t) => t.typeName === typeName);
         if (!entity) {
           return null; // unknown object type
