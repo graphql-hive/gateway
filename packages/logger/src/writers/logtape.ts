@@ -15,7 +15,7 @@ export interface LogTapeLogWriterOptions {
 export class LogTapeLogWriter implements LogWriter {
   #logTapeLogger: LogTapeLogger;
 
-  constructor(public options: LogTapeLogWriterOptions) {
+  constructor(public options: LogTapeLogWriterOptions = {}) {
     this.#logTapeLogger = getLogger(this.options.category ?? ['hive-gateway']);
   }
 
