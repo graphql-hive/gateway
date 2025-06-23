@@ -45,7 +45,8 @@ jobs:
               return npmTagFromPrBody;
             }
             const prTitle = context.payload.pull_request.title;
-            if (prTitle !== 'Upcoming Release Changes') {
+            // TODO: anyone can set the PR title to "Upcoming Release Changes" so this is not secure
+            if (prTitle === 'Upcoming Release Changes') {
               console.log('Using "rc" tag for upcoming release');
               return 'rc';
             }
