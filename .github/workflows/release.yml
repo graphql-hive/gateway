@@ -45,8 +45,8 @@ jobs:
               return npmTagFromPrBody;
             }
             const prTitle = context.payload.pull_request.title;
-            // TODO: anyone can set the PR title to "Upcoming Release Changes" so this is not secure
-            if (prTitle === 'Upcoming Release Changes') {
+            const prAuthor = context.payload.pull_request.user.login;
+            if (prAuthor === 'theguild-bot' && prTitle === 'Upcoming Release Changes') {
               console.log('Using "rc" tag for upcoming release');
               return 'rc';
             }
