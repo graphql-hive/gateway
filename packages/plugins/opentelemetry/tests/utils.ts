@@ -4,14 +4,27 @@ import {
   GatewayPlugin,
 } from '@graphql-hive/gateway';
 import { MeshFetch } from '@graphql-mesh/types';
-import { context, diag, trace, TraceState } from '@opentelemetry/api';
+import {
+  context,
+  diag,
+  metrics,
+  propagation,
+  ProxyTracerProvider,
+  trace,
+  TraceState,
+  type TextMapPropagator,
+} from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
+import { Resource } from '@opentelemetry/resources';
 import {
   BasicTracerProvider,
   SimpleSpanProcessor,
   type ReadableSpan,
+  type Sampler,
   type SpanExporter,
+  type SpanProcessor,
+  type TracerConfig,
 } from '@opentelemetry/sdk-trace-base';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
@@ -234,5 +247,53 @@ const traceProvider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
 
-trace.setGlobalTracerProvider(traceProvider);
-context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+export function setupOtelForTests() {
+  trace.setGlobalTracerProvider(traceProvider);
+  context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+}
+
+export const getContextManager = () => {
+  // @ts-expect-error Access to private method for test purpose
+  return context._getContextManager() as Context;
+};
+
+export const getTracerProvider = () => {
+  return (trace.getTracerProvider() as ProxyTracerProvider).getDelegate();
+};
+
+export const getPropagator = () => {
+  // @ts-expect-error Access to private method for test purpose
+  return propagation._getGlobalPropagator() as TextMapPropagator;
+};
+
+export const getTracerProviderConfig = () => {
+  return (
+    // @ts-expect-error Access to private method for test purpose
+    (getTracerProvider() as BasicTracerProvider)._config as TracerConfig
+  );
+};
+
+export const getSampler = () => {
+  return getTracerProviderConfig().sampler;
+};
+
+export const getSpanProcessors = () => {
+  return getTracerProviderConfig().spanProcessors;
+};
+
+export const getResource = () => {
+  return getTracerProviderConfig().resource;
+};
+
+export const getLimits = () => {
+  const { spanLimits, generalLimits } = getTracerProviderConfig();
+  return { spanLimits, generalLimits };
+};
+
+export const disableAll = () => {
+  trace.disable();
+  context.disable();
+  propagation.disable();
+  metrics.disable();
+  diag.disable();
+};
