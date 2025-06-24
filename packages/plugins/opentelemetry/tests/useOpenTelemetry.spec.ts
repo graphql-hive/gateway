@@ -1,10 +1,8 @@
 import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import {
-  context,
-  propagation,
   SpanStatusCode,
   TextMapPropagator,
-  trace,
+  TracerProvider,
 } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
@@ -13,10 +11,17 @@ import {
   W3CTraceContextPropagator,
 } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
+  AlwaysOffSampler,
   AlwaysOnSampler,
   BasicTracerProvider,
   BatchSpanProcessor,
+  ConsoleSpanExporter,
+  ParentBasedSampler,
+  SimpleSpanProcessor,
+  SpanProcessor,
+  TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import {
   afterAll,
@@ -95,6 +100,219 @@ describe('useOpenTelemetry', () => {
       expect(resource?.attributes).toMatchObject({
         'service.name': '@graphql-mesh/plugin-opentelemetry',
       });
+    });
+
+    it('should register a custom TracerProvider', () => {
+      const tracerProvider: TracerProvider & { register: () => void } = {
+        register: vi.fn(),
+        getTracer: vi.fn(),
+      };
+
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          tracerProvider,
+        },
+      });
+
+      expect(tracerProvider.register).toHaveBeenCalled();
+    });
+
+    it('should not register a contextManager when passed null', () => {
+      const before = getContextManager();
+
+      opentelemetrySetup({
+        contextManager: null,
+      });
+
+      expect(getContextManager()).toBe(before);
+    });
+
+    it('should register a console exporter', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          console: true,
+        },
+      });
+
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(1);
+      // @ts-ignore access of private field
+      const exporter = processors![0]!._exporter;
+      expect(exporter).toBeInstanceOf(ConsoleSpanExporter);
+    });
+
+    it('should register a console exporter even if an exporter is given', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          exporter: new OTLPTraceExporter(),
+          console: true,
+        },
+      });
+
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(2);
+      // @ts-ignore access of private field
+      const exporter = processors![1]!._exporter;
+      expect(exporter).toBeInstanceOf(ConsoleSpanExporter);
+    });
+
+    it('should register a console exporter even if a list of processors is given', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
+          console: true,
+        },
+      });
+
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(2);
+      // @ts-ignore access of private field
+      const exporter = processors![1]!._exporter;
+      expect(exporter).toBeInstanceOf(ConsoleSpanExporter);
+    });
+
+    it('should register a custom resource', () => {
+      opentelemetrySetup({
+        traces: {
+          console: true,
+          resource: resourceFromAttributes({
+            'service.name': 'test-name',
+            'service.version': 'test-version',
+            'custom-attribute': 'test-value',
+          }),
+        },
+        contextManager: null,
+      });
+
+      expect(getResource()?.attributes).toMatchObject({
+        'service.name': 'test-name',
+        'service.version': 'test-version',
+        'custom-attribute': 'test-value',
+      });
+    });
+
+    it('should get service name and version from env var', () => {
+      vi.stubEnv('OTEL_SERVICE_NAME', 'test-name');
+      vi.stubEnv('OTEL_SERVICE_VERSION', 'test-version');
+
+      opentelemetrySetup({
+        traces: { console: true },
+        contextManager: null,
+      });
+
+      expect(getResource()?.attributes).toMatchObject({
+        'service.name': 'test-name',
+        'service.version': 'test-version',
+      });
+
+      vi.unstubAllEnvs();
+    });
+
+    it('should allow to register a custom sampler', () => {
+      opentelemetrySetup({
+        traces: {
+          console: true,
+        },
+        contextManager: null,
+        sampler: new AlwaysOffSampler(),
+      });
+
+      expect(getSampler()).toBeInstanceOf(AlwaysOffSampler);
+    });
+
+    it('should allow to configure a rate sampling strategy', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: { console: true },
+        samplingRate: 0.1,
+      });
+
+      const sampler = getSampler();
+      expect(sampler).toBeInstanceOf(ParentBasedSampler);
+
+      // @ts-ignore access private field
+      const rootSampler = sampler._root;
+      expect(rootSampler).toBeInstanceOf(TraceIdRatioBasedSampler);
+
+      // @ts-ignore access private field
+      const rate = rootSampler._ratio;
+      expect(rate).toBe(0.1);
+    });
+
+    it('should allow to disable batching', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          exporter: new OTLPTraceExporter(),
+          batching: false,
+        },
+      });
+
+      const [processor] = getSpanProcessors()!;
+      expect(processor).toBeInstanceOf(SimpleSpanProcessor);
+    });
+
+    it('should allow to configure batching', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          exporter: new OTLPTraceExporter(),
+          batching: {
+            maxExportBatchSize: 1,
+            maxQueueSize: 2,
+            scheduledDelayMillis: 3,
+            exportTimeoutMillis: 4,
+          },
+        },
+      });
+
+      const [processor] = getSpanProcessors()!;
+      expect(processor).toBeInstanceOf(BatchSpanProcessor);
+      expect(processor).toMatchObject({
+        _maxExportBatchSize: 1,
+        _maxQueueSize: 2,
+        _scheduledDelayMillis: 3,
+        _exportTimeoutMillis: 4,
+      });
+    });
+
+    it('should allow to manually define processor', () => {
+      const processor = {} as SpanProcessor;
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          processors: [processor],
+        },
+      });
+
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(1);
+      expect(getSpanProcessors()![0]).toBe(processor);
+    });
+
+    it('should allow to customize propagators', () => {
+      const propagator = {} as TextMapPropagator;
+      opentelemetrySetup({
+        contextManager: null,
+        propagators: [propagator],
+      });
+
+      expect(getPropagator()).toBe(propagator);
+    });
+
+    it('should allow to customize propagators', () => {
+      const before = getPropagator();
+
+      opentelemetrySetup({
+        contextManager: null,
+        propagators: false,
+      });
+
+      expect(getPropagator()).toBe(before);
     });
   });
 
