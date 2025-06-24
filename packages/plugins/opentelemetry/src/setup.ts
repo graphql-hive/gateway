@@ -37,14 +37,17 @@ export * from './attributes';
 
 type TracingOptions = {
   traces?:
-    | { tracerProvider: TracerProvider; processors?: never; exporter?: never }
+    | { tracerProvider: TracerProvider }
     | {
         tracerProvider?: never;
+        resource?: Resource | { serviceName: string; serviceVersion: string };
         processors: SpanProcessor[];
         exporter?: never;
+        console?: boolean;
       }
     | {
         tracerProvider?: never;
+        resource?: Resource | { serviceName: string; serviceVersion: string };
         processors?: never;
         exporter: SpanExporter;
         batching?: BatchingConfig | boolean;
@@ -52,9 +55,9 @@ type TracingOptions = {
       }
     | {
         tracerProvider?: never;
+        resource?: Resource | { serviceName: string; serviceVersion: string };
         processors?: never;
         exporter?: never;
-        batching?: never;
         console: boolean;
       };
 };
@@ -71,8 +74,7 @@ type SamplingOptions =
 
 type OpentelemetrySetupOptions = TracingOptions &
   SamplingOptions & {
-    resource?: Resource | { serviceName: string; serviceVersion: string };
-    contextManager: ContextManager | false;
+    contextManager: ContextManager | null;
     propagators?: TextMapPropagator[] | false;
   };
 
@@ -92,37 +94,32 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
         trace.setGlobalTracerProvider(options.traces.tracerProvider);
       }
     } else {
-      let spanProcessors = options.traces.processors;
-      if (!options.traces.processors) {
-        spanProcessors = [];
+      let spanProcessors = options.traces.processors ?? [];
 
-        if (options.traces.exporter) {
-          spanProcessors.push(
-            resolveBatchingConfig(
-              options.traces.exporter,
-              options.traces.batching,
-            ),
-          );
-        }
+      if (options.traces.exporter) {
+        spanProcessors.push(
+          resolveBatchingConfig(
+            options.traces.exporter,
+            options.traces.batching,
+          ),
+        );
+      }
 
-        if (options.traces.console) {
-          spanProcessors.push(
-            new SimpleSpanProcessor(new ConsoleSpanExporter()),
-          );
-        }
+      if (options.traces.console) {
+        spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
       }
 
       const baseResource = resourceFromAttributes({
         [ATTR_SERVICE_NAME]:
-          options.resource && 'serviceName' in options.resource
-            ? options.resource?.serviceName
+          options.traces.resource && 'serviceName' in options.traces.resource
+            ? options.traces.resource?.serviceName
             : getEnvVar(
                 'OTEL_SERVICE_NAME',
                 '@graphql-mesh/plugin-opentelemetry',
               ),
         [ATTR_SERVICE_VERSION]:
-          options.resource && 'serviceVersion' in options.resource
-            ? options.resource?.serviceVersion
+          options.traces.resource && 'serviceVersion' in options.traces.resource
+            ? options.traces.resource?.serviceVersion
             : getEnvVar(
                 'OTEL_SERVICE_VERSION',
                 globalThis.__OTEL_PLUGIN_VERSION__,
@@ -132,8 +129,9 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
       trace.setGlobalTracerProvider(
         new BasicTracerProvider({
           resource:
-            options.resource && !('serviceName' in options.resource)
-              ? baseResource.merge(options.resource)
+            options.traces.resource &&
+            !('serviceName' in options.traces.resource)
+              ? baseResource.merge(options.traces.resource)
               : baseResource,
           sampler:
             options.sampler ??
@@ -146,23 +144,23 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
         }),
       );
     }
+  }
 
-    if (options.contextManager !== false) {
-      context.setGlobalContextManager(options.contextManager);
-    }
+  if (options.contextManager !== null) {
+    context.setGlobalContextManager(options.contextManager);
+  }
 
-    if (options.propagators !== false) {
-      const propagators = options.propagators ?? [
-        new W3CBaggagePropagator(),
-        new W3CTraceContextPropagator(),
-      ];
+  if (options.propagators !== false) {
+    const propagators = options.propagators ?? [
+      new W3CBaggagePropagator(),
+      new W3CTraceContextPropagator(),
+    ];
 
-      propagation.setGlobalPropagator(
-        propagators.length === 1
-          ? propagators[0]!
-          : new CompositePropagator({ propagators }),
-      );
-    }
+    propagation.setGlobalPropagator(
+      propagators.length === 1
+        ? propagators[0]!
+        : new CompositePropagator({ propagators }),
+    );
   }
 }
 
