@@ -177,13 +177,13 @@ describe('useOpenTelemetry', () => {
 
     it('should register a custom resource', () => {
       opentelemetrySetup({
+        resource: resourceFromAttributes({
+          'service.name': 'test-name',
+          'service.version': 'test-version',
+          'custom-attribute': 'test-value',
+        }),
         traces: {
           console: true,
-          resource: resourceFromAttributes({
-            'service.name': 'test-name',
-            'service.version': 'test-version',
-            'custom-attribute': 'test-value',
-          }),
         },
         contextManager: null,
       });
@@ -313,6 +313,45 @@ describe('useOpenTelemetry', () => {
       });
 
       expect(getPropagator()).toBe(before);
+    });
+
+    it('should allow to customize limits', () => {
+      opentelemetrySetup({
+        contextManager: null,
+        traces: {
+          console: true,
+          spanLimits: {
+            attributeCountLimit: 1,
+            attributePerEventCountLimit: 2,
+            attributePerLinkCountLimit: 3,
+            attributeValueLengthLimit: 4,
+            eventCountLimit: 5,
+            linkCountLimit: 6,
+          },
+        },
+        generalLimits: {
+          attributeCountLimit: 7,
+          attributeValueLengthLimit: 8,
+        },
+      });
+
+      console.log(getTracerProvider());
+      // @ts-ignore access private field
+      const registeredConfig = getTracerProvider()._config;
+      expect(registeredConfig).toMatchObject({
+        spanLimits: {
+          attributeCountLimit: 1,
+          attributePerEventCountLimit: 2,
+          attributePerLinkCountLimit: 3,
+          attributeValueLengthLimit: 4,
+          eventCountLimit: 5,
+          linkCountLimit: 6,
+        },
+        generalLimits: {
+          attributeCountLimit: 7,
+          attributeValueLengthLimit: 8,
+        },
+      });
     });
   });
 

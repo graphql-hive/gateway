@@ -17,8 +17,10 @@ import {
   BasicTracerProvider,
   BatchSpanProcessor,
   ConsoleSpanExporter,
+  GeneralLimits,
   ParentBasedSampler,
   SimpleSpanProcessor,
+  SpanLimits,
   TraceIdRatioBasedSampler,
   type BufferConfig,
   type Sampler,
@@ -38,28 +40,33 @@ export * from './attributes';
 type TracingOptions = {
   traces?:
     | { tracerProvider: TracerProvider }
-    | {
-        tracerProvider?: never;
-        resource?: Resource | { serviceName: string; serviceVersion: string };
-        processors: SpanProcessor[];
-        exporter?: never;
-        console?: boolean;
-      }
-    | {
-        tracerProvider?: never;
-        resource?: Resource | { serviceName: string; serviceVersion: string };
-        processors?: never;
-        exporter: SpanExporter;
-        batching?: BatchingConfig | boolean;
-        console?: boolean;
-      }
-    | {
-        tracerProvider?: never;
-        resource?: Resource | { serviceName: string; serviceVersion: string };
-        processors?: never;
-        exporter?: never;
-        console: boolean;
-      };
+    | (TracerOptions &
+        (
+          | {
+              // Processors
+              processors: SpanProcessor[];
+              tracerProvider?: never;
+              exporter?: never;
+            }
+          | {
+              // Exporter
+              exporter: SpanExporter;
+              batching?: BatchingConfig | boolean;
+              tracerProvider?: never;
+              processors?: never;
+            }
+          | {
+              // Console only
+              tracerProvider?: never;
+              processors?: never;
+              exporter?: never;
+            }
+        ));
+};
+
+type TracerOptions = {
+  console?: boolean;
+  spanLimits?: SpanLimits;
 };
 
 type SamplingOptions =
@@ -74,8 +81,10 @@ type SamplingOptions =
 
 type OpentelemetrySetupOptions = TracingOptions &
   SamplingOptions & {
+    resource?: Resource | { serviceName: string; serviceVersion: string };
     contextManager: ContextManager | null;
     propagators?: TextMapPropagator[] | false;
+    generalLimits?: GeneralLimits;
   };
 
 export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
@@ -111,15 +120,15 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
 
       const baseResource = resourceFromAttributes({
         [ATTR_SERVICE_NAME]:
-          options.traces.resource && 'serviceName' in options.traces.resource
-            ? options.traces.resource?.serviceName
+          options.resource && 'serviceName' in options.resource
+            ? options.resource?.serviceName
             : getEnvVar(
                 'OTEL_SERVICE_NAME',
                 '@graphql-mesh/plugin-opentelemetry',
               ),
         [ATTR_SERVICE_VERSION]:
-          options.traces.resource && 'serviceVersion' in options.traces.resource
-            ? options.traces.resource?.serviceVersion
+          options.resource && 'serviceVersion' in options.resource
+            ? options.resource?.serviceVersion
             : getEnvVar(
                 'OTEL_SERVICE_VERSION',
                 globalThis.__OTEL_PLUGIN_VERSION__,
@@ -129,9 +138,8 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
       trace.setGlobalTracerProvider(
         new BasicTracerProvider({
           resource:
-            options.traces.resource &&
-            !('serviceName' in options.traces.resource)
-              ? baseResource.merge(options.traces.resource)
+            options.resource && !('serviceName' in options.resource)
+              ? baseResource.merge(options.resource)
               : baseResource,
           sampler:
             options.sampler ??
@@ -141,6 +149,8 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
                 })
               : new AlwaysOnSampler()),
           spanProcessors,
+          generalLimits: options.generalLimits,
+          spanLimits: options.traces.spanLimits,
         }),
       );
     }
