@@ -35,7 +35,7 @@ import {
   createGraphQLValidateSpan,
   createHttpSpan,
   createSchemaLoadingSpan,
-  startSubgraphExecuteFetchSpan as createSubgraphExecuteFetchSpan,
+  createSubgraphExecuteSpan,
   createUpstreamHttpFetchSpan,
   recordCacheError,
   recordCacheEvent,
@@ -137,25 +137,25 @@ export type OpenTelemetryGatewayPluginOptions = {
            *
            * Disabling the GraphQL operation spa will also disable all other child spans.
            */
-          graphql?: BooleanOrPredicate<unknown>; // FIXME: better type for graphql context
+          graphql?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
           /**
            * Enable/disable GraphQL context building phase (default: true).
            */
-          graphqlContextBuilding?: BooleanOrPredicate<unknown>; // FIXME: better type for graphql context
+          graphqlContextBuilding?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
           /**
            * Enable/disable GraphQL parse spans (default: true).
            */
-          graphqlParse?: BooleanOrPredicate<unknown>; // FIXME: better type for graphql context
+          graphqlParse?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
           /**
            * Enable/disable GraphQL validate spans (default: true).
            */
-          graphqlValidate?: BooleanOrPredicate<unknown>;
+          graphqlValidate?: BooleanOrPredicate<{ context: unknown }>;
           /**
            * Enable/disable GraphQL execute spans (default: true).
            *
            * Disabling the GraphQL execute spans will also disable all other child spans.
            */
-          graphqlExecute?: BooleanOrPredicate<unknown>;
+          graphqlExecute?: BooleanOrPredicate<{ context: unknown }>;
           /**
            * Enable/disable subgraph execute spans (default: true).
            *
@@ -168,11 +168,9 @@ export type OpenTelemetryGatewayPluginOptions = {
           /**
            * Enable/disable upstream HTTP fetch calls spans (default: true).
            */
-          upstreamFetch?: BooleanOrPredicate<ExecutionRequest | undefined>;
-          /**
-           * Enable/Disable cache related span events (default: true).
-           */
-          cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
+          upstreamFetch?: BooleanOrPredicate<{
+            executionRequest: ExecutionRequest | undefined;
+          }>;
           /**
            * Enable/disable schema loading spans (default: true if context manager available).
            *
@@ -183,6 +181,12 @@ export type OpenTelemetryGatewayPluginOptions = {
            * Enable/disable initialization span (default: true).
            */
           initialization?: boolean;
+        };
+        events?: {
+          /**
+           * Enable/Disable cache related span events (default: true).
+           */
+          cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
         };
       };
 };
@@ -350,7 +354,7 @@ export function useOpenTelemetry(
       ) {
         if (
           !isParentEnabled(parentState) ||
-          !shouldTrace(traces.spans?.graphql, gqlCtx)
+          !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
         ) {
           return wrapped();
         }
@@ -380,7 +384,9 @@ export function useOpenTelemetry(
       context({ state, context: gqlCtx }, wrapped) {
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlContextBuilding, gqlCtx)
+          !shouldTrace(traces.spans?.graphqlContextBuilding, {
+            context: gqlCtx,
+          })
         ) {
           return wrapped();
         }
@@ -409,7 +415,7 @@ export function useOpenTelemetry(
       parse({ state, context: gqlCtx }, wrapped) {
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlParse, gqlCtx)
+          !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
         ) {
           return wrapped();
         }
@@ -436,7 +442,7 @@ export function useOpenTelemetry(
       validate({ state, context: gqlCtx }, wrapped) {
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlValidate, gqlCtx)
+          !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
         ) {
           return wrapped();
         }
@@ -469,7 +475,7 @@ export function useOpenTelemetry(
       execute({ state, context: gqlCtx }, wrapped) {
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlExecute, gqlCtx)
+          !shouldTrace(traces.spans?.graphqlExecute, { context: gqlCtx })
         ) {
           // Other parenting skipping are marked by the fact that `otel` is undefined in the state
           // For execute, there is no specific state, so we keep track of it here.
@@ -533,7 +539,7 @@ export function useOpenTelemetry(
           : getContext(parentState);
 
         forSubgraphExecution.otel = new OtelContextStack(
-          createSubgraphExecuteFetchSpan({
+          createSubgraphExecuteSpan({
             ctx: parentContext,
             tracer,
             executionRequest,
@@ -570,7 +576,7 @@ export function useOpenTelemetry(
 
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.upstreamFetch, executionRequest)
+          !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
         ) {
           return wrapped();
         }
@@ -668,7 +674,7 @@ export function useOpenTelemetry(
     },
 
     onCacheGet: (payload) =>
-      shouldTrace(traces.spans?.cache, { key: payload.key, action: 'read' })
+      shouldTrace(traces.events?.cache, { key: payload.key, action: 'read' })
         ? {
             onCacheMiss: () => recordCacheEvent('miss', payload),
             onCacheHit: () => recordCacheEvent('hit', payload),
@@ -678,7 +684,7 @@ export function useOpenTelemetry(
         : undefined,
 
     onCacheSet: (payload) =>
-      shouldTrace(traces.spans?.cache, { key: payload.key, action: 'write' })
+      shouldTrace(traces.events?.cache, { key: payload.key, action: 'write' })
         ? {
             onCacheSetDone: () => recordCacheEvent('write', payload),
             onCacheSetError: ({ error }) =>
@@ -698,7 +704,7 @@ export function useOpenTelemetry(
     onParams: function onParamsOTEL({ state, context: gqlCtx, params }) {
       if (
         !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphql, gqlCtx)
+        !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
       ) {
         return;
       }
@@ -714,7 +720,7 @@ export function useOpenTelemetry(
     }) {
       if (
         !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphql, gqlCtx)
+        !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
       ) {
         return;
       }
@@ -725,7 +731,7 @@ export function useOpenTelemetry(
     onParse({ state, context: gqlCtx }) {
       if (
         !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphqlParse, gqlCtx)
+        !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
       ) {
         return;
       }
@@ -743,7 +749,7 @@ export function useOpenTelemetry(
     onValidate({ state, context: gqlCtx }) {
       if (
         !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphqlValidate, gqlCtx)
+        !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
       ) {
         return;
       }
@@ -800,7 +806,7 @@ export function useOpenTelemetry(
 
       if (
         !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.upstreamFetch, executionRequest)
+        !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
       ) {
         return;
       }

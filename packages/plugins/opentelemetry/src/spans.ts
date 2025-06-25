@@ -304,7 +304,7 @@ export function setGraphQLExecutionResultAttributes(input: {
   }
 }
 
-export function startSubgraphExecuteFetchSpan(input: {
+export function createSubgraphExecuteSpan(input: {
   ctx: Context;
   tracer: Tracer;
   executionRequest: ExecutionRequest;

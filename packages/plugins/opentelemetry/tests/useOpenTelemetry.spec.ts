@@ -335,7 +335,6 @@ describe('useOpenTelemetry', () => {
         },
       });
 
-      console.log(getTracerProvider());
       // @ts-ignore access private field
       const registeredConfig = getTracerProvider()._config;
       expect(registeredConfig).toMatchObject({
