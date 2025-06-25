@@ -83,7 +83,7 @@ type OpentelemetrySetupOptions = TracingOptions &
   SamplingOptions & {
     resource?: Resource | { serviceName: string; serviceVersion: string };
     contextManager: ContextManager | null;
-    propagators?: TextMapPropagator[] | false;
+    propagators?: TextMapPropagator[];
     generalLimits?: GeneralLimits;
   };
 
@@ -160,7 +160,7 @@ export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
     context.setGlobalContextManager(options.contextManager);
   }
 
-  if (options.propagators !== false) {
+  if (!options.propagators || options.propagators.length !== 0) {
     const propagators = options.propagators ?? [
       new W3CBaggagePropagator(),
       new W3CTraceContextPropagator(),
