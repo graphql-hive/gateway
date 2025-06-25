@@ -1,3 +1,4 @@
+import { link } from 'node:fs/promises';
 import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
@@ -7,6 +8,7 @@ import {
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
+  context,
   ROOT_CONTEXT,
   SpanKind,
   SpanStatusCode,
@@ -436,12 +438,23 @@ export function setExecutionResultAttributes(input: {
   }
 }
 
-export function createSchemaLoadingSpan(inputs: { tracer: Tracer }) {
+export function createSchemaLoadingSpan(inputs: {
+  tracer: Tracer;
+  ctx: Context;
+}) {
   const span = inputs.tracer.startSpan(
     'gateway.schema',
     { attributes: { 'gateway.schema.changed': false } },
-    ROOT_CONTEXT,
+    inputs.ctx,
   );
+  const currentContext = context.active();
+
+  // If the current span is not the provided span, add a link to the current span
+  if (currentContext !== inputs.ctx) {
+    const currentSpan = trace.getActiveSpan();
+    currentSpan?.addLink({ context: span.spanContext() });
+  }
+
   return trace.setSpan(ROOT_CONTEXT, span);
 }
 
