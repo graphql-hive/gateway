@@ -309,7 +309,7 @@ describe('useOpenTelemetry', () => {
 
       opentelemetrySetup({
         contextManager: null,
-        propagators: false,
+        propagators: [],
       });
 
       expect(getPropagator()).toBe(before);
