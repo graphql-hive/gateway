@@ -616,7 +616,10 @@ export function useOpenTelemetry(
 
         return unfakePromise(
           preparation$.then(() => {
-            const ctx = createSchemaLoadingSpan({ tracer });
+            const ctx = createSchemaLoadingSpan({
+              ctx: initSpan ?? ROOT_CONTEXT,
+              tracer,
+            });
             return fakePromise()
               .then(() => context.with(ctx, wrapped))
               .catch((err) => {
