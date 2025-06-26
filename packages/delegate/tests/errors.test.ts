@@ -359,6 +359,90 @@ describe('Errors', () => {
 
         expect(gatewayResult).toEqual(expectedResult);
       });
+
+      test('should handle multiple non-graphql errors from stitched schema', async () => {
+        const schema = stitchSchemas({
+          subschemas: [
+            makeExecutableSchema({
+              typeDefs: /* GraphQL */ `
+                type Object {
+                  field1: String
+                  field2: String
+                }
+                type Query {
+                  object: Object
+                }
+              `,
+              resolvers: {
+                Query: {
+                  object: () => ({
+                    field1: () => {
+                      throw new Error('field1 error');
+                    },
+                    field2: () => {
+                      throw new Error('field2 error');
+                    },
+                  }),
+                },
+              },
+            }),
+          ],
+        });
+
+        const result = await graphql({
+          schema,
+          source: /* GraphQL */ `
+            {
+              object {
+                field1
+                field2
+              }
+            }
+          `,
+        });
+
+        expect(result.data).toMatchInlineSnapshot(`
+          {
+            "object": {
+              "field1": null,
+              "field2": null,
+            },
+          }
+        `);
+        result.errors!.forEach((error) => {
+          expect(error).toBeInstanceOf(GraphQLError);
+        });
+        expect(result.errors!.map((e) => e.toJSON())).toMatchInlineSnapshot(`
+          [
+            {
+              "locations": [
+                {
+                  "column": 17,
+                  "line": 4,
+                },
+              ],
+              "message": "field1 error",
+              "path": [
+                "object",
+                "field1",
+              ],
+            },
+            {
+              "locations": [
+                {
+                  "column": 17,
+                  "line": 5,
+                },
+              ],
+              "message": "field2 error",
+              "path": [
+                "object",
+                "field2",
+              ],
+            },
+          ]
+        `);
+      });
     });
   });
 });
