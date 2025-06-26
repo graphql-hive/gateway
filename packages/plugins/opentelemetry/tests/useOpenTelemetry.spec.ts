@@ -57,10 +57,6 @@ describe('useOpenTelemetry', () => {
       // Unregister all global OTEL apis, so that each tests can check for different setups
       disableAll();
     });
-    afterAll(() => {
-      // Unregister all global OTEL apis, so that each tests can check for different setups
-      disableAll();
-    });
 
     it('should setup OTEL with sain default', () => {
       opentelemetrySetup({
@@ -358,14 +354,10 @@ describe('useOpenTelemetry', () => {
   });
 
   describe('tracing', () => {
-    beforeAll(() => {
+    beforeEach(() => {
       // Register testing OTEL api with a custom Span processor and an Async Context Manager
       disableAll();
       setupOtelForTests();
-    });
-
-    afterAll(() => {
-      disableAll();
     });
 
     describe.each([
