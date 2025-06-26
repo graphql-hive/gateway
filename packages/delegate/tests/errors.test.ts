@@ -360,7 +360,7 @@ describe('Errors', () => {
         expect(gatewayResult).toEqual(expectedResult);
       });
 
-      test('should handle multiple non-graphql errors from stitched schema', async () => {
+      test('should handle multiple non-graphql errors from multiple fields', async () => {
         const schema = stitchSchemas({
           subschemas: [
             makeExecutableSchema({
@@ -438,6 +438,65 @@ describe('Errors', () => {
               "path": [
                 "object",
                 "field2",
+              ],
+            },
+          ]
+        `);
+      });
+
+      test('should handle multiple non-graphql errors from single field', async () => {
+        const schema = stitchSchemas({
+          subschemas: [
+            makeExecutableSchema({
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  field: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  field: () => {
+                    throw new AggregateError([
+                      new Error('field error 1'),
+                      new Error('field error 2'),
+                    ]);
+                  },
+                },
+              },
+            }),
+          ],
+        });
+
+        const result = await graphql({
+          schema,
+          source: /* GraphQL */ `
+            {
+              field
+            }
+          `,
+        });
+
+        expect(result.data).toMatchInlineSnapshot(`
+          {
+            "field": null,
+          }
+        `);
+        result.errors!.forEach((error) => {
+          expect(error).toBeInstanceOf(GraphQLError);
+        });
+        expect(result.errors!.map((e) => e.toJSON())).toMatchInlineSnapshot(`
+          [
+            {
+              "locations": [
+                {
+                  "column": 15,
+                  "line": 3,
+                },
+              ],
+              "message": "field error 1, 
+          field error 2",
+              "path": [
+                "field",
               ],
             },
           ]
