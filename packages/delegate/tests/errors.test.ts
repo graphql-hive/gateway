@@ -360,7 +360,7 @@ describe('Errors', () => {
         expect(gatewayResult).toEqual(expectedResult);
       });
 
-      test('should handle multiple non-graphql errors from multiple fields', async () => {
+      test('should handle multiple errors from multiple fields', async () => {
         const schema = stitchSchemas({
           subschemas: [
             makeExecutableSchema({
@@ -444,7 +444,7 @@ describe('Errors', () => {
         `);
       });
 
-      test('should handle multiple non-graphql errors from single field', async () => {
+      test('should handle multiple errors from single field', async () => {
         const schema = stitchSchemas({
           subschemas: [
             makeExecutableSchema({
@@ -484,7 +484,16 @@ describe('Errors', () => {
         result.errors!.forEach((error) => {
           expect(error).toBeInstanceOf(GraphQLError);
         });
-        expect(result.errors!.map((e) => e.toJSON())).toMatchInlineSnapshot(`
+        expect(
+          result.errors!.map((e) => {
+            const eobj = e.toJSON();
+            return {
+              ...eobj,
+              // replace all newlines in the message with spaces to pass snapshot for both bun and vitest
+              message: eobj.message.replaceAll('\n', ' '),
+            };
+          }),
+        ).toMatchInlineSnapshot(`
           [
             {
               "locations": [
@@ -493,8 +502,74 @@ describe('Errors', () => {
                   "line": 3,
                 },
               ],
-              "message": "field error 1, 
-          field error 2",
+              "message": "field error 1, field error 2",
+              "path": [
+                "field",
+              ],
+            },
+          ]
+        `);
+      });
+
+      test('should handle multiple not-instanceof-Error errors from single field', async () => {
+        const schema = stitchSchemas({
+          subschemas: [
+            makeExecutableSchema({
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  field: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  field: () => {
+                    throw new AggregateError([
+                      { message: 'field error 1' },
+                      { message: 'field error 2' },
+                    ]);
+                  },
+                },
+              },
+            }),
+          ],
+        });
+
+        const result = await graphql({
+          schema,
+          source: /* GraphQL */ `
+            {
+              field
+            }
+          `,
+        });
+
+        expect(result.data).toMatchInlineSnapshot(`
+          {
+            "field": null,
+          }
+        `);
+        result.errors!.forEach((error) => {
+          expect(error).toBeInstanceOf(GraphQLError);
+        });
+        expect(
+          result.errors!.map((e) => {
+            const eobj = e.toJSON();
+            return {
+              ...eobj,
+              // replace all newlines in the message with spaces to pass snapshot for both bun and vitest
+              message: eobj.message.replaceAll('\n', ' '),
+            };
+          }),
+        ).toMatchInlineSnapshot(`
+          [
+            {
+              "locations": [
+                {
+                  "column": 15,
+                  "line": 3,
+                },
+              ],
+              "message": "field error 1, field error 2",
               "path": [
                 "field",
               ],
