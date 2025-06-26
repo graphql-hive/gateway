@@ -49,43 +49,56 @@ describe('Errors', () => {
       variableValues: {},
     };
 
-    test('persists single error', () => {
-      const result = {
-        errors: [createGraphQLError('Test error')],
-      };
-      try {
-        checkResultAndHandleErrors(result, {
+    test('should return single error', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [createGraphQLError('Test error')],
+        },
+        {
           fieldName: 'responseKey',
           info: fakeInfo,
-        } as DelegationContext);
-      } catch (e: any) {
-        expect(e.message).toEqual('Test error');
-        expect(e.originalError.errors).toBeUndefined();
-      }
+        } as DelegationContext,
+      );
+      expect(result.toJSON()).toMatchInlineSnapshot(`
+        {
+          "message": "Test error",
+          "path": [
+            "foo",
+          ],
+        }
+      `);
     });
 
-    test('persists single error with extensions', () => {
-      const result = {
-        errors: [
-          createGraphQLError('Test error', {
-            extensions: {
-              code: 'UNAUTHENTICATED',
-            },
-          }),
-        ],
-      };
-      try {
-        checkResultAndHandleErrors(result, {
+    test('should return single error with extensions', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [
+            createGraphQLError('Test error', {
+              extensions: {
+                code: 'UNAUTHENTICATED',
+              },
+            }),
+          ],
+        },
+        {
           fieldName: 'responseKey',
           info: fakeInfo,
-        } as DelegationContext);
-      } catch (e: any) {
-        expect(e.message).toEqual('Test error');
-        expect(e.extensions && e.extensions.code).toEqual('UNAUTHENTICATED');
-        expect(e.originalError.errors).toBeUndefined();
-      }
+        } as DelegationContext,
+      );
+      expect(result.toJSON()).toMatchInlineSnapshot(`
+        {
+          "extensions": {
+            "code": "UNAUTHENTICATED",
+          },
+          "message": "Test error",
+          "path": [
+            "foo",
+          ],
+        }
+      `);
+    });
 
-    test('persists multiple errors', () => {
+    test('should return multiple errors in ExecutionResult format', () => {
       const result = checkResultAndHandleErrors(
         {
           errors: [
@@ -98,6 +111,7 @@ describe('Errors', () => {
           info: fakeInfo,
         } as DelegationContext,
       );
+      expect(result.data).toBeUndefined();
       expect(result.errors.map((e: GraphQLError) => e.toJSON()))
         .toMatchInlineSnapshot(`
         [
@@ -117,7 +131,7 @@ describe('Errors', () => {
       `);
     });
 
-    test('persists multiple errors with extensions', () => {
+    test('should return multiple errors with extensions in ExecutionResult format', () => {
       const result = checkResultAndHandleErrors(
         {
           errors: [
@@ -138,6 +152,7 @@ describe('Errors', () => {
           info: fakeInfo,
         } as DelegationContext,
       );
+      expect(result.data).toBeUndefined();
       expect(result.errors.map((e: GraphQLError) => e.toJSON()))
         .toMatchInlineSnapshot(`
           [
@@ -163,24 +178,51 @@ describe('Errors', () => {
         `);
     });
 
-    test('combines errors and persists the original errors', () => {
-      const result = {
-        errors: [createGraphQLError('Error1'), createGraphQLError('Error2')],
-      };
-      try {
-        checkResultAndHandleErrors(result, {
+    test('should return multiple errors with original errors in ExecutionResult format', () => {
+      const errors = [
+        createGraphQLError('Error1'),
+        createGraphQLError('Error2'),
+      ];
+      const result = checkResultAndHandleErrors(
+        {
+          errors,
+        },
+        {
           fieldName: 'responseKey',
           info: fakeInfo,
-        } as DelegationContext);
-      } catch (e: any) {
-        expect(e.message).toEqual('Error1\nError2');
-        expect(e.originalError).toBeDefined();
-        expect(e.originalError.errors).toBeDefined();
-        expect(e.originalError.errors).toHaveLength(result.errors.length);
-        for (const i in result.errors) {
-          const error = result.errors[i];
-          expect(e.originalError.errors[i]).toEqual(error);
-        }
+        } as DelegationContext,
+      );
+      expect(result.data).toBeUndefined();
+      expect(
+        result.errors.map((e: GraphQLError) => ({
+          ...e.toJSON(),
+          originalError: (e.originalError as GraphQLError).toJSON(),
+        })),
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "message": "Error1",
+            "originalError": {
+              "message": "Error1",
+            },
+            "path": [
+              "foo",
+            ],
+          },
+          {
+            "message": "Error2",
+            "originalError": {
+              "message": "Error2",
+            },
+            "path": [
+              "foo",
+            ],
+          },
+        ]
+      `);
+      for (const i in errors) {
+        const originalError = errors[i];
+        expect(result.errors[i].originalError).toBe(originalError);
       }
     });
 
