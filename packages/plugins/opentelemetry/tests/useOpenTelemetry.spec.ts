@@ -195,22 +195,25 @@ describe('useOpenTelemetry', () => {
       });
     });
 
-    it('should get service name and version from env var', () => {
-      vi.stubEnv('OTEL_SERVICE_NAME', 'test-name');
-      vi.stubEnv('OTEL_SERVICE_VERSION', 'test-version');
+    it.runIf(vi.stubEnv)(
+      'should get service name and version from env var',
+      () => {
+        vi.stubEnv('OTEL_SERVICE_NAME', 'test-name');
+        vi.stubEnv('OTEL_SERVICE_VERSION', 'test-version');
 
-      opentelemetrySetup({
-        traces: { console: true },
-        contextManager: null,
-      });
+        opentelemetrySetup({
+          traces: { console: true },
+          contextManager: null,
+        });
 
-      expect(getResource()?.attributes).toMatchObject({
-        'service.name': 'test-name',
-        'service.version': 'test-version',
-      });
+        expect(getResource()?.attributes).toMatchObject({
+          'service.name': 'test-name',
+          'service.version': 'test-version',
+        });
 
-      vi.unstubAllEnvs();
-    });
+        vi.unstubAllEnvs();
+      },
+    );
 
     it('should allow to register a custom sampler', () => {
       opentelemetrySetup({
