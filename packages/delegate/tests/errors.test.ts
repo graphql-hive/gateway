@@ -226,6 +226,65 @@ describe('Errors', () => {
       }
     });
 
+    test('should handle single not-instanceof-Error errors', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [
+            // @ts-expect-error - testing non-Error error
+            { message: 'Test error' },
+          ],
+        },
+        {
+          fieldName: 'responseKey',
+          info: fakeInfo,
+        } as DelegationContext,
+      );
+      expect(result).toBeInstanceOf(GraphQLError);
+      expect(result.toJSON()).toMatchInlineSnapshot(`
+        {
+          "message": "Test error",
+          "path": [
+            "foo",
+          ],
+        }
+      `);
+    });
+
+    test('should handle multiple not-instanceof-Error errors', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [
+            // @ts-expect-error - testing non-Error error
+            { message: 'Test error' },
+            // @ts-expect-error - testing non-Error error
+            { message: 'Test error 2' },
+          ],
+        },
+        {
+          fieldName: 'responseKey',
+          info: fakeInfo,
+        } as DelegationContext,
+      );
+      expect(result.data).toBeUndefined();
+      expect(result.errors.map((e: GraphQLError) => e.toJSON()))
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "message": "Test error",
+            "path": [
+              "foo",
+            ],
+          },
+          {
+            "message": "Test error 2",
+            "path": [
+              "foo",
+            ],
+          },
+        ]
+      `);
+    });
+
     // see https://github.com/ardatan/graphql-tools/issues/1641
     describe('it proxies errors with invalid paths', () => {
       test('it works with bare delegation', async () => {
@@ -459,73 +518,6 @@ describe('Errors', () => {
                     throw new AggregateError([
                       new Error('field error 1'),
                       new Error('field error 2'),
-                    ]);
-                  },
-                },
-              },
-            }),
-          ],
-        });
-
-        const result = await graphql({
-          schema,
-          source: /* GraphQL */ `
-            {
-              field
-            }
-          `,
-        });
-
-        expect(result.data).toMatchInlineSnapshot(`
-          {
-            "field": null,
-          }
-        `);
-        result.errors!.forEach((error) => {
-          expect(error).toBeInstanceOf(GraphQLError);
-        });
-        expect(
-          result.errors!.map((e) => {
-            const eobj = e.toJSON();
-            return {
-              ...eobj,
-              // replace all newlines in the message with spaces to pass snapshot for both bun and vitest
-              message: eobj.message.replaceAll('\n', ' '),
-            };
-          }),
-        ).toMatchInlineSnapshot(`
-          [
-            {
-              "locations": [
-                {
-                  "column": 15,
-                  "line": 3,
-                },
-              ],
-              "message": "field error 1, field error 2",
-              "path": [
-                "field",
-              ],
-            },
-          ]
-        `);
-      });
-
-      test('should handle multiple not-instanceof-Error errors from single field', async () => {
-        const schema = stitchSchemas({
-          subschemas: [
-            makeExecutableSchema({
-              typeDefs: /* GraphQL */ `
-                type Query {
-                  field: String
-                }
-              `,
-              resolvers: {
-                Query: {
-                  field: () => {
-                    throw new AggregateError([
-                      { message: 'field error 1' },
-                      { message: 'field error 2' },
                     ]);
                   },
                 },
