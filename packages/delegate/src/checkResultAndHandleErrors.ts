@@ -83,7 +83,7 @@ export function mergeDataAndErrors(
             : !error.path
               ? path
               : path.concat(error.path.slice(1));
-        return relocatedError(e, newPath);
+        return relocatedError(error, newPath);
       }),
       errors.map((error) => error.message).join(',\n'),
     );
