@@ -195,7 +195,7 @@ describe('useOpenTelemetry', () => {
       });
     });
 
-    it.runIf(vi.stubEnv)(
+    it.skipIf(!vi.stubEnv)(
       'should get service name and version from env var',
       () => {
         vi.stubEnv('OTEL_SERVICE_NAME', 'test-name');
