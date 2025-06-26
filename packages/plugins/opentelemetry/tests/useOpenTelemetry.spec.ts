@@ -23,15 +23,7 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpenTelemetryContextExtension } from '../src/plugin';
 import {
   buildTestGateway,
