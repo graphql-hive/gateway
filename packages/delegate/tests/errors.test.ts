@@ -59,6 +59,7 @@ describe('Errors', () => {
           info: fakeInfo,
         } as DelegationContext,
       );
+      expect(result).toBeInstanceOf(GraphQLError);
       expect(result.toJSON()).toMatchInlineSnapshot(`
         {
           "message": "Test error",
@@ -85,6 +86,7 @@ describe('Errors', () => {
           info: fakeInfo,
         } as DelegationContext,
       );
+      expect(result).toBeInstanceOf(GraphQLError);
       expect(result.toJSON()).toMatchInlineSnapshot(`
         {
           "extensions": {
@@ -112,6 +114,9 @@ describe('Errors', () => {
         } as DelegationContext,
       );
       expect(result.data).toBeUndefined();
+      result.errors.forEach((error: any) => {
+        expect(error).toBeInstanceOf(GraphQLError);
+      });
       expect(result.errors.map((e: GraphQLError) => e.toJSON()))
         .toMatchInlineSnapshot(`
         [
@@ -153,6 +158,9 @@ describe('Errors', () => {
         } as DelegationContext,
       );
       expect(result.data).toBeUndefined();
+      result.errors.forEach((error: any) => {
+        expect(error).toBeInstanceOf(GraphQLError);
+      });
       expect(result.errors.map((e: GraphQLError) => e.toJSON()))
         .toMatchInlineSnapshot(`
           [
@@ -193,6 +201,9 @@ describe('Errors', () => {
         } as DelegationContext,
       );
       expect(result.data).toBeUndefined();
+      result.errors.forEach((error: any) => {
+        expect(error).toBeInstanceOf(GraphQLError);
+      });
       expect(
         result.errors.map((e: GraphQLError) => ({
           ...e.toJSON(),
@@ -266,6 +277,9 @@ describe('Errors', () => {
         } as DelegationContext,
       );
       expect(result.data).toBeUndefined();
+      result.errors.forEach((error: any) => {
+        expect(error).toBeInstanceOf(GraphQLError);
+      });
       expect(result.errors.map((e: GraphQLError) => e.toJSON()))
         .toMatchInlineSnapshot(`
         [
