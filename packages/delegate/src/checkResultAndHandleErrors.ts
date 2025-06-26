@@ -85,7 +85,7 @@ export function mergeDataAndErrors(
               : path.concat(error.path.slice(1));
         return relocatedError(e, newPath);
       }),
-      errors.map((error) => error.message).join(', \n'),
+      errors.map((error) => error.message).join(',\n'),
     );
 
     return { data: combinedError, unpathedErrors: [] };
