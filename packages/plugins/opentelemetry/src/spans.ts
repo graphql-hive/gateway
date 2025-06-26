@@ -1,4 +1,3 @@
-import { link } from 'node:fs/promises';
 import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {

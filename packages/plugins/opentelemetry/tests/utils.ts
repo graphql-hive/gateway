@@ -16,14 +16,11 @@ import {
 } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
-import { Resource } from '@opentelemetry/resources';
 import {
   BasicTracerProvider,
   SimpleSpanProcessor,
   type ReadableSpan,
-  type Sampler,
   type SpanExporter,
-  type SpanProcessor,
   type TracerConfig,
 } from '@opentelemetry/sdk-trace-base';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
