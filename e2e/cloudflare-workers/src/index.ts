@@ -38,7 +38,7 @@ let runtime: ReturnType<typeof createGatewayRuntime>;
 function getRuntime(env: Env) {
   if (!runtime) {
     opentelemetrySetup({
-      contextManager: false,
+      contextManager: null,
       resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
       traces: {
         exporter: new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] }),
