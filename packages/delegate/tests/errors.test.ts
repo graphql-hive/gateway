@@ -262,6 +262,7 @@ describe('Errors', () => {
     });
 
     test('should handle multiple not-instanceof-Error errors', () => {
+      // this can happen and has happened to the customer referenced in the pr where this test was added
       const result = checkResultAndHandleErrors(
         {
           errors: [
