@@ -5,6 +5,7 @@ import type {
 import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
+import type { GlobalObjectIdentificationOptions } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   Executor,
@@ -68,6 +69,7 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 
   logger?: Logger;
 }
@@ -107,6 +109,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
   instrumentation?: () => Instrumentation | undefined;
 
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
+
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }
 
 export type Instrumentation = {
@@ -137,6 +141,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private lastLoadTime?: number;
   private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
+  private globalObjectIdentification:
+    | boolean
+    | GlobalObjectIdentificationOptions;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
@@ -152,6 +159,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
       );
     }
+    this.globalObjectIdentification = opts.globalObjectIdentification ?? false;
   }
 
   private ensureUnifiedGraph(): MaybePromise<GraphQLSchema> {
@@ -310,6 +318,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
         logger: this.opts.transportContext?.logger,
+        globalObjectIdentification: this.globalObjectIdentification,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
