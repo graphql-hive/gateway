@@ -1,5 +1,17 @@
 # @graphql-tools/delegate
 
+## 10.2.20
+
+### Patch Changes
+
+- [#1280](https://github.com/graphql-hive/gateway/pull/1280) [`0655d1f`](https://github.com/graphql-hive/gateway/commit/0655d1fc604179b6cc0c148d73e38d6e8d839c56) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Relocate each error in multi-error ExecutionResult
+
+  Handling errors now works the same for both single-error and multi-error ExecutionResults.
+
+- [#1280](https://github.com/graphql-hive/gateway/pull/1280) [`0655d1f`](https://github.com/graphql-hive/gateway/commit/0655d1fc604179b6cc0c148d73e38d6e8d839c56) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove trailing spaces when merging multi-error responses
+
+- [#1280](https://github.com/graphql-hive/gateway/pull/1280) [`0655d1f`](https://github.com/graphql-hive/gateway/commit/0655d1fc604179b6cc0c148d73e38d6e8d839c56) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Call onLocatedError hook from delegation context for each error in multi-error ExecutionResult
+
 ## 10.2.19
 
 ### Patch Changes
