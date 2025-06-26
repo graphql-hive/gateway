@@ -3,6 +3,7 @@ import { stitchSchemas } from '@graphql-tools/stitch';
 import { createGraphQLError, ExecutionResult } from '@graphql-tools/utils';
 import {
   graphql,
+  GraphQLError,
   GraphQLResolveInfo,
   locatedError,
   OperationTypeNode,
@@ -83,6 +84,83 @@ describe('Errors', () => {
         expect(e.extensions && e.extensions.code).toEqual('UNAUTHENTICATED');
         expect(e.originalError.errors).toBeUndefined();
       }
+
+    test('persists multiple errors', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [
+            createGraphQLError('Test error'),
+            createGraphQLError('Test error 2'),
+          ],
+        },
+        {
+          fieldName: 'responseKey',
+          info: fakeInfo,
+        } as DelegationContext,
+      );
+      expect(result.errors.map((e: GraphQLError) => e.toJSON()))
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "message": "Test error",
+            "path": [
+              "foo",
+            ],
+          },
+          {
+            "message": "Test error 2",
+            "path": [
+              "foo",
+            ],
+          },
+        ]
+      `);
+    });
+
+    test('persists multiple errors with extensions', () => {
+      const result = checkResultAndHandleErrors(
+        {
+          errors: [
+            createGraphQLError('Test error', {
+              extensions: {
+                code: 'GOOD',
+              },
+            }),
+            createGraphQLError('Test error 2', {
+              extensions: {
+                code: 'VERY_GOOD',
+              },
+            }),
+          ],
+        },
+        {
+          fieldName: 'responseKey',
+          info: fakeInfo,
+        } as DelegationContext,
+      );
+      expect(result.errors.map((e: GraphQLError) => e.toJSON()))
+        .toMatchInlineSnapshot(`
+          [
+            {
+              "extensions": {
+                "code": "GOOD",
+              },
+              "message": "Test error",
+              "path": [
+                "foo",
+              ],
+            },
+            {
+              "extensions": {
+                "code": "VERY_GOOD",
+              },
+              "message": "Test error 2",
+              "path": [
+                "foo",
+              ],
+            },
+          ]
+        `);
     });
 
     test('combines errors and persists the original errors', () => {
