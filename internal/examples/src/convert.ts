@@ -476,6 +476,8 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       // filename
       '-f',
       `${config.e2e}.tar.gz`,
+      // respect .gitignore
+      `--exclude-from=${path.join(__project, '.gitignore')}`,
       // skip node_modules
       `--exclude=${config.e2e}/node_modules`,
       // skip existing example archive
