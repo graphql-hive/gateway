@@ -1231,6 +1231,7 @@ export function createGatewayRuntime<
     healthCheckEndpoint: config.healthCheckEndpoint || '/healthcheck',
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
+    multipart: config.multipart ?? false,
   });
 
   fetchAPI ||= yoga.fetchAPI;

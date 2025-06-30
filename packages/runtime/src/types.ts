@@ -620,6 +620,15 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   deferStream?: boolean;
 
   /**
+   * GraphQL Multipart Request support.
+   *
+   * @see https://github.com/jaydenseric/graphql-multipart-request-spec
+   *
+   * @default false
+   */
+  multipart?: boolean;
+
+  /**
    * Enable execution cancellation
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/performance/execution-cancellation)
