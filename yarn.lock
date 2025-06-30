@@ -5073,6 +5073,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/mock@npm:^9.0.23":
+  version: 9.0.23
+  resolution: "@graphql-tools/mock@npm:9.0.23"
+  dependencies:
+    "@graphql-tools/schema": "npm:^10.0.23"
+    "@graphql-tools/utils": "npm:^10.8.6"
+    fast-json-stable-stringify: "npm:^2.1.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/f6d2642bc5e67800a8ca8572685f144af2e483cd7ceb9f8777fed5e948cd60a47b3513727d07a1b8cd030dbf6c7d50ca004a26fb486e3a0cc912de61b3a6d9fb
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/schema@npm:10.0.23, @graphql-tools/schema@npm:^10.0.11, @graphql-tools/schema@npm:^10.0.23, @graphql-tools/schema@npm:^10.0.5":
   version: 10.0.23
   resolution: "@graphql-tools/schema@npm:10.0.23"
@@ -5108,6 +5122,7 @@ __metadata:
     "@graphql-tools/delegate": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.7"
     "@graphql-tools/merge": "npm:^9.0.12"
+    "@graphql-tools/mock": "npm:^9.0.23"
     "@graphql-tools/schema": "npm:^10.0.11"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@graphql-tools/wrap": "workspace:^"
@@ -5179,6 +5194,7 @@ __metadata:
   resolution: "@graphql-tools/wrap@workspace:packages/wrap"
   dependencies:
     "@graphql-tools/delegate": "workspace:^"
+    "@graphql-tools/mock": "npm:^9.0.23"
     "@graphql-tools/schema": "npm:^10.0.11"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@whatwg-node/promise-helpers": "npm:^1.3.0"
