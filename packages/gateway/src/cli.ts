@@ -252,9 +252,8 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
-const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: process.env['NODE_ENV'] === 'production' ? maxFork : 1,
+  fork: 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -274,21 +273,22 @@ let cli = new Command()
   })
   .addOption(
     new Option(
-      '--fork <count>',
-      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${defaultOptions.fork})`,
+      '--fork <number>',
+      `number of workers to spawn. (default: ${defaultOptions.fork})`,
     )
       .env('FORK')
       .argParser((v) => {
-        const count = parseInt(v);
-        if (isNaN(count)) {
+        const number = parseInt(v);
+        if (isNaN(number)) {
           throw new InvalidArgumentError('not a number.');
         }
-        if (count > maxFork) {
+        const maxConcurrency = getMaxConcurrency();
+        if (number > maxConcurrency) {
           throw new InvalidArgumentError(
-            `exceedes number of available parallelism "${maxFork}".`,
+            `exceedes number of available concurrency "${maxConcurrency}".`,
           );
         }
-        return count;
+        return number;
       }),
   )
   .addOption(
