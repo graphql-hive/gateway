@@ -4180,7 +4180,6 @@ __metadata:
     "@graphql-mesh/plugin-http-cache": "npm:^0.105.6"
     "@graphql-mesh/plugin-jit": "npm:^0.2.5"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
-    "@graphql-mesh/plugin-mock": "npm:^0.105.6"
     "@graphql-mesh/plugin-opentelemetry": "workspace:^"
     "@graphql-mesh/plugin-prometheus": "workspace:^"
     "@graphql-mesh/plugin-rate-limit": "npm:^0.104.5"
@@ -4644,26 +4643,6 @@ __metadata:
   peerDependencies:
     graphql: "*"
   checksum: 10c0/7acb7397d96f666b2d1260de4bb9e04bfce8a72b2a802bf7a4002fc1c5b715cbf1878ea4ce69529c45facfdde72ab6684a1ce21185d30d7583f8d13d0485a940
-  languageName: node
-  linkType: hard
-
-"@graphql-mesh/plugin-mock@npm:^0.105.6":
-  version: 0.105.7
-  resolution: "@graphql-mesh/plugin-mock@npm:0.105.7"
-  dependencies:
-    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/string-interpolation": "npm:^0.5.8"
-    "@graphql-mesh/types": "npm:^0.104.6"
-    "@graphql-mesh/utils": "npm:^0.104.6"
-    "@graphql-tools/mock": "npm:^9.0.3"
-    "@graphql-tools/schema": "npm:^10.0.5"
-    "@graphql-tools/utils": "npm:^10.8.0"
-    faker: "npm:5.5.3"
-    graphql-scalars: "npm:^1.22.4"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: "*"
-  checksum: 10c0/51703a20d7b82d64ce06cd7c223c007f82355e29c719ffe8c5af8f433bbce08b5f48856b6980ff51dc982a3dff2018c6f76eb4d9029d97dae2581cb6c013acff
   languageName: node
   linkType: hard
 
@@ -5232,20 +5211,6 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/2df55222b48e010e683572f456cf265aabae5748c59f7c1260c66dec9794b7a076d3706f04da969b77f0a32c7ccb4551fee30125931d3fe9c98a8806aae9a3f4
-  languageName: node
-  linkType: hard
-
-"@graphql-tools/mock@npm:^9.0.3":
-  version: 9.0.22
-  resolution: "@graphql-tools/mock@npm:9.0.22"
-  dependencies:
-    "@graphql-tools/schema": "npm:^10.0.23"
-    "@graphql-tools/utils": "npm:^10.8.6"
-    fast-json-stable-stringify: "npm:^2.1.0"
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/3e79c7e8ef2dcf787c65dda66c6dadd81252e7a05c201c394d4286d86b928ffe20c2153db746b47dc340c5c9805b3528a28441ac26bfbc0188ca2469652fcbdc
   languageName: node
   linkType: hard
 
@@ -13298,13 +13263,6 @@ __metadata:
   bin:
     extract-zip: cli.js
   checksum: 10c0/9afbd46854aa15a857ae0341a63a92743a7b89c8779102c3b4ffc207516b2019337353962309f85c66ee3d9092202a83cdc26dbf449a11981272038443974aee
-  languageName: node
-  linkType: hard
-
-"faker@npm:5.5.3":
-  version: 5.5.3
-  resolution: "faker@npm:5.5.3"
-  checksum: 10c0/55ee2fb6425df717253f237b4e952c94efe33da23a5826ca41c6ecb31ccfb49d06c5de64b82b6994ca9c76c05eab4dbf779cea047455fff6e62cc9d585c7d460
   languageName: node
   linkType: hard
 
