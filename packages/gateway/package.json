@@ -68,7 +68,6 @@
     "@graphql-mesh/plugin-http-cache": "^0.105.8",
     "@graphql-mesh/plugin-jit": "^0.2.7",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
-    "@graphql-mesh/plugin-mock": "^0.105.8",
     "@graphql-mesh/plugin-opentelemetry": "workspace:^",
     "@graphql-mesh/plugin-prometheus": "workspace:^",
     "@graphql-mesh/plugin-rate-limit": "^0.104.7",
