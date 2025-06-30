@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 18
           - 20
           - 22
           - 23
@@ -59,7 +58,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - 18
           - 20
           - 22
           - 23
@@ -88,10 +86,6 @@ jobs:
       matrix:
         setup:
           # Node
-          - workflow-name: Node 18 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            node-version: 18
           - workflow-name: Node 20 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
