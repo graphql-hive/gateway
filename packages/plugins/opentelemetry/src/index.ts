@@ -7,8 +7,6 @@ import {
 
 export * from './attributes';
 
-export type OpenTelemetryMeshPluginOptions = OpenTelemetryGatewayPluginOptions;
-
 export const OpenTelemetryDiagLogLevel = DiagLogLevel;
 
 export {
