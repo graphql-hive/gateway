@@ -4,15 +4,25 @@ import {
   GatewayPlugin,
 } from '@graphql-hive/gateway';
 import { MeshFetch } from '@graphql-mesh/types';
-import { diag, TraceState } from '@opentelemetry/api';
+import {
+  context,
+  diag,
+  metrics,
+  propagation,
+  ProxyTracerProvider,
+  trace,
+  TraceState,
+  type TextMapPropagator,
+} from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
 import {
+  BasicTracerProvider,
   SimpleSpanProcessor,
   type ReadableSpan,
   type SpanExporter,
+  type TracerConfig,
 } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
@@ -24,9 +34,7 @@ import type {
 export async function buildTestGateway(
   options: {
     gatewayOptions?: Omit<GatewayConfigProxy, 'proxy'>;
-    options?: Partial<
-      Extract<OpenTelemetryGatewayPluginOptions, { initializeNodeSDK: false }>
-    >;
+    options?: OpenTelemetryGatewayPluginOptions;
     plugins?: (
       otelPlugin: OpenTelemetryPlugin,
       ctx: GatewayConfigContext,
@@ -66,7 +74,6 @@ export async function buildTestGateway(
       maskedErrors: false,
       plugins: (ctx) => {
         otelPlugin = useOpenTelemetry({
-          initializeNodeSDK: false,
           ...ctx,
           ...options.options,
         });
@@ -233,9 +240,57 @@ export type Span = ReadableSpan & {
 };
 
 export const spanExporter = new MockSpanExporter();
-const traceProvider = new WebTracerProvider({
+const traceProvider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
-traceProvider.register({
-  contextManager: new AsyncLocalStorageContextManager(),
-});
+
+export function setupOtelForTests() {
+  trace.setGlobalTracerProvider(traceProvider);
+  context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+}
+
+export const getContextManager = () => {
+  // @ts-expect-error Access to private method for test purpose
+  return context._getContextManager() as Context;
+};
+
+export const getTracerProvider = () => {
+  return (trace.getTracerProvider() as ProxyTracerProvider).getDelegate();
+};
+
+export const getPropagator = () => {
+  // @ts-expect-error Access to private method for test purpose
+  return propagation._getGlobalPropagator() as TextMapPropagator;
+};
+
+export const getTracerProviderConfig = () => {
+  return (
+    // @ts-expect-error Access to private method for test purpose
+    (getTracerProvider() as BasicTracerProvider)._config as TracerConfig
+  );
+};
+
+export const getSampler = () => {
+  return getTracerProviderConfig().sampler;
+};
+
+export const getSpanProcessors = () => {
+  return getTracerProviderConfig().spanProcessors;
+};
+
+export const getResource = () => {
+  return getTracerProviderConfig().resource;
+};
+
+export const getLimits = () => {
+  const { spanLimits, generalLimits } = getTracerProviderConfig();
+  return { spanLimits, generalLimits };
+};
+
+export const disableAll = () => {
+  trace.disable();
+  context.disable();
+  propagation.disable();
+  metrics.disable();
+  diag.disable();
+};
