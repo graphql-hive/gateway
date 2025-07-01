@@ -45,7 +45,7 @@ it('should detect supergraph file change and reload schema', async () => {
   for (;;) {
     timeout.throwIfAborted();
     await setTimeout(100);
-    if (gw.getStd('both').match(/invalidating supergraph/i)) {
+    if (gw.getStd('both').match(/supergraph changed/i)) {
       break;
     }
   }

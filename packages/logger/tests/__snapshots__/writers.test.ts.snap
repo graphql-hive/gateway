@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConsoleLogWriter should color levels and keys 1`] = `
+[
+  ""\\u001b[36mTRC\\u001b[0m \\u001b[1mhi\\u001b[0m \\n  \\u001b[35mhello:\\u001b[0m \\u001b[35m{\\u001b[0m\\n    \\u001b[35mdear:\\u001b[0m \\"world\\"\\n    \\u001b[35mtry:\\u001b[0m \\u001b[35m[\\u001b[0m\\n      \\"num\\"\\n      1\\n      2\\n    \\u001b[35m]\\u001b[0m\\n  \\u001b[35m}\\u001b[0m"",
+  ""\\u001b[90mDBG\\u001b[0m \\u001b[1mhi\\u001b[0m \\n  \\u001b[35mhello:\\u001b[0m \\u001b[35m{\\u001b[0m\\n    \\u001b[35mdear:\\u001b[0m \\"world\\"\\n    \\u001b[35mtry:\\u001b[0m \\u001b[35m[\\u001b[0m\\n      \\"num\\"\\n      1\\n      2\\n    \\u001b[35m]\\u001b[0m\\n  \\u001b[35m}\\u001b[0m"",
+  ""\\u001b[32mINF\\u001b[0m \\u001b[1mhi\\u001b[0m \\n  \\u001b[35mhello:\\u001b[0m \\u001b[35m{\\u001b[0m\\n    \\u001b[35mdear:\\u001b[0m \\"world\\"\\n    \\u001b[35mtry:\\u001b[0m \\u001b[35m[\\u001b[0m\\n      \\"num\\"\\n      1\\n      2\\n    \\u001b[35m]\\u001b[0m\\n  \\u001b[35m}\\u001b[0m"",
+  ""\\u001b[33mWRN\\u001b[0m \\u001b[1mhi\\u001b[0m \\n  \\u001b[35mhello:\\u001b[0m \\u001b[35m{\\u001b[0m\\n    \\u001b[35mdear:\\u001b[0m \\"world\\"\\n    \\u001b[35mtry:\\u001b[0m \\u001b[35m[\\u001b[0m\\n      \\"num\\"\\n      1\\n      2\\n    \\u001b[35m]\\u001b[0m\\n  \\u001b[35m}\\u001b[0m"",
+  ""\\u001b[41;39mERR\\u001b[0m \\u001b[1mhi\\u001b[0m \\n  \\u001b[35mhello:\\u001b[0m \\u001b[35m{\\u001b[0m\\n    \\u001b[35mdear:\\u001b[0m \\"world\\"\\n    \\u001b[35mtry:\\u001b[0m \\u001b[35m[\\u001b[0m\\n      \\"num\\"\\n      1\\n      2\\n    \\u001b[35m]\\u001b[0m\\n  \\u001b[35m}\\u001b[0m"",
+]
+`;
+
+exports[`ConsoleLogWriter should flush async logs 1`] = `
+[
+  ""TRC hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""DBG hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""INF hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""WRN hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+  ""ERR hi \\n  hello: {\\n    dear: \\"world\\"\\n    try: [\\n      \\"num\\"\\n      1\\n      2\\n    ]\\n  }"",
+]
+`;
+
+exports[`ConsoleLogWriter should pretty print the attributes 1`] = `
+[
+  ""TRC obj \\n  a: 1\\n  b: 2"",
+  ""DBG arr \\n  \\"a\\"\\n  \\"b\\"\\n  \\"c\\""",
+  ""INF nested \\n  a: {\\n    b: {\\n      c: {\\n        d: 1\\n      }\\n    }\\n  }"",
+  ""WRN arr objs \\n  {\\n    a: 1\\n  }\\n  {\\n    b: 2\\n  }"",
+  ""ERR multlinestring \\n  str: \\"a\\n  b\\n  c\\"\\n  err: {\\n    message: \\"woah!\\"\\n  }"",
+  ""INF graphql \\n  query: \\"\\n  {\\n    hi(howMany: 1) {\\n      hello\\n      world\\n    }\\n  }\\n  \\""",
+]
+`;
