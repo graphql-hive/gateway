@@ -201,7 +201,7 @@ const HeadersTextMapGetter: TextMapGetter<Headers> = {
 };
 
 export type OpenTelemetryContextExtension = {
-  opentelemetry: {
+  openTelemetry: {
     tracer: Tracer;
     activeContext: () => Context;
   };
@@ -669,7 +669,7 @@ export function useOpenTelemetry(
 
     onEnveloped({ state, extendContext }) {
       extendContext({
-        opentelemetry: {
+        openTelemetry: {
           tracer,
           activeContext: () => getContext(state),
         },
