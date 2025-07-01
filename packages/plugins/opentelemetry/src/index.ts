@@ -5,7 +5,7 @@ import {
   type OpenTelemetryPlugin,
 } from './plugin';
 
-export * from './processors';
+export * from './attributes';
 
 export type OpenTelemetryMeshPluginOptions = OpenTelemetryGatewayPluginOptions;
 

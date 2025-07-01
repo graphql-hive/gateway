@@ -41,13 +41,16 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
     type JaegerTracesApiResponse = {
       data: Array<{
         traceID: string;
-        spans: Array<{
-          traceID: string;
-          spanID: string;
-          operationName: string;
-          tags: Array<{ key: string; value: string; type: string }>;
-        }>;
+        spans: JaegerTraceSpan[];
       }>;
+    };
+
+    type JaegerTraceSpan = {
+      traceID: string;
+      spanID: string;
+      operationName: string;
+      tags: Array<{ key: string; value: string; type: string }>;
+      references: Array<{ refType: string; spanID: string; traceID: string }>;
     };
 
     async function getJaegerTraces(
@@ -77,7 +80,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
 
     async function wrangler(env: {
       OTLP_EXPORTER_URL: string;
-      OTLP_SERVICE_NAME: string;
+      OTEL_SERVICE_NAME: string;
     }) {
       const port = await getAvailablePort();
       await spawn([
@@ -89,7 +92,9 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         '--var',
         'OTLP_EXPORTER_URL:' + env.OTLP_EXPORTER_URL,
         '--var',
-        'OTLP_SERVICE_NAME:' + env.OTLP_SERVICE_NAME,
+        'OTEL_SERVICE_NAME:' + env.OTEL_SERVICE_NAME,
+        '--var',
+        'OTEL_LOG_LEVEL:debug',
         ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
       ]);
       const hostname = await getLocalhost(port);
@@ -122,7 +127,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       const serviceName = 'mesh-e2e-test-1';
       const { execute } = await wrangler({
         OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-        OTLP_SERVICE_NAME: serviceName,
+        OTEL_SERVICE_NAME: serviceName,
       });
 
       await expect(execute({ query: TEST_QUERY })).resolves
@@ -169,7 +174,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       const serviceName = 'mesh-e2e-test-4';
       const { url } = await wrangler({
         OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-        OTLP_SERVICE_NAME: serviceName,
+        OTEL_SERVICE_NAME: serviceName,
       });
 
       await fetch(`${url}/non-existing`).catch(() => {});
@@ -207,7 +212,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       const serviceName = 'mesh-e2e-test-5';
       const { url, execute } = await wrangler({
         OTLP_EXPORTER_URL: `${jaegerHostname}:${jaeger.port}/v1/traces`,
-        OTLP_SERVICE_NAME: serviceName,
+        OTEL_SERVICE_NAME: serviceName,
       });
 
       await expect(
