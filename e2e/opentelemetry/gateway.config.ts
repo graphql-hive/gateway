@@ -1,11 +1,13 @@
-import {
-  createOtlpGrpcExporter,
-  createOtlpHttpExporter,
-  defineConfig,
-  GatewayPlugin,
-  OpenTelemetryDiagLogLevel,
-} from '@graphql-hive/gateway';
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
+import { trace } from '@opentelemetry/api';
+import {
+  getNodeAutoInstrumentations,
+  getResourceDetectors,
+} from '@opentelemetry/auto-instrumentations-node';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
 
 // The following plugin is used to trace the fetch calls made by Mesh.
 const useOnFetchTracer = (): GatewayPlugin => {
@@ -27,38 +29,58 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
+const { OTLPTraceExporter } =
+  process.env['OTLP_EXPORTER_TYPE'] === 'http'
+    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
+
+const exporter = new OTLPTraceExporter({
+  url: process.env['OTLP_EXPORTER_URL'],
+});
+
+const resource = resources.resourceFromAttributes({
+  'custom.resource': 'custom value',
+});
+
+// The NodeSDK only actually work in Node. For other envs, it's better to use our own configurator
+const runner = process.env['E2E_GATEWAY_RUNNER'];
+if (runner === 'node' || runner === 'docker') {
+  const sdk = new NodeSDK({
+    // Use spanProcessor instead of spanExporter to remove batching for test speed
+    spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
+    resource,
+    instrumentations: getNodeAutoInstrumentations(),
+    resourceDetectors: getResourceDetectors(),
+  });
+
+  sdk.start();
+  ['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
+} else {
+  opentelemetrySetup({
+    contextManager: new AsyncLocalStorageContextManager(),
+    resource,
+    traces: {
+      exporter,
+      // Disable batching to speedup tests
+      batching: false,
+    },
+  });
+}
+
 export const gatewayConfig = defineConfig({
   openTelemetry: {
-    diagLevel: OpenTelemetryDiagLogLevel.INFO,
-    exporters: [
-      process.env['OTLP_EXPORTER_TYPE'] === 'grpc'
-        ? createOtlpGrpcExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          )
-        : createOtlpHttpExporter(
-            {
-              url: process.env['OTLP_EXPORTER_URL'],
-            },
-            // Batching config is set in order to make it easier to test.
-            {
-              maxExportBatchSize: 1,
-              scheduledDelayMillis: 1,
-            },
-          ),
-    ],
-    serviceName: process.env['OTLP_SERVICE_NAME'],
+    traces: true,
   },
-  plugins: () =>
-    process.env['MEMTEST']
+  plugins: () => [
+    {
+      onExecute() {
+        trace.getActiveSpan()?.setAttribute('custom.attribute', 'custom value');
+      },
+    },
+    ...(process.env['MEMTEST']
       ? [
           // disable the plugin in memtests because the upstreamCallHeaders will grew forever reporting a false positive leak
         ]
-      : [useOnFetchTracer()],
+      : [useOnFetchTracer()]),
+  ],
 });
