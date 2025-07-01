@@ -87,7 +87,7 @@ type OpentelemetrySetupOptions = TracingOptions &
     generalLimits?: GeneralLimits;
   };
 
-export function opentelemetrySetup(options: OpentelemetrySetupOptions) {
+export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   if (getEnvVar('OTEL_SDK_DISABLED', false) === 'true') {
     return;
   }
