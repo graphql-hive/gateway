@@ -3,15 +3,14 @@ import {
   createGatewayRuntime,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import {
-  createOtlpHttpExporter,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
+import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import http from '@graphql-mesh/transport-http';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
-  OTLP_SERVICE_NAME: string;
+  OTEL_SERVICE_NAME: string;
   DEBUG: string;
 }
 
@@ -38,28 +37,27 @@ const useOnFetchTracer = (): GatewayPlugin => {
 let runtime: ReturnType<typeof createGatewayRuntime>;
 function getRuntime(env: Env) {
   if (!runtime) {
-    console.log(env);
+    opentelemetrySetup({
+      contextManager: null,
+      resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
+      traces: {
+        exporter: new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] }),
+        batching: false, // Disable batching to speedup tests
+      },
+    });
+
     runtime = createGatewayRuntime({
       proxy: { endpoint: 'https://countries.trevorblades.com' },
       transports: { http },
       plugins: (ctx) => [
-        useOpenTelemetry({
-          ...ctx,
-          exporters: [
-            createOtlpHttpExporter(
-              { url: env['OTLP_EXPORTER_URL'] },
-              // Batching config is set in order to make it easier to test.
-              false,
-            ),
-          ],
-          serviceName: env['OTLP_SERVICE_NAME'],
-        }),
+        useOpenTelemetry({ ...ctx, traces: true }),
         useOnFetchTracer(),
       ],
     });
   }
   return runtime;
 }
+
 export default {
   async fetch(req, env, ctx) {
     const res = await getRuntime(env)(req, env, ctx);
