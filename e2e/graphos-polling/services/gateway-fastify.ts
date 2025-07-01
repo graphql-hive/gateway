@@ -1,7 +1,7 @@
 import { createGatewayRuntime, Logger } from '@graphql-hive/gateway-runtime';
 import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
-import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import { Opts } from '@internal/testing';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -17,7 +17,7 @@ const port = opts.getServicePort('gateway-fastify');
 
 /*---  E2E TEST SPECIFIC CONFIGURATION END---  */
 
-opentelemetrySetup({
+openTelemetrySetup({
   contextManager: new AsyncLocalStorageContextManager(),
   traces: {
     exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
