@@ -1,0 +1,48 @@
+diff --git a/dist/es/index.js b/dist/es/index.js
+index 505218ea7b14fb8773fe805b622f9071d5da59dd..263631008120b7bf2bd678220dca6394ed30c026 100644
+--- a/dist/es/index.js
++++ b/dist/es/index.js
+@@ -478,28 +478,10 @@ async function resolvePackageTarget(context, { target, patternMatch, isImports }
+     }
+     // Otherwise, if target is a non-null Object, then
+     if (target && typeof target === 'object') {
+-        // For each property of target
+-        for (const [key, value] of Object.entries(target)) {
+-            // If exports contains any index property keys, as defined in ECMA-262 6.1.7 Array Index, throw an Invalid Package Configuration error.
+-            // TODO: We do not check if the key is a number here...
+-            // If key equals "default" or conditions contains an entry for the key, then
+-            if (key === 'default' || context.conditions.includes(key)) {
+-                // Let targetValue be the value of the property in target.
+-                // Let resolved be the result of PACKAGE_TARGET_RESOLVE of the targetValue
+-                const resolved = await resolvePackageTarget(context, {
+-                    target: value,
+-                    patternMatch,
+-                    isImports
+-                });
+-                // If resolved is equal to undefined, continue the loop.
+-                // Return resolved.
+-                if (resolved !== undefined) {
+-                    return resolved;
+-                }
+-            }
+-        }
+-        // Return undefined.
+-        return undefined;
++        const key = context.conditions.find(condition => condition in target) ?? 'default';
++        return key in target
++          ? resolvePackageTarget(context, { target: target[key], patternMatch, isImports })
++          : undefined;
+     }
+     // Otherwise, if target is null, return null.
+     if (target === null) {
+@@ -1072,8 +1054,8 @@ function nodeResolve(opts = {}) {
+             ? 'development'
+             : 'production'
+         ];
+-  const conditionsEsm = [...baseConditionsEsm, ...exportConditions, ...devProdCondition];
+-  const conditionsCjs = [...baseConditionsCjs, ...exportConditions, ...devProdCondition];
++  const conditionsEsm = [...baseConditionsEsm, ...exportConditions, ...devProdCondition].reverse();
++  const conditionsCjs = [...baseConditionsCjs, ...exportConditions, ...devProdCondition].reverse();
+   const packageInfoCache = new Map();
+   const idToPackageInfo = new Map();
+   const mainFields = getMainFields(options);
