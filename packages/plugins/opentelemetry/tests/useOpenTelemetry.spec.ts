@@ -1,4 +1,4 @@
-import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import {
   SpanStatusCode,
   TextMapPropagator,
@@ -51,7 +51,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should setup OTEL with sain default', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: new AsyncLocalStorageContextManager(),
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -96,7 +96,7 @@ describe('useOpenTelemetry', () => {
         getTracer: vi.fn(),
       };
 
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           tracerProvider,
@@ -109,7 +109,7 @@ describe('useOpenTelemetry', () => {
     it('should not register a contextManager when passed null', () => {
       const before = getContextManager();
 
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
       });
 
@@ -117,7 +117,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should register a console exporter', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           console: true,
@@ -132,7 +132,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should register a console exporter even if an exporter is given', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -148,7 +148,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should register a console exporter even if a list of processors is given', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
@@ -164,7 +164,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should register a custom resource', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         resource: resourceFromAttributes({
           'service.name': 'test-name',
           'service.version': 'test-version',
@@ -189,7 +189,7 @@ describe('useOpenTelemetry', () => {
         vi.stubEnv('OTEL_SERVICE_NAME', 'test-name');
         vi.stubEnv('OTEL_SERVICE_VERSION', 'test-version');
 
-        opentelemetrySetup({
+        openTelemetrySetup({
           traces: { console: true },
           contextManager: null,
         });
@@ -204,7 +204,7 @@ describe('useOpenTelemetry', () => {
     );
 
     it('should allow to register a custom sampler', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         traces: {
           console: true,
         },
@@ -216,7 +216,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should allow to configure a rate sampling strategy', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: { console: true },
         samplingRate: 0.1,
@@ -235,7 +235,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should allow to disable batching', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -248,7 +248,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should allow to configure batching', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -273,7 +273,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to manually define processor', () => {
       const processor = {} as SpanProcessor;
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           processors: [processor],
@@ -287,7 +287,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to customize propagators', () => {
       const propagator = {} as TextMapPropagator;
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         propagators: [propagator],
       });
@@ -298,7 +298,7 @@ describe('useOpenTelemetry', () => {
     it('should allow to customize propagators', () => {
       const before = getPropagator();
 
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         propagators: [],
       });
@@ -307,7 +307,7 @@ describe('useOpenTelemetry', () => {
     });
 
     it('should allow to customize limits', () => {
-      opentelemetrySetup({
+      openTelemetrySetup({
         contextManager: null,
         traces: {
           console: true,
@@ -474,8 +474,8 @@ describe('useOpenTelemetry', () => {
                 ({ context: gqlCtx, executionRequest }: any) => {
                   const ctx: OpenTelemetryContextExtension =
                     gqlCtx ?? executionRequest?.context;
-                  return ctx.opentelemetry.tracer
-                    .startSpan(name, {}, ctx.opentelemetry.activeContext())
+                  return ctx.openTelemetry.tracer
+                    .startSpan(name, {}, ctx.openTelemetry.activeContext())
                     .end();
                 };
 

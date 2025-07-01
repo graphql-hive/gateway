@@ -1,5 +1,5 @@
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
-import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import { trace } from '@opentelemetry/api';
 import {
@@ -56,7 +56,7 @@ if (runner === 'node' || runner === 'docker') {
   sdk.start();
   ['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
 } else {
-  opentelemetrySetup({
+  openTelemetrySetup({
     contextManager: new AsyncLocalStorageContextManager(),
     resource,
     traces: {
