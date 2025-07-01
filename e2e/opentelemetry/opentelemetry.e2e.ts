@@ -17,6 +17,17 @@ const JAEGER_HOSTNAME =
 
 const exampleSetup = createExampleSetup(__dirname);
 
+const runner = {
+  docker: {
+    volumes: [
+      {
+        host: __dirname + '/otel-setup.ts',
+        container: `/gateway/otel-setup.ts`,
+      },
+    ],
+  },
+};
+
 beforeAll(async () => {
   supergraph = await exampleSetup.supergraph();
 });
@@ -25,14 +36,26 @@ type JaegerTracesApiResponse = {
   data: Array<{
     traceID: string;
     spans: JaegerTraceSpan[];
+    processes: { [key: string]: JaegerTraceResource };
   }>;
+};
+
+type JaegerTraceTag = {
+  key: string;
+  type: string;
+  value: string;
+};
+
+type JaegerTraceResource = {
+  serviceName: string;
+  tags: JaegerTraceTag[];
 };
 
 type JaegerTraceSpan = {
   traceID: string;
   spanID: string;
   operationName: string;
-  tags: Array<{ key: string; value: string; type: string }>;
+  tags: Array<JaegerTraceTag>;
   references: Array<{ refType: string; spanID: string; traceID: string }>;
 };
 
@@ -125,11 +148,13 @@ describe('OpenTelemetry', () => {
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = 'mesh-e2e-test-1';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -600,6 +625,37 @@ describe('OpenTelemetry', () => {
           expect(relevantTrace).toBeDefined();
           expect(relevantTrace!.spans.length).toBe(20);
 
+          const resource = relevantTrace!.processes['p1'];
+          expect(resource).toBeDefined();
+
+          const tags = resource!.tags.map(({ key, value }) => ({ key, value }));
+          const tagKeys = resource!.tags.map(({ key }) => key);
+          expect(resource!.serviceName).toBe(serviceName);
+          [
+            ['custom.resource', 'custom value'],
+            ['otel.library.name', 'gateway'],
+          ].forEach(([key, value]) => {
+            return expect(tags).toContainEqual({ key, value });
+          });
+
+          if (
+            process.env['E2E_GATEWAY_RUNNER'] === 'node' ||
+            process.env['E2E_GATEWAY_RUNNER'] === 'docker'
+          ) {
+            const expectedTags = [
+              'process.owner',
+              'host.arch',
+              'os.type',
+              'service.instance.id',
+            ];
+            if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+              expectedTags.push('container.id');
+            }
+            expectedTags.forEach((key) => {
+              return expect(tagKeys).toContain(key);
+            });
+          }
+
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
 
@@ -620,6 +676,12 @@ describe('OpenTelemetry', () => {
               }),
             );
           }
+
+          expect(
+            operationSpan!.children
+              .find(({ span }) => span.operationName === 'graphql.execute')
+              ?.span.tags.find(({ key }) => key === 'custom.attribute'),
+          ).toMatchObject({ value: 'custom value' });
 
           const executeSpan = operationSpan!.children.find(
             ({ span }) => span.operationName === 'graphql.execute',
@@ -654,11 +716,13 @@ describe('OpenTelemetry', () => {
       it('should report parse failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-2';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -728,11 +792,13 @@ describe('OpenTelemetry', () => {
       it('should report validate failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-3';
         const { execute } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
@@ -806,11 +872,13 @@ describe('OpenTelemetry', () => {
       it('should report http failures', async () => {
         const serviceName = 'mesh-e2e-test-4';
         const { port } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
         const path = '/non-existing';
@@ -848,11 +916,13 @@ describe('OpenTelemetry', () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         const serviceName = 'mesh-e2e-test-5';
         const { execute, port } = await gateway({
+          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
             OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
-            OTLP_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
           },
         });
 
