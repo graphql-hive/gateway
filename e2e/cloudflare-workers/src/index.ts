@@ -4,7 +4,7 @@ import {
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
-import { opentelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
 import http from '@graphql-mesh/transport-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
@@ -37,7 +37,7 @@ const useOnFetchTracer = (): GatewayPlugin => {
 let runtime: ReturnType<typeof createGatewayRuntime>;
 function getRuntime(env: Env) {
   if (!runtime) {
-    opentelemetrySetup({
+    openTelemetrySetup({
       contextManager: null,
       resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
       traces: {
