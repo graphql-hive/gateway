@@ -244,9 +244,15 @@ const traceProvider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
 
-export function setupOtelForTests() {
+export function setupOtelForTests({
+  contextManager,
+}: {
+  contextManager?: boolean;
+} = {}) {
   trace.setGlobalTracerProvider(traceProvider);
-  context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+  if (contextManager !== false) {
+    context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+  }
 }
 
 export const getContextManager = () => {

@@ -1,10 +1,12 @@
 import { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { Logger } from '@graphql-hive/logger';
+import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
   OpenTelemetryLogWriter,
   openTelemetrySetup,
 } from '@graphql-mesh/plugin-opentelemetry/setup';
 import {
+  ROOT_CONTEXT,
   SpanStatusCode,
   TextMapPropagator,
   TracerProvider,
@@ -35,8 +37,19 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
-import type { OpenTelemetryContextExtension } from '../src/plugin';
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  MockedFunction,
+  vi,
+} from 'vitest';
+import type {
+  OpenTelemetryContextExtension,
+  OpenTelemetryGatewayPluginOptions,
+} from '../src/plugin';
 import {
   buildTestGateway,
   disableAll,
@@ -850,7 +863,6 @@ describe('useOpenTelemetry', () => {
   describe('logging', () => {
     beforeEach(() => {
       disableAll();
-      setupOtelForTests();
     });
 
     describe('setup', () => {
@@ -875,6 +887,7 @@ describe('useOpenTelemetry', () => {
           severityNumber: SeverityNumber.INFO,
           body: 'test',
           attributes: { foo: 'bar' },
+          context: ROOT_CONTEXT,
         });
       });
 
@@ -965,73 +978,129 @@ describe('useOpenTelemetry', () => {
       });
     });
 
-    it('should correlate logs with spans', async () => {
+    describe('logs correlation with span', async () => {
+      const hooks = [
+        'onRequest',
+        'onParams',
+        'onParse',
+        'onContextBuilding',
+        'onValidate',
+        'onExecute',
+        'onSubgraphExecute',
+        'onFetch',
+      ];
       const exporter = new MockLogRecordExporter();
-      await using gateway = await buildTestGateway({
-        gatewayOptions: {
-          logging: new Logger({
-            writers: [
-              new OpenTelemetryLogWriter({
-                exporter,
-                batching: false,
-              }),
-            ],
-          }),
-        },
-        plugins: (_, ctx) => {
-          const createHook = (name: string): any => ({
-            [name]: ({ context }: any) => {
-              const log = context?.log ?? ctx.log;
-              const phase =
-                (name as string).charAt(2).toLowerCase() +
-                (name as string).substring(3);
-              log.info({ phase }, name);
-            },
-          });
 
-          return [
-            {
-              ...createHook('onRequest'),
-              ...createHook('onParams'),
-              ...createHook('onParse'),
-              ...createHook('onValidate'),
-              ...createHook('onContextBuilding'),
-              ...createHook('onExecute'),
-              ...createHook('onSubgraphExecute'),
-              ...createHook('onFetch'),
-            },
-          ];
-        },
+      const buildTestGatewayForLogs = ({
+        useContextManager,
+      }: { useContextManager?: boolean } = {}) =>
+        buildTestGateway({
+          options: { useContextManager },
+          gatewayOptions: {
+            logging: new Logger({
+              writers: [
+                new OpenTelemetryLogWriter({
+                  useContextManager,
+                  exporter,
+                  batching: false,
+                }),
+              ],
+            }),
+          },
+          plugins: (_, ctx) => {
+            const createHook = (name: string): any => ({
+              [name]: (payload: any) => {
+                let log = ctx.log;
+                const context =
+                  payload.context ?? payload.executionRequest?.context;
+                const request = payload.request ?? context?.request;
+                if (request) {
+                  log = loggerForRequest(log, request) ?? log;
+                }
+                if (payload.context) {
+                  log = payload.context.log ?? log;
+                }
+
+                const phase =
+                  (name as string).charAt(2).toLowerCase() +
+                  (name as string).substring(3);
+                log.info({ phase }, name);
+              },
+            });
+
+            let plugin = {};
+            for (let hook of hooks) {
+              plugin = { ...plugin, ...createHook(hook) };
+            }
+
+            return [plugin];
+          },
+        });
+
+      beforeEach(() => {
+        disableAll();
+        exporter.reset();
       });
 
-      await gateway.query();
+      it('should correlate logs with spans with context manager', async () => {
+        setupOtelForTests();
 
-      const expectedLogs = {
-        'POST /graphql': 'onRequest',
-        'graphql.operation Anonymous': 'onParams',
-        'graphql.parse': 'onParse',
-        'graphql.validate': 'onValidate',
-        'graphql.context': 'onContextBuilding',
-        'graphql.execute': 'onExecute',
-        'subgraph.execute (upstream)': 'onSubgraphExecute',
-        'http.fetch': 'onFetch',
-      };
+        await using gateway = await buildTestGatewayForLogs();
+        await gateway.query();
 
-      Object.entries(expectedLogs).forEach(([spanName, hook]) => {
-        const span = spanExporter.assertSpanWithName(spanName);
-        const logs = exporter.getLogsForSpan(span.id);
-        const phase = hook.charAt(2).toLowerCase() + hook.substring(3);
-        // @ts-expect-error Access to private field. public `body` seems to not be readable (returns undefined)
-        const log = logs.find((log) => log._body === hook);
-        if (!log) {
-          console.error(
-            `${hook} log not found. Logs for ${spanName} were`,
-            logs,
-          );
-          throw new Error(`${hook} log not found`);
+        const expectedLogs = {
+          'POST /graphql': 'onRequest',
+          'graphql.operation Anonymous': 'onParams',
+          'graphql.parse': 'onParse',
+          'graphql.validate': 'onValidate',
+          'graphql.context': 'onContextBuilding',
+          'graphql.execute': 'onExecute',
+          'subgraph.execute (upstream)': 'onSubgraphExecute',
+          'http.fetch': 'onFetch',
+        };
+
+        Object.entries(expectedLogs).forEach(([spanName, hook]) => {
+          const span = spanExporter.assertSpanWithName(spanName);
+          const logs = exporter.getLogsForSpan(span.id);
+          const phase = hook.charAt(2).toLowerCase() + hook.substring(3);
+          // @ts-expect-error Access to private field. public `body` seems to not be readable (returns undefined)
+          const log = logs.find((log) => log._body === hook);
+          if (!log) {
+            console.error(
+              `${hook} log not found. Logs for ${spanName} were`,
+              logs,
+            );
+            throw new Error(`${hook} log not found`);
+          }
+
+          expect(log.attributes).toMatchObject({ phase });
+        });
+      });
+
+      it('should correlate logs with root http span without a context manager', async () => {
+        setupOtelForTests({ contextManager: false });
+
+        await using gateway = await buildTestGatewayForLogs({
+          useContextManager: false,
+        });
+        await gateway.query();
+
+        const httpSpan = spanExporter.assertRoot('POST /graphql');
+        const logs = exporter.getLogsForSpan(httpSpan.span.id);
+        for (let hook of hooks) {
+          const phase = hook.charAt(2).toLowerCase() + hook.substring(3);
+          // @ts-expect-error access to private field
+          const log = logs.find(({ _body: body }) => body === hook);
+          if (!log) {
+            console.error(
+              `missing log for ${hook}. Logs were:`,
+              exporter.records,
+            );
+            throw new Error(`missing log for ${hook}`);
+          }
+          expect(log).toBeDefined();
+          expect(log?.attributes).toMatchObject({ phase });
         }
-
-        expect(log.attributes).toMatchObject({ phase });
       });
     });
   });

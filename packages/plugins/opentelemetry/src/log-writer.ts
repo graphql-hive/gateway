@@ -1,4 +1,5 @@
 import { Attributes, LogLevel, LogWriter } from '@graphql-hive/logger';
+import { Context, context, ROOT_CONTEXT } from '@opentelemetry/api';
 import { logs, SeverityNumber, type Logger } from '@opentelemetry/api-logs';
 import { Resource } from '@opentelemetry/resources';
 import {
@@ -11,6 +12,7 @@ import {
   SimpleLogRecordProcessor,
 } from '@opentelemetry/sdk-logs';
 import { BufferConfig } from '@opentelemetry/sdk-trace-base';
+import { otelCtxForRequestId } from './plugin';
 
 type ProcessorOptions = {
   forceFlushTimeoutMillis?: number;
@@ -19,7 +21,7 @@ type ProcessorOptions = {
   console?: boolean;
 };
 
-export type OpenTelemetryLogWriterOptions =
+export type OpenTelemetryLogWriterSetupOptions =
   | {
       logger: Logger;
     }
@@ -44,10 +46,18 @@ export type OpenTelemetryLogWriterOptions =
           }
       ));
 
+export type OpenTelemetryLogWriterOptions =
+  OpenTelemetryLogWriterSetupOptions & {
+    useContextManager?: boolean;
+  };
+
 export class OpenTelemetryLogWriter implements LogWriter {
   private logger: Logger;
+  private useContextManager: boolean;
 
   constructor(options: OpenTelemetryLogWriterOptions) {
+    this.useContextManager = options.useContextManager ?? true;
+
     if ('logger' in options) {
       this.logger = options.logger;
       return;
@@ -107,11 +117,15 @@ export class OpenTelemetryLogWriter implements LogWriter {
     msg: string | null | undefined,
   ): void | Promise<void> {
     const attributes = Array.isArray(attrs) ? { attrs } : (attrs ?? undefined);
+
     return this.logger.emit({
       body: msg,
       attributes: attributes,
       severityNumber: HIVE_LOG_LEVEL_NUMBERS[level],
       severityText: level,
+      context: this.useContextManager
+        ? context.active()
+        : getContextForRequest(attributes),
     });
   }
 }
@@ -123,3 +137,13 @@ export const HIVE_LOG_LEVEL_NUMBERS = {
   warn: SeverityNumber.WARN,
   error: SeverityNumber.ERROR,
 };
+
+export function getContextForRequest(attributes?: {
+  requestId?: string;
+}): Context {
+  if (!attributes?.requestId) {
+    return ROOT_CONTEXT;
+  }
+
+  return otelCtxForRequestId.get(attributes.requestId) ?? ROOT_CONTEXT;
+}
