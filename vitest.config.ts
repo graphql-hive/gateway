@@ -21,14 +21,12 @@ export default defineConfig({
     server: { deps: { inline } },
     projects: [
       {
-        extends: './vitest.config.ts',
         test: {
           name: 'unit',
           include: ['**/*.(test|spec).ts'],
         },
       },
       {
-        extends: './vitest.config.ts',
         test: {
           name: 'e2e',
           include: [
@@ -51,7 +49,6 @@ export default defineConfig({
         },
       },
       {
-        extends: './vitest.config.ts',
         test: {
           name: 'bench',
           hookTimeout: testTimeout,
@@ -64,7 +61,6 @@ export default defineConfig({
         },
       },
       {
-        extends: './vitest.config.ts',
         test: {
           name: 'memtest',
           include: ['**/*.memtest.ts'],
