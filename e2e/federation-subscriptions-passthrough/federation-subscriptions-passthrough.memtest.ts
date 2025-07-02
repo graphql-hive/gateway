@@ -57,11 +57,6 @@ describe('upstream subscriptions via http callbacks', () => {
         }
       `,
       allowFailingRequests: true,
-      expectedHeavyFrame: (frame) =>
-        // allocates a lot but all is freed confirmed through heap snapshot
-        frame.callstack.some((frame) =>
-          frame.name.includes('wrapIncomingMessageWithPassthrough'),
-        ),
     },
     async () => {
       const availablePort = await getAvailablePort();
