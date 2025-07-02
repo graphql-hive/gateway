@@ -21,12 +21,14 @@ export default defineConfig({
     server: { deps: { inline } },
     projects: [
       {
+        extends: true,
         test: {
           name: 'unit',
           include: ['**/*.(test|spec).ts'],
         },
       },
       {
+        extends: true,
         test: {
           name: 'e2e',
           include: [
@@ -49,6 +51,7 @@ export default defineConfig({
         },
       },
       {
+        extends: true,
         test: {
           name: 'bench',
           hookTimeout: testTimeout,
@@ -61,6 +64,7 @@ export default defineConfig({
         },
       },
       {
+        extends: true,
         test: {
           name: 'memtest',
           include: ['**/*.memtest.ts'],
