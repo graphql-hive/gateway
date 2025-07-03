@@ -1,4 +1,3 @@
-import { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { Logger } from '@graphql-hive/logger';
 import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
@@ -11,7 +10,7 @@ import {
   TextMapPropagator,
   TracerProvider,
 } from '@opentelemetry/api';
-import { logs, SeverityNumber } from '@opentelemetry/api-logs';
+import { SeverityNumber } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
   CompositePropagator,
@@ -24,7 +23,6 @@ import {
   LoggerProvider,
   LogRecordExporter,
   LogRecordProcessor,
-  SimpleLogRecordProcessor,
 } from '@opentelemetry/sdk-logs';
 import {
   AlwaysOffSampler,
@@ -37,19 +35,8 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import {
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  MockedFunction,
-  vi,
-} from 'vitest';
-import type {
-  OpenTelemetryContextExtension,
-  OpenTelemetryGatewayPluginOptions,
-} from '../src/plugin';
+import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
+import type { OpenTelemetryContextExtension } from '../src/plugin';
 import {
   buildTestGateway,
   disableAll,
