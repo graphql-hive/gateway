@@ -965,7 +965,7 @@ describe('useOpenTelemetry', () => {
       });
     });
 
-    describe('logs correlation with span', async () => {
+    describe('logs correlation with span', () => {
       const hooks = [
         'onRequest',
         'onParams',
