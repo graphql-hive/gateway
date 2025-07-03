@@ -35,6 +35,8 @@ import { getEnvVar } from './utils';
 
 export * from './attributes';
 
+export * from './log-writer';
+
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
 type TracingOptions = {

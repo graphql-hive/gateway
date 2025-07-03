@@ -84,10 +84,12 @@ const deps = {
     [
       // Common API base
       ['api'],
+      ['api-logs'],
       ['core'],
       ['resources', 'esm/'],
       ['sdk-trace-base'],
       ['sdk-metrics'],
+      ['sdk-logs'],
       ['semantic-conventions'],
       ['instrumentation'],
 

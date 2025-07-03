@@ -14,8 +14,10 @@ import {
   TraceState,
   type TextMapPropagator,
 } from '@opentelemetry/api';
+import { logs } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { ExportResultCode, type ExportResult } from '@opentelemetry/core';
+import { LogRecordExporter, ReadableLogRecord } from '@opentelemetry/sdk-logs';
 import {
   BasicTracerProvider,
   SimpleSpanProcessor,
@@ -134,11 +136,7 @@ export async function buildTestGateway(
 }
 
 export class MockSpanExporter implements SpanExporter {
-  spans: Span[];
-
-  constructor() {
-    this.spans = [];
-  }
+  spans: Span[] = [];
 
   export(
     spans: ReadableSpan[],
@@ -195,7 +193,9 @@ export class MockSpanExporter implements SpanExporter {
   };
 
   assertSpanWithName = (name: string) => {
-    expect(this.spans.map(({ name }) => name)).toContain(name);
+    const span = this.spans.find((span) => span.name === name);
+    expect(span).toBeDefined();
+    return span!;
   };
 
   toString() {
@@ -244,9 +244,15 @@ const traceProvider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
 
-export function setupOtelForTests() {
+export function setupOtelForTests({
+  contextManager,
+}: {
+  contextManager?: boolean;
+} = {}) {
   trace.setGlobalTracerProvider(traceProvider);
-  context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+  if (contextManager !== false) {
+    context.setGlobalContextManager(new AsyncLocalStorageContextManager());
+  }
 }
 
 export const getContextManager = () => {
@@ -293,4 +299,50 @@ export const disableAll = () => {
   propagation.disable();
   metrics.disable();
   diag.disable();
+  logs.disable();
+};
+
+export class MockLogRecordExporter implements LogRecordExporter {
+  records: LogRecord[] = [];
+
+  export(
+    logs: ReadableLogRecord[],
+    resultCallback: (result: ExportResult) => void,
+  ): void {
+    this.records.push(
+      ...logs.map((record) => ({
+        ...record,
+        traceId: record.spanContext?.traceId,
+        spanId: record.spanContext?.spanId,
+      })),
+    );
+    resultCallback({ code: ExportResultCode.SUCCESS });
+  }
+
+  shutdown(): Promise<void> {
+    this.reset();
+    return Promise.resolve();
+  }
+
+  forceFlush(): Promise<void> {
+    this.reset();
+    return Promise.resolve();
+  }
+
+  reset() {
+    this.records = [];
+  }
+
+  getLogsForSpan(spanId: string) {
+    return this.records.filter((record) => record.spanId === spanId);
+  }
+
+  getLogsForTrace(traceId: string) {
+    return this.records.filter((record) => record.traceId === traceId);
+  }
+}
+
+export type LogRecord = ReadableLogRecord & {
+  traceId?: string;
+  spanId?: string;
 };

@@ -4033,6 +4033,7 @@ __metadata:
     "@graphql-tools/utils": "npm:^10.8.1"
     "@graphql-yoga/render-graphiql": "npm:^5.13.5"
     "@opentelemetry/api": "npm:^1.9.0"
+    "@opentelemetry/api-logs": "npm:^0.202.0"
     "@opentelemetry/context-zone": "npm:^2.0.1"
     "@opentelemetry/core": "npm:^2.0.1"
     "@opentelemetry/exporter-jaeger": "npm:^2.0.1"
@@ -4040,6 +4041,7 @@ __metadata:
     "@opentelemetry/propagator-b3": "npm:^2.0.1"
     "@opentelemetry/propagator-jaeger": "npm:^2.0.1"
     "@opentelemetry/sampler-jaeger-remote": "npm:^0.202.0"
+    "@opentelemetry/sdk-logs": "npm:^0.202.0"
     "@opentelemetry/sdk-metrics": "npm:^2.0.1"
     "@rollup/plugin-commonjs": "npm:^28.0.0"
     "@rollup/plugin-json": "npm:^6.1.0"
@@ -4501,6 +4503,7 @@ __metadata:
     "@graphql-mesh/utils": "npm:^0.104.5"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@opentelemetry/api": "npm:^1.9.0"
+    "@opentelemetry/api-logs": "npm:^0.202.0"
     "@opentelemetry/auto-instrumentations-node": "npm:^0.60.1"
     "@opentelemetry/context-async-hooks": "npm:^2.0.1"
     "@opentelemetry/core": "npm:^2.0.1"
@@ -4508,6 +4511,7 @@ __metadata:
     "@opentelemetry/exporter-trace-otlp-http": "npm:^0.202.0"
     "@opentelemetry/instrumentation": "npm:^0.202.0"
     "@opentelemetry/resources": "npm:^2.0.1"
+    "@opentelemetry/sdk-logs": "npm:^0.202.0"
     "@opentelemetry/sdk-node": "npm:^0.202.0"
     "@opentelemetry/sdk-trace-base": "npm:^2.0.1"
     "@opentelemetry/semantic-conventions": "npm:^1.34.0"
@@ -7557,7 +7561,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/sdk-logs@npm:0.202.0":
+"@opentelemetry/sdk-logs@npm:0.202.0, @opentelemetry/sdk-logs@npm:^0.202.0":
   version: 0.202.0
   resolution: "@opentelemetry/sdk-logs@npm:0.202.0"
   dependencies:
