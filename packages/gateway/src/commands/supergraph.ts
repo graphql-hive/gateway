@@ -29,6 +29,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
+import { handleOpenTelemetryConfig } from './handleOpenTelemetryConfig';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -49,11 +50,16 @@ export const addCommand: AddCommand = (ctx, cli) =>
     )
     .action(async function supergraph(schemaPathOrUrl) {
       const {
+        opentelemetry,
+        opentelemetryExporterType,
         hiveCdnEndpoint,
         hiveCdnKey,
         hiveRegistryToken,
         hiveUsageTarget,
+        hiveTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
         maskedErrors,
         apolloGraphRef,
         apolloKey,
@@ -68,6 +74,14 @@ export const addCommand: AddCommand = (ctx, cli) =>
       ctx.log.info(
         `Starting ${ctx.productName} ${ctx.version} with supergraph`,
       );
+
+      await handleOpenTelemetryConfig(ctx, {
+        openTelemetry: opentelemetry,
+        openTelemetryExporterType: opentelemetryExporterType,
+        hiveAccessToken,
+        hiveTarget,
+        hiveTraceAccessToken,
+      });
 
       const loadedConfig = await loadConfig({
         log: ctx.log,
@@ -161,6 +175,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       const registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
+        hiveTarget,
+        hiveAccessToken,
+        hiveTraceAccessToken,
         hiveRegistryToken,
         hiveUsageTarget,
         hiveUsageAccessToken,
@@ -185,6 +202,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           ...loadedConfig,
           ...opts,
+          openTelemetry: opentelemetry
+            ? { ...loadedConfig.openTelemetry, traces: true }
+            : loadedConfig.openTelemetry,
         },
         {
           log: ctx.log,
