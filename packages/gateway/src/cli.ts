@@ -346,29 +346,62 @@ let cli = new Command()
   )
   .addOption(
     new Option(
+      '--opentelemetry [exporter-endpoint]',
+      `Enable OpenTelemetry integration with an exporter using this option's value as endpoint. By default, it uses OTLP HTTP, use "--opentelemetry-exporter-type" to change the default.`,
+    ).env('OPENTELEMETRY'),
+  )
+  .addOption(
+    new Option(
+      '--opentelemetry-exporter-type <type>',
+      `OpenTelemetry exporter type to use when setting up OpenTelemetry integration. Requires "--opentelemetry" to set the endpoint.`,
+    )
+      .choices(['otlp-http', 'otlp-grpc'])
+      .default('otlp-http')
+      .env('OPENTELEMETRY_EXPORTER_TYPE'),
+  )
+  .addOption(
+    new Option(
       '--hive-registry-token <token>',
-      '[DEPRECATED: please use "--hive-usage-target" and "--hive-usage-access-token"] Hive registry token for usage metrics reporting',
+      '[DEPRECATED: please use "--hive-target" and "--hive-access-token"] Hive registry token for usage metrics reporting',
     ).env('HIVE_REGISTRY_TOKEN'),
   )
   .addOption(
     new Option(
       '--hive-usage-target <target>',
-      'Hive registry target to which the usage data should be reported to. requires the "--hive-usage-access-token <token>" option',
+      '[DEPRECATED] please use --hive-target instead.',
     ).env('HIVE_USAGE_TARGET'),
   )
   .addOption(
     new Option(
+      '--hive-target <target>',
+      'Hive registry target to which the usage and tracing data should be reported to. Requires either "--hive-access-token <token>", "--hive-usage-access-token <token>" or "--hive-trace-access-token" option',
+    ).env('HIVE_TARGET'),
+  )
+  .addOption(
+    new Option(
+      '--hive-access-token <token>',
+      'Hive registry access token for usage metrics reporting and tracing. Enables both usage reporting and tracing. Requires the "--hive-target <target>" option',
+    ).env('HIVE_ACCESS_TOKEN'),
+  )
+  .addOption(
+    new Option(
       '--hive-usage-access-token <token>',
-      'Hive registry access token for usage metrics reporting. requires the "--hive-usage-target <target>" option',
+      `Hive registry access token for usage reporting. Enables Hive usage report. Requires the "--hive-target <target>" option. It can't be used together with "--hive-access-token"`,
     ).env('HIVE_USAGE_ACCESS_TOKEN'),
+  )
+  .addOption(
+    new Option(
+      '--hive-trace-access-token <token>',
+      `Hive registry access token for tracing. Enables Hive tracing. Requires the "--hive-target <target>" option. It can't be used together with "--hive-access-token"`,
+    ).env('HIVE_TRACE_ACCESS_TOKEN'),
   )
   .option(
     '--hive-persisted-documents-endpoint <endpoint>',
-    '[EXPERIMENTAL] Hive CDN endpoint for fetching the persisted documents. requires the "--hive-persisted-documents-token <token>" option',
+    '[EXPERIMENTAL] Hive CDN endpoint for fetching the persisted documents. Requires the "--hive-persisted-documents-token <token>" option',
   )
   .option(
     '--hive-persisted-documents-token <token>',
-    '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. requires the "--hive-persisted-documents-endpoint <endpoint>" option',
+    '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. Requires the "--hive-persisted-documents-endpoint <endpoint>" option',
   )
   .addOption(
     new Option(

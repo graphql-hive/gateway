@@ -31,11 +31,15 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
+import {
+  HiveTracingSpanProcessor,
+  HiveTracingSpanProcessorOptions,
+} from './hive-span-processor';
 import { getEnvVar } from './utils';
 
 export * from './attributes';
-
 export * from './log-writer';
+export * from './hive-span-processor';
 
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
@@ -174,6 +178,53 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         : new CompositePropagator({ propagators }),
     );
   }
+}
+
+export type HiveTracingOptions = { target?: string } & (
+  | {
+      accessToken?: string;
+      batching?: BufferConfig;
+      processor?: never;
+    }
+  | {
+      processor: SpanProcessor;
+    }
+);
+
+export function hiveTracingSetup(
+  config: HiveTracingOptions & { contextManager: ContextManager | null },
+) {
+  config.target ??= getEnvVar('HIVE_TARGET', undefined);
+
+  if (!config.target) {
+    throw new Error(
+      'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
+    );
+  }
+
+  if (!config.processor) {
+    config.accessToken ??=
+      getEnvVar('HIVE_TRACING_ACCESS_TOKEN', undefined) ??
+      getEnvVar('HIVE_ACCESS_TOKEN', undefined);
+
+    if (!config.accessToken) {
+      throw new Error(
+        'You must specify the Hive Registry `accessToken`. Either provide `accessToken` option or `HIVE_ACCESS_TOKEN`/`HIVE_TRACE_ACCESS_TOKEN` environment variable.',
+      );
+    }
+  }
+
+  openTelemetrySetup({
+    contextManager: config.contextManager,
+    resource: resourceFromAttributes({
+      'hive.target_id': config.target,
+    }),
+    traces: {
+      processors: [
+        new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
+      ],
+    },
+  });
 }
 
 export type BatchingConfig = boolean | BufferConfig;
