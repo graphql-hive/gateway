@@ -52,6 +52,7 @@
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
+    "@graphql-hive/core": "0.13.0-alpha-20250707104821-802de2e836e8fc0fb59533a3c4c63cf53e9fc33c",
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",

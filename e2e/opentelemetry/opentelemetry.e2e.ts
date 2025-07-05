@@ -713,6 +713,120 @@ describe('OpenTelemetry', () => {
         });
       });
 
+      it('should report telemetry metrics correctly to jaeger using cli options', async () => {
+        const serviceName = 'mesh-e2e-test-1';
+        const { execute } = await gateway({
+          runner,
+          supergraph,
+          env: {
+            DISABLED_OPENTELEMETRY_SETUP: '1',
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
+          },
+          args: [
+            '--opentelemetry',
+            urls[OTLP_EXPORTER_TYPE],
+            '--opentelemetry-exporter-type',
+            `otlp-${OTLP_EXPORTER_TYPE}`,
+          ],
+        });
+
+        await expect(
+          execute({ query: exampleSetup.query }),
+        ).resolves.toMatchObject({
+          data: {},
+        });
+        await expectJaegerTraces(serviceName, (traces) => {
+          const relevantTraces = traces.data.filter((trace) =>
+            trace.spans.some((span) => span.operationName === 'POST /graphql'),
+          );
+          expect(relevantTraces.length).toBe(1);
+          const relevantTrace = relevantTraces[0];
+          expect(relevantTrace).toBeDefined();
+          expect(relevantTrace!.spans.length).toBe(20);
+
+          const resource = relevantTrace!.processes['p1'];
+          expect(resource).toBeDefined();
+
+          const tags = resource!.tags.map(({ key, value }) => ({ key, value }));
+          const tagKeys = resource!.tags.map(({ key }) => key);
+          expect(resource!.serviceName).toBe(serviceName);
+          [
+            ['custom.resource', 'custom value'],
+            ['otel.library.name', 'gateway'],
+          ].forEach(([key, value]) => {
+            return expect(tags).toContainEqual({ key, value });
+          });
+
+          if (
+            process.env['E2E_GATEWAY_RUNNER'] === 'node' ||
+            process.env['E2E_GATEWAY_RUNNER'] === 'docker'
+          ) {
+            const expectedTags = [
+              'process.owner',
+              'host.arch',
+              'os.type',
+              'service.instance.id',
+            ];
+            if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+              expectedTags.push('container.id');
+            }
+            expectedTags.forEach((key) => {
+              return expect(tagKeys).toContain(key);
+            });
+          }
+
+          const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
+          expect(spanTree).toBeDefined();
+
+          expect(spanTree!.children).toHaveLength(1);
+
+          const operationSpan = spanTree!.children[0];
+          const expectedOperationChildren = [
+            'graphql.parse',
+            'graphql.validate',
+            'graphql.context',
+            'graphql.execute',
+          ];
+          expect(operationSpan!.children).toHaveLength(4);
+          for (const operationName of expectedOperationChildren) {
+            expect(operationSpan?.children).toContainEqual(
+              expect.objectContaining({
+                span: expect.objectContaining({ operationName }),
+              }),
+            );
+          }
+
+          const executeSpan = operationSpan!.children.find(
+            ({ span }) => span.operationName === 'graphql.execute',
+          );
+
+          const expectedExecuteChildren = [
+            ['subgraph.execute (accounts)', 2],
+            ['subgraph.execute (products)', 2],
+            ['subgraph.execute (inventory)', 1],
+            ['subgraph.execute (reviews)', 2],
+          ] as const;
+
+          for (const [operationName, count] of expectedExecuteChildren) {
+            const matchingChildren = executeSpan!.children.filter(
+              ({ span }) => span.operationName === operationName,
+            );
+            expect(matchingChildren).toHaveLength(count);
+            for (const child of matchingChildren) {
+              expect(child.children).toHaveLength(1);
+              expect(child.children).toContainEqual(
+                expect.objectContaining({
+                  span: expect.objectContaining({
+                    operationName: 'http.fetch',
+                  }),
+                }),
+              );
+            }
+          }
+        });
+      });
+
       it('should report parse failures correctly', async () => {
         const serviceName = 'mesh-e2e-test-2';
         const { execute } = await gateway({
