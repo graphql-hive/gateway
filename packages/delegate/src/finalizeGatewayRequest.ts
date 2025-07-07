@@ -15,6 +15,7 @@ import {
   getNamedType,
   GraphQLField,
   GraphQLNamedType,
+  GraphQLObjectType,
   GraphQLSchema,
   GraphQLType,
   isAbstractType,
@@ -28,6 +29,7 @@ import {
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
+  TypeInfo,
   VariableDefinitionNode,
   visit,
   visitWithTypeInfo,
@@ -483,7 +485,48 @@ function finalizeSelectionSet(
   const seenNonNullableMap = new WeakMap<readonly ASTNode[], Set<string>>();
   const seenNullableMap = new WeakMap<readonly ASTNode[], Set<string>>();
 
-  const filteredSelectionSet = visit(
+  const filteredSelectionSet = filterSelectionSet(
+    schema,
+    typeInfo,
+    validFragments,
+    selectionSet,
+    onOverlappingAliases,
+    usedFragments,
+    seenNonNullableMap,
+    seenNullableMap,
+  );
+
+  visit(
+    filteredSelectionSet,
+    {
+      [Kind.VARIABLE]: (variableNode) => {
+        usedVariables.push(variableNode.name.value);
+      },
+    },
+    // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
+    // empty keys cannot be removed only because of typescript errors
+    // will hopefully be fixed in future version of graphql-js to be optional
+    variablesVisitorKeys as any,
+  );
+
+  return {
+    selectionSet: filteredSelectionSet,
+    usedFragments,
+    usedVariables,
+  };
+}
+
+function filterSelectionSet(
+  schema: GraphQLSchema,
+  typeInfo: TypeInfo,
+  validFragments: { [name: string]: GraphQLType },
+  selectionSet: SelectionSetNode,
+  onOverlappingAliases: () => void,
+  usedFragments: Array<string>,
+  seenNonNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
+  seenNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
+) {
+  return visit(
     selectionSet,
     visitWithTypeInfo(typeInfo, {
       [Kind.FIELD]: {
@@ -541,20 +584,66 @@ function finalizeSelectionSet(
               }
             }
             if (possibleTypeNames.length > 0) {
-              return possibleTypeNames.map((possibleTypeName) => ({
-                kind: Kind.INLINE_FRAGMENT,
-                typeCondition: {
-                  kind: Kind.NAMED_TYPE,
-                  name: {
-                    kind: Kind.NAME,
-                    value: possibleTypeName,
+              return possibleTypeNames.map((possibleTypeName) => {
+                if (!node.selectionSet?.selections) {
+                  // leaf field, no selection set. return as is we're sure it exists
+                  return {
+                    kind: Kind.INLINE_FRAGMENT,
+                    typeCondition: {
+                      kind: Kind.NAMED_TYPE,
+                      name: {
+                        kind: Kind.NAME,
+                        value: possibleTypeName,
+                      },
+                    },
+                    selectionSet: {
+                      kind: Kind.SELECTION_SET,
+                      selections: [node],
+                    },
+                  };
+                }
+
+                // object field with selection set. filter it recursively
+                const possibleType = schema.getType(
+                  possibleTypeName,
+                ) as GraphQLObjectType; // it's an object type because union members must be objects
+
+                const possibleField = possibleType.getFields()[node.name.value];
+                if (!possibleField) {
+                  // the field does not exist on the possible type, skip the spread altogether
+                  return undefined;
+                }
+
+                return {
+                  kind: Kind.INLINE_FRAGMENT,
+                  typeCondition: {
+                    kind: Kind.NAMED_TYPE,
+                    name: {
+                      kind: Kind.NAME,
+                      value: possibleTypeName,
+                    },
                   },
-                },
-                selectionSet: {
-                  kind: Kind.SELECTION_SET,
-                  selections: [node],
-                },
-              }));
+                  selectionSet: {
+                    kind: Kind.SELECTION_SET,
+                    selections: [
+                      {
+                        ...node,
+                        // recursively filter the selection set because abstract types can be nested
+                        selectionSet: filterSelectionSet(
+                          schema,
+                          getTypeInfoWithType(schema, possibleField.type),
+                          validFragments,
+                          node.selectionSet,
+                          onOverlappingAliases,
+                          usedFragments,
+                          seenNonNullableMap,
+                          seenNullableMap,
+                        ),
+                      },
+                    ],
+                  },
+                };
+              });
             }
           }
           return undefined;
@@ -729,25 +818,6 @@ function finalizeSelectionSet(
     // will hopefully be fixed in future version of graphql-js to be optional
     filteredSelectionSetVisitorKeys as any,
   );
-
-  visit(
-    filteredSelectionSet,
-    {
-      [Kind.VARIABLE]: (variableNode) => {
-        usedVariables.push(variableNode.name.value);
-      },
-    },
-    // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
-    // empty keys cannot be removed only because of typescript errors
-    // will hopefully be fixed in future version of graphql-js to be optional
-    variablesVisitorKeys as any,
-  );
-
-  return {
-    selectionSet: filteredSelectionSet,
-    usedFragments,
-    usedVariables,
-  };
 }
 
 function union(...arrays: Array<Array<string>>): Array<string> {
