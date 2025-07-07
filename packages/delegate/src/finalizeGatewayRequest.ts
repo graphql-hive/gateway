@@ -614,6 +614,23 @@ function filterSelectionSet(
                   return undefined;
                 }
 
+                // recursively filter the selection set because abstract types can be nested
+                const fieldFilteredSelectionSet = filterSelectionSet(
+                  schema,
+                  getTypeInfoWithType(schema, possibleField.type),
+                  validFragments,
+                  node.selectionSet,
+                  onOverlappingAliases,
+                  usedFragments,
+                  seenNonNullableMap,
+                  seenNullableMap,
+                );
+
+                if (!fieldFilteredSelectionSet.selections.length) {
+                  // no selections remain after filtering the field, skip the spread altogether
+                  return undefined;
+                }
+
                 return {
                   kind: Kind.INLINE_FRAGMENT,
                   typeCondition: {
@@ -628,17 +645,7 @@ function filterSelectionSet(
                     selections: [
                       {
                         ...node,
-                        // recursively filter the selection set because abstract types can be nested
-                        selectionSet: filterSelectionSet(
-                          schema,
-                          getTypeInfoWithType(schema, possibleField.type),
-                          validFragments,
-                          node.selectionSet,
-                          onOverlappingAliases,
-                          usedFragments,
-                          seenNonNullableMap,
-                          seenNullableMap,
-                        ),
+                        selectionSet: fieldFilteredSelectionSet,
                       },
                     ],
                   },

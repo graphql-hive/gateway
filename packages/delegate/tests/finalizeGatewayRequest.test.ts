@@ -288,5 +288,33 @@ describe('finalizeGatewayRequest', () => {
         }"
       `);
     });
+    it('should remove fields whose nested fields dont exist in schema', () => {
+      const query = parse(/* GraphQL */ `
+        query foo {
+          foo {
+            name {
+              nickname
+            }
+          }
+        }
+      `);
+      const filteredQuery = finalizeGatewayRequest(
+        {
+          document: query,
+        },
+        {
+          targetSchema,
+        } as DelegationContext,
+        () => {},
+      );
+      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
+        "query foo {
+          foo {
+            __typename
+            
+          }
+        }"
+      `);
+    });
   });
 });
