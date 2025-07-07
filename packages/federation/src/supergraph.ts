@@ -68,6 +68,11 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import {
+  createNodeDefinitions,
+  createResolvers,
+  GlobalObjectIdentificationOptions,
+} from './globalObjectIdentification.js';
+import {
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
@@ -129,6 +134,31 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
+  /**
+   * Add support for GraphQL Global Object Identification Specification by adding a `Node`
+   * interface and `node(nodeId: ID!): Node` field to the `Query` type.
+   *
+   * ```graphql
+   * """An object with a globally unique `ID`."""
+   * interface Node {
+   *   """
+   *   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+   *   """
+   *   nodeId: ID!
+   * }
+   *
+   * extend type Query {
+   *   """Fetches an object given its globally unique `ID`."""
+   *   node(
+   *     """The globally unique `ID`."""
+   *     nodeId: ID!
+   *   ): Node
+   * }
+   * ```
+   *
+   * @see https://graphql.org/learn/global-object-identification/
+   */
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
@@ -834,7 +864,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           mergedTypeConfig.canonical = true;
         }
 
-        function getMergedTypeConfigFromKey(key: string) {
+        function getMergedTypeConfigFromKey(key: string): MergedEntityConfig {
           return {
             selectionSet: `{ ${key} }`,
             argsFromKeys: getArgsFromKeysForFederation,
@@ -1506,20 +1536,40 @@ export function getStitchingOptionsFromSupergraphSdl(
       extraDefinitions.push(definition);
     }
   }
-  const additionalTypeDefs: DocumentNode = {
-    kind: Kind.DOCUMENT,
-    definitions: extraDefinitions,
-  };
   if (opts.onSubschemaConfig) {
     for (const subschema of subschemas) {
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
+  const globalObjectIdentification: GlobalObjectIdentificationOptions | null =
+    opts.globalObjectIdentification === true
+      ? // defaults
+        {}
+      : typeof opts.globalObjectIdentification === 'object'
+        ? // user configuration
+          opts.globalObjectIdentification
+        : null;
+  if (globalObjectIdentification && !typeNameKeysBySubgraphMap.size) {
+    throw new Error(
+      'Automatic Global Object Identification is enabled, but no subgraphs have entities defined with defined keys. Please ensure that at least one subgraph has a type with the `@key` directive making it an entity.',
+    );
+  }
   return {
     subschemas,
-    typeDefs: additionalTypeDefs,
+    typeDefs: {
+      kind: Kind.DOCUMENT,
+      definitions: !globalObjectIdentification
+        ? extraDefinitions
+        : [
+            ...extraDefinitions,
+            ...createNodeDefinitions(subschemas, globalObjectIdentification),
+          ],
+    } as DocumentNode,
     assumeValid: true,
     assumeValidSDL: true,
+    resolvers: !globalObjectIdentification
+      ? undefined
+      : createResolvers(subschemas, globalObjectIdentification),
     typeMergingOptions: {
       useNonNullableFieldOnConflict: true,
       validationSettings: {
@@ -1692,4 +1742,32 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     );
   }
   return null;
+}
+
+/**
+ * A merge type configuration for resolving types that are Apollo Federation entities.
+ * @see https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/entities/intro
+ */
+export type MergedEntityConfig = MergedTypeConfig &
+  Required<
+    Pick<
+      MergedTypeConfig,
+      | 'selectionSet'
+      | 'argsFromKeys'
+      | 'key'
+      | 'fieldName'
+      | 'dataLoaderOptions'
+    >
+  >;
+
+export function isMergedEntityConfig(
+  merge: MergedTypeConfig,
+): merge is MergedEntityConfig {
+  return (
+    'selectionSet' in merge &&
+    'argsFromKeys' in merge &&
+    'key' in merge &&
+    'fieldName' in merge &&
+    'dataLoaderOptions' in merge
+  );
 }

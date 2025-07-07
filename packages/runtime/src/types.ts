@@ -17,6 +17,7 @@ import type {
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
+import type { GlobalObjectIdentificationOptions } from '@graphql-tools/federation';
 import type {
   IResolvers,
   MaybePromise,
@@ -193,6 +194,31 @@ export interface GatewayConfigSupergraph<
    * If {@link cache} is provided, the fetched {@link supergraph} will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
+  /**
+   * Add support for GraphQL Global Object Identification Specification by adding a `Node`
+   * interface and `node(nodeId: ID!): Node` field to the `Query` type.
+   *
+   * ```graphql
+   * """An object with a globally unique `ID`."""
+   * interface Node {
+   *   """
+   *   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+   *   """
+   *   nodeId: ID!
+   * }
+   *
+   * extend type Query {
+   *   """Fetches an object given its globally unique `ID`."""
+   *   node(
+   *     """The globally unique `ID`."""
+   *     nodeId: ID!
+   *   ): Node
+   * }
+   * ```
+   *
+   * @see https://graphql.org/learn/global-object-identification/
+   */
+  globalObjectIdentification?: boolean | GlobalObjectIdentificationOptions;
 }
 
 export interface GatewayConfigSubgraph<
