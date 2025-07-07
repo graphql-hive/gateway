@@ -307,14 +307,17 @@ describe('finalizeGatewayRequest', () => {
         } as DelegationContext,
         () => {},
       );
-      expect(print(filteredQuery.document)).toMatchInlineSnapshot(`
-        "query foo {
-          foo {
-            __typename
-            
-          }
-        }"
-      `);
+      expect(
+        print(filteredQuery.document)
+          // remove empty new lines (idk why it appears below __typename)
+          .replaceAll(/\s*\n/g, '\n'),
+      ).toMatchInlineSnapshot(`
+          "query foo {
+            foo {
+              __typename
+            }
+          }"
+        `);
     });
   });
 });
