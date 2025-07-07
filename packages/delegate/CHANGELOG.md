@@ -1,5 +1,13 @@
 # @graphql-tools/delegate
 
+## 10.2.21
+
+### Patch Changes
+
+- [#1301](https://github.com/graphql-hive/gateway/pull/1301) [`b69c80b`](https://github.com/graphql-hive/gateway/commit/b69c80b259bd0565eb9826f7ee9bc8e6c32076d1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Filter selection sets recursively when finalizing gateway requests
+
+  Because abstract types can be nested.
+
 ## 10.2.20
 
 ### Patch Changes
