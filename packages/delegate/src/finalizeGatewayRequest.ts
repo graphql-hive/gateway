@@ -584,7 +584,7 @@ function filterSelectionSet(
               }
             }
             if (possibleTypeNames.length > 0) {
-              return possibleTypeNames.map((possibleTypeName) => {
+              const spreads = possibleTypeNames.map((possibleTypeName) => {
                 if (!node.selectionSet?.selections) {
                   // leaf field, no selection set. return as is we're sure it exists
                   return {
@@ -651,6 +651,14 @@ function filterSelectionSet(
                   },
                 };
               });
+              const nonEmptySpreads = spreads.filter(Boolean);
+              if (!nonEmptySpreads.length) {
+                // no spreads remain after filtering, skip the field altogether.
+                // this is important to avoid invalid ast nodes causing empty lines
+                // in the resulting query
+                return undefined;
+              }
+              return nonEmptySpreads;
             }
           }
           return undefined;
