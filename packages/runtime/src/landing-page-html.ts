@@ -49,6 +49,9 @@ export default /* html */`<!DOCTYPE html>
       th, td {
         padding: 6px 8px;
       }
+      td {
+        overflow-wrap: anywhere;
+      }
 
       pre {
         max-width: 100%;
@@ -142,7 +145,7 @@ export default /* html */`<!DOCTYPE html>
           ℹ️ Not the Page you Expected to See?
         </h2>
         <p>
-          This page is shown be default whenever a 404 is hit. You can
+          This page is shown be default whenever a 404 is hit.<br>You can
           disable this by behavior via the
           <code>landingPage</code>
           option.
@@ -157,7 +160,7 @@ export const gatewayConfig = defineConfig({
           If you expected
           <u>this</u>
           page to be the GraphQL route, you need to
-          configure Hive Gateway. Currently, the GraphQL route is configured to
+          configure Hive Gateway.<br>Currently, the GraphQL route is configured to
           be on
           <a href="__GRAPHIQL_LINK__" class="graphiql">__GRAPHIQL_LINK__</a>.
         </p>

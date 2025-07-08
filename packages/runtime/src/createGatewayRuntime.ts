@@ -397,29 +397,41 @@ export function createGatewayRuntime<
     subgraphInformationHTMLRenderer = () => {
       const endpoint = config.proxy.endpoint;
       const htmlParts: string[] = [];
-      htmlParts.push(`<section class="supergraph-information">`);
-      htmlParts.push(`<h3>Proxy: <a href="${endpoint}">${endpoint}</a></h3>`);
+
+      htmlParts.push(`<h2>Proxy Mode</h2>`);
       if (config.schema) {
         if (typeof config.schema === 'object' && 'type' in config.schema) {
           htmlParts.push(
-            `<p><strong>Source: </strong> <i>${config.schema.type === 'hive' ? 'Hive' : 'Unknown'} CDN</i></p>`,
+            `<p>From ${config.schema.type === 'hive' ? 'Hive' : 'Unknown'} CDN</p>`,
           );
         } else if (isValidPath(config.schema) || isUrl(String(config.schema))) {
-          htmlParts.push(
-            `<p><strong>Source: </strong> <i>${config.schema}</i></p>`,
-          );
+          if (isUrl(String(config.schema))) {
+            htmlParts.push(
+              `<p>From <a href="${config.schema}">${config.schema}</p>`,
+            );
+          } else {
+            htmlParts.push(`<p>From <code>${config.schema}</code></p>`);
+          }
         } else {
-          htmlParts.push(
-            `<p><strong>Source: </strong> <i>GraphQL schema in config</i></p>`,
-          );
+          htmlParts.push(`<p>Using GraphQL Schema in Config</p>`);
         }
       }
+      htmlParts.push('<br>');
+      htmlParts.push(
+        `<div class="var">
+          <label for="endpoint">Endpoint</label>
+          <code id="endpoint">${endpoint}</code>
+        </div>`,
+      );
       if (reportingTarget) {
+        htmlParts.push('<br>');
         htmlParts.push(
-          `<p><strong>Usage Reporting: </strong> <i>${reportingTarget}</i></p>`,
+          `<div class="var">
+            <label for="reporting">Usage Reporting Target</label>
+            <code id="reporting">${reportingTarget}</code>
+          </div>`,
         );
       }
-      htmlParts.push(`</section>`);
       return htmlParts.join('');
     };
   } else if ('subgraph' in config) {
@@ -791,6 +803,7 @@ export function createGatewayRuntime<
             htmlParts.push(`<p>✅ Loaded</p><br>`);
             htmlParts.push(sourceHtmlPart);
             if (reportingTarget) {
+              htmlParts.push('<br>');
               htmlParts.push(
                 `<div class="var">
                   <label for="reporting">Usage Reporting Target</label>
