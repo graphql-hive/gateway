@@ -780,18 +780,25 @@ export function createGatewayRuntime<
           ),
         ({ transportEntryMap, loaded, loadError }) => {
           const htmlParts: string[] = [];
+          htmlParts.push(`<h2>Supergraph Status</h2>`);
+          const sourceHtmlPart = supergraphLoadedPlace
+            ? `<div class="var">
+                <label for="source">Source</label>
+                <code id="source">${supergraphLoadedPlace}</code>
+              </div>`
+            : '';
           if (loaded) {
-            htmlParts.push(`<h3>Supergraph Status: Loaded ✅</h3>`);
-            if (supergraphLoadedPlace) {
+            htmlParts.push(`<p>✅ Loaded</p><br>`);
+            htmlParts.push(sourceHtmlPart);
+            if (reportingTarget) {
               htmlParts.push(
-                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
+                `<div class="var">
+                  <label for="reporting">Usage Reporting Target</label>
+                  <code id="reporting">${reportingTarget}</code>
+                </div>`,
               );
-              if (reportingTarget) {
-                htmlParts.push(
-                  `<p><strong>Usage Reporting: </strong> <i>${reportingTarget}</i></p>`,
-                );
-              }
             }
+            htmlParts.push(`<br>`);
             htmlParts.push(`<table>`);
             htmlParts.push(
               `<tr><th>Subgraph</th><th>Transport</th><th>Location</th></tr>`,
@@ -801,32 +808,30 @@ export function createGatewayRuntime<
               htmlParts.push(`<tr>`);
               htmlParts.push(`<td>${subgraphName}</td>`);
               htmlParts.push(`<td>${transportEntry.kind}</td>`);
-              htmlParts.push(
-                `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
-              );
+              if (transportEntry.location && isUrl(transportEntry.location)) {
+                htmlParts.push(
+                  `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
+                );
+              } else {
+                htmlParts.push(
+                  `<td><code>${transportEntry.location}</code></td>`,
+                );
+              }
               htmlParts.push(`</tr>`);
             }
             htmlParts.push(`</table>`);
           } else if (loadError) {
-            htmlParts.push(`<h3>Status: Failed ❌</h3>`);
-            if (supergraphLoadedPlace) {
-              htmlParts.push(
-                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
-              );
-            }
-            htmlParts.push(`<h3>Error:</h3>`);
+            htmlParts.push(`<p>❌ Failed</p><br>`);
+            htmlParts.push(sourceHtmlPart);
+            htmlParts.push(`<br>`);
             htmlParts.push(
-              `<pre>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</pre>`,
+              `<pre><code>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</code></pre>`,
             );
           } else {
-            htmlParts.push(`<h3>Status: Unknown</h3>`);
-            if (supergraphLoadedPlace) {
-              htmlParts.push(
-                `<p><strong>Source: </strong> <i>${supergraphLoadedPlace}</i></p>`,
-              );
-            }
+            htmlParts.push(`<p>⚠️ Unknown</p><br>`);
+            htmlParts.push(sourceHtmlPart);
           }
-          return `<section class="supergraph-information">${htmlParts.join('')}</section>`;
+          return htmlParts.join('');
         },
       );
   }

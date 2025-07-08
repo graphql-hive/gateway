@@ -1,1 +1,173 @@
-export default "<!doctype html><html lang=en><head><meta charset=utf-8><title>Welcome to __PRODUCT_NAME__</title><link rel=icon href=https://the-guild.dev/favicon.ico><style>body,html{padding:0;margin:0;height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Fira Sans','Droid Sans','Helvetica Neue',sans-serif;color:#fff;background-color:#000}main>section.hero{display:flex;height:50vh;justify-content:center;align-items:center;flex-direction:column}.logo{display:flex;align-items:center}.buttons{margin-top:24px}h1{font-size:80px}h2{color:#888;max-width:50%;margin-top:0;text-align:center}a{color:#fff;text-decoration:none;margin-left:10px;margin-right:10px;font-weight:700;transition:color .3s ease;padding:4px;overflow:visible}a.graphiql:hover{color:rgba(255,0,255,.7)}a.docs:hover{color:rgba(28,200,238,.7)}a.tutorial:hover{color:rgba(125,85,245,.7)}svg{margin-right:24px}.supergraph-information>*{margin-left:auto;margin-right:auto;text-align:center;max-width:50%}.not-what-your-looking-for{margin-top:5vh}.not-what-your-looking-for>*{margin-left:auto;margin-right:auto}.not-what-your-looking-for>p{text-align:center}.not-what-your-looking-for>h2{color:#464646}.not-what-your-looking-for>p{max-width:600px;line-height:1.3em}.not-what-your-looking-for>pre{max-width:300px}</style></head><body id=body><main><section class=hero><div class=logo><div>__PRODUCT_LOGO__</div><h1>__PRODUCT_NAME__</h1></div><h2>__PRODUCT_DESCRIPTION__</h2><div class=buttons><a href=__PRODUCT_LINK__ class=docs>Read the Docs</a> <a href=__GRAPHIQL_LINK__ class=graphiql>Visit GraphiQL</a></div></section>__SUBGRAPH_HTML__<section class=not-what-your-looking-for><h2>Not the page you are looking for? 👀</h2><p>This page is shown be default whenever a 404 is hit.<br>You can disable this by behavior via the <code>landingPage</code> option.</p><pre>\n          <code>\n// gateway.config.ts\n\nimport { defineConfig } from '__PRODUCT_PACKAGE_NAME__';\n\nexport const gatewayConfig = defineConfig({\n  landingPage: false,\n});\n          </code>\n        </pre><p>If you expected this page to be the GraphQL route, you need to configure Hive Gateway. Currently, the GraphQL route is configured to be on <code>__GRAPHIQL_LINK__</code>.</p><pre>\n          <code>\n// gateway.config.ts\n\nimport { defineConfig } from '__PRODUCT_PACKAGE_NAME__';\n\nexport const gatewayConfig = defineConfig({\n  graphqlEndpoint: '__REQUEST_PATH__',\n});\n          </code>\n        </pre></section></main></body></html>"
+export default /* html */`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Welcome to __PRODUCT_NAME__</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="https://the-guild.dev/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://the-guild.dev/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://the-guild.dev/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://the-guild.dev/favicon-16x16.png">
+    <link rel="shorcut icon" type="image/x-icon" href="https://the-guild.dev/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/typescript.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body,
+      html {
+        padding: 20px;
+        margin: 0;
+        background-color: black;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      }
+      a {
+        color: lightblue;
+      }
+      code {
+        background-color: lightgray;
+        color: black;
+        padding: 2px;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+
+      table {
+        border: 2px solid lightgray;
+        border-radius: 4px;
+        border-spacing: 0;
+      }
+      th {
+        text-align: left;
+        color: lightgray;
+        border-bottom: 4px solid lightgray;
+      }
+      th, td {
+        padding: 6px 8px;
+      }
+
+      pre {
+        max-width: 100%;
+      }
+
+      .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .hero .logo {
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hero .logo svg {
+        height: 50px;
+      }
+      .hero .logo h1 {
+        margin: 0;
+      }
+      .hero .description {
+        color: gray;
+      }
+      .hero .links {
+        text-align: center;
+      }
+
+      .status {
+        position: relative;
+        margin: 50px auto;
+        display: flex;
+        flex-direction: column;
+        max-width: 800px;
+      }
+      .status h2, .status p {
+        margin: 0;
+      }
+      .status .var {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .status .var label {
+        font-size: small;
+      }
+
+      .four-oh-four {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #2f2f2f;
+        border-radius: 4px;
+        margin: 0 auto;
+        padding: 10px;
+        max-width: 600px;
+        border: 1px solid gray;
+        opacity: 0.4;
+        transition: opacity 0.3s ease-in-out;
+      }
+      .four-oh-four:hover {
+        opacity: 1;
+      }
+      .four-oh-four p {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body id="body">
+    <main>
+      <section class="hero">
+        <div class="logo">
+          <!-- will be an <svg> -->
+          __PRODUCT_LOGO__
+          <h1>__PRODUCT_NAME__</h1>
+        </div>
+        <p class="description">__PRODUCT_DESCRIPTION__</p>
+        <div class="links">
+          <a href="__PRODUCT_LINK__" class="docs">📚 Read the Documentation</a>
+          <br>
+          <a href="__GRAPHIQL_LINK__" class="graphiql">🗃️ Visit GraphiQL</a>
+        </div>
+      </section>
+      <section class="status">
+        __SUBGRAPH_HTML__
+      </section>
+      <section class="four-oh-four">
+        <h2>
+          ℹ️ Not the Page you Expected to See?
+        </h2>
+        <p>
+          This page is shown be default whenever a 404 is hit. You can
+          disable this by behavior via the
+          <code>landingPage</code>
+          option.
+        </p>
+        <pre><code class="language-typescript">import { defineConfig } from '__PRODUCT_PACKAGE_NAME__';
+
+export const gatewayConfig = defineConfig({
+  landingPage: false,
+});
+</code></pre>
+        <p>
+          If you expected
+          <u>this</u>
+          page to be the GraphQL route, you need to
+          configure Hive Gateway. Currently, the GraphQL route is configured to
+          be on
+          <a href="__GRAPHIQL_LINK__" class="graphiql">__GRAPHIQL_LINK__</a>.
+        </p>
+        <pre><code class="language-typescript">import { defineConfig } from '__PRODUCT_PACKAGE_NAME__';
+
+export const gatewayConfig = defineConfig({
+  graphqlEndpoint: '__REQUEST_PATH__',
+});
+</code></pre>
+      </section>
+    </main>
+  </body>
+</html>`
