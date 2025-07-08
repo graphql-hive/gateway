@@ -109,7 +109,7 @@ export default /* html */`<!DOCTYPE html>
         border-radius: 4px;
         margin: 0 auto;
         padding: 10px;
-        max-width: 600px;
+        max-width: 800px;
         border: 1px solid gray;
         opacity: 0.4;
         transition: opacity 0.3s ease-in-out;
