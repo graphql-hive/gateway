@@ -424,12 +424,8 @@ export function createGatewayRuntime<
         </div>`,
       );
       if (reportingTarget) {
-        htmlParts.push('<br>');
         htmlParts.push(
-          `<div class="var">
-            <label for="reporting">Usage Reporting Target</label>
-            <code id="reporting">${reportingTarget}</code>
-          </div>`,
+          `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
         );
       }
       return htmlParts.join('');
@@ -803,12 +799,8 @@ export function createGatewayRuntime<
             htmlParts.push(`<p>✅ Loaded</p><br>`);
             htmlParts.push(sourceHtmlPart);
             if (reportingTarget) {
-              htmlParts.push('<br>');
               htmlParts.push(
-                `<div class="var">
-                  <label for="reporting">Usage Reporting Target</label>
-                  <code id="reporting">${reportingTarget}</code>
-                </div>`,
+                `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
               );
             }
             htmlParts.push(`<br>`);
