@@ -142,7 +142,7 @@ export default /* html */`<!DOCTYPE html>
       </section>
       <section class="four-oh-four">
         <h2>
-          ℹ️ Not the Page you Expected to See?
+          ℹ️ Not the Page You Expected To See?
         </h2>
         <p>
           This page is shown be default whenever a 404 is hit.<br>You can
