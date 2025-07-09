@@ -116,7 +116,9 @@ export class OpenTelemetryLogWriter implements LogWriter {
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void | Promise<void> {
-    const attributes = Array.isArray(attrs) ? { ...attrs } : (attrs ?? undefined);
+    const attributes = Array.isArray(attrs)
+      ? { ...attrs }
+      : (attrs ?? undefined);
 
     return this.logger.emit({
       body: msg,
