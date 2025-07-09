@@ -54,8 +54,8 @@
   "devDependencies": {
     "@graphql-hive/gateway-runtime": "workspace:*",
     "graphql": "^16.9.0",
-    "graphql-yoga": "^5.13.5",
-    "pkgroll": "2.13.1"
+    "graphql-yoga": "^5.14.0",
+    "pkgroll": "2.14.0"
   },
   "sideEffects": false
 }
