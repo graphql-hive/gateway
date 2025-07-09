@@ -1,9 +1,16 @@
-import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { Logger } from '@graphql-hive/logger';
+import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
+  OpenTelemetryLogWriter,
+  openTelemetrySetup,
+} from '@graphql-mesh/plugin-opentelemetry/setup';
+import {
+  ROOT_CONTEXT,
   SpanStatusCode,
   TextMapPropagator,
   TracerProvider,
 } from '@opentelemetry/api';
+import { SeverityNumber } from '@opentelemetry/api-logs';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
   CompositePropagator,
@@ -12,6 +19,11 @@ import {
 } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { resourceFromAttributes } from '@opentelemetry/resources';
+import {
+  LoggerProvider,
+  LogRecordExporter,
+  LogRecordProcessor,
+} from '@opentelemetry/sdk-logs';
 import {
   AlwaysOffSampler,
   AlwaysOnSampler,
@@ -23,7 +35,7 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import type { OpenTelemetryContextExtension } from '../src/plugin';
 import {
   buildTestGateway,
@@ -34,6 +46,7 @@ import {
   getSampler,
   getSpanProcessors,
   getTracerProvider,
+  MockLogRecordExporter,
   setupOtelForTests,
   spanExporter,
 } from './utils';
@@ -831,6 +844,251 @@ describe('useOpenTelemetry', () => {
         'subgraph.execute (upstream)',
         'http.fetch',
       ]);
+    });
+  });
+
+  describe('logging', () => {
+    beforeEach(() => {
+      disableAll();
+    });
+
+    describe('setup', () => {
+      beforeEach(() => {
+        disableAll();
+      });
+
+      it('should allow to use a given logger', () => {
+        const logger = { emit: vi.fn() };
+        const log = new Logger({
+          writers: [
+            new OpenTelemetryLogWriter({
+              logger,
+            }),
+          ],
+        });
+
+        log.info({ foo: 'bar' }, 'test');
+
+        expect(logger.emit).toHaveBeenCalledWith({
+          severityText: 'info',
+          severityNumber: SeverityNumber.INFO,
+          body: 'test',
+          attributes: { foo: 'bar' },
+          context: ROOT_CONTEXT,
+        });
+      });
+
+      it('should allow to use a provider', () => {
+        const processor: LogRecordProcessor = {
+          onEmit: vi.fn(),
+          forceFlush: vi.fn(),
+          shutdown: vi.fn(),
+        };
+        const provider = new LoggerProvider({ processors: [processor] });
+        const log = new Logger({
+          writers: [
+            new OpenTelemetryLogWriter({
+              provider,
+            }),
+          ],
+        });
+
+        log.info({ foo: 'bar' }, 'test');
+
+        expect(processor.onEmit).toHaveBeenCalled();
+        expect(
+          (processor.onEmit as MockedFunction<LogRecordProcessor['onEmit']>)
+            .mock.calls[0]![0],
+        ).toMatchObject({
+          severityText: 'info',
+          severityNumber: SeverityNumber.INFO,
+          body: 'test',
+          attributes: { foo: 'bar' },
+        });
+      });
+
+      it('should allow to provide a processor', () => {
+        const processor: LogRecordProcessor = {
+          onEmit: vi.fn(),
+          forceFlush: vi.fn(),
+          shutdown: vi.fn(),
+        };
+        const log = new Logger({
+          writers: [
+            new OpenTelemetryLogWriter({
+              processors: [processor],
+            }),
+          ],
+        });
+
+        log.info({ foo: 'bar' }, 'test');
+
+        expect(processor.onEmit).toHaveBeenCalled();
+        expect(
+          (processor.onEmit as MockedFunction<LogRecordProcessor['onEmit']>)
+            .mock.calls[0]![0],
+        ).toMatchObject({
+          severityText: 'info',
+          severityNumber: SeverityNumber.INFO,
+          body: 'test',
+          attributes: { foo: 'bar' },
+        });
+      });
+
+      it('should allow to use an exporter', () => {
+        const exportFn = vi.fn<LogRecordExporter['export']>();
+        const exporter: LogRecordExporter = {
+          export: exportFn,
+          shutdown: vi.fn(),
+        };
+
+        const log = new Logger({
+          writers: [
+            new OpenTelemetryLogWriter({
+              exporter,
+              batching: false,
+            }),
+          ],
+        });
+
+        log.info({ foo: 'bar' }, 'test');
+
+        expect(exportFn).toHaveBeenCalled();
+        expect(exportFn.mock.calls[0]![0]).toMatchObject([
+          {
+            severityText: 'info',
+            severityNumber: SeverityNumber.INFO,
+            body: 'test',
+            attributes: { foo: 'bar' },
+          },
+        ]);
+      });
+    });
+
+    describe('logs correlation with span', () => {
+      const hooks = [
+        'onRequest',
+        'onParams',
+        'onParse',
+        'onContextBuilding',
+        'onValidate',
+        'onExecute',
+        'onSubgraphExecute',
+        'onFetch',
+      ];
+      const exporter = new MockLogRecordExporter();
+
+      const buildTestGatewayForLogs = ({
+        useContextManager,
+      }: { useContextManager?: boolean } = {}) =>
+        buildTestGateway({
+          options: { useContextManager },
+          gatewayOptions: {
+            logging: new Logger({
+              writers: [
+                new OpenTelemetryLogWriter({
+                  useContextManager,
+                  exporter,
+                  batching: false,
+                }),
+              ],
+            }),
+          },
+          plugins: (_, ctx) => {
+            const createHook = (name: string): any => ({
+              [name]: (payload: any) => {
+                let log = ctx.log;
+                const context =
+                  payload.context ?? payload.executionRequest?.context;
+                const request = payload.request ?? context?.request;
+                if (request) {
+                  log = loggerForRequest(log, request) ?? log;
+                }
+                if (payload.context) {
+                  log = payload.context.log ?? log;
+                }
+
+                const phase =
+                  (name as string).charAt(2).toLowerCase() +
+                  (name as string).substring(3);
+                log.info({ phase }, name);
+              },
+            });
+
+            let plugin = {};
+            for (let hook of hooks) {
+              plugin = { ...plugin, ...createHook(hook) };
+            }
+
+            return [plugin];
+          },
+        });
+
+      beforeEach(() => {
+        disableAll();
+        exporter.reset();
+      });
+
+      it('should correlate logs with spans with context manager', async () => {
+        setupOtelForTests();
+
+        await using gateway = await buildTestGatewayForLogs();
+        await gateway.query();
+
+        const expectedLogs = {
+          'POST /graphql': 'onRequest',
+          'graphql.operation Anonymous': 'onParams',
+          'graphql.parse': 'onParse',
+          'graphql.validate': 'onValidate',
+          'graphql.context': 'onContextBuilding',
+          'graphql.execute': 'onExecute',
+          'subgraph.execute (upstream)': 'onSubgraphExecute',
+          'http.fetch': 'onFetch',
+        };
+
+        Object.entries(expectedLogs).forEach(([spanName, hook]) => {
+          const span = spanExporter.assertSpanWithName(spanName);
+          const logs = exporter.getLogsForSpan(span.id);
+          const phase = hook.charAt(2).toLowerCase() + hook.substring(3);
+          // @ts-expect-error Access to private field. public `body` seems to not be readable (returns undefined)
+          const log = logs.find((log) => log._body === hook);
+          if (!log) {
+            console.error(
+              `${hook} log not found. Logs for ${spanName} were`,
+              logs,
+            );
+            throw new Error(`${hook} log not found`);
+          }
+
+          expect(log.attributes).toMatchObject({ phase });
+        });
+      });
+
+      it('should correlate logs with root http span without a context manager', async () => {
+        setupOtelForTests({ contextManager: false });
+
+        await using gateway = await buildTestGatewayForLogs({
+          useContextManager: false,
+        });
+        await gateway.query();
+
+        const httpSpan = spanExporter.assertRoot('POST /graphql');
+        const logs = exporter.getLogsForSpan(httpSpan.span.id);
+        for (let hook of hooks) {
+          const phase = hook.charAt(2).toLowerCase() + hook.substring(3);
+          // @ts-expect-error access to private field
+          const log = logs.find(({ _body: body }) => body === hook);
+          if (!log) {
+            console.error(
+              `missing log for ${hook}. Logs were:`,
+              exporter.records,
+            );
+            throw new Error(`missing log for ${hook}`);
+          }
+          expect(log).toBeDefined();
+          expect(log?.attributes).toMatchObject({ phase });
+        }
+      });
     });
   });
 });
