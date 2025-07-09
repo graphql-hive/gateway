@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@graphql-hive/gateway": "workspace:^",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/types": "^0.104.5",
     "@graphql-tools/utils": "^10.8.1",
     "@whatwg-node/promise-helpers": "^1.3.0",

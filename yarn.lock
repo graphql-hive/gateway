@@ -4117,6 +4117,7 @@ __metadata:
   resolution: "@graphql-hive/nestjs@workspace:packages/nestjs"
   dependencies:
     "@graphql-hive/gateway": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.5"
     "@graphql-tools/utils": "npm:^10.8.1"
     "@nestjs/common": "npm:11.1.3"
@@ -4497,6 +4498,7 @@ __metadata:
   resolution: "@graphql-mesh/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
     "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.5"

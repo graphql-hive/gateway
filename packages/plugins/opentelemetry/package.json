@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@graphql-hive/gateway-runtime": "workspace:^",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.5",
