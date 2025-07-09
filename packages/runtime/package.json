@@ -77,7 +77,7 @@
     "@whatwg-node/server": "^0.10.10",
     "@whatwg-node/server-plugin-cookies": "^1.0.5",
     "graphql-ws": "^6.0.4",
-    "graphql-yoga": "^5.13.5",
+    "graphql-yoga": "^5.14.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
