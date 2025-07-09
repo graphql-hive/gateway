@@ -5,6 +5,10 @@ import {
   Logger,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
+import {
+  loggerForRequest,
+  requestIdByRequest,
+} from '@graphql-hive/logger/request';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import {
@@ -190,6 +194,8 @@ export type OpenTelemetryGatewayPluginOptions = {
         };
       };
 };
+
+export const otelCtxForRequestId = new Map<string, Context>();
 
 const HeadersTextMapGetter: TextMapGetter<Headers> = {
   keys(carrier) {
@@ -667,6 +673,27 @@ export function useOpenTelemetry(
       );
     },
 
+    onRequest({ state, request }) {
+      try {
+        const requestId = requestIdByRequest.get(request);
+        if (requestId) {
+          loggerForRequest(options.log.child({ requestId }), request);
+
+          // When running in a runtime without a context manager, we have to keep track of the
+          // span correlated to a log manually. For now, we just link all logs for a request to
+          // the HTTP root span
+          if (!useContextManager) {
+            otelCtxForRequestId.set(requestId, getContext(state));
+          }
+        }
+      } catch (error) {
+        pluginLogger.error(
+          { error },
+          'Error while setting up logger for request',
+        );
+      }
+    },
+
     onEnveloped({ state, extendContext }) {
       extendContext({
         openTelemetry: {
@@ -695,12 +722,20 @@ export function useOpenTelemetry(
           }
         : undefined,
 
-    onResponse({ response, state }) {
+    onResponse({ response, request, state }) {
       try {
         state.forRequest.otel &&
           setResponseAttributes(state.forRequest.otel.root, response);
+
+        // Clean up Logging context tracking for runtimes without context manager
+        if (!useContextManager) {
+          const requestId = requestIdByRequest.get(request);
+          if (requestId) {
+            otelCtxForRequestId.delete(requestId);
+          }
+        }
       } catch (error) {
-        pluginLogger!.error('Failed to end http span', { error });
+        pluginLogger!.error({ error }, 'Failed to end http span');
       }
     },
 

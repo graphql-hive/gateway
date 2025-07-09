@@ -20,7 +20,7 @@ import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
-import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
+import type { OpenTelemetryGatewayPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
@@ -129,7 +129,10 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
-  openTelemetry?: Exclude<OpenTelemetryMeshPluginOptions, GatewayConfigContext>;
+  openTelemetry?: Exclude<
+    OpenTelemetryGatewayPluginOptions,
+    GatewayConfigContext
+  >;
   /**
    * Configure Rate Limiting
    *
