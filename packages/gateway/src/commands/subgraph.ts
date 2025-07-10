@@ -23,6 +23,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
+import { handleOpenTelemetryConfig } from './handleOpenTelemetryConfig';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -37,16 +38,31 @@ export const addCommand: AddCommand = (ctx, cli) =>
     )
     .action(async function subgraph(schemaPathOrUrl) {
       const {
+        opentelemetry,
+        opentelemetryExporterType,
         maskedErrors,
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
       } = this.optsWithGlobals();
 
       ctx.log.info(`Starting ${ctx.productName} ${ctx.version} as subgraph`);
+
+      // Handle hive OTEL tracing before loading config so that the tracer provider is registered
+      // if users needs it in a custom plugin.
+      await handleOpenTelemetryConfig(ctx, {
+        openTelemetry: opentelemetry,
+        openTelemetryExporterType: opentelemetryExporterType,
+        hiveTarget,
+        hiveAccessToken,
+        hiveTraceAccessToken,
+      });
 
       const loadedConfig = await loadConfig({
         log: ctx.log,
@@ -65,8 +81,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const registryConfig: Pick<SubgraphConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
         // subgraph can only do reporting to hive registry
         apolloGraphRef: undefined,
         apolloKey: undefined,
@@ -89,6 +108,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           ...loadedConfig,
           ...opts,
+          openTelemetry: opentelemetry
+            ? { ...loadedConfig.openTelemetry, traces: true }
+            : loadedConfig.openTelemetry,
         },
         {
           log: ctx.log,

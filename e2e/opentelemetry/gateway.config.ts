@@ -29,42 +29,46 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
-const { OTLPTraceExporter } =
-  process.env['OTLP_EXPORTER_TYPE'] === 'http'
-    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
-    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
+if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
+  const { OTLPTraceExporter } =
+    process.env['OTLP_EXPORTER_TYPE'] === 'http'
+      ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+      : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
 
-const exporter = new OTLPTraceExporter({
-  url: process.env['OTLP_EXPORTER_URL'],
-});
-
-const resource = resources.resourceFromAttributes({
-  'custom.resource': 'custom value',
-});
-
-// The NodeSDK only actually work in Node. For other envs, it's better to use our own configurator
-const runner = process.env['E2E_GATEWAY_RUNNER'];
-if (runner === 'node' || runner === 'docker') {
-  const sdk = new NodeSDK({
-    // Use spanProcessor instead of spanExporter to remove batching for test speed
-    spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
-    resource,
-    instrumentations: getNodeAutoInstrumentations(),
-    resourceDetectors: getResourceDetectors(),
+  const exporter = new OTLPTraceExporter({
+    url: process.env['OTLP_EXPORTER_URL'],
   });
 
-  sdk.start();
-  ['SIGTERM', 'SIGINT'].forEach((sig) => process.on(sig, () => sdk.shutdown()));
-} else {
-  openTelemetrySetup({
-    contextManager: new AsyncLocalStorageContextManager(),
-    resource,
-    traces: {
-      exporter,
-      // Disable batching to speedup tests
-      batching: false,
-    },
+  const resource = resources.resourceFromAttributes({
+    'custom.resource': 'custom value',
   });
+
+  // The NodeSDK only actually work in Node. For other envs, it's better to use our own configurator
+  const runner = process.env['E2E_GATEWAY_RUNNER'];
+  if (runner === 'node' || runner === 'docker') {
+    const sdk = new NodeSDK({
+      // Use spanProcessor instead of spanExporter to remove batching for test speed
+      spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
+      resource,
+      instrumentations: getNodeAutoInstrumentations(),
+      resourceDetectors: getResourceDetectors(),
+    });
+
+    sdk.start();
+    ['SIGTERM', 'SIGINT'].forEach((sig) =>
+      process.on(sig, () => sdk.shutdown()),
+    );
+  } else {
+    openTelemetrySetup({
+      contextManager: new AsyncLocalStorageContextManager(),
+      resource,
+      traces: {
+        exporter,
+        // Disable batching to speedup tests
+        batching: false,
+      },
+    });
+  }
 }
 
 export const gatewayConfig = defineConfig({
