@@ -13,9 +13,8 @@ export interface LandingPageProps {
   productDescription?: string;
   productLink?: string;
   productPackageName?: string;
-  graphiqlLink?: string;
-  content?: string;
-  requestUrl?: string;
+  graphiqlPathname?: string;
+  graphqlUrl?: string;
   requestPathname?: string;
 }
 
@@ -25,9 +24,8 @@ export function LandingPage(props: LandingPageProps) {
     productDescription = '__PRODUCT_DESCRIPTION__',
     productLink = '__PRODUCT_LINK__',
     productPackageName = '__PRODUCT_PACKAGE_NAME__',
-    graphiqlLink = '__GRAPHIQL_LINK__',
-    content = '__CONTENT__',
-    requestUrl = '__REQUEST_URL__',
+    graphiqlPathname = '__GRAPHIQL_PATHNAME__',
+    graphqlUrl = '__GRAPHQL_URL__',
     requestPathname = '__REQUEST_PATHNAME__',
   } = props;
   return (
@@ -108,7 +106,7 @@ export function LandingPage(props: LandingPageProps) {
               <a href={productLink} className="button">
                 📚 Read the Documentation
               </a>
-              <a href={graphiqlLink} className="button accent">
+              <a href={graphiqlPathname} className="button accent">
                 🗃️ Visit GraphiQL
               </a>
             </div>
@@ -118,9 +116,9 @@ export function LandingPage(props: LandingPageProps) {
             <div className="shell">
               <span className="dollar">$</span>
               <pre className="command">
-                {`curl --url '${requestUrl}' \\
+                {`curl --url '${graphqlUrl}' \\
   --header 'content-type: application/json' \\
-  --data '{"query":"query { __typename }"}'`}
+  --data '{"query":"{ __typename }"}'`}
               </pre>
             </div>
           </section>
@@ -149,8 +147,8 @@ export const gatewayConfig = defineConfig({
               to configure Hive Gateway.
               <br />
               Currently, the GraphQL route is configured to be on{' '}
-              <a href={graphiqlLink} className="graphiql">
-                {graphiqlLink}
+              <a href={graphiqlPathname} className="graphiql">
+                {graphiqlPathname}
               </a>
               .
             </p>
