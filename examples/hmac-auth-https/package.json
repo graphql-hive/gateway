@@ -13,10 +13,10 @@
     "@apollo/server": "^4.12.2",
     "@apollo/subgraph": "^2.11.0",
     "@graphql-hive/gateway": "^1.15.4",
+    "@graphql-hive/logger": "^0.0.0",
     "@graphql-mesh/compose-cli": "^1.4.10",
     "@graphql-mesh/hmac-upstream-signature": "^1.2.28",
     "@graphql-mesh/plugin-jwt-auth": "^1.5.6",
-    "@graphql-hive/logger": "^0.0.0",
     "graphql": "^16.10.0",
     "graphql-yoga": "^5.15.1"
   },
