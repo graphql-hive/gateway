@@ -104,7 +104,6 @@ import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
 import { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 import { useWebhooks } from './plugins/useWebhooks';
-import { defaultProductLogo } from './productLogo';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -820,7 +819,6 @@ export function createGatewayRuntime<
     config.productDescription || 'Federated GraphQL Gateway';
   const productPackageName =
     config.productPackageName || '@graphql-hive/gateway';
-  const productLogo = config.productLogo || defaultProductLogo;
   const productLink =
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
@@ -876,8 +874,7 @@ export function createGatewayRuntime<
           .replaceAll(/__PRODUCT_NAME__/g, productName)
           .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
           .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
-          .replace(/__PRODUCT_LINK__/, productLink)
-          .replace(/__PRODUCT_LOGO__/g, productLogo),
+          .replace(/__PRODUCT_LINK__/, productLink),
         {
           status: 200,
           statusText: 'OK',
