@@ -10,6 +10,7 @@ const server = createServer(async (_req, res) => {
       'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
     graphiqlPathname: '/graphiql',
+    graphqlUrl: 'http://localhost:4000/graphql',
     productLink: 'https://graphql-hive.com',
     requestPathname: '/graphql',
   });
