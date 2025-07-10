@@ -1,16 +1,16 @@
 import { createServer } from 'node:http';
-import { render } from './render-landing-page';
+import { render, renderToFile } from './render-landing-page';
 
 const server = createServer(async (_req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html' });
+  await renderToFile(); // ensure the landing page is rendered to file on every change
   const landingPage = await render({
     productName: 'Hive Gateway',
     productDescription:
       'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
-    graphiqlLink: '/graphiql',
-    content: '<p>Welcome to Hive Gateway!</p>',
-    requestUrl: 'http://localhost:3000/graphql',
+    graphiqlPathname: '/graphiql',
+    productLink: 'https://graphql-hive.com',
     requestPathname: '/graphql',
   });
   res.end(landingPage);

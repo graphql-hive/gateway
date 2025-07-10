@@ -18,9 +18,11 @@ export function render(props: LandingPageProps) {
   });
 }
 
-console.log('Rendering landing page with defaults to file...');
-const html = await render({});
-await fs.promises.writeFile(
-  path.join(__dirname, '../src/landing-page-html.ts'),
-  `export default ${JSON.stringify(html)}`,
-);
+export async function renderToFile() {
+  console.log('Rendering landing page with defaults to file...');
+  const html = await render({});
+  await fs.promises.writeFile(
+    path.join(__dirname, '../src/landing-page-html.ts'),
+    `export default ${JSON.stringify(html)}`,
+  );
+}
