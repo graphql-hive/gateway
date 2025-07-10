@@ -816,7 +816,8 @@ export function createGatewayRuntime<
 
   const productName = config.productName || 'Hive Gateway';
   const productDescription =
-    config.productDescription || 'Federated GraphQL Gateway';
+    config.productDescription ||
+    'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.';
   const productPackageName =
     config.productPackageName || '@graphql-hive/gateway';
   const productLink =

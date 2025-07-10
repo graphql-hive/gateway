@@ -224,7 +224,7 @@ export interface CLIContext {
   log: Logger;
   /** @default 'Hive Gateway' */
   productName: string;
-  /** @default 'Federated GraphQL Gateway' */
+  /** @default 'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.' */
   productDescription: string;
   /** @default '@graphql-hive/gateway' */
   productPackageName: string;
@@ -405,7 +405,8 @@ export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
     log: userCtx.log || new Logger(),
     productName: 'Hive Gateway',
-    productDescription: 'Federated GraphQL Gateway',
+    productDescription:
+      'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
     productLink: 'https://the-guild.dev/graphql/hive/docs/gateway',
     binName: 'hive-gateway',

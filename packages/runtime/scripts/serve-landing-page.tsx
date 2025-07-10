@@ -5,7 +5,8 @@ const server = createServer(async (_req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html' });
   const landingPage = await render({
     productName: 'Hive Gateway',
-    productDescription: 'Federated GraphQL Gateway',
+    productDescription:
+      'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
     graphiqlLink: '/graphiql',
     content: '<p>Welcome to Hive Gateway!</p>',
