@@ -87,7 +87,7 @@ import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
-import landingPageHtml from './landing-page-html';
+import { iconBase64, html as landingPageHtml } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';

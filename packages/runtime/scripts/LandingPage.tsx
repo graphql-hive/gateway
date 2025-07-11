@@ -10,7 +10,7 @@ const styles = fs.readFileSync(
   'utf-8',
 );
 
-const iconBase64 = Buffer.from(
+export const iconBase64 = Buffer.from(
   fs.readFileSync(path.join(__dirname, '..', 'assets', 'icon-256x256.png')),
 ).toString('base64');
 
@@ -180,6 +180,7 @@ export const gatewayConfig = defineConfig({
 
 function Logo(props: SVGProps<SVGSVGElement>) {
   return (
+    // copied from assets/logo.svg
     <svg
       viewBox="0 1 52 51"
       fill="currentColor"
