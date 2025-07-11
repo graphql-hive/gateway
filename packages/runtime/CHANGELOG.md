@@ -1,5 +1,26 @@
 # @graphql-hive/gateway-runtime
 
+## 1.10.0
+
+### Minor Changes
+
+- [#1308](https://github.com/graphql-hive/gateway/pull/1308) [`9b230f3`](https://github.com/graphql-hive/gateway/commit/9b230f35b47afbf3b253e4c21720e836c5a2a8d1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Improved landing page visuals and new logo
+
+### Patch Changes
+
+- [#1318](https://github.com/graphql-hive/gateway/pull/1318) [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.10.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.10.1) (from `^0.8.6`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-csrf-prevention@^3.15.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-csrf-prevention/v/3.15.1) (from `^3.13.5`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-defer-stream@^3.15.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-defer-stream/v/3.15.1) (from `^3.13.5`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-persisted-operations@^3.15.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-persisted-operations/v/3.15.1) (from `^3.13.6`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.15.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.15.1) (from `^5.13.5`, in `dependencies`)
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0)]:
+  - @graphql-mesh/fusion-runtime@0.11.18
+  - @graphql-tools/federation@3.2.7
+  - @graphql-mesh/hmac-upstream-signature@1.2.28
+
 ## 1.9.4
 
 ### Patch Changes

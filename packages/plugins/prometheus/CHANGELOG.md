@@ -1,5 +1,16 @@
 # @graphql-mesh/plugin-prometheus
 
+## 1.3.51
+
+### Patch Changes
+
+- [#1318](https://github.com/graphql-hive/gateway/pull/1318) [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/plugin-prometheus@^6.10.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-prometheus/v/6.10.1) (from `^6.8.5`, in `dependencies`)
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`9b230f3`](https://github.com/graphql-hive/gateway/commit/9b230f35b47afbf3b253e4c21720e836c5a2a8d1)]:
+  - @graphql-hive/gateway-runtime@1.10.0
+
 ## 1.3.50
 
 ### Patch Changes
