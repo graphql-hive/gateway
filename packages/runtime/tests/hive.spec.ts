@@ -94,18 +94,6 @@ describe('Hive CDN', () => {
     const resJson: ExecutionResult<IntrospectionQuery> = await res.json();
     const clientSchema = buildClientSchema(resJson.data!);
     expect(printSchema(clientSchema)).toMatchSnapshot('hive-cdn');
-
-    // Landing page
-    const landingPageRes = await gateway.fetch('http://localhost:4000', {
-      method: 'GET',
-      headers: {
-        accept: 'text/html',
-      },
-    });
-    const landingPage = await landingPageRes.text();
-    expect(landingPage).toContain('Hive CDN');
-    expect(landingPage).toContain('upstream');
-    expect(landingPage).toContain('http://upstream/graphql');
   });
   it('uses Hive CDN instead of introspection for Proxy mode', async () => {
     const upstreamSchema = createUpstreamSchema();

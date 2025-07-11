@@ -7,6 +7,8 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "esnext",
+    // for landing page HTML generation
+    "jsx": "react-jsx",
     // TODO: set to true once dependencies (like yoga and whatwg server) add `| undefined` in addition to `?`
     "exactOptionalPropertyTypes": false,
     // packages
