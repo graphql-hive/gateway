@@ -1,5 +1,23 @@
 # @graphql-hive/gateway
 
+## 1.15.5
+
+### Patch Changes
+
+- [#1318](https://github.com/graphql-hive/gateway/pull/1318) [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Updated dependency [`@graphql-yoga/render-graphiql@^5.15.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/5.15.1) (from `^5.13.5`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.15.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.15.1) (from `^5.13.5`, in `dependencies`)
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`9b230f3`](https://github.com/graphql-hive/gateway/commit/9b230f35b47afbf3b253e4c21720e836c5a2a8d1)]:
+  - @graphql-hive/gateway-runtime@1.10.0
+  - @graphql-mesh/plugin-jwt-auth@1.5.7
+  - @graphql-mesh/plugin-prometheus@1.3.51
+  - @graphql-hive/plugin-aws-sigv4@1.0.16
+  - @graphql-hive/plugin-deduplicate-request@1.0.1
+  - @graphql-mesh/hmac-upstream-signature@1.2.28
+  - @graphql-mesh/plugin-opentelemetry@1.3.63
+
 ## 1.15.4
 
 ### Patch Changes

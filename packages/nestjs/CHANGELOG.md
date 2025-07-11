@@ -1,5 +1,12 @@
 # @graphql-hive/nestjs
 
+## 1.0.19
+
+### Patch Changes
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0)]:
+  - @graphql-hive/gateway@1.15.5
+
 ## 1.0.18
 
 ### Patch Changes
