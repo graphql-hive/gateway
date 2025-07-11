@@ -20,6 +20,6 @@
     "@whatwg-node/promise-helpers": "^1.2.5",
     "graphql": "^16.10.0",
     "jest-leak-detector": "30.0.2",
-    "ws": "^8.18.0"
+    "ws": "^8.18.3"
   }
 }

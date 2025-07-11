@@ -7,19 +7,19 @@
     "graphql": "^16.9.0",
     "tslib": "^2.8.1",
     "@apollo/server": "^4.12.2",
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.11.2",
     "@repeaterjs/repeater": "^3.0.6",
     "@types/express": "^5.0.3",
     "@types/ws": "^8",
     "express": "^5.0.0",
     "graphql-sse": "^2.5.3",
     "graphql-ws": "^6.0.2",
-    "ws": "^8.17.1",
+    "ws": "^8.18.3",
     "@graphql-hive/gateway": "^1.15.4"
   },
   "devDependencies": {
     "tsx": "^4.19.3",
-    "@apollo/rover": "^0.33.0"
+    "@apollo/rover": "^0.34.1"
   },
   "overrides": {
     "esbuild": "^0.25.5"
