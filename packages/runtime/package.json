@@ -37,8 +37,9 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist",
-    "generate-landing-page": "tsx scripts/generate-landing-page-html.ts",
-    "prepack": "yarn generate-landing-page && yarn build"
+    "prepack": "yarn render-landing-page && yarn build",
+    "render-landing-page": "tsx scripts/render-landing-page.tsx",
+    "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx"
   },
   "peerDependencies": {
     "graphql": "^15.9.0 || ^16.9.0"
@@ -86,12 +87,16 @@
     "@graphql-mesh/transport-rest": "^0.9.6",
     "@omnigraph/openapi": "^0.109.11",
     "@types/html-minifier-terser": "^7.0.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@whatwg-node/fetch": "^0.10.8",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
     "pkgroll": "2.14.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tsx": "4.20.3"
   },
   "sideEffects": false
