@@ -1,7 +1,7 @@
 .yarn/*
 !.yarn/custom-plugins
 Dockerfile
-packages/runtime/src/landing-page-html.ts
+packages/runtime/src/landing-page.generated.ts
 __generated__
 .changeset/*
 !.changeset/README.md
