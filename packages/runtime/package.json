@@ -37,9 +37,9 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist",
+    "prepack": "yarn render-landing-page && yarn build",
     "render-landing-page": "tsx scripts/render-landing-page.tsx",
-    "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx",
-    "prepack": "yarn render-landing-page && yarn build"
+    "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx"
   },
   "peerDependencies": {
     "graphql": "^15.9.0 || ^16.9.0"
