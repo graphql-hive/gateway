@@ -1,7 +1,6 @@
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
-import type { OnFetchHookDone } from '@graphql-mesh/types';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { GatewayPlugin } from '../types';
+import type { GatewayPlugin, OnFetchHookDone } from '../types';
 
 interface FromClientToSubgraphsPayload {
   request: Request;
@@ -34,7 +33,10 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
   const resHeadersByRequest = new WeakMap<Request, Record<string, string[]>>();
   return {
     onFetch({ executionRequest, context, options, setOptions }) {
-      const request = context?.request || executionRequest?.context?.request;
+      const request =
+        'request' in context
+          ? context?.request || executionRequest?.context?.request
+          : undefined;
       if (request) {
         const subgraphName = (executionRequest &&
           subgraphNameByExecutionRequest.get(executionRequest))!;

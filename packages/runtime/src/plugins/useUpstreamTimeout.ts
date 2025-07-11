@@ -54,11 +54,6 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               timeoutSignal,
             );
           }
-          const signals: AbortSignal[] = [];
-          signals.push(timeoutSignal);
-          if (executionRequest.signal) {
-            signals.push(executionRequest.signal);
-          }
           const timeoutDeferred = createDeferred<ExecutionResult>();
           function rejectDeferred() {
             timeoutDeferred.reject(timeoutSignal?.reason);
@@ -66,10 +61,17 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           timeoutSignal.addEventListener('abort', rejectDeferred, {
             once: true,
           });
-          const combinedSignal = abortSignalAny(signals);
+          const signals: AbortSignal[] = [];
+          signals.push(timeoutSignal);
+          if (executionRequest.signal) {
+            signals.push(executionRequest.signal);
+          }
+          // we want to create a new executionrequest and not mutate the existing one becaus, when using
+          // this with useUpstreamRetry, the same executionRequest will be used for each retry and we need
+          // to timeoutSignalsByExecutionRequest.set(...) again above
           const res$ = executor({
             ...executionRequest,
-            signal: combinedSignal,
+            signal: abortSignalAny(signals),
           });
           if (!isPromise(res$)) {
             return res$;

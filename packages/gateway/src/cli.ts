@@ -15,16 +15,16 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
-import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
+import type { OpenTelemetryGatewayPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
+import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
 import parseDuration from 'parse-duration';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
@@ -105,7 +105,7 @@ export interface GatewayCLIProxyConfig
 }
 
 export type KeyValueCacheFactoryFn = (ctx: {
-  logger: Logger;
+  log: Logger;
   pubsub: HivePubSub;
   cwd: string;
 }) => KeyValueCache;
@@ -128,7 +128,10 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
-  openTelemetry?: Exclude<OpenTelemetryMeshPluginOptions, GatewayConfigContext>;
+  openTelemetry?: Exclude<
+    OpenTelemetryGatewayPluginOptions,
+    GatewayConfigContext
+  >;
   /**
    * Configure Rate Limiting
    *
@@ -221,7 +224,7 @@ export interface CLIContext {
   log: Logger;
   /** @default 'Hive Gateway' */
   productName: string;
-  /** @default 'Federated GraphQL Gateway' */
+  /** @default 'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.' */
   productDescription: string;
   /** @default '@graphql-hive/gateway' */
   productPackageName: string;
@@ -252,9 +255,8 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
-const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: process.env['NODE_ENV'] === 'production' ? maxFork : 1,
+  fork: 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -274,21 +276,22 @@ let cli = new Command()
   })
   .addOption(
     new Option(
-      '--fork <count>',
-      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${defaultOptions.fork})`,
+      '--fork <number>',
+      `number of workers to spawn. (default: ${defaultOptions.fork})`,
     )
       .env('FORK')
       .argParser((v) => {
-        const count = parseInt(v);
-        if (isNaN(count)) {
+        const number = parseInt(v);
+        if (isNaN(number)) {
           throw new InvalidArgumentError('not a number.');
         }
-        if (count > maxFork) {
+        const maxConcurrency = getMaxConcurrency();
+        if (number > maxConcurrency) {
           throw new InvalidArgumentError(
-            `exceedes number of available parallelism "${maxFork}".`,
+            `exceedes number of available concurrency "${maxConcurrency}".`,
           );
         }
-        return count;
+        return number;
       }),
   )
   .addOption(
@@ -400,9 +403,10 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || getDefaultLogger(),
+    log: userCtx.log || new Logger(),
     productName: 'Hive Gateway',
-    productDescription: 'Federated GraphQL Gateway',
+    productDescription:
+      'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
     productLink: 'https://the-guild.dev/graphql/hive/docs/gateway',
     binName: 'hive-gateway',

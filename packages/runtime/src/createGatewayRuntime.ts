@@ -1,10 +1,15 @@
-import { OnExecuteEventPayload, OnSubscribeEventPayload } from '@envelop/core';
+import {
+  getInstrumented,
+  OnExecuteEventPayload,
+  OnSubscribeEventPayload,
+} from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
 import {
   createSchemaFetcher,
   createSupergraphSDLFetcher,
 } from '@graphql-hive/core';
+import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
@@ -23,19 +28,13 @@ import {
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
-import type {
-  KeyValueCache,
-  OnDelegateHook,
-  OnFetchHook,
-} from '@graphql-mesh/types';
+import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
   getHeadersObj,
   getInContextSDK,
   isDisposable,
   isUrl,
-  LogLevel,
-  wrapFetchWithHooks,
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
@@ -80,15 +79,19 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
+import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
-import { handleLoggingConfig } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
-import landingPageHtml from './landing-page-html';
+import {
+  iconBase64,
+  html as landingPageHtml,
+  logoSvg,
+} from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
@@ -105,7 +108,6 @@ import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
 import { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 import { useWebhooks } from './plugins/useWebhooks';
-import { defaultProductLogo } from './productLogo';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -115,6 +117,7 @@ import type {
   OnCacheDeleteHook,
   OnCacheGetHook,
   OnCacheSetHook,
+  OnFetchHook,
   UnifiedGraphConfig,
 } from './types';
 import {
@@ -123,6 +126,7 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
+import { wrapFetchWithHooks } from './wrapFetchWithHooks';
 
 export type GatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
@@ -135,7 +139,7 @@ export function createGatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayConfig<TContext>): GatewayRuntime<TContext> {
   let fetchAPI = config.fetchAPI;
-  const logger = handleLoggingConfig(config.logging);
+  const log = createLoggerFromLogging(config.logging);
 
   let instrumentation: GatewayPlugin['instrumentation'];
 
@@ -145,8 +149,8 @@ export function createGatewayRuntime<
   const onCacheDeleteHooks: OnCacheDeleteHook[] = [];
   const wrappedFetchFn = wrapFetchWithHooks(
     onFetchHooks,
+    log,
     () => instrumentation,
-    logger,
   );
   const wrappedCache: KeyValueCache | undefined = config.cache
     ? wrapCacheWithHooks({
@@ -161,7 +165,7 @@ export function createGatewayRuntime<
 
   const configContext: GatewayConfigContext = {
     fetch: wrappedFetchFn,
-    logger,
+    log,
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
@@ -187,10 +191,7 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
-    config,
-    configContext,
-  );
+  const reportingPlugin = getReportingPlugin(config, configContext);
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
@@ -201,9 +202,7 @@ export function createGatewayRuntime<
     persistedDocumentsPlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
-      logger: configContext.logger.child({
-        plugin: 'Hive Persisted Documents',
-      }),
+      log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
       experimental__persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
@@ -222,7 +221,6 @@ export function createGatewayRuntime<
       ...config.persistedDocuments,
     });
   }
-  let subgraphInformationHTMLRenderer: () => MaybePromise<string> = () => '';
 
   if ('proxy' in config) {
     const transportExecutorStack = new AsyncDisposableStack();
@@ -268,7 +266,9 @@ export function createGatewayRuntime<
       const fetcher = createSchemaFetcher({
         endpoint,
         key,
-        logger: configContext.logger.child({ source: 'Hive CDN' }),
+        logger: LegacyLogger.from(
+          configContext.log.child('[hiveSchemaFetcher] '),
+        ),
       });
       schemaFetcher = function fetchSchemaFromCDN() {
         pausePolling();
@@ -337,12 +337,20 @@ export function createGatewayRuntime<
             return true;
           },
           (err) => {
-            configContext.logger.warn(`Failed to introspect schema`, err);
+            configContext.log.warn(`Failed to introspect schema`, err);
             return true;
           },
         );
       };
     }
+
+    const instrumentedFetcher = schemaFetcher;
+    schemaFetcher = (...args) =>
+      getInstrumented(null).asyncFn(
+        instrumentation?.schema,
+        instrumentedFetcher,
+      )(...args);
+
     getSchema = () => {
       if (unifiedGraph != null) {
         return unifiedGraph;
@@ -381,42 +389,6 @@ export function createGatewayRuntime<
       // @ts-expect-error TODO: this is illegal but somehow we want it
       unifiedGraph = undefined;
       initialFetch$ = schemaFetcher();
-    };
-    subgraphInformationHTMLRenderer = () => {
-      const endpoint = config.proxy.endpoint;
-      const htmlParts: string[] = [];
-
-      htmlParts.push(`<h2>Proxy Mode</h2>`);
-      if (config.schema) {
-        if (typeof config.schema === 'object' && 'type' in config.schema) {
-          htmlParts.push(
-            `<p>From ${config.schema.type === 'hive' ? 'Hive' : 'Unknown'} CDN</p>`,
-          );
-        } else if (isValidPath(config.schema) || isUrl(String(config.schema))) {
-          if (isUrl(String(config.schema))) {
-            htmlParts.push(
-              `<p>From <a href="${config.schema}">${config.schema}</p>`,
-            );
-          } else {
-            htmlParts.push(`<p>From <code>${config.schema}</code></p>`);
-          }
-        } else {
-          htmlParts.push(`<p>Using GraphQL Schema in Config</p>`);
-        }
-      }
-      htmlParts.push('<br>');
-      htmlParts.push(
-        `<div class="var">
-          <label for="endpoint">Endpoint</label>
-          <code id="endpoint">${endpoint}</code>
-        </div>`,
-      );
-      if (reportingTarget) {
-        htmlParts.push(
-          `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
-        );
-      }
-      return htmlParts.join('');
     };
   } else if ('subgraph' in config) {
     const subgraphInConfig = config.subgraph;
@@ -461,7 +433,10 @@ export function createGatewayRuntime<
             const onSubgraphExecute = getOnSubgraphExecute({
               onSubgraphExecuteHooks,
               ...(config.transports ? { transports: config.transports } : {}),
-              transportContext: configContext,
+              transportContext: {
+                ...configContext,
+                logger: LegacyLogger.from(configContext.log),
+              },
               transportEntryMap,
               getSubgraphSchema() {
                 return unifiedGraph;
@@ -623,7 +598,7 @@ export function createGatewayRuntime<
                   unifiedGraph,
                   // @ts-expect-error - Typings are wrong in legacy Mesh
                   [subschemaConfig],
-                  configContext.logger,
+                  LegacyLogger.from(configContext.log),
                   onDelegateHooks,
                 ),
               );
@@ -647,17 +622,15 @@ export function createGatewayRuntime<
     let unifiedGraphFetcher: (
       transportCtx: TransportContext,
     ) => MaybePromise<UnifiedGraphSchema>;
-    let supergraphLoadedPlace: string;
-
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
       if (config.supergraph.type === 'hive') {
         // hive cdn
         const { endpoint, key } = config.supergraph;
-        supergraphLoadedPlace = 'Hive CDN <br>' + endpoint;
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
-          logger: configContext.logger.child({ source: 'Hive CDN' }),
+          log: configContext.log.child('[hiveSupergraphFetcher] '),
+
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
           fetchImplementation: configContext.fetch,
         });
@@ -670,7 +643,6 @@ export function createGatewayRuntime<
           pollingInterval: config.pollingInterval,
         });
         unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
-        supergraphLoadedPlace = graphosFetcherContainer.supergraphLoadedPlace;
       } else {
         unifiedGraphFetcher = () => {
           throw new Error(
@@ -682,10 +654,10 @@ export function createGatewayRuntime<
       // local or remote
       if (!isDynamicUnifiedGraphSchema(config.supergraph)) {
         // no polling for static schemas
-        logger.debug(`Disabling polling for static supergraph`);
+        log.debug(`Disabling polling for static supergraph`);
         delete config.pollingInterval;
       } else if (!config.pollingInterval) {
-        logger.debug(
+        log.debug(
           `Polling interval not set for supergraph, if you want to get updates of supergraph, we recommend setting a polling interval`,
         );
       }
@@ -696,13 +668,14 @@ export function createGatewayRuntime<
           config.supergraph,
           configContext,
         );
-      if (typeof config.supergraph === 'function') {
-        const fnName = config.supergraph.name || '';
-        supergraphLoadedPlace = `a custom loader ${fnName}`;
-      } else if (typeof config.supergraph === 'string') {
-        supergraphLoadedPlace = config.supergraph;
-      }
     }
+
+    const instrumentedGraphFetcher = unifiedGraphFetcher;
+    unifiedGraphFetcher = (...args) =>
+      getInstrumented(null).asyncFn(
+        instrumentation?.schema,
+        instrumentedGraphFetcher,
+      )(...args);
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       getUnifiedGraph: unifiedGraphFetcher,
@@ -713,7 +686,10 @@ export function createGatewayRuntime<
       transports: config.transports,
       transportEntryAdditions: config.transportEntries,
       pollingInterval: config.pollingInterval,
-      transportContext: configContext,
+      transportContext: {
+        ...configContext,
+        logger: LegacyLogger.from(configContext.log),
+      },
       onDelegateHooks,
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
@@ -725,24 +701,22 @@ export function createGatewayRuntime<
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
-      const logger = configContext.logger.child('readiness');
-      logger.debug(`checking`);
+      const log = configContext.log.child('[readiness] ');
+      log.debug('checking');
       return handleMaybePromise(
         () => unifiedGraphManager.getUnifiedGraph(),
         (schema) => {
           if (!schema) {
-            logger.debug(
-              `failed because supergraph has not been loaded yet or failed to load`,
+            log.debug(
+              'failed because supergraph has not been loaded yet or failed to load',
             );
             return false;
           }
-          logger.debug('passed');
+          log.debug('passed');
           return true;
         },
         (err) => {
-          logger.error(
-            `failed due to errors on loading supergraph:\n${err.stack || err.message}`,
-          );
+          log.error(err, 'loading supergraph failed due to errors');
           return false;
         },
       );
@@ -755,78 +729,6 @@ export function createGatewayRuntime<
         return dispose(unifiedGraphManager);
       },
     };
-    subgraphInformationHTMLRenderer = () =>
-      handleMaybePromise(
-        () =>
-          handleMaybePromise(
-            () => unifiedGraphManager.getTransportEntryMap(),
-            (transportEntryMap) => ({
-              transportEntryMap,
-              loadError: undefined,
-              loaded: true,
-            }),
-            (loadError) => ({
-              transportEntryMap: {} as Record<
-                string,
-                TransportEntry<Record<string, any>>
-              >,
-              loadError,
-              loaded: false,
-            }),
-          ),
-        ({ transportEntryMap, loaded, loadError }) => {
-          const htmlParts: string[] = [];
-          htmlParts.push(`<h2>Supergraph Status</h2>`);
-          const sourceHtmlPart = supergraphLoadedPlace
-            ? `<div class="var">
-                <label for="source">Source</label>
-                <code id="source">${supergraphLoadedPlace}</code>
-              </div>`
-            : '';
-          if (loaded) {
-            htmlParts.push(`<p>✅ Loaded</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-            if (reportingTarget) {
-              htmlParts.push(
-                `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
-              );
-            }
-            htmlParts.push(`<br>`);
-            htmlParts.push(`<table>`);
-            htmlParts.push(
-              `<tr><th>Subgraph</th><th>Transport</th><th>Location</th></tr>`,
-            );
-            for (const subgraphName in transportEntryMap) {
-              const transportEntry = transportEntryMap[subgraphName]!;
-              htmlParts.push(`<tr>`);
-              htmlParts.push(`<td>${subgraphName}</td>`);
-              htmlParts.push(`<td>${transportEntry.kind}</td>`);
-              if (transportEntry.location && isUrl(transportEntry.location)) {
-                htmlParts.push(
-                  `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
-                );
-              } else {
-                htmlParts.push(
-                  `<td><code>${transportEntry.location}</code></td>`,
-                );
-              }
-              htmlParts.push(`</tr>`);
-            }
-            htmlParts.push(`</table>`);
-          } else if (loadError) {
-            htmlParts.push(`<p>❌ Failed</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-            htmlParts.push(`<br>`);
-            htmlParts.push(
-              `<pre><code>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</code></pre>`,
-            );
-          } else {
-            htmlParts.push(`<p>⚠️ Unknown</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-          }
-          return htmlParts.join('');
-        },
-      );
   }
 
   const readinessCheckPlugin = useReadinessCheck({
@@ -918,18 +820,21 @@ export function createGatewayRuntime<
 
   const productName = config.productName || 'Hive Gateway';
   const productDescription =
-    config.productDescription || 'Federated GraphQL Gateway';
+    config.productDescription ||
+    'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.';
   const productPackageName =
     config.productPackageName || '@graphql-hive/gateway';
-  const productLogo = config.productLogo || defaultProductLogo;
   const productLink =
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
+  const graphiqlLogo = `<div style="height: 20px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
 
   if (config.graphiql == null || config.graphiql === true) {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
     };
   } else if (config.graphiql === false) {
@@ -937,6 +842,8 @@ export function createGatewayRuntime<
   } else if (typeof config.graphiql === 'object') {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
       ...config.graphiql,
     };
@@ -952,11 +859,14 @@ export function createGatewayRuntime<
           if (resolvedOpts === true) {
             return {
               title: productName,
+              logo: graphiqlLogo,
               defaultQuery: defaultQueryText,
             };
           }
           return {
             title: productName,
+            logo: graphiqlLogo,
+            favicon: `data:image/png;base64,${iconBase64}`,
             defaultQuery: defaultQueryText,
             ...resolvedOpts,
           };
@@ -969,27 +879,22 @@ export function createGatewayRuntime<
 
   if (config.landingPage == null || config.landingPage === true) {
     landingPageRenderer = (opts) =>
-      handleMaybePromise(
-        subgraphInformationHTMLRenderer,
-        (subgraphHtml) =>
-          new opts.fetchAPI.Response(
-            landingPageHtml
-              .replace(/__GRAPHIQL_LINK__/g, opts.graphqlEndpoint)
-              .replace(/__REQUEST_PATH__/g, opts.url.pathname)
-              .replace(/__SUBGRAPH_HTML__/g, subgraphHtml)
-              .replaceAll(/__PRODUCT_NAME__/g, productName)
-              .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
-              .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
-              .replace(/__PRODUCT_LINK__/, productLink)
-              .replace(/__PRODUCT_LOGO__/g, productLogo),
-            {
-              status: 200,
-              statusText: 'OK',
-              headers: {
-                'Content-Type': 'text/html',
-              },
-            },
-          ),
+      new opts.fetchAPI.Response(
+        landingPageHtml
+          .replace(/__GRAPHIQL_PATHNAME__/g, opts.graphqlEndpoint)
+          .replace(/__REQUEST_PATHNAME__/g, opts.url.pathname)
+          .replace(/__GRAPHQL_URL__/g, opts.url.origin + opts.graphqlEndpoint)
+          .replaceAll(/__PRODUCT_NAME__/g, productName)
+          .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
+          .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
+          .replace(/__PRODUCT_LINK__/, productLink),
+        {
+          status: 200,
+          statusText: 'OK',
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        },
       );
   } else if (typeof config.landingPage === 'function') {
     landingPageRenderer = config.landingPage;
@@ -1001,9 +906,9 @@ export function createGatewayRuntime<
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
-    registryPlugin,
+    reportingPlugin,
     persistedDocumentsPlugin,
-    useRetryOnSchemaReload({ logger }),
+    useRetryOnSchemaReload({ log }),
   ];
 
   if (config.subgraphErrors !== false) {
@@ -1132,23 +1037,21 @@ export function createGatewayRuntime<
 
   let isDebug: boolean = false;
 
-  if ('level' in logger) {
-    if (logger.level === 'debug' || logger.level === LogLevel.debug) {
-      isDebug = true;
-    }
+  if (config.logging === 'debug') {
+    isDebug = true;
   } else {
-    logger.debug(() => {
+    // we use the logger's debug option because the extra plugins only add more logs
+    log.debug(() => {
       isDebug = true;
-      return 'Debug mode enabled';
-    });
+    }, 'Debug mode enabled');
   }
 
   if (isDebug) {
     extraPlugins.push(
-      useSubgraphExecuteDebug(configContext),
-      useFetchDebug(configContext),
-      useDelegationPlanDebug(configContext),
-      useCacheDebug(configContext),
+      useSubgraphExecuteDebug(),
+      useFetchDebug(),
+      useDelegationPlanDebug(),
+      useCacheDebug({ log: configContext.log }),
     );
   }
 
@@ -1157,7 +1060,7 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: logger,
+    logging: log,
     plugins: [
       ...basePlugins,
       ...extraPlugins,
@@ -1196,6 +1099,7 @@ export function createGatewayRuntime<
     healthCheckEndpoint: config.healthCheckEndpoint || '/healthcheck',
     landingPage: landingPageRenderer,
     disposeOnProcessTerminate: true,
+    multipart: config.multipart ?? false,
   });
 
   fetchAPI ||= yoga.fetchAPI;
