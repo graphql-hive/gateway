@@ -90,7 +90,11 @@ import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
-import landingPageHtml from './landing-page-html';
+import {
+  iconBase64,
+  html as landingPageHtml,
+  logoSvg,
+} from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
@@ -107,7 +111,6 @@ import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
 import { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 import { useWebhooks } from './plugins/useWebhooks';
-import { defaultProductLogo } from './productLogo';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -191,13 +194,13 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  const {
-    name: reportingTarget,
-    // when using hive reporting and hive persisted documents,
-    // this plugin will contain both the registry and the persisted
-    // documents plugin
-    plugin: registryWithMaybePersistedDocumentsPlugin,
-  } = getReportingPlugin(config, configContext);
+  // when using hive reporting and hive persisted documents,
+  // this plugin will contain both the registry and the persisted
+  // documents plugin
+  const reportingWithMaybePersistedDocumentsPlugin = getReportingPlugin(
+    config,
+    configContext,
+  );
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
@@ -227,7 +230,6 @@ export function createGatewayRuntime<
       ...config.persistedDocuments,
     });
   }
-  let subgraphInformationHTMLRenderer: () => MaybePromise<string> = () => '';
 
   if ('proxy' in config) {
     const transportExecutorStack = new AsyncDisposableStack();
@@ -396,42 +398,6 @@ export function createGatewayRuntime<
       // @ts-expect-error TODO: this is illegal but somehow we want it
       unifiedGraph = undefined;
       initialFetch$ = schemaFetcher();
-    };
-    subgraphInformationHTMLRenderer = () => {
-      const endpoint = config.proxy.endpoint;
-      const htmlParts: string[] = [];
-
-      htmlParts.push(`<h2>Proxy Mode</h2>`);
-      if (config.schema) {
-        if (typeof config.schema === 'object' && 'type' in config.schema) {
-          htmlParts.push(
-            `<p>From ${config.schema.type === 'hive' ? 'Hive' : 'Unknown'} CDN</p>`,
-          );
-        } else if (isValidPath(config.schema) || isUrl(String(config.schema))) {
-          if (isUrl(String(config.schema))) {
-            htmlParts.push(
-              `<p>From <a href="${config.schema}">${config.schema}</p>`,
-            );
-          } else {
-            htmlParts.push(`<p>From <code>${config.schema}</code></p>`);
-          }
-        } else {
-          htmlParts.push(`<p>Using GraphQL Schema in Config</p>`);
-        }
-      }
-      htmlParts.push('<br>');
-      htmlParts.push(
-        `<div class="var">
-          <label for="endpoint">Endpoint</label>
-          <code id="endpoint">${endpoint}</code>
-        </div>`,
-      );
-      if (reportingTarget) {
-        htmlParts.push(
-          `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
-        );
-      }
-      return htmlParts.join('');
     };
   } else if ('subgraph' in config) {
     const subgraphInConfig = config.subgraph;
@@ -666,13 +632,10 @@ export function createGatewayRuntime<
     let unifiedGraphFetcher: (
       transportCtx: TransportContext,
     ) => MaybePromise<UnifiedGraphSchema>;
-    let supergraphLoadedPlace: string;
-
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
       if (config.supergraph.type === 'hive') {
         // hive cdn
         const { endpoint, key } = config.supergraph;
-        supergraphLoadedPlace = 'Hive CDN <br>' + endpoint;
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
@@ -690,7 +653,6 @@ export function createGatewayRuntime<
           pollingInterval: config.pollingInterval,
         });
         unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
-        supergraphLoadedPlace = graphosFetcherContainer.supergraphLoadedPlace;
       } else {
         unifiedGraphFetcher = () => {
           throw new Error(
@@ -716,12 +678,6 @@ export function createGatewayRuntime<
           config.supergraph,
           configContext,
         );
-      if (typeof config.supergraph === 'function') {
-        const fnName = config.supergraph.name || '';
-        supergraphLoadedPlace = `a custom loader ${fnName}`;
-      } else if (typeof config.supergraph === 'string') {
-        supergraphLoadedPlace = config.supergraph;
-      }
     }
 
     const instrumentedGraphFetcher = unifiedGraphFetcher;
@@ -784,78 +740,6 @@ export function createGatewayRuntime<
         return dispose(unifiedGraphManager);
       },
     };
-    subgraphInformationHTMLRenderer = () =>
-      handleMaybePromise(
-        () =>
-          handleMaybePromise(
-            () => unifiedGraphManager.getTransportEntryMap(),
-            (transportEntryMap) => ({
-              transportEntryMap,
-              loadError: undefined,
-              loaded: true,
-            }),
-            (loadError) => ({
-              transportEntryMap: {} as Record<
-                string,
-                TransportEntry<Record<string, any>>
-              >,
-              loadError,
-              loaded: false,
-            }),
-          ),
-        ({ transportEntryMap, loaded, loadError }) => {
-          const htmlParts: string[] = [];
-          htmlParts.push(`<h2>Supergraph Status</h2>`);
-          const sourceHtmlPart = supergraphLoadedPlace
-            ? `<div class="var">
-                <label for="source">Source</label>
-                <code id="source">${supergraphLoadedPlace}</code>
-              </div>`
-            : '';
-          if (loaded) {
-            htmlParts.push(`<p>✅ Loaded</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-            if (reportingTarget) {
-              htmlParts.push(
-                `<br><p>Usage Reporting Sent to <u>${reportingTarget}</u></p>`,
-              );
-            }
-            htmlParts.push(`<br>`);
-            htmlParts.push(`<table>`);
-            htmlParts.push(
-              `<tr><th>Subgraph</th><th>Transport</th><th>Location</th></tr>`,
-            );
-            for (const subgraphName in transportEntryMap) {
-              const transportEntry = transportEntryMap[subgraphName]!;
-              htmlParts.push(`<tr>`);
-              htmlParts.push(`<td>${subgraphName}</td>`);
-              htmlParts.push(`<td>${transportEntry.kind}</td>`);
-              if (transportEntry.location && isUrl(transportEntry.location)) {
-                htmlParts.push(
-                  `<td><a href="${transportEntry.location}">${transportEntry.location}</a></td>`,
-                );
-              } else {
-                htmlParts.push(
-                  `<td><code>${transportEntry.location}</code></td>`,
-                );
-              }
-              htmlParts.push(`</tr>`);
-            }
-            htmlParts.push(`</table>`);
-          } else if (loadError) {
-            htmlParts.push(`<p>❌ Failed</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-            htmlParts.push(`<br>`);
-            htmlParts.push(
-              `<pre><code>${loadError instanceof Error ? loadError.stack : JSON.stringify(loadError, null, '  ')}</code></pre>`,
-            );
-          } else {
-            htmlParts.push(`<p>⚠️ Unknown</p><br>`);
-            htmlParts.push(sourceHtmlPart);
-          }
-          return htmlParts.join('');
-        },
-      );
   }
 
   const readinessCheckPlugin = useReadinessCheck({
@@ -947,18 +831,21 @@ export function createGatewayRuntime<
 
   const productName = config.productName || 'Hive Gateway';
   const productDescription =
-    config.productDescription || 'Federated GraphQL Gateway';
+    config.productDescription ||
+    'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.';
   const productPackageName =
     config.productPackageName || '@graphql-hive/gateway';
-  const productLogo = config.productLogo || defaultProductLogo;
   const productLink =
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
+  const graphiqlLogo = `<div style="height: 20px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
 
   if (config.graphiql == null || config.graphiql === true) {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
     };
   } else if (config.graphiql === false) {
@@ -966,6 +853,8 @@ export function createGatewayRuntime<
   } else if (typeof config.graphiql === 'object') {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
       ...config.graphiql,
     };
@@ -981,11 +870,14 @@ export function createGatewayRuntime<
           if (resolvedOpts === true) {
             return {
               title: productName,
+              logo: graphiqlLogo,
               defaultQuery: defaultQueryText,
             };
           }
           return {
             title: productName,
+            logo: graphiqlLogo,
+            favicon: `data:image/png;base64,${iconBase64}`,
             defaultQuery: defaultQueryText,
             ...resolvedOpts,
           };
@@ -998,27 +890,22 @@ export function createGatewayRuntime<
 
   if (config.landingPage == null || config.landingPage === true) {
     landingPageRenderer = (opts) =>
-      handleMaybePromise(
-        subgraphInformationHTMLRenderer,
-        (subgraphHtml) =>
-          new opts.fetchAPI.Response(
-            landingPageHtml
-              .replace(/__GRAPHIQL_LINK__/g, opts.graphqlEndpoint)
-              .replace(/__REQUEST_PATH__/g, opts.url.pathname)
-              .replace(/__SUBGRAPH_HTML__/g, subgraphHtml)
-              .replaceAll(/__PRODUCT_NAME__/g, productName)
-              .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
-              .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
-              .replace(/__PRODUCT_LINK__/, productLink)
-              .replace(/__PRODUCT_LOGO__/g, productLogo),
-            {
-              status: 200,
-              statusText: 'OK',
-              headers: {
-                'Content-Type': 'text/html',
-              },
-            },
-          ),
+      new opts.fetchAPI.Response(
+        landingPageHtml
+          .replace(/__GRAPHIQL_PATHNAME__/g, opts.graphqlEndpoint)
+          .replace(/__REQUEST_PATHNAME__/g, opts.url.pathname)
+          .replace(/__GRAPHQL_URL__/g, opts.url.origin + opts.graphqlEndpoint)
+          .replaceAll(/__PRODUCT_NAME__/g, productName)
+          .replaceAll(/__PRODUCT_DESCRIPTION__/g, productDescription)
+          .replaceAll(/__PRODUCT_PACKAGE_NAME__/g, productPackageName)
+          .replace(/__PRODUCT_LINK__/, productLink),
+        {
+          status: 200,
+          statusText: 'OK',
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        },
       );
   } else if (typeof config.landingPage === 'function') {
     landingPageRenderer = config.landingPage;
@@ -1035,7 +922,7 @@ export function createGatewayRuntime<
     unifiedGraphPlugin,
     readinessCheckPlugin,
     persistedDocumentsPlugin,
-    registryWithMaybePersistedDocumentsPlugin,
+    reportingWithMaybePersistedDocumentsPlugin,
     useRetryOnSchemaReload({ log }),
   ];
 

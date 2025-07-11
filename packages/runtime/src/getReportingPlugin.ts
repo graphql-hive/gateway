@@ -11,10 +11,7 @@ import type {
 export function getReportingPlugin<TContext extends Record<string, any>>(
   config: GatewayConfig<TContext>,
   configContext: GatewayConfigContext,
-): {
-  name?: 'Hive' | 'GraphOS';
-  plugin: GatewayPlugin<TContext>;
-} {
+): GatewayPlugin<TContext> {
   if (config.reporting?.type === 'hive') {
     const { target, ...reporting } = config.reporting;
     let usage: HiveConsolePluginOptions['usage'] = reporting.usage;
@@ -27,29 +24,26 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
         ...(typeof usage === 'object' ? { ...usage } : {}),
       };
     }
-    return {
-      name: 'Hive',
-      plugin: useHiveConsole({
-        log: configContext.log.child('[useHiveConsole] '),
-        enabled: true,
-        ...reporting,
-        ...(usage ? { usage } : {}),
-        ...(config.persistedDocuments &&
-        'type' in config.persistedDocuments &&
-        config.persistedDocuments?.type === 'hive'
-          ? {
-              experimental__persistedDocuments: {
-                cdn: {
-                  endpoint: config.persistedDocuments.endpoint,
-                  accessToken: config.persistedDocuments.token,
-                },
-                allowArbitraryDocuments:
-                  !!config.persistedDocuments.allowArbitraryDocuments,
+    return useHiveConsole({
+      log: configContext.log.child('[useHiveConsole] '),
+      enabled: true,
+      ...reporting,
+      ...(usage ? { usage } : {}),
+      ...(config.persistedDocuments &&
+      'type' in config.persistedDocuments &&
+      config.persistedDocuments?.type === 'hive'
+        ? {
+            experimental__persistedDocuments: {
+              cdn: {
+                endpoint: config.persistedDocuments.endpoint,
+                accessToken: config.persistedDocuments.token,
               },
-            }
-          : {}),
-      }),
-    };
+              allowArbitraryDocuments:
+                !!config.persistedDocuments.allowArbitraryDocuments,
+            },
+          }
+        : {}),
+    });
   } else if (
     config.reporting?.type === 'graphos' ||
     (!config.reporting &&
@@ -76,16 +70,13 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       }
     }
 
-    return {
-      name: 'GraphOS',
-      // @ts-expect-error - TODO: Fix types
-      plugin: useApolloUsageReport({
-        agentVersion: `hive-gateway@${globalThis.__VERSION__}`,
-        ...config.reporting,
-      }),
-    };
+    const plugin = useApolloUsageReport({
+      agentVersion: `hive-gateway@${globalThis.__VERSION__}`,
+      ...config.reporting,
+    });
+
+    // @ts-expect-error - TODO: Fix types
+    return plugin;
   }
-  return {
-    plugin: {},
-  };
+  return {};
 }
