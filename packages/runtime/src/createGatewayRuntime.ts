@@ -76,10 +76,10 @@ import {
   mergeSchemas,
   useExecutionCancellation,
   useReadinessCheck,
+  type GraphiQLOptionsOrFactory,
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
-import type { GraphiQLOptions, PromiseOrValue } from 'graphql-yoga';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { handleLoggingConfig } from './getDefaultLogger';
 import { getProxyExecutor } from './getProxyExecutor';
@@ -123,18 +123,6 @@ import {
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
 } from './utils';
-
-// TODO: this type export is not properly accessible from graphql-yoga
-//       "graphql-yoga/typings/plugins/use-graphiql.js" is an illegal path
-export type GraphiQLOptionsOrFactory<TServerContext> =
-  | GraphiQLOptions
-  | ((
-      request: Request,
-      ...args: {} extends TServerContext
-        ? [serverContext?: TServerContext | undefined]
-        : [serverContext: TServerContext]
-    ) => PromiseOrValue<GraphiQLOptions | boolean>)
-  | boolean;
 
 export type GatewayRuntime<
   TContext extends Record<string, any> = Record<string, any>,
