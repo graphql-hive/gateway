@@ -87,7 +87,11 @@ import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
 } from './handleUnifiedGraphConfig';
-import { iconBase64, html as landingPageHtml } from './landing-page.generated';
+import {
+  iconBase64,
+  html as landingPageHtml,
+  logoSvg,
+} from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
@@ -824,10 +828,13 @@ export function createGatewayRuntime<
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
+  const graphiqlLogo = `<div style="height: 25px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
 
   if (config.graphiql == null || config.graphiql === true) {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
     };
   } else if (config.graphiql === false) {
@@ -835,6 +842,8 @@ export function createGatewayRuntime<
   } else if (typeof config.graphiql === 'object') {
     graphiqlOptionsOrFactory = {
       title: productName,
+      logo: graphiqlLogo,
+      favicon: `data:image/png;base64,${iconBase64}`,
       defaultQuery: defaultQueryText,
       ...config.graphiql,
     };
@@ -850,11 +859,14 @@ export function createGatewayRuntime<
           if (resolvedOpts === true) {
             return {
               title: productName,
+              logo: graphiqlLogo,
               defaultQuery: defaultQueryText,
             };
           }
           return {
             title: productName,
+            logo: graphiqlLogo,
+            favicon: `data:image/png;base64,${iconBase64}`,
             defaultQuery: defaultQueryText,
             ...resolvedOpts,
           };
