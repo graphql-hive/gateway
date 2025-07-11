@@ -175,7 +175,7 @@ export const gatewayConfig = defineConfig({
 function Logo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 52 53"
+      viewBox="0 1 52 51"
       fill="currentColor"
       {...props}
       xmlns="http://www.w3.org/2000/svg"
