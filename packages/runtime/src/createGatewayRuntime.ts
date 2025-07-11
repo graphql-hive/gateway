@@ -828,7 +828,7 @@ export function createGatewayRuntime<
     config.productLink || 'https://the-guild.dev/graphql/hive/docs/gateway';
 
   let graphiqlOptionsOrFactory!: GraphiQLOptionsOrFactory<unknown> | false;
-  const graphiqlLogo = `<div style="height: 25px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
+  const graphiqlLogo = `<div style="height: 20px;display: flex;margin: 0 5px 0 auto">${logoSvg}</div>`;
 
   if (config.graphiql == null || config.graphiql === true) {
     graphiqlOptionsOrFactory = {
