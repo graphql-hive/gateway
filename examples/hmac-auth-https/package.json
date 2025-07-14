@@ -20,7 +20,7 @@
     "graphql-yoga": "^5.15.1"
   },
   "devDependencies": {
-    "tsx": "^4.19.3"
+    "tsx": "^4.20.3"
   },
   "overrides": {
     "esbuild": "^0.25.5"
