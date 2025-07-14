@@ -18,7 +18,7 @@
     "@graphql-hive/gateway": "^1.15.4"
   },
   "devDependencies": {
-    "tsx": "^4.19.3",
+    "tsx": "^4.20.3",
     "@apollo/rover": "^0.34.1"
   },
   "overrides": {

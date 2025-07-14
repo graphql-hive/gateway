@@ -2,7 +2,7 @@
   "name": "@example/apq-subgraphs",
   "private": true,
   "devDependencies": {
-    "tsx": "^4.19.3"
+    "tsx": "^4.20.3"
   },
   "dependencies": {
     "@apollo/server": "^4.12.2",
