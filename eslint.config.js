@@ -1,5 +1,4 @@
-import importPlugin from // @ts-expect-error no defs
-'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import';
 import nPlugin from 'eslint-plugin-n';
 import tseslint from 'typescript-eslint';
 

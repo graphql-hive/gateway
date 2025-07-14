@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.11.2",
     "fastify": "^5.4.0",
     "graphql": "^16.10.0",
     "graphql-yoga": "^5.15.1",

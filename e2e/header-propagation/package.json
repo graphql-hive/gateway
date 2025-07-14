@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^4.12.2",
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.11.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "cors": "^2.8.5",

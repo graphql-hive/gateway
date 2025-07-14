@@ -45,12 +45,12 @@
     "graphql-ws": "^6.0.3",
     "isomorphic-ws": "^5.0.0",
     "tslib": "^2.8.1",
-    "ws": "^8.17.1"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/ws": "^8.0.0",
     "graphql": "^16.9.0",
-    "pkgroll": "2.13.1"
+    "pkgroll": "2.14.3"
   },
   "sideEffects": false
 }
