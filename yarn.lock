@@ -21022,6 +21022,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tsx@patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch":
+  version: 4.20.3
+  resolution: "tsx@patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch::version=4.20.3&hash=4c4dd9"
+  dependencies:
+    esbuild: "npm:~0.25.0"
+    fsevents: "npm:~2.3.3"
+    get-tsconfig: "npm:^4.7.5"
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    tsx: dist/cli.mjs
+  checksum: 10c0/50f9b5f9b079b439ad5f3104efb4a086bb2a8b908069e83fe329f03962687dc31d51f1ccf2a7400e0d7e923e729682007cde431c61b712b47921f1a7d10c7ad6
+  languageName: node
+  linkType: hard
+
 "tuf-js@npm:^3.0.1":
   version: 3.0.1
   resolution: "tuf-js@npm:3.0.1"

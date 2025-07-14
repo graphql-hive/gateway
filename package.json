@@ -76,6 +76,7 @@
     "jest-leak-detector": "patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.10",
+    "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
     "vite": "6.3.5"
   }
 }
