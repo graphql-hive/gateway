@@ -2,7 +2,7 @@
   "name": "@e2e/retry-timeout",
   "private": true,
   "dependencies": {
-    "@apollo/subgraph": "^2.11.0",
+    "@apollo/subgraph": "^2.11.2",
     "@graphql-hive/gateway": "workspace:*",
     "graphql": "16.11.0",
     "graphql-yoga": "^5.15.1",
