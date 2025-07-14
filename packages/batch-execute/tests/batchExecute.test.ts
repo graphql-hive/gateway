@@ -22,7 +22,9 @@ describe('batch execution', () => {
         field1: String
         field2: String
         field3(input: String): String
+        fieldNonNullable: String!
         boom(message: String): String
+        boomNonNullable(message: String): String!
         boomWithPath(message: String, path: [String]): String
         extension: String
         widget: Widget
@@ -37,6 +39,7 @@ describe('batch execution', () => {
         field2: () => '2',
         field3: (_root, { input }) => String(input),
         boom: (_root, { message }) => new Error(message),
+        boomNonNullable: (_root, { message }) => new Error(message),
         boomWithPath: (_root, { message, path }) =>
           createGraphQLError(message, { path }),
         extension: () => createGraphQLError('boom', { extensions }),
@@ -228,6 +231,35 @@ describe('batch execution', () => {
     expect(second?.errors?.length).toEqual(1);
     expect(first?.errors?.[0]?.message).toMatch(/notgonnawork/);
     expect(second?.errors?.[0]?.message).toMatch(/notgonnawork/);
+    expect(executorCalls).toEqual(1);
+  });
+
+  it('returns error for the failing non-nullable field', async () => {
+    const [first] = (await Promise.all([
+      batchExec({
+        document: parse(
+          '{ fieldNonNullable boomNonNullable(message: "failed") }',
+        ),
+      }),
+    ])) as ExecutionResult[];
+
+    expect(first?.data).toBeNull();
+    expect(first?.errors?.length).toEqual(1);
+    expect(first?.errors?.[0]?.message).toMatch(/failed/);
+    expect(executorCalls).toEqual(1);
+  });
+
+  it('returns error for the failing non-nullable field across multiple executions', async () => {
+    const [first, second] = (await Promise.all([
+      batchExec({ document: parse('{ fieldNonNullable }') }),
+      batchExec({ document: parse('{ boomNonNullable(message: "failed") }') }),
+    ])) as ExecutionResult[];
+
+    expect(first?.data).toBeNull();
+    expect(first?.errors).toBeUndefined();
+    expect(second?.data).toBeNull();
+    expect(second?.errors?.length).toEqual(1);
+    expect(second?.errors?.[0]?.message).toMatch(/failed/);
     expect(executorCalls).toEqual(1);
   });
 

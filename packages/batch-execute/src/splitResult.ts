@@ -10,7 +10,10 @@ export function splitResult(
   { data, errors }: ExecutionResult,
   numResults: number,
 ): Array<ExecutionResult> {
-  const splitResults = new Array<ExecutionResult>(numResults);
+  const splitResults: ExecutionResult[] = Array.from(
+    { length: numResults },
+    () => ({ data: null }),
+  );
 
   if (data) {
     for (const prefixedKey in data) {
