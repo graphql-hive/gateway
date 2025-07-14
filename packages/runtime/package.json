@@ -91,7 +91,7 @@
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
     "pkgroll": "2.14.3",
-    "tsx": "4.19.4"
+    "tsx": "4.20.3"
   },
   "sideEffects": false
 }
