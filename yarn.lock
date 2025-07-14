@@ -3073,6 +3073,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/load-on-init@workspace:e2e/load-on-init":
+  version: 0.0.0-use.local
+  resolution: "@e2e/load-on-init@workspace:e2e/load-on-init"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/manual-transport-def@workspace:e2e/manual-transport-def":
   version: 0.0.0-use.local
   resolution: "@e2e/manual-transport-def@workspace:e2e/manual-transport-def"
