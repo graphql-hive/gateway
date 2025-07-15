@@ -39,6 +39,16 @@
         "default": "./dist/request.js"
       }
     },
+    "./writers/json": {
+      "require": {
+        "types": "./dist/writers/json.d.cts",
+        "default": "./dist/writers/json.cjs"
+      },
+      "import": {
+        "types": "./dist/writers/json.d.ts",
+        "default": "./dist/writers/json.js"
+      }
+    },
     "./writers/logtape": {
       "require": {
         "types": "./dist/writers/logtape.d.cts",
