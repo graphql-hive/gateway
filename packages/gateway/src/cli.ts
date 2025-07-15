@@ -23,7 +23,7 @@ import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opente
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
-import { getEnvStr, isDebug } from '~internal/env';
+import { getEnvStr, isDebug, truthyEnv } from '~internal/env';
 import parseDuration from 'parse-duration';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
@@ -395,9 +395,15 @@ let cli = new Command()
   .addOption(
     new Option(
       '--jit',
-      'Enable Just-In-Time compilation of GraphQL documents',
+      'Enable Just-In-Time compilation of GraphQL documents (env: JIT)',
     ).env('JIT'),
-  );
+  )
+  .on('optionEnv:jit', function (this: Command) {
+    // we need this because commanderjs only checks for the existence of the
+    // variable, and not whether it is truthy (JIT=0 would be still true)
+    // TODO: this should be done in commanderjs itself, raise an issue
+    this.setOptionValueWithSource('jit', truthyEnv('JIT'), 'env');
+  });
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
