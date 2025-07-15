@@ -33,30 +33,30 @@ export interface AWSSignv4PluginOutgoingOptions {
 
   /**
    * ACCESS_KEY_ID
-   * @default process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY
+   * @default env.AWS_ACCESS_KEY_ID || env.AWS_ACCESS_KEY
    */
   accessKeyId?: string;
   /**
    * AWS_SECRET_ACCESS_KEY
-   * @default process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_KEY
+   * @default env.AWS_SECRET_ACCESS_KEY || env.AWS_SECRET_KEY
    */
   secretAccessKey?: string;
   /**
    * AWS_SESSION_TOKEN
-   * @default process.env.AWS_SESSION_TOKEN
+   * @default env.AWS_SESSION_TOKEN
    */
   sessionToken?: string;
   /**
    * An identifier for the assumed role session.
    *
-   * @default process.env.AWS_ROLE_ARN
+   * @default env.AWS_ROLE_ARN
    */
   roleArn?: string;
   /**
    * The Amazon Resource Names (ARNs) of the IAM managed policies that you want to use as
    * managed session policies. The policies must exist in the same account as the role.
    *
-   * @default process.env.AWS_IAM_ROLE_SESSION_NAME
+   * @default env.AWS_IAM_ROLE_SESSION_NAME
    */
   roleSessionName?: string;
 }
@@ -137,14 +137,14 @@ export interface AssumeRolePayload {
   /**
    * An identifier for the assumed role session.
    *
-   * @default process.env.AWS_ROLE_ARN
+   * @default env.AWS_ROLE_ARN
    */
   roleArn?: string;
   /**
    * The Amazon Resource Names (ARNs) of the IAM managed policies that you want to use as
    * managed session policies. The policies must exist in the same account as the role.
    *
-   * @default process.env.AWS_IAM_ROLE_SESSION_NAME
+   * @default env.AWS_IAM_ROLE_SESSION_NAME
    */
   roleSessionName?: string;
 }
@@ -152,7 +152,7 @@ export interface AssumeRolePayload {
 export interface AWSSignv4PluginIncomingOptions {
   /**
    * Callback for secretKey. You have to provide process to get proper secret or return undefined secret.
-   * By default it uses `accessKey` to get secret from `process.env.AWS_SECRET_ACCESS_KEY` or `process.env.AWS_SECRET_KEY`.
+   * By default it uses `accessKey` to get secret from `env.AWS_SECRET_ACCESS_KEY` or `env.AWS_SECRET_KEY`.
    * Should return secretKey on incoming parameters - but if secret is missing which it will be normal case when someone want to guess - you should return undefined;
    */
   secretAccessKey?: (
@@ -161,7 +161,7 @@ export interface AWSSignv4PluginIncomingOptions {
   /**
    * An identifier for the assumed role session.
    *
-   * @default process.env.AWS_ROLE_ARN
+   * @default env.AWS_ROLE_ARN
    */
   assumeRole?: (
     payload: AWSSignv4PluginIncomingPayload,

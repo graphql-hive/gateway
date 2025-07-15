@@ -1,4 +1,3 @@
-import { process } from '@graphql-mesh/cross-helpers';
 import { millisecondsToStr } from '@graphql-mesh/fusion-runtime';
 import { TransportContext } from '@graphql-mesh/transport-common';
 import {
@@ -6,6 +5,7 @@ import {
   fetchSupergraphSdlFromManagedFederation,
 } from '@graphql-tools/federation';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { getEnvStr } from '~internal/env';
 import type {
   GatewayConfigContext,
   GatewayGraphOSManagedFederationOptions,
@@ -53,7 +53,7 @@ export function createGraphOSFetcher({
   let lastSupergraphSdl: string;
   let nextFetchTime: number;
   const uplinksParam =
-    graphosOpts.upLink || process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'];
+    graphosOpts.upLink || getEnvStr('APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT');
   const uplinks =
     uplinksParam?.split(',').map((uplink) => uplink.trim()) || DEFAULT_UPLINKS;
   const graphosLogger = configContext.logger.child({ source: 'GraphOS' });

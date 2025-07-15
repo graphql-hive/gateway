@@ -29,6 +29,7 @@ import {
   type SubscriptionConfig,
 } from '@nestjs/graphql';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { isDebug } from '~internal/env';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { lexicographicSortSchema } from 'graphql';
 
@@ -82,7 +83,7 @@ export class HiveGatewayDriver<
       'Hive Gateway',
       {},
       new NestLogger('Hive Gateway'),
-      options.debug ?? truthy(process.env['DEBUG']),
+      options.debug ?? isDebug(),
     );
     const configCtx = {
       logger,
@@ -375,12 +376,4 @@ class NestJSLoggerAdapter implements GatewayLogger {
       this.isDebug,
     );
   }
-}
-
-function truthy(val: unknown) {
-  return (
-    val === true ||
-    val === 1 ||
-    ['1', 't', 'true', 'y', 'yes'].includes(String(val))
-  );
 }
