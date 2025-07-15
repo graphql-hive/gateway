@@ -1,7 +1,7 @@
 import { JSONLogger } from '@graphql-hive/logger-json';
 import { Logger } from '@graphql-mesh/types';
 import { DefaultLogger, LogLevel } from '@graphql-mesh/utils';
-import { getEnvStr } from '~internal/env';
+import { getEnvStr, getNodeEnv } from '~internal/env';
 
 export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
   const logFormat = getEnvStr('LOG_FORMAT') || (globalThis as any).LOG_FORMAT;
@@ -12,7 +12,7 @@ export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
       return new DefaultLogger(opts?.name, opts?.level);
     }
   }
-  const nodeEnv = getEnvStr('NODE_ENV') || (globalThis as any).NODE_ENV;
+  const nodeEnv = getNodeEnv();
   if (nodeEnv === 'production') {
     return new JSONLogger(opts);
   }

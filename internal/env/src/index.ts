@@ -69,6 +69,17 @@ export function getEnvBool(key: string, opts: EnvOptions = {}): boolean {
 }
 
 /**
+ * Gets the NODE_ENV environment variable.
+ *
+ * @returns Commonly 'development', 'production', 'test'; uncommonly a custom string if NODE_ENV is set to something else, or `undefined` if not set.
+ */
+export function getNodeEnv(
+  opts: EnvOptions = {},
+): 'development' | 'production' | 'test' | string | undefined {
+  return getEnvStr('NODE_ENV', opts);
+}
+
+/**
  * Converts the {@link string str} to a truthy boolean.
  *
  * Truthy values are (case-insensitive):

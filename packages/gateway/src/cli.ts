@@ -23,7 +23,7 @@ import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opente
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
-import { getEnvBool, getEnvStr, isDebug } from '~internal/env';
+import { getEnvBool, getNodeEnv, isDebug } from '~internal/env';
 import parseDuration from 'parse-duration';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
@@ -255,7 +255,7 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 // override the config file (with option defaults, config file will always be overwritten)
 const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: getEnvStr('NODE_ENV') === 'production' ? maxFork : 1,
+  fork: getNodeEnv() === 'production' ? maxFork : 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?

@@ -4,7 +4,7 @@ import {
   isAsyncIterable,
   mapAsyncIterator,
 } from '@graphql-tools/utils';
-import { getEnvStr } from '~internal/env';
+import { getNodeEnv } from '~internal/env';
 import {
   FieldNode,
   GraphQLNamedOutputType,
@@ -55,7 +55,7 @@ export interface DemandControlPluginOptions {
 export function useDemandControl<TContext extends Record<string, any>>({
   listSize = 0,
   maxCost,
-  includeExtensionMetadata = getEnvStr('NODE_ENV') === 'development',
+  includeExtensionMetadata = getNodeEnv() === 'development',
   operationTypeCost = (operationType) =>
     operationType === 'mutation' ? 10 : 0,
   fieldCost,
