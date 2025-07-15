@@ -82,12 +82,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
         | GatewayHiveCDNOptions
         | GatewayGraphOSManagedFederationOptions = './supergraph.graphql';
       if (schemaPathOrUrl) {
-        ctx.log.info(`Supergraph will be loaded from ${schemaPathOrUrl}`);
+        ctx.log.info(`Supergraph will be loaded from "${schemaPathOrUrl}"`);
         if (hiveCdnKey) {
           ctx.log.info('Using Hive CDN key');
           if (!isUrl(schemaPathOrUrl)) {
             ctx.log.error(
-              `Hive CDN endpoint must be a URL when providing --hive-cdn-key but got ${schemaPathOrUrl}`,
+              `Hive CDN endpoint must be a URL when providing --hive-cdn-key but got "${schemaPathOrUrl}"`,
             );
             process.exit(1);
           }
@@ -100,7 +100,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           ctx.log.info('Using GraphOS API key');
           if (!schemaPathOrUrl.includes('@')) {
             ctx.log.error(
-              `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant> when providing --apollo-key. Please provide a valid graph ref not ${schemaPathOrUrl}.`,
+              `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant> when providing --apollo-key. Please provide a valid graph ref not "${schemaPathOrUrl}".`,
             );
             process.exit(1);
           }
@@ -274,13 +274,12 @@ export async function runSupergraph(
     absSchemaPath = isAbsolute(supergraphPath)
       ? String(supergraphPath)
       : resolve(process.cwd(), supergraphPath);
-    log.info({ path: absSchemaPath }, 'Reading supergraph');
     try {
       await lstat(absSchemaPath);
     } catch (err) {
       log.error(
         { path: absSchemaPath, err },
-        'Could not read supergraph. Make sure the file exists.',
+        'Could not find supergraph. Make sure the file exists.',
       );
       process.exit(1);
     }
@@ -290,7 +289,7 @@ export async function runSupergraph(
     // Polling should not be enabled when watching the file
     delete config.pollingInterval;
     if (cluster.isPrimary) {
-      log.info({ path: absSchemaPath }, 'Watching supergraph for changes');
+      log.info({ path: absSchemaPath }, 'Watching supergraph file for changes');
 
       const ctrl = new AbortController();
       registerTerminateHandler((signal) => {
@@ -369,9 +368,9 @@ export async function runSupergraph(
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {
-    log.info({ path: absSchemaPath }, 'Serving local supergraph');
+    log.info({ path: absSchemaPath }, 'Loading local supergraph');
   } else if (isUrl(String(config.supergraph))) {
-    log.info({ url: config.supergraph }, 'Serving remote supergraph');
+    log.info({ url: config.supergraph }, 'Loading remote supergraph');
   } else if (
     typeof config.supergraph === 'object' &&
     'type' in config.supergraph &&
@@ -379,11 +378,13 @@ export async function runSupergraph(
   ) {
     log.info(
       { endpoint: config.supergraph.endpoint },
-      'Serving supergraph from Hive CDN',
+      'Loading supergraph from Hive CDN',
     );
   } else {
-    log.info('Serving supergraph from config');
+    log.info('Loading supergraph from config');
   }
+
+  await runtime.getSchema();
 
   await startServerForRuntime(runtime, {
     ...config,
