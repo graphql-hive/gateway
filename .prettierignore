@@ -12,5 +12,6 @@ __generated__
 /packages/importer/tests/fixtures/syntax-error.ts
 /e2e/config-syntax-error/gateway.config.ts
 /e2e/config-syntax-error/custom-resolvers.ts
+/e2e/load-on-init/malformed.graphql
 CHANGELOG.md
 /internal/heapsnapshot/dist/
