@@ -5932,6 +5932,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/env@workspace:internal/env":
+  version: 0.0.0-use.local
+  resolution: "@internal/env@workspace:internal/env"
+  languageName: unknown
+  linkType: soft
+
 "@internal/examples@workspace:internal/examples":
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
