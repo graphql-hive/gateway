@@ -64,7 +64,7 @@ export function getEnvNum(
  *
  * @returns `true` if the variable is set and is a truthy string, `false` otherwise.
  */
-export function truthyEnv(key: string, opts: EnvOptions = {}): boolean {
+export function getEnvBool(key: string, opts: EnvOptions = {}): boolean {
   return strToBool(getEnvStr(key, opts));
 }
 
@@ -92,10 +92,10 @@ export function strToBool(str: string | undefined): boolean {
  * Checks whether the `DEBUG` environment variable is {@link truthy truthyEnv}.
  */
 export function isDebug(): boolean {
-  return truthyEnv('DEBUG');
+  return getEnvBool('DEBUG');
 }
 
 /** Checks whether the `CI` environment variable is {@link truthy truthyEnv}. */
 export function isCI(): boolean {
-  return truthyEnv('CI');
+  return getEnvBool('CI');
 }
