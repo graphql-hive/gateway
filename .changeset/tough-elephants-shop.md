@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/logger': major
+'@graphql-hive/logger': patch
 ---
 
 Introducing Hive Logger
