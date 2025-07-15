@@ -3609,15 +3609,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/disable-introspection@npm:^7.0.0":
-  version: 7.1.3
-  resolution: "@envelop/disable-introspection@npm:7.1.3"
+"@envelop/disable-introspection@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@envelop/disable-introspection@npm:8.0.0"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.2.3
+    "@envelop/core": ^5.3.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/d74cfa4771f22dcad446472b076153ec0c93c3f577527c17191e5689de63b621357b62c8fb57eaad646330df20184e5c893608409db1a2cc8f0d5f812b1c8338
+  checksum: 10c0/e82386ffa688a421ac863ccecf6536c5782d6ca231c7fae28f79536d489f991e83f8acd3c160d10f6585b9f39b3ff6aebb940ff65acb14c159c47fa0d7dd4018
   languageName: node
   linkType: hard
 
@@ -4194,7 +4194,7 @@ __metadata:
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
   dependencies:
     "@envelop/core": "npm:^5.3.0"
-    "@envelop/disable-introspection": "npm:^7.0.0"
+    "@envelop/disable-introspection": "npm:^8.0.0"
     "@envelop/generic-auth": "npm:^9.0.0"
     "@graphql-hive/core": "npm:^0.13.0"
     "@graphql-hive/logger-json": "workspace:^"
