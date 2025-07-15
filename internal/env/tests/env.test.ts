@@ -1,5 +1,5 @@
 import { it } from 'vitest';
-import { env } from '../src/index';
+import { truthyEnv } from '../src/index';
 
 it.for([
   { variable: '1', truthy: true },
@@ -29,11 +29,11 @@ it.for([
   'should parse truthy variable $variable as $truthy',
   ({ variable, truthy }, { expect }) => {
     expect(
-      env('TEST_VAR', {
+      truthyEnv('TEST_VAR', {
         globalThis: {
           TEST_VAR: variable,
         },
-      }).truthy(),
+      }),
     ).toBe(truthy);
   },
 );

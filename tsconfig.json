@@ -11,7 +11,6 @@
     "exactOptionalPropertyTypes": false,
     // packages
     "paths": {
-      "@internal/env": ["./internal/env/src/index.ts"],
       "@internal/testing": ["./internal/testing/src/index.ts"],
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@internal/proc": ["./internal/proc/src/index.ts"],
@@ -78,7 +77,9 @@
       ],
       "@graphql-hive/nestjs": ["./packages/nestjs/src/index.ts"],
       "@graphql-hive/signal": ["./packages/signal/src/index.ts"],
-      "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"]
+      "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"],
+      // paths starting with ~ are used by published packages and will be bundled
+      "~internal/env": ["./internal/env/src/index.ts"]
     }
   },
   "include": [
