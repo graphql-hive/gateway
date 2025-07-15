@@ -1,7 +1,7 @@
-import { it } from 'vitest';
+import { expect, it } from 'vitest';
 import { getEnvBool } from '../src/index';
 
-it.for([
+it.each([
   { variable: '1', truthy: true },
   { variable: 'true', truthy: true },
   { variable: 't', truthy: true },
@@ -27,7 +27,7 @@ it.for([
   { variable: 'whatever', truthy: false },
 ])(
   'should parse truthy variable $variable as $truthy',
-  ({ variable, truthy }, { expect }) => {
+  ({ variable, truthy }) => {
     expect(
       getEnvBool('TEST_VAR', {
         globalThis: {
