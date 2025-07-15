@@ -21,7 +21,6 @@
 '@graphql-hive/importer': major
 '@graphql-hive/gateway': major
 '@graphql-hive/gateway-runtime': major
-'@graphql-hive/logger': major
 '@graphql-hive/nestjs': major
 '@graphql-hive/pubsub': major
 '@graphql-hive/signal': major
