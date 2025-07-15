@@ -13,7 +13,7 @@
     "@types/ws": "^8",
     "express": "^5.0.0",
     "graphql-sse": "^2.5.3",
-    "graphql-ws": "^6.0.2",
+    "graphql-ws": "^6.0.6",
     "ws": "^8.18.3",
     "@graphql-hive/gateway": "^1.15.4"
   },
