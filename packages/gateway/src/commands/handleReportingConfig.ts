@@ -40,7 +40,8 @@ export function handleReportingConfig(
     ...confOpts,
     ...cliOpts,
     hiveTarget:
-      cliOpts.hiveTarget ?? cliOpts.hiveUsageTarget ?? confOpts.hiveTarget,
+      // cli arguments always take precedence over config
+      confOpts.hiveTarget ?? cliOpts.hiveTarget ?? cliOpts.hiveUsageTarget,
   };
 
   if (cliOpts.hiveRegistryToken && cliOpts.hiveUsageAccessToken) {
@@ -80,7 +81,7 @@ export function handleReportingConfig(
     (opts.hiveAccessToken ||
       opts.hiveUsageAccessToken ||
       opts.hiveTraceAccessToken) &&
-    !opts.hiveUsageTarget
+    !opts.hiveTarget
   ) {
     ctx.log.error(
       'Hive access token needs a target. Please provide it through the "--hive-target <target>" option or the config.',
