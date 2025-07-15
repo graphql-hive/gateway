@@ -3,8 +3,8 @@ import { resolve } from 'path';
 import type { Config } from 'jest';
 import JSON5 from 'json5';
 import { pathsToModuleNameMapper } from 'ts-jest';
+import { isCI } from './internal/env/src/index';
 
-const isCI = !!process.env['CI'];
 const rootDir = __dirname;
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
 const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
@@ -24,7 +24,10 @@ export default {
   reporters: ['default'],
   modulePathIgnorePatterns: ['dist'],
   collectCoverage: false,
-  cacheDirectory: resolve(rootDir, `${isCI ? '' : 'node_modules/'}.cache/jest`),
+  cacheDirectory: resolve(
+    rootDir,
+    `${isCI() ? '' : 'node_modules/'}.cache/jest`,
+  ),
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.m?(t|j)s?$': 'babel-jest',
