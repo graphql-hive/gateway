@@ -186,12 +186,14 @@ export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {
-    log.info(`Serving local subgraph from ${absSchemaPath}`);
+    log.info(`Loading local subgraph from ${absSchemaPath}`);
   } else if (isUrl(String(config.subgraph))) {
-    log.info(`Serving remote subgraph from ${config.subgraph}`);
+    log.info(`Loading remote subgraph from ${config.subgraph}`);
   } else {
-    log.info('Serving subgraph from config');
+    log.info('Loading subgraph from config');
   }
+
+  await runtime.getSchema();
 
   await startServerForRuntime(runtime, {
     ...config,

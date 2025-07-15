@@ -345,10 +345,6 @@ export function createGatewayRuntime<
             continuePolling();
             return true;
           },
-          (err) => {
-            configContext.log.warn(`Failed to introspect schema`, err);
-            return true;
-          },
         );
       };
     }

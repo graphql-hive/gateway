@@ -206,9 +206,13 @@ export async function runProxy({ log }: CLIContext, config: ProxyConfig) {
     return;
   }
 
-  log.info(`Proxying requests to ${config.proxy.endpoint}`);
-
   const runtime = createGatewayRuntime(config);
+
+  log.info({ endpoint: config.proxy.endpoint }, 'Loading schema');
+
+  await runtime.getSchema();
+
+  log.info({ endpoint: config.proxy.endpoint }, 'Proxying requests');
 
   await startServerForRuntime(runtime, {
     ...config,

@@ -3188,6 +3188,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/load-on-init@workspace:e2e/load-on-init":
+  version: 0.0.0-use.local
+  resolution: "@e2e/load-on-init@workspace:e2e/load-on-init"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/location-string-interpolation@workspace:e2e/location-string-interpolation":
   version: 0.0.0-use.local
   resolution: "@e2e/location-string-interpolation@workspace:e2e/location-string-interpolation"
