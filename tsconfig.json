@@ -79,7 +79,8 @@
       "@graphql-hive/signal": ["./packages/signal/src/index.ts"],
       "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"],
       // paths starting with ~ are used by published packages and will be bundled
-      "~internal/env": ["./internal/env/src/index.ts"]
+      "~internal/env": ["./internal/env/src/index.ts"],
+      "~internal/env/node": ["./internal/env/src/node.ts"]
     }
   },
   "include": [

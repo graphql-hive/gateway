@@ -16,7 +16,7 @@ export interface EnvOptions {
  *
  * If the variable is set, it will also trim the value removing any empty spaces.
  */
-export function getEnv(key: string, opts: EnvOptions = {}) {
+export function getEnv(key: string, opts: EnvOptions = {}): string | undefined {
   const globalThat = opts.globalThis ?? globalThis;
   let variable: string | undefined =
     globalThat.process?.env?.[key] ||
@@ -35,7 +35,7 @@ export function getEnv(key: string, opts: EnvOptions = {}) {
 }
 
 /**
- * Parses the {@link getEnv environment variable} as a truthy boolean.
+ * Parses the {@link getEnv environment variable} as a {@link strToBool truthy string}.
  *
  * Truthy values are (case-insensitive):
  *   - `1`
@@ -48,8 +48,38 @@ export function getEnv(key: string, opts: EnvOptions = {}) {
  *
  * If the variable is not set or is any other string than truthy, it returns `false`.
  */
-export function truthyEnv(key: string, opts: EnvOptions = {}) {
+export function truthyEnv(key: string, opts: EnvOptions = {}): boolean {
+  return strToBool(getEnv(key, opts));
+}
+
+/**
+ * Converts the {@link string str} to a truthy boolean.
+ *
+ * Truthy values are (case-insensitive):
+ *   - `1`
+ *   - `true`
+ *   - `t`
+ *   - `yes`
+ *   - `y`
+ *   - `on`
+ *   - `enabled`
+ *
+ * If the variable is not set or is any other string than truthy, it returns `false`.
+ */
+export function strToBool(str: string | undefined): boolean {
   return ['1', 't', 'true', 'y', 'yes', 'on', 'enabled'].includes(
-    (getEnv(key, opts) || '').toLowerCase(),
+    (str || '').toLowerCase(),
   );
+}
+
+/**
+ * Checks whether the `DEBUG` environment variable is {@link truthy truthyEnv}.
+ */
+export function isDebug(): boolean {
+  return truthyEnv('DEBUG');
+}
+
+/** Checks whether the `CI` environment variable is {@link truthy truthyEnv}. */
+export function isCI(): boolean {
+  return truthyEnv('CI');
 }

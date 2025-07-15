@@ -1,7 +1,8 @@
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { boolEnv, isCI, isNotPlatform } from './internal/testing/src/env';
+import { isCI, truthyEnv } from './internal/env/src/index';
+import { isNotPlatform } from './internal/env/src/node';
 
 // By default, Vite bypasses node_packages to native Node; meaning, imports to
 // packages that match the tsconfig paths wont work because Node will require the
@@ -47,7 +48,7 @@ export default defineConfig({
           ],
           hookTimeout: testTimeout,
           testTimeout,
-          retry: boolEnv('CI') ? 3 : 0,
+          retry: truthyEnv('CI') ? 3 : 0,
         },
       },
       {

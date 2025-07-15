@@ -152,7 +152,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         calmdown,
         runs,
         server,
-        pipeLogs: isDebug('memtest') ? 'loadtest.out' : undefined,
+        pipeLogs: isDebug() ? 'loadtest.out' : undefined,
         async onMemorySample(samples) {
           if (flags.includes('chart')) {
             const chart = createMemorySampleLineChart(samples);

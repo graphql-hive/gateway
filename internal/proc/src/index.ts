@@ -33,7 +33,7 @@ export interface ProcOptions {
    *
    * Useful for debugging.
    *
-   * @default boolEnv('DEBUG')
+   * @default truthyEnv('DEBUG')
    */
   pipeLogs?: boolean | string;
   /**
@@ -56,7 +56,7 @@ interface SpawnOptions extends ProcOptions {
 export function spawn(
   {
     cwd,
-    pipeLogs = isDebug(),
+    pipeLogs,
     env = {},
     shell,
     signal,
@@ -182,7 +182,7 @@ export function spawn(
 
 /** Maybe pipes the log entry to the stderr of the current process, or appends it to a file relative to the {@link cwd} - if {@link pipeLogs} is a `string`. */
 function pipeLog(
-  { cwd, pipeLogs }: { cwd: string; pipeLogs: boolean | string },
+  { cwd, pipeLogs }: { cwd: string; pipeLogs: boolean | string | undefined },
   log: string,
 ) {
   if (pipeLogs === true) {

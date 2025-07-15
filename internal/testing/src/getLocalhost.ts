@@ -1,5 +1,5 @@
 import { fetch } from '@whatwg-node/fetch';
-import { isDebug } from './env';
+import { isDebug } from '~internal/env';
 
 export const hostnames = ['0.0.0.0', '127.0.0.1', 'localhost'];
 
