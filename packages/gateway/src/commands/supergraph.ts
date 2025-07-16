@@ -60,6 +60,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,
+        hiveTraceEndpoint,
         maskedErrors,
         apolloGraphRef,
         apolloKey,
@@ -81,6 +82,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveAccessToken,
         hiveTarget,
         hiveTraceAccessToken,
+        hiveTraceEndpoint,
       });
 
       const loadedConfig = await loadConfig({

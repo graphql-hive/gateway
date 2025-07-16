@@ -7,11 +7,14 @@ export async function handleOpenTelemetryConfig(
     hiveAccessToken: string | undefined; // TODO: Use it to enable tracing by default once stable
     hiveTarget: string | undefined;
     hiveTraceAccessToken: string | undefined;
+    hiveTraceEndpoint: string | undefined;
     openTelemetryExporterType: 'otlp-http' | 'otlp-grpc' | undefined;
     openTelemetry: boolean | string | undefined;
   },
 ) {
   const accessToken = cliOpts.hiveTraceAccessToken; // TODO: also use value of hiveAccessToken
+  const endpoint =
+    cliOpts.hiveTraceEndpoint ?? `https://api.graphql-hive.com/otel/v1/traces`;
   const target = cliOpts.hiveTarget;
   const openTelemetry = cliOpts.openTelemetry;
   const exporterType = cliOpts.openTelemetryExporterType ?? 'otlp-http';
@@ -40,10 +43,12 @@ export async function handleOpenTelemetryConfig(
         process.exit(1);
       }
 
+      ctx.log.debug('Hive tracing is enabled for endpont %s', endpoint);
       processors.push(
         new HiveTracingSpanProcessor({
           accessToken,
           target,
+          endpoint,
         }),
       );
     }
