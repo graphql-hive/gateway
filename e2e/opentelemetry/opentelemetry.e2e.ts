@@ -886,7 +886,7 @@ describe('OpenTelemetry', () => {
                   value: 'Syntax Error: Expected Name, found <EOF>.',
                 }),
                 expect.objectContaining({
-                  key: 'graphql.error.count',
+                  key: 'hive.graphql.error.count',
                   value: 1,
                 }),
               ]),
@@ -966,7 +966,7 @@ describe('OpenTelemetry', () => {
                     'Cannot query field "nonExistentField" on type "Query".',
                 }),
                 expect.objectContaining({
-                  key: 'graphql.error.count',
+                  key: 'hive.graphql.error.count',
                   value: 1,
                 }),
               ]),
