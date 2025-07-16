@@ -395,6 +395,12 @@ let cli = new Command()
       `Hive registry access token for tracing. Enables Hive tracing. Requires the "--hive-target <target>" option. It can't be used together with "--hive-access-token"`,
     ).env('HIVE_TRACE_ACCESS_TOKEN'),
   )
+  .addOption(
+    new Option(
+      '--hive-trace-endpoint <endpoint>',
+      `Hive registry trascing endpoint.`,
+    ).env('HIVE_TRACE_ENDPOINT'),
+  )
   .option(
     '--hive-persisted-documents-endpoint <endpoint>',
     '[EXPERIMENTAL] Hive CDN endpoint for fetching the persisted documents. Requires the "--hive-persisted-documents-token <token>" option',
