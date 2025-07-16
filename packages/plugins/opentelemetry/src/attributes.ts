@@ -21,12 +21,14 @@ export {
 export const SEMATTRS_GRAPHQL_DOCUMENT = 'graphql.document';
 export const SEMATTRS_GRAPHQL_OPERATION_TYPE = 'graphql.operation.type';
 export const SEMATTRS_GRAPHQL_OPERATION_NAME = 'graphql.operation.name';
-export const SEMATTRS_GRAPHQL_OPERATION_HASH = 'graphql.operation.hash';
-export const SEMATTRS_GRAPHQL_ERROR_COUNT = 'graphql.error.count';
-export const SEMATTRS_GRAPHQL_ERROR_CODES = 'graphql.error.codes';
 
-// Gateway-specific attributes
+// GraphQL-specific-non-standard attributes
+export const SEMATTRS_GRAPHQL_OPERATION_HASH = 'hive.graphql.operation.hash';
+export const SEMATTRS_GRAPHQL_ERROR_COUNT = 'hive.graphql.error.count';
+export const SEMATTRS_GRAPHQL_ERROR_CODES = 'hive.graphql.error.codes';
+
+// Hive Gateway-specific attributes
 export const SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME =
-  'gateway.upstream.subgraph.name';
+  'hive.gateway.upstream.subgraph.name';
 export const SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES =
-  'gateway.operation.subgraph.names';
+  'hive.gateway.operation.subgraph.names';

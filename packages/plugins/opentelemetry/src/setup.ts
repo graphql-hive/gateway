@@ -95,7 +95,7 @@ type OpentelemetrySetupOptions = TracingOptions &
   };
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  if (getEnvVar('OTEL_SDK_DISABLED', false) === 'true') {
+  if (getEnvVar('OTEL_SDK_DISABLED', 'false') === 'true') {
     return;
   }
 
