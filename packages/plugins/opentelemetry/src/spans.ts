@@ -34,14 +34,14 @@ import {
   isRetryExecutionRequest,
 } from '../../../runtime/src/plugins/useUpstreamRetry';
 import {
-  SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-  SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
   SEMATTRS_GRAPHQL_DOCUMENT,
-  SEMATTRS_GRAPHQL_ERROR_CODES,
-  SEMATTRS_GRAPHQL_ERROR_COUNT,
-  SEMATTRS_GRAPHQL_OPERATION_HASH,
   SEMATTRS_GRAPHQL_OPERATION_NAME,
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
+  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
   SEMATTRS_HTTP_CLIENT_IP,
   SEMATTRS_HTTP_HOST,
   SEMATTRS_HTTP_METHOD,
@@ -135,10 +135,9 @@ export function setParamsAttributes(input: {
   }
 
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, params.query ?? '<undefined>');
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    params.operationName ?? 'Anonymous',
-  );
+  if (params.operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, params.operationName);
+  }
 }
 
 export type OperationHashingFn = (input: {
@@ -176,18 +175,21 @@ export function setExecutionAttributesOnOperationSpan(input: {
       args.document,
       args.operationName || undefined,
     );
-    const operationName = operation.name?.value ?? 'Anonymous';
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+
     const document = defaultPrintFn(args.document);
+    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
 
     const hash = hashOperationFn?.({ ...args });
     if (hash) {
-      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_HASH, hash);
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH, hash);
     }
 
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
-    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
-    span.updateName(`graphql.operation ${operationName}`);
+    const operationName = operation.name?.value;
+    if (operationName) {
+      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+      span.updateName(`graphql.operation ${operationName}`);
+    }
   }
 }
 
@@ -230,14 +232,15 @@ export function setGraphQLParseAttributes(input: {
     return;
   }
 
-  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query ?? '<empty>');
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    input.operationName ?? 'Anonymous',
-  );
+  if (input.query) {
+    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query);
+  }
+  if (input.operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, input.operationName);
+  }
 
   if (input.result instanceof Error) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
   }
 }
 
@@ -277,7 +280,7 @@ export function setGraphQLValidateAttributes(input: {
       message: result.message,
     });
   } else if (Array.isArray(result) && result.length > 0) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.map((e) => e.message).join(', '),
@@ -316,16 +319,15 @@ export function setGraphQLExecutionAttributes(input: {
     args.document,
     args.operationName || undefined,
   );
-
   span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    operation.name?.value ?? 'Anonymous',
-  );
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_DOCUMENT,
-    defaultPrintFn(input.args.document),
-  );
+
+  const operationName = operation.name?.value;
+  if (operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+  }
+
+  const document = defaultPrintFn(input.args.document);
+  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
 }
 
 export function setGraphQLExecutionResultAttributes(input: {
@@ -341,7 +343,7 @@ export function setGraphQLExecutionResultAttributes(input: {
 
   if (input.subgraphNames) {
     span.setAttribute(
-      SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+      SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
       input.subgraphNames,
     );
   }
@@ -351,7 +353,7 @@ export function setGraphQLExecutionResultAttributes(input: {
     result.errors &&
     result.errors.length > 0
   ) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.errors.map((e) => e.message).join(', '),
@@ -362,7 +364,7 @@ export function setGraphQLExecutionResultAttributes(input: {
       span.recordException(error);
       codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
     }
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_CODES, codes);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
   }
 }
 
@@ -381,12 +383,12 @@ export function createSubgraphExecuteSpan(input: {
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operation.name?.value ?? 'Anonymous',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operation.name?.value,
         [SEMATTRS_GRAPHQL_DOCUMENT]: defaultPrintFn(
           input.executionRequest.document,
         ),
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
-        [SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
+        [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
       },
       kind: SpanKind.CLIENT,
     },

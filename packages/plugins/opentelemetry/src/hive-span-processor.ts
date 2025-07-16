@@ -10,9 +10,9 @@ import {
 import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
 import { SEMATTRS_HTTP_METHOD } from '@opentelemetry/semantic-conventions';
 import {
-  SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-  SEMATTRS_GRAPHQL_ERROR_CODES,
-  SEMATTRS_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
 } from './attributes';
 
 export type HiveTracingSpanProcessorOptions =
@@ -152,12 +152,12 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     }
 
     if (span.name === 'graphql.execute') {
-      copyAttribute(span, operationSpan, SEMATTRS_GRAPHQL_ERROR_CODES);
-      copyAttribute(span, operationSpan, SEMATTRS_GRAPHQL_ERROR_COUNT);
+      copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_CODES);
+      copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT);
       copyAttribute(
         span,
         operationSpan,
-        SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+        SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
       );
     }
 

@@ -5,14 +5,14 @@ import {
   HiveTracingSpanProcessor,
   OpenTelemetryLogWriter,
   openTelemetrySetup,
-  SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-  SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
   SEMATTRS_GRAPHQL_DOCUMENT,
-  SEMATTRS_GRAPHQL_ERROR_CODES,
-  SEMATTRS_GRAPHQL_ERROR_COUNT,
-  SEMATTRS_GRAPHQL_OPERATION_HASH,
   SEMATTRS_GRAPHQL_OPERATION_NAME,
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
+  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
   SEMATTRS_HTTP_HOST,
   SEMATTRS_HTTP_METHOD,
   SEMATTRS_HTTP_ROUTE,
@@ -418,10 +418,10 @@ describe('useOpenTelemetry', () => {
       const expected = {
         http: {
           root: 'POST /graphql',
-          children: ['graphql.operation Anonymous'],
+          children: ['graphql.operation'],
         },
         graphql: {
-          root: 'graphql.operation Anonymous',
+          root: 'graphql.operation',
           children: [
             'graphql.parse',
             'graphql.validate',
@@ -459,7 +459,7 @@ describe('useOpenTelemetry', () => {
           const expectedCustomSpans = {
             http: { root: 'POST /graphql', children: ['custom.request'] },
             graphql: {
-              root: 'graphql.operation Anonymous',
+              root: 'graphql.operation',
               children: ['custom.operation'],
             },
             parse: { root: 'graphql.parse', children: ['custom.parse'] },
@@ -573,7 +573,7 @@ describe('useOpenTelemetry', () => {
           await gateway.query();
           const rootSpan = spanExporter.assertRoot('POST /graphql');
           const subgraphSpan = rootSpan
-            .expectChild('graphql.operation Anonymous')
+            .expectChild('graphql.operation')
             .expectChild('graphql.execute')
             .expectChild('subgraph.execute (upstream)');
 
@@ -771,7 +771,7 @@ describe('useOpenTelemetry', () => {
       const expectedCustomSpans = {
         http: { root: 'POST /graphql', children: ['custom.request'] },
         graphql: {
-          root: 'graphql.operation Anonymous',
+          root: 'graphql.operation',
           children: ['custom.operation'],
         },
         parse: { root: 'graphql.parse', children: ['custom.parse'] },
@@ -1077,7 +1077,7 @@ describe('useOpenTelemetry', () => {
 
         const expectedLogs = {
           'POST /graphql': 'onRequest',
-          'graphql.operation Anonymous': 'onParams',
+          'graphql.operation': 'onParams',
           'graphql.parse': 'onParse',
           'graphql.validate': 'onValidate',
           'graphql.context': 'onContextBuilding',
@@ -1198,12 +1198,13 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
-        [SEMATTRS_GRAPHQL_OPERATION_HASH]: 'd40f732de805d03db6284b9b8c6c6f0b',
-        [SEMATTRS_GRAPHQL_ERROR_COUNT]: 1,
-        [SEMATTRS_GRAPHQL_ERROR_CODES]: ['DOWNSTREAM_SERVICE_ERROR'],
+        [SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH]:
+          'd40f732de805d03db6284b9b8c6c6f0b',
+        [SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT]: 1,
+        [SEMATTRS_HIVE_GRAPHQL_ERROR_CODES]: ['DOWNSTREAM_SERVICE_ERROR'],
 
         // Execution Attributes
-        [SEMATTRS_GATEWAY_OPERATION_SUBGRAPH_NAMES]: ['upstream'],
+        [SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES]: ['upstream'],
       });
 
       // Subgraph Execution Span
@@ -1225,7 +1226,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 
         // Federation attributes
-        [SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',
+        [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',
       });
     });
   });
