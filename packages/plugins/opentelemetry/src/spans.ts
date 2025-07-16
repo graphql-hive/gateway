@@ -137,7 +137,7 @@ export function setParamsAttributes(input: {
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, params.query ?? '<undefined>');
   span.setAttribute(
     SEMATTRS_GRAPHQL_OPERATION_NAME,
-    params.operationName ?? 'Anonymous',
+    params.operationName ?? '',
   );
 }
 
@@ -159,7 +159,8 @@ export const defaultOperationHashingFn: OperationHashingFn = (input) => {
     documentNode: input.document,
     operationName: input.operationName ?? null,
     schema: input.schema,
-    variables: input.variableValues ?? null,
+    // NOTE: we should make this configurable at some point.
+    variables: null,
     typeInfo,
   });
 };
@@ -176,7 +177,7 @@ export function setExecutionAttributesOnOperationSpan(input: {
       args.document,
       args.operationName || undefined,
     );
-    const operationName = operation.name?.value ?? 'Anonymous';
+    const operationName = operation.name?.value;
     const document = defaultPrintFn(args.document);
 
     const hash = hashOperationFn?.({ ...args });
@@ -185,9 +186,9 @@ export function setExecutionAttributesOnOperationSpan(input: {
     }
 
     span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName ?? '');
     span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
-    span.updateName(`graphql.operation ${operationName}`);
+    span.updateName(`graphql.operation ${operationName ?? '<Anonymous>'}`);
   }
 }
 
@@ -231,10 +232,7 @@ export function setGraphQLParseAttributes(input: {
   }
 
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query ?? '<empty>');
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    input.operationName ?? 'Anonymous',
-  );
+  span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, input.operationName ?? '');
 
   if (input.result instanceof Error) {
     span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
@@ -320,7 +318,7 @@ export function setGraphQLExecutionAttributes(input: {
   span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
   span.setAttribute(
     SEMATTRS_GRAPHQL_OPERATION_NAME,
-    operation.name?.value ?? 'Anonymous',
+    operation.name?.value ?? '',
   );
   span.setAttribute(
     SEMATTRS_GRAPHQL_DOCUMENT,
@@ -381,7 +379,7 @@ export function createSubgraphExecuteSpan(input: {
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operation.name?.value ?? 'Anonymous',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operation.name?.value ?? '',
         [SEMATTRS_GRAPHQL_DOCUMENT]: defaultPrintFn(
           input.executionRequest.document,
         ),
