@@ -76,7 +76,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         `Starting ${ctx.productName} ${ctx.version} with supergraph`,
       );
 
-      await handleOpenTelemetryConfig(ctx, {
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryConfig(ctx, {
         openTelemetry: opentelemetry,
         openTelemetryExporterType: opentelemetryExporterType,
         hiveAccessToken,
@@ -204,7 +204,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           ...loadedConfig,
           ...opts,
-          openTelemetry: opentelemetry
+          openTelemetry: openTelemetryEnabledByCLI
             ? { ...loadedConfig.openTelemetry, traces: true }
             : loadedConfig.openTelemetry,
         },

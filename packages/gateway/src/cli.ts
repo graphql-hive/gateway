@@ -397,8 +397,10 @@ let cli = new Command()
   .addOption(
     new Option(
       '--hive-trace-endpoint <endpoint>',
-      `Hive registry trascing endpoint.`,
-    ).env('HIVE_TRACE_ENDPOINT'),
+      `Hive registry tracing endpoint.`,
+    )
+      .env('HIVE_TRACE_ENDPOINT')
+      .default(`https://api.graphql-hive.com/otel/v1/traces`),
   )
   .option(
     '--hive-persisted-documents-endpoint <endpoint>',

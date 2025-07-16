@@ -57,7 +57,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       // Handle hive OTEL tracing before loading config so that the tracer provider is registered
       // if users needs it in a custom plugin.
-      await handleOpenTelemetryConfig(ctx, {
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryConfig(ctx, {
         openTelemetry: opentelemetry,
         openTelemetryExporterType: opentelemetryExporterType,
         hiveTarget,
@@ -110,7 +110,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           ...loadedConfig,
           ...opts,
-          openTelemetry: opentelemetry
+          openTelemetry: openTelemetryEnabledByCLI
             ? { ...loadedConfig.openTelemetry, traces: true }
             : loadedConfig.openTelemetry,
         },
