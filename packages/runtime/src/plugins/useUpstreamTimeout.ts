@@ -1,5 +1,4 @@
 import { abortSignalAny } from '@graphql-hive/signal';
-import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
@@ -127,9 +126,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
       return undefined;
     },
     onFetch({ url, executionRequest, options, setOptions }) {
-      const subgraphName =
-        executionRequest &&
-        subgraphNameByExecutionRequest.get(executionRequest);
+      const subgraphName = executionRequest?.subgraphName;
       if (
         !executionRequest ||
         !timeoutSignalsByExecutionRequest.has(executionRequest)
