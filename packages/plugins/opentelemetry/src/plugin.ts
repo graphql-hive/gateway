@@ -662,7 +662,7 @@ export function useOpenTelemetry(
           ],
         });
 
-      pluginLogger = log.child('[useOpenTelemetry]');
+      pluginLogger = log.child('[OpenTelemetry] ');
 
       if (options.configureDiagLogger !== false) {
         const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does

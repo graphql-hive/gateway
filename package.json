@@ -12,6 +12,7 @@
   ],
   "packageManager": "yarn@4.9.2",
   "scripts": {
+    "start": "yarn workspace @graphql-hive/gateway start",
     "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
     "bundle": "yarn workspaces foreach -A -p run bundle",

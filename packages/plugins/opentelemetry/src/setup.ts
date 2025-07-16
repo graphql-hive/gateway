@@ -40,6 +40,7 @@ import { getEnvVar } from './utils';
 export * from './attributes';
 export * from './log-writer';
 export * from './hive-span-processor';
+export { getEnvVar };
 
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
