@@ -393,7 +393,7 @@ describe('useOpenTelemetry', () => {
       expect(exporter).toBeInstanceOf(OTLPTraceExporter);
       // @ts-expect-error Access of private field
       expect(exporter._delegate._transport._transport._parameters.url).toBe(
-        'https://app.graphql-hive.com/opentelemetry/v1/traces',
+        'http://localhost:4318/v1/traces',
       );
     });
   });
