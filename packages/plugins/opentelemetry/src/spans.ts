@@ -158,7 +158,7 @@ export const defaultOperationHashingFn: OperationHashingFn = (input) => {
     documentNode: input.document,
     operationName: input.operationName ?? null,
     schema: input.schema,
-    variables: input.variableValues ?? null,
+    variables: null, // Unstable feature, not using it for now
     typeInfo,
   });
 };
