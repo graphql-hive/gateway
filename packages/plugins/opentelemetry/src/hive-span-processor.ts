@@ -19,6 +19,7 @@ export type HiveTracingSpanProcessorOptions =
   | {
       target: string;
       accessToken: string;
+      endpoint: string;
       batching?: BufferConfig;
       processor?: never;
     }
@@ -44,7 +45,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     } else {
       this.processor = new BatchSpanProcessor(
         new OTLPTraceExporter({
-          url: `https://app.graphql-hive.com/opentelemetry/v1/traces`,
+          url: config.endpoint,
           headers: {
             Authorization: `Bearer ${config.accessToken}`,
             'X-Hive-Target-Ref': config.target,

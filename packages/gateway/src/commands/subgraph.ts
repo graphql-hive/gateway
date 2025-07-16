@@ -47,6 +47,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveAccessToken,
         hiveUsageAccessToken,
         hiveTraceAccessToken,
+        hiveTraceEndpoint,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
@@ -62,6 +63,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         hiveTarget,
         hiveAccessToken,
         hiveTraceAccessToken,
+        hiveTraceEndpoint,
       });
 
       const loadedConfig = await loadConfig({
