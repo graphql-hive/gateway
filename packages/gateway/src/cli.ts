@@ -362,7 +362,7 @@ let cli = new Command()
   .addOption(
     new Option(
       '--hive-registry-token <token>',
-      '[DEPRECATED: please use "--hive-target" and "--hive-access-token"] Hive registry token for usage metrics reporting',
+      '[DEPRECATED] please use "--hive-target" and "--hive-access-token"',
     ).env('HIVE_REGISTRY_TOKEN'),
   )
   .addOption(
