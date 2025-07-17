@@ -45,6 +45,7 @@
   "dependencies": {
     "@envelop/core": "^5.3.0",
     "@envelop/instrumentation": "^1.0.0",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.7",

@@ -4,6 +4,7 @@ import { isAbsolute, resolve } from 'node:path';
 import { Option } from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
+  createLoggerFromLogging,
   type GatewayConfigSupergraph,
   type GatewayGraphOSManagedFederationOptions,
   type GatewayHiveCDNOptions,
@@ -29,7 +30,6 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleLoggingConfig } from './handleLoggingOption';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -66,6 +66,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
       // TODO: move to optsWithGlobals once https://github.com/commander-js/extra-typings/pull/76 is merged
       const { apolloUplink } = this.opts();
 
+      ctx.log.info(
+        `Starting ${ctx.productName} ${ctx.version} with supergraph`,
+      );
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -76,15 +80,14 @@ export const addCommand: AddCommand = (ctx, cli) =>
       let supergraph:
         | UnifiedGraphConfig
         | GatewayHiveCDNOptions
-        | GatewayGraphOSManagedFederationOptions = 'supergraph.graphql';
+        | GatewayGraphOSManagedFederationOptions = './supergraph.graphql';
       if (schemaPathOrUrl) {
         ctx.log.info(`Supergraph will be loaded from ${schemaPathOrUrl}`);
         if (hiveCdnKey) {
-          ctx.log.info(`Using Hive CDN key`);
+          ctx.log.info('Using Hive CDN key');
           if (!isUrl(schemaPathOrUrl)) {
             ctx.log.error(
-              'Hive CDN endpoint must be a URL when providing --hive-cdn-key but got ' +
-                schemaPathOrUrl,
+              `Hive CDN endpoint must be a URL when providing --hive-cdn-key but got ${schemaPathOrUrl}`,
             );
             process.exit(1);
           }
@@ -94,7 +97,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
             key: hiveCdnKey,
           };
         } else if (apolloKey) {
-          ctx.log.info(`Using GraphOS API key`);
+          ctx.log.info('Using GraphOS API key');
           if (!schemaPathOrUrl.includes('@')) {
             ctx.log.error(
               `Apollo GraphOS requires a graph ref in the format <graph-id>@<graph-variant> when providing --apollo-key. Please provide a valid graph ref not ${schemaPathOrUrl}.`,
@@ -124,7 +127,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           );
           process.exit(1);
         }
-        ctx.log.info(`Using Hive CDN endpoint: ${hiveCdnEndpoint}`);
+        ctx.log.info(`Using Hive CDN endpoint ${hiveCdnEndpoint}`);
         supergraph = {
           type: 'hive',
           endpoint: hiveCdnEndpoint,
@@ -139,11 +142,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
         }
         if (!apolloKey) {
           ctx.log.error(
-            `Apollo GraphOS requires an API key. Please provide an API key using the --apollo-key option.`,
+            'Apollo GraphOS requires an API key. Please provide an API key using the --apollo-key option.',
           );
           process.exit(1);
         }
-        ctx.log.info(`Using Apollo Graph Ref: ${apolloGraphRef}`);
+        ctx.log.info(`Using Apollo Graph Ref ${apolloGraphRef}`);
         supergraph = {
           type: 'graphos',
           apiKey: apolloKey,
@@ -154,7 +157,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         supergraph = loadedConfig.supergraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
         // TODO: how to provide hive-cdn-key?
       } else {
-        ctx.log.info(`Using default supergraph location: ${supergraph}`);
+        ctx.log.info(`Using default supergraph location "${supergraph}"`);
       }
 
       const registryConfig: Pick<SupergraphConfig, 'reporting'> = {};
@@ -172,11 +175,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const pubsub = loadedConfig.pubsub || new PubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
-        handleLoggingConfig(loadedConfig.logging, ctx);
+        ctx.log = createLoggerFromLogging(loadedConfig.logging);
       }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
-        logger: ctx.log,
+        log: ctx.log,
         cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(
@@ -185,7 +188,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           ...opts,
         },
         {
-          logger: ctx.log,
+          log: ctx.log,
           cache,
           pubsub,
           cwd,
@@ -225,7 +228,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
             loadedConfig.persistedDocuments.token);
         if (!token) {
           ctx.log.error(
-            `Hive persisted documents needs a CDN token. Please provide it through the "--hive-persisted-documents-token <token>" option or the config.`,
+            'Hive persisted documents needs a CDN token. Please provide it through the "--hive-persisted-documents-token <token>" option or the config.',
           );
           process.exit(1);
         }
@@ -271,12 +274,13 @@ export async function runSupergraph(
     absSchemaPath = isAbsolute(supergraphPath)
       ? String(supergraphPath)
       : resolve(process.cwd(), supergraphPath);
-    log.info(`Reading supergraph from ${absSchemaPath}`);
+    log.info({ path: absSchemaPath }, 'Reading supergraph');
     try {
       await lstat(absSchemaPath);
-    } catch {
+    } catch (err) {
       log.error(
-        `Could not read supergraph from ${absSchemaPath}. Make sure the file exists.`,
+        { path: absSchemaPath, err },
+        'Could not read supergraph. Make sure the file exists.',
       );
       process.exit(1);
     }
@@ -286,11 +290,14 @@ export async function runSupergraph(
     // Polling should not be enabled when watching the file
     delete config.pollingInterval;
     if (cluster.isPrimary) {
-      log.info(`Watching ${absSchemaPath} for changes`);
+      log.info({ path: absSchemaPath }, 'Watching supergraph for changes');
 
       const ctrl = new AbortController();
       registerTerminateHandler((signal) => {
-        log.info(`Closing watcher for ${absSchemaPath} on ${signal}`);
+        log.info(
+          { path: absSchemaPath },
+          `Closing watcher for supergraph on ${signal}`,
+        );
         return ctrl.abort(`Process terminated on ${signal}`);
       });
 
@@ -302,7 +309,10 @@ export async function runSupergraph(
             // TODO: or should we just ignore?
             throw new Error(`Supergraph file was renamed to "${f.filename}"`);
           }
-          log.info(`${absSchemaPath} changed. Invalidating supergraph...`);
+          log.info(
+            { path: absSchemaPath },
+            'Supergraph changed. Invalidating...',
+          );
           if (config.fork && config.fork > 1) {
             for (const workerId in cluster.workers) {
               cluster.workers[workerId]!.send('invalidateUnifiedGraph');
@@ -315,10 +325,16 @@ export async function runSupergraph(
       })()
         .catch((e) => {
           if (e.name === 'AbortError') return;
-          log.error(`Watcher for ${absSchemaPath} closed with an error`, e);
+          log.error(
+            { path: absSchemaPath, err: e },
+            'Supergraph watcher closed with an error',
+          );
         })
         .then(() => {
-          log.info(`Watcher for ${absSchemaPath} successfuly closed`);
+          log.info(
+            { path: absSchemaPath },
+            'Supergraph watcher successfuly closed',
+          );
         });
     }
   }
@@ -353,16 +369,17 @@ export async function runSupergraph(
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {
-    log.info(`Serving local supergraph from ${absSchemaPath}`);
+    log.info({ path: absSchemaPath }, 'Serving local supergraph');
   } else if (isUrl(String(config.supergraph))) {
-    log.info(`Serving remote supergraph from ${config.supergraph}`);
+    log.info({ url: config.supergraph }, 'Serving remote supergraph');
   } else if (
     typeof config.supergraph === 'object' &&
     'type' in config.supergraph &&
     config.supergraph.type === 'hive'
   ) {
     log.info(
-      `Serving supergraph from Hive CDN at ${config.supergraph.endpoint}`,
+      { endpoint: config.supergraph.endpoint },
+      'Serving supergraph from Hive CDN',
     );
   } else {
     log.info('Serving supergraph from config');

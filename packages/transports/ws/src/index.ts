@@ -36,7 +36,7 @@ export interface WSTransportOptions {
 
 export default {
   getSubgraphExecutor(
-    { transportEntry, logger },
+    { transportEntry, log: rootLog },
     /**
      * Do not use this option unless you know what you are doing.
      * @internal
@@ -83,12 +83,12 @@ export default {
 
       let wsExecutor = wsExecutorMap.get(hash);
       if (!wsExecutor) {
-        const executorLogger = logger?.child({
+        const log = rootLog.child({
           executor: 'GraphQL WS',
           wsUrl,
           connectionParams,
           headers,
-        } as Record<string, any>);
+        });
         wsExecutor = buildGraphQLWSExecutor({
           headers,
           url: wsUrl,
@@ -98,30 +98,30 @@ export default {
           connectionParams,
           on: {
             connecting(isRetry) {
-              executorLogger?.debug('connecting', { isRetry });
+              log.debug({ isRetry }, 'connecting');
             },
             opened(socket) {
-              executorLogger?.debug('opened', { socket });
+              log.debug({ socket }, 'opened');
             },
             connected(socket, payload) {
-              executorLogger?.debug('connected', { socket, payload });
+              log.debug({ socket, payload }, 'connected');
             },
             ping(received, payload) {
-              executorLogger?.debug('ping', { received, payload });
+              log.debug({ received, payload }, 'ping');
             },
             pong(received, payload) {
-              executorLogger?.debug('pong', { received, payload });
+              log.debug({ received, payload }, 'pong');
             },
             message(message) {
-              executorLogger?.debug('message', { message });
+              log.debug({ message }, 'message');
             },
             closed(event) {
-              executorLogger?.debug('closed', { event });
+              log.debug({ event }, 'closed');
               // no subscriptions and the lazy close timeout has passed - remove the client
               wsExecutorMap.delete(hash);
             },
             error(error) {
-              executorLogger?.debug('error', { error });
+              log.debug({ error }, 'error');
             },
           },
           onClient,
