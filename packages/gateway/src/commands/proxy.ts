@@ -19,6 +19,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
+import { handleOpenTelemetryConfig } from './handleOpenTelemetryConfig';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -34,11 +35,17 @@ export const addCommand: AddCommand = (ctx, cli) =>
     )
     .action(async function proxy(endpoint) {
       const {
+        opentelemetry,
+        opentelemetryExporterType,
         hiveCdnEndpoint,
         hiveCdnKey,
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
+        hiveTraceEndpoint,
         maskedErrors,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
@@ -46,6 +53,15 @@ export const addCommand: AddCommand = (ctx, cli) =>
       } = this.optsWithGlobals();
 
       ctx.log.info(`Starting ${ctx.productName} ${ctx.version} in proxy mode`);
+
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryConfig(ctx, {
+        openTelemetry: opentelemetry,
+        openTelemetryExporterType: opentelemetryExporterType,
+        hiveAccessToken,
+        hiveTarget,
+        hiveTraceAccessToken,
+        hiveTraceEndpoint,
+      });
 
       const loadedConfig = await loadConfig({
         log: ctx.log,
@@ -104,8 +120,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const registryConfig: Pick<ProxyConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
         // proxy can only do reporting to hive registry
         apolloGraphRef: undefined,
         apolloKey: undefined,
@@ -128,6 +147,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
         {
           ...loadedConfig,
           ...opts,
+          openTelemetry: openTelemetryEnabledByCLI
+            ? { ...loadedConfig.openTelemetry, traces: true }
+            : loadedConfig.openTelemetry,
         },
         {
           log: ctx.log,

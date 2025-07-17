@@ -104,14 +104,17 @@ export async function buildTestGateway(
           }
         `,
       },
+      headers,
     }: {
       body?: GraphQLParams;
       shouldReturnErrors?: boolean;
+      headers?: Record<string, string>;
     } = {}) => {
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
+          ...headers,
         },
         body: JSON.stringify(body),
       });

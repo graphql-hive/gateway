@@ -69,10 +69,10 @@ describe('useOpenTelemetry', () => {
       const expected = {
         http: {
           root: 'POST /graphql',
-          children: ['graphql.operation Anonymous'],
+          children: ['graphql.operation'],
         },
         graphql: {
-          root: 'graphql.operation Anonymous',
+          root: 'graphql.operation',
           children: [
             'graphql.parse',
             'graphql.validate',
@@ -97,7 +97,7 @@ describe('useOpenTelemetry', () => {
           const expectedCustomSpans = {
             http: { root: 'POST /graphql', children: ['custom.request'] },
             graphql: {
-              root: 'graphql.operation Anonymous',
+              root: 'graphql.operation',
               children: ['custom.operation'],
             },
             parse: { root: 'graphql.parse', children: ['custom.parse'] },
