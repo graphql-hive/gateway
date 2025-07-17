@@ -666,9 +666,6 @@ function filterSelectionSet(
         leave: (node) => {
           const type = typeInfo.getType();
           if (type == null) {
-            // console.warn(
-            //   `Invalid type for node: ${typeInfo.getParentType()?.name}.${node.name.value}`,
-            // );
             return null;
           }
           const namedType = getNamedType(type);
