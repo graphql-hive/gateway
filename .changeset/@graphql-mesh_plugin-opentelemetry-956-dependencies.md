@@ -12,6 +12,7 @@ dependencies updates:
 - Updated dependency [`@opentelemetry/sdk-trace-base@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.0.1) (from `^1.29.0`, in `dependencies`)
 - Updated dependency [`@opentelemetry/semantic-conventions@^1.34.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/semantic-conventions/v/1.34.0) (from `^1.28.0`, in `dependencies`)
 - Updated dependency [`@whatwg-node/promise-helpers@1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.3.0`, in `dependencies`)
+- Added dependency [`@graphql-hive/core@^0.13.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.0) (to `dependencies`)
 - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
 - Added dependency [`@opentelemetry/api-logs@^0.202.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.202.0) (to `dependencies`)
 - Added dependency [`@opentelemetry/auto-instrumentations-node@^0.60.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.60.1) (to `dependencies`)
