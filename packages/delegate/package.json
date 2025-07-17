@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "@graphql-tools/batch-execute": "workspace:^",
-    "@graphql-tools/executor": "^1.4.7",
-    "@graphql-tools/schema": "^10.0.11",
-    "@graphql-tools/utils": "^10.8.1",
+    "@graphql-tools/executor": "^1.4.8",
+    "@graphql-tools/schema": "^10.0.24",
+    "@graphql-tools/utils": "^10.9.0",
     "@repeaterjs/repeater": "^3.0.6",
     "@whatwg-node/promise-helpers": "^1.3.0",
     "dataloader": "^2.2.3",
