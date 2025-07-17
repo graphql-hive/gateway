@@ -362,9 +362,14 @@ export function setGraphQLExecutionResultAttributes(input: {
     const codes: string[] = [];
     for (const error of result.errors) {
       span.recordException(error);
-      codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
+      if (error.extensions['code']) {
+        codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
+      }
     }
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+
+    if (codes.length > 0) {
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+    }
   }
 }
 
