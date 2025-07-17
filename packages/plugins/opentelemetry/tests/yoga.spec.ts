@@ -1,3 +1,4 @@
+import { Logger } from '@graphql-hive/logger';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,6 +35,7 @@ describe('useOpenTelemetry', () => {
         const otelPlugin = useOpenTelemetry({
           initializeNodeSDK: false,
           contextManager,
+          log: new Logger({ level: false }),
         });
 
         const yoga = createYoga({

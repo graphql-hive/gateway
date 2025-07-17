@@ -6,13 +6,13 @@ export const gatewayConfig = defineConfig({
     maxRetries: 4,
   },
   upstreamTimeout: 300,
-  plugins(ctx) {
+  plugins() {
     return [
       ...(process.env['DEDUPLICATE_REQUEST'] ? [useDeduplicateRequest()] : []),
       {
-        onFetch() {
+        onFetch({ context }) {
           i++;
-          ctx.logger.info(`[FETCHING] #${i}`);
+          context.log.info(`[FETCHING] #${i}`);
         },
       },
     ];
