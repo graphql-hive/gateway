@@ -341,7 +341,7 @@ export function setGraphQLExecutionResultAttributes(input: {
     return;
   }
 
-  if (input.subgraphNames) {
+  if (input.subgraphNames?.length) {
     span.setAttribute(
       SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
       input.subgraphNames,
