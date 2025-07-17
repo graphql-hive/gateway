@@ -32,6 +32,7 @@
     "@babel/plugin-proposal-explicit-resource-management": "7.27.4",
     "@babel/plugin-transform-class-properties": "7.27.1",
     "@babel/plugin-transform-class-static-block": "7.27.1",
+    "@babel/plugin-transform-private-methods": "^7.27.1",
     "@babel/preset-env": "7.28.0",
     "@babel/preset-typescript": "7.27.1",
     "@changesets/changelog-github": "^0.5.0",

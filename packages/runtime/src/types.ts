@@ -1,5 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
+import type { Logger, LogLevel } from '@graphql-hive/logger';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type {
   BatchDelegateOptions,
@@ -12,13 +13,14 @@ import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-s
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
-  Logger,
+  Logger as LegacyLogger,
   MeshFetch,
-  OnFetchHook,
+  MeshFetchRequestInit,
 } from '@graphql-mesh/types';
-import type { FetchInstrumentation, LogLevel } from '@graphql-mesh/utils';
+import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
 import type {
+  ExecutionRequest,
   IResolvers,
   MaybePromise,
   TypeSource,
@@ -36,6 +38,7 @@ import type {
   Plugin as YogaPlugin,
   YogaServerOptions,
 } from 'graphql-yoga';
+import { GraphQLResolveInfo } from 'graphql/type';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
@@ -62,9 +65,9 @@ export interface GatewayConfigContext {
    */
   fetch: MeshFetch;
   /**
-   * The logger to use throught Mesh and it's plugins.
+   * The logger to use throught Hive and its plugins.
    */
-  logger: Logger;
+  log: Logger;
   /**
    * Current working directory.
    */
@@ -97,7 +100,7 @@ export type GatewayPlugin<
   TContext extends Record<string, any> = Record<string, any>,
 > = YogaPlugin<Partial<TPluginContext> & GatewayContext & TContext> &
   UnifiedGraphPlugin<Partial<TPluginContext> & GatewayContext & TContext> & {
-    onFetch?: OnFetchHook<Partial<TPluginContext> & GatewayContext & TContext>;
+    onFetch?: OnFetchHook<Partial<TPluginContext> & TContext>;
     onCacheGet?: OnCacheGetHook;
     onCacheSet?: OnCacheSetHook;
     onCacheDelete?: OnCacheDeleteHook;
@@ -112,6 +115,40 @@ export type GatewayPlugin<
       TPluginContext & TContext & GatewayContext
     >;
   };
+
+export interface OnFetchHookPayload<TContext> {
+  url: string;
+  setURL(url: URL | string): void;
+  options: MeshFetchRequestInit;
+  setOptions(options: MeshFetchRequestInit): void;
+  /**
+   * The context is not available in cases where "fetch" is done in
+   * order to pull a supergraph or do some internal work.
+   *
+   * The logger will be available in all cases.
+   */
+  context: (GatewayContext & TContext) | { log: Logger };
+  /** @deprecated Please use `log` from the {@link context} instead. */
+  logger: LegacyLogger;
+  info: GraphQLResolveInfo;
+  fetchFn: MeshFetch;
+  setFetchFn: (fetchFn: MeshFetch) => void;
+  executionRequest?: ExecutionRequest;
+  endResponse: (response$: MaybePromise<Response>) => void;
+}
+
+export interface OnFetchHookDonePayload {
+  response: Response;
+  setResponse: (response: Response) => void;
+}
+
+export type OnFetchHookDone = (
+  payload: OnFetchHookDonePayload,
+) => MaybePromise<void>;
+
+export type OnFetchHook<TContext> = (
+  payload: OnFetchHookPayload<TContext>,
+) => MaybePromise<void | OnFetchHookDone>;
 
 export type OnCacheGetHook = (
   payload: OnCacheGetHookEventPayload,
@@ -486,9 +523,10 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * Enable, disable or implement a custom logger for logging.
    *
    * @default true
+   *
    * @see https://the-guild.dev/graphql/hive/docs/gateway/logging-and-error-handling
    */
-  logging?: boolean | Logger | LogLevel | keyof typeof LogLevel | undefined;
+  logging?: boolean | Logger | LogLevel | undefined;
   /**
    * Endpoint of the GraphQL API.
    */

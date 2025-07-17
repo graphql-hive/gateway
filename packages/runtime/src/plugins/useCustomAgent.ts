@@ -2,8 +2,11 @@
 import type { Agent as HttpAgent } from 'node:http';
 // eslint-disable-next-line import/no-nodejs-modules
 import type { Agent as HttpsAgent } from 'node:https';
-import type { OnFetchHookPayload } from '@graphql-mesh/types';
-import type { GatewayContext, GatewayPlugin } from '../types';
+import type {
+  GatewayContext,
+  GatewayPlugin,
+  OnFetchHookPayload,
+} from '../types';
 
 export type AgentFactory<TContext> = (
   payload: OnFetchHookPayload<
