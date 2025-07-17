@@ -1,8 +1,25 @@
 import { Logger } from '@graphql-hive/logger';
 import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
+  hiveTracingSetup,
+  HiveTracingSpanProcessor,
   OpenTelemetryLogWriter,
   openTelemetrySetup,
+  SEMATTRS_GRAPHQL_DOCUMENT,
+  SEMATTRS_GRAPHQL_OPERATION_NAME,
+  SEMATTRS_GRAPHQL_OPERATION_TYPE,
+  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
+  SEMATTRS_HTTP_HOST,
+  SEMATTRS_HTTP_METHOD,
+  SEMATTRS_HTTP_ROUTE,
+  SEMATTRS_HTTP_SCHEME,
+  SEMATTRS_HTTP_STATUS_CODE,
+  SEMATTRS_HTTP_URL,
+  SEMATTRS_NET_HOST_NAME,
 } from '@graphql-mesh/plugin-opentelemetry/setup';
 import {
   ROOT_CONTEXT,
@@ -17,7 +34,7 @@ import {
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
 } from '@opentelemetry/core';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   LoggerProvider,
@@ -356,6 +373,29 @@ describe('useOpenTelemetry', () => {
         },
       });
     });
+
+    it('should setup Hive Tracing', () => {
+      hiveTracingSetup({
+        contextManager: new AsyncLocalStorageContextManager(),
+        target: 'target',
+        accessToken: 'access-token',
+      });
+
+      const processors = getSpanProcessors();
+      expect(processors).toHaveLength(1);
+      expect(processors![0]).toBeInstanceOf(HiveTracingSpanProcessor);
+      const processor = processors![0] as HiveTracingSpanProcessor;
+      // @ts-expect-error Access of private field
+      const subProcessor = processor.processor as BatchSpanProcessor;
+      expect(subProcessor).toBeInstanceOf(BatchSpanProcessor);
+      // @ts-expect-error Access of private field
+      const exporter = subProcessor._exporter as OTLPTraceExporter;
+      expect(exporter).toBeInstanceOf(OTLPTraceExporter);
+      // @ts-expect-error Access of private field
+      expect(exporter._delegate._transport._transport._parameters.url).toBe(
+        'http://localhost:4318/v1/traces',
+      );
+    });
   });
 
   describe('tracing', () => {
@@ -378,10 +418,10 @@ describe('useOpenTelemetry', () => {
       const expected = {
         http: {
           root: 'POST /graphql',
-          children: ['graphql.operation Anonymous'],
+          children: ['graphql.operation'],
         },
         graphql: {
-          root: 'graphql.operation Anonymous',
+          root: 'graphql.operation',
           children: [
             'graphql.parse',
             'graphql.validate',
@@ -419,7 +459,7 @@ describe('useOpenTelemetry', () => {
           const expectedCustomSpans = {
             http: { root: 'POST /graphql', children: ['custom.request'] },
             graphql: {
-              root: 'graphql.operation Anonymous',
+              root: 'graphql.operation',
               children: ['custom.operation'],
             },
             parse: { root: 'graphql.parse', children: ['custom.parse'] },
@@ -533,7 +573,7 @@ describe('useOpenTelemetry', () => {
           await gateway.query();
           const rootSpan = spanExporter.assertRoot('POST /graphql');
           const subgraphSpan = rootSpan
-            .expectChild('graphql.operation Anonymous')
+            .expectChild('graphql.operation')
             .expectChild('graphql.execute')
             .expectChild('subgraph.execute (upstream)');
 
@@ -731,7 +771,7 @@ describe('useOpenTelemetry', () => {
       const expectedCustomSpans = {
         http: { root: 'POST /graphql', children: ['custom.request'] },
         graphql: {
-          root: 'graphql.operation Anonymous',
+          root: 'graphql.operation',
           children: ['custom.operation'],
         },
         parse: { root: 'graphql.parse', children: ['custom.parse'] },
@@ -1037,7 +1077,7 @@ describe('useOpenTelemetry', () => {
 
         const expectedLogs = {
           'POST /graphql': 'onRequest',
-          'graphql.operation Anonymous': 'onParams',
+          'graphql.operation': 'onParams',
           'graphql.parse': 'onParse',
           'graphql.validate': 'onValidate',
           'graphql.context': 'onContextBuilding',
@@ -1088,6 +1128,105 @@ describe('useOpenTelemetry', () => {
           expect(log).toBeDefined();
           expect(log?.attributes).toMatchObject({ phase });
         }
+      });
+    });
+  });
+
+  describe('hive tracing', () => {
+    beforeEach(() => {
+      // Register testing OTEL api with a custom Span processor and an Async Context Manager
+      disableAll();
+      hiveTracingSetup({
+        target: 'test-target',
+        contextManager: new AsyncLocalStorageContextManager(),
+        processor: new SimpleSpanProcessor(spanExporter),
+      });
+    });
+
+    it('should not report http spans', async () => {
+      await using gateway = await buildTestGateway();
+      await gateway.query();
+
+      spanExporter.assertNoSpanWithName('POST /graphql');
+    });
+
+    it('should have all attributes required by Hive Tracing', async () => {
+      await using gateway = await buildTestGateway({
+        fetch: (upstreamFetch) => {
+          let calls = 0;
+          return (...args) => {
+            calls++;
+            if (calls > 1)
+              return Promise.resolve(new Response(null, { status: 500 }));
+            else return upstreamFetch(...args);
+          };
+        },
+      });
+      await gateway.query({
+        shouldReturnErrors: true,
+        body: { query: 'query testOperation { hello }' },
+        headers: {
+          'x-graphql-client-name': 'test-client-name',
+          'x-graphql-client-version': 'test-client-version',
+        },
+      });
+
+      const operationSpan = spanExporter.assertRoot(
+        'graphql.operation testOperation',
+      );
+
+      expect(operationSpan.span.resource.attributes).toMatchObject({
+        'hive.target_id': 'test-target',
+      });
+
+      // Root span
+      expect(operationSpan.span.attributes).toMatchObject({
+        // HTTP Attributes
+        [SEMATTRS_HTTP_METHOD]: 'POST',
+        [SEMATTRS_HTTP_URL]: 'http://localhost:4000/graphql',
+        [SEMATTRS_HTTP_ROUTE]: '/graphql',
+        [SEMATTRS_HTTP_SCHEME]: 'http:',
+        [SEMATTRS_NET_HOST_NAME]: 'localhost',
+        [SEMATTRS_HTTP_HOST]: 'localhost:4000',
+        [SEMATTRS_HTTP_STATUS_CODE]: 500,
+
+        // Hive specific
+        ['hive.client.name']: 'test-client-name',
+        ['hive.client.version']: 'test-client-version',
+
+        // Operation Attributes
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
+        [SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH]:
+          'd40f732de805d03db6284b9b8c6c6f0b',
+        [SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT]: 1,
+        [SEMATTRS_HIVE_GRAPHQL_ERROR_CODES]: ['DOWNSTREAM_SERVICE_ERROR'],
+
+        // Execution Attributes
+        [SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES]: ['upstream'],
+      });
+
+      // Subgraph Execution Span
+      expect(
+        spanExporter.assertRoot('subgraph.execute (upstream)').span.attributes,
+      ).toMatchObject({
+        // HTTP Attributes
+        [SEMATTRS_HTTP_METHOD]: 'POST',
+        [SEMATTRS_HTTP_URL]: 'https://example.com/graphql',
+        [SEMATTRS_HTTP_ROUTE]: '/graphql',
+        [SEMATTRS_HTTP_SCHEME]: 'https:',
+        [SEMATTRS_NET_HOST_NAME]: 'example.com',
+        [SEMATTRS_HTTP_HOST]: 'example.com',
+        [SEMATTRS_HTTP_STATUS_CODE]: 500,
+
+        // Operation Attributes
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
+
+        // Federation attributes
+        [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: 'upstream',
       });
     });
   });

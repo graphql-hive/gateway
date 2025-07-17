@@ -1,3 +1,4 @@
+import { Attributes, Logger } from '@graphql-hive/logger';
 import {
   context,
   ContextManager,
@@ -31,11 +32,16 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
+import {
+  HiveTracingSpanProcessor,
+  HiveTracingSpanProcessorOptions,
+} from './hive-span-processor';
 import { getEnvVar } from './utils';
 
 export * from './attributes';
-
 export * from './log-writer';
+export * from './hive-span-processor';
+export { getEnvVar };
 
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
@@ -87,12 +93,21 @@ type OpentelemetrySetupOptions = TracingOptions &
     contextManager: ContextManager | null;
     propagators?: TextMapPropagator[];
     generalLimits?: GeneralLimits;
+    log?: Logger;
   };
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
+  const log = options.log?.child('[OpenTelemetry] ');
+
   if (getEnvVar('OTEL_SDK_DISABLED', false) === 'true') {
+    log?.warn(
+      'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is set to `true`',
+    );
     return;
   }
+
+  const logAttributes: Attributes = { registrationResults: {} };
+  let logMessage = 'OpenTelemetry integration is enabled';
 
   if (options.traces) {
     if (options.traces.tracerProvider) {
@@ -100,10 +115,13 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         'register' in options.traces.tracerProvider &&
         typeof options.traces.tracerProvider.register === 'function'
       ) {
-        options.traces.tracerProvider.register();
+        logAttributes['registrationResults'].tracer =
+          options.traces.tracerProvider.register();
       } else {
-        trace.setGlobalTracerProvider(options.traces.tracerProvider);
+        logAttributes['registrationResults'].tracer =
+          trace.setGlobalTracerProvider(options.traces.tracerProvider);
       }
+      logMessage += ' and provided TracerProvider has been registered';
     } else {
       let spanProcessors = options.traces.processors ?? [];
 
@@ -114,10 +132,14 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
             options.traces.batching,
           ),
         );
+        logMessage += ' and exporter have been registered';
+        logAttributes['batching'] = options.traces.batching ?? true;
       }
 
       if (options.traces.console) {
         spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+        logMessage += ' in addition to an stdout debug exporter';
+        logAttributes['console'] = true;
       }
 
       const baseResource = resourceFromAttributes({
@@ -135,31 +157,42 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
                 'OTEL_SERVICE_VERSION',
                 globalThis.__OTEL_PLUGIN_VERSION__,
               ),
+        ['hive.gateway.version']: globalThis.__VERSION__,
+        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__,
       });
 
-      trace.setGlobalTracerProvider(
-        new BasicTracerProvider({
-          resource:
-            options.resource && !('serviceName' in options.resource)
-              ? baseResource.merge(options.resource)
-              : baseResource,
-          sampler:
-            options.sampler ??
-            (options.samplingRate
-              ? new ParentBasedSampler({
-                  root: new TraceIdRatioBasedSampler(options.samplingRate),
-                })
-              : new AlwaysOnSampler()),
-          spanProcessors,
-          generalLimits: options.generalLimits,
-          spanLimits: options.traces.spanLimits,
-        }),
-      );
+      const resource =
+        options.resource && !('serviceName' in options.resource)
+          ? baseResource.merge(options.resource)
+          : baseResource;
+
+      logAttributes['resource'] = resource.attributes;
+      logAttributes['sampling'] = options.sampler
+        ? 'custom'
+        : options.samplingRate;
+
+      logAttributes['registrationResults'].tracerProvider =
+        trace.setGlobalTracerProvider(
+          new BasicTracerProvider({
+            resource,
+            sampler:
+              options.sampler ??
+              (options.samplingRate
+                ? new ParentBasedSampler({
+                    root: new TraceIdRatioBasedSampler(options.samplingRate),
+                  })
+                : new AlwaysOnSampler()),
+            spanProcessors,
+            generalLimits: options.generalLimits,
+            spanLimits: options.traces.spanLimits,
+          }),
+        );
     }
   }
 
   if (options.contextManager !== null) {
-    context.setGlobalContextManager(options.contextManager);
+    logAttributes['registrationResults'].contextManager =
+      context.setGlobalContextManager(options.contextManager);
   }
 
   if (!options.propagators || options.propagators.length !== 0) {
@@ -168,12 +201,74 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
       new W3CTraceContextPropagator(),
     ];
 
-    propagation.setGlobalPropagator(
-      propagators.length === 1
-        ? propagators[0]!
-        : new CompositePropagator({ propagators }),
+    logAttributes['registrationResults'].propagators =
+      propagation.setGlobalPropagator(
+        propagators.length === 1
+          ? propagators[0]!
+          : new CompositePropagator({ propagators }),
+      );
+  }
+
+  log?.info(logAttributes, logMessage);
+}
+
+export type HiveTracingOptions = { target?: string } & (
+  | {
+      accessToken?: string;
+      batching?: BufferConfig;
+      processor?: never;
+      endpoint?: string;
+    }
+  | {
+      processor: SpanProcessor;
+    }
+);
+
+export function hiveTracingSetup(
+  config: HiveTracingOptions & {
+    contextManager: ContextManager | null;
+    log?: Logger;
+  },
+) {
+  const log = config.log?.child('[OpenTelemetry] ');
+  config.target ??= getEnvVar('HIVE_TARGET', undefined);
+
+  if (!config.target) {
+    throw new Error(
+      'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
     );
   }
+
+  const logAttributes: Attributes = { target: config.target };
+
+  if (!config.processor) {
+    config.accessToken ??=
+      getEnvVar('HIVE_TRACING_ACCESS_TOKEN', undefined) ??
+      getEnvVar('HIVE_ACCESS_TOKEN', undefined);
+
+    if (!config.accessToken) {
+      throw new Error(
+        'You must specify the Hive Registry `accessToken`. Either provide `accessToken` option or `HIVE_ACCESS_TOKEN`/`HIVE_TRACE_ACCESS_TOKEN` environment variable.',
+      );
+    }
+
+    logAttributes['endpoint'] = config.endpoint;
+    logAttributes['batching'] = config.batching;
+  }
+
+  openTelemetrySetup({
+    contextManager: config.contextManager,
+    resource: resourceFromAttributes({
+      'hive.target_id': config.target,
+    }),
+    traces: {
+      processors: [
+        new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
+      ],
+    },
+  });
+
+  log?.info(logAttributes, 'Hive Tracing integration has been enabled');
 }
 
 export type BatchingConfig = boolean | BufferConfig;
