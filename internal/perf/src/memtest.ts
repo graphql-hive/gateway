@@ -232,14 +232,6 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
               frame.callstack.some(
                 (stack) => stack.name === 'handleMaybePromise',
               )
-            ) &&
-            !(
-              // allocates a lot but all is freed confirmed through heap snapshot
-              frame.callstack.some(
-                (frame) =>
-                  frame.file?.includes('@whatwg-node/node-fetch') &&
-                  frame.name.includes('wrapIncomingMessageWithPassthrough'),
-              )
             ),
         )
         .filter((frame) => {
