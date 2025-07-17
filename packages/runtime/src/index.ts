@@ -1,7 +1,7 @@
 export * from './createGatewayRuntime';
-export { LogLevel, DefaultLogger } from '@graphql-mesh/utils';
-export { JSONLogger } from '@graphql-hive/logger-json';
 export type * from './types';
+export * from '@graphql-hive/logger';
+export * from './createLoggerFromLogging';
 export * from './plugins/useCustomFetch';
 export * from './plugins/useStaticFiles';
 export * from './getProxyExecutor';
@@ -20,5 +20,4 @@ export {
 } from './plugins/useUpstreamRetry';
 export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 export { getGraphQLWSOptions } from './getGraphQLWSOptions';
-export * from './getDefaultLogger';
 export { withState } from '@envelop/core';
