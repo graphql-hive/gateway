@@ -20,6 +20,7 @@
     "check:missing-peer-deps": "yarn install | grep YN0002 && exit 1 || exit 0",
     "check:types": "yarn tsc",
     "format": "yarn check:format --write",
+    "start": "yarn workspace @graphql-hive/gateway start",
     "test": "vitest --project unit",
     "test:bun": "bun test --bail",
     "test:e2e": "vitest --project e2e --slowTestThreshold 1000",
