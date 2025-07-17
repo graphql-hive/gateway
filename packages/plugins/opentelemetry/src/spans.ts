@@ -1,3 +1,4 @@
+import { hashOperation } from '@graphql-hive/core';
 import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
@@ -20,18 +21,27 @@ import {
   SEMATTRS_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_TYPE,
 } from '@opentelemetry/semantic-conventions';
-import { printSchema, type ExecutionArgs, type GraphQLSchema } from 'graphql';
+import {
+  DocumentNode,
+  GraphQLSchema,
+  printSchema,
+  TypeInfo,
+  type ExecutionArgs,
+} from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
 import {
   getRetryInfo,
   isRetryExecutionRequest,
 } from '../../../runtime/src/plugins/useUpstreamRetry';
 import {
-  SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
   SEMATTRS_GRAPHQL_DOCUMENT,
-  SEMATTRS_GRAPHQL_ERROR_COUNT,
   SEMATTRS_GRAPHQL_OPERATION_NAME,
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
+  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
   SEMATTRS_HTTP_CLIENT_IP,
   SEMATTRS_HTTP_HOST,
   SEMATTRS_HTTP_METHOD,
@@ -71,6 +81,10 @@ export function createHttpSpan(input: {
           ?.split(',')[0],
         [SEMATTRS_HTTP_USER_AGENT]:
           request.headers.get('user-agent') || undefined,
+        'hive.client.name':
+          request.headers.get('x-graphql-client-name') || undefined,
+        'hive.client.version':
+          request.headers.get('x-graphql-client-version') || undefined,
       },
       kind: SpanKind.SERVER,
     },
@@ -121,28 +135,61 @@ export function setParamsAttributes(input: {
   }
 
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, params.query ?? '<undefined>');
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    params.operationName ?? 'Anonymous',
-  );
+  if (params.operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, params.operationName);
+  }
 }
 
-export function setExecutionAttributesOnOperationSpan(
-  ctx: Context,
-  args: ExecutionArgs,
-) {
+export type OperationHashingFn = (input: {
+  document: DocumentNode;
+  operationName?: string | null;
+  variableValues?: Record<string, unknown> | null;
+  schema: GraphQLSchema;
+}) => string | null;
+
+const typeInfos = new WeakMap<GraphQLSchema, TypeInfo>();
+export const defaultOperationHashingFn: OperationHashingFn = (input) => {
+  if (!typeInfos.has(input.schema)) {
+    typeInfos.set(input.schema, new TypeInfo(input.schema));
+  }
+  const typeInfo = typeInfos.get(input.schema);
+
+  return hashOperation({
+    documentNode: input.document,
+    operationName: input.operationName ?? null,
+    schema: input.schema,
+    variables: null, // Unstable feature, not using it for now
+    typeInfo,
+  });
+};
+
+export function setExecutionAttributesOnOperationSpan(input: {
+  ctx: Context;
+  args: ExecutionArgs;
+  hashOperationFn?: OperationHashingFn | null;
+}) {
+  const { hashOperationFn = defaultOperationHashingFn, args, ctx } = input;
   const span = trace.getSpan(ctx);
   if (span) {
     const operation = getOperationASTFromDocument(
       args.document,
       args.operationName || undefined,
     );
-    const operationName = operation.name?.value ?? 'Anonymous';
-    const document = defaultPrintFn(args.document);
     span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+
+    const document = defaultPrintFn(args.document);
     span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
-    span.updateName(`graphql.operation ${operationName}`);
+
+    const hash = hashOperationFn?.({ ...args });
+    if (hash) {
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH, hash);
+    }
+
+    const operationName = operation.name?.value;
+    if (operationName) {
+      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+      span.updateName(`graphql.operation ${operationName}`);
+    }
   }
 }
 
@@ -185,14 +232,15 @@ export function setGraphQLParseAttributes(input: {
     return;
   }
 
-  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query ?? '<empty>');
-  span.setAttribute(
-    SEMATTRS_GRAPHQL_OPERATION_NAME,
-    input.operationName ?? 'Anonymous',
-  );
+  if (input.query) {
+    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query);
+  }
+  if (input.operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, input.operationName);
+  }
 
   if (input.result instanceof Error) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, 1);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
   }
 }
 
@@ -232,7 +280,7 @@ export function setGraphQLValidateAttributes(input: {
       message: result.message,
     });
   } else if (Array.isArray(result) && result.length > 0) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.length);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.map((e) => e.message).join(', '),
@@ -271,16 +319,21 @@ export function setGraphQLExecutionAttributes(input: {
     args.document,
     args.operationName || undefined,
   );
-  const operationName = operation.name?.value ?? 'Anonymous';
-  const document = defaultPrintFn(input.args.document);
   span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
-  span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+
+  const operationName = operation.name?.value;
+  if (operationName) {
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+  }
+
+  const document = defaultPrintFn(input.args.document);
   span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
 }
 
 export function setGraphQLExecutionResultAttributes(input: {
   ctx: Context;
   result: ExecutionResult | AsyncIterableIterator<ExecutionResult>;
+  subgraphNames?: string[];
 }) {
   const { ctx, result } = input;
   const span = trace.getSpan(ctx);
@@ -288,19 +341,34 @@ export function setGraphQLExecutionResultAttributes(input: {
     return;
   }
 
+  if (input.subgraphNames?.length) {
+    span.setAttribute(
+      SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+      input.subgraphNames,
+    );
+  }
+
   if (
     !isAsyncIterable(result) && // FIXME: Handle async iterable too
     result.errors &&
     result.errors.length > 0
   ) {
-    span.setAttribute(SEMATTRS_GRAPHQL_ERROR_COUNT, result.errors.length);
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.errors.map((e) => e.message).join(', '),
     });
 
+    const codes: string[] = [];
     for (const error of result.errors) {
       span.recordException(error);
+      if (error.extensions['code']) {
+        codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
+      }
+    }
+
+    if (codes.length > 0) {
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
     }
   }
 }
@@ -311,19 +379,21 @@ export function createSubgraphExecuteSpan(input: {
   executionRequest: ExecutionRequest;
   subgraphName: string;
 }): Context {
+  const operation = getOperationASTFromDocument(
+    input.executionRequest.document,
+    input.executionRequest.operationName,
+  );
+
   const span = input.tracer.startSpan(
     `subgraph.execute (${input.subgraphName})`,
     {
       attributes: {
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: input.executionRequest.operationName,
+        [SEMATTRS_GRAPHQL_OPERATION_NAME]: operation.name?.value,
         [SEMATTRS_GRAPHQL_DOCUMENT]: defaultPrintFn(
           input.executionRequest.document,
         ),
-        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: getOperationASTFromDocument(
-          input.executionRequest.document,
-          input.executionRequest.operationName,
-        )?.operation,
-        [SEMATTRS_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
+        [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
+        [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
       },
       kind: SpanKind.CLIENT,
     },
