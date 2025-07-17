@@ -1,15 +1,20 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 1.5.7
+
+### Patch Changes
+
+- [#1318](https://github.com/graphql-hive/gateway/pull/1318) [`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  - Updated dependency [`@graphql-yoga/plugin-jwt@^3.9.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-jwt/v/3.9.1) (from `^3.7.6`, in `dependencies`)
+
 ## 1.5.6
 
 ### Patch Changes
 
 - [#1245](https://github.com/graphql-hive/gateway/pull/1245) [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
-
   - Updated dependency [`@graphql-mesh/utils@^0.104.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.5) (from `^0.104.3`, in `dependencies`)
 
 - [#1258](https://github.com/graphql-hive/gateway/pull/1258) [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@graphql-mesh/types@^0.104.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.5) (from `^0.104.3`, in `dependencies`)
 
 ## 1.5.5
@@ -17,7 +22,6 @@
 ### Patch Changes
 
 - [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@graphql-yoga/plugin-jwt@^3.7.6` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-jwt/v/3.7.6) (from `^3.4.9`, in `dependencies`)
 
 ## 1.5.4
@@ -182,7 +186,6 @@
   Thanks [@jjangga0214](https://github.com/jjangga0214)! -
   [#3590](https://github.com/dotansimha/graphql-yoga/pull/3590) Do not throw when \`request\` is not
   available in the context, it can be a WebSockets connection
-
   - Export helper `extractFromConnectionParams` to get the token from WebSocket `connectionParams`
     when GraphQL WS is used like
     [here](https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#graphql-over-websocket-protocol-via-graphql-ws)
@@ -463,7 +466,6 @@
   [`9f01438`](https://github.com/ardatan/graphql-mesh/commit/9f01438fbdf327c0a4bfa0cf440d890ec871ffcc)
   Thanks [@ardatan](https://github.com/ardatan)! - Adding these plugins to serve-runtime by default,
   and make them configurable through the configuration;
-
   - `useResponseCache`
   - `useContentEncoding`
   - `useDeferStream`
@@ -477,7 +479,6 @@
   - `useWebhooks`
 
   In addition, the following ones are added to the serve-cli:
-
   - `useJWT`
   - `usePrometheus`
   - `useOpenTelemetry`
@@ -621,7 +622,6 @@
 - [#7374](https://github.com/ardatan/graphql-mesh/pull/7374)
   [`f427d7f`](https://github.com/ardatan/graphql-mesh/commit/f427d7fec8ab2f374e8e3aa5fd90a400a6792fc5)
   Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
-
   - Updated dependency
     [`@graphql-yoga/plugin-jwt@3.0.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-jwt/v/3.0.1)
     (from `3.0.0`, in `dependencies`)
