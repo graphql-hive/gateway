@@ -41,6 +41,7 @@ import {
   createSchemaLoadingSpan,
   createSubgraphExecuteSpan,
   createUpstreamHttpFetchSpan,
+  OperationHashingFn,
   recordCacheError,
   recordCacheEvent,
   registerException,
@@ -113,6 +114,13 @@ export type OpenTelemetryGatewayPluginOptions = {
    * @default 'forceFlush'
    */
   flushOnDispose?: string | false;
+  /**
+   * Function to be used to compute the hash of each operation (graphql.operation.hash attribute).
+   * Note: pass `null` to disable operation hashing
+   *
+   * @default `hashOperation` from @graphql-hive/core
+   */
+  hashOperation?: OperationHashingFn | null;
   /**
    * Tracing configuration
    */
@@ -309,7 +317,7 @@ export function useOpenTelemetry(
   return withState<
     OpenTelemetryPlugin,
     OtelState,
-    OtelState & { skipExecuteSpan?: true },
+    OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
     OtelState
   >((getState) => ({
     getTracer: () => tracer,
@@ -654,7 +662,7 @@ export function useOpenTelemetry(
           ],
         });
 
-      pluginLogger = log.child('[useOpenTelemetry]');
+      pluginLogger = log.child('[OpenTelemetry] ');
 
       if (options.configureDiagLogger !== false) {
         const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
@@ -739,7 +747,7 @@ export function useOpenTelemetry(
       }
     },
 
-    onParams: function onParamsOTEL({ state, context: gqlCtx, params }) {
+    onParams({ state, context: gqlCtx, params }) {
       if (
         !isParentEnabled(state) ||
         !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
@@ -751,11 +759,7 @@ export function useOpenTelemetry(
       setParamsAttributes({ ctx, params });
     },
 
-    onExecutionResult: function onExeResOTEL({
-      result,
-      context: gqlCtx,
-      state,
-    }) {
+    onExecutionResult({ result, context: gqlCtx, state }) {
       if (
         !isParentEnabled(state) ||
         !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
@@ -802,10 +806,11 @@ export function useOpenTelemetry(
         return;
       }
 
-      setExecutionAttributesOnOperationSpan(
-        state.forOperation.otel!.root,
+      setExecutionAttributesOnOperationSpan({
+        ctx: state.forOperation.otel!.root,
         args,
-      );
+        hashOperationFn: options.hashOperation,
+      });
 
       if (state.forOperation.skipExecuteSpan) {
         return;
@@ -814,11 +819,23 @@ export function useOpenTelemetry(
       const ctx = getContext(state);
       setGraphQLExecutionAttributes({ ctx, args });
 
+      state.forOperation.subgraphNames = [];
+
       return {
         onExecuteDone({ result }) {
-          setGraphQLExecutionResultAttributes({ ctx, result });
+          setGraphQLExecutionResultAttributes({
+            ctx,
+            result,
+            subgraphNames: state.forOperation.subgraphNames,
+          });
         },
       };
+    },
+
+    onSubgraphExecute({ subgraphName, state }) {
+      // Keep track of the list of subgraphs that has been hit for this operation
+      // This list will be added as attribute on onExecuteDone hook
+      state.forOperation?.subgraphNames?.push(subgraphName);
     },
 
     onFetch(payload) {
@@ -862,6 +879,7 @@ export function useOpenTelemetry(
         setUpstreamFetchResponseAttributes({ ctx, response });
       };
     },
+
     onSchemaChange(payload) {
       setSchemaAttributes(payload);
 
