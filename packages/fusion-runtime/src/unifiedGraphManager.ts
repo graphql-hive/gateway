@@ -1,8 +1,9 @@
+import type { Logger } from '@graphql-hive/logger';
 import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { Logger, OnDelegateHook } from '@graphql-mesh/types';
+import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
@@ -83,7 +84,7 @@ export interface UnifiedGraphHandlerOpts {
    */
   batchDelegateOptions?: BatchDelegateOptions;
 
-  logger?: Logger;
+  log?: Logger;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -95,7 +96,7 @@ export interface UnifiedGraphHandlerResult {
 
 export interface UnifiedGraphManagerOptions<TContext> {
   getUnifiedGraph(
-    ctx: TransportContext,
+    ctx: TransportContext | undefined,
   ): MaybePromise<GraphQLSchema | string | DocumentNode>;
   // Handle the unified graph by any specification
   handleUnifiedGraph?: UnifiedGraphHandler;
@@ -124,7 +125,6 @@ export interface UnifiedGraphManagerOptions<TContext> {
   batchDelegateOptions?: BatchDelegateOptions;
 
   instrumentation?: () => Instrumentation | undefined;
-
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
 }
 
@@ -176,7 +176,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.onDelegationStageExecuteHooks =
       opts?.onDelegationStageExecuteHooks || [];
     if (opts.pollingInterval != null) {
-      opts.transportContext?.logger?.debug(
+      opts.transportContext?.log.debug(
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
       );
     }
@@ -189,16 +189,16 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       this.lastLoadTime != null &&
       Date.now() - this.lastLoadTime >= this.opts.pollingInterval
     ) {
-      this.opts?.transportContext?.logger?.debug(`Polling Supergraph`);
+      this.opts?.transportContext?.log.debug(`Polling Supergraph`);
       this.polling$ = handleMaybePromise(
         () => this.getAndSetUnifiedGraph(),
         () => {
           this.polling$ = undefined;
         },
         (err) => {
-          this.opts.transportContext?.logger?.error(
-            'Failed to poll Supergraph',
+          this.opts.transportContext?.log.error(
             err,
+            'Failed to poll Supergraph',
           );
           this.polling$ = undefined;
         },
@@ -206,19 +206,21 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     }
     if (!this.unifiedGraph) {
       if (!this.initialUnifiedGraph$) {
-        this.opts?.transportContext?.logger?.debug(
+        this.opts?.transportContext?.log.debug(
           'Fetching the initial Supergraph',
         );
         if (this.opts.transportContext?.cache) {
-          this.opts.transportContext?.logger?.debug(
-            `Searching for Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}"...`,
+          this.opts.transportContext?.log.debug(
+            { key: UNIFIEDGRAPH_CACHE_KEY },
+            'Searching for Supergraph in cache...',
           );
           this.initialUnifiedGraph$ = handleMaybePromise(
             () =>
               this.opts.transportContext?.cache?.get(UNIFIEDGRAPH_CACHE_KEY),
             (cachedUnifiedGraph) => {
               if (cachedUnifiedGraph) {
-                this.opts.transportContext?.logger?.debug(
+                this.opts.transportContext?.log.debug(
+                  { key: UNIFIEDGRAPH_CACHE_KEY },
                   'Found Supergraph in cache',
                 );
                 return this.handleLoadedUnifiedGraph(cachedUnifiedGraph, true);
@@ -236,7 +238,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           () => this.initialUnifiedGraph$!,
           (v) => {
             this.initialUnifiedGraph$ = undefined;
-            this.opts.transportContext?.logger?.debug(
+            this.opts.transportContext?.log.debug(
+              { key: UNIFIEDGRAPH_CACHE_KEY },
               'Initial Supergraph fetched',
             );
             return v;
@@ -259,7 +262,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         this.lastLoadedUnifiedGraph != null &&
         compareSchemas(loadedUnifiedGraph, this.lastLoadedUnifiedGraph)
       ) {
-        this.opts.transportContext?.logger?.debug(
+        this.opts.transportContext?.log.debug(
           'Supergraph has not been changed, skipping...',
         );
         this.lastLoadTime = Date.now();
@@ -286,17 +289,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
                 // 60 seconds making sure the unifiedgraph is not kept forever
                 // NOTE: we default to 60s because Cloudflare KV TTL does not accept anything less
                 60;
-            this.opts.transportContext.logger?.debug(
-              `Caching Supergraph with TTL ${ttl}s`,
+            this.opts.transportContext?.log.debug(
+              { ttl, key: UNIFIEDGRAPH_CACHE_KEY },
+              'Caching Supergraph',
             );
-            const logCacheSetError = (e: unknown) => {
-              this.opts.transportContext?.logger?.debug(
-                `Unable to store Supergraph in cache under key "${UNIFIEDGRAPH_CACHE_KEY}" with TTL ${ttl}s`,
-                e,
+            const logCacheSetError = (err: unknown) => {
+              this.opts.transportContext?.log.debug(
+                { err, ttl, key: UNIFIEDGRAPH_CACHE_KEY },
+                'Unable to cache Supergraph',
               );
             };
             try {
-              const cacheSet$ = this.opts.transportContext.cache.set(
+              const cacheSet$ = this.opts.transportContext?.cache.set(
                 UNIFIEDGRAPH_CACHE_KEY,
                 serializedUnifiedGraph,
                 { ttl },
@@ -308,10 +312,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             } catch (e) {
               logCacheSetError(e);
             }
-          } catch (e) {
-            this.opts.transportContext.logger?.error(
+          } catch (err: any) {
+            this.opts.transportContext?.log.error(
+              err,
               'Failed to initiate caching of Supergraph',
-              e,
             );
           }
         }
@@ -338,7 +342,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
-        logger: this.opts.transportContext?.logger,
+        log: this.opts.transportContext?.log,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
@@ -380,7 +384,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
             },
           },
         );
-        this.opts.transportContext?.logger?.debug(
+        this.opts.transportContext?.log.debug(
           'Supergraph has been changed, updating...',
         );
       }
@@ -392,9 +396,9 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         },
         (err) => {
           this.disposeReason = undefined;
-          this.opts.transportContext?.logger?.error(
-            'Failed to dispose the existing transports and executors',
+          this.opts.transportContext?.log.error(
             err,
+            'Failed to dispose the existing transports and executors',
           );
           return this.unifiedGraph!;
         },
@@ -412,14 +416,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   private getAndSetUnifiedGraph(): MaybePromise<GraphQLSchema> {
     return handleMaybePromise(
-      () => this.opts.getUnifiedGraph(this.opts.transportContext || {}),
+      () => this.opts.getUnifiedGraph(this.opts.transportContext),
       (loadedUnifiedGraph: string | GraphQLSchema | DocumentNode) =>
         this.handleLoadedUnifiedGraph(loadedUnifiedGraph),
       (err) => {
-        this.opts.transportContext?.logger?.error(
-          'Failed to load Supergraph',
-          err,
-        );
+        this.opts.transportContext?.log.error(err, 'Failed to load Supergraph');
         this.lastLoadTime = Date.now();
         this.disposeReason = undefined;
         this.polling$ = undefined;
