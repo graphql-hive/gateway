@@ -16,7 +16,7 @@
     "@graphql-tools/utils": "^10.7.2",
     "@types/node": "^22.15.30",
     "@whatwg-node/disposablestack": "^0.0.6",
-    "@whatwg-node/fetch": "0.10.9-alpha-20250710160716-6df7209d12299dba404ac539d834654be5d43990",
+    "@whatwg-node/fetch": "^0.10.9",
     "@whatwg-node/promise-helpers": "^1.2.5",
     "graphql": "^16.10.0",
     "jest-leak-detector": "30.0.2",
