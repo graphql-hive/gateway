@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/transport-ws": "^1.0.10",
-    "@whatwg-node/fetch": "^0.10.8",
+    "@whatwg-node/fetch": "^0.10.9",
     "graphql": "^16.9.0",
     "tslib": "^2.8.1",
     "@apollo/server": "^4.12.2",
