@@ -25,7 +25,7 @@ if (publishedPackagesOpt) {
 
 await convertE2EToExample({
   e2e: opts.get('e2e', true),
-  clean: strToBool(String(opts.get('clean'))),
-  skipTest: strToBool(String(opts.get('skipTest'))),
+  clean: strToBool(opts.get('clean')),
+  skipTest: strToBool(opts.get('skipTest')),
   publishedPackages,
 });

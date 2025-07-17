@@ -1,10 +1,10 @@
-import { process } from '@graphql-mesh/cross-helpers';
 import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
   isAsyncIterable,
   mapAsyncIterator,
 } from '@graphql-tools/utils';
+import { getNodeEnv } from '~internal/env';
 import {
   FieldNode,
   GraphQLNamedOutputType,
@@ -47,7 +47,7 @@ export interface DemandControlPluginOptions {
   typeCost?(type: GraphQLNamedOutputType): number;
   /**
    * Include extension values that provide useful information, such as the estimated cost of the operation.
-   * Defaults to `true` if `process.env["NODE_ENV"]` is set to `"development"`, otherwise `false`.
+   * Defaults to `true` if `env.NODE_ENV` is set to `"development"`, otherwise `false`.
    */
   includeExtensionMetadata?: boolean;
 }
@@ -55,7 +55,7 @@ export interface DemandControlPluginOptions {
 export function useDemandControl<TContext extends Record<string, any>>({
   listSize = 0,
   maxCost,
-  includeExtensionMetadata = process.env['NODE_ENV'] === 'development',
+  includeExtensionMetadata = getNodeEnv() === 'development',
   operationTypeCost = (operationType) =>
     operationType === 'mutation' ? 10 : 0,
   fieldCost,

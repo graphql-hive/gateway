@@ -1,6 +1,6 @@
-import { process } from '@graphql-mesh/cross-helpers';
 import type { LazyLoggerMessage, Logger } from '@graphql-mesh/types';
 import { LogLevel } from '@graphql-mesh/utils';
+import { getEnvStr } from '~internal/env';
 import { inspect } from 'cross-inspect';
 
 export interface JSONLoggerOptions {
@@ -30,7 +30,7 @@ export class JSONLogger implements Logger {
     this.name = opts?.name;
     this.console = opts?.console || console;
     this.meta = opts?.meta || {};
-    const debugStrs = [process.env['DEBUG'], globalThis.DEBUG];
+    const debugStrs = [getEnvStr('DEBUG'), globalThis.DEBUG];
     if (opts?.level != null) {
       this.logLevel = opts.level;
     } else {

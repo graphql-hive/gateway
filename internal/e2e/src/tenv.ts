@@ -13,7 +13,6 @@ import {
 import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import { Proc, ProcOptions, Server, spawn, waitForPort } from '@internal/proc';
 import {
-  boolEnv,
   createOpt,
   createPortOpt,
   createServicePortOpt,
@@ -23,6 +22,7 @@ import {
 import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
+import { getEnvBool } from '~internal/env';
 import Dockerode from 'dockerode';
 import { glob } from 'glob';
 import type { ExecutionResult } from 'graphql';
@@ -57,21 +57,21 @@ const gatewayRunner = (function getServeRunner() {
       `Unsupported E2E gateway runner "${runner}"; supported runners are ${E2E_GATEWAY_RUNNERS}`,
     );
   }
-  if (runner === 'docker' && !boolEnv('CI')) {
+  if (runner === 'docker' && !getEnvBool('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 yarn build && E2E_GATEWAY_RUNNER=docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e
 
 `);
   }
-  if (runner === 'bin' && !boolEnv('CI')) {
+  if (runner === 'bin' && !getEnvBool('CI')) {
     process.stderr.write(`
 ⚠️ Using bin gateway runner! Make sure you have built the binary with:
 yarn build && yarn workspace @graphql-hive/gateway bundle && yarn workspace @graphql-hive/gateway tsx scripts/package-binary
 
 `);
   }
-  if (runner === 'bun-docker' && !boolEnv('CI')) {
+  if (runner === 'bun-docker' && !getEnvBool('CI')) {
     process.stderr.write(`
 ⚠️ Using docker gateway runner! Make sure you have built the containers with:
 yarn build && E2E_GATEWAY_RUNNER=bun-docker yarn workspace @graphql-hive/gateway bundle && docker buildx bake e2e_bun
@@ -279,7 +279,7 @@ export interface Tenv {
 
 // docker for linux (which is used in the CI) will have the host be on 172.17.0.1,
 // and locally the host.docker.internal (or just on macos?) should just work
-export const dockerHostName = boolEnv('CI')
+export const dockerHostName = getEnvBool('CI')
   ? '172.17.0.1'
   : 'host.docker.internal';
 
@@ -366,7 +366,7 @@ export function createTenv(cwd: string): Tenv {
         port = await getAvailablePort(),
         supergraph: supergraphOpt,
         subgraph: subgraphOpt,
-        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS')
+        pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS')
           ? 'gateway.out'
           : false,
         env,
@@ -637,7 +637,9 @@ export function createTenv(cwd: string): Tenv {
         services = [],
         trimHostPaths,
         maskServicePorts,
-        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? 'mesh.out' : false,
+        pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS')
+          ? 'mesh.out'
+          : false,
         env,
         args = [],
       } = opts || {};
@@ -717,7 +719,7 @@ export function createTenv(cwd: string): Tenv {
       {
         port,
         gatewayPort,
-        pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS')
+        pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS')
           ? `${name}.out`
           : false,
         args = [],
@@ -778,7 +780,9 @@ export function createTenv(cwd: string): Tenv {
       hostPort,
       additionalContainerPorts: containerAdditionalPorts,
       healthcheck,
-      pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? `${name}.out` : false,
+      pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS')
+        ? `${name}.out`
+        : false,
       cmd = [],
       volumes = [],
       args = [],
@@ -1010,7 +1014,7 @@ export function createTenv(cwd: string): Tenv {
     },
     async composeWithApollo({
       services = [],
-      pipeLogs = isDebug() || boolEnv('E2E_PIPE_LOGS') ? 'rover.out' : false,
+      pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS') ? 'rover.out' : false,
     }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {

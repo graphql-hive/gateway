@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { Server } from '@internal/proc';
-import { isDebug } from '@internal/testing';
+import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
 import {
@@ -29,13 +29,15 @@ const supportedFlags = [
  * - `sampling` Will write the heap allocation sampling profile regardless of whether the test fails.
  */
 const flags =
-  process.env['MEMTEST']?.split(',').map((flag) => {
-    flag = flag.trim().toLowerCase();
-    if (!supportedFlags.includes(flag as any)) {
-      throw new Error(`Unsupported MEMTEST flag: "${flag}"`);
-    }
-    return flag as (typeof supportedFlags)[number];
-  }) || [];
+  getEnvStr('MEMTEST')
+    ?.split(',')
+    .map((flag) => {
+      flag = flag.trim().toLowerCase();
+      if (!supportedFlags.includes(flag as any)) {
+        throw new Error(`Unsupported MEMTEST flag: "${flag}"`);
+      }
+      return flag as (typeof supportedFlags)[number];
+    }) || [];
 
 export interface MemtestOptions
   extends Omit<
@@ -152,7 +154,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         calmdown,
         runs,
         server,
-        pipeLogs: isDebug('memtest') ? 'loadtest.out' : undefined,
+        pipeLogs: isDebug() ? 'loadtest.out' : undefined,
         async onMemorySample(samples) {
           if (flags.includes('chart')) {
             const chart = createMemorySampleLineChart(samples);

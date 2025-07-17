@@ -12,6 +12,7 @@ import type { TypedEventTarget } from '@graphql-yoga/typed-event-target';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { CustomEvent } from '@whatwg-node/events';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
+import { getEnvStr } from '~internal/env';
 import { GraphQLSchema } from 'graphql';
 import {
   getStitchedSchemaFromSupergraphSdl,
@@ -148,7 +149,7 @@ export async function fetchSupergraphSdlFromManagedFederation(
   options: FetchSupergraphSdlFromManagedFederationOpts = {},
 ): Promise<RouterConfig | Unchanged | FetchError> {
   const userDefinedUplinks =
-    process.env['APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT']?.split(',') ?? [];
+    getEnvStr('APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT')?.split(',') ?? [];
 
   const {
     upLink = userDefinedUplinks[0] || DEFAULT_UPLINKS[0],
@@ -158,11 +159,11 @@ export async function fetchSupergraphSdlFromManagedFederation(
   } = options;
 
   if (!variables.graphRef) {
-    variables.graphRef = process.env['APOLLO_GRAPH_REF'];
+    variables.graphRef = getEnvStr('APOLLO_GRAPH_REF');
   }
 
   if (!variables.apiKey) {
-    variables.apiKey = process.env['APOLLO_KEY'];
+    variables.apiKey = getEnvStr('APOLLO_KEY');
   }
 
   if (!upLink) {

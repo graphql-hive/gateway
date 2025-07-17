@@ -1,10 +1,10 @@
 import { JSONLogger } from '@graphql-hive/logger-json';
-import { process } from '@graphql-mesh/cross-helpers';
 import { Logger } from '@graphql-mesh/types';
 import { DefaultLogger, LogLevel } from '@graphql-mesh/utils';
+import { getEnvStr, getNodeEnv } from '~internal/env';
 
 export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
-  const logFormat = process.env['LOG_FORMAT'] || (globalThis as any).LOG_FORMAT;
+  const logFormat = getEnvStr('LOG_FORMAT') || (globalThis as any).LOG_FORMAT;
   if (logFormat) {
     if (logFormat.toLowerCase() === 'json') {
       return new JSONLogger(opts);
@@ -12,7 +12,7 @@ export function getDefaultLogger(opts?: { name?: string; level?: LogLevel }) {
       return new DefaultLogger(opts?.name, opts?.level);
     }
   }
-  const nodeEnv = process.env['NODE_ENV'] || (globalThis as any).NODE_ENV;
+  const nodeEnv = getNodeEnv();
   if (nodeEnv === 'production') {
     return new JSONLogger(opts);
   }

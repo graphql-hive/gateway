@@ -1,5 +1,6 @@
+export * from '~internal/env';
+export * from '~internal/env/node';
 export * from './server';
-export * from './env';
 export * from './getLocalhost';
 export * from './opts';
 export * from './assertions';

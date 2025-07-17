@@ -23,6 +23,7 @@ import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opente
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
+import { getEnvBool, getNodeEnv, isDebug } from '~internal/env';
 import parseDuration from 'parse-duration';
 import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
@@ -72,13 +73,13 @@ export interface GatewayCLIHiveReportingOptions
   /**
    * The target to which the usage data should be reported to.
    *
-   * @default process.env.HIVE_USAGE_TARGET
+   * @default env.HIVE_USAGE_TARGET
    */
   target?: GatewayHiveReportingOptions['target'];
   /**
    * Hive registry access token for usage metrics reporting.
    *
-   * @default process.env.HIVE_USAGE_ACCESS_TOKEN || process.env.HIVE_REGISTRY_TOKEN
+   * @default env.HIVE_USAGE_ACCESS_TOKEN || env.HIVE_REGISTRY_TOKEN
    */
   token?: GatewayHiveReportingOptions['token'];
 }
@@ -254,7 +255,7 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 // override the config file (with option defaults, config file will always be overwritten)
 const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: process.env['NODE_ENV'] === 'production' ? maxFork : 1,
+  fork: getNodeEnv() === 'production' ? maxFork : 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -394,9 +395,15 @@ let cli = new Command()
   .addOption(
     new Option(
       '--jit',
-      'Enable Just-In-Time compilation of GraphQL documents',
+      'Enable Just-In-Time compilation of GraphQL documents (env: JIT)',
     ).env('JIT'),
-  );
+  )
+  .on('optionEnv:jit', function (this: Command) {
+    // we need this because commanderjs only checks for the existence of the
+    // variable, and not whether it is truthy (JIT=0 would be still true)
+    // TODO: this should be done in commanderjs itself, raise an issue
+    this.setOptionValueWithSource('jit', getEnvBool('JIT'), 'env');
+  });
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
@@ -429,7 +436,7 @@ export function handleNodeWarnings() {
     warning: string | Error,
     ...opts: any[]
   ) {
-    if (['1', 'y', 'yes', 't', 'true'].includes(String(process.env['DEBUG']))) {
+    if (isDebug()) {
       originalProcessEmitWarning(warning, ...opts);
     }
   };

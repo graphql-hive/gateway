@@ -3,6 +3,7 @@ import { STS } from '@aws-sdk/client-sts';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { getEnvStr } from '~internal/env';
 import aws4, { type Request as AWS4Request } from 'aws4';
 import { createGraphQLError } from 'graphql-yoga';
 import {
@@ -20,13 +21,13 @@ const DEFAULT_INCOMING_OPTIONS: Required<AWSSignv4PluginIncomingOptions> = {
   enabled: () => true,
   headers: (headers) => headers,
   secretAccessKey: () =>
-    process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'],
+    getEnvStr('AWS_SECRET_ACCESS_KEY') || getEnvStr('AWS_SECRET_KEY'),
   assumeRole: () =>
-    process.env['AWS_ROLE_ARN'] != null &&
-    process.env['AWS_IAM_ROLE_SESSION_NAME'] != null
+    getEnvStr('AWS_ROLE_ARN') != null &&
+    getEnvStr('AWS_IAM_ROLE_SESSION_NAME') != null
       ? {
-          roleArn: process.env['AWS_ROLE_ARN'],
-          roleSessionName: process.env['AWS_IAM_ROLE_SESSION_NAME'],
+          roleArn: getEnvStr('AWS_ROLE_ARN'),
+          roleSessionName: getEnvStr('AWS_IAM_ROLE_SESSION_NAME'),
         }
       : undefined,
   onExpired() {
@@ -79,8 +80,8 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
             ...DEFAULT_INCOMING_OPTIONS,
             secretAccessKey(payload) {
               const secretFromEnv =
-                process.env['AWS_SECRET_ACCESS_KEY'] ||
-                process.env['AWS_SECRET_KEY'];
+                getEnvStr('AWS_SECRET_ACCESS_KEY') ||
+                getEnvStr('AWS_SECRET_KEY');
               if (secretFromEnv) {
                 return secretFromEnv;
               }
@@ -372,31 +373,32 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
       }
       let signQuery = false;
       let accessKeyId: string | undefined =
-        process.env['AWS_ACCESS_KEY_ID'] || process.env['AWS_ACCESS_KEY'];
+        getEnvStr('AWS_ACCESS_KEY_ID') || getEnvStr('AWS_ACCESS_KEY');
       let secretAccessKey: string | undefined =
-        process.env['AWS_SECRET_ACCESS_KEY'] || process.env['AWS_SECRET_KEY'];
-      let sessionToken: string | undefined = process.env['AWS_SESSION_TOKEN'];
+        getEnvStr('AWS_SECRET_ACCESS_KEY') || getEnvStr('AWS_SECRET_KEY');
+      let sessionToken: string | undefined = getEnvStr('AWS_SESSION_TOKEN');
       let service: string | undefined;
       let region: string | undefined;
-      let roleArn: string | undefined = process.env['AWS_ROLE_ARN'];
-      let roleSessionName: string | undefined =
-        process.env['AWS_IAM_ROLE_SESSION_NAME'];
+      let roleArn: string | undefined = getEnvStr('AWS_ROLE_ARN');
+      let roleSessionName: string | undefined = getEnvStr(
+        'AWS_IAM_ROLE_SESSION_NAME',
+      );
       if (typeof factoryResult === 'object' && factoryResult != null) {
         signQuery = factoryResult.signQuery || false;
         accessKeyId =
           factoryResult.accessKeyId ||
-          process.env['AWS_ACCESS_KEY_ID'] ||
-          process.env['AWS_ACCESS_KEY'];
+          getEnvStr('AWS_ACCESS_KEY_ID') ||
+          getEnvStr('AWS_ACCESS_KEY');
         secretAccessKey =
           factoryResult.secretAccessKey ||
-          process.env['AWS_SECRET_ACCESS_KEY'] ||
-          process.env['AWS_SECRET_KEY'];
+          getEnvStr('AWS_SECRET_ACCESS_KEY') ||
+          getEnvStr('AWS_SECRET_KEY');
         sessionToken =
-          factoryResult.sessionToken || process.env['AWS_SESSION_TOKEN'];
+          factoryResult.sessionToken || getEnvStr('AWS_SESSION_TOKEN');
         roleArn = factoryResult.roleArn;
         roleSessionName =
           factoryResult.roleSessionName ||
-          process.env['AWS_IAM_ROLE_SESSION_NAME'];
+          getEnvStr('AWS_IAM_ROLE_SESSION_NAME');
         service = factoryResult.serviceName;
         region = factoryResult.region;
       }

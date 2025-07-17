@@ -15,6 +15,7 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadTypedefs } from '@graphql-tools/load';
 import { asArray, isValidPath } from '@graphql-tools/utils';
+import { getNodeEnv } from '~internal/env';
 import {
   defaultOptions,
   type AddCommand,
@@ -251,8 +252,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
       }
       return runSupergraph(ctx, config);
     })
-    .allowUnknownOption(process.env['NODE_ENV'] === 'test')
-    .allowExcessArguments(process.env['NODE_ENV'] === 'test');
+    .allowUnknownOption(getNodeEnv() === 'test')
+    .allowExcessArguments(getNodeEnv() === 'test');
 
 export type SupergraphConfig = GatewayConfigSupergraph & GatewayCLIConfig;
 

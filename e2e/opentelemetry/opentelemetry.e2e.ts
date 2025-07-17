@@ -1,6 +1,6 @@
 import os from 'os';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { boolEnv } from '@internal/testing';
+import { isCI } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ let supergraph!: string;
 
 const JAEGER_HOSTNAME =
   gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
-    ? boolEnv('CI')
+    ? isCI()
       ? '172.17.0.1'
       : 'host.docker.internal'
     : '0.0.0.0';
