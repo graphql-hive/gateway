@@ -157,6 +157,8 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
                 'OTEL_SERVICE_VERSION',
                 globalThis.__OTEL_PLUGIN_VERSION__,
               ),
+        ['hive.gateway.version']: globalThis.__VERSION__,
+        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__,
       });
 
       const resource =
