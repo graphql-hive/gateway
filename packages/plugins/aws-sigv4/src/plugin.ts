@@ -1,7 +1,6 @@
 import { BinaryLike, createHash, createHmac, KeyObject } from 'node:crypto';
 import { STS } from '@aws-sdk/client-sts';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
-import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getEnvStr } from '~internal/env';
 import aws4, { type Request as AWS4Request } from 'aws4';
@@ -358,8 +357,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
     },
     // Handle outgoing requests
     onFetch({ url, options, setURL, setOptions, executionRequest }) {
-      const subgraphName = (executionRequest &&
-        subgraphNameByExecutionRequest.get(executionRequest))!;
+      const subgraphName = executionRequest?.subgraphName!;
       if (!isBufferOrString(options.body)) {
         return;
       }

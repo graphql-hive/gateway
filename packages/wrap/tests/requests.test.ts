@@ -28,6 +28,7 @@ describe('requests', () => {
   test('should create requests', () => {
     const request = removeLocations(
       createRequest({
+        subgraphName: undefined,
         targetOperation: 'query' as OperationTypeNode,
         targetFieldName: 'version',
         selectionSet: parseSelectionSet(`{
