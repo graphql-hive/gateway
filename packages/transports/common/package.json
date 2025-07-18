@@ -46,9 +46,9 @@
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
     "@graphql-mesh/types": "^0.104.5",
-    "@graphql-tools/executor": "^1.4.7",
+    "@graphql-tools/executor": "^1.4.8",
     "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.8.1",
+    "@graphql-tools/utils": "^10.9.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
