@@ -1,0 +1,13 @@
+diff --git a/build/src/Span.js b/build/src/Span.js
+index 12c33551fa559f3657e1d9074cadb34b7e73a675..63ac0075b94eae4c519d94c5c141c7002d21e412 100644
+--- a/build/src/Span.js
++++ b/build/src/Span.js
+@@ -69,7 +69,7 @@ class SpanImpl {
+         this.parentSpanContext = opts.parentSpanContext;
+         this.kind = opts.kind;
+         this.links = opts.links || [];
+-        this.startTime = this._getTime(opts.startTime ?? hrTime(this._performanceStartTime + this._performanceOffset));
++        this.startTime = this._getTime(opts.startTime ?? core_1.hrTime(this._performanceStartTime + this._performanceOffset));
+         this.resource = opts.resource;
+         this.instrumentationScope = opts.scope;
+         if (opts.attributes != null) {

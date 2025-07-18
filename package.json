@@ -81,6 +81,7 @@
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.10",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "@opentelemetry/sdk-trace-base@npm:2.0.1": "patch:@opentelemetry/sdk-trace-base@patch%3A@opentelemetry/sdk-trace-base@npm%253A2.0.1%23~/.yarn/patches/@opentelemetry-sdk-trace-base-npm-2.0.1-ebe4f8e34e.patch%3A%3Aversion=2.0.1&hash=212481#~/.yarn/patches/@opentelemetry-sdk-trace-base-patch-0b7dbf6a30.patch"
   }
 }
