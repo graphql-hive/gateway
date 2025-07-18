@@ -1,0 +1,39 @@
+diff --git a/build/esm/Span.js b/build/esm/Span.js
+index 185835fdc5667eddb072891618607ce213bb6625..5554c8bde3f6f44504587a88e115104a01d39ec4 100644
+--- a/build/esm/Span.js
++++ b/build/esm/Span.js
+@@ -66,7 +66,7 @@ export class SpanImpl {
+         this.parentSpanContext = opts.parentSpanContext;
+         this.kind = opts.kind;
+         this.links = opts.links || [];
+-        this.startTime = this._getTime(opts.startTime ?? now);
++        this.startTime = this._getTime(opts.startTime ?? hrTime(this._performanceStartTime + this._performanceOffset));
+         this.resource = opts.resource;
+         this.instrumentationScope = opts.scope;
+         if (opts.attributes != null) {
+diff --git a/build/esnext/Span.js b/build/esnext/Span.js
+index 185835fdc5667eddb072891618607ce213bb6625..5554c8bde3f6f44504587a88e115104a01d39ec4 100644
+--- a/build/esnext/Span.js
++++ b/build/esnext/Span.js
+@@ -66,7 +66,7 @@ export class SpanImpl {
+         this.parentSpanContext = opts.parentSpanContext;
+         this.kind = opts.kind;
+         this.links = opts.links || [];
+-        this.startTime = this._getTime(opts.startTime ?? now);
++        this.startTime = this._getTime(opts.startTime ?? hrTime(this._performanceStartTime + this._performanceOffset));
+         this.resource = opts.resource;
+         this.instrumentationScope = opts.scope;
+         if (opts.attributes != null) {
+diff --git a/build/src/Span.js b/build/src/Span.js
+index 5a807fe223a70e5e077b66ad74b8efe2eaabd8fa..6388deff9c1e83946f16b04cbfaf884b6f350d29 100644
+--- a/build/src/Span.js
++++ b/build/src/Span.js
+@@ -69,7 +69,7 @@ class SpanImpl {
+         this.parentSpanContext = opts.parentSpanContext;
+         this.kind = opts.kind;
+         this.links = opts.links || [];
+-        this.startTime = this._getTime(opts.startTime ?? now);
++        this.startTime = this._getTime(opts.startTime ?? hrTime(this._performanceStartTime + this._performanceOffset));
+         this.resource = opts.resource;
+         this.instrumentationScope = opts.scope;
+         if (opts.attributes != null) {
