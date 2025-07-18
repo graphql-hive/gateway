@@ -31,8 +31,8 @@ const server = new ApolloServer<ExpressContextFunctionArgument>({
       }
 
       type Headers {
-        authorization: String!
-        sessionCookieId: String!
+        authorization: String
+        sessionCookieId: String
       }
     `),
     resolvers: resolvers as GraphQLResolverMap<unknown>,

@@ -47,9 +47,17 @@ describe('batch execution', () => {
       resolvers: {
         Query: {
           field1: (_parent, _args, context, info) =>
-            delegateToSchema({ schema: innerSubschemaConfig, context, info }),
+            delegateToSchema({
+              schema: innerSubschemaConfig,
+              context,
+              info,
+            }),
           field2: (_parent, _args, context, info) =>
-            delegateToSchema({ schema: innerSubschemaConfig, context, info }),
+            delegateToSchema({
+              schema: innerSubschemaConfig,
+              context,
+              info,
+            }),
         },
       },
     });

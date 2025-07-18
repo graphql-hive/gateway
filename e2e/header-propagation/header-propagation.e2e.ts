@@ -34,6 +34,41 @@ it('propagates headers to subgraphs', async () => {
   });
 });
 
+it('propagates headers to subgraphs with batching', async () => {
+  await using gw = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [await service('upstream')],
+    },
+  });
+  const result = await gw.execute({
+    query: /* GraphQL */ `
+      query {
+        h1: headers {
+          sessionCookieId
+        }
+        h2: headers {
+          authorization
+        }
+      }
+    `,
+    headers: {
+      authorization: 'Bearer token',
+      'session-cookie-id': 'session-cookie',
+    },
+  });
+  expect(result).toEqual({
+    data: {
+      h1: {
+        sessionCookieId: 'session-cookie',
+      },
+      h2: {
+        authorization: 'Bearer token',
+      },
+    },
+  });
+});
+
 it('sends default headers to subgraphs', async () => {
   await using gw = await gateway({
     supergraph: {
