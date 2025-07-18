@@ -1,0 +1,184 @@
+:root {
+  --background-color: #a5c4cb;
+  --background-light-color: #adcad0;
+  --primary-color: #00342c;
+  --accent-color: #e1ff00;
+  --primary-light-color: #245850;
+  --primary-light-hover-color: #3b736a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  padding: 50px 25px;
+  margin: 0;
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+main {
+  z-index: 1;
+  position: relative;
+}
+footer {
+  margin-top: 50px;
+  text-align: center;
+}
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.the-guild {
+  display: flex;
+  margin-left: 5px;
+  color: black;
+  width: 3.2rem;
+}
+.the-guild svg.logo {
+  width: 2em;
+}
+.the-guild svg.name {
+  margin-left: 3px;
+  width: 2.5em;
+}
+.watermark {
+  z-index: 0;
+  position: absolute;
+  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+a {
+  /* color: var(--accent-color); */
+  color: var(--primary-color);
+  font-weight: bold;
+}
+code {
+  background-color: white;
+  color: var(--primary-color);
+  padding: 4px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+pre {
+  max-width: 100%;
+}
+pre code {
+  border-radius: 16px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hero .logo {
+  font-size: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.hero .logo svg {
+  min-width: 50px;
+  max-width: 50px;
+}
+.hero .logo h1 {
+  margin: 0;
+  text-align: center;
+}
+.hero .description {
+  color: #245850;
+  max-width: 600px;
+  text-align: center;
+}
+.hero .links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.content {
+  position: relative;
+  margin: 50px auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  align-items: center;
+}
+.content p {
+  text-align: center;
+}
+
+.shell {
+  background-color: var(--background-light-color);
+  border-radius: 16px;
+  display: flex;
+  padding: 6px 16px;
+}
+.shell .dollar {
+  margin-top: 11px; /* Align dollar sign with the command text */
+  margin-right: 10px;
+  color: var(--accent-color);
+}
+.shell .command {
+  user-select: all;
+  /* color: white; */
+}
+
+.curl code {
+  padding-left: 30px !important;
+  background-color: var(--primary-light-color);
+  color: white;
+}
+
+.four-oh-four {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 16px;
+  margin: 0 auto;
+  padding: 20px 30px;
+  max-width: 800px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease-in-out;
+}
+.four-oh-four:hover {
+  opacity: 1;
+}
+.four-oh-four p {
+  text-align: center;
+}
+
+a.button {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 1.2rem;
+  transition: background-color 0.1s ease-in-out;
+  color: white;
+  background-color: var(--primary-light-color);
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid var(--primary-light-color);
+}
+a.button:hover {
+  background-color: var(--primary-light-hover-color);
+}
+a.button.accent {
+  color: black;
+  background-color: var(--accent-color);
+}
+a.button.accent:hover {
+  background-color: white;
+}

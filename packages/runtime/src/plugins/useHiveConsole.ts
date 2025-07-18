@@ -1,6 +1,6 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
+import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
-import type { Logger } from '@graphql-mesh/types';
 import { isDebug } from '~internal/env';
 import { GatewayPlugin } from '../types';
 
@@ -33,13 +33,13 @@ export default function useHiveConsole<
   enabled,
   token,
   ...options
-}: HiveConsolePluginOptions & { logger: Logger }): GatewayPlugin<
+}: HiveConsolePluginOptions & { log: Logger }): GatewayPlugin<
   TPluginContext,
   TContext
 > {
   const agent: HiveConsolePluginOptions['agent'] = {
     name: 'hive-gateway',
-    logger: options.logger,
+    logger: LegacyLogger.from(options.log),
     ...options.agent,
   };
 

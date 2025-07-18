@@ -34,7 +34,7 @@ export function getExecutorForUnifiedGraph<TContext>(
       () => unifiedGraphManager.getContext(execReq.context),
       (context) => {
         function handleExecutor(executor: Executor) {
-          opts?.transportContext?.logger?.debug(
+          opts?.transportContext?.log.debug(
             'Executing request on unified graph',
             () => print(execReq.document),
           );
@@ -50,7 +50,7 @@ export function getExecutorForUnifiedGraph<TContext>(
               return handleMaybePromise(
                 () => unifiedGraphManager.getUnifiedGraph(),
                 (unifiedGraph) => {
-                  opts?.transportContext?.logger?.debug(
+                  opts?.transportContext?.log.debug(
                     'Executing request on unified graph',
                     () => print(execReq.document),
                   );
@@ -70,9 +70,7 @@ export function getExecutorForUnifiedGraph<TContext>(
     enumerable: true,
     get() {
       return function unifiedGraphExecutorDispose() {
-        opts?.transportContext?.logger?.debug(
-          'Disposing unified graph executor',
-        );
+        opts?.transportContext?.log.debug('Disposing unified graph executor');
         return unifiedGraphManager[DisposableSymbols.asyncDispose]();
       };
     },
