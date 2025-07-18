@@ -1,4 +1,3 @@
-import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { GatewayPlugin, OnFetchHookDone } from '../types';
 
@@ -38,8 +37,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           ? context?.request || executionRequest?.context?.request
           : undefined;
       if (request) {
-        const subgraphName = (executionRequest &&
-          subgraphNameByExecutionRequest.get(executionRequest))!;
+        const subgraphName = executionRequest?.subgraphName!;
         return handleMaybePromise(
           () =>
             handleMaybePromise(

@@ -171,11 +171,6 @@ function getTransportExecutor({
   );
 }
 
-export const subgraphNameByExecutionRequest = new WeakMap<
-  ExecutionRequest,
-  string
->();
-
 /**
  * This function creates a executor factory that uses the transport packages,
  * and wraps them with the hooks
@@ -206,7 +201,6 @@ export function getOnSubgraphExecute({
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ) {
-    subgraphNameByExecutionRequest.set(executionRequest, subgraphName);
     let executor: Executor | undefined = subgraphExecutorMap.get(subgraphName);
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
