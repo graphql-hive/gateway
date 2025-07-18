@@ -54,6 +54,7 @@ export function delegateToSchema<
   } = options;
 
   const request = createRequest({
+    subgraphName: (schema as SubschemaConfig).name,
     sourceSchema: info.schema,
     sourceParentType: info.parentType,
     sourceFieldName: info.fieldName,
