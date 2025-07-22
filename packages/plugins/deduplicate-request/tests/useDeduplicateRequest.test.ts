@@ -14,7 +14,10 @@ export function wrapFetchWithPlugins(plugins: GatewayPlugin[]): MeshFetch {
   return wrapFetchWithHooks(onFetchHooks);
 }
 
-const modules = ['node-fetch', 'undici', '@whatwg-node/fetch'];
+const modules = ['node-fetch', '@whatwg-node/fetch'];
+if (!process.versions.node?.startsWith('1')) {
+  modules.push('undici');
+}
 
 describe('useDeduplicateRequest', () => {
   modules.forEach((fetchImplName) => {
