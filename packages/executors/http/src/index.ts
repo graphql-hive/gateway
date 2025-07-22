@@ -58,7 +58,9 @@ export type SyncImportFn = (moduleName: string) => any;
 
 export interface HTTPExecutorOptions {
   /**
-   * The endpoint to use when querying the upstream API
+   * The endpoint to use when querying the upstream API. Can also be a factory function that returns the
+   * endpoint based on the `ExecutionRequest` allowing for dynamic endpoints, such as using environment
+   * variables or other runtime values.
    * @default '/graphql'
    */
   endpoint?: string | ((executorRequest?: ExecutionRequest) => string);
