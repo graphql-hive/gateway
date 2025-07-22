@@ -15,7 +15,7 @@ export function wrapFetchWithPlugins(plugins: GatewayPlugin[]): MeshFetch {
 }
 
 const modules = ['node-fetch', '@whatwg-node/fetch'];
-if (process.versions.node?.startsWith('2')) {
+if (!process.versions.node?.startsWith('1')) {
   modules.push('undici');
 }
 
