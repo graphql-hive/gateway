@@ -447,51 +447,6 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   }
 
   {
-    console.group('Creating an example archive...');
-    using _ = defer(() => console.groupEnd());
-
-    // https://reproducible-builds.org/docs/archives/
-    const [, waitForExit] = await spawn(
-      {
-        cwd: path.join(__project, 'examples'),
-        env: {
-          // remove timestamps from gzip
-          GZIP: '-n',
-        },
-      },
-      'tar',
-      // consistent sort of files (by default tar sorts files by order of the filesystem)
-      '--sort=name',
-      // set modify time to zero
-      '--mtime="@0"',
-      // set default permissions and owners
-      '--mode=a+rwX',
-      '--owner=0',
-      '--group=0',
-      '--numeric-owner',
-      // PAX headers
-      '--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime',
-      // create gzip
-      '-cz',
-      // filename
-      '-f',
-      `${config.e2e}.tar.gz`,
-      // respect .gitignore
-      `--exclude-from=${path.join(__project, '.gitignore')}`,
-      // skip node_modules
-      `--exclude=${config.e2e}/node_modules`,
-      // skip existing example archive
-      `--exclude=${config.e2e}/example.tar.gz`,
-      config.e2e,
-    );
-    await waitForExit;
-
-    await fs.rename(
-      path.join(__project, 'examples', `${config.e2e}.tar.gz`),
-      path.join(__project, 'examples', config.e2e, 'example.tar.gz'),
-    );
-  }
-  {
     console.group('Defining codesandbox setup and tasks...');
     using _ = defer(() => console.groupEnd());
 
@@ -548,100 +503,148 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
     );
   }
 
-  if (config.skipTest) {
-    console.log('Skipping example tests...');
-    return;
-  }
+  if (!config.skipTest) {
+    console.log('Testing example...');
 
-  console.log('Hiding root node_modules and tsconfig.json');
-  const hiddenPrefix = 'HIDDEN_';
-  await Promise.all([
-    fs.rename(
-      path.join(__project, 'node_modules'),
-      path.join(__project, `${hiddenPrefix}node_modules`),
-    ),
-    fs.rename(
-      path.join(__project, 'tsconfig.json'),
-      path.join(__project, `${hiddenPrefix}tsconfig.json`),
-    ),
-  ]);
-  await using _ = asyncDefer(() => {
-    console.log('Restoring root node_modules and tsconfig.json');
-    return Promise.all([
+    console.log('Hiding root node_modules and tsconfig.json');
+    const hiddenPrefix = 'HIDDEN_';
+    await Promise.all([
       fs.rename(
-        path.join(__project, `${hiddenPrefix}node_modules`),
         path.join(__project, 'node_modules'),
+        path.join(__project, `${hiddenPrefix}node_modules`),
       ),
       fs.rename(
-        path.join(__project, `${hiddenPrefix}tsconfig.json`),
         path.join(__project, 'tsconfig.json'),
+        path.join(__project, `${hiddenPrefix}tsconfig.json`),
       ),
     ]);
-  });
+    await using _ = asyncDefer(() => {
+      console.log('Restoring root node_modules and tsconfig.json');
+      return Promise.all([
+        fs.rename(
+          path.join(__project, `${hiddenPrefix}node_modules`),
+          path.join(__project, 'node_modules'),
+        ),
+        fs.rename(
+          path.join(__project, `${hiddenPrefix}tsconfig.json`),
+          path.join(__project, 'tsconfig.json'),
+        ),
+      ]);
+    });
 
-  {
-    console.group('Testing codesandbox setup and starting Hive Gateway...');
-    using _ = defer(() => console.groupEnd());
+    {
+      console.group('Testing codesandbox setup and starting Hive Gateway...');
+      using _ = defer(() => console.groupEnd());
 
-    await using stack = new AsyncDisposableStack();
+      await using stack = new AsyncDisposableStack();
 
-    for (const { background, ...task } of tasks) {
-      console.log(`Running "${task.name}"...`);
+      for (const { background, ...task } of tasks) {
+        console.log(`Running "${task.name}"...`);
 
-      const [proc, waitForExit] = await spawn(
-        {
-          cwd: exampleDir,
-          signal: background ? undefined : AbortSignal.timeout(60_000),
-        },
-        ...cmdAndArgs(task),
-      );
-      if (background) {
-        console.info(
-          'Task is a background job, making sure it starts and not waiting for exit',
-        );
-
-        // wait 1 second and see whether the process will fail
-        await Promise.race([waitForExit, setTimeout(1_000)]);
-
-        stack.use(proc);
-
-        console.log(`Running "${background.wait.name}"...`);
-        await spawn(
+        const [proc, waitForExit] = await spawn(
           {
             cwd: exampleDir,
-            signal: AbortSignal.timeout(60_000),
+            signal: background ? undefined : AbortSignal.timeout(60_000),
           },
-          ...cmdAndArgs(background.wait),
+          ...cmdAndArgs(task),
         );
-      } else {
-        await waitForExit;
+        if (background) {
+          console.info(
+            'Task is a background job, making sure it starts and not waiting for exit',
+          );
+
+          // wait 1 second and see whether the process will fail
+          await Promise.race([waitForExit, setTimeout(1_000)]);
+
+          stack.use(proc);
+
+          console.log(`Running "${background.wait.name}"...`);
+          await spawn(
+            {
+              cwd: exampleDir,
+              signal: AbortSignal.timeout(60_000),
+            },
+            ...cmdAndArgs(background.wait),
+          );
+        } else {
+          await waitForExit;
+        }
+      }
+
+      console.log(`Starting Hive Gateway...`);
+      const [proc, waitForExit] = await spawn(
+        { cwd: exampleDir },
+        'npm',
+        'run',
+        'gateway',
+      );
+      stack.use(proc);
+      await Promise.race([
+        waitForExit,
+        waitForPort({
+          port: 4000,
+          signal: AbortSignal.timeout(10_000),
+        }),
+      ]);
+
+      console.log('Checking Hive Gateway health...');
+      const res = await fetch('http://0.0.0.0:4000/healthcheck');
+      if (!res.ok) {
+        throw new Error('Hive Gateway not healthy');
       }
     }
 
-    console.log(`Starting Hive Gateway...`);
-    const [proc, waitForExit] = await spawn(
-      { cwd: exampleDir },
-      'npm',
-      'run',
-      'gateway',
-    );
-    stack.use(proc);
-    await Promise.race([
-      waitForExit,
-      waitForPort({
-        port: 4000,
-        signal: AbortSignal.timeout(10_000),
-      }),
-    ]);
-
-    console.log('Checking Hive Gateway health...');
-    const res = await fetch('http://0.0.0.0:4000/healthcheck');
-    if (!res.ok) {
-      throw new Error('Hive Gateway not healthy');
-    }
+    console.log('Ok');
+  } else {
+    console.log('Skipping example tests...');
   }
 
-  console.log('Ok');
+  // we create an example archive after testing because it might've changed the package-lock.json
+  {
+    console.group('Creating an example archive...');
+    using _ = defer(() => console.groupEnd());
+
+    // https://reproducible-builds.org/docs/archives/
+    const [, waitForExit] = await spawn(
+      {
+        cwd: path.join(__project, 'examples'),
+        env: {
+          // remove timestamps from gzip
+          GZIP: '-n',
+        },
+      },
+      'tar',
+      // consistent sort of files (by default tar sorts files by order of the filesystem)
+      '--sort=name',
+      // set modify time to zero
+      '--mtime="@0"',
+      // set default permissions and owners
+      '--mode=a+rwX',
+      '--owner=0',
+      '--group=0',
+      '--numeric-owner',
+      // PAX headers
+      '--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime',
+      // create gzip
+      '-cz',
+      // filename
+      '-f',
+      `${config.e2e}.tar.gz`,
+      // respect .gitignore
+      `--exclude-from=${path.join(__project, '.gitignore')}`,
+      // skip node_modules
+      `--exclude=${config.e2e}/node_modules`,
+      // skip existing example archive
+      `--exclude=${config.e2e}/example.tar.gz`,
+      config.e2e,
+    );
+    await waitForExit;
+
+    await fs.rename(
+      path.join(__project, 'examples', `${config.e2e}.tar.gz`),
+      path.join(__project, 'examples', config.e2e, 'example.tar.gz'),
+    );
+  }
 }
 
 interface Task {
