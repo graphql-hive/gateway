@@ -2,6 +2,7 @@
   "name": "@e2e/location-string-interpolation",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.4.10"
+    "@graphql-mesh/compose-cli": "^1.4.10",
+    "graphql": "^16.9.0"
   }
 }

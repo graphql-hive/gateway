@@ -3179,6 +3179,7 @@ __metadata:
   resolution: "@e2e/location-string-interpolation@workspace:e2e/location-string-interpolation"
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.10"
+    graphql: "npm:^16.9.0"
   languageName: unknown
   linkType: soft
 
