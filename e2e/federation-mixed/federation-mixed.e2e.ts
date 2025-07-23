@@ -1,8 +1,12 @@
-import { createExampleSetup, createTenv } from '@internal/e2e';
+import {
+  createExampleSetup,
+  createTenv,
+  replaceLocalhostWithDockerHost,
+} from '@internal/e2e';
 import { getLocalhost } from '@internal/testing';
 import { expect, it } from 'vitest';
 
-const { service, gateway } = createTenv(__dirname);
+const { service, gateway, gatewayRunner } = createTenv(__dirname);
 const exampleSetup = createExampleSetup(__dirname);
 
 it('should execute', async () => {
@@ -25,7 +29,7 @@ it('should execute', async () => {
       },
     },
     env: {
-      INVENTORY_ENDPOINT: `${inventoryHost}:${inventoryService.port}/graphql`,
+      INVENTORY_ENDPOINT: `${gatewayRunner.includes('docker') ? replaceLocalhostWithDockerHost(inventoryHost) : inventoryHost}:${inventoryService.port}/graphql`,
     },
   });
   await expect(
