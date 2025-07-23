@@ -369,9 +369,15 @@ export interface GatewayHivePersistedDocumentsOptions {
   /**
    * Whether arbitrary documents should be allowed along-side persisted documents.
    *
+   * Alternatively, you can provide a function that returns a boolean value based on
+   * the request's headers.
+   *
    * @default false
    */
-  allowArbitraryDocuments?: boolean;
+  allowArbitraryDocuments?:
+    | boolean
+    // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
+    | ((request: Request) => MaybePromise<boolean>);
 }
 
 interface GatewayConfigBase<TContext extends Record<string, any>> {
