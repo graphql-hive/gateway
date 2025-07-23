@@ -376,13 +376,8 @@ export interface GatewayHivePersistedDocumentsOptions {
    */
   allowArbitraryDocuments?:
     | boolean
-    // @graphql-hive/core/client#AllowArbitraryDocumentsFunction
-    | ((context: {
-        /** an object for accessing the request headers. */
-        headers?: {
-          get(name: string): string | null;
-        };
-      }) => MaybePromise<boolean>);
+    // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
+    | ((request: Request) => MaybePromise<boolean>);
 }
 
 interface GatewayConfigBase<TContext extends Record<string, any>> {
