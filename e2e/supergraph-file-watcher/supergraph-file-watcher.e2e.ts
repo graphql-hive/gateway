@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { createTenv, handleDockerHostNameInSDL } from '@internal/e2e';
+import { createTenv, replaceLocalhostWithDockerHost } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
 const { gatewayRunner, gateway, service, composeWithMesh, fs } =
@@ -11,7 +11,7 @@ it('should detect supergraph file change and reload schema', async () => {
   // compose only "a" service
   let compose = await composeWithMesh({ services });
   if (gatewayRunner.includes('docker')) {
-    compose.result = handleDockerHostNameInSDL(compose.result);
+    compose.result = replaceLocalhostWithDockerHost(compose.result);
   }
   const supergraph = await fs.tempfile('supergraph.graphql', compose.result);
 
@@ -36,7 +36,7 @@ it('should detect supergraph file change and reload schema', async () => {
   // compose only "b" service
   compose = await composeWithMesh({ services, env: { USE_B: 1 } });
   if (gatewayRunner.includes('docker')) {
-    compose.result = handleDockerHostNameInSDL(compose.result);
+    compose.result = replaceLocalhostWithDockerHost(compose.result);
   }
   await fs.write(supergraph, compose.result);
 

@@ -292,12 +292,12 @@ export async function handleDockerHostNameInURLOrAtPath(
 ) {
   if (/^http(s?):\/\//.test(supergraph)) {
     // supergraph is a url
-    supergraph = handleDockerHostNameInSDL(supergraph);
+    supergraph = replaceLocalhostWithDockerHost(supergraph);
   } else {
     // supergraph is a path
     await fs.writeFile(
       supergraph,
-      handleDockerHostNameInSDL(await fs.readFile(supergraph, 'utf8')),
+      replaceLocalhostWithDockerHost(await fs.readFile(supergraph, 'utf8')),
     );
     volumes.push({
       host: supergraph,
@@ -308,10 +308,10 @@ export async function handleDockerHostNameInURLOrAtPath(
   return supergraph;
 }
 
-export function handleDockerHostNameInSDL(supergraph: string) {
+export function replaceLocalhostWithDockerHost(str: string) {
   // we need to replace all local servers in the supergraph to use docker's local hostname.
   // without this, the services running on the host wont be accessible by the docker container
-  return supergraph
+  return str
     .replaceAll('0.0.0.0', dockerHostName)
     .replaceAll('localhost', dockerHostName)
     .replaceAll('127.0.0.1', dockerHostName);

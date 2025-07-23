@@ -1,5 +1,8 @@
 import { process } from '@graphql-mesh/cross-helpers';
-import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
+import {
+  getInterpolatedHeadersFactory,
+  getInterpolatedStringFactory,
+} from '@graphql-mesh/string-interpolation';
 import {
   abortSignalAny,
   type DisposableExecutor,
@@ -83,6 +86,9 @@ export default {
       headersInConfig = Object.fromEntries(transportEntry.headers);
     }
 
+    const endpointFactory = transportEntry.location
+      ? getInterpolatedStringFactory(transportEntry.location)
+      : undefined;
     const headersFactory = getInterpolatedHeadersFactory(headersInConfig);
 
     const verifier = crypto.randomUUID();
@@ -162,19 +168,23 @@ export default {
         signal = abortSignalAny([reqAbortCtrl.signal, signal]);
       }
       const subFetchCall$ = handleMaybePromise(
-        () =>
-          fetch(
-            transportEntry.location!,
+        () => {
+          const factoryContext = {
+            env: process.env as Record<string, string>,
+            root: executionRequest.rootValue,
+            context: executionRequest.context,
+            info: executionRequest.info,
+          };
+
+          return fetch(
+            endpointFactory
+              ? endpointFactory(factoryContext)
+              : transportEntry.location!,
             {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                ...headersFactory({
-                  env: process.env as Record<string, string>,
-                  root: executionRequest.rootValue,
-                  context: executionRequest.context,
-                  info: executionRequest.info,
-                }),
+                ...headersFactory(factoryContext),
                 Accept: 'application/json;callbackSpec=1.0; charset=utf-8',
               },
               body: fetchBody,
@@ -182,7 +192,8 @@ export default {
             },
             executionRequest.context,
             executionRequest.info,
-          ),
+          );
+        },
         (res) =>
           handleMaybePromise(
             () => res.text(),

@@ -58,10 +58,12 @@ export type SyncImportFn = (moduleName: string) => any;
 
 export interface HTTPExecutorOptions {
   /**
-   * The endpoint to use when querying the upstream API
+   * The endpoint to use when querying the upstream API. Can also be a factory function that returns the
+   * endpoint based on the `ExecutionRequest` allowing for dynamic endpoints, such as using environment
+   * variables or other runtime values.
    * @default '/graphql'
    */
-  endpoint?: string;
+  endpoint?: string | ((executorRequest?: ExecutionRequest) => string);
   /**
    * The WHATWG compatible fetch implementation to use
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
@@ -194,8 +196,28 @@ export function buildHTTPExecutor(
       method ||= 'POST';
     }
 
-    const endpoint =
-      request.extensions?.endpoint || options?.endpoint || '/graphql';
+    let endpoint: string | undefined;
+
+    if (request.extensions?.endpoint) {
+      if (typeof request.extensions.endpoint === 'string') {
+        endpoint = request.extensions.endpoint;
+      }
+      if (typeof request.extensions.endpoint === 'function') {
+        endpoint = request.extensions.endpoint(request);
+      }
+    }
+    if (!endpoint) {
+      if (typeof options?.endpoint === 'string') {
+        endpoint = options.endpoint;
+      }
+      if (typeof options?.endpoint === 'function') {
+        endpoint = options.endpoint(request);
+      }
+    }
+    if (!endpoint) {
+      endpoint = '/graphql';
+    }
+
     const headers: Record<string, any> = { accept };
 
     if (options?.headers) {
@@ -561,7 +583,7 @@ function coerceFetchError(
     upstreamErrorExtensions,
   }: {
     signal?: AbortSignal;
-    endpoint: string;
+    endpoint?: string;
     upstreamErrorExtensions: UpstreamErrorExtensions;
   },
 ) {

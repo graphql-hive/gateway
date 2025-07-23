@@ -1,5 +1,8 @@
 import { process } from '@graphql-mesh/cross-helpers';
-import { getInterpolatedHeadersFactory } from '@graphql-mesh/string-interpolation';
+import {
+  getInterpolatedHeadersFactory,
+  getInterpolatedStringFactory,
+} from '@graphql-mesh/string-interpolation';
 import {
   type DisposableExecutor,
   type Transport,
@@ -46,7 +49,10 @@ export default {
         'WS Transport: location is required in the transport entry',
       );
     }
-    const wsUrl = switchProtocols(transportEntry.location);
+
+    const endpointFactory = transportEntry.location
+      ? getInterpolatedStringFactory(transportEntry.location)
+      : undefined;
     const connectionParamsFactory = transportEntry.options?.connectionParams
       ? getInterpolatedHeadersFactory(transportEntry.options.connectionParams)
       : undefined;
@@ -59,18 +65,19 @@ export default {
     const mergedExecutor: DisposableExecutor = function mergedExecutor(
       execReq,
     ) {
-      const connectionParams = connectionParamsFactory?.({
+      const factoryContext = {
         env: process.env as Record<string, string>,
         root: execReq.rootValue,
         context: execReq.context,
         info: execReq.info,
-      });
-      const headers = headersFactory?.({
-        env: process.env as Record<string, string>,
-        root: execReq.rootValue,
-        context: execReq.context,
-        info: execReq.info,
-      });
+      };
+
+      const endpoint = endpointFactory
+        ? endpointFactory(factoryContext)
+        : transportEntry.location!;
+      const wsUrl = switchProtocols(endpoint);
+      const connectionParams = connectionParamsFactory?.(factoryContext);
+      const headers = headersFactory?.(factoryContext);
 
       const hash = JSON.stringify({ wsUrl, connectionParams, headers });
 
