@@ -1,5 +1,20 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 1.0.16
+
+### Patch Changes
+
+- [#1321](https://github.com/graphql-hive/gateway/pull/1321) [`6215001`](https://github.com/graphql-hive/gateway/commit/6215001b1d650ad865331661532bcc4f7bad6b40) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@aws-sdk/client-sts@^3.844.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.844.0) (from `^3.828.0`, in `dependencies`)
+
+- [#1344](https://github.com/graphql-hive/gateway/pull/1344) [`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@aws-sdk/client-sts@^3.848.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.848.0) (from `^3.844.0`, in `dependencies`)
+
+- [#1333](https://github.com/graphql-hive/gateway/pull/1333) [`ffa3753`](https://github.com/graphql-hive/gateway/commit/ffa3753ccb9045c5b2d62af05edc7f1d78336cb3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Isomorphic environment variable getter with truthy value parsing
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`6215001`](https://github.com/graphql-hive/gateway/commit/6215001b1d650ad865331661532bcc4f7bad6b40), [`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a)]:
+  - @graphql-mesh/fusion-runtime@0.11.18
+
 ## 1.0.15
 
 ### Patch Changes
@@ -19,15 +34,12 @@
 ### Patch Changes
 
 - [#1217](https://github.com/graphql-hive/gateway/pull/1217) [`931d576`](https://github.com/graphql-hive/gateway/commit/931d5763c1f8c6d7fdc299bd87a634fecdd70b15) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.825.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.825.0) (from `^3.823.0`, in `dependencies`)
 
 - [#1225](https://github.com/graphql-hive/gateway/pull/1225) [`3dc8ab2`](https://github.com/graphql-hive/gateway/commit/3dc8ab25d40b6a6191c1b4185e97882caef4e8d6) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.826.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.826.0) (from `^3.825.0`, in `dependencies`)
 
 - [#1233](https://github.com/graphql-hive/gateway/pull/1233) [`ed323fa`](https://github.com/graphql-hive/gateway/commit/ed323fa06d196c1df128a493006238078bf69fc6) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.828.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.828.0) (from `^3.826.0`, in `dependencies`)
 
 - Updated dependencies [[`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741)]:
@@ -38,11 +50,9 @@
 ### Patch Changes
 
 - [#1195](https://github.com/graphql-hive/gateway/pull/1195) [`cdc959c`](https://github.com/graphql-hive/gateway/commit/cdc959c57dd770fd5f0bcd05a5de7e3102dacfe2) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.821.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.821.0) (from `^3.817.0`, in `dependencies`)
 
 - [#1203](https://github.com/graphql-hive/gateway/pull/1203) [`4bab6a3`](https://github.com/graphql-hive/gateway/commit/4bab6a3048cd6a9b20b221d625ed94a1e2cf8689) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.823.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.823.0) (from `^3.821.0`, in `dependencies`)
 
 ## 1.0.11
@@ -50,7 +60,6 @@
 ### Patch Changes
 
 - [#1156](https://github.com/graphql-hive/gateway/pull/1156) [`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@aws-sdk/client-sts@^3.817.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.817.0) (from `^3.758.0`, in `dependencies`)
 
 - Updated dependencies [[`fb74009`](https://github.com/graphql-hive/gateway/commit/fb740098652dba2e9107981d1f4e362143478451)]:
@@ -114,7 +123,6 @@
 ### Patch Changes
 
 - [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
 
 - Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04), [`3003ae2`](https://github.com/graphql-hive/gateway/commit/3003ae2545148f75edf0ddca5e84c7b527176713)]:
@@ -125,7 +133,6 @@
 ### Patch Changes
 
 - [#862](https://github.com/graphql-hive/gateway/pull/862) [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.2.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.5) (from `^1.2.4`, in `dependencies`)
 
 - Updated dependencies [[`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448)]:
@@ -151,11 +158,9 @@
 ### Patch Changes
 
 - [#759](https://github.com/graphql-hive/gateway/pull/759) [`817486d`](https://github.com/graphql-hive/gateway/commit/817486ddfb82590028e3775870c1fb5835766a24) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency [`@aws-sdk/client-sts@^3.758.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.758.0) (to `dependencies`)
 
 - [#782](https://github.com/graphql-hive/gateway/pull/782) [`890f16a`](https://github.com/graphql-hive/gateway/commit/890f16afb352987f0565658f338022f9db3b4e3d) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency [`@whatwg-node/promise-helpers@^1.2.4` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.4) (to `dependencies`)
 
 - Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1), [`c54a080`](https://github.com/graphql-hive/gateway/commit/c54a080b8b9c477ed55dd7c23fc8fcae9139bec8), [`002fc95`](https://github.com/graphql-hive/gateway/commit/002fc95c446470943de4d0ef1457850277c3d8aa), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`0451e82`](https://github.com/graphql-hive/gateway/commit/0451e82446a83a17f9fd4b285da240fb00f1c162)]:
