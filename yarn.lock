@@ -3174,6 +3174,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/location-string-interpolation@workspace:e2e/location-string-interpolation":
+  version: 0.0.0-use.local
+  resolution: "@e2e/location-string-interpolation@workspace:e2e/location-string-interpolation"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.4.10"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/manual-transport-def@workspace:e2e/manual-transport-def":
   version: 0.0.0-use.local
   resolution: "@e2e/manual-transport-def@workspace:e2e/manual-transport-def"
