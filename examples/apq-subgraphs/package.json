@@ -9,7 +9,7 @@
     "@graphql-mesh/compose-cli": "^1.4.10",
     "graphql": "^16.9.0",
     "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^1.15.4"
+    "@graphql-hive/gateway": "^1.16.0"
   },
   "overrides": {
     "esbuild": "^0.25.5"
