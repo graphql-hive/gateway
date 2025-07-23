@@ -1,5 +1,17 @@
 # @graphql-hive/nestjs
 
+## 1.0.19
+
+### Patch Changes
+
+- [#1344](https://github.com/graphql-hive/gateway/pull/1344) [`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-tools/utils@^10.9.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.9.0) (from `^10.8.1`, in `dependencies`)
+
+- [#1333](https://github.com/graphql-hive/gateway/pull/1333) [`ffa3753`](https://github.com/graphql-hive/gateway/commit/ffa3753ccb9045c5b2d62af05edc7f1d78336cb3) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Isomorphic environment variable getter with truthy value parsing
+
+- Updated dependencies [[`7dafdeb`](https://github.com/graphql-hive/gateway/commit/7dafdebc803e49373fe9d53997113483e512fdb0), [`6215001`](https://github.com/graphql-hive/gateway/commit/6215001b1d650ad865331661532bcc4f7bad6b40), [`910ff77`](https://github.com/graphql-hive/gateway/commit/910ff777ce787297cece37ec66c3382bc292412b), [`ce99e43`](https://github.com/graphql-hive/gateway/commit/ce99e43b9fec43c665836bd3a282ce6d4302481d), [`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a), [`ffa3753`](https://github.com/graphql-hive/gateway/commit/ffa3753ccb9045c5b2d62af05edc7f1d78336cb3), [`2fa0c8f`](https://github.com/graphql-hive/gateway/commit/2fa0c8f1dd074c9da8e6ac4086eb3009be9fdf07)]:
+  - @graphql-hive/gateway@1.16.0
+
 ## 1.0.18
 
 ### Patch Changes
@@ -19,7 +31,6 @@
 ### Patch Changes
 
 - [#1258](https://github.com/graphql-hive/gateway/pull/1258) [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
-
   - Updated dependency [`@graphql-mesh/types@^0.104.5` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.5) (from `^0.104.0`, in `dependencies`)
 
 - Updated dependencies [[`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85), [`3d24beb`](https://github.com/graphql-hive/gateway/commit/3d24beb7b15fd8109f86bbb3dfd514f6b8202741), [`29f537f`](https://github.com/graphql-hive/gateway/commit/29f537f7dfcf17f3911efd5845d7af1e532d2e85)]:
@@ -93,7 +104,6 @@
 ### Patch Changes
 
 - [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
 
 - Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04)]:
@@ -119,7 +129,6 @@
 ### Patch Changes
 
 - [#862](https://github.com/graphql-hive/gateway/pull/862) [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.2.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.5) (from `^1.0.0`, in `dependencies`)
 
 - Updated dependencies [[`d8a7e9e`](https://github.com/graphql-hive/gateway/commit/d8a7e9e4f0492268f07301a87f1e102400fae921), [`d8a7e9e`](https://github.com/graphql-hive/gateway/commit/d8a7e9e4f0492268f07301a87f1e102400fae921), [`dc8c4ce`](https://github.com/graphql-hive/gateway/commit/dc8c4ce642ecc8bb47d14002b196981f67c78c3c)]:
@@ -161,7 +170,6 @@
 ### Patch Changes
 
 - [#775](https://github.com/graphql-hive/gateway/pull/775) [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
-
   - Updated dependency [`@graphql-mesh/types@^0.104.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.0) (from `^0.103.18`, in `dependencies`)
 
 - Updated dependencies [[`e393337`](https://github.com/graphql-hive/gateway/commit/e393337ecb40beffb79748b19b5aa8f2fd9197b7), [`3cdd0aa`](https://github.com/graphql-hive/gateway/commit/3cdd0aa8fa98a436365c2f36ca80d49968a48a5e), [`c47322a`](https://github.com/graphql-hive/gateway/commit/c47322a1a1385f24f7649f396fd2fbc632a9256c), [`c7a9849`](https://github.com/graphql-hive/gateway/commit/c7a98491e755cd234ba14033b39d5bc83ad0f945), [`09de0ba`](https://github.com/graphql-hive/gateway/commit/09de0bae281be40f8d8cc462d9c447d03141a5fa), [`33f7dfd`](https://github.com/graphql-hive/gateway/commit/33f7dfdb10eef2a1e7f6dffe0ce6e4bb3cc7c2c6), [`890f16a`](https://github.com/graphql-hive/gateway/commit/890f16afb352987f0565658f338022f9db3b4e3d), [`b145a27`](https://github.com/graphql-hive/gateway/commit/b145a27fc8671f33c36f9f6a3a437d80107631ee), [`bbc98c5`](https://github.com/graphql-hive/gateway/commit/bbc98c58277283f064ba826a3d844709f75ac451), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`09de0ba`](https://github.com/graphql-hive/gateway/commit/09de0bae281be40f8d8cc462d9c447d03141a5fa), [`ee00eaf`](https://github.com/graphql-hive/gateway/commit/ee00eaf8cd843dacba20b9235033b62f061195f7), [`3cdd0aa`](https://github.com/graphql-hive/gateway/commit/3cdd0aa8fa98a436365c2f36ca80d49968a48a5e), [`e0d5feb`](https://github.com/graphql-hive/gateway/commit/e0d5feb156f896be5c5235eb1ae22144cf67eff9)]:

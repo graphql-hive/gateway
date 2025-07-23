@@ -1,5 +1,15 @@
 # @graphql-tools/batch-delegate
 
+## 9.0.40
+
+### Patch Changes
+
+- [#1344](https://github.com/graphql-hive/gateway/pull/1344) [`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-tools/utils@^10.9.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.9.0) (from `^10.8.1`, in `dependencies`)
+
+- Updated dependencies [[`a71236d`](https://github.com/graphql-hive/gateway/commit/a71236d6ba356741bc85fe27757bea45576dcf1a)]:
+  - @graphql-tools/delegate@10.2.22
+
 ## 9.0.39
 
 ### Patch Changes
@@ -44,7 +54,6 @@
 ### Patch Changes
 
 - [#532](https://github.com/graphql-hive/gateway/pull/532) [`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.3.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.0) (from `^1.2.5`, in `dependencies`)
 
 - Updated dependencies [[`4e33933`](https://github.com/graphql-hive/gateway/commit/4e339333945f4c4547d9ae719e67b4671fe89f04)]:
@@ -55,7 +64,6 @@
 ### Patch Changes
 
 - [#862](https://github.com/graphql-hive/gateway/pull/862) [`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@whatwg-node/promise-helpers@^1.2.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.5) (from `^1.0.0`, in `dependencies`)
 
 - Updated dependencies [[`278618a`](https://github.com/graphql-hive/gateway/commit/278618a1383a01016041ce0a40adec8803c62448)]:
@@ -66,7 +74,6 @@
 ### Patch Changes
 
 - [#726](https://github.com/graphql-hive/gateway/pull/726) [`6334b2e`](https://github.com/graphql-hive/gateway/commit/6334b2e5d4942693121ab7d44a96fa80408aace1) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency [`@whatwg-node/promise-helpers@^1.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.0.0) (to `dependencies`)
 
 - [#742](https://github.com/graphql-hive/gateway/pull/742) [`2a54e85`](https://github.com/graphql-hive/gateway/commit/2a54e85f2848aea7525703ea33918a21db96b26b) Thanks [@kathrynkodama](https://github.com/kathrynkodama)! - Remove the index from the batched error;
@@ -90,7 +97,6 @@
 ### Patch Changes
 
 - [#620](https://github.com/graphql-hive/gateway/pull/620) [`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
-
   - Updated dependency [`@graphql-tools/utils@^10.8.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.8.1) (from `^10.7.0`, in `dependencies`)
 
 - Updated dependencies [[`d72209a`](https://github.com/graphql-hive/gateway/commit/d72209ad82ec53689f93ce5d81bfa52493919ad9)]:
@@ -189,7 +195,6 @@
 ### Patch Changes
 
 - [#373](https://github.com/graphql-hive/gateway/pull/373) [`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@graphql-tools/utils@^10.7.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.7.0) (from `^10.6.2`, in `dependencies`)
 
 - Updated dependencies [[`e606975`](https://github.com/graphql-hive/gateway/commit/e60697593290255fb9ac407e591ae3e8cb752df2)]:
@@ -207,7 +212,6 @@
 ### Patch Changes
 
 - [#291](https://github.com/graphql-hive/gateway/pull/291) [`34d1224`](https://github.com/graphql-hive/gateway/commit/34d12249ead65b8277df976f6318dca757df1151) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`tslib@^2.8.1` ↗︎](https://www.npmjs.com/package/tslib/v/2.8.1) (from `^2.4.0`, in `dependencies`)
 
 - Updated dependencies [[`34d1224`](https://github.com/graphql-hive/gateway/commit/34d12249ead65b8277df976f6318dca757df1151)]:
@@ -218,15 +222,12 @@
 ### Patch Changes
 
 - [#264](https://github.com/graphql-hive/gateway/pull/264) [`6f56083`](https://github.com/graphql-hive/gateway/commit/6f56083028402780f505db1492b9e84ab4227a4f) Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
-
   - Updated dependency [`dataloader@2.2.3` ↗︎](https://www.npmjs.com/package/dataloader/v/2.2.3) (from `2.2.2`, in `dependencies`)
 
 - [#268](https://github.com/graphql-hive/gateway/pull/268) [`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`dataloader@^2.2.3` ↗︎](https://www.npmjs.com/package/dataloader/v/2.2.3) (from `2.2.3`, in `dependencies`)
 
 - [#269](https://github.com/graphql-hive/gateway/pull/269) [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@graphql-tools/utils@^10.6.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.2) (from `^10.6.0`, in `dependencies`)
 
 - Updated dependencies [[`7df2215`](https://github.com/graphql-hive/gateway/commit/7df2215abd309dc1dfd91f4ec91ce975f3982c62), [`cdca511`](https://github.com/graphql-hive/gateway/commit/cdca5116ce30c2bfced1130c9fbead67280af9d4)]:
@@ -265,15 +266,12 @@
 ### Patch Changes
 
 - [#164](https://github.com/graphql-hive/gateway/pull/164) [`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency [`@graphql-tools/utils@^10.6.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.6.0) (from `^10.5.6`, in `dependencies`)
 
 - [#185](https://github.com/graphql-hive/gateway/pull/185) [`f0b6921`](https://github.com/graphql-hive/gateway/commit/f0b69219fefc1b24c5511a1c623a5e3bbaf5ca0b) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Removed dependency [`value-or-promise@^1.0.12` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.12) (from `dependencies`)
 
 - [#188](https://github.com/graphql-hive/gateway/pull/188) [`f71366d`](https://github.com/graphql-hive/gateway/commit/f71366d234fe8f30a419814fe1460f1e22663241) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Removed dependency [`value-or-promise@^1.0.12` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.12) (from `dependencies`)
 
 - Updated dependencies [[`310613d`](https://github.com/graphql-hive/gateway/commit/310613d68d1df3e2bceafbd0730084a4c83527bf)]:
@@ -453,7 +451,6 @@
 - [#5205](https://github.com/ardatan/graphql-tools/pull/5205)
   [`a33097f7`](https://github.com/ardatan/graphql-tools/commit/a33097f734992105ca13e1774da90842780c6467)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency
     [`value-or-promise@^1.0.12` ↗︎](https://www.npmjs.com/package/value-or-promise/v/1.0.12) (to
     `dependencies`)
@@ -746,7 +743,6 @@
 - [#4640](https://github.com/ardatan/graphql-tools/pull/4640)
   [`27bdc237`](https://github.com/ardatan/graphql-tools/commit/27bdc23713a5176485ac940fc5431256b4f2de8d)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`@graphql-tools/delegate@9.0.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/delegate/v/9.0.3)
     (was `9.0.2`, in `dependencies`)
@@ -1120,7 +1116,6 @@
   rootValue property is now a part of the Request type.
 
   When delegating with delegateToSchema, rootValue can be set multiple ways:
-
   - when using a custom executor, the custom executor can utilize a rootValue in whichever custom
     way it specifies.
   - when using the default executor (execute/subscribe from graphql-js): -- rootValue can be passed
@@ -1178,11 +1173,9 @@
 - a9254491: - Resolver validation options should now be set to `error`, `warn` or `ignore` rather
   than `true` or `false`. In previous versions, some of the validators caused errors to be thrown,
   while some issued warnings. This changes brings consistency to validator behavior.
-
   - The `allowResolversNotInSchema` has been renamed to `requireResolversToMatchSchema`, to
     harmonize the naming convention of all the validators. The default setting of
     `requireResolversToMatchSchema` is `error`, matching the previous behavior.
-
   * The `delegateToSchema` return value has matured and been formalized as an `ExternalObject`, in
     which all errors are integrated into the GraphQL response, preserving their initial path. Those
     advanced users accessing the result directly will note the change in error handling. This also
@@ -1210,7 +1203,6 @@
 
   * `applySchemaTransforms` parameters have been updated to match and support the `transformSchema`
     parameters above.
-
   - `wrapSchema` and `generateProxyingResolvers` now only take a single options argument with named
     properties of type `SubschemaConfig`. The previously possible shorthand version with first
     argument consisting of a `GraphQLSchema` and second argument representing the transforms should
@@ -1244,7 +1236,6 @@
     parsed SDL rather than strings, to nudge end users to parse these strings at build time (when
     possible), rather than at runtime. Parsing of selection set strings can be performed using the
     `parseSelectionSet` function from `@graphql-tools/utils`.
-
   * `stitchSchemas`'s `mergeTypes` option is now true by default! This causes the `onTypeConflict`
     option to be ignored by default. To use `onTypeConflict` to select a specific type instead of
     simply merging, simply set `mergeTypes` to false.
@@ -1263,11 +1254,9 @@
     used. Signatures of the `onTypeConflict`, `fieldConfigMerger`, and `inputFieldConfigMerger` have
     been updated to include metadata related to the original and transformed subschemas. Note the
     property name change for `onTypeConflict` from `schema` to `subschema`.
-
   - Mocks returning objects with fields set as functions are now operating according to upstream
     graphql-js convention, i.e. these functions take three arguments, `args`, `context`, and `info`
     with `parent` available as `this` rather than as the first argument.
-
   * `filterSchema`'s `fieldFilter` will now filter _all_ fields across Object, Interface, and Input
     types. For the previous Object-only behavior, switch to the `objectFieldFilter` option.
   * Unused `fieldNodes` utility functions have been removed.
