@@ -11,16 +11,12 @@ export function useSubgraphExecuteDebug<
       fetchAPI = yoga.fetchAPI;
     },
     onSubgraphExecute({ executionRequest }) {
-      let log = executionRequest.context?.log.child({
-        subgraphExecuteId: fetchAPI.crypto.randomUUID(),
-      });
+      let log = executionRequest.context?.log.child(
+        '[useSubgraphExecuteDebug] ',
+      );
       if (!log) {
         throw new Error('Logger is not available in the execution context');
       }
-      // we intentionally mutate the executionRequest context here
-      // to avoid losing the context ref and improve perf
-      executionRequest.context!.log = log;
-      log = log.child('[useSubgraphExecuteDebug] ');
       log.debug(() => {
         const logData: Record<string, any> = {};
         if (executionRequest.document) {
