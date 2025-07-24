@@ -386,7 +386,9 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /** Persisted documents options. */
   persistedDocuments?:
     | GatewayHivePersistedDocumentsOptions
-    | UsePersistedOperationsOptions<GatewayContext>;
+    | UsePersistedOperationsOptions<GatewayContext>
+    // plugin itself
+    | GatewayPlugin<GatewayContext>;
   /**
    * A map, or factory function, of transport kinds to their implementations.
    *
