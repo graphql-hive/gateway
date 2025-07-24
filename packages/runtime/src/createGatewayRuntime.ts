@@ -61,6 +61,7 @@ import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
   buildASTSchema,
@@ -76,6 +77,7 @@ import {
   mergeSchemas,
   useExecutionCancellation,
   useReadinessCheck,
+  Plugin as YogaPlugin,
   type GraphiQLOptionsOrFactory,
   type LandingPageRenderer,
   type YogaServerInstance,
@@ -1000,7 +1002,11 @@ export function createGatewayRuntime<
     landingPageRenderer = false;
   }
 
-  const basePlugins = [
+  const basePlugins: (
+    | ServerAdapterPlugin<any>
+    | YogaPlugin<any>
+    | GatewayPlugin<any>
+  )[] = [
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
@@ -1044,7 +1050,11 @@ export function createGatewayRuntime<
     basePlugins.push(cacheDisposePlugin);
   }
 
-  const extraPlugins = [];
+  const extraPlugins: (
+    | ServerAdapterPlugin<any>
+    | YogaPlugin<any>
+    | GatewayPlugin<any>
+  )[] = [];
 
   if (config.webhooks) {
     extraPlugins.push(useWebhooks(configContext));
