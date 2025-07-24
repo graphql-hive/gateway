@@ -3466,6 +3466,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/usage-reporting-persisted-operations@workspace:e2e/usage-reporting-persisted-operations":
+  version: 0.0.0-use.local
+  resolution: "@e2e/usage-reporting-persisted-operations@workspace:e2e/usage-reporting-persisted-operations"
+  dependencies:
+    "@repeaterjs/repeater": "npm:^3.0.6"
+    "@whatwg-node/server": "npm:^0.10.10"
+  languageName: unknown
+  linkType: soft
+
 "@emnapi/runtime@npm:^1.2.0":
   version: 1.4.3
   resolution: "@emnapi/runtime@npm:1.4.3"
