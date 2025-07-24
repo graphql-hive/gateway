@@ -1,10 +1,14 @@
-import { createExampleSetup, createTenv } from '@internal/e2e';
+import {
+  createExampleSetup,
+  createTenv,
+  replaceLocalhostWithDockerHost,
+} from '@internal/e2e';
 import { createDisposableServer } from '@internal/testing';
 import { Push, Repeater, Stop } from '@repeaterjs/repeater';
 import { createServerAdapter } from '@whatwg-node/server';
 import { expect, it } from 'vitest';
 
-const { gateway } = createTenv(__dirname);
+const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
 it('should execute persisted query and report usage', async () => {
@@ -87,7 +91,9 @@ async function createHiveConsole() {
     }),
   );
   return {
-    url: server.url,
+    url: gatewayRunner.includes('docker')
+      ? replaceLocalhostWithDockerHost(server.url)
+      : server.url,
     reqs,
     [Symbol.asyncDispose]() {
       stop();
