@@ -1001,8 +1001,8 @@ export function createGatewayRuntime<
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
-    registryPlugin,
     persistedDocumentsPlugin,
+    registryPlugin,
     useRetryOnSchemaReload({ logger }),
   ];
 
