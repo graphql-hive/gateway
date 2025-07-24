@@ -187,10 +187,13 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
-    config,
-    configContext,
-  );
+  const {
+    name: reportingTarget,
+    // when using hive reporting and hive persisted documents,
+    // this plugin will contain both the registry and the persisted
+    // documents plugin
+    plugin: registryWithMaybePersistedDocumentsPlugin,
+  } = getReportingPlugin(config, configContext);
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
@@ -1002,7 +1005,7 @@ export function createGatewayRuntime<
     unifiedGraphPlugin,
     readinessCheckPlugin,
     persistedDocumentsPlugin,
-    registryPlugin,
+    registryWithMaybePersistedDocumentsPlugin,
     useRetryOnSchemaReload({ logger }),
   ];
 
