@@ -226,11 +226,6 @@ export function createGatewayRuntime<
       ...configContext,
       ...config.persistedDocuments,
     });
-  } else if (
-    config.persistedDocuments &&
-    'onParams' in config.persistedDocuments
-  ) {
-    persistedDocumentsPlugin = config.persistedDocuments;
   }
   let subgraphInformationHTMLRenderer: () => MaybePromise<string> = () => '';
 
