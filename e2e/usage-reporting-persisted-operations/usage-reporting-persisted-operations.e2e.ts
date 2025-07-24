@@ -86,7 +86,6 @@ async function createHiveConsole() {
       return new Response('ok');
     }),
   );
-  // TODO: hive stuff
   return {
     url: server.url,
     reqs,
