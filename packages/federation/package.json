@@ -39,12 +39,12 @@
   },
   "dependencies": {
     "@graphql-tools/delegate": "workspace:^",
-    "@graphql-tools/executor": "^1.4.8",
+    "@graphql-tools/executor": "^1.4.9",
     "@graphql-tools/executor-http": "workspace:^",
-    "@graphql-tools/merge": "^9.1.0",
-    "@graphql-tools/schema": "^10.0.24",
+    "@graphql-tools/merge": "^9.1.1",
+    "@graphql-tools/schema": "^10.0.25",
     "@graphql-tools/stitch": "workspace:^",
-    "@graphql-tools/utils": "^10.9.0",
+    "@graphql-tools/utils": "^10.9.1",
     "@graphql-tools/wrap": "workspace:^",
     "@graphql-yoga/typed-event-target": "^3.0.2",
     "@whatwg-node/disposablestack": "^0.0.6",
@@ -61,7 +61,7 @@
     "@types/lodash": "4.17.20",
     "graphql": "^16.9.0",
     "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#main",
-    "pkgroll": "2.14.3"
+    "pkgroll": "2.14.5"
   },
   "sideEffects": false
 }

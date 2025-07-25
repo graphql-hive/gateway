@@ -13,13 +13,13 @@
   "devDependencies": {
     "@graphql-hive/pubsub": "workspace:*",
     "@graphql-mesh/types": "^0.104.5",
-    "@graphql-tools/utils": "^10.9.0",
+    "@graphql-tools/utils": "^10.9.1",
     "@types/node": "^22.15.30",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.9",
     "@whatwg-node/promise-helpers": "^1.2.5",
     "graphql": "^16.10.0",
-    "jest-leak-detector": "30.0.2",
+    "jest-leak-detector": "30.0.5",
     "ws": "^8.18.3"
   }
 }
