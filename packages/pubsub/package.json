@@ -43,7 +43,7 @@
     "@whatwg-node/disposablestack": "^0.0.6"
   },
   "devDependencies": {
-    "pkgroll": "2.14.3"
+    "pkgroll": "2.14.5"
   },
   "sideEffects": false
 }

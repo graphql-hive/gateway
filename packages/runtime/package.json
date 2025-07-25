@@ -65,7 +65,7 @@
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/federation": "workspace:^",
     "@graphql-tools/stitch": "workspace:^",
-    "@graphql-tools/utils": "^10.9.0",
+    "@graphql-tools/utils": "^10.9.1",
     "@graphql-tools/wrap": "workspace:^",
     "@graphql-yoga/plugin-apollo-usage-report": "^0.10.1",
     "@graphql-yoga/plugin-csrf-prevention": "^3.15.1",
@@ -90,7 +90,7 @@
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.14.3",
+    "pkgroll": "2.14.5",
     "tsx": "4.20.3"
   },
   "sideEffects": false

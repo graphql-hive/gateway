@@ -41,7 +41,7 @@
   "dependencies": {
     "@graphql-hive/signal": "workspace:^",
     "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.9.0",
+    "@graphql-tools/utils": "^10.9.1",
     "@repeaterjs/repeater": "^3.0.4",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.9",
@@ -56,7 +56,7 @@
     "extract-files": "13.0.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.15.1",
-    "pkgroll": "2.14.3"
+    "pkgroll": "2.14.5"
   },
   "sideEffects": false
 }

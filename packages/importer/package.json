@@ -51,7 +51,7 @@
   "devDependencies": {
     "get-tsconfig": "^4.10.1",
     "glob": "^11.0.3",
-    "pkgroll": "2.14.3",
+    "pkgroll": "2.14.5",
     "sucrase": "^3.35.0"
   },
   "sideEffects": false
