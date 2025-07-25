@@ -61,6 +61,7 @@ import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
   buildASTSchema,
@@ -76,6 +77,7 @@ import {
   mergeSchemas,
   useExecutionCancellation,
   useReadinessCheck,
+  Plugin as YogaPlugin,
   type GraphiQLOptionsOrFactory,
   type LandingPageRenderer,
   type YogaServerInstance,
@@ -187,10 +189,13 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
-  const { name: reportingTarget, plugin: registryPlugin } = getReportingPlugin(
-    config,
-    configContext,
-  );
+  const {
+    name: reportingTarget,
+    // when using hive reporting and hive persisted documents,
+    // this plugin will contain both the registry and the persisted
+    // documents plugin
+    plugin: registryWithMaybePersistedDocumentsPlugin,
+  } = getReportingPlugin(config, configContext);
   let persistedDocumentsPlugin: GatewayPlugin = {};
   if (
     config.reporting?.type !== 'hive' &&
@@ -997,12 +1002,16 @@ export function createGatewayRuntime<
     landingPageRenderer = false;
   }
 
-  const basePlugins = [
+  const basePlugins: (
+    | ServerAdapterPlugin<any>
+    | YogaPlugin<any>
+    | GatewayPlugin<any>
+  )[] = [
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
-    registryPlugin,
     persistedDocumentsPlugin,
+    registryWithMaybePersistedDocumentsPlugin,
     useRetryOnSchemaReload({ logger }),
   ];
 
@@ -1041,7 +1050,11 @@ export function createGatewayRuntime<
     basePlugins.push(cacheDisposePlugin);
   }
 
-  const extraPlugins = [];
+  const extraPlugins: (
+    | ServerAdapterPlugin<any>
+    | YogaPlugin<any>
+    | GatewayPlugin<any>
+  )[] = [];
 
   if (config.webhooks) {
     extraPlugins.push(useWebhooks(configContext));

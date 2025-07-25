@@ -132,6 +132,7 @@ export interface Gateway extends Server {
     variables?: Record<string, unknown>;
     operationName?: string;
     headers?: Record<string, string>;
+    extensions?: Record<string, unknown>;
   }): Promise<ExecutionResult<any>>;
 }
 
