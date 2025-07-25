@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 1.10.1
+
+### Patch Changes
+
+- [#1355](https://github.com/graphql-hive/gateway/pull/1355) [`352e89d`](https://github.com/graphql-hive/gateway/commit/352e89d496ecd19db02cbaa2ade58c2da77d69c6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Run the persisted documents plugin before the usage reporting and registry plugin
+
+  Making sure the queries are discovered before being reported.
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@1.2.29
+
 ## 1.10.0
 
 ### Minor Changes
