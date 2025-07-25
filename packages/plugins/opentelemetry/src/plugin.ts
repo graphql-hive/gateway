@@ -218,6 +218,11 @@ export type OpenTelemetryContextExtension = {
   openTelemetry: {
     tracer: Tracer;
     activeContext: () => Context;
+    httpContext: (request?: Request) => Context | undefined;
+    operationContext: (context?: any) => Context | undefined;
+    executionRequestContext: (
+      ExecutionRequest: ExecutionRequest,
+    ) => Context | undefined;
   };
 };
 
@@ -231,12 +236,17 @@ type State = Partial<
 
 export type OpenTelemetryPlugin =
   GatewayPlugin<OpenTelemetryContextExtension> & {
-    getOtelContext: (payload: {
+    getActiveContext: (payload: {
       request?: Request;
       context?: any;
       executionRequest?: ExecutionRequest;
     }) => Context;
     getTracer(): Tracer;
+    getHttpContext: (request: Request) => Context | undefined;
+    getOperationContext: (context: any) => Context | undefined;
+    getExecutionRequestContext: (
+      ExecutionRequest: ExecutionRequest,
+    ) => Context | undefined;
   };
 
 export function useOpenTelemetry(
@@ -321,7 +331,16 @@ export function useOpenTelemetry(
     OtelState
   >((getState) => ({
     getTracer: () => tracer,
-    getOtelContext: ({ state }) => getContext(state),
+    getActiveContext: ({ state }) => getContext(state),
+    getHttpContext: (request) => {
+      return getState({ request }).forRequest.otel?.root;
+    },
+    getOperationContext: (context) => {
+      return getState({ context }).forOperation.otel?.root;
+    },
+    getExecutionRequestContext: (executionRequest) => {
+      return getState({ executionRequest }).forSubgraphExecution.otel?.root;
+    },
     instrumentation: {
       request({ state: { forRequest }, request }, wrapped) {
         if (!shouldTrace(traces.spans?.http, { request })) {
@@ -706,7 +725,20 @@ export function useOpenTelemetry(
       extendContext({
         openTelemetry: {
           tracer,
-          activeContext: () => getContext(state),
+          httpContext: (request) => {
+            const { forRequest } = request ? getState({ request }) : state;
+            return forRequest.otel?.root;
+          },
+          operationContext: (context) => {
+            const { forOperation } = context ? getState({ context }) : state;
+            return forOperation.otel?.root;
+          },
+          executionRequestContext: (executionRequest) => {
+            return getState({ executionRequest }).forSubgraphExecution.otel
+              ?.root;
+          },
+          activeContext: (contextMatcher?: Parameters<typeof getState>[0]) =>
+            getContext(contextMatcher ? getState(contextMatcher) : state),
         },
       });
     },
