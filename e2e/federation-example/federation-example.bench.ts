@@ -23,6 +23,7 @@ describe('Gateway', async () => {
     'Hive Gateway w/ Tools': await gateway({
       supergraph,
       env: {
+        FORK: 1,
         NODE_ENV: 'production',
         TOOLS_FEDERATION: 1,
       },
@@ -30,6 +31,7 @@ describe('Gateway', async () => {
     'Hive Gateway w/ Query Planner': await gateway({
       supergraph,
       env: {
+        FORK: 1,
         NODE_ENV: 'production',
         TOOLS_FEDERATION: 0,
       },
