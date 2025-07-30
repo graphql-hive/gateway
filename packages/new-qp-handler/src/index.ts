@@ -68,7 +68,7 @@ export function handleSupergraphWithQueryPlanner(
       context,
     }: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
       const queryPlan = buildQueryPlan(document);
-      return executeQueryPlan({
+      const res = executeQueryPlan({
         supergraphSchema: unifiedGraph,
         document,
         operationName,
@@ -77,6 +77,8 @@ export function handleSupergraphWithQueryPlanner(
         onSubgraphExecute: opts.onSubgraphExecute,
         queryPlan: queryPlan as any,
       });
+      // @ts-expect-error
+      return res;
     },
     inContextSDK: {},
   };
