@@ -1,12 +1,10 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createDefaultExecutor } from '@graphql-tools/delegate';
 import { parse } from 'graphql';
-import { it } from 'vitest';
+import { expect, it } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 
-it('should delegate requests to the subgraph supporting aliases', async ({
-  expect,
-}) => {
+it('should delegate requests to the subgraph supporting aliases', async () => {
   const subgraph = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       type Query {
