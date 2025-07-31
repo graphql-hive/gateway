@@ -1,3 +1,4 @@
+import { createReadStream } from 'fs';
 import fs from 'fs/promises';
 import { parseHeapSnapshot } from '@internal/heapsnapshot';
 
@@ -19,28 +20,28 @@ export interface HeapSnapshotDiff {
  * of each snapshot compared to the previous one starting from the first one.
  */
 export async function diffHeapSnapshotFiles(
-  snapshotFiles: string[],
+  files: string[],
 ): Promise<HeapSnapshotDiff> {
-  if (snapshotFiles.length < 2) {
+  if (files.length < 2) {
     throw new Error(
       'At least two heap snapshot files are required for comparison.',
     );
   }
-
-  const profiles = await Promise.all(
-    snapshotFiles.map((file) => fs.readFile(file, 'utf8')),
-  );
+  const snapshotFiles = [...files];
 
   const totalDiff: HeapSnapshotDiff = {};
 
-  let baseSnap = await parseHeapSnapshot(profiles.shift()!);
+  let baseSnap = await parseHeapSnapshot(
+    createReadStream(snapshotFiles.shift()!),
+    { silent: false },
+  );
   while (baseSnap) {
-    const comparedProfile = profiles.shift()!;
-    if (!comparedProfile) {
+    const snapshotFile = snapshotFiles.shift()!;
+    if (!snapshotFile) {
       break; // no more profiles to compare
     }
 
-    const snap = await parseHeapSnapshot(comparedProfile);
+    const snap = await parseHeapSnapshot(createReadStream(snapshotFile));
 
     const defs = snap.interfaceDefinitions();
     const aggregates = baseSnap.aggregatesForDiff(defs);
