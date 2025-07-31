@@ -268,9 +268,15 @@ async function createHeapSnapshot(
   run: number,
 ): Promise<LoadtestHeapSnapshot> {
   const time = new Date();
+  const filenameSafeTime = time
+    .toISOString()
+    // replace time colons with dashes to make it a valid filename
+    .replaceAll(':', '-')
+    // remove milliseconds
+    .split('.')[0];
   const file = path.join(
     cwd,
-    `loadtest-${phase}-run-${run}-${Date.now()}.heapsnapshot`,
+    `loadtest-${phase}-run-${run}-${filenameSafeTime}.heapsnapshot`,
   );
   await inspector.writeHeapSnapshot(file);
   return { phase, run, time, file };
