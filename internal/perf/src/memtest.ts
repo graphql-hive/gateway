@@ -11,6 +11,7 @@ import { loadtest, LoadtestOptions } from './loadtest';
 const supportedFlags = [
   'rapid' as const,
   'short' as const,
+  'cleanheapsnaps' as const,
   'noheapsnaps' as const,
   'moreruns' as const,
   'chart' as const,
@@ -23,6 +24,7 @@ const supportedFlags = [
  * {@link supportedFlags Supported flags} are:
  * - `rapid` Runs the loadtest for `10s` and the calmdown for `5s` instead of the defaults.
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
+ * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
  * - `noheapsnaps` Disable taking heap snapshots.
  * - `moreruns` Does `5` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
@@ -146,6 +148,15 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         runs,
     },
     async ({ expect }) => {
+      if (flags.includes('cleanheapsnaps')) {
+        const filesInCwd = await fs.readdir(cwd, { withFileTypes: true });
+        for (const file of filesInCwd) {
+          if (file.isFile() && file.name.endsWith('.heapsnapshot')) {
+            await fs.unlink(path.join(cwd, file.name));
+          }
+        }
+      }
+
       const server = await setup();
 
       const startTime = new Date()
@@ -176,16 +187,6 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
             );
           }
           return onMemorySample?.(samples);
-        },
-        async onHeapSnapshot(heapsnapshot) {
-          await fs.copyFile(
-            heapsnapshot.file,
-            path.join(
-              cwd,
-              `memtest-run-${heapsnapshot.run}-${heapsnapshot.phase}_${startTime}.heapsnapshot`,
-            ),
-          );
-          return onHeapSnapshot?.(heapsnapshot);
         },
       });
 

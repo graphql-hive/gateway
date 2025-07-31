@@ -160,10 +160,6 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     ctrl.abort('Test run cancelled');
   });
 
-  const heapsnapshotCwd = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
-  );
-
   using inspector = await connectInspector(server);
 
   let phase: LoadtestPhase = 'idle';
@@ -204,12 +200,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   await Promise.race([setTimeout(idle), serverThrowOnExit, memorySnapshotting]);
 
   if (takeHeapSnapshots) {
-    const heapsnapshot = await createHeapSnapshot(
-      heapsnapshotCwd,
-      inspector,
-      phase,
-      run,
-    );
+    const heapsnapshot = await createHeapSnapshot(cwd, inspector, phase, run);
     heapsnapshots.push(heapsnapshot);
     await onHeapSnapshot?.(heapsnapshot);
   }
@@ -257,12 +248,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     ]);
 
     if (takeHeapSnapshots) {
-      const heapsnapshot = await createHeapSnapshot(
-        heapsnapshotCwd,
-        inspector,
-        phase,
-        run,
-      );
+      const heapsnapshot = await createHeapSnapshot(cwd, inspector, phase, run);
       heapsnapshots.push(heapsnapshot);
       await onHeapSnapshot?.(heapsnapshot);
     }
@@ -282,7 +268,10 @@ async function createHeapSnapshot(
   run: number,
 ): Promise<LoadtestHeapSnapshot> {
   const time = new Date();
-  const file = path.join(cwd, `${phase}-run-${run}-${Date.now()}.heapsnapshot`);
+  const file = path.join(
+    cwd,
+    `loadtest-${phase}-run-${run}-${Date.now()}.heapsnapshot`,
+  );
   await inspector.writeHeapSnapshot(file);
   return { phase, run, time, file };
 }
