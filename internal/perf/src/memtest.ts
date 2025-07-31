@@ -7,7 +7,7 @@ import { createMemorySampleLineChart } from './chart';
 import {
   getHeaviestFramesFromHeapSamplingProfile,
   HeapSamplingProfileFrame,
-} from './heap';
+} from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 const supportedFlags = [

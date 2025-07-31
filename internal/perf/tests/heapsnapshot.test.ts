@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { expect, it } from 'vitest';
-import { leakingObjectsInHeapSnapshotFiles } from '../src/heap';
+import { leakingObjectsInHeapSnapshotFiles } from '../src/heapsnapshot';
 
 const __fixtures = path.resolve(__dirname, '__fixtures__');
 
