@@ -2,8 +2,24 @@
   "name": "@internal/heapsnapshot",
   "type": "module",
   "private": true,
-  "main": "./src/index.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./heap_snapshot_worker-entrypoint": "./dist/heap_snapshot_worker-entrypoint.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "pkgroll --clean-dist --sourcemap",
+    "check:types": "tsc --noEmit",
+    "start": "yarn build --watch"
+  },
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.8"
+    "@tsconfig/node18": "^18.2.4",
+    "@tsconfig/recommended": "^1.0.8",
+    "@types/node": "^22.15.30",
+    "pkgroll": "2.14.5",
+    "typescript": "5.8.3"
   }
 }

@@ -28,8 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import type { LiveObjects, Profile } from './HeapSnapshot';
-import * as HeapSnapshotModel from './HeapSnapshotModel';
+import type { LiveObjects, Profile } from './HeapSnapshot.js';
+import * as HeapSnapshotModel from './HeapSnapshotModel.js';
 
 export class AllocationProfile {
   readonly #strings: string[];

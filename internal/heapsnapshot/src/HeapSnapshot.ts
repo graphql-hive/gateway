@@ -30,10 +30,11 @@
 
 /* eslint-disable rulesdir/prefer-private-class-members */
 
-import { AllocationProfile } from './AllocationProfile';
-import * as HeapSnapshotModel from './HeapSnapshotModel';
-import { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher';
-import * as Platform from './platform';
+import { MessagePort } from 'node:worker_threads';
+import { AllocationProfile } from './AllocationProfile.js';
+import * as HeapSnapshotModel from './HeapSnapshotModel.js';
+import { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher.js';
+import * as Platform from './platform/index.js';
 
 export interface HeapSnapshotItem {
   itemIndex(): number;
@@ -883,16 +884,15 @@ export class SecondaryInitManager {
   argsStep3: Promise<SecondaryInitArgumentsStep3>;
   constructor(port: MessagePort) {
     const { promise: argsStep1, resolve: resolveArgsStep1 } =
-      Promise.withResolvers<SecondaryInitArgumentsStep1>();
+      Platform.PromiseUtilities.withResolvers<SecondaryInitArgumentsStep1>();
     this.argsStep1 = argsStep1;
     const { promise: argsStep2, resolve: resolveArgsStep2 } =
-      Promise.withResolvers<SecondaryInitArgumentsStep2>();
+      Platform.PromiseUtilities.withResolvers<SecondaryInitArgumentsStep2>();
     this.argsStep2 = argsStep2;
     const { promise: argsStep3, resolve: resolveArgsStep3 } =
-      Promise.withResolvers<SecondaryInitArgumentsStep3>();
+      Platform.PromiseUtilities.withResolvers<SecondaryInitArgumentsStep3>();
     this.argsStep3 = argsStep3;
-    port.onmessage = (e) => {
-      const data = e.data;
+    port.on('message', (data) => {
       switch (data.step) {
         case 1:
           resolveArgsStep1(data.args);
@@ -904,7 +904,7 @@ export class SecondaryInitManager {
           resolveArgsStep3(data.args);
           break;
       }
-    };
+    });
     void this.initialize(port);
   }
 
@@ -938,21 +938,17 @@ export class SecondaryInitManager {
         ...dominatorsAndRetainedSizes,
         ...dominatedNodesOutputs,
       };
-      port.postMessage(
-        { resultsFromSecondWorker: results },
-        {
-          transfer: [
-            results.dominatorsTree.buffer,
-            results.firstRetainerIndex.buffer,
-            results.retainedSizes.buffer,
-            results.retainingEdges.buffer,
-            results.retainingNodes.buffer,
-            results.dominatedNodes.buffer,
-            results.firstDominatedNodeIndex.buffer,
-          ],
-        },
-      );
-    } catch (e) {
+      port.postMessage({ resultsFromSecondWorker: results }, [
+        // TODO: node should be ok with this
+        results.dominatorsTree.buffer,
+        results.firstRetainerIndex.buffer,
+        results.retainedSizes.buffer,
+        results.retainingEdges.buffer,
+        results.retainingNodes.buffer,
+        results.dominatedNodes.buffer,
+        results.firstDominatedNodeIndex.buffer,
+      ]);
+    } catch (e: any) {
       port.postMessage({ error: e + '\n' + e?.stack });
     }
   }
@@ -1220,8 +1216,7 @@ export abstract class HeapSnapshot {
   ): Promise<ResultsFromSecondWorker> {
     const resultsFromSecondWorker = new Promise<ResultsFromSecondWorker>(
       (resolve, reject) => {
-        secondWorker.onmessage = (event: MessageEvent) => {
-          const data = event.data;
+        secondWorker.on('message', (data) => {
           if (data?.problemReport) {
             const problemReport: HeapSnapshotProblemReport = data.problemReport;
             console.warn(formatProblemReport(this, problemReport));
@@ -1232,7 +1227,7 @@ export abstract class HeapSnapshot {
           } else if (data?.error) {
             reject(data.error);
           }
-        };
+        });
       },
     );
     const edgeCount = this.#edgeCount;

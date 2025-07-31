@@ -31,10 +31,11 @@
 // We mirror what heap_snapshot_worker.ts does, but we can't use it here as we'd have a
 // cyclic GN dependency otherwise.
 
-import * as AllocationProfile from './AllocationProfile';
-import * as HeapSnapshot from './HeapSnapshot';
-import * as HeapSnapshotLoader from './HeapSnapshotLoader';
-import * as HeapSnapshotModel from './HeapSnapshotModel';
+import { MessagePort } from 'node:worker_threads';
+import * as AllocationProfile from './AllocationProfile.js';
+import * as HeapSnapshot from './HeapSnapshot.js';
+import * as HeapSnapshotLoader from './HeapSnapshotLoader.js';
+import * as HeapSnapshotModel from './HeapSnapshotModel.js';
 
 interface DispatcherResponse {
   callId?: number;
@@ -48,8 +49,8 @@ export class HeapSnapshotWorkerDispatcher {
   // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   #objects: any[];
-  readonly #postMessage: typeof Window.prototype.postMessage;
-  constructor(postMessage: typeof Window.prototype.postMessage) {
+  readonly #postMessage: MessagePort['postMessage'];
+  constructor(postMessage: MessagePort['postMessage']) {
     this.#objects = [];
     this.#postMessage = postMessage;
   }
@@ -118,8 +119,8 @@ export class HeapSnapshotWorkerDispatcher {
             };
             // @ts-expect-error
             globalThis.HeapSnapshotModel = HeapSnapshotModel;
-            response.result = await self.eval(data.source);
-          } catch (error) {
+            response.result = await eval(data.source);
+          } catch (error: any) {
             response.result = error.toString();
           }
           break;
@@ -130,7 +131,7 @@ export class HeapSnapshotWorkerDispatcher {
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       response.error = error.toString();
       response.errorCallStack = error.stack;
       if (data.methodName) {

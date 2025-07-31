@@ -6080,7 +6080,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/heapsnapshot@workspace:internal/heapsnapshot"
   dependencies:
+    "@tsconfig/node18": "npm:^18.2.4"
     "@tsconfig/recommended": "npm:^1.0.8"
+    "@types/node": "npm:^22.15.30"
+    pkgroll: "npm:2.14.5"
+    typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft
 
@@ -8695,9 +8699,9 @@ __metadata:
   linkType: hard
 
 "@tsconfig/recommended@npm:^1.0.8":
-  version: 1.0.8
-  resolution: "@tsconfig/recommended@npm:1.0.8"
-  checksum: 10c0/bd6517e3f69cf96108ab8b7d2ee70a7e64ee457bb72326524acdef6e2219813b298654e9aa57ce2f8899901c9b8fd66388b036b9ca0aa062952a83adb59bec17
+  version: 1.0.10
+  resolution: "@tsconfig/recommended@npm:1.0.10"
+  checksum: 10c0/402ef03da7300ea0f9f9d6e0507dcb8782c6b764c1f45b946a6c34f2bd3153571a1a85f10659606c24d1052aed699c3e32dd0da876e8f7eea577374eeeb80d17
   languageName: node
   linkType: hard
 

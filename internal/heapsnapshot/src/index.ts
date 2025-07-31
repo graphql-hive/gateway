@@ -1,1 +1,1 @@
-export * from './HeapSnapshot';
+export * from './HeapSnapshot.js';
