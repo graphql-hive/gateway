@@ -120,6 +120,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     throw new Error(`At least one run is necessary, got "${runs}"`);
   }
 
+  const startTime = new Date();
+
   // make sure the query works before starting the loadtests
   // the request here matches the request done in loadtest-script.ts
   const res = await fetch(
@@ -198,7 +200,13 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   await Promise.race([setTimeout(idle), serverThrowOnExit, memorySnapshotting]);
 
   if (takeHeapSnapshots) {
-    const heapsnapshot = await createHeapSnapshot(cwd, inspector, phase, run);
+    const heapsnapshot = await createHeapSnapshot(
+      cwd,
+      startTime,
+      inspector,
+      phase,
+      run,
+    );
     heapsnapshots.push(heapsnapshot);
     await onHeapSnapshot?.(heapsnapshot);
   }
@@ -246,7 +254,13 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     ]);
 
     if (takeHeapSnapshots) {
-      const heapsnapshot = await createHeapSnapshot(cwd, inspector, phase, run);
+      const heapsnapshot = await createHeapSnapshot(
+        cwd,
+        startTime,
+        inspector,
+        phase,
+        run,
+      );
       heapsnapshots.push(heapsnapshot);
       await onHeapSnapshot?.(heapsnapshot);
     }
@@ -261,12 +275,13 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
 async function createHeapSnapshot(
   cwd: string,
+  startTime: Date,
   inspector: Inspector,
   phase: LoadtestPhase,
   run: number,
 ): Promise<LoadtestHeapSnapshot> {
   const time = new Date();
-  const filenameSafeTime = time
+  const filenameSafeStartTime = startTime
     .toISOString()
     // replace time colons with dashes to make it a valid filename
     .replaceAll(':', '-')
@@ -274,7 +289,7 @@ async function createHeapSnapshot(
     .split('.')[0];
   const file = path.join(
     cwd,
-    `loadtest-${phase}-run-${run}-${filenameSafeTime}.heapsnapshot`,
+    `loadtest-${phase}-run-${run}-${filenameSafeStartTime}.heapsnapshot`,
   );
   await inspector.writeHeapSnapshot(file);
   return { phase, run, time, file };
