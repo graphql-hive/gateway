@@ -9,6 +9,7 @@ import { leakingObjectsInHeapSnapshotFiles } from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 const supportedFlags = [
+  'rapid' as const,
   'short' as const,
   'noheapsnaps' as const,
   'moreruns' as const,
@@ -20,6 +21,7 @@ const supportedFlags = [
  * Allows controlling the memtest runs with the `MEMTEST` environment variable.
  *
  * {@link supportedFlags Supported flags} are:
+ * - `rapid` Runs the loadtest for `10s` and the calmdown for `5s` instead of the defaults.
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
  * - `noheapsnaps` Disable taking heap snapshots.
  * - `moreruns` Does `5` runs instead of the defaults.
@@ -71,7 +73,8 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `30s` if {@link flags MEMTEST has the `short` flag}.
+   * Ignores the `default` and runs for `30s` if {@link flags MEMTEST} has the `short`
+   * flag, or `10s` if it has the `rapid` flag.
    *
    * @default 120_000
    */
@@ -79,7 +82,8 @@ export interface MemtestOptions
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `10s` if {@link flags MEMTEST has the `short` flag}.
+   * Ignores the `default` and runs for `10s` if {@link flags MEMTEST} has the `short`
+   * flag, or `5s` if it has the `rapid` flag.
    *
    * @default 30_000
    */
@@ -112,8 +116,16 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     cwd,
     memorySnapshotWindow = 1_000,
     idle = 10_000,
-    duration = flags.includes('short') ? 30_000 : 120_000,
-    calmdown = flags.includes('short') ? 10_000 : 30_000,
+    duration = flags.includes('rapid')
+      ? 10_000
+      : flags.includes('short')
+        ? 30_000
+        : 120_000,
+    calmdown = flags.includes('rapid')
+      ? 5_000
+      : flags.includes('short')
+        ? 10_000
+        : 30_000,
     runs = flags.includes('moreruns') ? 5 : 3,
     takeHeapSnapshots = !flags.includes('noheapsnaps'),
     performHeapSampling = flags.includes('sampling'),
