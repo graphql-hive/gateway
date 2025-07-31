@@ -1,3 +1,4 @@
 export * from './loadtest';
-export * from './heapsnapshot';
 export * from './inspector';
+export * from './heapsnapshot';
+export * from './heapsampling';
