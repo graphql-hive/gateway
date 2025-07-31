@@ -2,15 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import { parentPort } from 'node:worker_threads';
 import * as HeapSnapshotWorker from './heap_snapshot_worker.js';
 
 const dispatcher =
   new HeapSnapshotWorker.HeapSnapshotWorkerDispatcher.HeapSnapshotWorkerDispatcher(
-    self.postMessage.bind(self),
+    parentPort!.postMessage.bind(parentPort!),
   );
-self.addEventListener(
-  'message',
-  dispatcher.dispatchMessage.bind(dispatcher),
-  false,
-);
-self.postMessage('workerReady');
+parentPort!.on('message', dispatcher.dispatchMessage.bind(dispatcher));
+parentPort!.postMessage('workerReady');

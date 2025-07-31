@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { MessagePort } from 'node:worker_threads';
 import {
   HeapSnapshotProgress,
   JSHeapSnapshot,
@@ -35,13 +36,13 @@ import {
   type Profile,
 } from './HeapSnapshot.js';
 import type { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher.js';
-import * as Platform from './platform';
-import * as TextUtils from './TextUtils';
+import * as Platform from './platform/index.js';
+import * as TextUtils from './TextUtils.js';
 
 export class HeapSnapshotLoader {
   readonly #progress: HeapSnapshotProgress;
   #buffer: string[];
-  #dataCallback: ((value: string | PromiseLike<string>) => void) | null;
+  #dataCallback: ((value: string) => void) | null;
   #done: boolean;
   // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -162,7 +163,8 @@ export class HeapSnapshotLoader {
       return Promise.resolve(this.#buffer.shift() as string);
     }
 
-    const { promise, resolve } = Promise.withResolvers<string>();
+    const { promise, resolve } =
+      Platform.PromiseUtilities.withResolvers<string>();
     this.#dataCallback = resolve;
     return promise;
   }
