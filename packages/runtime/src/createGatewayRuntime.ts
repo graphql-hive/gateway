@@ -39,6 +39,7 @@ import {
 } from '@graphql-mesh/utils';
 import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
+  defaultMergedResolver,
   delegateToSchema,
   type SubschemaConfig,
 } from '@graphql-tools/delegate';
@@ -618,6 +619,7 @@ export function createGatewayRuntime<
               schemas: [unifiedGraph],
               typeDefs: finalTypeDefs,
               resolvers: additionalResolvers,
+              defaultFieldResolver: defaultMergedResolver,
             });
             contextBuilder = (base) =>
               // @ts-expect-error - Typings are wrong in legacy Mesh
