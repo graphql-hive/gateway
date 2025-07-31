@@ -88,6 +88,7 @@ export async function leakingObjectsInHeapSnapshotFiles(
       // size just kept growing
       object.sizeDelta > 0 &&
       // count just kept growing (10 retained objects is ok, it's probably javascript things)
+      // TODO: is this really the case? can there be a super subtle leak? (our loadtests run long so this is unlikely atm)
       object.countDelta > 10
     ) {
       leakingDiff[object.ctor] = object;
