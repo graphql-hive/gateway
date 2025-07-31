@@ -19,8 +19,9 @@ export async function parseHeapSnapshot(
   data: string,
   opts: ParseHeapSnapshotOptions = {},
 ): Promise<JSHeapSnapshot> {
+  const { silent = true } = opts;
   const loader = new HeapSnapshotLoader(
-    opts.silent ? silentProgress : consoleProgress,
+    silent ? silentProgress : consoleProgress,
   );
   loader.write(data);
   loader.close();
