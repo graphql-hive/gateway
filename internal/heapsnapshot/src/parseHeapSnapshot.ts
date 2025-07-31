@@ -1,6 +1,10 @@
+import path from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { HeapSnapshotProgress, JSHeapSnapshot } from './HeapSnapshot.js';
 import { HeapSnapshotLoader } from './HeapSnapshotLoader.js';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export interface ParseHeapSnapshotOptions {
   /**
@@ -27,7 +31,7 @@ export async function parseHeapSnapshot(
   // two workers are used to parse the heap snapshots, this will
   // be the main one and the second one initialised in "assistant" mode
   const secondWorker = new Worker(
-    './heap_snapshot_worker-entrypoint.js', // exists after building
+    path.join(__dirname, 'heap_snapshot_worker-entrypoint.js'), // exists after building
   );
   await using _ = {
     async [Symbol.asyncDispose]() {
