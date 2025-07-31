@@ -6,7 +6,10 @@
     "node": ">=18.0.0"
   },
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./heap_snapshot_worker-entrypoint": "./dist/heap_snapshot_worker-entrypoint.js",
     "./package.json": "./package.json"
   },
