@@ -4,10 +4,8 @@ import { Server } from '@internal/proc';
 import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
-import {
-  getHeaviestFramesFromHeapSamplingProfile,
-  HeapSamplingProfileFrame,
-} from './heapsampling';
+import { HeapSamplingProfileFrame } from './heapsampling';
+import { leakingObjectsInHeapSnapshotFiles } from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 const supportedFlags = [
@@ -118,6 +116,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     calmdown = flags.includes('short') ? 10_000 : 30_000,
     runs = flags.includes('moreruns') ? 5 : 3,
     takeHeapSnapshots = !flags.includes('noheapsnaps'),
+    performHeapSampling = flags.includes('sampling'),
     onMemorySample,
     onHeapSnapshot,
     expectedHeavyFrame,
@@ -149,6 +148,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         cwd,
         memorySnapshotWindow,
         takeHeapSnapshots,
+        performHeapSampling,
         idle,
         duration,
         calmdown,
@@ -177,20 +177,26 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         },
       });
 
-      // TODO: track failed requests during the loadtest, if any
-
-      const heapSamplingProfileFile = path.join(
-        cwd,
-        `memtest_${startTime}.heapprofile`,
-      );
-      if (flags.includes('sampling')) {
+      if (loadtestResult.heapSamplingProfile) {
+        const heapSamplingProfileFile = path.join(
+          cwd,
+          `memtest_${startTime}.heapprofile`,
+        );
         await fs.writeFile(
           heapSamplingProfileFile,
           JSON.stringify(loadtestResult.heapSamplingProfile),
         );
       }
 
-      // TODO: check heap snaps
+      if (loadtestResult.heapSnapshots.length) {
+        await expect(
+          leakingObjectsInHeapSnapshotFiles(
+            loadtestResult.heapSnapshots.map(({ file }) => file),
+          ),
+        ).resolves.toEqual({});
+      } else {
+        expect.fail('Expected to diff heap snapshots, but none were taken.');
+      }
     },
   );
 }
