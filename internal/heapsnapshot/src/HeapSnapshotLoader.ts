@@ -35,7 +35,7 @@ import {
   type HeapSnapshotHeader,
   type Profile,
 } from './HeapSnapshot.js';
-import type { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher.js';
+import { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher.js';
 import * as Platform from './platform/index.js';
 import * as TextUtils from './TextUtils.js';
 
@@ -51,9 +51,15 @@ export class HeapSnapshotLoader {
   #arrayIndex!: number;
   #json = '';
   parsingComplete: Promise<void>;
-  constructor(dispatcher: HeapSnapshotWorkerDispatcher) {
+  constructor(
+    dispatcherOrProgress: HeapSnapshotProgress | HeapSnapshotWorkerDispatcher,
+  ) {
     this.#reset();
-    this.#progress = new HeapSnapshotProgress(dispatcher);
+    if (dispatcherOrProgress instanceof HeapSnapshotWorkerDispatcher) {
+      this.#progress = new HeapSnapshotProgress(dispatcherOrProgress);
+    } else {
+      this.#progress = dispatcherOrProgress;
+    }
     this.#buffer = [];
     this.#dataCallback = null;
     this.#done = false;
