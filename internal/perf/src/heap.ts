@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { parseHeapSnapshot } from '@internal/heapsnapshot';
 
-export interface Diff {
+export interface HeapSnapshotDiff {
   [ctor: string]: {
     ctor: string;
     addedCount: number;
@@ -13,9 +13,14 @@ export interface Diff {
   };
 }
 
+/**
+ * Diffs the provided v8 JavaScript heap snapshot files (`*.heapsnapshot`)
+ * consecutively, returning a total of the differences by summing up the deltas
+ * of each snapshot compared to the previous one starting from the first one.
+ */
 export async function diffHeapSnapshotFiles(
   snapshotFiles: string[],
-): Promise<Diff> {
+): Promise<HeapSnapshotDiff> {
   if (snapshotFiles.length < 2) {
     throw new Error(
       'At least two heap snapshot files are required for comparison.',
@@ -26,7 +31,7 @@ export async function diffHeapSnapshotFiles(
     snapshotFiles.map((file) => fs.readFile(file, 'utf8')),
   );
 
-  const totalDiff: Diff = {};
+  const totalDiff: HeapSnapshotDiff = {};
 
   let baseSnap = await parseHeapSnapshot(profiles.shift()!);
   while (baseSnap) {
@@ -65,12 +70,19 @@ export async function diffHeapSnapshotFiles(
   return totalDiff;
 }
 
+/**
+ * Diffs the provided v8 JavaScript heap snapshot files (`*.heapsnapshot`)
+ * using {@link diffHeapSnapshotFiles} and filters the results to only include
+ * objects that have a positive delta in both count and size, **possibly** indicating
+ * a leak. Note that this is a heuristic and may not always indicate a leak, some objects
+ * may legitimately grow in size or count over time.
+ */
 export async function leakingObjectsInHeapSnapshotFiles(
   snapshotFiles: string[],
-): Promise<Diff> {
+): Promise<HeapSnapshotDiff> {
   const diff = await diffHeapSnapshotFiles(snapshotFiles);
 
-  const leakingDiff: Diff = {};
+  const leakingDiff: HeapSnapshotDiff = {};
   for (const object of Object.values(diff)) {
     if (object.countDelta > 0 && object.sizeDelta > 0) {
       leakingDiff[object.ctor] = object;
