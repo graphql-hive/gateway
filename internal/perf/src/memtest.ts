@@ -210,7 +210,6 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           loadtestResult.heapSnapshots.map(({ file }) => file),
         );
         expect.fail(`Leak detected on ${Object.keys(diff).length} objects that keep growing!
-
 ${Object.values(diff)
   .map(
     ({ ctor, sizeDelta, countDelta }) =>
