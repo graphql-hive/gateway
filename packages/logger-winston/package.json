@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "graphql": "16.11.0",
-    "pkgroll": "2.14.5",
+    "pkgroll": "2.15.0",
     "winston": "^3.17.0"
   },
   "sideEffects": false

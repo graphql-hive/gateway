@@ -60,7 +60,7 @@
     "fastify": "5.4.0",
     "file-type": "^21.0.0",
     "graphql": "^16.9.0",
-    "pkgroll": "2.14.5",
+    "pkgroll": "2.15.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
     "supertest": "7.1.4"
