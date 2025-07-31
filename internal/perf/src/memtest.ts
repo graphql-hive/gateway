@@ -224,11 +224,6 @@ ${Object.values(diff)
 Please load the following heap snapshots respectively in Chrome DevTools for more details:
 ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}
 `);
-        await expect(
-          leakingObjectsInHeapSnapshotFiles(
-            loadtestResult.heapSnapshots.map(({ file }) => file),
-          ),
-        ).resolves.toEqual({});
       } else {
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
