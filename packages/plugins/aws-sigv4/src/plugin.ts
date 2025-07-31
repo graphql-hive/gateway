@@ -363,83 +363,84 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
       if (!isBufferOrString(options.body)) {
         return;
       }
-      const factoryResult = outgoingOptionsFactory({
-        url,
-        options,
-        subgraphName,
-      });
-      if (factoryResult === false) {
-        return;
-      }
-      let signQuery = false;
-      let accessKeyId: string | undefined =
-        getEnvStr('AWS_ACCESS_KEY_ID') || getEnvStr('AWS_ACCESS_KEY');
-      let secretAccessKey: string | undefined =
-        getEnvStr('AWS_SECRET_ACCESS_KEY') || getEnvStr('AWS_SECRET_KEY');
-      let sessionToken: string | undefined = getEnvStr('AWS_SESSION_TOKEN');
-      let service: string | undefined;
-      let region: string | undefined;
-      let roleArn: string | undefined = getEnvStr('AWS_ROLE_ARN');
-      let roleSessionName: string | undefined = getEnvStr(
-        'AWS_IAM_ROLE_SESSION_NAME',
-      );
-      if (typeof factoryResult === 'object' && factoryResult != null) {
-        signQuery = factoryResult.signQuery || false;
-        accessKeyId =
-          factoryResult.accessKeyId ||
-          getEnvStr('AWS_ACCESS_KEY_ID') ||
-          getEnvStr('AWS_ACCESS_KEY');
-        secretAccessKey =
-          factoryResult.secretAccessKey ||
-          getEnvStr('AWS_SECRET_ACCESS_KEY') ||
-          getEnvStr('AWS_SECRET_KEY');
-        sessionToken =
-          factoryResult.sessionToken || getEnvStr('AWS_SESSION_TOKEN');
-        roleArn = factoryResult.roleArn;
-        roleSessionName =
-          factoryResult.roleSessionName ||
-          getEnvStr('AWS_IAM_ROLE_SESSION_NAME');
-        service = factoryResult.serviceName;
-        region = factoryResult.region;
-      }
       return handleMaybePromise(
-        () =>
-          roleArn && roleSessionName
-            ? new STS({ region }).assumeRole({
-                RoleArn: roleArn,
-                RoleSessionName: roleSessionName,
-              })
-            : undefined,
-        (stsResult) => {
-          accessKeyId = stsResult?.Credentials?.AccessKeyId || accessKeyId;
-          secretAccessKey =
-            stsResult?.Credentials?.SecretAccessKey || secretAccessKey;
-          sessionToken = stsResult?.Credentials?.SessionToken || sessionToken;
-          const parsedUrl = new URL(url);
-          const aws4Request: AWS4Request = {
-            host: parsedUrl.host,
-            method: options.method,
-            path: `${parsedUrl.pathname}${parsedUrl.search}`,
-            body: options.body as Buffer,
-            headers: options.headers,
-            signQuery,
-            service,
-            region,
-          };
-          const modifiedAws4Request = aws4.sign(aws4Request, {
-            accessKeyId,
-            secretAccessKey,
-            sessionToken,
-          });
-          setURL(
-            `${parsedUrl.protocol}//${modifiedAws4Request.host}${modifiedAws4Request.path}`,
+        () => outgoingOptionsFactory({ url, options, subgraphName }),
+        (factoryResult) => {
+          if (factoryResult === false) {
+            return;
+          }
+          let signQuery = false;
+          let accessKeyId: string | undefined =
+            getEnvStr('AWS_ACCESS_KEY_ID') || getEnvStr('AWS_ACCESS_KEY');
+          let secretAccessKey: string | undefined =
+            getEnvStr('AWS_SECRET_ACCESS_KEY') || getEnvStr('AWS_SECRET_KEY');
+          let sessionToken: string | undefined = getEnvStr('AWS_SESSION_TOKEN');
+          let service: string | undefined;
+          let region: string | undefined;
+          let roleArn: string | undefined = getEnvStr('AWS_ROLE_ARN');
+          let roleSessionName: string | undefined = getEnvStr(
+            'AWS_IAM_ROLE_SESSION_NAME',
           );
-          setOptions({
-            ...options,
-            method: modifiedAws4Request.method,
-            headers: modifiedAws4Request.headers as Record<string, string>,
-            body: modifiedAws4Request.body,
-          });
+          if (typeof factoryResult === 'object' && factoryResult != null) {
+            signQuery = factoryResult.signQuery || false;
+            accessKeyId =
+              factoryResult.accessKeyId ||
+              getEnvStr('AWS_ACCESS_KEY_ID') ||
+              getEnvStr('AWS_ACCESS_KEY');
+            secretAccessKey =
+              factoryResult.secretAccessKey ||
+              getEnvStr('AWS_SECRET_ACCESS_KEY') ||
+              getEnvStr('AWS_SECRET_KEY');
+            sessionToken =
+              factoryResult.sessionToken || getEnvStr('AWS_SESSION_TOKEN');
+            roleArn = factoryResult.roleArn;
+            roleSessionName =
+              factoryResult.roleSessionName ||
+              getEnvStr('AWS_IAM_ROLE_SESSION_NAME');
+            service = factoryResult.serviceName;
+            region = factoryResult.region;
+          }
+          return handleMaybePromise(
+            () =>
+              roleArn && roleSessionName
+                ? new STS({ region }).assumeRole({
+                    RoleArn: roleArn,
+                    RoleSessionName: roleSessionName,
+                  })
+                : undefined,
+            (stsResult) => {
+              accessKeyId = stsResult?.Credentials?.AccessKeyId || accessKeyId;
+              secretAccessKey =
+                stsResult?.Credentials?.SecretAccessKey || secretAccessKey;
+              sessionToken =
+                stsResult?.Credentials?.SessionToken || sessionToken;
+              const parsedUrl = new URL(url);
+              const aws4Request: AWS4Request = {
+                host: parsedUrl.host,
+                method: options.method,
+                path: `${parsedUrl.pathname}${parsedUrl.search}`,
+                body: options.body as Buffer,
+                headers: options.headers,
+                signQuery,
+                service,
+                region,
+              };
+              const modifiedAws4Request = aws4.sign(aws4Request, {
+                accessKeyId,
+                secretAccessKey,
+                sessionToken,
+              });
+              setURL(
+                `${parsedUrl.protocol}//${modifiedAws4Request.host}${modifiedAws4Request.path}`,
+              );
+              setOptions({
+                ...options,
+                method: modifiedAws4Request.method,
+                headers: modifiedAws4Request.headers as Record<string, string>,
+                body: modifiedAws4Request.body,
+              });
+            },
+          );
         },
       );
     },
