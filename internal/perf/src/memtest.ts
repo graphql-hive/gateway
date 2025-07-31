@@ -222,7 +222,6 @@ ${Object.values(diff)
   .join('\n')}
 
 Please load the following heap snapshots respectively in Chrome DevTools for more details:
-
 ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}
 `);
         await expect(
