@@ -1219,7 +1219,9 @@ export abstract class HeapSnapshot {
         secondWorker.on('message', (data) => {
           if (data?.problemReport) {
             const problemReport: HeapSnapshotProblemReport = data.problemReport;
-            console.warn(formatProblemReport(this, problemReport));
+            this.#progress.reportProblem(
+              formatProblemReport(this, problemReport),
+            );
           } else if (data?.resultsFromSecondWorker) {
             const resultsFromSecondWorker: ResultsFromSecondWorker =
               data.resultsFromSecondWorker;
@@ -2787,8 +2789,6 @@ export abstract class HeapSnapshot {
       return;
     }
 
-    console.time('propagateDOMState');
-
     const visited = new Uint8Array(this.nodeCount);
     const attached: number[] = [];
     const detached: number[] = [];
@@ -2906,8 +2906,6 @@ export abstract class HeapSnapshot {
       }
       propagateState(this, nodeOrdinal, DOMLinkState.DETACHED);
     }
-
-    console.timeEnd('propagateDOMState');
   }
 
   private buildSamples(): void {
