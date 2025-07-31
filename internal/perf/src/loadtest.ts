@@ -37,6 +37,16 @@ export interface LoadtestOptions extends ProcOptions {
    */
   takeHeapSnapshots?: boolean;
   /**
+   * Whether to perform heap allocation sampling during the complete loadtest run.
+   * This is the "allocation sampling" feature of the V8 memory profiling you may
+   * find in the Chrome DevTools. It approximates memory allocations by sampling
+   * long operations with minimal overhead and get a breakdown by JavaScript execution
+   * stack.
+   *
+   * @default false
+   */
+  performHeapSampling?: boolean;
+  /**
    * Should the loadtest immediatelly error out on the first failed request?
    *
    * This is useful and disabled by default because we want to guarantee that the gateway
@@ -83,8 +93,8 @@ export interface LoadtestHeapSnapshot {
 
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
-  heapsnapshots: LoadtestHeapSnapshot[];
-  profile: HeapProfiler.SamplingHeapProfile;
+  heapSnapshots: LoadtestHeapSnapshot[];
+  heapSamplingProfile: HeapProfiler.SamplingHeapProfile | null;
 }> {
   const {
     cwd,
@@ -97,6 +107,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     server,
     query,
     takeHeapSnapshots,
+    performHeapSampling,
     allowFailingRequests,
     onMemorySample,
     onHeapSnapshot,
@@ -204,7 +215,9 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   }
 
   // start heap sampling after idling (no need to sample anything during the idling phase)
-  const stopHeapSampling = await inspector.startHeapSampling();
+  const stopHeapSampling = performHeapSampling
+    ? await inspector.startHeapSampling()
+    : () => null; // no-op if no heap allocation sampling
 
   for (; run <= runs; run++) {
     phase = 'loadtest';
@@ -257,8 +270,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   return {
     samples,
-    heapsnapshots,
-    profile: await stopHeapSampling(),
+    heapSnapshots: heapsnapshots,
+    heapSamplingProfile: await stopHeapSampling(),
   };
 }
 
