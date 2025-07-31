@@ -1,6 +1,4 @@
-import fs from 'fs/promises';
 import { HeapProfiler } from 'inspector';
-import os from 'os';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
