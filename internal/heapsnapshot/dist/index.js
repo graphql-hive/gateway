@@ -57,7 +57,25 @@ async function parseHeapSnapshot(data, opts = {}) {
     const loader = new HeapSnapshotLoader(
       silent ? silentProgress : consoleProgress
     );
-    loader.write(data);
+    await new Promise((resolve, reject) => {
+      function consume(chunk) {
+        loader.write(String(chunk));
+      }
+      data.on("data", consume);
+      function cleanup() {
+        data.off("data", consume);
+        data.off("error", reject);
+        data.off("end", resolve);
+      }
+      data.once("error", (e) => {
+        cleanup();
+        reject(e);
+      });
+      data.once("end", () => {
+        cleanup();
+        resolve();
+      });
+    });
     loader.close();
     await loader.parsingComplete;
     const secondWorker = new Worker(

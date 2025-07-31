@@ -1,4 +1,5 @@
 import { MessagePort } from 'node:worker_threads';
+import { Readable } from 'node:stream';
 
 declare class AllocationNodeCallers {
     nodesWithSingleCaller: SerializedAllocationNode[];
@@ -712,6 +713,6 @@ interface ParseHeapSnapshotOptions {
      */
     silent?: boolean;
 }
-declare function parseHeapSnapshot(data: string, opts?: ParseHeapSnapshotOptions): Promise<JSHeapSnapshot>;
+declare function parseHeapSnapshot(data: Readable, opts?: ParseHeapSnapshotOptions): Promise<JSHeapSnapshot>;
 
 export { type AggregatedInfo, HeapSnapshot, HeapSnapshotEdge, HeapSnapshotEdgeIndexProvider, HeapSnapshotEdgeIterator, HeapSnapshotEdgesProvider, HeapSnapshotFilteredIterator, type HeapSnapshotHeader, HeapSnapshotIndexRangeIterator, type HeapSnapshotItem, type HeapSnapshotItemIndexProvider, type HeapSnapshotItemIterator, HeapSnapshotItemProvider, HeapSnapshotNode, HeapSnapshotNodeIndexProvider, HeapSnapshotNodeIterator, HeapSnapshotNodesProvider, HeapSnapshotProgress, HeapSnapshotRetainerEdge, HeapSnapshotRetainerEdgeIndexProvider, HeapSnapshotRetainerEdgeIterator, JSHeapSnapshot, JSHeapSnapshotEdge, JSHeapSnapshotNode, JSHeapSnapshotRetainerEdge, type LiveObjects, type ParseHeapSnapshotOptions, type Profile, SecondaryInitManager, parseHeapSnapshot, serializeUIString };

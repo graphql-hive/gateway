@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { fileURLToPath, URL } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { HeapSnapshotProgress, JSHeapSnapshot } from './HeapSnapshot.js';
@@ -16,14 +17,35 @@ export interface ParseHeapSnapshotOptions {
 }
 
 export async function parseHeapSnapshot(
-  data: string,
+  data: Readable,
   opts: ParseHeapSnapshotOptions = {},
 ): Promise<JSHeapSnapshot> {
   const { silent = true } = opts;
   const loader = new HeapSnapshotLoader(
     silent ? silentProgress : consoleProgress,
   );
-  loader.write(data);
+
+  await new Promise<void>((resolve, reject) => {
+    function consume(chunk: string | Buffer) {
+      loader.write(String(chunk));
+    }
+    data.on('data', consume);
+
+    function cleanup() {
+      data.off('data', consume);
+      data.off('error', reject);
+      data.off('end', resolve);
+    }
+    data.once('error', (e) => {
+      cleanup();
+      reject(e);
+    });
+    data.once('end', () => {
+      cleanup();
+      resolve();
+    });
+  });
+
   loader.close();
 
   // TODO: this will hang if the snapshot is incomplete or in some cases malformed
