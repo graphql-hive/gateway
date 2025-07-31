@@ -14,7 +14,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "pkgroll --clean-dist --sourcemap",
+    "build": "pkgroll --clean-dist",
     "check:types": "tsc --noEmit",
     "start": "yarn build --watch"
   },
