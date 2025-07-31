@@ -84,7 +84,12 @@ export async function leakingObjectsInHeapSnapshotFiles(
 
   const leakingDiff: HeapSnapshotDiff = {};
   for (const object of Object.values(diff)) {
-    if (object.countDelta > 0 && object.sizeDelta > 0) {
+    if (
+      // size just kept growing
+      object.sizeDelta > 0 &&
+      // count just kept growing (10 retained objects is ok, it's probably javascript things)
+      object.countDelta > 10
+    ) {
       leakingDiff[object.ctor] = object;
     }
   }

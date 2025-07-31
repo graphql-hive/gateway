@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Server } from '@internal/proc';
 import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
@@ -7,6 +8,9 @@ import { createMemorySampleLineChart } from './chart';
 import { HeapSamplingProfileFrame } from './heapsampling';
 import { leakingObjectsInHeapSnapshotFiles } from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __project = path.resolve(__dirname, '..', '..', '..');
 
 const supportedFlags = [
   'rapid' as const,
@@ -202,6 +206,22 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       }
 
       if (loadtestResult.heapSnapshots.length) {
+        const diff = await leakingObjectsInHeapSnapshotFiles(
+          loadtestResult.heapSnapshots.map(({ file }) => file),
+        );
+        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that keep growing!
+
+${Object.values(diff)
+  .map(
+    ({ ctor, sizeDelta, countDelta }) =>
+      `- "${ctor}" grew ${(sizeDelta / (1024 * 1024)).toFixed(2)}MB in size (${countDelta} objects were not released)`,
+  )
+  .join('\n')}
+
+Please load the following heap snapshots respectively in Chrome DevTools for more details:
+
+${loadtestResult.heapSnapshots.map(({ file }, index) => `${index + 1}. ${path.relative(__project, file)}`).join('\n')}
+`);
         await expect(
           leakingObjectsInHeapSnapshotFiles(
             loadtestResult.heapSnapshots.map(({ file }) => file),
