@@ -227,6 +227,11 @@ ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.
       } else {
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
+
+      // no leak, remove the heap snapshots
+      await Promise.all(
+        loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
+      );
     },
   );
 }
