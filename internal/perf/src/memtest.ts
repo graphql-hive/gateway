@@ -214,13 +214,16 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 ${Object.values(diff)
   .map(
     ({ ctor, sizeDelta, countDelta }) =>
-      `- "${ctor}" grew ${(sizeDelta / (1024 * 1024)).toFixed(2)}MB in size (${countDelta} objects were not released)`,
+      `\t- "${ctor}" grew ${
+        // use SI prefix to convert bytes to MB
+        (sizeDelta / 1_000_000).toFixed(2)
+      }MB in size (${countDelta} objects were not released)`,
   )
   .join('\n')}
 
 Please load the following heap snapshots respectively in Chrome DevTools for more details:
 
-${loadtestResult.heapSnapshots.map(({ file }, index) => `${index + 1}. ${path.relative(__project, file)}`).join('\n')}
+${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}
 `);
         await expect(
           leakingObjectsInHeapSnapshotFiles(
