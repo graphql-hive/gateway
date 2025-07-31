@@ -232,7 +232,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
               frame.callstack.some(
                 (stack) => stack.name === 'handleMaybePromise',
               )
-            ),
+            ) &&
+            // Anonymous `set` frames are false-positives
+            !(frame.name === 'set' && frame.file == null),
         )
         .filter((frame) => {
           if (expectedHeavyFrame) {
