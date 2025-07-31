@@ -1,5 +1,4 @@
 import { createReadStream } from 'fs';
-import fs from 'fs/promises';
 import { parseHeapSnapshot } from '@internal/heapsnapshot';
 
 export interface HeapSnapshotDiff {
