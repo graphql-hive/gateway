@@ -14,7 +14,6 @@
       "@internal/testing": ["./internal/testing/src/index.ts"],
       "@internal/e2e": ["./internal/e2e/src/index.ts"],
       "@internal/proc": ["./internal/proc/src/index.ts"],
-      "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"],
       "@internal/perf": ["./internal/perf/src/index.ts"],
       "@internal/perf/memtest": ["./internal/perf/src/memtest.ts"],
       "@internal/testing/to-be-similar-string": [
@@ -82,6 +81,8 @@
       // paths starting with ~ are used by published packages and will be bundled
       "~internal/env": ["./internal/env/src/index.ts"],
       "~internal/env/node": ["./internal/env/src/node.ts"]
+      // INTENTIONAL: the heapsnapshot package needs to be built to be used (because of the worker script)
+      // "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"]
     }
   },
   "include": [
