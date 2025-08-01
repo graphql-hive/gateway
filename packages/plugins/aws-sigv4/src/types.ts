@@ -69,7 +69,7 @@ export interface AWSSignv4PluginOutgoingOptionsFactoryOptions {
 
 export type AWSSignv4PluginOutgoingOptionsFactory = (
   factoryOptions: AWSSignv4PluginOutgoingOptionsFactoryOptions,
-) => AWSSignv4PluginOutgoingOptions | undefined | false | true;
+) => MaybePromise<AWSSignv4PluginOutgoingOptions | undefined | false | true>;
 
 export interface AWSSignv4PluginIncomingPayload {
   /**
