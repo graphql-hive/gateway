@@ -1,5 +1,47 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 1.0.17
+
+### Patch Changes
+
+- [#1367](https://github.com/graphql-hive/gateway/pull/1367) [`bfe2ac7`](https://github.com/graphql-hive/gateway/commit/bfe2ac7fbb40b3a1fc22c8be9d52b95c68ee4fe3) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@aws-sdk/client-sts@^3.857.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.857.0) (from `^3.848.0`, in `dependencies`)
+
+- [#1368](https://github.com/graphql-hive/gateway/pull/1368) [`a6aeed2`](https://github.com/graphql-hive/gateway/commit/a6aeed298de71271e59f86d3effc14ae0f65c703) Thanks [@ardatan](https://github.com/ardatan)! - Support `Promise` as a result of `outgoing`;
+
+  So you can use credentials providers from `@aws-sdk/credential-providers` package.
+  [See more](https://www.npmjs.com/package/@aws-sdk/credential-providers#fromnodeproviderchain).
+
+  ```ts
+  import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  const config = defineConfig({
+    plugins: [
+      useAWSSigv4({
+        outgoing: fromNodeProviderChain({
+          // This provider accepts any input of fromEnv(), fromSSO(), fromTokenFile(),
+          // fromIni(), fromProcess(), fromInstanceMetadata(), fromContainerMetadata()
+          // that exist in the default credential chain.
+
+          // Optional client overrides. This is passed to an inner credentials client
+          // that may be STS, SSO, or other instantiated to resolve the credentials.
+          // Region and profile are inherited from the upper client if present
+          // unless overridden, so it should not be necessary to set those.
+          //
+          // Warning: setting a region here may override the region set in
+          // the config file for the selected profile if profile-based
+          // credentials are used.
+          clientConfig: {},
+        }),
+      }),
+    ],
+  });
+  ```
+
+- Updated dependencies [[`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1)]:
+  - @graphql-mesh/fusion-runtime@0.11.19
+
 ## 1.0.16
 
 ### Patch Changes
