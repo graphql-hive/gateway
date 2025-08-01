@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 1.16.3
+
+### Patch Changes
+
+- Updated dependencies [[`bed67a6`](https://github.com/graphql-hive/gateway/commit/bed67a6eaf57b2aa6c7d08d1137b3bd8c4d4b066)]:
+  - @graphql-hive/plugin-aws-sigv4@1.0.18
+
 ## 1.16.2
 
 ### Patch Changes
