@@ -45,7 +45,7 @@
   "devDependencies": {
     "@graphql-tools/schema": "^10.0.25",
     "graphql": "^16.9.0",
-    "pkgroll": "2.14.5"
+    "pkgroll": "2.15.0"
   },
   "sideEffects": false
 }
