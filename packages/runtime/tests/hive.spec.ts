@@ -29,16 +29,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
+// Workaround to use `Request` outside of the handler
 function cloneRequest(req: Request): MaybePromise<Request> {
-  // Only for Bun
-  if (globalThis.Bun) {
-    return req.json().then((json) => ({
-      ...req,
-      headers: req.headers,
-      json: () => fakePromise(json),
-    }));
-  }
-  return req;
+  return req.json().then((json) => ({
+    ...req,
+    headers: req.headers,
+    json: () => fakePromise(json),
+  }));
 }
 
 function createUpstreamSchema() {
