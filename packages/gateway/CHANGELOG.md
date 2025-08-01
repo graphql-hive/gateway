@@ -1,5 +1,59 @@
 # @graphql-hive/gateway
 
+## 1.16.2
+
+### Patch Changes
+
+- [#1358](https://github.com/graphql-hive/gateway/pull/1358) [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-tools/code-file-loader@^8.1.22` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.22) (from `^8.1.21`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.0.22` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.0.22) (from `^8.0.21`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/load@^8.1.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.1.2) (from `^8.1.1`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.9.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.9.1) (from `^10.9.0`, in `dependencies`)
+  - Updated dependency [`dotenv@^17.2.1` ↗︎](https://www.npmjs.com/package/dotenv/v/17.2.1) (from `^17.2.0`, in `dependencies`)
+
+- [#1368](https://github.com/graphql-hive/gateway/pull/1368) [`a6aeed2`](https://github.com/graphql-hive/gateway/commit/a6aeed298de71271e59f86d3effc14ae0f65c703) Thanks [@ardatan](https://github.com/ardatan)! - Support `Promise` as a result of `outgoing`;
+
+  So you can use credentials providers from `@aws-sdk/credential-providers` package.
+  [See more](https://www.npmjs.com/package/@aws-sdk/credential-providers#fromnodeproviderchain).
+
+  ```ts
+  import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+  import { defineConfig } from '@graphql-hive/gateway';
+
+  const config = defineConfig({
+    plugins: [
+      useAWSSigv4({
+        outgoing: fromNodeProviderChain({
+          // This provider accepts any input of fromEnv(), fromSSO(), fromTokenFile(),
+          // fromIni(), fromProcess(), fromInstanceMetadata(), fromContainerMetadata()
+          // that exist in the default credential chain.
+
+          // Optional client overrides. This is passed to an inner credentials client
+          // that may be STS, SSO, or other instantiated to resolve the credentials.
+          // Region and profile are inherited from the upper client if present
+          // unless overridden, so it should not be necessary to set those.
+          //
+          // Warning: setting a region here may override the region set in
+          // the config file for the selected profile if profile-based
+          // credentials are used.
+          clientConfig: {},
+        }),
+      }),
+    ],
+  });
+  ```
+
+- Updated dependencies [[`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`38e5173`](https://github.com/graphql-hive/gateway/commit/38e51731e31e9e8bcdbeb370ae7cac5657a6f6d3), [`bfe2ac7`](https://github.com/graphql-hive/gateway/commit/bfe2ac7fbb40b3a1fc22c8be9d52b95c68ee4fe3), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`6cedc05`](https://github.com/graphql-hive/gateway/commit/6cedc056ef4070bc1719fbe222d60c0d48af5a71), [`a6aeed2`](https://github.com/graphql-hive/gateway/commit/a6aeed298de71271e59f86d3effc14ae0f65c703)]:
+  - @graphql-hive/gateway-runtime@1.10.2
+  - @graphql-hive/plugin-aws-sigv4@1.0.17
+  - @graphql-hive/plugin-deduplicate-request@1.0.3
+  - @graphql-mesh/hmac-upstream-signature@1.2.30
+  - @graphql-mesh/plugin-opentelemetry@1.3.65
+  - @graphql-mesh/plugin-prometheus@1.3.53
+  - @graphql-mesh/transport-http@0.7.1
+  - @graphql-mesh/transport-http-callback@0.7.1
+  - @graphql-mesh/transport-ws@1.1.1
+
 ## 1.16.1
 
 ### Patch Changes

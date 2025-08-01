@@ -1,5 +1,29 @@
 # @graphql-hive/gateway-runtime
 
+## 1.10.2
+
+### Patch Changes
+
+- [#1358](https://github.com/graphql-hive/gateway/pull/1358) [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-tools/utils@^10.9.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.9.1) (from `^10.9.0`, in `dependencies`)
+
+- [#1361](https://github.com/graphql-hive/gateway/pull/1361) [`38e5173`](https://github.com/graphql-hive/gateway/commit/38e51731e31e9e8bcdbeb370ae7cac5657a6f6d3) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Updated dependency [`@whatwg-node/server@^0.10.11` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.11) (from `^0.10.10`, in `dependencies`)
+
+- [#1366](https://github.com/graphql-hive/gateway/pull/1366) [`6cedc05`](https://github.com/graphql-hive/gateway/commit/6cedc056ef4070bc1719fbe222d60c0d48af5a71) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Use the merge resolver for delegated subgraph schemas
+
+- Updated dependencies [[`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1), [`8e37851`](https://github.com/graphql-hive/gateway/commit/8e3785194d97edbe82c7fce316104b81bb0362f1)]:
+  - @graphql-mesh/fusion-runtime@0.11.19
+  - @graphql-mesh/hmac-upstream-signature@1.2.30
+  - @graphql-mesh/transport-common@0.7.37
+  - @graphql-tools/batch-delegate@9.0.41
+  - @graphql-tools/delegate@10.2.23
+  - @graphql-tools/executor-common@0.0.6
+  - @graphql-tools/executor-http@2.1.1
+  - @graphql-tools/federation@3.2.8
+  - @graphql-tools/stitch@9.4.28
+  - @graphql-tools/wrap@10.1.4
+
 ## 1.10.1
 
 ### Patch Changes
