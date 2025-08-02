@@ -199,15 +199,23 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         const diff = await leakingObjectsInHeapSnapshotFiles(
           loadtestResult.heapSnapshots.map(({ file }) => file),
         );
-        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that keept growing:
+        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that kept growing:
 ${Object.values(diff)
   .map(
-    ({ ctor, sizeDelta, countDelta, removedSize }) =>
-      `\t- "${ctor}" grew ${
-        // use SI prefix to convert bytes to MB
-        (sizeDelta / 1_000_000).toFixed(2)
-      }MB in size (${countDelta} objects were not freed)` +
-      (removedSize <= 0 ? ' (never freed any object, all were retained)' : ''),
+    ({
+      ctor,
+      addedSize,
+      removedSize,
+      sizeDelta,
+      addedCount,
+      removedCount,
+      countDelta,
+    }) =>
+      // use SI prefix to convert bytes to MB
+      `\t- "${ctor}" allocated ${(addedSize / 1_000_000).toFixed(
+        2,
+      )}MB, freeing only ${(removedSize / 1_000_000).toFixed(2)}MB (Δ${(sizeDelta / 1_000_000).toFixed(2)}MB)
+\t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
   )
   .join('\n')}
 
