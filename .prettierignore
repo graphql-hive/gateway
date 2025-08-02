@@ -13,3 +13,4 @@ __generated__
 /e2e/config-syntax-error/gateway.config.ts
 /e2e/config-syntax-error/custom-resolvers.ts
 CHANGELOG.md
+/internal/heapsnapshot/dist/
