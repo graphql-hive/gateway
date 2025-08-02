@@ -4,15 +4,24 @@ import { leakingObjectsInHeapSnapshotFiles } from '../src/heapsnapshot';
 
 const __fixtures = path.resolve(__dirname, '__fixtures__');
 
-it('should correctly calculate the leaking objects', async () => {
-  await expect(
-    leakingObjectsInHeapSnapshotFiles([
-      path.join(__fixtures, 'http-server-under-load', '1.heapsnapshot'),
-      path.join(__fixtures, 'http-server-under-load', '2.heapsnapshot'),
-      path.join(__fixtures, 'http-server-under-load', '3.heapsnapshot'),
-      path.join(__fixtures, 'http-server-under-load', '4.heapsnapshot'),
-    ]),
-  ).resolves.toMatchInlineSnapshot(`
+it.skipIf(
+  // no need to test in bun (also, bun does not support increasing timeouts per test)
+  globalThis.Bun,
+)(
+  'should correctly calculate the leaking objects',
+  {
+    // parsing snapshots can take a while, so we increase the timeout
+    timeout: 30_000,
+  },
+  async () => {
+    await expect(
+      leakingObjectsInHeapSnapshotFiles([
+        path.join(__fixtures, 'http-server-under-load', '1.heapsnapshot'),
+        path.join(__fixtures, 'http-server-under-load', '2.heapsnapshot'),
+        path.join(__fixtures, 'http-server-under-load', '3.heapsnapshot'),
+        path.join(__fixtures, 'http-server-under-load', '4.heapsnapshot'),
+      ]),
+    ).resolves.toMatchInlineSnapshot(`
     {
       "(compiled code)": {
         "addedCount": 1727,
@@ -25,4 +34,5 @@ it('should correctly calculate the leaking objects', async () => {
       },
     }
   `);
-});
+  },
+);
