@@ -32,7 +32,6 @@ export async function diffHeapSnapshotFiles(
 
   let baseSnap = await parseHeapSnapshot(
     createReadStream(snapshotFiles.shift()!),
-    { silent: false },
   );
   while (baseSnap) {
     const snapshotFile = snapshotFiles.shift()!;
