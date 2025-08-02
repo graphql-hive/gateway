@@ -6,7 +6,10 @@ import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
 import { HeapSamplingProfileFrame } from './heapsampling';
-import { leakingObjectsInHeapSnapshotFiles } from './heapsnapshot';
+import {
+  bytesToHuman,
+  leakingObjectsInHeapSnapshotFiles,
+} from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -212,9 +215,7 @@ ${Object.values(diff)
       countDelta,
     }) =>
       // use SI prefix to convert bytes to MB
-      `\t- "${ctor}" allocated ${(addedSize / 1_000_000).toFixed(
-        2,
-      )}MB, freed ${removedSize > 0 ? (removedSize / 1_000_000).toFixed(2) + 'MB' : 'nothing'} (Δ${(sizeDelta / 1_000_000).toFixed(2)}MB)
+      `\t- "${ctor}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
 \t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
   )
   .join('\n')}

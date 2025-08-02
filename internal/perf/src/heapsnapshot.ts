@@ -96,3 +96,15 @@ export async function leakingObjectsInHeapSnapshotFiles(
 
   return leakingDiff;
 }
+
+/** Converts the provided bytes size to human-readable format (kB, MB, GB). Uses the SI prefix. */
+export function bytesToHuman(size: number) {
+  if (size < 1_000) {
+    return `${size}B`;
+  } else if (size < 1_000_000) {
+    return `${(size / 1_000).toFixed(2)}kB`;
+  } else if (size < 1_000_000_000) {
+    return `${(size / 1_000_000).toFixed(2)}MB`;
+  }
+  return `${(size / 1_000_000_000).toFixed(2)}GB`;
+}
