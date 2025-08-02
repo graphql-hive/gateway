@@ -41,6 +41,9 @@ export async function leakingObjectsInHeapSnapshotFiles(
     const aggregates = baseSnap.aggregatesForDiff(defs);
     const snapshotDiff = snap.calculateSnapshotDiff('', aggregates);
 
+    // next base snap is this/current snap
+    baseSnap = snap;
+
     const growingDiff: HeapSnapshotDiff = {};
     for (const { addedIndexes, deletedIndexes, ...diff } of Object.values(
       snapshotDiff,
@@ -81,8 +84,6 @@ export async function leakingObjectsInHeapSnapshotFiles(
         delete totalGrowingDiff[totalDiffName];
       }
     }
-
-    baseSnap = snap;
   }
 
   return totalGrowingDiff;

@@ -51,13 +51,13 @@ it.skipIf(
       .toMatchInlineSnapshot(`
       {
         "(compiled code)": {
-          "addedCount": 24267,
-          "addedSize": 4981944,
-          "countDelta": -19747,
+          "addedCount": 16020,
+          "addedSize": 3015968,
+          "countDelta": -9728,
           "name": "(compiled code)",
-          "removedCount": 44014,
-          "removedSize": 2541944,
-          "sizeDelta": 2440000,
+          "removedCount": 25748,
+          "removedSize": 1731144,
+          "sizeDelta": 1284824,
         },
       }
     `);
