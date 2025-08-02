@@ -8,7 +8,7 @@ export interface HeapSnapshotDiff {
 /**
  * Diffs the provided v8 JavaScript {@link files heap snapshot files}
  * consecutively and filters the results to only include objects that have a positive
- * delta in both count and size in **every** snapshot, possibly indicating a leak.
+ * size delta (grew in size) in **every** snapshot, possibly indicating a leak.
  *
  * Note that this is a heuristic and may not always indicate a leak, some objects may
  * legitimately grow in size or count over time.
@@ -28,6 +28,7 @@ export async function leakingObjectsInHeapSnapshotFiles(
   let baseSnap = await parseHeapSnapshot(
     createReadStream(snapshotFiles.shift()!),
   );
+  let firstSnap = true;
   while (baseSnap) {
     const snapshotFile = snapshotFiles.shift()!;
     if (!snapshotFile) {
@@ -46,16 +47,15 @@ export async function leakingObjectsInHeapSnapshotFiles(
     )) {
       if (
         // size just kept growing
-        diff.sizeDelta > 0 &&
-        // count just kept growing
-        diff.countDelta > 0
+        diff.sizeDelta > 0
       ) {
         growingDiff[diff.name] = diff;
       }
     }
 
-    if (!Object.keys(totalGrowingDiff).length) {
+    if (firstSnap) {
       // this is the first snapshot, so we just take the diff as is
+      firstSnap = false;
       Object.assign(totalGrowingDiff, growingDiff);
       continue;
     }

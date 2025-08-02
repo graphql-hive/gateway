@@ -10,41 +10,54 @@ it.skipIf(
   // no need to test in bun (also, bun does not support increasing timeouts per test)
   globalThis.Bun,
 )(
-  'should correctly calculate the leaking objects',
+  'should correctly calculate no leaking objects',
   {
     // parsing snapshots can take a while, so we increase the timeout
     timeout: 30_000,
   },
   async () => {
-    await using snap1 = await archivedFixtureFile(
+    await using snaps = await archivedFixtureFiles([
       'http-server-under-load/1.heapsnapshot',
-    );
-    await using snap2 = await archivedFixtureFile(
       'http-server-under-load/2.heapsnapshot',
-    );
-    await using snap3 = await archivedFixtureFile(
       'http-server-under-load/3.heapsnapshot',
-    );
-    await using snap4 = await archivedFixtureFile(
       'http-server-under-load/4.heapsnapshot',
-    );
-    await expect(
-      leakingObjectsInHeapSnapshotFiles([
-        snap1.filepath,
-        snap2.filepath,
-        snap3.filepath,
-        snap4.filepath,
-      ]),
-    ).resolves.toMatchInlineSnapshot(`
+    ]);
+    await expect(leakingObjectsInHeapSnapshotFiles(snaps.filepaths)).resolves
+      .toMatchInlineSnapshot(`
+      {}
+    `);
+  },
+);
+
+it.skipIf(
+  // no need to test in bun (also, bun does not support increasing timeouts per test)
+  globalThis.Bun,
+)(
+  'should correctly detect randomly growing and freeing objects in size',
+  {
+    // parsing snapshots can take a while, so we increase the timeout
+    timeout: 30_000,
+  },
+  async () => {
+    await using snaps = await archivedFixtureFiles([
+      'random-grow-and-free/1.heapsnapshot',
+      'random-grow-and-free/2.heapsnapshot',
+      'random-grow-and-free/3.heapsnapshot',
+      'random-grow-and-free/4.heapsnapshot',
+      'random-grow-and-free/5.heapsnapshot',
+      'random-grow-and-free/6.heapsnapshot',
+    ]);
+    await expect(leakingObjectsInHeapSnapshotFiles(snaps.filepaths)).resolves
+      .toMatchInlineSnapshot(`
       {
         "(compiled code)": {
-          "addedCount": 1727,
-          "addedSize": 228096,
-          "countDelta": 91,
+          "addedCount": 24267,
+          "addedSize": 4981944,
+          "countDelta": -19747,
           "name": "(compiled code)",
-          "removedCount": 1636,
-          "removedSize": 163328,
-          "sizeDelta": 64768,
+          "removedCount": 44014,
+          "removedSize": 2541944,
+          "sizeDelta": 2440000,
         },
       }
     `);
@@ -52,30 +65,34 @@ it.skipIf(
 );
 
 /**
- * Unarchives the {@link archivedFile provided fixture file} for using in
- * tests and then removes it on disposal.
+ * Unarchives the {@link archivedFiles provided fixture files} for using in
+ * tests and then removes them on disposal.
  *
- * @param archivedFile - The name of the archived fixture file (without `.tar.gz`). Is the
+ * @param archivedFiles - An array of file names of the archived fixture file (without `.tar.gz`). Is the
  * filename of the file inside the archive.
  */
-async function archivedFixtureFile(archivedFile: string) {
-  const filepath = path.join(__fixtures, archivedFile);
-  const [, waitForExit] = await spawn(
-    {
-      cwd: __fixtures,
-    },
-    'tar',
-    '-xz',
-    '-f',
-    archivedFile + '.tar.gz',
-    '-C',
-    path.dirname(filepath),
-  );
-  await waitForExit;
+async function archivedFixtureFiles(archivedFiles: string[]) {
+  const filepaths: string[] = [];
+  for (const archivedFile of archivedFiles) {
+    const filepath = path.join(__fixtures, archivedFile);
+    const [, waitForExit] = await spawn(
+      {
+        cwd: __fixtures,
+      },
+      'tar',
+      '-xz',
+      '-f',
+      archivedFile + '.tar.gz',
+      '-C',
+      path.dirname(filepath),
+    );
+    await waitForExit;
+    filepaths.push(filepath);
+  }
   return {
-    [Symbol.asyncDispose]() {
-      return fs.unlink(filepath);
+    async [Symbol.asyncDispose]() {
+      await Promise.all(filepaths.map((filepath) => fs.unlink(filepath)));
     },
-    filepath,
+    filepaths,
   };
 }
