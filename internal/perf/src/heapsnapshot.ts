@@ -2,25 +2,28 @@ import { createReadStream } from 'fs';
 import { Diff, parseHeapSnapshot } from '@internal/heapsnapshot';
 
 export interface HeapSnapshotDiff {
-  [ctor: string]: Diff;
+  [ctor: string]: Omit<Diff, 'addedIndexes' | 'deletedIndexes'>;
 }
 
 /**
- * Diffs the provided v8 JavaScript heap snapshot files (`*.heapsnapshot`)
- * consecutively, returning a total of the differences by summing up the deltas
- * of each snapshot compared to the previous one starting from the first one.
+ * Diffs the provided v8 JavaScript {@link files heap snapshot files}
+ * consecutively and filters the results to only include objects that have a positive
+ * delta in both count and size in **every** snapshot, possibly indicating a leak.
+ *
+ * Note that this is a heuristic and may not always indicate a leak, some objects may
+ * legitimately grow in size or count over time.
  */
-export async function diffHeapSnapshotFiles(
+export async function leakingObjectsInHeapSnapshotFiles(
   files: string[],
 ): Promise<HeapSnapshotDiff> {
-  if (files.length < 2) {
+  if (files.length < 3) {
     throw new Error(
-      'At least two heap snapshot files are required for comparison.',
+      'At least three heap snapshot files are required for leak detection.',
     );
   }
   const snapshotFiles = [...files];
 
-  const totalDiff: HeapSnapshotDiff = {};
+  const totalGrowingDiff: HeapSnapshotDiff = {};
 
   let baseSnap = await parseHeapSnapshot(
     createReadStream(snapshotFiles.shift()!),
@@ -37,50 +40,53 @@ export async function diffHeapSnapshotFiles(
     const aggregates = baseSnap.aggregatesForDiff(defs);
     const snapshotDiff = snap.calculateSnapshotDiff('', aggregates);
 
-    for (const diff of Object.values(snapshotDiff)) {
-      const totalDiffForCtor = (totalDiff[diff.name] ||= diff);
-      totalDiffForCtor.addedCount += diff.addedCount;
-      totalDiffForCtor.removedCount += diff.removedCount;
-      totalDiffForCtor.addedSize += diff.addedSize;
-      totalDiffForCtor.removedSize += diff.removedSize;
-      totalDiffForCtor.countDelta += diff.countDelta;
-      totalDiffForCtor.sizeDelta += diff.sizeDelta;
-      totalDiffForCtor.addedIndexes.push(...diff.addedIndexes);
-      totalDiffForCtor.deletedIndexes.push(...diff.deletedIndexes);
+    const growingDiff: HeapSnapshotDiff = {};
+    for (const { addedIndexes, deletedIndexes, ...diff } of Object.values(
+      snapshotDiff,
+    )) {
+      if (
+        // size just kept growing
+        diff.sizeDelta > 0 &&
+        // count just kept growing (10 retained objects is ok, it's probably javascript things)
+        // TODO: is this really the case? can there be a super subtle leak? (our loadtests run long so this is unlikely atm)
+        diff.countDelta > 10
+      ) {
+        growingDiff[diff.name] = diff;
+      }
+    }
+
+    if (!Object.keys(totalGrowingDiff).length) {
+      // this is the first snapshot, so we just take the diff as is
+      Object.assign(totalGrowingDiff, growingDiff);
+      continue;
+    }
+
+    for (const diff of Object.values(growingDiff)) {
+      const totalGrowingDiffForName = totalGrowingDiff[diff.name];
+      if (!totalGrowingDiffForName) {
+        // didnt grow in the previous snapshot, so we skip it
+        continue;
+      }
+
+      totalGrowingDiffForName.addedCount += diff.addedCount;
+      totalGrowingDiffForName.removedCount += diff.removedCount;
+      totalGrowingDiffForName.addedSize += diff.addedSize;
+      totalGrowingDiffForName.removedSize += diff.removedSize;
+      totalGrowingDiffForName.countDelta += diff.countDelta;
+      totalGrowingDiffForName.sizeDelta += diff.sizeDelta;
+    }
+
+    // remove everything that the total has but not in the current index, means the thing didnt grow
+    for (const totalDiffName of Object.keys(totalGrowingDiff)) {
+      if (!growingDiff[totalDiffName]) {
+        delete totalGrowingDiff[totalDiffName];
+      }
     }
 
     baseSnap = snap;
   }
 
-  return totalDiff;
-}
-
-/**
- * Diffs the provided v8 JavaScript heap snapshot files (`*.heapsnapshot`)
- * using {@link diffHeapSnapshotFiles} and filters the results to only include
- * objects that have a positive delta in both count and size, **possibly** indicating
- * a leak. Note that this is a heuristic and may not always indicate a leak, some objects
- * may legitimately grow in size or count over time.
- */
-export async function leakingObjectsInHeapSnapshotFiles(
-  snapshotFiles: string[],
-): Promise<HeapSnapshotDiff> {
-  const diff = await diffHeapSnapshotFiles(snapshotFiles);
-
-  const leakingDiff: HeapSnapshotDiff = {};
-  for (const object of Object.values(diff)) {
-    if (
-      // size just kept growing
-      object.sizeDelta > 0 &&
-      // count just kept growing (10 retained objects is ok, it's probably javascript things)
-      // TODO: is this really the case? can there be a super subtle leak? (our loadtests run long so this is unlikely atm)
-      object.countDelta > 10
-    ) {
-      leakingDiff[object.name] = object;
-    }
-  }
-
-  return leakingDiff;
+  return totalGrowingDiff;
 }
 
 /** Converts the provided bytes size to human-readable format (kB, MB, GB). Uses the SI prefix. */
