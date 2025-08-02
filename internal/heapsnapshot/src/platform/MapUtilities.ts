@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-export const inverse = function<K, V>(map: Map<K, V>): Multimap<V, K> {
+export const inverse = function <K, V>(map: Map<K, V>): Multimap<V, K> {
   const result = new Multimap<V, K>();
   for (const [key, value] of map.entries()) {
     result.set(value, key);
@@ -83,7 +83,10 @@ export class Multimap<K, V> {
  * Gets value for key, assigning a default if value is falsy.
  */
 export function getWithDefault<K extends {}, V>(
-    map: WeakMap<K, V>|Map<K, V>, key: K, defaultValueFactory: (key?: K) => V): V {
+  map: WeakMap<K, V> | Map<K, V>,
+  key: K,
+  defaultValueFactory: (key?: K) => V,
+): V {
   let value = map.get(key);
   if (value === undefined || value === null) {
     value = defaultValueFactory(key);
