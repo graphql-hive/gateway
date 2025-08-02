@@ -64,6 +64,50 @@ it.skipIf(
   },
 );
 
+it.skipIf(
+  // no need to test in bun (also, bun does not support increasing timeouts per test)
+  globalThis.Bun,
+)(
+  'should detect a small leak in a forver growing array',
+  {
+    // parsing snapshots can take a while, so we increase the timeout
+    timeout: 30_000,
+  },
+  async () => {
+    await using snaps = await archivedFixtureFiles([
+      'small-leak-in-growing-array/1.heapsnapshot',
+      'small-leak-in-growing-array/2.heapsnapshot',
+      'small-leak-in-growing-array/3.heapsnapshot',
+      'small-leak-in-growing-array/4.heapsnapshot',
+      'small-leak-in-growing-array/5.heapsnapshot',
+      'small-leak-in-growing-array/6.heapsnapshot',
+    ]);
+    await expect(leakingObjectsInHeapSnapshotFiles(snaps.filepaths)).resolves
+      .toMatchInlineSnapshot(`
+      {
+        "(system)": {
+          "addedCount": 47,
+          "addedSize": 88040,
+          "countDelta": -50,
+          "name": "(system)",
+          "removedCount": 97,
+          "removedSize": 38408,
+          "sizeDelta": 49632,
+        },
+        "{subgraphName}": {
+          "addedCount": 60597,
+          "addedSize": 1939104,
+          "countDelta": 60597,
+          "name": "{subgraphName}",
+          "removedCount": 0,
+          "removedSize": 0,
+          "sizeDelta": 1939104,
+        },
+      }
+    `);
+  },
+);
+
 /**
  * Unarchives the {@link archivedFiles provided fixture files} for using in
  * tests and then removes them on disposal.
