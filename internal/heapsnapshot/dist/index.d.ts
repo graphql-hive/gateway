@@ -1,6 +1,12 @@
 import { MessagePort } from 'node:worker_threads';
 import { Readable } from 'node:stream';
 
+declare const HeapSnapshotProgressEvent: {
+    Update: string;
+    BrokenSnapshot: string;
+};
+declare const baseSystemDistance = 100000000;
+declare const baseUnreachableDistance: number;
 declare class AllocationNodeCallers {
     nodesWithSingleCaller: SerializedAllocationNode[];
     branchingCallers: SerializedAllocationNode[];
@@ -77,6 +83,18 @@ declare class Diff {
     countDelta: number;
     sizeDelta: number;
     constructor(name: string);
+}
+declare class DiffForClass {
+    name: string;
+    addedCount: number;
+    removedCount: number;
+    addedSize: number;
+    removedSize: number;
+    deletedIndexes: number[];
+    addedIndexes: number[];
+    countDelta: number;
+    sizeDelta: number;
+    constructor();
 }
 declare class ComparatorConfig {
     fieldName1: string;
@@ -715,4 +733,4 @@ interface ParseHeapSnapshotOptions {
 }
 declare function parseHeapSnapshot(data: Readable, opts?: ParseHeapSnapshotOptions): Promise<JSHeapSnapshot>;
 
-export { type AggregatedInfo, HeapSnapshot, HeapSnapshotEdge, HeapSnapshotEdgeIndexProvider, HeapSnapshotEdgeIterator, HeapSnapshotEdgesProvider, HeapSnapshotFilteredIterator, type HeapSnapshotHeader, HeapSnapshotIndexRangeIterator, type HeapSnapshotItem, type HeapSnapshotItemIndexProvider, type HeapSnapshotItemIterator, HeapSnapshotItemProvider, HeapSnapshotNode, HeapSnapshotNodeIndexProvider, HeapSnapshotNodeIterator, HeapSnapshotNodesProvider, HeapSnapshotProgress, HeapSnapshotRetainerEdge, HeapSnapshotRetainerEdgeIndexProvider, HeapSnapshotRetainerEdgeIterator, JSHeapSnapshot, JSHeapSnapshotEdge, JSHeapSnapshotNode, JSHeapSnapshotRetainerEdge, type LiveObjects, type ParseHeapSnapshotOptions, type Profile, SecondaryInitManager, parseHeapSnapshot, serializeUIString };
+export { Aggregate, AggregateForDiff, type AggregatedInfo, AllocationNodeCallers, AllocationStackFrame, ComparatorConfig, Diff, DiffForClass, Edge, HeapSnapshot, HeapSnapshotEdge, HeapSnapshotEdgeIndexProvider, HeapSnapshotEdgeIterator, HeapSnapshotEdgesProvider, HeapSnapshotFilteredIterator, type HeapSnapshotHeader, HeapSnapshotIndexRangeIterator, type HeapSnapshotItem, type HeapSnapshotItemIndexProvider, type HeapSnapshotItemIterator, HeapSnapshotItemProvider, HeapSnapshotNode, HeapSnapshotNodeIndexProvider, HeapSnapshotNodeIterator, HeapSnapshotNodesProvider, HeapSnapshotProgress, HeapSnapshotProgressEvent, HeapSnapshotRetainerEdge, HeapSnapshotRetainerEdgeIndexProvider, HeapSnapshotRetainerEdgeIterator, ItemsRange, JSHeapSnapshot, JSHeapSnapshotEdge, JSHeapSnapshotNode, JSHeapSnapshotRetainerEdge, type LiveObjects, Location, Node, NodeFilter, type ParseHeapSnapshotOptions, type Profile, Samples, SearchConfig, SecondaryInitManager, SerializedAllocationNode, StaticData, type Statistics, WorkerCommand, baseSystemDistance, baseUnreachableDistance, parseHeapSnapshot, serializeUIString };
