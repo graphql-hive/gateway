@@ -2695,7 +2695,7 @@ class HeapSnapshot {
     };
     for (let interfaceIndex = 0; interfaceIndex < definitions.length; ++interfaceIndex) {
       const definition = definitions[interfaceIndex];
-      const properties = definition.properties.toSorted();
+      const properties = [...definition.properties].sort();
       let currentNode = propertyTree;
       for (const property of properties) {
         const nextMap = currentNode.next;

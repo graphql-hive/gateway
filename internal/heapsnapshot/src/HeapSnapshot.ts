@@ -2636,7 +2636,8 @@ export abstract class HeapSnapshot {
       ++interfaceIndex
     ) {
       const definition = definitions[interfaceIndex];
-      const properties = definition.properties.toSorted();
+      // const properties = definition.properties.toSorted(); not supported on Node v18
+      const properties = [...definition.properties].sort();
       let currentNode = propertyTree;
       for (const property of properties) {
         const nextMap = currentNode.next;
