@@ -15,31 +15,13 @@ it('should correctly calculate the leaking objects', async () => {
   ).resolves.toMatchInlineSnapshot(`
     {
       "(compiled code)": {
-        "addedCount": 31530,
-        "addedSize": 3536040,
-        "countDelta": 274,
-        "ctor": "(compiled code)",
-        "removedCount": 31256,
-        "removedSize": 3429480,
-        "sizeDelta": 106560,
-      },
-      "Array": {
-        "addedCount": 636,
-        "addedSize": 20672,
-        "countDelta": 36,
-        "ctor": "Array",
-        "removedCount": 600,
-        "removedSize": 19520,
-        "sizeDelta": 1152,
-      },
-      "HTTPParser": {
-        "addedCount": 314,
-        "addedSize": 97968,
-        "countDelta": 36,
-        "ctor": "HTTPParser",
-        "removedCount": 278,
-        "removedSize": 86736,
-        "sizeDelta": 11232,
+        "addedCount": 1727,
+        "addedSize": 228096,
+        "countDelta": 91,
+        "name": "(compiled code)",
+        "removedCount": 1636,
+        "removedSize": 163328,
+        "sizeDelta": 64768,
       },
     }
   `);
