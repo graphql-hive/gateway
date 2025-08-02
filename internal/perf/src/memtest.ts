@@ -32,7 +32,7 @@ const supportedFlags = [
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
  * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
  * - `noheapsnaps` Disable taking heap snapshots.
- * - `moreruns` Does `5` runs instead of the defaults.
+ * - `moreruns` Does `10` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
  * - `sampling` Perform and write the heap sampling profile.
  */
@@ -98,9 +98,9 @@ export interface MemtestOptions
   /**
    * How many times to run the loadtests?
    *
-   * Ignores the `default` and does `5` runs if {@link flags MEMTEST has the `moreruns` flag}.
+   * Ignores the `default` and does `10` runs if {@link flags MEMTEST has the `moreruns` flag}.
    *
-   * @default 3
+   * @default 5
    */
   runs?: number;
 }
@@ -112,7 +112,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     idle = 5_000,
     duration = flags.includes('short') ? 10_000 : 30_000,
     calmdown = flags.includes('short') ? 5_000 : 10_000,
-    runs = flags.includes('moreruns') ? 5 : 3,
+    runs = flags.includes('moreruns') ? 10 : 5,
     takeHeapSnapshots = !flags.includes('noheapsnaps'),
     performHeapSampling = flags.includes('sampling'),
     onMemorySample,
