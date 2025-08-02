@@ -10,6 +10,8 @@ export interface HeapSnapshotDiff {
  * consecutively and filters the results to only include objects that have a positive
  * size delta (grew in size) in **every** snapshot, possibly indicating a leak.
  *
+ * To make accurete results, there should be at least three heap snapshots provided.
+ *
  * Note that this is a heuristic and may not always indicate a leak, some objects may
  * legitimately grow in size or count over time.
  */

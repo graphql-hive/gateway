@@ -27,7 +27,6 @@ const supportedFlags = [
  * Allows controlling the memtest runs with the `MEMTEST` environment variable.
  *
  * {@link supportedFlags Supported flags} are:
- * - `rapid` Runs the loadtest for `10s` and the calmdown for `5s` instead of the defaults.
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
  * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
  * - `noheapsnaps` Disable taking heap snapshots.
@@ -66,7 +65,8 @@ export interface MemtestOptions
    * Whether to take heap snapshots on the end of the `idle` phase and then at the end
    * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
    *
-   * Ignores the `default` and runs with `false` if {@link flags MEMTEST has the `noheapsnaps` flag}.
+   * Ignores the _@default_ and runs with `false` if {@link flags MEMTEST} has the `noheapsnaps`
+   * flag provided.
    *
    * @default true
    */
@@ -80,7 +80,8 @@ export interface MemtestOptions
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `10s`.
+   * Ignores the _@default_ and runs for `10s` if {@link flags MEMTEST} has the `short`
+   * flag provided.
    *
    * @default 30_000
    */
@@ -88,8 +89,8 @@ export interface MemtestOptions
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `5s` if {@link flags MEMTEST} has the `short`
-   * flag.
+   * Ignores the _@default_ and runs for `5s` if {@link flags MEMTEST} has the `short`
+   * flag provided.
    *
    * @default 10_000
    */
@@ -97,7 +98,8 @@ export interface MemtestOptions
   /**
    * How many times to run the loadtests?
    *
-   * Ignores the `default` and does `10` runs if {@link flags MEMTEST has the `moreruns` flag}.
+   * Ignores the _@default_ and does `10` runs if {@link flags MEMTEST} has the `moreruns`
+   * flag provided.
    *
    * @default 5
    */
