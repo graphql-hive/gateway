@@ -103,19 +103,6 @@ export interface MemtestOptions
    * @default 3
    */
   runs?: number;
-  /**
-   * The heap allocation sampling profile gathered during the loadtests is analysed
-   * to find the heaviest frames (frames that allocated most of the memory). These,
-   * high allocation frames, are often the ones that contain a leak. But not always,
-   * a frame can simply be heavy... There are some usual suspects which we safely ignore;
-   * but, if the profile contains any other unexpected heavy frames, the test will fail.
-   *
-   * Using this callback check, you can add more "expected" heavy frames for a given test.
-   *
-   * BEWARE: Please be diligent when adding expected heavy frames. Carefully analyse the
-   * heap sampling profile and make sure that the frame you're adding is 100% not leaking.
-   */
-  expectedHeavyFrame?: (frame: HeapSamplingProfileFrame) => boolean;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
@@ -130,7 +117,6 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
     performHeapSampling = flags.includes('sampling'),
     onMemorySample,
     onHeapSnapshot,
-    expectedHeavyFrame,
     ...loadtestOpts
   } = opts;
   it(
