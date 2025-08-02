@@ -57,11 +57,6 @@ jobs:
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
-        with:
-          timeout_minutes: 30
-          max_attempts: 5
-          command: yarn test:mem ${{matrix.test_name}}
-          # TODO: publish heap allocation sampling profile to artifact
+        run: yarn test:mem ${{matrix.test_name}}
