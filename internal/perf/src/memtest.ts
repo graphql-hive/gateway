@@ -199,20 +199,20 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         const diff = await leakingObjectsInHeapSnapshotFiles(
           loadtestResult.heapSnapshots.map(({ file }) => file),
         );
-        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that keep growing!
+        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that keept growing:
 ${Object.values(diff)
   .map(
-    ({ ctor, sizeDelta, countDelta }) =>
+    ({ ctor, sizeDelta, countDelta, removedSize }) =>
       `\t- "${ctor}" grew ${
         // use SI prefix to convert bytes to MB
         (sizeDelta / 1_000_000).toFixed(2)
-      }MB in size (${countDelta} objects were not released)`,
+      }MB in size (${countDelta} objects were not freed)` +
+      (removedSize <= 0 ? ' (never freed any object, all were retained)' : ''),
   )
   .join('\n')}
 
 Please load the following heap snapshots respectively in Chrome DevTools for more details:
-${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}
-`);
+${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}`);
       } else {
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
