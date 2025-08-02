@@ -214,7 +214,7 @@ ${Object.values(diff)
       // use SI prefix to convert bytes to MB
       `\t- "${ctor}" allocated ${(addedSize / 1_000_000).toFixed(
         2,
-      )}MB, freeing only ${(removedSize / 1_000_000).toFixed(2)}MB (Δ${(sizeDelta / 1_000_000).toFixed(2)}MB)
+      )}MB, ${removedSize > 0 ? `freeing only ${(removedSize / 1_000_000).toFixed(2)}MB` : 'freed nothing'} (Δ${(sizeDelta / 1_000_000).toFixed(2)}MB)
 \t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
   )
   .join('\n')}
