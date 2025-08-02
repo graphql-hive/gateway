@@ -199,7 +199,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         delete diff['(compiled code)'];
 
         if (Object.keys(diff).length) {
-          expect.fail(`Leak detected on ${Object.keys(diff).length} objects that kept growing in every snapshot:
+          expect.fail(`Leak detected on ${Object.keys(diff).length} object(s) that kept growing in every snapshot:
   ${Object.values(diff)
     .map(
       ({
