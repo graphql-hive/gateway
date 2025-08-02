@@ -68,7 +68,7 @@ it.skipIf(
   // no need to test in bun (also, bun does not support increasing timeouts per test)
   globalThis.Bun,
 )(
-  'should detect a small leak in a forver growing array',
+  'should detect a small leak in a forever growing array',
   {
     // parsing snapshots can take a while, so we increase the timeout
     timeout: 30_000,
