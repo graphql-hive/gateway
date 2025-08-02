@@ -1,16 +1,8 @@
 import { createReadStream } from 'fs';
-import { parseHeapSnapshot } from '@internal/heapsnapshot';
+import { Diff, parseHeapSnapshot } from '@internal/heapsnapshot';
 
 export interface HeapSnapshotDiff {
-  [ctor: string]: {
-    ctor: string;
-    addedCount: number;
-    removedCount: number;
-    addedSize: number;
-    removedSize: number;
-    countDelta: number;
-    sizeDelta: number;
-  };
+  [ctor: string]: Diff;
 }
 
 /**
@@ -46,21 +38,15 @@ export async function diffHeapSnapshotFiles(
     const snapshotDiff = snap.calculateSnapshotDiff('', aggregates);
 
     for (const diff of Object.values(snapshotDiff)) {
-      const totalDiffForCtor = (totalDiff[diff.name] ||= {
-        ctor: diff.name,
-        addedCount: 0,
-        removedCount: 0,
-        addedSize: 0,
-        removedSize: 0,
-        countDelta: 0,
-        sizeDelta: 0,
-      });
+      const totalDiffForCtor = (totalDiff[diff.name] ||= diff);
       totalDiffForCtor.addedCount += diff.addedCount;
       totalDiffForCtor.removedCount += diff.removedCount;
       totalDiffForCtor.addedSize += diff.addedSize;
       totalDiffForCtor.removedSize += diff.removedSize;
       totalDiffForCtor.countDelta += diff.countDelta;
       totalDiffForCtor.sizeDelta += diff.sizeDelta;
+      totalDiffForCtor.addedIndexes.push(...diff.addedIndexes);
+      totalDiffForCtor.deletedIndexes.push(...diff.deletedIndexes);
     }
 
     baseSnap = snap;
@@ -90,7 +76,7 @@ export async function leakingObjectsInHeapSnapshotFiles(
       // TODO: is this really the case? can there be a super subtle leak? (our loadtests run long so this is unlikely atm)
       object.countDelta > 10
     ) {
-      leakingDiff[object.ctor] = object;
+      leakingDiff[object.name] = object;
     }
   }
 
