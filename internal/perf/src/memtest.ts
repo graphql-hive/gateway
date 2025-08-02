@@ -5,7 +5,6 @@ import { Server } from '@internal/proc';
 import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
-import { HeapSamplingProfileFrame } from './heapsampling';
 import {
   bytesToHuman,
   leakingObjectsInHeapSnapshotFiles,
