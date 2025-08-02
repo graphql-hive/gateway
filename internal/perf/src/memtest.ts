@@ -13,7 +13,6 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const __project = path.resolve(__dirname, '..', '..', '..');
 
 const supportedFlags = [
-  'rapid' as const,
   'short' as const,
   'cleanheapsnaps' as const,
   'noheapsnaps' as const,
@@ -73,25 +72,24 @@ export interface MemtestOptions
   /**
    * Idling duration before loadtests {@link runs run} in milliseconds.
    *
-   * @default 10_000
+   * @default 5_000
    */
   idle?: number;
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `30s` if {@link flags MEMTEST} has the `short`
-   * flag, or `10s` if it has the `rapid` flag.
+   * Ignores the `default` and runs for `10s`.
    *
-   * @default 120_000
+   * @default 30_000
    */
   duration?: number;
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `10s` if {@link flags MEMTEST} has the `short`
-   * flag, or `5s` if it has the `rapid` flag.
+   * Ignores the `default` and runs for `5s` if {@link flags MEMTEST} has the `short`
+   * flag.
    *
-   * @default 30_000
+   * @default 10_000
    */
   calmdown?: number;
   /**
@@ -121,17 +119,9 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
     cwd,
     memorySnapshotWindow = 1_000,
-    idle = 10_000,
-    duration = flags.includes('rapid')
-      ? 10_000
-      : flags.includes('short')
-        ? 30_000
-        : 120_000,
-    calmdown = flags.includes('rapid')
-      ? 5_000
-      : flags.includes('short')
-        ? 10_000
-        : 30_000,
+    idle = 5_000,
+    duration = flags.includes('short') ? 10_000 : 30_000,
+    calmdown = flags.includes('short') ? 5_000 : 10_000,
     runs = flags.includes('moreruns') ? 5 : 3,
     takeHeapSnapshots = !flags.includes('noheapsnaps'),
     performHeapSampling = flags.includes('sampling'),
