@@ -188,26 +188,39 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         const diff = await leakingObjectsInHeapSnapshotFiles(
           loadtestResult.heapSnapshots.map(({ file }) => file),
         );
-        expect.fail(`Leak detected on ${Object.keys(diff).length} objects that kept growing:
-${Object.values(diff)
-  .map(
-    ({
-      name,
-      addedSize,
-      removedSize,
-      sizeDelta,
-      addedCount,
-      removedCount,
-      countDelta,
-    }) =>
-      // use SI prefix to convert bytes to MB
-      `\t- "${name}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
+
+        // growing "(compiled code)" in memory heap snapshots, is typically not a memory leak in the traditional
+        // sense, but rather a reflection of how the JavaScript engine optimizes your code. It usually
+        // indicates that the V8 engine is compiling and optimizing more and more JavaScript functions as
+        // your application runs
+        //
+        // TODO: while subtle growth is normal, an excessive and rapid increase in "(compiled code)" could be
+        // a symptom of an issue where codepaths repeadetly generate and execute new functions that are
+        // different from the previous ones
+        delete diff['(compiled code)'];
+
+        if (Object.keys(diff).length) {
+          expect.fail(`Leak detected on ${Object.keys(diff).length} objects that kept growing:
+  ${Object.values(diff)
+    .map(
+      ({
+        name,
+        addedSize,
+        removedSize,
+        sizeDelta,
+        addedCount,
+        removedCount,
+        countDelta,
+      }) =>
+        // use SI prefix to convert bytes to MB
+        `\t- "${name}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
 \t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
-  )
-  .join('\n')}
+    )
+    .join('\n')}
 
 Please load the following heap snapshots respectively in Chrome DevTools for more details:
 ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}`);
+        }
       } else {
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
