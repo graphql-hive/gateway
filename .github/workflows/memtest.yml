@@ -60,3 +60,9 @@ jobs:
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
         run: yarn test:mem ${{matrix.test_name}}
+      - name: Upload heap snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{matrix.test_name}}-heap-snapshots
+          path: e2e/${{matrix.test_name}}/*.heapsnapshot
