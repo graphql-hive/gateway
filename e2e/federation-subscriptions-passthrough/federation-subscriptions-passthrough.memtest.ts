@@ -23,14 +23,6 @@ describe('upstream subscriptions via websockets', () => {
           }
         }
       `,
-      expectedHeavyFrame: (frame) =>
-        // allocates a lot but all is freed confirmed through heap snapshot
-        frame.name === 'set' &&
-        frame.callstack.some(
-          (frame) =>
-            frame.name.includes('stitchingInfo') ||
-            frame.name.includes('batch'),
-        ),
     },
     async () =>
       gateway({
