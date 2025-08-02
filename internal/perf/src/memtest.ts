@@ -206,7 +206,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 ${Object.values(diff)
   .map(
     ({
-      ctor,
+      name,
       addedSize,
       removedSize,
       sizeDelta,
@@ -215,7 +215,7 @@ ${Object.values(diff)
       countDelta,
     }) =>
       // use SI prefix to convert bytes to MB
-      `\t- "${ctor}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
+      `\t- "${name}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
 \t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
   )
   .join('\n')}
