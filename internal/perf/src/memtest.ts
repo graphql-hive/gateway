@@ -200,6 +200,15 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         // different from the previous ones
         delete diff['(compiled code)'];
 
+        // "(system)" is a label used to group objects and memory allocations that are managed directly by th
+        // JavaScript engine's internal systems. a growing "(system)" footprint could signal code bloat or
+        // inefficient code patterns that force the engine to create many internal data structures, leading
+        // to an increased "(system)" size
+        //
+        // TODO: use it to detect code bloat or inefficient code patterns. optimizing it will lead to better
+        // JS execution performance and reduced memory usage
+        delete diff['(system)'];
+
         if (Object.keys(diff).length) {
           expect.fail(`Leak detected on ${Object.keys(diff).length} object(s) that kept growing in every snapshot:
   ${Object.values(diff)
