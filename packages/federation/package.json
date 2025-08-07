@@ -61,7 +61,7 @@
     "@types/lodash": "4.17.20",
     "graphql": "^16.9.0",
     "graphql-federation-gateway-audit": "the-guild-org/graphql-federation-gateway-audit#main",
-    "pkgroll": "2.15.0"
+    "pkgroll": "2.15.2"
   },
   "sideEffects": false
 }
