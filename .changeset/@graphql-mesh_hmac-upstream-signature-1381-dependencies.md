@@ -1,9 +1,8 @@
 ---
-'@graphql-hive/logger-pino': patch
+'@graphql-mesh/hmac-upstream-signature': patch
 ---
 
 dependencies updates: 
 
 - Updated dependency [`@graphql-mesh/types@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.7) (from `^0.104.5`, in `dependencies`)
 - Updated dependency [`@graphql-mesh/utils@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.7) (from `^0.104.5`, in `dependencies`)
-- Updated dependency [`pino@^9.8.0` ↗︎](https://www.npmjs.com/package/pino/v/9.8.0) (from `^9.7.0`, in `peerDependencies`)
