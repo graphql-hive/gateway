@@ -4,7 +4,7 @@
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.4.10",
     "@graphql-mesh/cross-helpers": "^0.4.10",
-    "@graphql-mesh/plugin-live-query": "^0.104.5",
+    "@graphql-mesh/plugin-live-query": "^0.104.7",
     "@omnigraph/json-schema": "^0.109.5",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",

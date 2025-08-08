@@ -42,6 +42,7 @@ function prepareArgs(messageArgs: LazyLoggerMessage[]): Parameters<pino.LogFn> {
     }
   }
   if (extras.length > 0) {
+    // @ts-expect-error - pino accepts an array of objects as extra metadata
     return [Object.assign({}, ...extras), message];
   }
   return [message];

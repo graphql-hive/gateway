@@ -44,8 +44,8 @@
     "pino": "^9.8.0"
   },
   "dependencies": {
-    "@graphql-mesh/types": "^0.104.5",
-    "@graphql-mesh/utils": "^0.104.5",
+    "@graphql-mesh/types": "^0.104.7",
+    "@graphql-mesh/utils": "^0.104.7",
     "@whatwg-node/disposablestack": "^0.0.6",
     "tslib": "^2.8.1"
   },
