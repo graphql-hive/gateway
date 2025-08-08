@@ -5,7 +5,7 @@ import type {
 import { LogLevel } from '@graphql-mesh/utils';
 import type pino from 'pino';
 
-type PinoWithChild = pino.BaseLogger & {
+type PinoWithChild = Omit<pino.BaseLogger, 'msgPrefix'> & {
   child: (meta: any) => PinoWithChild;
 };
 
