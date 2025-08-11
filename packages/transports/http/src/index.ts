@@ -107,6 +107,9 @@ export default {
               options: {
                 ...payload.transportEntry.options,
                 ...payload.transportEntry.options?.subscriptions?.options,
+                // Make sure to remove subscription option to avoid infinite loop.
+                // This option doesn't make sense here but is present in `transportEntry.options`
+                subscriptions: undefined,
               },
             }),
           (resolvedSubscriptionsExecutor) => {
