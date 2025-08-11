@@ -2,8 +2,8 @@
   "name": "@e2e/manual-transport-def",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.4.10",
-    "@graphql-mesh/transport-rest": "^0.9.6",
+    "@graphql-mesh/compose-cli": "^1.4.12",
+    "@graphql-mesh/transport-rest": "^0.9.8",
     "@omnigraph/openapi": "^0.109.11",
     "fets": "^0.8.4",
     "graphql": "^16.9.0"
