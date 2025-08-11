@@ -481,7 +481,9 @@ describe('useOpenTelemetry', () => {
               const createSpan =
                 (name: string) =>
                 (
-                  matcher: Parameters<(typeof otelPlugin)['getActiveContext']>[0],
+                  matcher: Parameters<
+                    (typeof otelPlugin)['getActiveContext']
+                  >[0],
                 ) =>
                   otelPlugin
                     .getTracer()
