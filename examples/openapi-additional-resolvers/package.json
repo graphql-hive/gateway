@@ -2,7 +2,7 @@
   "name": "@example/openapi-additional-resolvers",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.4.10",
+    "@graphql-mesh/compose-cli": "^1.4.12",
     "@omnigraph/openapi": "^0.109.11",
     "graphql": "^16.9.0",
     "moment": "^2.30.1",
