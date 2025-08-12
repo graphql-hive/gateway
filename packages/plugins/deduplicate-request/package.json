@@ -51,7 +51,7 @@
     "@graphql-mesh/types": "^0.104.7",
     "@whatwg-node/fetch": "^0.10.9",
     "graphql": "^16.9.0",
-    "pkgroll": "2.15.0"
+    "pkgroll": "2.15.3"
   },
   "sideEffects": false
 }
