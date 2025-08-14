@@ -1,5 +1,6 @@
+import { TransportEntry } from '@graphql-mesh/transport-common';
 import type { MeshFetch } from '@graphql-mesh/types';
-import { buildSchema, parse } from 'graphql';
+import { buildSchema, OperationTypeNode, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import httpTransport from '../src';
 
@@ -14,22 +15,25 @@ describe('HTTP Transport', () => {
       }),
     );
     const expectedToken = 'wowmuchsecret';
-    const executor = httpTransport.getSubgraphExecutor({
-      subgraphName,
-      transportEntry: {
-        kind: 'http',
-        subgraph: subgraphName,
-        headers: [['x-test', '{context.myToken}']],
-      },
-      fetch,
-      // @ts-expect-error - transport kind is const in httpTransport but string is expected
-      transportExecutorFactoryGetter: () => httpTransport.getSubgraphExecutor,
-      subgraph: buildSchema(/* GraphQL */ `
-        type Query {
-          test: String
-        }
-      `),
+    const getTransportExecutor = (transportEntry: TransportEntry) =>
+      httpTransport.getSubgraphExecutor({
+        subgraphName,
+        transportEntry,
+        fetch,
+        getTransportExecutor,
+        subgraph: buildSchema(/* GraphQL */ `
+          type Query {
+            test: String
+          }
+        `),
+      });
+
+    const executor = getTransportExecutor({
+      kind: 'http',
+      subgraph: subgraphName,
+      headers: [['x-test', '{context.myToken}']],
     });
+
     await executor({
       document: parse(/* GraphQL */ `
         query {
@@ -44,6 +48,50 @@ describe('HTTP Transport', () => {
       headers: {
         'x-test': expectedToken,
       },
+    });
+  });
+
+  it('should allow to specify subscription specific options', async () => {
+    const fetch = vi.fn<MeshFetch>();
+
+    const getTransportExecutor = (transportEntry: TransportEntry) =>
+      httpTransport.getSubgraphExecutor({
+        subgraphName,
+        transportEntry,
+        fetch,
+        getTransportExecutor,
+        subgraph: buildSchema(/* GraphQL */ `
+          type Subscription {
+            test: String
+          }
+        `),
+      });
+
+    const executor = getTransportExecutor({
+      kind: 'http',
+      subgraph: subgraphName,
+      options: {
+        subscriptions: {
+          kind: 'http',
+          subgraph: subgraphName,
+          options: {
+            method: 'POST',
+          },
+        },
+      },
+    });
+
+    await executor({
+      operationType: OperationTypeNode.SUBSCRIPTION,
+      document: parse(/* GraphQL */ `
+        subscription {
+          test
+        }
+      `),
+    });
+
+    expect(fetch.mock.calls[0]?.[1]).toMatchObject({
+      method: 'POST',
     });
   });
 });
