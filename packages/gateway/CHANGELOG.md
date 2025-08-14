@@ -1,5 +1,34 @@
 # @graphql-hive/gateway
 
+## 1.16.3
+
+### Patch Changes
+
+- [#1383](https://github.com/graphql-hive/gateway/pull/1383) [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.105.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.105.7) (from `^0.105.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.8) (from `^0.105.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.1.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.1.7) (from `^0.1.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.8) (from `^0.105.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.2.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.2.7) (from `^0.2.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-mock@^0.105.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-mock/v/0.105.8) (from `^0.105.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+
+- Updated dependencies [[`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`bed67a6`](https://github.com/graphql-hive/gateway/commit/bed67a6eaf57b2aa6c7d08d1137b3bd8c4d4b066), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420), [`34294ea`](https://github.com/graphql-hive/gateway/commit/34294eaa26d82da0ac7018da081b2dca46bd90f4)]:
+  - @graphql-hive/gateway-runtime@1.10.3
+  - @graphql-hive/plugin-aws-sigv4@1.0.18
+  - @graphql-hive/plugin-deduplicate-request@1.0.4
+  - @graphql-mesh/hmac-upstream-signature@1.2.31
+  - @graphql-mesh/plugin-jwt-auth@1.5.8
+  - @graphql-mesh/plugin-opentelemetry@1.3.66
+  - @graphql-mesh/plugin-prometheus@1.3.54
+  - @graphql-mesh/transport-http@0.7.2
+  - @graphql-mesh/transport-http-callback@0.7.2
+  - @graphql-mesh/transport-ws@1.1.2
+
 ## 1.16.2
 
 ### Patch Changes
