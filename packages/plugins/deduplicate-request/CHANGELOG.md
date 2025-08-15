@@ -1,5 +1,12 @@
 # @graphql-hive/plugin-deduplicate-request
 
+## 1.0.4
+
+### Patch Changes
+
+- [#1383](https://github.com/graphql-hive/gateway/pull/1383) [`a832e7b`](https://github.com/graphql-hive/gateway/commit/a832e7bf9a8f92c48fb9df8ca1bff5a008dcf420) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  - Updated dependency [`@graphql-mesh/utils@^0.104.7` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.7) (from `^0.104.5`, in `dependencies`)
+
 ## 1.0.3
 
 ### Patch Changes
