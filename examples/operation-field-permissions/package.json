@@ -6,7 +6,7 @@
     "@envelop/operation-field-permissions": "^7.0.0",
     "@graphql-mesh/compose-cli": "^1.4.12",
     "graphql": "^16.10.0",
-    "@graphql-hive/gateway": "^1.16.2"
+    "@graphql-hive/gateway": "^1.16.3"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
