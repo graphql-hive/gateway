@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.4.12",
-    "@omnigraph/openapi": "^0.109.11",
+    "@omnigraph/openapi": "^0.109.14",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
     "tslib": "^2.8.1"

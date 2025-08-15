@@ -84,14 +84,14 @@
     "@apollo/subgraph": "^2.11.2",
     "@graphql-mesh/fusion-composition": "^0.8.11",
     "@graphql-mesh/transport-rest": "^0.9.8",
-    "@omnigraph/openapi": "^0.109.11",
+    "@omnigraph/openapi": "^0.109.14",
     "@types/html-minifier-terser": "^7.0.2",
     "@whatwg-node/fetch": "^0.10.9",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.15.0",
+    "pkgroll": "2.15.3",
     "tsx": "4.20.3"
   },
   "sideEffects": false
