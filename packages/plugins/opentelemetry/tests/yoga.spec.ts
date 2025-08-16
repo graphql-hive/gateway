@@ -99,7 +99,7 @@ describe('useOpenTelemetry', () => {
           }
         });
 
-        it.only('should allow to report custom spans', async () => {
+        it('should allow to report custom spans', async () => {
           const expectedCustomSpans = {
             http: { root: 'POST /graphql', children: ['custom.request'] },
             graphql: {
