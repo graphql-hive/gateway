@@ -7758,6 +7758,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch":
+  version: 0.203.0
+  resolution: "@opentelemetry/otlp-exporter-base@patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch::version=0.203.0&hash=301c6a"
+  dependencies:
+    "@opentelemetry/core": "npm:2.0.1"
+    "@opentelemetry/otlp-transformer": "npm:0.203.0"
+  peerDependencies:
+    "@opentelemetry/api": ^1.3.0
+  checksum: 10c0/c90d352cdf5fa221d9ed185aace3d722a74629670a479153f0315f4824ac6efb9a85a2eb29c9eb6cda23cc912f2c483c3d5ecb100a23606019452836a26a6f88
+  languageName: node
+  linkType: hard
+
 "@opentelemetry/otlp-grpc-exporter-base@npm:0.203.0":
   version: 0.203.0
   resolution: "@opentelemetry/otlp-grpc-exporter-base@npm:0.203.0"
