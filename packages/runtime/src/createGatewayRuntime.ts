@@ -125,6 +125,7 @@ import type {
 } from './types';
 import {
   checkIfDataSatisfiesSelectionSet,
+  createOpenTelemetryAPI,
   defaultQueryText,
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
@@ -172,6 +173,7 @@ export function createGatewayRuntime<
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
+    openTelemetry: createOpenTelemetryAPI()
   };
 
   let unifiedGraphPlugin: GatewayPlugin;

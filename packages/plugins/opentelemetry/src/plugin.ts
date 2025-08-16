@@ -1,5 +1,6 @@
 import {
   Attributes,
+  GatewayConfigContext,
   getRetryInfo,
   isRetryExecutionRequest,
   Logger,
@@ -214,15 +215,30 @@ const HeadersTextMapGetter: TextMapGetter<Headers> = {
   },
 };
 
+export type ContextMatcher = {
+  request?: Request;
+  context?: any;
+  executionRequest?: ExecutionRequest;
+};
+
+export type OpenTelemetryPluginUtils = {
+  tracer?: Tracer;
+  getActiveContext: (payload: ContextMatcher) => Context;
+  getHttpContext: (request: Request) => Context | undefined;
+  getOperationContext: (context: any) => Context | undefined;
+  getExecutionRequestContext: (
+    ExecutionRequest: ExecutionRequest,
+  ) => Context | undefined;
+};
+
 export type OpenTelemetryContextExtension = {
-  openTelemetry: {
+  openTelemetry: Omit<
+    OpenTelemetryPluginUtils,
+    'getActiveContext' | 'tracer' | 'register'
+  > & {
     tracer: Tracer;
-    activeContext: () => Context;
-    httpContext: (request?: Request) => Context | undefined;
-    operationContext: (context?: any) => Context | undefined;
-    executionRequestContext: (
-      ExecutionRequest: ExecutionRequest,
-    ) => Context | undefined;
+    getActiveContext: (payload?: ContextMatcher) => Context;
+    register?: never;
   };
 };
 
@@ -234,25 +250,13 @@ type State = Partial<
   HttpState<OtelState> & GraphQLState<OtelState> & GatewayState<OtelState>
 >;
 
-export type OpenTelemetryPlugin =
-  GatewayPlugin<OpenTelemetryContextExtension> & {
-    getActiveContext: (payload: {
-      request?: Request;
-      context?: any;
-      executionRequest?: ExecutionRequest;
-    }) => Context;
-    getTracer(): Tracer;
-    getHttpContext: (request: Request) => Context | undefined;
-    getOperationContext: (context: any) => Context | undefined;
-    getExecutionRequestContext: (
-      ExecutionRequest: ExecutionRequest,
-    ) => Context | undefined;
-  };
+export type OpenTelemetryPlugin = GatewayPlugin<OpenTelemetryContextExtension> &
+  OpenTelemetryPluginUtils;
 
 export function useOpenTelemetry(
-  options: OpenTelemetryGatewayPluginOptions & {
-    log: Logger;
-  },
+  options: OpenTelemetryGatewayPluginOptions &
+    // We ask for a Partial context to still allow the usage as a Yoga plugin
+    Partial<GatewayConfigContext>,
 ): OpenTelemetryPlugin {
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
@@ -260,8 +264,11 @@ export function useOpenTelemetry(
   const traces = typeof options.traces === 'object' ? options.traces : {};
 
   let tracer: Tracer;
-  let pluginLogger: Logger;
   let initSpan: Context | null;
+
+  // TODO: Make it const once Yoga has the Hive Logger
+  let pluginLogger: Logger | undefined =
+    options.log && options.log.child('[OpenTelemetry] ');
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -314,7 +321,7 @@ export function useOpenTelemetry(
 
     if (!useContextManager) {
       if (traces.spans?.schema) {
-        pluginLogger.warn(
+        pluginLogger?.warn(
           'Schema loading spans are disabled because no context manager is available',
         );
       }
@@ -324,13 +331,15 @@ export function useOpenTelemetry(
     }
   }
 
-  return withState<
+  const plugin = withState<
     OpenTelemetryPlugin,
     OtelState,
     OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
     OtelState
   >((getState) => ({
-    getTracer: () => tracer,
+    get tracer() {
+      return tracer;
+    },
     getActiveContext: ({ state }) => getContext(state),
     getHttpContext: (request) => {
       return getState({ request }).forRequest.otel?.root;
@@ -667,21 +676,17 @@ export function useOpenTelemetry(
     },
 
     onYogaInit({ yoga }) {
-      const log =
-        options.log ??
-        //TODO remove this when Yoga will also use the new Logger API
-        new Logger({
-          writers: [
-            {
-              write(level, attrs, msg) {
-                level = level === 'trace' ? 'debug' : level;
-                yoga.logger[level](msg, attrs);
-              },
+      //TODO remove this when Yoga will also use the new Logger API
+      pluginLogger ??= new Logger({
+        writers: [
+          {
+            write(level, attrs, msg) {
+              level = level === 'trace' ? 'debug' : level;
+              yoga.logger[level](msg, attrs);
             },
-          ],
-        });
-
-      pluginLogger = log.child('[OpenTelemetry] ');
+          },
+        ],
+      }).child('[OpenTelemetry] ');
 
       if (options.configureDiagLogger !== false) {
         const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
@@ -704,7 +709,9 @@ export function useOpenTelemetry(
       try {
         const requestId = requestIdByRequest.get(request);
         if (requestId) {
-          loggerForRequest(options.log.child({ requestId }), request);
+          if (options.log) {
+            loggerForRequest(options.log.child({ requestId }), request);
+          }
 
           // When running in a runtime without a context manager, we have to keep track of the
           // span correlated to a log manually. For now, we just link all logs for a request to
@@ -714,7 +721,7 @@ export function useOpenTelemetry(
           }
         }
       } catch (error) {
-        pluginLogger.error(
+        pluginLogger!.error(
           { error },
           'Error while setting up logger for request',
         );
@@ -725,19 +732,19 @@ export function useOpenTelemetry(
       extendContext({
         openTelemetry: {
           tracer,
-          httpContext: (request) => {
+          getHttpContext: (request) => {
             const { forRequest } = request ? getState({ request }) : state;
             return forRequest.otel?.root;
           },
-          operationContext: (context) => {
+          getOperationContext: (context) => {
             const { forOperation } = context ? getState({ context }) : state;
             return forOperation.otel?.root;
           },
-          executionRequestContext: (executionRequest) => {
+          getExecutionRequestContext: (executionRequest) => {
             return getState({ executionRequest }).forSubgraphExecution.otel
               ?.root;
           },
-          activeContext: (contextMatcher?: Parameters<typeof getState>[0]) =>
+          getActiveContext: (contextMatcher?: Parameters<typeof getState>[0]) =>
             getContext(contextMatcher ? getState(contextMatcher) : state),
         },
       });
@@ -935,6 +942,16 @@ export function useOpenTelemetry(
       }
     },
   }));
+
+  if (options.openTelemetry) {
+    if (options.openTelemetry.register) {
+      options.openTelemetry?.register?.(plugin);
+    } else {
+      options.log?.warn('An OpenTelemetry plugin is already registered');
+    }
+  }
+
+  return plugin;
 }
 
 function shouldTrace<Args>(
