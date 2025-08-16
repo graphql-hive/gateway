@@ -3,6 +3,7 @@ import {
   useOpenTelemetry,
   type OpenTelemetryGatewayPluginOptions,
   type OpenTelemetryPlugin,
+  type OpenTelemetryPluginUtils,
 } from './plugin';
 
 export * from './attributes';
@@ -13,4 +14,5 @@ export {
   useOpenTelemetry,
   OpenTelemetryPlugin,
   OpenTelemetryGatewayPluginOptions,
+  OpenTelemetryPluginUtils,
 };

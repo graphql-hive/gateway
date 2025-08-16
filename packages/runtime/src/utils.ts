@@ -1,3 +1,4 @@
+import { OpenTelemetryPluginUtils } from '@graphql-mesh/plugin-opentelemetry';
 import { KeyValueCache } from '@graphql-mesh/types';
 import type { ExecutionArgs } from '@graphql-tools/executor';
 import {
@@ -5,9 +6,11 @@ import {
   getDirectiveExtensions,
   memoize1,
 } from '@graphql-tools/utils';
+import { context } from '@opentelemetry/api';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
 import type { GraphQLSchema, SelectionSetNode } from 'graphql';
 import {
+  GatewayConfigContext,
   OnCacheDeleteHook,
   OnCacheDeleteHookResult,
   OnCacheGetHook,
@@ -330,4 +333,42 @@ export function getDirectiveNameForFederationDirective({
     }
   }
   return normalizedDirectiveName;
+}
+
+/**
+ * Creates the OpenTelemetry API for the config context.
+ * It has a default implementation that can be replaced by calling `register`.
+ * The OpenTelemetry plugin uses `register` to replace the default on gateway initialization.
+ */
+export function createOpenTelemetryAPI(): GatewayConfigContext['openTelemetry'] {
+  let delegate: OpenTelemetryPluginUtils = {
+    // In case no OpenTelemetry plugin is registered, we just rely on standard context management
+    getActiveContext: () => context.active(),
+    // undefined to indicate the OpenTelemetry is either not setup or not initialized yet.
+    tracer: undefined,
+    getHttpContext: () => undefined,
+    getExecutionRequestContext: () => undefined,
+    getOperationContext: () => undefined,
+  };
+
+  let register: GatewayConfigContext['openTelemetry']['register'] = (
+    plugin,
+  ) => {
+    delegate = plugin;
+    // Disallow the registration of another delegate. Multiple OpenTelemetry plugin should not
+    // exits in the same Gateway instance.
+    register = undefined;
+  };
+
+  return {
+    get tracer() {
+      return delegate.tracer;
+    },
+    getActiveContext: (...args) => delegate.getActiveContext(...args),
+    getHttpContext: (...args) => delegate.getHttpContext(...args),
+    getOperationContext: (...args) => delegate.getOperationContext(...args),
+    getExecutionRequestContext: (...args) =>
+      delegate.getExecutionRequestContext(...args),
+    register,
+  };
 }

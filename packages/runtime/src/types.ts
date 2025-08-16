@@ -9,6 +9,7 @@ import type {
   UnifiedGraphPlugin,
 } from '@graphql-mesh/fusion-runtime';
 import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-signature';
+import { OpenTelemetryPluginUtils } from '@graphql-mesh/plugin-opentelemetry';
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
@@ -79,6 +80,12 @@ export interface GatewayConfigContext {
    * Cache Storage
    */
   cache?: KeyValueCache;
+  /**
+   * OpenTelemetry API to get access to OTEL Tracer and Hive Gateway internal OTEL Contexts
+   */
+  openTelemetry: OpenTelemetryPluginUtils & {
+    register?: (plugin: OpenTelemetryPluginUtils) => void;
+  };
 }
 
 export interface GatewayContext
