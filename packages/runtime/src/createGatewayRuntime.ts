@@ -173,7 +173,7 @@ export function createGatewayRuntime<
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
-    openTelemetry: createOpenTelemetryAPI()
+    openTelemetry: createOpenTelemetryAPI(),
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
