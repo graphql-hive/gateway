@@ -53,7 +53,10 @@ import {
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
-import type { OpenTelemetryContextExtension } from '../src/plugin';
+import type {
+  ContextMatcher,
+  OpenTelemetryContextExtension,
+} from '../src/plugin';
 import {
   buildTestGateway,
   disableAll,
@@ -477,18 +480,11 @@ describe('useOpenTelemetry', () => {
           };
 
           await using gateway = await buildTestGatewayForCtx({
-            plugins: (otelPlugin) => {
-              const createSpan =
-                (name: string) =>
-                (
-                  matcher: Parameters<
-                    (typeof otelPlugin)['getActiveContext']
-                  >[0],
-                ) =>
-                  otelPlugin
-                    .getTracer()
-                    .startSpan(name, {}, otelPlugin.getActiveContext(matcher))
-                    .end();
+            plugins: ({ openTelemetry }) => {
+              const createSpan = (name: string) => (matcher: ContextMatcher) =>
+                openTelemetry.tracer
+                  ?.startSpan(name, {}, openTelemetry.getActiveContext(matcher))
+                  .end();
 
               return [
                 {
@@ -524,15 +520,18 @@ describe('useOpenTelemetry', () => {
 
           await using gateway = await buildTestGatewayForCtx({
             plugins: () => {
-              const createSpan =
-                (name: string) =>
-                ({ context: gqlCtx, executionRequest }: any) => {
+              const createSpan = (name: string) => (payload: any) => {
+                try {
+                  const { context: gqlCtx, executionRequest } = payload;
                   const ctx: OpenTelemetryContextExtension =
                     gqlCtx ?? executionRequest?.context;
                   return ctx.openTelemetry.tracer
-                    .startSpan(name, {}, ctx.openTelemetry.activeContext())
+                    .startSpan(name, {}, ctx.openTelemetry.getActiveContext())
                     .end();
-                };
+                } catch (err) {
+                  console.error(err);
+                }
+              };
 
               return [
                 {
@@ -752,7 +751,7 @@ describe('useOpenTelemetry', () => {
 
         it('should not trace fetch if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
-            plugins: (_, { fetch }) => {
+            plugins: ({ fetch }) => {
               return [
                 {
                   onPluginInit() {
@@ -791,9 +790,9 @@ describe('useOpenTelemetry', () => {
       };
 
       await using gateway = await buildTestGateway({
-        plugins: (otelPlugin) => {
+        plugins: ({ openTelemetry }) => {
           const createSpan = (name: string) => () =>
-            otelPlugin.getTracer().startSpan(name).end();
+            openTelemetry.tracer?.startSpan(name).end();
 
           return [
             {
@@ -1036,7 +1035,7 @@ describe('useOpenTelemetry', () => {
               ],
             }),
           },
-          plugins: (_, ctx) => {
+          plugins: (ctx) => {
             const createHook = (name: string): any => ({
               [name]: (payload: any) => {
                 let log = ctx.log;

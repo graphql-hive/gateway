@@ -1082,7 +1082,7 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ request, params, req, connectionParams }) {
+    context({ request, req, connectionParams, ...ctx }) {
       let headers = // Maybe Node-like environment
         req?.headers
           ? getHeadersObj(req.headers)
@@ -1091,20 +1091,20 @@ export function createGatewayRuntime<
             ? getHeadersObj(request.headers)
             : // Unknown environment
               {};
+
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
+
       const baseContext = {
         ...configContext,
-        request,
-        params,
+        // Give priority to the openTelemetry API defined by OTEL plugin
+        openTelemetry: ctx['openTelemetry'] ?? configContext.openTelemetry,
         headers,
         connectionParams: headers,
       };
-      if (contextBuilder) {
-        return contextBuilder(baseContext);
-      }
-      return baseContext;
+
+      return contextBuilder?.(baseContext) ?? baseContext;
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,

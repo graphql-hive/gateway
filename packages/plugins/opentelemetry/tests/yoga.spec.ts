@@ -2,6 +2,7 @@ import { Logger } from '@graphql-hive/logger';
 import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { ContextMatcher } from '../src/plugin';
 import { disableAll, setupOtelForTests, spanExporter } from './utils';
 
 describe('useOpenTelemetry', () => {
@@ -59,6 +60,11 @@ describe('useOpenTelemetry', () => {
               body: JSON.stringify({ query: '{ hello }' }),
             });
             expect(response.status).toBe(200);
+            const result = await response.json();
+            if (result.errors) {
+              console.error('Graphql Errors:', result.errors);
+            }
+            expect(result.errors).not.toBeDefined();
           },
           [Symbol.asyncDispose]: async () => {
             await yoga.dispose();
@@ -93,7 +99,7 @@ describe('useOpenTelemetry', () => {
           }
         });
 
-        it('should allow to report custom spans', async () => {
+        it.only('should allow to report custom spans', async () => {
           const expectedCustomSpans = {
             http: { root: 'POST /graphql', children: ['custom.request'] },
             graphql: {
@@ -110,18 +116,11 @@ describe('useOpenTelemetry', () => {
           };
 
           await using yoga = buildTest({
-            plugins: (otelPlugin) => {
-              const createSpan =
-                (name: string) =>
-                (
-                  matcher: Parameters<
-                    (typeof otelPlugin)['getActiveContext']
-                  >[0],
-                ) =>
-                  otelPlugin
-                    .getTracer()
-                    .startSpan(name, {}, otelPlugin.getActiveContext(matcher))
-                    .end();
+            plugins: (openTelemetry) => {
+              const createSpan = (name: string) => (matcher: ContextMatcher) =>
+                openTelemetry.tracer
+                  ?.startSpan(name, {}, openTelemetry.getActiveContext(matcher))
+                  .end();
 
               return [
                 {
