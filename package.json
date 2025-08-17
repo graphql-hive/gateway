@@ -67,6 +67,7 @@
     "@graphql-mesh/utils": "0.104.6",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/utils": "10.9.0-alpha-20250710200000-fde1c74a0c2fa4f651cbeed5b2091aeda7afb162",
+    "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@vitest/snapshot": "patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch",
     "ansi-color@npm:^0.2.1": "patch:ansi-color@npm%3A0.2.1#~/.yarn/patches/ansi-color-npm-0.2.1-f7243d10a4.patch",
@@ -80,7 +81,6 @@
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar-fs": "3.0.10",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
-    "vite": "6.3.5",
-    "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch"
+    "vite": "6.3.5"
   }
 }
