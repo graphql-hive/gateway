@@ -131,7 +131,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           30_000) *
         runs,
     },
-    async ({ expect }) => {
+    async ({ expect, task }) => {
       if (flags.includes('cleanheapsnaps')) {
         const filesInCwd = await fs.readdir(cwd, { withFileTypes: true });
         for (const file of filesInCwd) {
@@ -166,7 +166,10 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           if (flags.includes('chart')) {
             const chart = createMemorySampleLineChart(samples);
             await fs.writeFile(
-              path.join(cwd, `memtest-memory-usage_${startTime}.svg`),
+              path.join(
+                cwd,
+                `memtest-${task.id}-memory-usage_${startTime}.svg`,
+              ),
               chart.toBuffer(),
             );
           }
@@ -177,7 +180,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
       if (loadtestResult.heapSamplingProfile) {
         const heapSamplingProfileFile = path.join(
           cwd,
-          `memtest_${startTime}.heapprofile`,
+          `memtest-${task.id}_${startTime}.heapprofile`,
         );
         await fs.writeFile(
           heapSamplingProfileFile,

@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 dist/
+# see internal/heapsnapshot/README.md for why we're committing the dist folder
 !/internal/heapsnapshot/dist/
 bundle/
 .yarn/*
@@ -19,4 +20,6 @@ hive-gateway
 /e2e/**/*/*.heapsnapshot
 /e2e/**/*/*.heapprofile
 /e2e/**/*/*.out
+/internal/**/*/*.heapsnapshot
+/internal/**/*/*.heapprofile
 /internal/**/*/*.out

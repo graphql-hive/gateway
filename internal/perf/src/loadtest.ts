@@ -122,6 +122,10 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   const startTime = new Date();
 
+  // we create a random id to make sure the heapsnapshot files are unique and easily distinguishable in the filesystem
+  // when running multiple loadtests in parallel. see e2e/opentelemetry memtest as an example
+  const id = Math.random().toString(36).slice(2, 6);
+
   // make sure the query works before starting the loadtests
   // the request here matches the request done in loadtest-script.ts
   const res = await fetch(
@@ -202,6 +206,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   if (takeHeapSnapshots) {
     const heapsnapshot = await createHeapSnapshot(
       cwd,
+      id,
       startTime,
       inspector,
       phase,
@@ -256,6 +261,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     if (takeHeapSnapshots) {
       const heapsnapshot = await createHeapSnapshot(
         cwd,
+        id,
         startTime,
         inspector,
         phase,
@@ -275,6 +281,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
 async function createHeapSnapshot(
   cwd: string,
+  id: string,
   startTime: Date,
   inspector: Inspector,
   phase: LoadtestPhase,
@@ -289,7 +296,7 @@ async function createHeapSnapshot(
     .split('.')[0];
   const file = path.join(
     cwd,
-    `loadtest-${phase}-run-${run}-${filenameSafeStartTime}.heapsnapshot`,
+    `loadtest-${id}-${phase}-run-${run}-${filenameSafeStartTime}.heapsnapshot`,
   );
   await inspector.writeHeapSnapshot(file);
   return { phase, run, time, file };
