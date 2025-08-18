@@ -2,6 +2,11 @@ import { defineConfig } from '@graphql-hive/gateway';
 import moment from 'moment';
 
 export const gatewayConfig = defineConfig({
+  transportEntries: {
+    '*.rest': {
+      headers: [['user-agent', 'hive-gateway/e2e']],
+    },
+  },
   additionalResolvers: {
     Query: {
       async viewsInPastMonth(
