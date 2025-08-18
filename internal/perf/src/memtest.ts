@@ -1,18 +1,23 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Server } from '@internal/proc';
 import { getEnvStr, isDebug } from '@internal/testing';
 import { it } from 'vitest';
 import { createMemorySampleLineChart } from './chart';
 import {
-  getHeaviestFramesFromHeapSamplingProfile,
-  HeapSamplingProfileFrame,
-} from './heap';
+  bytesToHuman,
+  leakingObjectsInHeapSnapshotFiles,
+} from './heapsnapshot';
 import { loadtest, LoadtestOptions } from './loadtest';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __project = path.resolve(__dirname, '..', '..', '..');
 
 const supportedFlags = [
   'short' as const,
-  'heapsnaps' as const,
+  'cleanheapsnaps' as const,
+  'noheapsnaps' as const,
   'moreruns' as const,
   'chart' as const,
   'sampling' as const,
@@ -23,10 +28,11 @@ const supportedFlags = [
  *
  * {@link supportedFlags Supported flags} are:
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
- * - `heapsnaps` Takes heap snapshots instead of the defaults.
- * - `moreruns` Does `5` runs instead of the defaults.
+ * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
+ * - `noheapsnaps` Disable taking heap snapshots.
+ * - `moreruns` Does `10` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
- * - `sampling` Will write the heap allocation sampling profile regardless of whether the test fails.
+ * - `sampling` Perform and write the heap sampling profile.
  */
 const flags =
   getEnvStr('MEMTEST')
@@ -59,68 +65,59 @@ export interface MemtestOptions
    * Whether to take heap snapshots on the end of the `idle` phase and then at the end
    * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
    *
-   * Ignores the `default` and runs with `true` if {@link flags MEMTEST has the `heapsnaps` flag}.
+   * Ignores the _@default_ and runs with `false` if {@link flags MEMTEST} has the `noheapsnaps`
+   * flag provided.
    *
-   * @default false
+   * @default true
    */
   takeHeapSnapshots?: boolean;
   /**
    * Idling duration before loadtests {@link runs run} in milliseconds.
    *
-   * @default 10_000
+   * @default 5_000
    */
   idle?: number;
   /**
    * Duration of the loadtest for each {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `30s` if {@link flags MEMTEST has the `short` flag}.
+   * Ignores the _@default_ and runs for `10s` if {@link flags MEMTEST} has the `short`
+   * flag provided.
    *
-   * @default 120_000
+   * @default 30_000
    */
   duration?: number;
   /**
    * Calmdown duration after loadtesting {@link runs run} in milliseconds.
    *
-   * Ignores the `default` and runs for `10s` if {@link flags MEMTEST has the `short` flag}.
+   * Ignores the _@default_ and runs for `5s` if {@link flags MEMTEST} has the `short`
+   * flag provided.
    *
-   * @default 30_000
+   * @default 10_000
    */
   calmdown?: number;
   /**
    * How many times to run the loadtests?
    *
-   * Ignores the `default` and does `5` runs if {@link flags MEMTEST has the `moreruns` flag}.
+   * Ignores the _@default_ and does `10` runs if {@link flags MEMTEST} has the `moreruns`
+   * flag provided.
    *
-   * @default 3
+   * @default 5
    */
   runs?: number;
-  /**
-   * The heap allocation sampling profile gathered during the loadtests is analysed
-   * to find the heaviest frames (frames that allocated most of the memory). These,
-   * high allocation frames, are often the ones that contain a leak. But not always,
-   * a frame can simply be heavy... There are some usual suspects which we safely ignore;
-   * but, if the profile contains any other unexpected heavy frames, the test will fail.
-   *
-   * Using this callback check, you can add more "expected" heavy frames for a given test.
-   *
-   * BEWARE: Please be diligent when adding expected heavy frames. Carefully analyse the
-   * heap sampling profile and make sure that the frame you're adding is 100% not leaking.
-   */
-  expectedHeavyFrame?: (frame: HeapSamplingProfileFrame) => boolean;
 }
 
 export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
   const {
     cwd,
     memorySnapshotWindow = 1_000,
-    idle = 10_000,
-    duration = flags.includes('short') ? 30_000 : 120_000,
-    calmdown = flags.includes('short') ? 10_000 : 30_000,
-    runs = flags.includes('moreruns') ? 5 : 3,
-    takeHeapSnapshots = flags.includes('heapsnaps'),
+    idle = 5_000,
+    duration = flags.includes('short') ? 10_000 : 30_000,
+    calmdown = flags.includes('short') ? 5_000 : 10_000,
+    runs = flags.includes('moreruns') ? 10 : 5,
+    takeHeapSnapshots = !flags.includes('noheapsnaps'),
+    performHeapSampling = flags.includes('sampling'),
     onMemorySample,
     onHeapSnapshot,
-    expectedHeavyFrame,
     ...loadtestOpts
   } = opts;
   it(
@@ -135,6 +132,15 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         runs,
     },
     async ({ expect }) => {
+      if (flags.includes('cleanheapsnaps')) {
+        const filesInCwd = await fs.readdir(cwd, { withFileTypes: true });
+        for (const file of filesInCwd) {
+          if (file.isFile() && file.name.endsWith('.heapsnapshot')) {
+            await fs.unlink(path.join(cwd, file.name));
+          }
+        }
+      }
+
       const server = await setup();
 
       const startTime = new Date()
@@ -149,6 +155,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         cwd,
         memorySnapshotWindow,
         takeHeapSnapshots,
+        performHeapSampling,
         idle,
         duration,
         calmdown,
@@ -165,104 +172,73 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
           }
           return onMemorySample?.(samples);
         },
-        async onHeapSnapshot(heapsnapshot) {
-          if (flags.includes('heapsnaps')) {
-            await fs.copyFile(
-              heapsnapshot.file,
-              path.join(
-                cwd,
-                `memtest-run-${heapsnapshot.run}-${heapsnapshot.phase}_${startTime}.heapsnapshot`,
-              ),
-            );
-          }
-          return onHeapSnapshot?.(heapsnapshot);
-        },
       });
 
-      // TODO: track failed requests during the loadtest, if any
-
-      const heapSamplingProfileFile = path.join(
-        cwd,
-        `memtest_${startTime}.heapprofile`,
-      );
-      if (flags.includes('sampling')) {
+      if (loadtestResult.heapSamplingProfile) {
+        const heapSamplingProfileFile = path.join(
+          cwd,
+          `memtest_${startTime}.heapprofile`,
+        );
         await fs.writeFile(
           heapSamplingProfileFile,
-          JSON.stringify(loadtestResult.profile),
+          JSON.stringify(loadtestResult.heapSamplingProfile),
         );
       }
 
-      // NOTE: memory usage slop trend check is disabled allowing us to run the tests in parallel in the CI
-      //       and we dont want to disable it _only_ in the CI because we want consistant tests locally and in the CI
-      // import { calculateTrendSlope } from './chart'
-      // const slope = calculateTrendSlope(loadtestResult.samples.map(({ mem }) => mem));
-      // expect
-      //   .soft(slope, 'Consistent memory increase detected')
-      //   .toBeLessThan(10);
+      if (loadtestResult.heapSnapshots.length) {
+        const diff = await leakingObjectsInHeapSnapshotFiles(
+          loadtestResult.heapSnapshots.map(({ file }) => file),
+        );
 
-      const unexpectedHeavyFrames = getHeaviestFramesFromHeapSamplingProfile(
-        loadtestResult.profile,
-      )
-        .filter(
-          (frame) =>
-            // node internals can allocate a lot, but they on their own cannot leak
-            // if other things triggered by node internals are leaking, they will show up in other frames
-            !frame.callstack.every(
-              (stack) =>
-                stack.file?.startsWith('node:') || stack.name === '(root)',
-            ) &&
-            // memoized functions are usually heavy because they're called a lot, but they're proven to not leak
-            !(
-              frame.name === 'set' &&
-              frame.callstack.some((stack) => stack.name === 'memoized')
-            ) &&
-            // graphql visitor enter is heavy because it's called a lot, but it's proven to not leak
-            !(
-              frame.name === 'enter' &&
-              frame.callstack.some((stack) => stack.name === 'visit')
-            ) &&
-            // graphql visitor leave is heavy because it's called a lot, but it's proven to not leak
-            !(
-              frame.name === 'leave' &&
-              frame.callstack.some((stack) => stack.name === 'visit')
-            ) &&
-            // the (fake)promises themselves cannot leak, things they do can
-            !(
-              frame.name === 'then' &&
-              frame.callstack.some(
-                (stack) => stack.name === 'handleMaybePromise',
-              )
-            ) &&
-            // Anonymous `set` frames are false-positives
-            !(frame.name === 'set' && frame.file == null),
-        )
-        .filter((frame) => {
-          if (expectedHeavyFrame) {
-            // user-provided heavy frames check
-            return !expectedHeavyFrame(frame);
-          }
-          return true;
-        });
+        // growing "(compiled code)" in memory heap snapshots, is typically not a memory leak in the traditional
+        // sense, but rather a reflection of how the JavaScript engine optimizes your code. It usually
+        // indicates that the V8 engine is compiling and optimizing more and more JavaScript functions as
+        // your application runs
+        //
+        // TODO: while subtle growth is normal, an excessive and rapid increase in "(compiled code)" could be
+        // a symptom of an issue where codepaths repeadetly generate and execute new functions that are
+        // different from the previous ones
+        delete diff['(compiled code)'];
 
-      if (unexpectedHeavyFrames.length) {
-        let msg = `Unexpected heavy frames detected! In total ${unexpectedHeavyFrames.length} and they are:\n\n`;
-        let i = 1;
-        for (const frame of unexpectedHeavyFrames) {
-          msg += `${i++}. ${frame.name} (${frame.file || '<anonymous>'})\n`;
-          for (const stack of frame.callstack) {
-            msg += `  ${stack.name} (${stack.file || '<anonymous>'})\n`;
-          }
-          msg += '\n';
+        // "(system)" is a label used to group objects and memory allocations that are managed directly by th
+        // JavaScript engine's internal systems. a growing "(system)" footprint could signal code bloat or
+        // inefficient code patterns that force the engine to create many internal data structures, leading
+        // to an increased "(system)" size
+        //
+        // TODO: use it to detect code bloat or inefficient code patterns. optimizing it will lead to better
+        // JS execution performance and reduced memory usage
+        delete diff['(system)'];
+
+        if (Object.keys(diff).length) {
+          expect.fail(`Leak detected on ${Object.keys(diff).length} object(s) that kept growing in every snapshot:
+  ${Object.values(diff)
+    .map(
+      ({
+        name,
+        addedSize,
+        removedSize,
+        sizeDelta,
+        addedCount,
+        removedCount,
+        countDelta,
+      }) =>
+        // use SI prefix to convert bytes to MB
+        `\t- "${name}" allocated ${bytesToHuman(addedSize)}, freed ${removedSize > 0 ? bytesToHuman(removedSize) : 'nothing'} (Δ${bytesToHuman(sizeDelta)})
+\t\t- ${addedCount} instances were added, ${removedCount} were removed (Δ${countDelta})`,
+    )
+    .join('\n')}
+
+Please load the following heap snapshots respectively in Chrome DevTools for more details:
+${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.relative(__project, file)}`).join('\n')}`);
         }
-        msg += `Writing heap sampling profile to ${heapSamplingProfileFile}`;
-
-        await fs.writeFile(
-          heapSamplingProfileFile,
-          JSON.stringify(loadtestResult.profile),
-        );
-
-        expect.fail(msg);
+      } else {
+        expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
+
+      // no leak, remove the heap snapshots
+      await Promise.all(
+        loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
+      );
     },
   );
 }

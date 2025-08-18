@@ -81,6 +81,8 @@
       // paths starting with ~ are used by published packages and will be bundled
       "~internal/env": ["./internal/env/src/index.ts"],
       "~internal/env/node": ["./internal/env/src/node.ts"]
+      // INTENTIONAL: the heapsnapshot package needs to be built to be used (because of the worker script)
+      // "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"]
     }
   },
   "include": [
@@ -101,6 +103,12 @@
   "exclude": [
     "./packages/importer/tests/fixtures/syntax-error.ts",
     "./e2e/config-syntax-error/gateway.config.ts",
-    "./e2e/config-syntax-error/custom-resolvers.ts"
+    "./e2e/config-syntax-error/custom-resolvers.ts",
+    "./internal/heapsnapshot"
+  ],
+  "references": [
+    {
+      "path": "./internal/heapsnapshot/tsconfig.json"
+    }
   ]
 }

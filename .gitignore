@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 dist/
+!/internal/heapsnapshot/dist/
 bundle/
 .yarn/*
 !.yarn/patches

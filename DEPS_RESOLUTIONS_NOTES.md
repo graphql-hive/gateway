@@ -14,8 +14,3 @@ Here we collect reasons and write explanations about why some resolutions or pat
 ### vitest-tsconfig-paths
 
 1. Resolve tsconfig paths in modules that have been [inlined](https://vitest.dev/config/#server-deps-inline).
-
-### @memlab/core
-
-1. Define package.json#export for `@memlab/core/Types`
-1. Define package.json#export for `@memlab/core/Utils`

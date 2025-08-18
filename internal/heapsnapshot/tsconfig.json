@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "@tsconfig/recommended/tsconfig.json",
+    "@tsconfig/node18/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "composite": true,
+    "types": ["node"]
+  }
+}

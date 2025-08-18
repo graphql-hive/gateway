@@ -1,6 +1,4 @@
-import fs from 'fs/promises';
 import { HeapProfiler } from 'inspector';
-import os from 'os';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
@@ -36,6 +34,16 @@ export interface LoadtestOptions extends ProcOptions {
    * @default false
    */
   takeHeapSnapshots?: boolean;
+  /**
+   * Whether to perform heap allocation sampling during the complete loadtest run.
+   * This is the "allocation sampling" feature of the V8 memory profiling you may
+   * find in the Chrome DevTools. It approximates memory allocations by sampling
+   * long operations with minimal overhead and get a breakdown by JavaScript execution
+   * stack.
+   *
+   * @default false
+   */
+  performHeapSampling?: boolean;
   /**
    * Should the loadtest immediatelly error out on the first failed request?
    *
@@ -83,8 +91,8 @@ export interface LoadtestHeapSnapshot {
 
 export async function loadtest(opts: LoadtestOptions): Promise<{
   samples: LoadtestMemorySample[];
-  heapsnapshots: LoadtestHeapSnapshot[];
-  profile: HeapProfiler.SamplingHeapProfile;
+  heapSnapshots: LoadtestHeapSnapshot[];
+  heapSamplingProfile: HeapProfiler.SamplingHeapProfile | null;
 }> {
   const {
     cwd,
@@ -97,6 +105,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     server,
     query,
     takeHeapSnapshots,
+    performHeapSampling,
     allowFailingRequests,
     onMemorySample,
     onHeapSnapshot,
@@ -110,6 +119,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   if (runs < 1) {
     throw new Error(`At least one run is necessary, got "${runs}"`);
   }
+
+  const startTime = new Date();
 
   // make sure the query works before starting the loadtests
   // the request here matches the request done in loadtest-script.ts
@@ -148,10 +159,6 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   cancelledSignal.addEventListener('abort', () => {
     ctrl.abort('Test run cancelled');
   });
-
-  const heapsnapshotCwd = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'hive-gateway_perf_loadtest_heapsnapshots'),
-  );
 
   using inspector = await connectInspector(server);
 
@@ -194,7 +201,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   if (takeHeapSnapshots) {
     const heapsnapshot = await createHeapSnapshot(
-      heapsnapshotCwd,
+      cwd,
+      startTime,
       inspector,
       phase,
       run,
@@ -204,7 +212,9 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
   }
 
   // start heap sampling after idling (no need to sample anything during the idling phase)
-  const stopHeapSampling = await inspector.startHeapSampling();
+  const stopHeapSampling = performHeapSampling
+    ? await inspector.startHeapSampling()
+    : () => null; // no-op if no heap allocation sampling
 
   for (; run <= runs; run++) {
     phase = 'loadtest';
@@ -245,7 +255,8 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
     if (takeHeapSnapshots) {
       const heapsnapshot = await createHeapSnapshot(
-        heapsnapshotCwd,
+        cwd,
+        startTime,
         inspector,
         phase,
         run,
@@ -257,19 +268,29 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   return {
     samples,
-    heapsnapshots,
-    profile: await stopHeapSampling(),
+    heapSnapshots: heapsnapshots,
+    heapSamplingProfile: await stopHeapSampling(),
   };
 }
 
 async function createHeapSnapshot(
   cwd: string,
+  startTime: Date,
   inspector: Inspector,
   phase: LoadtestPhase,
   run: number,
 ): Promise<LoadtestHeapSnapshot> {
   const time = new Date();
-  const file = path.join(cwd, `${phase}-run-${run}-${Date.now()}.heapsnapshot`);
+  const filenameSafeStartTime = startTime
+    .toISOString()
+    // replace time colons with dashes to make it a valid filename
+    .replaceAll(':', '-')
+    // remove milliseconds
+    .split('.')[0];
+  const file = path.join(
+    cwd,
+    `loadtest-${phase}-run-${run}-${filenameSafeStartTime}.heapsnapshot`,
+  );
   await inspector.writeHeapSnapshot(file);
   return { phase, run, time, file };
 }
