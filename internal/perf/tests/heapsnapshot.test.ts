@@ -108,6 +108,50 @@ it.skipIf(
   },
 );
 
+it.skipIf(
+  // no need to test in bun (also, bun does not support increasing timeouts per test)
+  globalThis.Bun,
+)(
+  'should ignore constructors that have zero instance count delta (all released) but positive memory delta (leftover memory)',
+  {
+    // parsing snapshots can take a while, so we increase the timeout
+    timeout: 30_000,
+  },
+  async () => {
+    await using snaps = await archivedFixtureFiles([
+      'released-all-instances-but-leftover-memory/1.heapsnapshot',
+      'released-all-instances-but-leftover-memory/2.heapsnapshot',
+      'released-all-instances-but-leftover-memory/3.heapsnapshot',
+      'released-all-instances-but-leftover-memory/4.heapsnapshot',
+      'released-all-instances-but-leftover-memory/5.heapsnapshot',
+      'released-all-instances-but-leftover-memory/6.heapsnapshot',
+    ]);
+    await expect(leakingObjectsInHeapSnapshotFiles(snaps.filepaths)).resolves
+      .toMatchInlineSnapshot(`
+      {
+        "(compiled code)": {
+          "addedCount": 25287,
+          "addedSize": 5208456,
+          "countDelta": -8387,
+          "name": "(compiled code)",
+          "removedCount": 33674,
+          "removedSize": 2495560,
+          "sizeDelta": 2712896,
+        },
+        "(system)": {
+          "addedCount": 48,
+          "addedSize": 85968,
+          "countDelta": -55,
+          "name": "(system)",
+          "removedCount": 103,
+          "removedSize": 26312,
+          "sizeDelta": 59656,
+        },
+      }
+    `);
+  },
+);
+
 /**
  * Unarchives the {@link archivedFiles provided fixture files} for using in
  * tests and then removes them on disposal.

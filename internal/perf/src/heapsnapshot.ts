@@ -88,6 +88,18 @@ export async function leakingObjectsInHeapSnapshotFiles(
     }
   }
 
+  // remove everything that has a zero count delta, this can happen even if it grew in size.
+  // these are not leaks, but rather just normal behavior of JS:
+  // - memory allocators often allocate in chunks larger than requested
+  // - internal bookkeeping structures add overhead
+  // - memory alignment requirements can cause padding
+  for (const totalDiffName of Object.keys(totalGrowingDiff)) {
+    const diff = totalGrowingDiff[totalDiffName]!;
+    if (diff.countDelta === 0) {
+      delete totalGrowingDiff[totalDiffName];
+    }
+  }
+
   return totalGrowingDiff;
 }
 
