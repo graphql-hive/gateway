@@ -413,14 +413,12 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * export const gatewayConfig = defineConfig({
    *   transportEntries: {
-   *     '*': {
-   *       http: {
-   *          options: {
-   *            subscriptions: {
-   *              ws: {
-   *                endpoint: '/subscriptions',
-   *              },
-   *          },
+   *     '*.http': { // all subgraphs that use the "http" transport kind
+   *       options: {
+   *         subscriptions: {
+   *           ws: {
+   *             endpoint: '/subscriptions',
+   *           },
    *         },
    *       },
    *     },
