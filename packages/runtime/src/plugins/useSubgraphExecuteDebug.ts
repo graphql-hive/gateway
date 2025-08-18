@@ -1,15 +1,11 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
-import { FetchAPI, isAsyncIterable } from 'graphql-yoga';
+import { isAsyncIterable } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
 export function useSubgraphExecuteDebug<
   TContext extends Record<string, any>,
 >(): GatewayPlugin<TContext> {
-  let fetchAPI: FetchAPI;
   return {
-    onYogaInit({ yoga }) {
-      fetchAPI = yoga.fetchAPI;
-    },
     onSubgraphExecute({ executionRequest }) {
       let log = executionRequest.context?.log.child(
         '[useSubgraphExecuteDebug] ',
