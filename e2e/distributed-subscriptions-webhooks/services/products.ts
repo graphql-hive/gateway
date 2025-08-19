@@ -1,80 +1,70 @@
 import { createServer } from 'node:http';
-import { ApolloServer } from '@apollo/server';
-import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { expressMiddleware } from '@as-integrations/express5';
 import { Opts } from '@internal/testing';
-import { Repeater } from '@repeaterjs/repeater';
-import express from 'express';
 import { parse } from 'graphql';
+import { createYoga } from 'graphql-yoga';
 
-let push:
-  | ((_data: { newProduct: { name: string; price: number } }) => void)
-  | null = null;
+const mainGwUrl = process.env['MAIN_GW_URL'];
+if (!mainGwUrl) {
+  throw new Error('MAIN_GW_URL environment variable is not set');
+}
 
-const apollo = new ApolloServer({
-  schema: buildSubgraphSchema([
-    {
+const port = Opts(process.argv).getServicePort('products');
+
+createServer(
+  createYoga({
+    schema: buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
         type Query {
           hello: String!
         }
-        type Product {
+        type Product @key(fields: "id") {
+          id: ID!
           name: String!
           price: Float!
-        }
-
-        type Subscription {
-          newProduct: Product!
         }
       `),
       resolvers: {
         Query: {
           hello: () => 'world',
         },
-        Subscription: {
-          newProduct: {
-            subscribe: () =>
-              new Repeater(async (_push, stop) => {
-                push = _push;
-                await stop;
-                push = null;
-              }),
-          },
+        Product: {
+          __resolveReference: (ref) => ({
+            id: ref.id,
+            name: `Roomba X${ref.id}`,
+            price: 100,
+          }),
         },
       },
-    },
-  ]),
-  plugins: [ApolloServerPluginSubscriptionCallback()],
-});
-
-(async function start() {
-  await apollo.start();
-
-  const app = express();
-
-  let ver = 10;
-
-  app.use('/graphql', express.json(), expressMiddleware(apollo));
-  app.use('/product-released', (_req, res) => {
-    if (!push) {
-      res.status(503).send();
-      return;
-    }
-    push({
-      newProduct: {
-        name:
-          ver % 2 === 0 ? `iPhone ${ver++} Pro` : `Samsung Galaxy S${ver++}`,
-        price: ver + 99.99,
+    }),
+    plugins: [
+      {
+        async onRequest({ url, endResponse, fetchAPI: { fetch } }) {
+          if (url.pathname === '/product-released') {
+            const res = await fetch(
+              // url and opts like specified in additionalTypeDefs in mesh.config.ts
+              `${mainGwUrl}/webhooks/new_product`,
+              {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                  id: 'ip10pro',
+                  name: 'iPhone 10 Pro',
+                  price: 110.99,
+                }),
+              },
+            );
+            if (!res.ok) {
+              throw new Error(
+                `Failed to call product release webhook ${res.statusText}`,
+              );
+            }
+            endResponse(new Response());
+          }
+        },
       },
-    });
-    res.status(200).send();
-  });
-
-  const opts = Opts(process.argv);
-
-  createServer(app).listen(opts.getServicePort('products', true));
-})().catch((err) => {
-  console.error(err);
-  process.exit(1);
+    ],
+  }),
+).listen(port, () => {
+  console.log(`Products subgraph running on http://localhost:${port}/graphql`);
 });
