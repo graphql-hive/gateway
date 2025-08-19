@@ -7,6 +7,7 @@ import type {
 } from '@graphql-hive/gateway-runtime';
 import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { PubSub } from '@graphql-hive/pubsub';
+import { MeshPubSub } from '@graphql-hive/pubsub/mesh';
 import type { KeyValueCache } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
@@ -217,6 +218,8 @@ export async function getCacheInstanceFromConfig(
           ...config.cache,
           // TODO: use new logger
           logger: LegacyLogger.from(ctx.log),
+          // TODO: use new pubsub
+          pubsub: MeshPubSub.from(ctx.pubsub),
         }) as KeyValueCache;
       }
       case 'cfw-kv': {
@@ -250,6 +253,8 @@ export async function getCacheInstanceFromConfig(
     return new LocalforageCache({
       ...ctx,
       ...config.cache,
+      // TODO: use new pubsub
+      pubsub: MeshPubSub.from(ctx.pubsub),
     });
   }
   if (config.cache) {
@@ -258,5 +263,9 @@ export async function getCacheInstanceFromConfig(
   const { default: LocalforageCache } = await import(
     '@graphql-mesh/cache-localforage'
   );
-  return new LocalforageCache(ctx);
+  return new LocalforageCache({
+    ...ctx,
+    // TODO: use new pubsub
+    pubsub: MeshPubSub.from(ctx.pubsub),
+  });
 }
