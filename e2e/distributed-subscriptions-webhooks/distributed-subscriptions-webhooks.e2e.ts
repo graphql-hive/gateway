@@ -3,43 +3,32 @@ import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 import { expect, it } from 'vitest';
 
-const { gateway, service, composeWithApollo } = createTenv(__dirname);
+const { gateway, service, composeWithMesh } = createTenv(__dirname);
 
-it('should subscribe and cancel', async () => {
-  const products = await service('products');
+it('should receive subscription event on distributed gateway', async () => {
+  const mainGwPort = await getAvailablePort();
+  const mainGwUrl = `http://0.0.0.0:${mainGwPort}`;
 
-  const { output: supergraph } = await composeWithApollo({
+  const products = await service('products', {
+    env: {
+      MAIN_GW_URL: mainGwUrl,
+    },
+  });
+
+  const { output: supergraph } = await composeWithMesh({
+    output: 'graphql',
     services: [products],
   });
 
-  const mainGwPort = await getAvailablePort();
-  const mainGwUrl = `http://0.0.0.0:${mainGwPort}`;
   const mainGw = await gateway({
     port: mainGwPort,
     supergraph,
-    pipeLogs: 'mainGw.out',
-    env: {
-      PUBLIC_URL: mainGwUrl,
-    },
   });
 
   const gws = [
     mainGw, // main
-    await gateway({
-      supergraph,
-      pipeLogs: 'replica1.out',
-      env: {
-        DEBUG: 1,
-        PUBLIC_URL: mainGwUrl,
-      },
-    }), // replica 1
-    await gateway({
-      supergraph,
-      pipeLogs: 'replica2.out',
-      env: {
-        PUBLIC_URL: mainGwUrl,
-      },
-    }), // replica 2
+    await gateway({ supergraph }), // replica 1
+    await gateway({ supergraph }), // replica 2
   ];
 
   const clients = gws.map((gw) =>
@@ -65,10 +54,12 @@ it('should subscribe and cancel', async () => {
 
   const msgs: any[] = [];
 
-  // TODO: report this error somehow
+  // TODO: properly wait for subscriptions to establish
+
   setTimeout(async () => {
     const res = await fetch(`http://0.0.0.0:${products.port}/product-released`);
     if (!res.ok) {
+      // TODO: fail test on this error
       throw new Error(`Failed to trigger product release: ${res.statusText}`);
     }
   }, 100);
