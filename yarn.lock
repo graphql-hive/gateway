@@ -4394,7 +4394,13 @@ __metadata:
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
+    ioredis: "npm:^5.7.0"
     pkgroll: "npm:2.15.0"
+  peerDependencies:
+    ioredis: ^5
+  peerDependenciesMeta:
+    ioredis:
+      optional: true
   languageName: unknown
   linkType: soft
 

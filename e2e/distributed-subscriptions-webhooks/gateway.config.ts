@@ -1,6 +1,6 @@
 import { defineConfig } from '@graphql-hive/gateway';
+import { RedisPubSub } from '@graphql-hive/pubsub/redis';
 import Redis from 'ioredis';
-import { RedisPubSub } from './redis-pubsub';
 
 const pub = new Redis();
 const sub = new Redis();

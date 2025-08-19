@@ -1,26 +1,26 @@
-import type { HivePubSub, PubSubListener } from '@graphql-hive/pubsub';
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type Redis from 'ioredis';
+import type { HivePubSub, PubSubListener, TopicDataMap } from './pubsub';
 
-// TODO: use hive logger for logging
-
-type TopicDataMap = Record<string, any>;
+// TODO: use hive logger for logging once ready
 
 /**
  * When a Redis connection enters "subscriber mode" (after calling SUBSCRIBE), it can only execute
  * subscriber commands (SUBSCRIBE, UNSUBSCRIBE, etc.). Meaning, it cannot execute other commands like PUBLISH.
  * To avoid this, we use two separate Redis clients: one for publishing and one for subscribing.
- * */
+ */
 export interface RedisPubSubConnections {
+  /** The redis instance that publishes events/topics. */
   pub: Redis;
+  /** The redis instance that listens and subscribes to events/topics. */
   sub: Redis;
 }
 
 export interface RedisPubSubOptions {
   /**
    * Prefix for Redis channels to avoid conflicts
-   * @default 'hive-gateway:'
+   * @default '@graphql-hive/pubsub:'
    */
   channelPrefix?: string;
   /**
@@ -60,7 +60,7 @@ export class RedisPubSub<Data extends TopicDataMap = TopicDataMap>
     options: RedisPubSubOptions = {},
   ) {
     const {
-      channelPrefix = 'hive-gateway:',
+      channelPrefix = '@graphql-hive/pubsub:',
       maxRetries = 3,
       retryDelay = 1000,
     } = options;
@@ -128,18 +128,15 @@ export class RedisPubSub<Data extends TopicDataMap = TopicDataMap>
     }
 
     try {
-      await this.redis.sub.subscribe(channel, (err, count) => {
+      await this.redis.sub.subscribe(channel, (err) => {
         if (err) {
+          // TODO: throw somehow
           console.error(
             `Failed to subscribe to Redis channel ${channel}:`,
             err,
           );
           throw err;
         }
-        // TODO: remove
-        console.log(
-          `Successfully subscribed to Redis channel ${channel}. Total subscriptions: ${count}`,
-        );
       });
       this.#redisSubscriptions.add(channel);
     } catch (error) {
@@ -162,16 +159,12 @@ export class RedisPubSub<Data extends TopicDataMap = TopicDataMap>
     }
 
     try {
-      await this.redis.sub.unsubscribe(channel, (err, count) => {
+      await this.redis.sub.unsubscribe(channel, (err) => {
         if (err) {
+          // TODO: throw somehow
           console.error(
             `Failed to unsubscribe from Redis channel ${channel}:`,
             err,
-          );
-        } else {
-          // TODO: remove
-          console.log(
-            `Successfully unsubscribed from Redis channel ${channel}. Remaining subscriptions: ${count}`,
           );
         }
       });
