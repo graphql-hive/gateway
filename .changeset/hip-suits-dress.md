@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/pubsub': minor
+'@graphql-hive/pubsub': major
 ---
 
-Implement and offer optional Redis pub/sub
+TODO: explain breaking changes, change of interface, HivePubSub -> PubSub, PubSub -> MemPubSub and introduce RedisPubSub
