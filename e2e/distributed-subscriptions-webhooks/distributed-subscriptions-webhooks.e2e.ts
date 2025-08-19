@@ -62,7 +62,7 @@ it('should receive subscription event on distributed gateway', async () => {
       // TODO: fail test on this error
       throw new Error(`Failed to trigger product release: ${res.statusText}`);
     }
-  }, 100);
+  }, 1_000);
 
   for (const sub of subs) {
     for await (const msg of sub) {
