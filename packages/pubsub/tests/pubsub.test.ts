@@ -42,7 +42,7 @@ for (const PubSub of PubSubCtors) {
         });
         await new Promise((resolve, reject) => {
           sub.once('connect', resolve);
-          pub.once('error', reject);
+          sub.once('error', reject);
         });
         return new RedisPubSub<Data>({ pub, sub });
       }
