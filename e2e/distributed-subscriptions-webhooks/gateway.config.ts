@@ -2,10 +2,13 @@ import { defineConfig } from '@graphql-hive/gateway';
 import { RedisPubSub } from '@graphql-hive/pubsub/redis';
 import Redis from 'ioredis';
 
-const pub = new Redis();
-const sub = new Redis();
-await new Promise((resolve) => pub.once('connect', resolve));
-await new Promise((resolve) => sub.once('connect', resolve));
+/**
+ * When a Redis connection enters "subscriber mode" (after calling SUBSCRIBE), it can only execute
+ * subscriber commands (SUBSCRIBE, UNSUBSCRIBE, etc.). Meaning, it cannot execute other commands like PUBLISH.
+ * To avoid this, we use two separate Redis clients: one for publishing and one for subscribing.
+ */
+const pub = new Redis({ port: parseInt(process.env['REDIS_PORT']!) });
+const sub = new Redis({ port: parseInt(process.env['REDIS_PORT']!) });
 
 export const gatewayConfig = defineConfig({
   webhooks: true,
