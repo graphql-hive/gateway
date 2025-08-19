@@ -85,7 +85,7 @@ export class MemPubSub<M extends TopicDataMap = TopicDataMap>
     this.#subscribers.clear();
   }
 
-  async [DisposableSymbols.asyncDispose]() {
+  [DisposableSymbols.asyncDispose]() {
     return this.dispose();
   }
 }

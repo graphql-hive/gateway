@@ -1,4 +1,5 @@
 import { Repeater } from '@repeaterjs/repeater';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isPromise } from '@whatwg-node/promise-helpers';
 import { MaybePromise } from 'bun';
 import { PubSub } from './pubsub';
@@ -101,5 +102,13 @@ export class MeshPubSub {
       await stop;
       this.unsubscribe(subId);
     });
+  }
+
+  public dispose() {
+    return this.#pubsub.dispose();
+  }
+
+  [DisposableSymbols.asyncDispose]() {
+    return this.#pubsub.dispose();
   }
 }
