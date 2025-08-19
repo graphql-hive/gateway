@@ -1,9 +1,22 @@
-import { createTenv, getAvailablePort } from '@internal/e2e';
+import { Container, createTenv, getAvailablePort } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
-import { expect, it } from 'vitest';
+import { beforeAll, expect, it } from 'vitest';
 
-const { gateway, service, composeWithMesh } = createTenv(__dirname);
+const { container, gateway, service, composeWithMesh } = createTenv(__dirname);
+
+let redis!: Container;
+beforeAll(async () => {
+  redis = await container({
+    name: 'redis',
+    image: 'redis:8',
+    containerPort: 6379,
+    healthcheck: ['CMD-SHELL', 'redis-cli ping'],
+    env: {
+      LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+    },
+  });
+});
 
 it('should receive subscription event on distributed gateway', async () => {
   const mainGwPort = await getAvailablePort();
@@ -23,12 +36,13 @@ it('should receive subscription event on distributed gateway', async () => {
   const mainGw = await gateway({
     port: mainGwPort,
     supergraph,
+    env: { REDIS_PORT: redis.port },
   });
 
   const gws = [
     mainGw, // main
-    await gateway({ supergraph }), // replica 1
-    await gateway({ supergraph }), // replica 2
+    await gateway({ supergraph, env: { REDIS_PORT: redis.port } }), // replica 1
+    await gateway({ supergraph, env: { REDIS_PORT: redis.port } }), // replica 2
   ];
 
   const clients = gws.map((gw) =>
