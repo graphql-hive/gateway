@@ -1,4 +1,6 @@
+import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import Redis from 'ioredis';
 import LeakDetector from 'jest-leak-detector';
 import { describe, expect, it, vi } from 'vitest';
@@ -28,22 +30,18 @@ for (const PubSub of PubSubCtors) {
       IPubSub<Data>
     > {
       if (PubSub === MemPubSub) {
-        return new PubSub<Data>();
+        return new MemPubSub<Data>();
       }
       if (PubSub === RedisPubSub) {
         if (!redis) {
           throw new Error('Redis container is not initialized');
         }
-        const pub = new Redis({ port: redis.port });
-        const sub = new Redis({ port: redis.port });
-        await new Promise((resolve, reject) => {
-          pub.once('connect', resolve);
-          pub.once('error', reject);
-        });
-        await new Promise((resolve, reject) => {
-          sub.once('connect', resolve);
-          sub.once('error', reject);
-        });
+        const pub = new Redis({ port: redis.port, lazyConnect: false });
+        pub.once('error', () => {});
+        const sub = new Redis({ port: redis.port, lazyConnect: false });
+        sub.once('error', () => {});
+        // await pub.connect();
+        // await sub.connect();
         return new RedisPubSub<Data>({ pub, sub });
       }
       throw new Error(`Unsupported PubSub implementation: ${PubSub.name}`);
@@ -92,20 +90,25 @@ for (const PubSub of PubSubCtors) {
     it('should publish to relevant subscribers', async () => {
       await using pubsub = await createPubSub();
 
-      const helloCb = vi.fn();
-      await pubsub.subscribe('hello', helloCb);
+      const { resolve: hello1Cb, promise: hello1 } = createDeferredPromise();
+      await pubsub.subscribe('hello', hello1Cb);
 
-      const helloCb2 = vi.fn();
-      await pubsub.subscribe('hello', helloCb2);
+      const { resolve: hello2Cb, promise: hello2 } = createDeferredPromise();
+      await pubsub.subscribe('hello', hello2Cb);
 
-      const alohaCb = vi.fn();
-      await pubsub.subscribe('alloha', alohaCb);
+      const { resolve: allohaCb, promise: alloha } = createDeferredPromise();
+      await pubsub.subscribe('alloha', allohaCb);
 
       await pubsub.publish('hello', 'world');
 
-      expect(helloCb).toHaveBeenCalledTimes(1);
-      expect(helloCb2).toHaveBeenCalledTimes(1);
-      expect(alohaCb).not.toHaveBeenCalled();
+      await expect(hello1).resolves.toBe('world');
+      await expect(hello2).resolves.toBe('world');
+      await Promise.race([
+        alloha.then(() => {
+          throw new Error('alloha should not have resolved');
+        }),
+        setTimeout(100),
+      ]);
     });
 
     it('should not receive topics after unsubscribe', async () => {
@@ -116,9 +119,15 @@ for (const PubSub of PubSubCtors) {
 
       await pubsub.publish('hello', 'world');
 
+      // let the events flush before checking
+      await setTimeout(100);
+
       await unsub();
 
       await pubsub.publish('hello', 'world');
+
+      // let the events flush before checking
+      await setTimeout(100);
 
       expect(helloCb).toHaveBeenCalledTimes(1);
     });
@@ -141,17 +150,31 @@ for (const PubSub of PubSubCtors) {
     it('should return async iterables after dispose', async () => {
       const pubsub = await createPubSub();
 
+      const { resolve: receive, promise: received } = createDeferredPromise();
       const iter = (async () => {
         for await (const _data of pubsub.subscribe('hello')) {
+          receive();
         }
         // wont break if not disposed
       })();
+
+      // we wait for the iterator to start i.e. to subscribe
+      let subscribed = false;
+      for (;;) {
+        subscribed = await Promise.race([
+          received.then(() => true),
+          setTimeout(100).then(() => false),
+        ]);
+        if (subscribed) break;
+        await pubsub.publish('hello', 'world');
+      }
 
       await pubsub.dispose();
 
       await expect(iter).resolves.toBeUndefined();
     });
 
+    // TODO: test the same but for iterator
     it.skipIf(
       // leak detector doesnt work with bun because setFlagsFromString is not yet implemented in Bun
       // we also assume that bun doesnt leak
