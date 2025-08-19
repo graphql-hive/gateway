@@ -1,5 +1,5 @@
 import type { Logger } from '@graphql-hive/logger';
-import { HivePubSub } from '@graphql-hive/pubsub';
+import type { PubSub } from '@graphql-hive/pubsub';
 import type {
   KeyValueCache,
   Logger as LegacyLogger,
@@ -32,7 +32,7 @@ export interface TransportContext {
   fetch?: MeshFetch;
   /** Will be empty when run on serverless. */
   cwd?: string;
-  pubsub?: HivePubSub;
+  pubsub?: PubSub;
   cache?: KeyValueCache;
 }
 
