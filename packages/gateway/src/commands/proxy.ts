@@ -4,7 +4,7 @@ import {
   createLoggerFromLogging,
   type GatewayConfigProxy,
 } from '@graphql-hive/gateway-runtime';
-import { PubSub } from '@graphql-hive/pubsub';
+import { MemPubSub } from '@graphql-hive/pubsub';
 import { isUrl } from '@graphql-mesh/utils';
 import {
   defaultOptions,
@@ -133,7 +133,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         registryConfig.reporting = reporting;
       }
 
-      const pubsub = loadedConfig.pubsub || new PubSub();
+      const pubsub = loadedConfig.pubsub || new MemPubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
         ctx.log = createLoggerFromLogging(loadedConfig.logging);

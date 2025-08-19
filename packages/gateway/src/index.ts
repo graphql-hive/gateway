@@ -1,7 +1,7 @@
 export * from './cli';
 export * from '@graphql-hive/logger';
 export * from '@graphql-hive/gateway-runtime';
-export { PubSub } from '@graphql-hive/pubsub';
+export * from '@graphql-hive/pubsub';
 export * from '@graphql-mesh/plugin-jwt-auth';
 export * from '@graphql-mesh/plugin-prometheus';
 export { default as useRateLimit } from '@graphql-mesh/plugin-rate-limit';

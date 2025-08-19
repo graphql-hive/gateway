@@ -1,7 +1,7 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
-import { HivePubSub } from '@graphql-hive/pubsub';
+import type { PubSub } from '@graphql-hive/pubsub';
 import type {
   BatchDelegateOptions,
   Instrumentation as GatewayRuntimeInstrumentation,
@@ -76,7 +76,7 @@ export interface GatewayConfigContext {
   /**
    * Event bus for pub/sub.
    */
-  pubsub?: HivePubSub;
+  pubsub?: PubSub;
   /**
    * Cache Storage
    */
@@ -551,7 +551,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * For example, the fetched {@link supergraph} will be cached setting the TTL to the provided polling interval in seconds when it's behind and URL.
    */
   cache?: KeyValueCache;
-  pubsub?: HivePubSub;
+  pubsub?: PubSub;
   /**
    * Health check endpoint
    */
