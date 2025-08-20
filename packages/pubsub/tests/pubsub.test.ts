@@ -144,6 +144,9 @@ for (const PubSub of PubSubCtors) {
 
       expect(() => pubsub.publish('hello', 'world')).toThrow();
 
+      // let the events flush before checking
+      await setTimeout(100);
+
       expect(helloCb).toHaveBeenCalledTimes(1);
     });
 
