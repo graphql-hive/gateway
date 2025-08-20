@@ -26,6 +26,15 @@ for (const PubSub of PubSubCtors) {
       });
     }
 
+    /** Imitates a flush of data/operations by simply waiting, if the pubsub is async, like Redis. */
+    function flush(ms: number = 100) {
+      if (PubSub === MemPubSub) {
+        // MemPubSub is synchronous, no need to wait
+        return Promise.resolve();
+      }
+      return setTimeout(ms);
+    }
+
     async function createPubSub<Data extends TopicDataMap>(): Promise<
       IPubSub<Data>
     > {
@@ -107,7 +116,7 @@ for (const PubSub of PubSubCtors) {
         alloha.then(() => {
           throw new Error('alloha should not have resolved');
         }),
-        setTimeout(100),
+        flush(),
       ]);
     });
 
@@ -120,14 +129,14 @@ for (const PubSub of PubSubCtors) {
       await pubsub.publish('hello', 'world');
 
       // let the events flush before checking
-      await setTimeout(100);
+      await flush();
 
       await unsub();
 
       await pubsub.publish('hello', 'world');
 
       // let the events flush before checking
-      await setTimeout(100);
+      await flush();
 
       expect(helloCb).toHaveBeenCalledTimes(1);
     });
@@ -139,7 +148,7 @@ for (const PubSub of PubSubCtors) {
       await pubsub.subscribe('hello', helloCb);
 
       // let the events flush before checking
-      await setTimeout(100);
+      await flush();
 
       await pubsub.publish('hello', 'world');
 
@@ -148,7 +157,7 @@ for (const PubSub of PubSubCtors) {
       expect(() => pubsub.publish('hello', 'world')).toThrow();
 
       // let the events flush before checking
-      await setTimeout(100);
+      await flush();
 
       expect(helloCb).toHaveBeenCalledTimes(1);
     });
@@ -169,7 +178,7 @@ for (const PubSub of PubSubCtors) {
       for (;;) {
         subscribed = await Promise.race([
           received.then(() => true),
-          setTimeout(100).then(() => false),
+          flush().then(() => false),
         ]);
         if (subscribed) break;
         await pubsub.publish('hello', 'world');
