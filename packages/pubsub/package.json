@@ -39,16 +39,6 @@
         "default": "./dist/redis.js"
       }
     },
-    "./mesh": {
-      "require": {
-        "types": "./dist/mesh.d.cts",
-        "default": "./dist/mesh.cjs"
-      },
-      "import": {
-        "types": "./dist/mesh.d.ts",
-        "default": "./dist/mesh.js"
-      }
-    },
     "./package.json": "./package.json"
   },
   "files": [
