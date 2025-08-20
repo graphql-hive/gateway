@@ -138,6 +138,9 @@ for (const PubSub of PubSubCtors) {
       const helloCb = vi.fn();
       await pubsub.subscribe('hello', helloCb);
 
+      // let the events flush before checking
+      await setTimeout(100);
+
       await pubsub.publish('hello', 'world');
 
       await pubsub.dispose();
