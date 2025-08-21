@@ -1,5 +1,5 @@
 diff --git a/build/esnext/transport/http-exporter-transport.js b/build/esnext/transport/http-exporter-transport.js
-index 7977489487a2236fbd0e4c2273ef53fd3c7b93a8..93e9701d10f6aea530f38330daea87199e514452 100644
+index e63fda75feb67686bad9b692a046ebb1af2bd8a0..93e9701d10f6aea530f38330daea87199e514452 100644
 --- a/build/esnext/transport/http-exporter-transport.js
 +++ b/build/esnext/transport/http-exporter-transport.js
 @@ -20,7 +20,7 @@ class HttpExporterTransport {
@@ -21,7 +21,7 @@ index 7977489487a2236fbd0e4c2273ef53fd3c7b93a8..93e9701d10f6aea530f38330daea8719
          if (utils === null) {
              // Lazy require to ensure that http/https is not required before instrumentations can wrap it.
 -            const { sendWithHttp, createHttpAgent,
--            // eslint-disable-next-line @typescript-eslint/no-var-requires
+-            // eslint-disable-next-line @typescript-eslint/no-require-imports
 -             } = require('./http-transport-utils');
 +            const { sendWithHttp, createHttpAgent } = await import('./http-transport-utils');
              utils = this._utils = {
