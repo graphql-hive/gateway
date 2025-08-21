@@ -94,7 +94,7 @@
     "@opentelemetry/sampler-jaeger-remote": "^0.203.0",
     "@opentelemetry/sdk-logs": "^0.203.0",
     "@opentelemetry/sdk-metrics": "^2.0.1",
-    "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-base": "patch:@opentelemetry/sdk-trace-base@patch%3A@opentelemetry/sdk-trace-base@npm%253A2.0.1%23~/.yarn/patches/@opentelemetry-sdk-trace-base-npm-2.0.1-ebe4f8e34e.patch%3A%3Aversion=2.0.1&hash=212481#~/.yarn/patches/@opentelemetry-sdk-trace-base-patch-0b7dbf6a30.patch",
     "commander": "^13.1.0",
     "dotenv": "^17.2.1",
     "graphql-ws": "^6.0.6",
