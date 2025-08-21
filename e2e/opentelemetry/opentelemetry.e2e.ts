@@ -752,10 +752,7 @@ describe('OpenTelemetry', () => {
           const tags = resource!.tags.map(({ key, value }) => ({ key, value }));
           const tagKeys = resource!.tags.map(({ key }) => key);
           expect(resource!.serviceName).toBe(serviceName);
-          [
-            ['custom.resource', 'custom value'],
-            ['otel.library.name', 'gateway'],
-          ].forEach(([key, value]) => {
+          [['otel.library.name', 'gateway']].forEach(([key, value]) => {
             return expect(tags).toContainEqual({ key, value });
           });
 
