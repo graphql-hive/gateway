@@ -51,7 +51,8 @@ group "e2e_bun" {
   targets = [
     "gateway_e2e-bun",
     "gateway_e2e_openapi-javascript-wiki_bun",
-    "gateway_e2e_operation-field-permissions_bun"
+    "gateway_e2e_operation-field-permissions_bun",
+    "gateway_e2e_distributed-subscriptions-webhooks_bun"
   ]
 }
 
@@ -64,7 +65,7 @@ target "gateway_e2e" {
   context = "packages/gateway"
   dockerfile = "node_e2e.Dockerfile"
   tags = ["ghcr.io/graphql-hive/gateway:e2e"]
-  contexts = {
+
     "gateway_e2e_base": "target:gateway_e2e_base"
   }
 }
