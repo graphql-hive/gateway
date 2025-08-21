@@ -2,7 +2,7 @@ import os from 'os';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { isCI } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
 
@@ -63,7 +63,8 @@ describe('OpenTelemetry', () => {
   (['http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
     describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
       let jaeger: Container;
-      beforeAll(async () => {
+
+      beforeEach(async () => {
         jaeger = await container({
           name: `jaeger-${OTLP_EXPORTER_TYPE}`,
           image:
