@@ -78,8 +78,10 @@ export class MemPubSub<M extends TopicDataMap = TopicDataMap>
 
   public async dispose() {
     this.#disposed = true;
-    for (const stop of this.#subscribers.values().flatMap((s) => s.values())) {
-      stop();
+    for (const sub of this.#subscribers.values()) {
+      for (const stop of sub.values()) {
+        stop();
+      }
     }
     this.#subscribers.values().forEach((s) => s.clear()); // just in case
     this.#subscribers.clear();
