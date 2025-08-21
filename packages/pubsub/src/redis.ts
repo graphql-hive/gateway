@@ -150,8 +150,8 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       for (const stop of sub.values()) {
         stop();
       }
+      sub.clear(); // just in case
     }
-    this.#subscribers.values().forEach((s) => s.clear()); // just in case
     this.#subscribers.clear();
   }
 
