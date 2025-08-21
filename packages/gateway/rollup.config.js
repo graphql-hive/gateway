@@ -47,6 +47,8 @@ const deps = {
   'node_modules/@graphql-hive/gateway/opentelemetry/setup':
     'src/opentelemetry/setup.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
+  'node_modules/@graphql-hive/pubsub/index': '../pubsub/src/index.ts',
+  'node_modules/@graphql-hive/pubsub/redis': '../pubsub/src/redis.ts',
   // the hooks are dynamically registered on startup, we need to bundle them at path
   'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',
   // include envelop core for ease of usage in the config files
