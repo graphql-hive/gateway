@@ -152,6 +152,9 @@ for (const PubSub of PubSubCtors) {
 
       await pubsub.publish('hello', 'world');
 
+      // let the events flush before checking
+      await flush();
+
       await pubsub.dispose();
 
       expect(() => pubsub.publish('hello', 'world')).toThrow();
