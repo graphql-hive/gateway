@@ -131,6 +131,9 @@ for (const PubSub of PubSubCtors) {
 
       await pubsub.publish('hello', 'world');
 
+      // let the events flush before checking
+      await flush();
+
       await unsub();
 
       await pubsub.publish('hello', 'world');
