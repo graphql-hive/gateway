@@ -15,7 +15,7 @@ dependencies updates:
 - Added dependency [`@graphql-hive/core@^0.13.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.0) (to `dependencies`)
 - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
 - Added dependency [`@opentelemetry/api-logs@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.203.0) (to `dependencies`)
-- Added dependency [`@opentelemetry/auto-instrumentations-node@^0.62.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.62.0) (to `dependencies`)
+- Added dependency [`@opentelemetry/auto-instrumentations-node@^0.62.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.62.1) (to `dependencies`)
 - Added dependency [`@opentelemetry/context-async-hooks@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.0.1) (to `dependencies`)
 - Added dependency [`@opentelemetry/sdk-logs@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.203.0) (to `dependencies`)
 - Added dependency [`@opentelemetry/sdk-node@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.203.0) (to `dependencies`)
