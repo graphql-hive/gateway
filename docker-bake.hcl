@@ -42,7 +42,8 @@ group "e2e" {
   targets = [
     "gateway_e2e",
     "gateway_e2e_openapi-javascript-wiki",
-    "gateway_e2e_operation-field-permissions"
+    "gateway_e2e_operation-field-permissions",
+    "gateway_e2e_distributed-subscriptions-webhooks"
   ]
 }
 
@@ -110,6 +111,23 @@ target "gateway_e2e_operation-field-permissions_bun" {
   context = "e2e/operation-field-permissions"
   dockerfile = "gateway_bun.Dockerfile"
   tags = ["ghcr.io/graphql-hive/gateway:e2e.operation-field-permissions-bun"]
+  contexts = {
+    "gateway_e2e-bun": "target:gateway_e2e-bun"
+  }
+}
+
+target "gateway_e2e_distributed-subscriptions-webhooks" {
+  context = "e2e/distributed-subscriptions-webhooks"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.distributed-subscriptions-webhooks"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
+target "gateway_e2e_distributed-subscriptions-webhooks_bun" {
+  context = "e2e/distributed-subscriptions-webhooks"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.distributed-subscriptions-webhooks-bun"]
   contexts = {
     "gateway_e2e-bun": "target:gateway_e2e-bun"
   }

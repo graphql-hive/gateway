@@ -7,10 +7,17 @@ import Redis from 'ioredis';
  * subscriber commands (SUBSCRIBE, UNSUBSCRIBE, etc.). Meaning, it cannot execute other commands like PUBLISH.
  * To avoid this, we use two separate Redis clients: one for publishing and one for subscribing.
  */
-const pub = new Redis({ port: parseInt(process.env['REDIS_PORT']!) });
-const sub = new Redis({ port: parseInt(process.env['REDIS_PORT']!) });
+const pub = new Redis({
+  host: process.env['REDIS_HOST'],
+  port: parseInt(process.env['REDIS_PORT']!),
+});
+const sub = new Redis({
+  host: process.env['REDIS_HOST'],
+  port: parseInt(process.env['REDIS_PORT']!),
+});
 
 export const gatewayConfig = defineConfig({
+  maskedErrors: false,
   webhooks: true,
   pubsub: new RedisPubSub({ pub, sub }),
 });

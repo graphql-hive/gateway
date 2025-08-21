@@ -1,9 +1,17 @@
-import { Container, createTenv, getAvailablePort } from '@internal/e2e';
+import fs from 'fs/promises';
+import {
+  Container,
+  createTenv,
+  dockerHostName,
+  getAvailablePort,
+  handleDockerHostNameInURLOrAtPath,
+} from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 import { beforeAll, expect, it } from 'vitest';
 
-const { container, gateway, service, composeWithMesh } = createTenv(__dirname);
+const { container, gateway, service, composeWithMesh, gatewayRunner } =
+  createTenv(__dirname);
 
 let redis!: Container;
 beforeAll(async () => {
@@ -33,16 +41,25 @@ it('should receive subscription event on distributed gateway', async () => {
     services: [products],
   });
 
+  if (gatewayRunner.includes('docker')) {
+    await handleDockerHostNameInURLOrAtPath(supergraph, []);
+  }
+
+  const gwEnv = {
+    REDIS_HOST: gatewayRunner.includes('docker') ? dockerHostName : '0.0.0.0',
+    REDIS_PORT: redis.port,
+  };
+
   const mainGw = await gateway({
     port: mainGwPort,
     supergraph,
-    env: { REDIS_PORT: redis.port },
+    env: gwEnv,
   });
 
   const gws = [
     mainGw, // main
-    await gateway({ supergraph, env: { REDIS_PORT: redis.port } }), // replica 1
-    await gateway({ supergraph, env: { REDIS_PORT: redis.port } }), // replica 2
+    await gateway({ supergraph, env: gwEnv }), // replica 1
+    await gateway({ supergraph, env: gwEnv }), // replica 2
   ];
 
   const clients = gws.map((gw) =>
