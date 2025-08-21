@@ -820,7 +820,11 @@ export function createTenv(cwd: string): Tenv {
         .catch(() => false);
 
       const ctrl = new AbortController();
-      const signal = AbortSignal.any([ctrl.signal, cancelledSignal]);
+      const signal = AbortSignal.any(
+        [ctrl.signal, cancelledSignal]
+          // we filter because cancelledSignal is not present in jest
+          .filter(Boolean),
+      );
 
       if (!bakedImage) {
         // pull image if it doesnt exist and wait for finish
