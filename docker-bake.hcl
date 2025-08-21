@@ -65,7 +65,7 @@ target "gateway_e2e" {
   context = "packages/gateway"
   dockerfile = "node_e2e.Dockerfile"
   tags = ["ghcr.io/graphql-hive/gateway:e2e"]
-
+  contexts = {
     "gateway_e2e_base": "target:gateway_e2e_base"
   }
 }
