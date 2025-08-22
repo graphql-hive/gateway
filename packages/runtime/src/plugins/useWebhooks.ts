@@ -24,8 +24,8 @@ export function useWebhooks({
     See documentation: https://the-guild.dev/docs/mesh/pubsub`);
   }
   return {
-    onRequest({ request, url, endResponse, fetchAPI }) {
-      const topics = pubsub.subscribedTopics();
+    async onRequest({ request, url, endResponse, fetchAPI }) {
+      const topics = await pubsub.subscribedTopics();
       if (Array(topics).length === 0) return;
       const requestMethod = request.method.toLowerCase();
       const pathname = url.pathname;

@@ -19,8 +19,10 @@ export interface PubSub<M extends TopicDataMap = TopicDataMap> {
   ): MaybePromise<void>;
   /**
    * A distinct list of all topics that are currently subscribed to.
+   * Can be a promise to accomodate distributed systems where subscribers exist on other
+   * locations and we need to know about all of them.
    */
-  subscribedTopics(): Iterable<keyof M>;
+  subscribedTopics(): MaybePromise<Iterable<keyof M>>;
   /**
    * Subscribe and listen to a {@link topic} receiving its data.
    *
