@@ -18,10 +18,10 @@ export interface RedisPubSubConnections {
 
 export interface RedisPubSubOptions {
   /**
-   * Prefix for Redis channels to avoid conflicts
-   * @default '@graphql-hive/pubsub'
+   * Prefix for Redis channels to avoid conflicts.
+   * Intentionally no default because we don't want to accidentally share channels between different services.
    */
-  channelPrefix?: string;
+  channelPrefix: string;
 }
 
 /** In-memory {@link PubSub} implementation. */
@@ -43,9 +43,9 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
 
   #boundHandleMessage: (channel: string, message: string) => void;
 
-  constructor(redis: RedisPubSubConnections, options: RedisPubSubOptions = {}) {
+  constructor(redis: RedisPubSubConnections, options: RedisPubSubOptions) {
     this.#redis = redis;
-    this.#channelPrefix = options.channelPrefix || '@graphql-hive/pubsub';
+    this.#channelPrefix = options.channelPrefix;
     this.#subscribersSetKey = `subscribers:${this.#channelPrefix}`;
     this.#boundHandleMessage = this.#handleMessage.bind(this);
     this.#redis.sub.on('message', this.#boundHandleMessage);

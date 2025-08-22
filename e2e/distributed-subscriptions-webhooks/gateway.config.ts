@@ -19,5 +19,12 @@ const sub = new Redis({
 export const gatewayConfig = defineConfig({
   maskedErrors: false,
   webhooks: true,
-  pubsub: new RedisPubSub({ pub, sub }),
+  pubsub: new RedisPubSub(
+    { pub, sub },
+    {
+      // we make sure to use the same prefix for all gateways to share the same channels and pubsub
+      // meaning, all gateways using this channel prefix will receive and publish to the same topics
+      channelPrefix: 'my-shared-gateways',
+    },
+  ),
 });
