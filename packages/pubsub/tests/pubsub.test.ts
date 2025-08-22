@@ -1,13 +1,13 @@
 import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { crypto } from '@whatwg-node/fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import Redis from 'ioredis';
 import LeakDetector from 'jest-leak-detector';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { MemPubSub } from '../src/mem';
 import { PubSub as IPubSub, TopicDataMap } from '../src/pubsub';
-import { RedisPubSub } from '../src/redis';
+import { RedisPubSub, RedisPubSubOptions } from '../src/redis';
 
 const PubSubCtors = [MemPubSub, RedisPubSub];
 
@@ -40,9 +40,9 @@ for (const PubSub of PubSubCtors) {
         return setTimeout(ms);
       }
 
-      async function createPubSub<Data extends TopicDataMap>(): Promise<
-        IPubSub<Data>
-      > {
+      async function createPubSub<Data extends TopicDataMap>(
+        redisOpts: RedisPubSubOptions = {},
+      ): Promise<IPubSub<Data>> {
         if (PubSub === MemPubSub) {
           return new MemPubSub<Data>();
         }
@@ -56,7 +56,10 @@ for (const PubSub of PubSubCtors) {
           sub.once('error', () => {});
           // await pub.connect();
           // await sub.connect();
-          return new RedisPubSub<Data>({ pub, sub });
+          return new RedisPubSub<Data>(
+            { pub, sub },
+            { channelPrefix: crypto.randomUUID(), ...redisOpts },
+          );
         }
         throw new Error(`Unsupported PubSub implementation: ${PubSub.name}`);
       }
@@ -222,6 +225,56 @@ for (const PubSub of PubSubCtors) {
 
         await expect(cbDetector.isLeaking()).resolves.toBeFalsy(); // unsubscribed
       });
+
+      it('should list all subscribed topics', async () => {
+        await using pubsub = await createPubSub();
+
+        const noop = () => {};
+
+        await pubsub.subscribe('hello', noop);
+        await pubsub.subscribe('world', noop);
+        await pubsub.subscribe('there', noop);
+
+        const topics = await pubsub.subscribedTopics();
+        expect(Array.from(topics)).toEqual(['hello', 'world', 'there']);
+      });
+
+      it.skipIf(PubSub !== RedisPubSub)(
+        'should get subscribed topics across all pubsubs',
+        async () => {
+          const sharedChannel = crypto.randomUUID();
+          await using pubsub1 = await createPubSub({
+            channelPrefix: sharedChannel,
+          });
+          await using pubsub2 = await createPubSub({
+            channelPrefix: sharedChannel,
+          });
+
+          const noop = () => {};
+          await pubsub1.subscribe('hello1', noop);
+          await pubsub1.subscribe('world', noop); // duplicate
+          await pubsub2.subscribe('world', noop);
+          await pubsub2.subscribe('world2', noop);
+
+          await expect(pubsub1.subscribedTopics()).resolves
+            .toMatchInlineSnapshot(`
+            [
+              "hello1",
+              "world",
+              "world2",
+            ]
+          `);
+
+          await expect(pubsub2.subscribedTopics()).resolves
+            .toMatchInlineSnapshot(`
+            [
+              "world",
+              "world2",
+              "hello1",
+            ]
+          `);
+        },
+      );
     },
   );
 }
