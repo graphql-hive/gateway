@@ -1,7 +1,7 @@
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import type { MaybePromise } from '@whatwg-node/promise-helpers';
-import type { Redis } from 'ioredis';
+import type { Redis, RedisKey } from 'ioredis';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
 /**
@@ -19,7 +19,7 @@ export interface RedisPubSubConnections {
 export interface RedisPubSubOptions {
   /**
    * Prefix for Redis channels to avoid conflicts
-   * @default '@graphql-hive/pubsub:'
+   * @default '@graphql-hive/pubsub'
    */
   channelPrefix?: string;
 }
@@ -36,6 +36,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       () => void // unsubscribe function
     >
   >();
+  #subscribersSetKey: RedisKey;
 
   #redis: RedisPubSubConnections;
   #channelPrefix: string;
@@ -44,20 +45,29 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
 
   constructor(redis: RedisPubSubConnections, options: RedisPubSubOptions = {}) {
     this.#redis = redis;
-    this.#channelPrefix = options.channelPrefix || '@graphql-hive/pubsub:';
+    this.#channelPrefix = options.channelPrefix || '@graphql-hive/pubsub';
+    this.#subscribersSetKey = `subscribers:${this.#channelPrefix}`;
     this.#boundHandleMessage = this.#handleMessage.bind(this);
     this.#redis.sub.on('message', this.#boundHandleMessage);
   }
 
   #topicToChannel(topic: keyof M): string {
-    return `${this.#channelPrefix}${String(topic)}`;
+    return `${this.#channelPrefix}:${String(topic)}`;
   }
   #topicFromChannel(channel: string): string {
-    return channel.replace(this.#channelPrefix, '');
+    return channel.replace(`${this.#channelPrefix}:`, '');
   }
 
-  public subscribedTopics() {
-    return this.#subscribers.keys();
+  public async subscribedTopics() {
+    const distinctTopics = Array.from(this.#subscribers.keys());
+    for (const otherTopic of await this.#redis.pub.smembers(
+      this.#subscribersSetKey,
+    )) {
+      if (!distinctTopics.includes(otherTopic)) {
+        distinctTopics.push(otherTopic);
+      }
+    }
+    return distinctTopics;
   }
 
   public publish<Topic extends keyof M>(topic: Topic, data: M[Topic]) {
@@ -107,15 +117,23 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       this.#subscribers.set(topic, listeners);
     }
 
+    // redis args for the set to inform about subscribers count, this is used by the main gateway to know whether there are subscribers
+    const setArgs: [RedisKey, string] = [
+      this.#subscribersSetKey,
+      String(topic),
+    ];
+
     if (!listener) {
       return new Repeater<M[Topic], any, any>(async (push, stop) => {
         await this.#redis.sub.subscribe(this.#topicToChannel(topic));
+        await this.#redis.pub.sadd(...setArgs);
         listeners.set(push, stop);
         await stop;
         listeners.delete(push);
         if (listeners.size === 0) {
           this.#subscribers.delete(topic);
         }
+        await this.#redis.pub.srem(...setArgs);
         await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
       });
     }
@@ -127,20 +145,16 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       if (listeners!.size === 0) {
         this.#subscribers.delete(topic);
       }
+      await this.#redis.pub.srem(...setArgs);
       await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
     };
     listeners.set(listener, unsubscribe);
 
-    return new Promise((resolve, reject) => {
-      this.#redis.sub.subscribe(this.#topicToChannel(topic), (err) => {
-        if (err) {
-          unsubscribe();
-          reject(err);
-        } else {
-          resolve(unsubscribe);
-        }
-      });
-    });
+    return (async () => {
+      await this.#redis.sub.subscribe(this.#topicToChannel(topic));
+      await this.#redis.pub.sadd(...setArgs);
+      return unsubscribe;
+    })();
   }
 
   public async dispose() {
