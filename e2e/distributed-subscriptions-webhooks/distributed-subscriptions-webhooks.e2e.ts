@@ -163,12 +163,11 @@ it('should distribute subscription event even if main gateway is not subscribed'
     port: mainGwPort,
     supergraph,
     env: redisEnv,
-    pipeLogs: 'mainGw.out',
   });
 
   const gws = [
     // mainGw, // main, we dont want to subscribe to the main gw
-    await gateway({ supergraph, env: redisEnv, pipeLogs: 'replica1.out' }), // replica 1
+    await gateway({ supergraph, env: redisEnv }), // replica 1
     await gateway({ supergraph, env: redisEnv }), // replica 2
   ];
 
