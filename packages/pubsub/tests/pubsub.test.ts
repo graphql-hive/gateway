@@ -41,7 +41,7 @@ for (const PubSub of PubSubCtors) {
       }
 
       async function createPubSub<Data extends TopicDataMap>(
-        redisOpts: RedisPubSubOptions = {},
+        redisOpts: RedisPubSubOptions = { channelPrefix: crypto.randomUUID() },
       ): Promise<IPubSub<Data>> {
         if (PubSub === MemPubSub) {
           return new MemPubSub<Data>();
@@ -56,10 +56,7 @@ for (const PubSub of PubSubCtors) {
           sub.once('error', () => {});
           // await pub.connect();
           // await sub.connect();
-          return new RedisPubSub<Data>(
-            { pub, sub },
-            { channelPrefix: crypto.randomUUID(), ...redisOpts },
-          );
+          return new RedisPubSub<Data>({ pub, sub }, redisOpts);
         }
         throw new Error(`Unsupported PubSub implementation: ${PubSub.name}`);
       }
