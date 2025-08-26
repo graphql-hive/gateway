@@ -8,7 +8,6 @@ import { TransportContext } from '@graphql-mesh/transport-common';
 import { Response } from '@whatwg-node/fetch';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
-import { createOpenTelemetryAPI } from '../src/utils';
 
 describe('GraphOS', () => {
   describe('supergraph fetching', () => {
@@ -168,7 +167,6 @@ function createTestFetcher(
     configContext: {
       log,
       cwd: process.cwd(),
-      openTelemetry: createOpenTelemetryAPI(),
       ...configContext,
     },
     graphosOpts: {

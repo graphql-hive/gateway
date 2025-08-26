@@ -103,7 +103,7 @@ export type OpenTelemetryGatewayPluginOptions = {
    * Configure Opentelemetry `diag` API to use Gateway's logger.
    *
    * @default true
-   
+   *
    * Note: Logger configuration respects OTEL environment variables standard.
    *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
    */
@@ -232,7 +232,7 @@ export type OpenTelemetryPluginUtils = {
 };
 
 export type OpenTelemetryContextExtension = {
-  openTelemetry: {
+  openTelemetry?: {
     tracer: Tracer;
     getActiveContext: (payload?: ContextMatcher) => Context;
     getHttpContext: (request?: Request) => Context | undefined;

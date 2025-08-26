@@ -125,7 +125,6 @@ import type {
 } from './types';
 import {
   checkIfDataSatisfiesSelectionSet,
-  createOpenTelemetryAPI,
   defaultQueryText,
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
@@ -173,7 +172,6 @@ export function createGatewayRuntime<
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
-    openTelemetry: createOpenTelemetryAPI(),
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
@@ -916,6 +914,36 @@ export function createGatewayRuntime<
     | YogaPlugin<any>
     | GatewayPlugin<any>
   )[] = [
+    {
+      onRequest({ serverContext }) {
+        const { req, request, connectionParams } = serverContext;
+
+        let headers = // Maybe Node-like environment
+          req?.headers
+            ? getHeadersObj(req.headers)
+            : // Fetch environment
+              request?.headers
+              ? getHeadersObj(request.headers)
+              : // Unknown environment
+                {};
+
+        const baseContext = { ...configContext, headers };
+        if (connectionParams) {
+          const headers = {
+            ...baseContext.headers,
+            ...connectionParams,
+          };
+          baseContext.headers = headers;
+          baseContext.connectionParams = headers;
+        }
+
+        const context = contextBuilder?.(baseContext) ?? baseContext;
+
+        // we want to inject the GatewayConfigContext to the server context to
+        // have it available always through the plugin system
+        Object.assign(serverContext, context);
+      },
+    } as ServerAdapterPlugin,
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
@@ -1083,29 +1111,11 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ request, req, connectionParams, ...ctx }) {
-      let headers = // Maybe Node-like environment
-        req?.headers
-          ? getHeadersObj(req.headers)
-          : // Fetch environment
-            request?.headers
-            ? getHeadersObj(request.headers)
-            : // Unknown environment
-              {};
-
+    context({ headers, connectionParams, ...ctx }) {
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-
-      const baseContext = {
-        ...configContext,
-        // Give priority to the openTelemetry API defined by OTEL plugin
-        openTelemetry: ctx['openTelemetry'] ?? configContext.openTelemetry,
-        headers,
-        connectionParams: headers,
-      };
-
-      return contextBuilder?.(baseContext) ?? baseContext;
+      return { ...ctx, headers, connectionParams: headers };
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
