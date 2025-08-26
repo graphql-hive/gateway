@@ -915,33 +915,43 @@ export function createGatewayRuntime<
     | GatewayPlugin<any>
   )[] = [
     {
-      onRequest({ serverContext }) {
-        const { req, request, connectionParams } = serverContext;
+      onRequest({ serverContext, request }) {
+        const {
+          // @ts-expect-error might be present, or not?
+          req,
+        } = serverContext;
 
         let headers = // Maybe Node-like environment
           req?.headers
             ? getHeadersObj(req.headers)
             : // Fetch environment
+              // TODO: request should always be present
               request?.headers
               ? getHeadersObj(request.headers)
               : // Unknown environment
                 {};
 
         const baseContext = { ...configContext, headers };
-        if (connectionParams) {
-          const headers = {
-            ...baseContext.headers,
-            ...connectionParams,
-          };
-          baseContext.headers = headers;
-          baseContext.connectionParams = headers;
-        }
 
-        const context = contextBuilder?.(baseContext) ?? baseContext;
+        // NOTE: connectionParams wont ever be set in onRequest, the hook wont even be called probably
+        //       adding connectionParams to the headers is done in the context factory in yoga
+        // if (serverContext.connectionParams) {
+        //   const headers = {
+        //     ...baseContext.headers,
+        //     ...connectionParams,
+        //   };
+        //   baseContext.headers = headers;
+        //   baseContext.connectionParams = headers;
+        // }
 
-        // we want to inject the GatewayConfigContext to the server context to
-        // have it available always through the plugin system
-        Object.assign(serverContext, context);
+        return handleMaybePromise(
+          () => contextBuilder?.(baseContext) ?? baseContext,
+          (context) => {
+            // we want to inject the GatewayConfigContext to the server context to
+            // have it available always through the plugin system
+            Object.assign(serverContext, context);
+          },
+        );
       },
     } as ServerAdapterPlugin,
     defaultGatewayPlugin,
