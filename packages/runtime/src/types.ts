@@ -2,6 +2,7 @@ import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type {
+  BatchDelegateOptions,
   Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
   Transports,
@@ -675,6 +676,15 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    * @experimental
    */
   __experimental__batchExecution?: boolean;
+
+  /**
+   * Confugre the delegation batching options for all types on all subgraphs
+   *
+   * Do not use it unless you know what you are doing!
+   *
+   * @experimental
+   */
+  __experimental__batchDelegateOptions?: BatchDelegateOptions;
 
   /**
    * Subgraph error handling

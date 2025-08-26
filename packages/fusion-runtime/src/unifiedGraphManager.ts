@@ -55,6 +55,16 @@ export function ensureSchema(source: GraphQLSchema | DocumentNode | string) {
   }
   return source;
 }
+/**
+ * Configure the batch delegation options for all merged types in all subschemas.
+ */
+export interface BatchDelegateOptions {
+  /**
+   * Limits the number of items that get requested when performing batch delegation.
+   * @default Infinity
+   */
+  maxBatchSize?: number;
+}
 
 export type UnifiedGraphHandler = (
   opts: UnifiedGraphHandlerOpts,
@@ -68,6 +78,10 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
+  /**
+   * Configure the batch delegation options for all merged types in all subschemas.
+   */
+  batchDelegateOptions?: BatchDelegateOptions;
 
   logger?: Logger;
 }
@@ -104,6 +118,11 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * @default true
    */
   batch?: boolean;
+  /**
+   * Configure the batch delegation options for all merged types in all subschemas.
+   */
+  batchDelegateOptions?: BatchDelegateOptions;
+
   instrumentation?: () => Instrumentation | undefined;
 
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
@@ -309,6 +328,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationPlanHooks: this.onDelegationPlanHooks,
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
+        batchDelegateOptions: this.opts.batchDelegateOptions,
         logger: this.opts.transportContext?.logger,
       });
       const transportExecutorStack = new AsyncDisposableStack();
