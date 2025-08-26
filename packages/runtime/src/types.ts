@@ -2,7 +2,6 @@ import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { useGenericAuth } from '@envelop/generic-auth';
 import { HivePubSub } from '@graphql-hive/pubsub';
 import type {
-  BatchDelegationOptions,
   Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
   Transports,
@@ -669,13 +668,13 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   demandControl?: DemandControlPluginOptions;
 
   /**
-   * Enable/disable, or configure, batching the requests to the subgraphs
+   * Enable/disable batching the requests to the subgraphs
    *
    * Do not use it unless you know what you are doing.
    *
    * @experimental
    */
-  __experimental__batchDelegation?: boolean | BatchDelegationOptions;
+  __experimental__batchDelegation?: boolean;
 
   /**
    * Subgraph error handling

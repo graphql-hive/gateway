@@ -29,7 +29,6 @@ import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
 import {
-  BatchDelegationOptions,
   compareSchemas,
   getOnSubgraphExecute,
   getTransportEntryMapUsingFusionAndFederationDirectives,
@@ -104,7 +103,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
    * Whether to batch the subgraph executions.
    * @default true
    */
-  batch?: boolean | BatchDelegationOptions;
+  batch?: boolean;
   instrumentation?: () => Instrumentation | undefined;
 
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
@@ -123,7 +122,7 @@ export type Instrumentation = {
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 
 export class UnifiedGraphManager<TContext> implements AsyncDisposable {
-  private batch: boolean | BatchDelegationOptions;
+  private batch: boolean;
   private handleUnifiedGraph: UnifiedGraphHandler;
   private unifiedGraph?: GraphQLSchema;
   private lastLoadedUnifiedGraph?: string | GraphQLSchema | DocumentNode;
