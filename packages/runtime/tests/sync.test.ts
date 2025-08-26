@@ -51,7 +51,7 @@ it.skipIf(globalThis.Bun)(
           upstreamYoga.fetch,
         ),
       ],
-      __experimental__batchDelegation: false,
+      __experimental__batchExecution: false,
     });
     const res = gw.fetch('http://localhost:4000/graphql', {
       method: 'POST',

@@ -674,7 +674,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * @experimental
    */
-  __experimental__batchDelegation?: boolean;
+  __experimental__batchExecution?: boolean;
 
   /**
    * Subgraph error handling
