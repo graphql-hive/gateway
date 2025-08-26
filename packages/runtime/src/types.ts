@@ -678,7 +678,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   __experimental__batchExecution?: boolean;
 
   /**
-   * Confugre the delegation batching options for all types on all subgraphs
+   * Configure the delegation batching options for all types on all subgraphs
    *
    * Do not use it unless you know what you are doing!
    *
