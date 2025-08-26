@@ -180,6 +180,14 @@ export const subgraphNameByExecutionRequest = new WeakMap<
   string
 >();
 
+export interface BatchDelegationOptions {
+  /**
+   * Limits the number of items that get requested when performing batch delegation.
+   * @default Infinity
+   */
+  maxBatchSize?: number;
+}
+
 /**
  * This function creates a executor factory that uses the transport packages,
  * and wraps them with the hooks
@@ -202,7 +210,7 @@ export function getOnSubgraphExecute({
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   transportExecutorStack: AsyncDisposableStack;
   getDisposeReason?: () => GraphQLError | undefined;
-  batch?: boolean;
+  batch?: boolean | BatchDelegationOptions;
   instrumentation: () => Instrumentation | undefined;
 }) {
   const subgraphExecutorMap = new Map<string, Executor>();
@@ -270,6 +278,7 @@ export function getOnSubgraphExecute({
       executor = getBatchingExecutor(
         executionRequest.context || subgraphExecutorMap,
         executor,
+        typeof batch === 'object' ? batch : undefined,
       );
     }
     const originalExecutor = executor;
