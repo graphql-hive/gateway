@@ -232,7 +232,7 @@ export type OpenTelemetryPluginUtils = {
 };
 
 export type OpenTelemetryContextExtension = {
-  openTelemetry?: {
+  openTelemetry: {
     tracer: Tracer;
     getActiveContext: (payload?: ContextMatcher) => Context;
     getHttpContext: (request?: Request) => Context | undefined;
