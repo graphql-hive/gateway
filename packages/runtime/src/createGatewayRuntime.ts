@@ -96,6 +96,7 @@ import {
   logoSvg,
 } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
+import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -188,7 +189,9 @@ export function createGatewayRuntime<
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
-  let contextBuilder: <T>(context: T) => MaybePromise<T>;
+  const contextBuilderRef: {
+    ref: null | (<T>(context: T) => MaybePromise<T>);
+  } = { ref: null };
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
@@ -595,8 +598,7 @@ export function createGatewayRuntime<
               resolvers: additionalResolvers,
               defaultFieldResolver: defaultMergedResolver,
             });
-            contextBuilder = (base) =>
-              // @ts-expect-error - Typings are wrong in legacy Mesh
+            contextBuilderRef.ref = <T>(base: T) =>
               Object.assign(
                 // @ts-expect-error - Typings are wrong in legacy Mesh
                 base,
@@ -607,7 +609,7 @@ export function createGatewayRuntime<
                   LegacyLogger.from(configContext.log),
                   onDelegateHooks,
                 ),
-              );
+              ) as T;
             return true;
           },
         );
@@ -729,7 +731,8 @@ export function createGatewayRuntime<
       );
     };
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
-    contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
+    contextBuilderRef.ref = (base) =>
+      unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
       onDispose() {
@@ -914,46 +917,7 @@ export function createGatewayRuntime<
     | YogaPlugin<any>
     | GatewayPlugin<any>
   )[] = [
-    {
-      onRequest({ serverContext, request }) {
-        const {
-          // @ts-expect-error might be present, or not?
-          req,
-        } = serverContext;
-
-        let headers = // Maybe Node-like environment
-          req?.headers
-            ? getHeadersObj(req.headers)
-            : // Fetch environment
-              // TODO: request should always be present
-              request?.headers
-              ? getHeadersObj(request.headers)
-              : // Unknown environment
-                {};
-
-        const baseContext = { ...configContext, headers };
-
-        // NOTE: connectionParams wont ever be set in onRequest, the hook wont even be called probably
-        //       adding connectionParams to the headers is done in the context factory in yoga
-        // if (serverContext.connectionParams) {
-        //   const headers = {
-        //     ...baseContext.headers,
-        //     ...connectionParams,
-        //   };
-        //   baseContext.headers = headers;
-        //   baseContext.connectionParams = headers;
-        // }
-
-        return handleMaybePromise(
-          () => contextBuilder?.(baseContext) ?? baseContext,
-          (context) => {
-            // we want to inject the GatewayConfigContext to the server context to
-            // have it available always through the plugin system
-            Object.assign(serverContext, context);
-          },
-        );
-      },
-    } as ServerAdapterPlugin,
+    useConfigInServerContext({ configContext, contextBuilderRef }),
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
