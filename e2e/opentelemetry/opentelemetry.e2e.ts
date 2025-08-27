@@ -639,17 +639,14 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (
-            process.env['E2E_GATEWAY_RUNNER'] === 'node' ||
-            process.env['E2E_GATEWAY_RUNNER'] === 'docker'
-          ) {
+          if (gatewayRunner === 'node' || gatewayRunner === 'docker') {
             const expectedTags = [
               'process.owner',
               'host.arch',
               'os.type',
               'service.instance.id',
             ];
-            if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+            if (gatewayRunner === 'docker') {
               expectedTags.push('container.id');
             }
             expectedTags.forEach((key) => {
@@ -756,17 +753,14 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (
-            process.env['E2E_GATEWAY_RUNNER'] === 'node' ||
-            process.env['E2E_GATEWAY_RUNNER'] === 'docker'
-          ) {
+          if (gatewayRunner === 'node' || gatewayRunner === 'docker') {
             const expectedTags = [
               'process.owner',
               'host.arch',
               'os.type',
               'service.instance.id',
             ];
-            if (process.env['E2E_GATEWAY_RUNNER'] === 'docker') {
+            if (gatewayRunner === 'docker') {
               expectedTags.push('container.id');
             }
             expectedTags.forEach((key) => {
