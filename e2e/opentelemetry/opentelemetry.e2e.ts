@@ -646,7 +646,7 @@ describe('OpenTelemetry', () => {
               'os.type',
               'service.instance.id',
             ];
-            if (gatewayRunner === 'docker') {
+            if (gatewayRunner.includes('docker')) {
               expectedTags.push('container.id');
             }
             expectedTags.forEach((key) => {
@@ -760,7 +760,7 @@ describe('OpenTelemetry', () => {
               'os.type',
               'service.instance.id',
             ];
-            if (gatewayRunner === 'docker') {
+            if (gatewayRunner.includes('docker')) {
               expectedTags.push('container.id');
             }
             expectedTags.forEach((key) => {
