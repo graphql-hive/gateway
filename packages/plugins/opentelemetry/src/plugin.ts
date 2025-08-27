@@ -332,7 +332,7 @@ export function useOpenTelemetry(
     }
   }
 
-  const plugin = withState<
+  return withState<
     OpenTelemetryPlugin,
     OtelState,
     OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
@@ -943,16 +943,6 @@ export function useOpenTelemetry(
       }
     },
   }));
-
-  if (options.openTelemetry) {
-    if (options.openTelemetry.register) {
-      options.openTelemetry?.register?.(plugin);
-    } else {
-      options.log?.warn('An OpenTelemetry plugin is already registered');
-    }
-  }
-
-  return plugin;
 }
 
 function shouldTrace<Args>(
