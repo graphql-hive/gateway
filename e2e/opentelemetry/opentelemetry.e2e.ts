@@ -1,4 +1,5 @@
 import os from 'os';
+import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { isCI } from '@internal/testing';
 import { crypto, fetch } from '@whatwg-node/fetch';
