@@ -100,6 +100,7 @@ describe('OpenTelemetry', () => {
         const signal = AbortSignal.any([timeout, abort.signal]);
         while (!signal.aborted) {
           try {
+            await setTimeout(500); // wait for flush before checking
             res = await fetch(url, { signal }).then((r) => r.json());
             await checkFn(res, abort);
             return;
