@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "graphql": "^15.9.0 || ^16.9.0",
-    "pino": "^9.7.0"
+    "pino": "^9.9.0"
   },
   "dependencies": {
     "@graphql-mesh/types": "^0.104.8",
@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "graphql": "16.11.0",
-    "pino": "^9.7.0",
-    "pkgroll": "2.15.0"
+    "pino": "^9.9.0",
+    "pkgroll": "2.15.3"
   },
   "sideEffects": false
 }
