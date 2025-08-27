@@ -1,8 +1,8 @@
 import os from 'os';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
 import { isCI, isNode } from '@internal/testing';
-import { fetch } from '@whatwg-node/fetch';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { crypto, fetch } from '@whatwg-node/fetch';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
 
@@ -64,7 +64,7 @@ describe('OpenTelemetry', () => {
     describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
       let jaeger: Container;
 
-      beforeEach(async () => {
+      beforeAll(async () => {
         jaeger = await container({
           name: `jaeger-${OTLP_EXPORTER_TYPE}`,
           image:
@@ -147,7 +147,7 @@ describe('OpenTelemetry', () => {
         throw err;
       }
       it('should report telemetry metrics correctly to jaeger', async () => {
-        const serviceName = 'mesh-e2e-test-1';
+        const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
           runner,
           supergraph,
@@ -712,7 +712,7 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report telemetry metrics correctly to jaeger using cli options', async () => {
-        const serviceName = 'mesh-e2e-test-1';
+        const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
           runner,
           supergraph,
@@ -820,7 +820,7 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report parse failures correctly', async () => {
-        const serviceName = 'mesh-e2e-test-2';
+        const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
           runner,
           supergraph,
@@ -896,7 +896,7 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report validate failures correctly', async () => {
-        const serviceName = 'mesh-e2e-test-3';
+        const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
           runner,
           supergraph,
@@ -976,7 +976,7 @@ describe('OpenTelemetry', () => {
       });
 
       it('should report http failures', async () => {
-        const serviceName = 'mesh-e2e-test-4';
+        const serviceName = crypto.randomUUID();
         const { port } = await gateway({
           runner,
           supergraph,
@@ -1020,7 +1020,7 @@ describe('OpenTelemetry', () => {
 
       it('context propagation should work correctly', async () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
-        const serviceName = 'mesh-e2e-test-5';
+        const serviceName = crypto.randomUUID();
         const { execute, port } = await gateway({
           runner,
           supergraph,
