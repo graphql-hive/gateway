@@ -144,7 +144,7 @@ jobs:
       - name: Inject version
         run: yarn workspace @graphql-hive/gateway tsx scripts/inject-version ${{ fromJSON(steps.ver-gateway.outputs.result).version }}
       - name: Bake and Push
-        uses: docker/bake-action@37816e747588cb137173af99ab33873600c46ea8 # v6
+        uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # v6
         env:
           GATEWAY_TAGS: ${{ fromJSON(steps.ver-gateway.outputs.result).tags }}
         with:
