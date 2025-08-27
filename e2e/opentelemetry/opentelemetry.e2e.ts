@@ -5,18 +5,7 @@ import { crypto, fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
-
-let supergraph!: string;
-
-const JAEGER_HOSTNAME =
-  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
-    ? isCI()
-      ? '172.17.0.1'
-      : 'host.docker.internal'
-    : '0.0.0.0';
-
 const exampleSetup = createExampleSetup(__dirname);
-
 const runner = {
   docker: {
     volumes: [
@@ -28,10 +17,17 @@ const runner = {
   },
 };
 
+let supergraph!: string;
 beforeAll(async () => {
   supergraph = await exampleSetup.supergraph();
 });
 
+const JAEGER_HOSTNAME =
+  gatewayRunner === 'docker' || gatewayRunner === 'bun-docker'
+    ? isCI()
+      ? '172.17.0.1'
+      : 'host.docker.internal'
+    : '0.0.0.0';
 let jaeger!: Container;
 beforeAll(async () => {
   jaeger = await container({
