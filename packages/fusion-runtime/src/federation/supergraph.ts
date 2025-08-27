@@ -156,6 +156,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegationPlanHooks,
   onDelegationStageExecuteHooks,
   onDelegateHooks,
+  batchDelegateOptions,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
   logger,
@@ -187,6 +188,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
 
   let executableUnifiedGraph = getStitchedSchemaFromSupergraphSdl({
     supergraphSdl: getDocumentNodeFromSchema(unifiedGraph),
+    batchDelegateOptions,
     /**
      * This visits over the subgraph schema to get;
      * - Extra Type Defs and Resolvers (additionalTypeDefs & additionalResolvers)
