@@ -44,8 +44,11 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
   });
 
   // The NodeSDK only actually work in Node. For other envs, it's better to use our own configurator
-  const runner = process.env['E2E_GATEWAY_RUNNER'];
-  if (runner === 'node' || runner === 'docker') {
+  if (
+    typeof process !== 'undefined' &&
+    process.versions &&
+    process.versions.node
+  ) {
     const sdk = new NodeSDK({
       // Use spanProcessor instead of spanExporter to remove batching for test speed
       spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
