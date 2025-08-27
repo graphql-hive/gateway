@@ -38,7 +38,6 @@ import type {
   YogaServerOptions,
 } from 'graphql-yoga';
 import { GraphQLResolveInfo } from 'graphql/type';
-import { OpenTelemetryContextExtension } from '../../plugins/opentelemetry/src/plugin';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
@@ -84,7 +83,6 @@ export interface GatewayConfigContext {
 
 export interface GatewayContext
   extends GatewayConfigContext,
-    OpenTelemetryContextExtension,
     YogaInitialContext {
   /**
    * Environment agnostic HTTP headers provided with the request.
