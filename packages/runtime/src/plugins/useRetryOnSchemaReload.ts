@@ -7,7 +7,7 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { ExecutionArgs, getOperationAST, type ExecutionResult } from 'graphql';
 import { isAsyncIterable, YogaInitialContext } from 'graphql-yoga';
-import type { GatewayPlugin } from '../types';
+import type { GatewayConfigContext, GatewayPlugin } from '../types';
 
 type ExecHandler = () => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
@@ -66,7 +66,7 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
         paramsHandler({
           request,
           params,
-          context: context as YogaInitialContext,
+          context: context as YogaInitialContext & GatewayConfigContext,
         }),
       );
     },

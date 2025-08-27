@@ -31,7 +31,6 @@ import { TransportContext } from '@graphql-mesh/transport-common';
 import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
-  getHeadersObj,
   getInContextSDK,
   isDisposable,
   isUrl,
