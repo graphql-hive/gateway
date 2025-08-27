@@ -728,7 +728,8 @@ export function createGatewayRuntime<
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
       instrumentation: () => instrumentation,
-      batch: config.__experimental__batchDelegation,
+      batch: config.__experimental__batchExecution,
+      batchDelegateOptions: config.__experimental__batchDelegateOptions,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {

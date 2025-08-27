@@ -8,7 +8,6 @@
     "canvas": "^3.1.2",
     "chart.js": "^4.4.7",
     "chartjs-plugin-trendline": "^2.1.9",
-    "memlab": "^1.1.59",
     "parse-duration": "^2.0.0",
     "speedscope": "./speedscope-1.23.0-alpha.4.tgz",
     "ws": "^8.18.3"
