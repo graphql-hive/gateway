@@ -80,6 +80,12 @@ export interface GatewayConfigContext {
    * Cache Storage
    */
   cache?: KeyValueCache;
+}
+
+export interface GatewayContext
+  extends GatewayConfigContext,
+    OpenTelemetryContextExtension,
+    YogaInitialContext {
   /**
    * Environment agnostic HTTP headers provided with the request.
    */
@@ -89,10 +95,6 @@ export interface GatewayConfigContext {
    */
   connectionParams?: Record<string, string>;
 }
-
-export type GatewayContext = GatewayConfigContext &
-  OpenTelemetryContextExtension &
-  YogaInitialContext;
 
 export type GatewayPlugin<
   TPluginContext extends Record<string, any> = Record<string, any>,
