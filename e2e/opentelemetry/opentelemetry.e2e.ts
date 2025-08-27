@@ -60,7 +60,7 @@ type JaegerTraceSpan = {
 };
 
 describe('OpenTelemetry', () => {
-  (['http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
+  (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
     describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
       let jaeger: Container;
 
