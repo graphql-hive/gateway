@@ -69,6 +69,7 @@ export interface GatewayConfigContext {
   log: Logger;
   /**
    * Current working directory.
+   * Note that working directory does not exist in serverless environments and will therefore be empty.
    */
   cwd: string;
   /**
