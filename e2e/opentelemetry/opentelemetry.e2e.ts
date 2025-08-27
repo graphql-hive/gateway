@@ -1,6 +1,6 @@
 import os from 'os';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { isCI } from '@internal/testing';
+import { isCI, isNode } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
@@ -639,7 +639,7 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (gatewayRunner === 'node' || gatewayRunner === 'docker') {
+          if (isNode()) {
             const expectedTags = [
               'process.owner',
               'host.arch',
@@ -753,7 +753,7 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (gatewayRunner === 'node' || gatewayRunner === 'docker') {
+          if (isNode()) {
             const expectedTags = [
               'process.owner',
               'host.arch',
