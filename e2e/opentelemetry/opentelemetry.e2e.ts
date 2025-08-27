@@ -32,6 +32,23 @@ beforeAll(async () => {
   supergraph = await exampleSetup.supergraph();
 });
 
+let jaeger!: Container;
+beforeAll(async () => {
+  jaeger = await container({
+    name: 'jaeger',
+    image:
+      os.platform().toLowerCase() === 'win32'
+        ? 'johnnyhuy/jaeger-windows:1809'
+        : 'jaegertracing/all-in-one:1.56',
+    env: {
+      COLLECTOR_OTLP_ENABLED: 'true',
+    },
+    containerPort: 4318,
+    additionalContainerPorts: [16686, 4317],
+    healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
+  });
+});
+
 type JaegerTracesApiResponse = {
   data: Array<{
     traceID: string;
@@ -62,24 +79,6 @@ type JaegerTraceSpan = {
 describe('OpenTelemetry', () => {
   (['grpc', 'http'] as const).forEach((OTLP_EXPORTER_TYPE) => {
     describe(`exporter > ${OTLP_EXPORTER_TYPE}`, () => {
-      let jaeger: Container;
-
-      beforeAll(async () => {
-        jaeger = await container({
-          name: `jaeger-${OTLP_EXPORTER_TYPE}`,
-          image:
-            os.platform().toLowerCase() === 'win32'
-              ? 'johnnyhuy/jaeger-windows:1809'
-              : 'jaegertracing/all-in-one:1.56',
-          env: {
-            COLLECTOR_OTLP_ENABLED: 'true',
-          },
-          containerPort: 4318,
-          additionalContainerPorts: [16686, 4317],
-          healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
-        });
-      });
-
       const urls = {
         get http() {
           return `http://${JAEGER_HOSTNAME}:${jaeger.port}/v1/traces`;
