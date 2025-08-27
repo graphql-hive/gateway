@@ -204,7 +204,7 @@ export function createGatewayRuntime<
     config,
     configContext,
   );
-  let persistedDocumentsPlugin: GatewayPlugin = {};
+  let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
     config.reporting?.type !== 'hive' &&
     config.persistedDocuments &&
@@ -228,10 +228,12 @@ export function createGatewayRuntime<
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments
   ) {
-    persistedDocumentsPlugin = usePersistedOperations<GatewayContext>({
+    const plugin = usePersistedOperations<GatewayContext>({
       ...configContext,
       ...config.persistedDocuments,
     });
+    // @ts-expect-error the ServerContext does not match
+    persistedDocumentsPlugin = plugin;
   }
 
   if ('proxy' in config) {
