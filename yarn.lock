@@ -3192,7 +3192,7 @@ __metadata:
   dependencies:
     "@graphql-mesh/compose-cli": "npm:^1.4.12"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/plugin-live-query": "npm:^0.104.7"
+    "@graphql-mesh/plugin-live-query": "npm:^0.104.8"
     "@omnigraph/json-schema": "npm:^0.109.5"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.9.0"
@@ -4691,21 +4691,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/plugin-live-query@npm:^0.104.7":
-  version: 0.104.7
-  resolution: "@graphql-mesh/plugin-live-query@npm:0.104.7"
+"@graphql-mesh/plugin-live-query@npm:^0.104.8":
+  version: 0.104.8
+  resolution: "@graphql-mesh/plugin-live-query@npm:0.104.8"
   dependencies:
     "@envelop/core": "npm:^5.0.0"
     "@envelop/live-query": "npm:^9.0.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
-    "@graphql-mesh/types": "npm:^0.104.7"
-    "@graphql-mesh/utils": "npm:^0.104.7"
+    "@graphql-mesh/types": "npm:^0.104.8"
+    "@graphql-mesh/utils": "npm:^0.104.8"
     "@n1ru4l/in-memory-live-query-store": "npm:^0.10.0"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/7bd5b7eaa63e698c43dbe4ffeb4a4db3e90b95eabe8dfd96d9879385ff44688a86618353bafcd89f1caa23746460cfe416252a192a93dbe45f1599a1fe7cb248
+  checksum: 10c0/b3e916ba788b9838f99ce86b3703d4c9951ace88fc0989a25108579cc21553c0ae70edd747c075cbecb41ba3e1e8f75abf8a736f11b2ac544d5b5db74d7f4c5a
   languageName: node
   linkType: hard
 
