@@ -38,8 +38,7 @@ export type GatewayCLIConfig = (
 ) &
   ServerConfig & {
     /**
-     * Count of workers to spawn. Defaults to `os.availableParallelism()` when NODE_ENV
-     * is "production", otherwise only one (the main) worker.
+     * Count of workers to spawn.
      */
     fork?: number;
     /**
