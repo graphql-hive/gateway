@@ -8,6 +8,8 @@ export type PubSubListener<
   Topic extends keyof Data,
 > = (data: Data[Topic]) => void;
 
+// DO NOT FORGET TO UPDATE DOCUMENTATION WHEN CHANGING THE INTERFACE
+
 export interface PubSub<M extends TopicDataMap = TopicDataMap> {
   /**
    * Publish {@link data} for a {@link topic}.
