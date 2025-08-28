@@ -46,7 +46,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   constructor(redis: RedisPubSubConnections, options: RedisPubSubOptions) {
     this.#redis = redis;
     this.#channelPrefix = options.channelPrefix;
-    if (this.#channelPrefix.trim() === '') {
+    if (String(this.#channelPrefix || '').trim() === '') {
       throw new Error('RedisPubSub requires a non-empty channelPrefix');
     }
     this.#subscribersSetKey = `subscribers:${this.#channelPrefix}`;
