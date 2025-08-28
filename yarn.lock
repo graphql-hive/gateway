@@ -3016,6 +3016,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions"
+  dependencies:
+    graphql: "npm:^16.9.0"
+    graphql-sse: "npm:^2.5.3"
+    ioredis: "npm:^5.7.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
