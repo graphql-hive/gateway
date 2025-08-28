@@ -2,11 +2,6 @@
   "name": "@e2e/distributed-subscriptions-webhooks",
   "private": true,
   "dependencies": {
-    "@apollo/server": "^4.12.2",
-    "@apollo/subgraph": "^2.11.2",
-    "@as-integrations/express5": "^1.1.2",
-    "@repeaterjs/repeater": "^3.0.6",
-    "express": "^5.1.0",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "ioredis": "^5.7.0"
