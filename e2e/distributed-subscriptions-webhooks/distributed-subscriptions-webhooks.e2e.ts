@@ -99,7 +99,7 @@ it('should receive subscription event on distributed gateway', async () => {
       }
     })(),
     // or the subscription events go through
-    subs.map((sub) =>
+    ...subs.map((sub) =>
       (async () => {
         for await (const msg of sub) {
           msgs.push(msg);
@@ -206,7 +206,7 @@ it('should distribute subscription event even if main gateway is not subscribed'
       }
     })(),
     // or the subscription events go through
-    subs.map((sub) =>
+    ...subs.map((sub) =>
       (async () => {
         for await (const msg of sub) {
           msgs.push(msg);
