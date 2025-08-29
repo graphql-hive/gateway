@@ -25,6 +25,8 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    exclude-paths:
+      - 'examples' # the examples are auto-generated from the e2es, whose packages we do auto-update
     groups:
       all-minor-patch:
         patterns:
