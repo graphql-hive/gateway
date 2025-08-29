@@ -132,6 +132,13 @@ export interface HTTPExecutorOptions {
   getDisposeReason?(): Error | undefined;
 }
 
+type InflightRequestId = string;
+
+const inflightRequests = new Map<
+  InflightRequestId,
+  MaybePromise<ExecutionResult>
+>();
+
 export type HeadersConfig = Record<string, string>;
 
 export function buildHTTPExecutor(
@@ -319,8 +326,13 @@ export function buildHTTPExecutor(
 
     return handleMaybePromise(
       () => serializeFn(),
-      (body: SerializedExecutionRequest) =>
-        handleMaybePromise(
+      (body: SerializedExecutionRequest) => {
+        const inflightRequestId = `${method}:${endpoint}:${JSON.stringify(body)}:${JSON.stringify(headers)}`;
+        const inflightRequestRes = inflightRequests.get(inflightRequestId);
+        if (inflightRequestRes) {
+          return inflightRequestRes;
+        }
+        const promise = handleMaybePromise(
           () => {
             switch (method) {
               case 'GET': {
@@ -491,7 +503,15 @@ export function buildHTTPExecutor(
               handleError,
             ),
           handleError,
-        ),
+        );
+        inflightRequests.set(inflightRequestId, promise);
+        handleMaybePromise(
+          () => promise,
+          () => inflightRequests.delete(inflightRequestId),
+          () => inflightRequests.delete(inflightRequestId),
+        );
+        return promise;
+      },
       handleError,
     );
   };
