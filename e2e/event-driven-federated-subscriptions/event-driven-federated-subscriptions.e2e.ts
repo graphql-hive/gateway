@@ -90,9 +90,7 @@ it('should receive subscription published event on all distributed gateways', as
       await pub.publish(
         'my-shared-gateways:new_product',
         JSON.stringify({
-          id: 'ip10pro',
-          name: 'iPhone 10 Pro',
-          price: 110.99,
+          id: '60',
         }),
       );
     })(),
@@ -112,24 +110,24 @@ it('should receive subscription published event on all distributed gateways', as
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },

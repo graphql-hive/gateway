@@ -114,16 +114,16 @@ it('should receive subscription event on distributed gateway', async () => {
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
@@ -221,16 +221,16 @@ it('should distribute subscription event even if main gateway is not subscribed'
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
