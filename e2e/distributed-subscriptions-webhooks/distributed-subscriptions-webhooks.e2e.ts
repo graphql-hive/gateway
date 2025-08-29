@@ -130,8 +130,8 @@ it('should receive subscription event on distributed gateway', async () => {
       {
         "data": {
           "newProduct": {
-            "name": "iPhone 10 Pro",
-            "price": 110.99,
+            "name": "Roomba X60",
+            "price": 100,
           },
         },
       },
