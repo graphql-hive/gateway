@@ -101,7 +101,7 @@
     "@types/adm-zip": "^0.5.5",
     "@types/bun": "1.2.21",
     "@types/ws": "^8.5.12",
-    "@whatwg-node/fetch": "^0.10.9",
+    "@whatwg-node/fetch": "^0.10.10",
     "adm-zip": "^0.5.15",
     "bun": "^1.2.21",
     "graphql": "^16.9.0",
