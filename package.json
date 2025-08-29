@@ -64,7 +64,7 @@
   },
   "resolutions": {
     "@graphql-mesh/types": "0.104.8",
-    "@graphql-mesh/utils": "0.104.8",
+    "@graphql-mesh/utils": "0.104.10-alpha-20250829183455-c197ac2de84ef18b929e5f28392798c6e3a4d4d9",
     "@graphql-tools/delegate": "workspace:^",
     "@graphql-tools/utils": "10.9.0-alpha-20250710200000-fde1c74a0c2fa4f651cbeed5b2091aeda7afb162",
     "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",

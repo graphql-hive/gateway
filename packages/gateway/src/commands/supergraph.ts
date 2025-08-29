@@ -10,7 +10,7 @@ import {
   type GatewayHiveCDNOptions,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
-import { PubSub } from '@graphql-hive/pubsub';
+import { MemPubSub } from '@graphql-hive/pubsub';
 import { isUrl, registerTerminateHandler } from '@graphql-mesh/utils';
 import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
@@ -191,7 +191,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         registryConfig.reporting = reporting;
       }
 
-      const pubsub = loadedConfig.pubsub || new PubSub();
+      const pubsub = loadedConfig.pubsub || new MemPubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
         ctx.log = createLoggerFromLogging(loadedConfig.logging);

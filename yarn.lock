@@ -3006,6 +3006,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/distributed-subscriptions-webhooks@workspace:e2e/distributed-subscriptions-webhooks":
+  version: 0.0.0-use.local
+  resolution: "@e2e/distributed-subscriptions-webhooks@workspace:e2e/distributed-subscriptions-webhooks"
+  dependencies:
+    graphql: "npm:^16.9.0"
+    graphql-sse: "npm:^2.5.3"
+    ioredis: "npm:^5.7.0"
+  languageName: unknown
+  linkType: soft
+
+"@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions"
+  dependencies:
+    graphql: "npm:^16.9.0"
+    graphql-sse: "npm:^2.5.3"
+    ioredis: "npm:^5.7.0"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
@@ -4370,7 +4390,14 @@ __metadata:
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/promise-helpers": "npm:^1.3.0"
+    ioredis: "npm:^5.7.0"
     pkgroll: "npm:2.15.0"
+  peerDependencies:
+    ioredis: ^5
+  peerDependenciesMeta:
+    ioredis:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -5020,14 +5047,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/utils@npm:0.104.8":
-  version: 0.104.8
-  resolution: "@graphql-mesh/utils@npm:0.104.8"
+"@graphql-mesh/utils@npm:0.104.10-alpha-20250829183455-c197ac2de84ef18b929e5f28392798c6e3a4d4d9":
+  version: 0.104.10-alpha-20250829183455-c197ac2de84ef18b929e5f28392798c6e3a4d4d9
+  resolution: "@graphql-mesh/utils@npm:0.104.10-alpha-20250829183455-c197ac2de84ef18b929e5f28392798c6e3a4d4d9"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:^0.5.8"
-    "@graphql-mesh/types": "npm:^0.104.8"
+    "@graphql-mesh/types": "npm:0.104.10-alpha-20250829183455-c197ac2de84ef18b929e5f28392798c6e3a4d4d9"
     "@graphql-tools/batch-delegate": "npm:^9.0.16"
     "@graphql-tools/delegate": "npm:^10.0.28"
     "@graphql-tools/utils": "npm:^10.8.0"
@@ -5043,7 +5070,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/57e59ae4666f771f70d779625a1cfaf73e6e609fff186f250663612bbb7416d7ff6a7aa63bfdb7146fa0a2ad3de2d152acd1b4748e3bed2f8245e8abc265d25d
+  checksum: 10c0/32143be1ed5989c4defef4951cc38493191b10ddd92713aae9411e4560ebf29042137a92d5411097816f861c672a5db1436045178355266859864a1193186aa2
   languageName: node
   linkType: hard
 
@@ -6114,6 +6141,13 @@ __metadata:
   version: 1.2.0
   resolution: "@ioredis/commands@npm:1.2.0"
   checksum: 10c0/a5d3c29dd84d8a28b7c67a441ac1715cbd7337a7b88649c0f17c345d89aa218578d2b360760017c48149ef8a70f44b051af9ac0921a0622c2b479614c4f65b36
+  languageName: node
+  linkType: hard
+
+"@ioredis/commands@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@ioredis/commands@npm:1.3.0"
+  checksum: 10c0/5ab990a8f69c20daf3d7d64307aa9f13ee727c92ab4c7664a6943bb500227667a0c368892e9c4913f06416377db47dba78d58627fe723da476d25f2c04a6d5aa
   languageName: node
   linkType: hard
 
@@ -15788,6 +15822,23 @@ __metadata:
     redis-parser: "npm:^3.0.0"
     standard-as-callback: "npm:^2.1.0"
   checksum: 10c0/26ae49cf448e807e454a9bdea5a9dfdcf669e2fdbf2df341900a0fb693c5662fea7e39db3227ce8972d1bda0ba7da9b7410e5163b12d8878a579548d847220ac
+  languageName: node
+  linkType: hard
+
+"ioredis@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "ioredis@npm:5.7.0"
+  dependencies:
+    "@ioredis/commands": "npm:^1.3.0"
+    cluster-key-slot: "npm:^1.1.0"
+    debug: "npm:^4.3.4"
+    denque: "npm:^2.1.0"
+    lodash.defaults: "npm:^4.2.0"
+    lodash.isarguments: "npm:^3.1.0"
+    redis-errors: "npm:^1.2.0"
+    redis-parser: "npm:^3.0.0"
+    standard-as-callback: "npm:^2.1.0"
+  checksum: 10c0/c63c521a953bfaf29f8c8871b122af38e439328336fa238f83bfbb066556f64daf69ed7a4ec01fc7b9ee1f0862059dd188b8c684150125d362d36642399b30ee
   languageName: node
   linkType: hard
 

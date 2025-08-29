@@ -1,8 +1,10 @@
 .yarn/*
+yarn.lock
 !.yarn/custom-plugins
 Dockerfile
 packages/runtime/src/landing-page.generated.ts
 __generated__
+__snapshots__
 .changeset/*
 !.changeset/README.md
 !.changeset/config.json
@@ -15,3 +17,5 @@ __generated__
 /e2e/load-on-init/malformed.graphql
 CHANGELOG.md
 /internal/heapsnapshot/dist/
+*.tar.gz
+*.tgz

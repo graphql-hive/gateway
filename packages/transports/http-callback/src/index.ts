@@ -241,7 +241,7 @@ export default {
         },
       );
       executionRequest.context?.waitUntil?.(subFetchCall$);
-      return new Repeater<ExecutionResult>((push, stop) => {
+      return new Repeater<ExecutionResult>(async (push, stop) => {
         if (signal) {
           if (signal.aborted) {
             stop(signal?.reason);
@@ -259,7 +259,7 @@ export default {
         stopSubscription = stop;
         stopFnSet.add(stop);
         log.debug(`Listening to ${subscriptionCallbackPath}`);
-        const subId = pubsub.subscribe(
+        const unsubscribe = await pubsub.subscribe(
           `webhook:post:${subscriptionCallbackPath}`,
           (message: HTTPCallbackMessage) => {
             log.debug(
@@ -300,7 +300,7 @@ export default {
           },
         );
         stop.finally(() => {
-          pubsub.unsubscribe(subId);
+          unsubscribe();
           clearTimeout(heartbeats.get(subscriptionId));
           heartbeats.delete(subscriptionId);
           stopFnSet.delete(stop);

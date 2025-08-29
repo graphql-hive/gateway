@@ -1,11 +1,11 @@
 import type { Logger } from '@graphql-hive/logger';
-import { HivePubSub } from '@graphql-hive/pubsub';
+import type { PubSub } from '@graphql-hive/pubsub';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 
 export interface GatewayWebhooksPluginOptions {
   log: Logger;
-  pubsub?: HivePubSub;
+  pubsub?: PubSub;
 }
 
 export function useWebhooks({
@@ -25,38 +25,44 @@ export function useWebhooks({
   }
   return {
     onRequest({ request, url, endResponse, fetchAPI }) {
-      const eventNames = pubsub.getEventNames();
-      if ((eventNames as string[]).length === 0) {
-        return;
-      }
-      const requestMethod = request.method.toLowerCase();
-      const pathname = url.pathname;
-      const expectedEventName = `webhook:${requestMethod}:${pathname}`;
-      for (const eventName of eventNames) {
-        if (eventName === expectedEventName) {
-          log.debug({ pathname }, 'Received webhook request');
-          return handleMaybePromise(
-            () => request.text(),
-            function handleWebhookPayload(webhookPayload) {
-              log.debug(
-                { pathname, payload: webhookPayload },
-                'Emitted webhook request',
+      return handleMaybePromise(
+        () => pubsub.subscribedTopics(),
+        (topics) => {
+          if (Array(topics).length === 0) return;
+          const requestMethod = request.method.toLowerCase();
+          const pathname = url.pathname;
+          const expectedEventName = `webhook:${requestMethod}:${pathname}`;
+          for (const eventName of topics) {
+            if (eventName === expectedEventName) {
+              log.debug({ pathname }, 'Received webhook request');
+              return handleMaybePromise(
+                () => request.text(),
+                function handleWebhookPayload(webhookPayload) {
+                  log.debug(
+                    { pathname, payload: webhookPayload },
+                    'Emitted webhook request',
+                  );
+                  webhookPayload =
+                    request.headers.get('content-type') === 'application/json'
+                      ? JSON.parse(webhookPayload)
+                      : webhookPayload;
+                  return handleMaybePromise(
+                    () => pubsub.publish(eventName, webhookPayload),
+                    () => {
+                      endResponse(
+                        new fetchAPI.Response(null, {
+                          status: 204,
+                          statusText: 'OK',
+                        }),
+                      );
+                    },
+                  );
+                },
               );
-              webhookPayload =
-                request.headers.get('content-type') === 'application/json'
-                  ? JSON.parse(webhookPayload)
-                  : webhookPayload;
-              pubsub.publish(eventName, webhookPayload);
-              return endResponse(
-                new fetchAPI.Response(null, {
-                  status: 204,
-                  statusText: 'OK',
-                }),
-              );
-            },
-          );
-        }
-      }
+            }
+          }
+        },
+      );
     },
   };
 }
