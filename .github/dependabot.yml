@@ -25,6 +25,8 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    exclude-paths:
+      - 'examples'
     groups:
       all-minor-patch:
         patterns:
