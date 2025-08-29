@@ -48,9 +48,7 @@ createServer(
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
-                  id: 'ip10pro',
-                  name: 'iPhone 10 Pro',
-                  price: 110.99,
+                  id: '60',
                 }),
               },
             );
