@@ -39,6 +39,7 @@ describe('bare requests', () => {
         Query: {
           delegate: (_root, args, _context, info) => {
             const request = createRequest({
+              subgraphName: 'inner',
               fieldNodes: [
                 {
                   kind: Kind.FIELD,
@@ -139,6 +140,7 @@ describe('bare requests', () => {
         Query: {
           delegate: (_root, args, _context, info) => {
             const request = createRequest({
+              subgraphName: 'inner',
               fieldNodes: [
                 {
                   kind: Kind.FIELD,
@@ -220,6 +222,7 @@ describe('bare requests', () => {
         Query: {
           delegate: (_source, _args, _context, info) => {
             const request = createRequest({
+              subgraphName: 'inner',
               fieldNodes: [
                 {
                   kind: Kind.FIELD,

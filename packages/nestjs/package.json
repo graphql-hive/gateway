@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@graphql-hive/gateway": "workspace:^",
+    "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/types": "^0.104.8",
     "@graphql-tools/utils": "^10.9.1",
     "@whatwg-node/promise-helpers": "^1.3.0",

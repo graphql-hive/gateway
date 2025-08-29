@@ -1,5 +1,4 @@
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import type { OnFetchHookDonePayload } from '@graphql-mesh/types';
 import { getSupportedEncodings, useContentEncoding } from '@whatwg-node/server';
 import {
   createSchema,
@@ -8,7 +7,11 @@ import {
   type YogaInitialContext,
 } from 'graphql-yoga';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createGatewayRuntime, useCustomFetch } from '../src/index';
+import {
+  createGatewayRuntime,
+  OnFetchHookDonePayload,
+  useCustomFetch,
+} from '../src/index';
 
 describe('contentEncoding', () => {
   const fooResolver = vi.fn((_, __, _context: YogaInitialContext) => {

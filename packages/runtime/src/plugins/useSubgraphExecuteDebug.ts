@@ -1,24 +1,19 @@
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
-import type { Logger } from '@graphql-mesh/types';
-import { FetchAPI, isAsyncIterable } from 'graphql-yoga';
+import { isAsyncIterable } from 'graphql-yoga';
 import type { GatewayPlugin } from '../types';
 
 export function useSubgraphExecuteDebug<
   TContext extends Record<string, any>,
->(opts: { logger: Logger }): GatewayPlugin<TContext> {
-  let fetchAPI: FetchAPI;
+>(): GatewayPlugin<TContext> {
   return {
-    onYogaInit({ yoga }) {
-      fetchAPI = yoga.fetchAPI;
-    },
-    onSubgraphExecute({ executionRequest, logger = opts.logger }) {
-      const subgraphExecuteHookLogger = logger.child({
-        subgraphExecuteId: fetchAPI.crypto.randomUUID(),
-      });
-      const subgraphExecuteStartLogger = subgraphExecuteHookLogger.child(
-        'subgraph-execute-start',
+    onSubgraphExecute({ executionRequest }) {
+      let log = executionRequest.context?.log.child(
+        '[useSubgraphExecuteDebug] ',
       );
-      subgraphExecuteStartLogger.debug(() => {
+      if (!log) {
+        throw new Error('Logger is not available in the execution context');
+      }
+      log.debug(() => {
         const logData: Record<string, any> = {};
         if (executionRequest.document) {
           logData['query'] = defaultPrintFn(executionRequest.document);
@@ -30,28 +25,25 @@ export function useSubgraphExecuteDebug<
           logData['variables'] = executionRequest.variables;
         }
         return logData;
-      });
+      }, 'Start');
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
-        const subgraphExecuteEndLogger = subgraphExecuteHookLogger.child(
-          'subgraph-execute-end',
-        );
         if (isAsyncIterable(result)) {
           return {
             onNext({ result }) {
-              const subgraphExecuteNextLogger = subgraphExecuteHookLogger.child(
-                'subgraph-execute-next',
-              );
-              subgraphExecuteNextLogger.debug(result);
+              log.debug(result, 'Next');
             },
             onEnd() {
-              subgraphExecuteEndLogger.debug(() => ({
-                duration: performance.now() - start,
-              }));
+              log.debug(
+                () => ({
+                  duration: performance.now() - start,
+                }),
+                'End',
+              );
             },
           };
         }
-        subgraphExecuteEndLogger.debug(result);
+        log.debug(result, 'Done');
         return void 0;
       };
     },
