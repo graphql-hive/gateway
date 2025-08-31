@@ -171,7 +171,9 @@ export function useHmacSignatureValidation(
 
   return {
     onParams({ params, fetchAPI, context }) {
-      const log = context.log.child('[useHmacSignatureValidation] ');
+      // log will be missing from context if executing from Yoga (Yoga does not update serverContext)
+      let log = context?.log ?? options.log;
+      log = log.child('[useHmacSignatureValidation] ');
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 
