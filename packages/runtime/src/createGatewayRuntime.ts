@@ -1077,7 +1077,7 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: log,
+    logging: LegacyLogger.from(log),
     plugins: [
       ...basePlugins,
       ...extraPlugins,
