@@ -47,7 +47,8 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
   if (
     typeof process !== 'undefined' &&
     process.versions &&
-    process.versions.node
+    process.versions.node &&
+    typeof Bun === 'undefined' // Bun also has process.versions.node
   ) {
     const sdk = new NodeSDK({
       // Use spanProcessor instead of spanExporter to remove batching for test speed
