@@ -171,7 +171,7 @@ export function useHmacSignatureValidation(
 
   return {
     onParams({ params, fetchAPI, context }) {
-      const log = context.log;
+      const log = context.log.child('[useHmacSignatureValidation] ');
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 
