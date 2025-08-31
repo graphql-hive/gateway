@@ -1,5 +1,4 @@
 import type { Logger } from '@graphql-hive/logger';
-import { loggerForRequest } from '@graphql-hive/logger/request';
 import type { MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -11,11 +10,9 @@ import type { GatewayConfigContext, GatewayPlugin } from '../types';
 
 type ExecHandler = () => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
-export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
-  log: rootLog,
-}: {
-  log: Logger;
-}): GatewayPlugin<TContext> {
+export function useRetryOnSchemaReload<
+  TContext extends Record<string, any>,
+>(): GatewayPlugin<TContext> {
   const execHandlerByContext = new WeakMap<{}, ExecHandler>();
   function handleOnExecute(args: ExecutionArgs) {
     if (args.contextValue) {
@@ -26,14 +23,12 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
       }
     }
   }
-  const logForRequest = new WeakMap<Request, Logger>();
   function handleExecutionResult({
     context,
     result,
     setResult,
-    request,
   }: {
-    context: {};
+    context: { log: Logger };
     result?: ExecutionResult;
     setResult: (result: MaybeAsyncIterable<ExecutionResult>) => void;
     // request wont be available over websockets
@@ -44,13 +39,7 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
       execHandler &&
       result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
     ) {
-      const log = request
-        ? loggerForRequest(
-            logForRequest.get(request)!, // must exist at this point
-            request,
-          )
-        : rootLog;
-      log.info(
+      context.log.info(
         '[useRetryOnSchemaReload] The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
       );
       if (execHandler) {
@@ -70,20 +59,10 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
         }),
       );
     },
-    onExecute({ args, context }) {
-      // we set the logger here because it most likely contains important attributes (like the request-id)
-      if (context.request) {
-        // the request wont be available over websockets
-        logForRequest.set(context.request, context.log);
-      }
+    onExecute({ args }) {
       handleOnExecute(args);
     },
-    onSubscribe({ args, context }) {
-      // we set the logger here because it most likely contains important attributes (like the request-id)
-      if (context.request) {
-        // the request wont be available over websockets
-        logForRequest.set(context.request, context.log);
-      }
+    onSubscribe({ args }) {
       handleOnExecute(args);
     },
     onExecutionResult({ request, context, result, setResult }) {

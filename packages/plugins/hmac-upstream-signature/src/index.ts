@@ -1,6 +1,5 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-hive/logger';
-import { loggerForRequest } from '@graphql-hive/logger/request';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
@@ -8,11 +7,7 @@ import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type {
-  FetchAPI,
-  GraphQLParams,
-  Plugin as YogaPlugin,
-} from 'graphql-yoga';
+import type { FetchAPI, GraphQLParams } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
 
 export type HMACUpstreamSignatureOptions = {
@@ -162,7 +157,7 @@ export type HMACUpstreamSignatureValidationOptions = {
 
 export function useHmacSignatureValidation(
   options: HMACUpstreamSignatureValidationOptions,
-): YogaPlugin {
+): GatewayPlugin {
   if (!options.secret) {
     throw new Error(
       'Property "secret" is required for useHmacSignatureValidation plugin',
@@ -175,10 +170,8 @@ export function useHmacSignatureValidation(
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
 
   return {
-    onParams({ params, fetchAPI, request }) {
-      const log = loggerForRequest(options.log, request).child(
-        '[useHmacSignatureValidation] ',
-      );
+    onParams({ params, fetchAPI, context }) {
+      const log = context.log;
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 

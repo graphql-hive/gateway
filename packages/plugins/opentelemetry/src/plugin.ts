@@ -6,10 +6,6 @@ import {
   Logger,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import {
-  loggerForRequest,
-  requestIdByRequest,
-} from '@graphql-hive/logger/request';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import {
@@ -706,26 +702,19 @@ export function useOpenTelemetry(
       );
     },
 
-    onRequest({ state, request }) {
-      try {
-        const requestId = requestIdByRequest.get(request);
-        if (requestId) {
-          if (options.log) {
-            loggerForRequest(options.log.child({ requestId }), request);
-          }
-
-          // When running in a runtime without a context manager, we have to keep track of the
-          // span correlated to a log manually. For now, we just link all logs for a request to
-          // the HTTP root span
-          if (!useContextManager) {
-            otelCtxForRequestId.set(requestId, getContext(state));
-          }
+    onRequest({ state, serverContext }) {
+      // When running in a runtime without a context manager, we have to keep track of the
+      // span correlated to a log manually. For now, we just link all logs for a request to
+      // the HTTP root span
+      if (!useContextManager) {
+        const requestId =
+          serverContext.log.attrs?.[
+            // @ts-expect-error even if the attrs is an array this will work
+            'requestId'
+          ];
+        if (typeof requestId === 'string') {
+          otelCtxForRequestId.set(requestId, getContext(state));
         }
-      } catch (error) {
-        pluginLogger!.error(
-          { error },
-          'Error while setting up logger for request',
-        );
       }
     },
 
@@ -770,20 +759,20 @@ export function useOpenTelemetry(
           }
         : undefined,
 
-    onResponse({ response, request, state }) {
-      try {
-        state.forRequest.otel &&
-          setResponseAttributes(state.forRequest.otel.root, response);
+    onResponse({ response, state, serverContext }) {
+      state.forRequest.otel &&
+        setResponseAttributes(state.forRequest.otel.root, response);
 
-        // Clean up Logging context tracking for runtimes without context manager
-        if (!useContextManager) {
-          const requestId = requestIdByRequest.get(request);
-          if (requestId) {
-            otelCtxForRequestId.delete(requestId);
-          }
+      // Clean up Logging context tracking for runtimes without context manager
+      if (!useContextManager) {
+        const requestId =
+          serverContext.log.attrs?.[
+            // @ts-expect-error even if the attrs is an array this will work
+            'requestId'
+          ];
+        if (typeof requestId === 'string') {
+          otelCtxForRequestId.delete(requestId);
         }
-      } catch (error) {
-        pluginLogger!.error({ error }, 'Failed to end http span');
       }
     },
 

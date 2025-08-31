@@ -1,5 +1,4 @@
 import { Logger } from '@graphql-hive/logger';
-import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
   hiveTracingSetup,
   HiveTracingSpanProcessor,
@@ -1035,20 +1034,16 @@ describe('useOpenTelemetry', () => {
               ],
             }),
           },
-          plugins: (ctx) => {
+          plugins: () => {
             const createHook = (name: string): any => ({
               [name]: (payload: any) => {
-                let log = ctx.log;
-                const context =
-                  payload.context ?? payload.executionRequest?.context;
-                const request = payload.request ?? context?.request;
-                if (request) {
-                  log = loggerForRequest(log, request) ?? log;
-                }
-                if (payload.context) {
-                  log = payload.context.log ?? log;
-                }
-
+                const log =
+                  // logger for the subgraph execution request
+                  payload.executionRequest?.context.log ??
+                  // logger before/outside graphql operation
+                  payload.serverContext?.log ??
+                  // graphql operation logger
+                  payload.context?.log;
                 const phase =
                   (name as string).charAt(2).toLowerCase() +
                   (name as string).substring(3);

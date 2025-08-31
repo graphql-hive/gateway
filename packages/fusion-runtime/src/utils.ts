@@ -1,6 +1,5 @@
 import { getInstrumented } from '@envelop/instrumentation';
 import { LegacyLogger, Logger } from '@graphql-hive/logger';
-import { loggerForRequest } from '@graphql-hive/logger/request';
 import {
   defaultPrintFn,
   type Transport,
@@ -205,12 +204,7 @@ export function getOnSubgraphExecute({
     // If the executor is not initialized yet, initialize it
     if (executor == null) {
       if (transportContext) {
-        let log = executionRequest.context?.request
-          ? loggerForRequest(
-              transportContext.log,
-              executionRequest.context.request,
-            )
-          : transportContext.log;
+        let log = executionRequest.context?.log || transportContext.log;
         if (subgraphName) {
           log = log.child({ subgraph: subgraphName });
         }

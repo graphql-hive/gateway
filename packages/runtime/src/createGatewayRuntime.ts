@@ -924,7 +924,7 @@ export function createGatewayRuntime<
     readinessCheckPlugin,
     persistedDocumentsPlugin,
     reportingWithMaybePersistedDocumentsPlugin,
-    useRetryOnSchemaReload({ log }),
+    useRetryOnSchemaReload(),
   ];
 
   if (config.subgraphErrors !== false) {
