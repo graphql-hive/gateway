@@ -222,7 +222,7 @@ export type ContextMatcher = {
 };
 
 export type OpenTelemetryPluginUtils = {
-  tracer?: Tracer;
+  tracer: Tracer;
   getActiveContext: (payload: ContextMatcher) => Context;
   getHttpContext: (request: Request) => Context | undefined;
   getOperationContext: (context: any) => Context | undefined;
