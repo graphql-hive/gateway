@@ -708,7 +708,8 @@ export function useOpenTelemetry(
       // the HTTP root span
       if (!useContextManager) {
         const requestId =
-          serverContext.log.attrs?.[
+          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+          serverContext.log?.attrs?.[
             // @ts-expect-error even if the attrs is an array this will work
             'requestId'
           ];
@@ -766,7 +767,8 @@ export function useOpenTelemetry(
       // Clean up Logging context tracking for runtimes without context manager
       if (!useContextManager) {
         const requestId =
-          serverContext.log.attrs?.[
+          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+          serverContext.log?.attrs?.[
             // @ts-expect-error even if the attrs is an array this will work
             'requestId'
           ];
