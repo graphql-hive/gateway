@@ -480,10 +480,10 @@ describe('useOpenTelemetry', () => {
           };
 
           await using gateway = await buildTestGatewayForCtx({
-            plugins: ({ openTelemetry }) => {
+            plugins: (_, otelPlugin) => {
               const createSpan = (name: string) => (matcher: ContextMatcher) =>
-                openTelemetry.tracer
-                  ?.startSpan(name, {}, openTelemetry.getActiveContext(matcher))
+                otelPlugin.tracer
+                  ?.startSpan(name, {}, otelPlugin.getActiveContext(matcher))
                   .end();
 
               return [
@@ -790,9 +790,9 @@ describe('useOpenTelemetry', () => {
       };
 
       await using gateway = await buildTestGateway({
-        plugins: ({ openTelemetry }) => {
+        plugins: (_, otelPlugin) => {
           const createSpan = (name: string) => () =>
-            openTelemetry.tracer?.startSpan(name).end();
+            otelPlugin.tracer.startSpan(name).end();
 
           return [
             {

@@ -28,7 +28,10 @@ import {
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
-import type { OpenTelemetryGatewayPluginOptions } from '../src/plugin';
+import type {
+  OpenTelemetryGatewayPluginOptions,
+  OpenTelemetryPlugin,
+} from '../src/plugin';
 
 export async function buildTestGateway(
   options: {
@@ -36,6 +39,7 @@ export async function buildTestGateway(
     options?: OpenTelemetryGatewayPluginOptions;
     plugins?: (
       ctx: GatewayConfigContext,
+      otelPlugin: OpenTelemetryPlugin,
     ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
     fetch?: (upstreamFetch: MeshFetch) => MeshFetch;
   } = {},
@@ -81,7 +85,7 @@ export async function buildTestGateway(
             options.fetch ? options.fetch(upstream.fetch) : upstream.fetch,
           ),
           otelPlugin,
-          ...(options.plugins?.(ctx) ?? []),
+          ...(options.plugins?.(ctx, otelPlugin) ?? []),
         ];
       },
       logging: false,
