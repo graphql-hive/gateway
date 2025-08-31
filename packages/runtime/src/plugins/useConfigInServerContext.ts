@@ -1,16 +1,12 @@
 import { getHeadersObj } from '@graphql-mesh/utils';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayConfigContext, GatewayPlugin } from '../types';
 
 export interface ConfigInServerContextOptions {
   configContext: GatewayConfigContext;
-  /** We use the "ref" pattern because the contextBuilder can be asynchronously set by createGatewayRuntime. */
-  contextBuilderRef: { ref: (<T>(context: T) => MaybePromise<T>) | null };
 }
 
 export function useConfigInServerContext({
   configContext,
-  contextBuilderRef,
 }: ConfigInServerContextOptions): GatewayPlugin {
   return {
     onRequest({ serverContext, request }) {
@@ -42,14 +38,9 @@ export function useConfigInServerContext({
       //   baseContext.connectionParams = headers;
       // }
 
-      return handleMaybePromise(
-        () => contextBuilderRef.ref?.(baseContext) ?? baseContext,
-        (context) => {
-          // we want to inject the GatewayConfigContext to the server context to
-          // have it available always through the plugin system
-          Object.assign(serverContext, context);
-        },
-      );
+      // we want to inject the GatewayConfigContext to the server context to
+      // have it available always through the plugin system
+      Object.assign(serverContext, baseContext);
     },
   };
 }

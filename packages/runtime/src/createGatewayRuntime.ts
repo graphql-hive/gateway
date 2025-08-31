@@ -188,9 +188,7 @@ export function createGatewayRuntime<
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
-  const contextBuilderRef: {
-    ref: null | (<T>(context: T) => MaybePromise<T>);
-  } = { ref: null };
+  let contextBuilder: <T>(context: T) => MaybePromise<T> | undefined;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
@@ -599,7 +597,7 @@ export function createGatewayRuntime<
               resolvers: additionalResolvers,
               defaultFieldResolver: defaultMergedResolver,
             });
-            contextBuilderRef.ref = <T>(base: T) =>
+            contextBuilder = <T>(base: T) =>
               Object.assign(
                 // @ts-expect-error - Typings are wrong in legacy Mesh
                 base,
@@ -732,8 +730,7 @@ export function createGatewayRuntime<
       );
     };
     schemaInvalidator = () => unifiedGraphManager.invalidateUnifiedGraph();
-    contextBuilderRef.ref = (base) =>
-      unifiedGraphManager.getContext(base as any);
+    contextBuilder = (base) => unifiedGraphManager.getContext(base as any);
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
       onDispose() {
@@ -918,7 +915,7 @@ export function createGatewayRuntime<
     | YogaPlugin<any>
     | GatewayPlugin<any>
   )[] = [
-    useConfigInServerContext({ configContext, contextBuilderRef }),
+    useConfigInServerContext({ configContext }),
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
@@ -1090,7 +1087,8 @@ export function createGatewayRuntime<
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-      return { ...ctx, headers, connectionParams: headers };
+      const baseContext = { ...ctx, headers, connectionParams: headers };
+      return contextBuilder?.(baseContext) ?? baseContext;
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,
