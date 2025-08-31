@@ -49,14 +49,8 @@ export function useRequestId<TContext extends Record<string, any>>(
         });
       requestIdByRequest.set(request, requestId);
       serverContext.log = serverContext.log.child({ requestId });
-    },
-    onContextBuilding({ context, extendContext }) {
-      extendContext(
-        // @ts-expect-error TODO: typescript is acting up here
-        {
-          logger: LegacyLogger.from(context.log),
-        },
-      );
+      // @ts-expect-error - Logger is not typed because it's deprecated and should not be used, but hey - it's there...
+      serverContext.logger = LegacyLogger.from(serverContext.log);
     },
     onFetch({ context, options, setOptions }) {
       if ('request' in context) {
