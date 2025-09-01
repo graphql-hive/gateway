@@ -86,14 +86,14 @@ describe('GraphOS', () => {
       const { unifiedGraphFetcher } = createTestFetcher({ fetch: mockSDL });
 
       Promise.resolve().then(() => unifiedGraphFetcher());
-      await advanceTimersByTimeAsync(25);
+      await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
       Promise.resolve().then(() => unifiedGraphFetcher());
-      await advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
-      await advanceTimersByTimeAsync(50);
+      await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(2);
     });
 
