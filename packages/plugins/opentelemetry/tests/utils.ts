@@ -28,10 +28,8 @@ import {
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
-import type {
-  OpenTelemetryGatewayPluginOptions,
-  OpenTelemetryPlugin,
-} from '../src/plugin';
+import { hive } from '../src/api';
+import type { OpenTelemetryGatewayPluginOptions } from '../src/plugin';
 
 export async function buildTestGateway(
   options: {
@@ -39,7 +37,6 @@ export async function buildTestGateway(
     options?: OpenTelemetryGatewayPluginOptions;
     plugins?: (
       ctx: GatewayConfigContext,
-      otelPlugin: OpenTelemetryPlugin,
     ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
     fetch?: (upstreamFetch: MeshFetch) => MeshFetch;
   } = {},
@@ -66,7 +63,8 @@ export async function buildTestGateway(
     }),
   );
 
-  let otelPlugin: ReturnType<typeof useOpenTelemetry>;
+  // Disable hive utils API to allow the new instance to replace it
+  hive.disable();
 
   const gateway = stack.use(
     gw.createGatewayRuntime({
@@ -75,17 +73,16 @@ export async function buildTestGateway(
       },
       maskedErrors: false,
       plugins: (ctx) => {
-        otelPlugin = useOpenTelemetry({
-          ...ctx,
-          ...options.options,
-        });
         return [
           gw.useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
             options.fetch ? options.fetch(upstream.fetch) : upstream.fetch,
           ),
-          otelPlugin,
-          ...(options.plugins?.(ctx, otelPlugin) ?? []),
+          useOpenTelemetry({
+            ...ctx,
+            ...options.options,
+          }),
+          ...(options.plugins?.(ctx) ?? []),
         ];
       },
       logging: false,
@@ -94,7 +91,6 @@ export async function buildTestGateway(
   );
 
   return {
-    otelPlugin: otelPlugin!,
     query: async ({
       shouldReturnErrors,
       body = {
@@ -303,6 +299,7 @@ export const disableAll = () => {
   metrics.disable();
   diag.disable();
   logs.disable();
+  hive.disable();
 };
 
 export class MockLogRecordExporter implements LogRecordExporter {

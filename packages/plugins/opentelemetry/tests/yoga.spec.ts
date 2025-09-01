@@ -1,8 +1,8 @@
 import { Logger } from '@graphql-hive/logger';
-import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
 import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { ContextMatcher } from '../src/plugin';
+import { hive } from '../src/api';
+import { ContextMatcher, useOpenTelemetry } from '../src/plugin';
 import { disableAll, setupOtelForTests, spanExporter } from './utils';
 
 describe('useOpenTelemetry', () => {
@@ -22,16 +22,10 @@ describe('useOpenTelemetry', () => {
     ])('$name', ({ contextManager }) => {
       function buildTest(
         options: {
-          plugins?: (
-            otelPlugin: ReturnType<typeof useOpenTelemetry>,
-          ) => YogaPlugin[];
+          plugins?: () => YogaPlugin[];
         } = {},
       ) {
-        const otelPlugin = useOpenTelemetry({
-          log: new Logger({ level: false }),
-          useContextManager: contextManager,
-        });
-
+        hive.disable();
         const yoga = createYoga({
           schema: createSchema({
             typeDefs: /* GraphQL */ `
@@ -47,7 +41,13 @@ describe('useOpenTelemetry', () => {
           }),
           logging: false,
           maskedErrors: false,
-          plugins: [otelPlugin, ...(options.plugins?.(otelPlugin) ?? [])],
+          plugins: [
+            useOpenTelemetry({
+              log: new Logger({ level: false }),
+              useContextManager: contextManager,
+            }),
+            ...(options.plugins?.() ?? []),
+          ],
         });
 
         return {
@@ -116,10 +116,10 @@ describe('useOpenTelemetry', () => {
           };
 
           await using yoga = buildTest({
-            plugins: (openTelemetry) => {
+            plugins: () => {
               const createSpan = (name: string) => (matcher: ContextMatcher) =>
-                openTelemetry.tracer
-                  ?.startSpan(name, {}, openTelemetry.getActiveContext(matcher))
+                hive.tracer
+                  ?.startSpan(name, {}, hive.getActiveContext(matcher))
                   .end();
 
               return [
