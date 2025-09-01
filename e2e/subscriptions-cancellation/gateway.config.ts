@@ -1,4 +1,4 @@
-import { defineConfig } from '@graphql-hive/gateway';
+import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 
 export const gatewayConfig = defineConfig({
   plugins() {
@@ -20,7 +20,7 @@ export const gatewayConfig = defineConfig({
             }
             return void 0;
           },
-      },
+      } as GatewayPlugin,
     ];
   },
 });
