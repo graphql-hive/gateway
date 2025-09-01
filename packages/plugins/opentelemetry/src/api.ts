@@ -1,6 +1,9 @@
 import { Logger } from '@graphql-hive/logger';
 import { context, Tracer } from '@opentelemetry/api';
-import type { OpenTelemetryPluginUtils } from './plugin';
+import type {
+  OpenTelemetryGatewayPluginOptions,
+  OpenTelemetryPluginUtils,
+} from './plugin';
 
 export * from '@opentelemetry/api';
 
@@ -8,20 +11,20 @@ export type HiveAPI = Omit<OpenTelemetryPluginUtils, 'tracer'> & {
   /**
    * The tracer used by the OpenTelemetry plugin.
    * Note: It will stay undefined until the plugin is actually instantiated.
-   *       This means it is not usable at import time, please use your own Tracer in this case.
-   *       You can provide this custom tracer in `openTelemetry.traces.tracer` option if needed.
+   *       **This means it is not usable at import time**, please use your own `Tracer` in this case.
+   *       You can provide a custom tracer in {@link OpenTelemetryGatewayPluginOptions.traces the plugin options}.
    */
   tracer: Tracer | undefined;
   /**
    * Register the Hive OpenTelemetry plugin utility API
    *
-   * @param utils: The plugin instance with all the utility methods
-   * @param log: A Logger that will be used to warn in case of double registration. Leave it undefined or null to disable the log.
-   * @returns true if successful, false if the API was already registered
+   * @param utils - The plugin instance with all the utility methods
+   * @param log - A Logger that will be used to warn in case of double registration. Leave it undefined or null to disable the log.
+   * @returns `true` - if successful, `false` if the API was already registered
    */
   setPluginUtils(utils: OpenTelemetryPluginUtils, log?: Logger): boolean;
   /**
-   * Unregister the current Hive OpenTelemetry plugin utility API if any is registered. No-op if no API was registered
+   * Unregister the current Hive OpenTelemetry plugin utility API if any is registered. No-op if no API was registered.
    */
   disable(): void;
 };
