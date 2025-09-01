@@ -110,6 +110,7 @@ export async function handleOpenTelemetryConfig(
 
       openTelemetrySetup({
         traces: { processors },
+        resource: await detectResource(),
         contextManager,
       });
 
@@ -120,4 +121,20 @@ export async function handleOpenTelemetryConfig(
   }
 
   return false;
+}
+
+async function detectResource() {
+  if (
+    typeof process !== 'undefined' &&
+    process.versions &&
+    process.versions.node &&
+    typeof Bun === 'undefined' // Bun also has process.versions.node
+  ) {
+    const { getResourceDetectors } = await import(
+      '@opentelemetry/auto-instrumentations-node'
+    );
+    const { detectResources } = await import('@opentelemetry/resources');
+    return detectResources({ detectors: getResourceDetectors() });
+  }
+  return undefined;
 }

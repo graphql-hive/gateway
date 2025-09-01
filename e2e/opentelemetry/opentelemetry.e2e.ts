@@ -1,7 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { isCI } from '@internal/testing';
+import { isCI, isNode } from '@internal/testing';
 import { crypto, fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -181,21 +181,22 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          // TODO: process and os traces are important and should be present
-          // if (isNode()) {
-          //   const expectedTags = [
-          //     'process.owner',
-          //     'host.arch',
-          //     'os.type',
-          //     'service.instance.id',
-          //   ];
-          //   if (gatewayRunner.includes('docker')) {
-          //     expectedTags.push('container.id');
-          //   }
-          //   expectedTags.forEach((key) => {
-          //     return expect(tagKeys).toContain(key);
-          //   });
-          // }
+          if (isNode()) {
+            const expectedTags = [
+              'process.owner',
+              'host.arch',
+              'os.type',
+              'service.instance.id',
+            ];
+            if (gatewayRunner.includes('docker')) {
+              expectedTags.push('container.id');
+            }
+            expectedTags.forEach((key) => {
+              return expect(tags).toContainEqual(
+                expect.objectContaining({ key }),
+              );
+            });
+          }
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
@@ -296,21 +297,22 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          // TODO: process and os traces are important and should be present
-          // if (isNode()) {
-          //   const expectedTags = [
-          //     'process.owner',
-          //     'host.arch',
-          //     'os.type',
-          //     'service.instance.id',
-          //   ];
-          //   if (gatewayRunner.includes('docker')) {
-          //     expectedTags.push('container.id');
-          //   }
-          //   expectedTags.forEach((key) => {
-          //     return expect(tagKeys).toContain(key);
-          //   });
-          // }
+          if (isNode()) {
+            const expectedTags = [
+              'process.owner',
+              'host.arch',
+              'os.type',
+              'service.instance.id',
+            ];
+            if (gatewayRunner.includes('docker')) {
+              expectedTags.push('container.id');
+            }
+            expectedTags.forEach((key) => {
+              return expect(tags).toContainEqual(
+                expect.objectContaining({ key }),
+              );
+            });
+          }
 
           const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
           expect(spanTree).toBeDefined();
