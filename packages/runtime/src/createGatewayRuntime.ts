@@ -31,6 +31,7 @@ import { TransportContext } from '@graphql-mesh/transport-common';
 import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
+  getHeadersObj,
   getInContextSDK,
   isDisposable,
   isUrl,
@@ -1083,7 +1084,13 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ headers, connectionParams, ...ctx }) {
+    context({ connectionParams, ...ctx }) {
+      // @ts-expect-error when we have an operation happening over WebSockets, there wont be a fetch Request - there'll only be the upgrade http node request
+      let headers = ctx.req
+        ? // @ts-expect-error
+          { ...(ctx.headers || {}), ...getHeadersObj(ctx.req.headers) }
+        : // @ts-expect-error
+          ctx.headers;
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
