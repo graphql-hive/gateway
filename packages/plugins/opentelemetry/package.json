@@ -39,6 +39,16 @@
         "default": "./dist/setup.js"
       }
     },
+    "./api": {
+      "require": {
+        "types": "./dist/api.d.cts",
+        "default": "./dist/api.cjs"
+      },
+      "import": {
+        "types": "./dist/api.d.ts",
+        "default": "./dist/api.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [

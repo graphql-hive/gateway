@@ -52,6 +52,7 @@ import {
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
+import { hive } from '../src/api';
 import type {
   ContextMatcher,
   OpenTelemetryContextExtension,
@@ -479,12 +480,13 @@ describe('useOpenTelemetry', () => {
           };
 
           await using gateway = await buildTestGatewayForCtx({
-            plugins: (_, otelPlugin) => {
-              const createSpan = (name: string) => (matcher: ContextMatcher) =>
-                otelPlugin.tracer
-                  ?.startSpan(name, {}, otelPlugin.getActiveContext(matcher))
-                  .end();
-
+            plugins: () => {
+              const createSpan =
+                (name: string) => (matcher: ContextMatcher) => {
+                  hive.tracer
+                    ?.startSpan(name, {}, hive.getActiveContext(matcher))
+                    .end();
+                };
               return [
                 {
                   onRequest: createSpan('custom.request'),
@@ -789,9 +791,9 @@ describe('useOpenTelemetry', () => {
       };
 
       await using gateway = await buildTestGateway({
-        plugins: (_, otelPlugin) => {
+        plugins: () => {
           const createSpan = (name: string) => () =>
-            otelPlugin.tracer.startSpan(name).end();
+            hive.tracer?.startSpan(name).end();
 
           return [
             {

@@ -78,6 +78,8 @@ const deps = {
     '../plugins/opentelemetry/src/auto-instrumentations.ts',
   'node_modules/@graphql-mesh/plugin-opentelemetry/setup':
     '../plugins/opentelemetry/src/setup.ts',
+  'node_modules/@graphql-mesh/plugin-opentelemetry/api':
+    '../plugins/opentelemetry/src/api.ts',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.
     // Those are most used features.
