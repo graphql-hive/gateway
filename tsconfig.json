@@ -51,6 +51,9 @@
       "@graphql-mesh/plugin-opentelemetry/setup": [
         "./packages/plugins/opentelemetry/src/setup.ts"
       ],
+      "@graphql-mesh/plugin-opentelemetry/api": [
+        "./packages/plugins/opentelemetry/src/api.ts"
+      ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"
       ],

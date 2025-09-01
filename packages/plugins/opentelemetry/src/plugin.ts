@@ -8,18 +8,19 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
+import { setGlobalErrorHandler } from '@opentelemetry/core';
+import { unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   context,
   diag,
+  hive,
   propagation,
   ROOT_CONTEXT,
   trace,
   type Context,
   type TextMapGetter,
   type Tracer,
-} from '@opentelemetry/api';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
-import { unfakePromise } from '@whatwg-node/promise-helpers';
+} from './api';
 import { OtelContextStack } from './context';
 import {
   getMostSpecificState,
@@ -328,7 +329,7 @@ export function useOpenTelemetry(
     }
   }
 
-  return withState<
+  const plugin = withState<
     OpenTelemetryPlugin,
     OtelState,
     OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
@@ -934,6 +935,9 @@ export function useOpenTelemetry(
       }
     },
   }));
+
+  hive.setPluginUtils(plugin);
+  return plugin;
 }
 
 function shouldTrace<Args>(

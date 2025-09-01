@@ -33,6 +33,36 @@
         "default": "./dist/index.js"
       }
     },
+    "./opentelemetry": {
+      "require": {
+        "types": "./dist/opentelemetry/index.d.cts",
+        "default": "./dist/opentelemetry/index.cjs"
+      },
+      "import": {
+        "types": "./dist/opentelemetry/index.d.ts",
+        "default": "./dist/opentelemetry/index.js"
+      }
+    },
+    "./opentelemetry/api": {
+      "require": {
+        "types": "./dist/opentelemetry/api.d.cts",
+        "default": "./dist/opentelemetry/api.cjs"
+      },
+      "import": {
+        "types": "./dist/opentelemetry/api.d.ts",
+        "default": "./dist/opentelemetry/api.js"
+      }
+    },
+    "./opentelemetry/setup": {
+      "require": {
+        "types": "./dist/opentelemetry/setup.d.cts",
+        "default": "./dist/opentelemetry/setup.cjs"
+      },
+      "import": {
+        "types": "./dist/opentelemetry/setup.d.ts",
+        "default": "./dist/opentelemetry/setup.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
