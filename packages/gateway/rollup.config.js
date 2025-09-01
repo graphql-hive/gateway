@@ -40,6 +40,12 @@ console.log('Bundling...');
  */
 const deps = {
   'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/index':
+    'src/opentelemetry/index.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/api':
+    'src/opentelemetry/api.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/setup':
+    'src/opentelemetry/setup.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
   // the hooks are dynamically registered on startup, we need to bundle them at path
   'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',

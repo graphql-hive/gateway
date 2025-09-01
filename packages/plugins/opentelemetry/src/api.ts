@@ -5,7 +5,13 @@ import type { OpenTelemetryPluginUtils } from './plugin';
 export * from '@opentelemetry/api';
 
 export type HiveAPI = Omit<OpenTelemetryPluginUtils, 'tracer'> & {
-  tracer?: Tracer;
+  /**
+   * The tracer used by the OpenTelemetry plugin.
+   * Note: It will stay undefined until the plugin is actually instantiated.
+   *       This means it is not usable at import time, please use your own Tracer in this case.
+   *       You can provide this custom tracer in `openTelemetry.traces.tracer` option if needed.
+   */
+  tracer: Tracer | undefined;
   /**
    * Register the Hive OpenTelemetry plugin utility API
    *
@@ -27,6 +33,7 @@ const defaultDelegate: HiveAPIDelegate = {
   getExecutionRequestContext: () => context.active(),
   getHttpContext: () => context.active(),
   getOperationContext: () => context.active(),
+  tracer: undefined,
 };
 
 let delegate: HiveAPIDelegate = defaultDelegate;
