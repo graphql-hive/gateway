@@ -85,7 +85,7 @@ export async function buildTestGateway(
           ...(options.plugins?.(ctx) ?? []),
         ];
       },
-      logging: true,
+      logging: false,
       ...options.gatewayOptions,
     }),
   );
