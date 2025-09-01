@@ -67,7 +67,6 @@
       "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
       "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
       "@graphql-hive/logger": ["./packages/logger/src/index.ts"],
-      "@graphql-hive/logger/request": ["./packages/logger/src/request.ts"],
       "@graphql-hive/logger/writers/pino": [
         "./packages/logger/src/writers/pino.ts"
       ],

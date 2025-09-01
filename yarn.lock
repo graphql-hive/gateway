@@ -4133,7 +4133,6 @@ __metadata:
     "@graphql-yoga/plugin-defer-stream": "npm:^3.15.1"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.15.1"
     "@omnigraph/openapi": "npm:^0.109.15"
-    "@opentelemetry/api": "npm:^1.9.0"
     "@types/html-minifier-terser": "npm:^7.0.2"
     "@types/node": "npm:^22.15.30"
     "@types/react": "npm:^19"

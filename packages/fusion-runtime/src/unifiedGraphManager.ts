@@ -459,7 +459,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         if (this.inContextSDK) {
           Object.assign(base, this.inContextSDK);
         }
-        Object.assign(base, this.opts.transportContext);
+        // we want to set only missing keys from transport context to avoid overwriting existing context values.
+        // like for example the `log` which already contains context-relevant metadata
+        for (const [key, value] of Object.entries(
+          this.opts.transportContext ?? {},
+        )) {
+          if (!(key in base)) {
+            (base as any)[key] = value;
+          }
+        }
         return base;
       },
     );

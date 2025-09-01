@@ -6,10 +6,6 @@ import {
   Logger,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import {
-  loggerForRequest,
-  requestIdByRequest,
-} from '@graphql-hive/logger/request';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import {
@@ -103,7 +99,7 @@ export type OpenTelemetryGatewayPluginOptions = {
    * Configure Opentelemetry `diag` API to use Gateway's logger.
    *
    * @default true
-   
+   *
    * Note: Logger configuration respects OTEL environment variables standard.
    *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
    */
@@ -222,7 +218,7 @@ export type ContextMatcher = {
 };
 
 export type OpenTelemetryPluginUtils = {
-  tracer?: Tracer;
+  tracer: Tracer;
   getActiveContext: (payload: ContextMatcher) => Context;
   getHttpContext: (request: Request) => Context | undefined;
   getOperationContext: (context: any) => Context | undefined;
@@ -332,7 +328,7 @@ export function useOpenTelemetry(
     }
   }
 
-  const plugin = withState<
+  return withState<
     OpenTelemetryPlugin,
     OtelState,
     OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
@@ -706,26 +702,20 @@ export function useOpenTelemetry(
       );
     },
 
-    onRequest({ state, request }) {
-      try {
-        const requestId = requestIdByRequest.get(request);
-        if (requestId) {
-          if (options.log) {
-            loggerForRequest(options.log.child({ requestId }), request);
-          }
-
-          // When running in a runtime without a context manager, we have to keep track of the
-          // span correlated to a log manually. For now, we just link all logs for a request to
-          // the HTTP root span
-          if (!useContextManager) {
-            otelCtxForRequestId.set(requestId, getContext(state));
-          }
+    onRequest({ state, serverContext }) {
+      // When running in a runtime without a context manager, we have to keep track of the
+      // span correlated to a log manually. For now, we just link all logs for a request to
+      // the HTTP root span
+      if (!useContextManager) {
+        const requestId =
+          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+          serverContext.log?.attrs?.[
+            // @ts-expect-error even if the attrs is an array this will work
+            'requestId'
+          ];
+        if (typeof requestId === 'string') {
+          otelCtxForRequestId.set(requestId, getContext(state));
         }
-      } catch (error) {
-        pluginLogger!.error(
-          { error },
-          'Error while setting up logger for request',
-        );
       }
     },
 
@@ -770,20 +760,21 @@ export function useOpenTelemetry(
           }
         : undefined,
 
-    onResponse({ response, request, state }) {
-      try {
-        state.forRequest.otel &&
-          setResponseAttributes(state.forRequest.otel.root, response);
+    onResponse({ response, state, serverContext }) {
+      state.forRequest.otel &&
+        setResponseAttributes(state.forRequest.otel.root, response);
 
-        // Clean up Logging context tracking for runtimes without context manager
-        if (!useContextManager) {
-          const requestId = requestIdByRequest.get(request);
-          if (requestId) {
-            otelCtxForRequestId.delete(requestId);
-          }
+      // Clean up Logging context tracking for runtimes without context manager
+      if (!useContextManager) {
+        const requestId =
+          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+          serverContext.log?.attrs?.[
+            // @ts-expect-error even if the attrs is an array this will work
+            'requestId'
+          ];
+        if (typeof requestId === 'string') {
+          otelCtxForRequestId.delete(requestId);
         }
-      } catch (error) {
-        pluginLogger!.error({ error }, 'Failed to end http span');
       }
     },
 
@@ -943,16 +934,6 @@ export function useOpenTelemetry(
       }
     },
   }));
-
-  if (options.openTelemetry) {
-    if (options.openTelemetry.register) {
-      options.openTelemetry?.register?.(plugin);
-    } else {
-      options.log?.warn('An OpenTelemetry plugin is already registered');
-    }
-  }
-
-  return plugin;
 }
 
 function shouldTrace<Args>(

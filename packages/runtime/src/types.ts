@@ -10,7 +10,6 @@ import type {
   UnifiedGraphPlugin,
 } from '@graphql-mesh/fusion-runtime';
 import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-signature';
-import { OpenTelemetryPluginUtils } from '@graphql-mesh/plugin-opentelemetry';
 import type { ResponseCacheConfig } from '@graphql-mesh/plugin-response-cache';
 import type {
   KeyValueCache,
@@ -40,7 +39,6 @@ import type {
   YogaServerOptions,
 } from 'graphql-yoga';
 import { GraphQLResolveInfo } from 'graphql/type';
-import { OpenTelemetryContextExtension } from '../../plugins/opentelemetry/src/plugin';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
@@ -72,6 +70,7 @@ export interface GatewayConfigContext {
   log: Logger;
   /**
    * Current working directory.
+   * Note that working directory does not exist in serverless environments and will therefore be empty.
    */
   cwd: string;
   /**
@@ -82,17 +81,10 @@ export interface GatewayConfigContext {
    * Cache Storage
    */
   cache?: KeyValueCache;
-  /**
-   * OpenTelemetry API to get access to OTEL Tracer and Hive Gateway internal OTEL Contexts
-   */
-  openTelemetry: OpenTelemetryPluginUtils & {
-    register?: (plugin: OpenTelemetryPluginUtils) => void;
-  };
 }
 
 export interface GatewayContext
-  extends Omit<GatewayConfigContext, 'openTelemetry'>,
-    OpenTelemetryContextExtension,
+  extends GatewayConfigContext,
     YogaInitialContext {
   /**
    * Environment agnostic HTTP headers provided with the request.
@@ -101,13 +93,16 @@ export interface GatewayContext
   /**
    * Runtime context available within WebSocket connections.
    */
-  connectionParams: Record<string, string>;
+  connectionParams?: Record<string, string>;
 }
 
 export type GatewayPlugin<
   TPluginContext extends Record<string, any> = Record<string, any>,
   TContext extends Record<string, any> = Record<string, any>,
-> = YogaPlugin<Partial<TPluginContext> & GatewayContext & TContext> &
+> = YogaPlugin<
+  Partial<TPluginContext> & GatewayContext & TContext,
+  GatewayConfigContext
+> &
   UnifiedGraphPlugin<Partial<TPluginContext> & GatewayContext & TContext> & {
     onFetch?: OnFetchHook<Partial<TPluginContext> & TContext>;
     onCacheGet?: OnCacheGetHook;

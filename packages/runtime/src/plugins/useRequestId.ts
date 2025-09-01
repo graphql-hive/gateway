@@ -1,8 +1,4 @@
 import { LegacyLogger } from '@graphql-hive/logger';
-import {
-  loggerForRequest,
-  requestIdByRequest,
-} from '@graphql-hive/logger/request';
 import { FetchAPI } from '@whatwg-node/server';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
@@ -38,6 +34,7 @@ export const defaultRequestIdHeader: string = 'x-request-id';
 export function useRequestId<TContext extends Record<string, any>>(
   opts?: RequestIdOptions<TContext>,
 ): GatewayPlugin<TContext> {
+  const requestIdByRequest = new WeakMap<Request, string>();
   const headerName = opts?.headerName || defaultRequestIdHeader;
   const generateRequestId = opts?.generateRequestId || defaultGenerateRequestId;
   return {
@@ -51,24 +48,9 @@ export function useRequestId<TContext extends Record<string, any>>(
           context: serverContext,
         });
       requestIdByRequest.set(request, requestId);
-    },
-    onContextBuilding({ context, extendContext }) {
-      // the request ID wont always be available because there's no request in websockets
-      const requestId = requestIdByRequest.get(context.request);
-      let log = context.log;
-      if (requestId) {
-        log = loggerForRequest(
-          context.log.child({ requestId }),
-          context.request,
-        );
-      }
-      extendContext(
-        // @ts-expect-error TODO: typescript is acting up here
-        {
-          log,
-          logger: LegacyLogger.from(log),
-        },
-      );
+      serverContext.log = serverContext.log.child({ requestId });
+      // @ts-expect-error - Logger is not typed because it's deprecated and should not be used, but hey - it's there...
+      serverContext.logger = LegacyLogger.from(serverContext.log);
     },
     onFetch({ context, options, setOptions }) {
       if ('request' in context) {
