@@ -31,7 +31,6 @@ import { TransportContext } from '@graphql-mesh/transport-common';
 import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
-  getHeadersObj,
   getInContextSDK,
   isDisposable,
   isUrl,
@@ -96,6 +95,7 @@ import {
   logoSvg,
 } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
+import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -125,7 +125,6 @@ import type {
 } from './types';
 import {
   checkIfDataSatisfiesSelectionSet,
-  createOpenTelemetryAPI,
   defaultQueryText,
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
@@ -173,7 +172,6 @@ export function createGatewayRuntime<
     cwd: config.cwd || (typeof process !== 'undefined' ? process.cwd() : ''),
     cache: wrappedCache,
     pubsub,
-    openTelemetry: createOpenTelemetryAPI(),
   };
 
   let unifiedGraphPlugin: GatewayPlugin;
@@ -190,7 +188,7 @@ export function createGatewayRuntime<
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
   let getSchema: () => MaybePromise<GraphQLSchema> = () => unifiedGraph;
-  let contextBuilder: <T>(context: T) => MaybePromise<T>;
+  let contextBuilder: <T>(context: T) => MaybePromise<T> | undefined;
   let readinessChecker: () => MaybePromise<boolean>;
   let getExecutor: (() => MaybePromise<Executor | undefined>) | undefined;
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
@@ -203,7 +201,7 @@ export function createGatewayRuntime<
     config,
     configContext,
   );
-  let persistedDocumentsPlugin: GatewayPlugin = {};
+  let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
     config.reporting?.type !== 'hive' &&
     config.persistedDocuments &&
@@ -227,10 +225,12 @@ export function createGatewayRuntime<
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments
   ) {
-    persistedDocumentsPlugin = usePersistedOperations<GatewayContext>({
+    const plugin = usePersistedOperations<GatewayContext>({
       ...configContext,
       ...config.persistedDocuments,
     });
+    // @ts-expect-error the ServerContext does not match
+    persistedDocumentsPlugin = plugin;
   }
 
   if ('proxy' in config) {
@@ -597,8 +597,7 @@ export function createGatewayRuntime<
               resolvers: additionalResolvers,
               defaultFieldResolver: defaultMergedResolver,
             });
-            contextBuilder = (base) =>
-              // @ts-expect-error - Typings are wrong in legacy Mesh
+            contextBuilder = <T>(base: T) =>
               Object.assign(
                 // @ts-expect-error - Typings are wrong in legacy Mesh
                 base,
@@ -609,7 +608,7 @@ export function createGatewayRuntime<
                   LegacyLogger.from(configContext.log),
                   onDelegateHooks,
                 ),
-              );
+              ) as T;
             return true;
           },
         );
@@ -916,12 +915,13 @@ export function createGatewayRuntime<
     | YogaPlugin<any>
     | GatewayPlugin<any>
   )[] = [
+    useConfigInServerContext({ configContext }),
     defaultGatewayPlugin,
     unifiedGraphPlugin,
     readinessCheckPlugin,
     persistedDocumentsPlugin,
     reportingWithMaybePersistedDocumentsPlugin,
-    useRetryOnSchemaReload({ log }),
+    useRetryOnSchemaReload(),
   ];
 
   if (config.subgraphErrors !== false) {
@@ -1077,34 +1077,17 @@ export function createGatewayRuntime<
     schema: unifiedGraph,
     // @ts-expect-error MeshFetch is not compatible with YogaFetch
     fetchAPI: config.fetchAPI,
-    logging: log,
+    logging: LegacyLogger.from(log),
     plugins: [
       ...basePlugins,
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ request, req, connectionParams, ...ctx }) {
-      let headers = // Maybe Node-like environment
-        req?.headers
-          ? getHeadersObj(req.headers)
-          : // Fetch environment
-            request?.headers
-            ? getHeadersObj(request.headers)
-            : // Unknown environment
-              {};
-
+    context({ headers, connectionParams, ...ctx }) {
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-
-      const baseContext = {
-        ...configContext,
-        // Give priority to the openTelemetry API defined by OTEL plugin
-        openTelemetry: ctx['openTelemetry'] ?? configContext.openTelemetry,
-        headers,
-        connectionParams: headers,
-      };
-
+      const baseContext = { ...ctx, headers, connectionParams: headers };
       return contextBuilder?.(baseContext) ?? baseContext;
     },
     cors: config.cors,

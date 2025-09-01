@@ -29,16 +29,6 @@
         "default": "./dist/index.js"
       }
     },
-    "./request": {
-      "require": {
-        "types": "./dist/request.d.cts",
-        "default": "./dist/request.cjs"
-      },
-      "import": {
-        "types": "./dist/request.d.ts",
-        "default": "./dist/request.js"
-      }
-    },
     "./writers/json": {
       "require": {
         "types": "./dist/writers/json.d.cts",

@@ -31,15 +31,16 @@ import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './servers/types';
 
-export type GatewayCLIConfig = (
-  | GatewayCLISupergraphConfig
-  | GatewayCLISubgraphConfig
-  | GatewayCLIProxyConfig
+export type GatewayCLIConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> = (
+  | GatewayCLISupergraphConfig<TContext>
+  | GatewayCLISubgraphConfig<TContext>
+  | GatewayCLIProxyConfig<TContext>
 ) &
   ServerConfig & {
     /**
-     * Count of workers to spawn. Defaults to `os.availableParallelism()` when NODE_ENV
-     * is "production", otherwise only one (the main) worker.
+     * Count of workers to spawn.
      */
     fork?: number;
     /**
@@ -52,8 +53,12 @@ export type GatewayCLIConfig = (
     pollingInterval?: number;
   } & GatewayCLIBuiltinPluginConfig;
 
-export interface GatewayCLISupergraphConfig
-  extends Omit<GatewayConfigSupergraph, 'supergraph' | 'cache' | 'reporting'> {
+export interface GatewayCLISupergraphConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<
+    GatewayConfigSupergraph<TContext>,
+    'supergraph' | 'cache' | 'reporting'
+  > {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -62,7 +67,7 @@ export interface GatewayCLISupergraphConfig
    * @default 'supergraph.graphql'
    */
   // default matches commands/supergraph.ts
-  supergraph?: GatewayConfigSupergraph['supergraph'];
+  supergraph?: GatewayConfigSupergraph<TContext>['supergraph'];
 
   /** Usage reporting options. */
   reporting?: GatewayCLIHiveReportingOptions | GatewayGraphOSReportingOptions;
@@ -84,8 +89,9 @@ export interface GatewayCLIHiveReportingOptions
   token?: GatewayHiveReportingOptions['token'];
 }
 
-export interface GatewayCLISubgraphConfig
-  extends Omit<GatewayConfigSubgraph, 'subgraph' | 'cache'> {
+export interface GatewayCLISubgraphConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<GatewayConfigSubgraph<TContext>, 'subgraph' | 'cache'> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -94,15 +100,16 @@ export interface GatewayCLISubgraphConfig
    * @default 'subgraph.graphql'
    */
   // default matches commands/subgraph.ts
-  subgraph?: GatewayConfigSubgraph['subgraph'];
+  subgraph?: GatewayConfigSubgraph<TContext>['subgraph'];
 }
 
-export interface GatewayCLIProxyConfig
-  extends Omit<GatewayConfigProxy, 'proxy' | 'cache'> {
+export interface GatewayCLIProxyConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<GatewayConfigProxy<TContext>, 'proxy' | 'cache'> {
   /**
    * HTTP executor to proxy all incoming requests to another HTTP endpoint.
    */
-  proxy?: GatewayConfigProxy['proxy'];
+  proxy?: GatewayConfigProxy<TContext>['proxy'];
 }
 
 export type KeyValueCacheFactoryFn = (ctx: {
@@ -215,7 +222,9 @@ export type GatewayCLIUpstashRedisCacheConfig = {
 /**
  * Type helper for defining the config.
  */
-export function defineConfig(config: GatewayCLIConfig) {
+export function defineConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+>(config: GatewayCLIConfig<TContext>) {
   return config;
 }
 
