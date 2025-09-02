@@ -1,5 +1,4 @@
 import {
-  extractUnavailableFields,
   StitchingInfo,
   Subschema,
   subtractSelectionSets,
@@ -28,7 +27,6 @@ export function getFieldsNotInSubschema(
   subschema: Subschema,
   providedSelectionNode: SelectionSetNode | undefined,
 ): Array<FieldNode> {
-  const sourceSchema = subschema.transformedSchema;
   let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
     schema,
     fragments,
