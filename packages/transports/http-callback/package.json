@@ -47,7 +47,7 @@
     "@graphql-mesh/string-interpolation": "^0.5.6",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.8",
-    "@graphql-mesh/utils": "^0.104.10",
+    "@graphql-mesh/utils": "^0.104.11",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.9.1",
     "@repeaterjs/repeater": "^3.0.6",
