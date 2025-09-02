@@ -21,6 +21,8 @@ updates:
       actions-deps:
         patterns:
           - '*'
+        exclude-patterns:
+          - 'ScribeMD/docker-cache' # dont update docker-cache because we use a custom fix, see test.yml and memtest.yml
   - package-ecosystem: 'npm' # See documentation for possible values
     directory: '/' # Location of package manifests
     schedule:
