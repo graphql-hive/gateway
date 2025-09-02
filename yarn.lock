@@ -3020,9 +3020,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions"
   dependencies:
+    "@nats-io/transport-node": "npm:^3.1.0"
     graphql: "npm:^16.9.0"
     graphql-sse: "npm:^2.5.3"
-    ioredis: "npm:^5.7.0"
   languageName: unknown
   linkType: soft
 

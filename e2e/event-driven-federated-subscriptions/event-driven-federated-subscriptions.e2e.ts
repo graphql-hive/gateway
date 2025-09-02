@@ -4,32 +4,29 @@ import {
   dockerHostName,
   handleDockerHostNameInURLOrAtPath,
 } from '@internal/e2e';
+import { connect as natsConnect } from '@nats-io/transport-node';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
-import Redis from 'ioredis';
 import { beforeAll, expect, it } from 'vitest';
 
 const { container, gateway, service, composeWithMesh, gatewayRunner } =
   createTenv(__dirname);
 
 const redisEnv = {
-  REDIS_HOST: '',
-  REDIS_PORT: 0,
+  NATS_HOST: '',
+  NATS_PORT: 0,
 };
 beforeAll(async () => {
-  const redis = await container({
-    name: 'redis',
-    image: 'redis:8',
-    containerPort: 6379,
-    healthcheck: ['CMD-SHELL', 'redis-cli ping'],
-    env: {
-      LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
-    },
+  const nats = await container({
+    name: 'nats',
+    image: 'nats:2.11-alpine', // we want alpine for healtcheck
+    containerPort: 4222,
+    healthcheck: ['CMD-SHELL', 'wget --spider http://localhost:8222/healthz'],
   });
-  redisEnv.REDIS_HOST = gatewayRunner.includes('docker')
+  redisEnv.NATS_HOST = gatewayRunner.includes('docker')
     ? dockerHostName
     : '0.0.0.0';
-  redisEnv.REDIS_PORT = redis.port;
+  redisEnv.NATS_PORT = nats.port;
 });
 
 it('should receive subscription published event on all distributed gateways', async () => {
@@ -75,19 +72,16 @@ it('should receive subscription published event on all distributed gateways', as
     // either the publishing fails
     (async () => {
       await setTimeout(1_000);
-      const pub = new Redis({
-        host: redisEnv.REDIS_HOST,
-        port: redisEnv.REDIS_PORT,
-        lazyConnect: true,
+      const nats = await natsConnect({
+        servers: [`${redisEnv.NATS_HOST}:${redisEnv.NATS_PORT}`],
       });
-      pub.once('error', () => {});
-      await pub.connect();
-      using _ = {
-        [Symbol.dispose]() {
-          pub.disconnect();
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await nats.flush();
+          await nats.close();
         },
       };
-      await pub.publish(
+      nats.publish(
         'my-shared-gateways:new_product',
         JSON.stringify({
           id: '60',
