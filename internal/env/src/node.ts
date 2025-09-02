@@ -18,13 +18,3 @@ export function isNotPlatform(...platforms: NodeJS.Platform[]): boolean {
   }
   return true;
 }
-
-/** Returns `true` if the runtime environment is Node.js. */
-export function isNode() {
-  return (
-    typeof process !== 'undefined' &&
-    process.versions &&
-    process.versions.node &&
-    typeof Bun === 'undefined' // Bun also has process.versions.node
-  );
-}
