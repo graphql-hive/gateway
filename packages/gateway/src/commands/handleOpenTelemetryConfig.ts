@@ -139,12 +139,13 @@ export async function handleOpenTelemetryConfig(
 
 async function detectResource() {
   if (isNode()) {
-    // eslint-disable-next-line import/no-extraneous-dependencies -- it's up to the user to install
-    const { getResourceDetectors } = await import(
-      '@opentelemetry/auto-instrumentations-node'
-    );
-    // eslint-disable-next-line import/no-extraneous-dependencies -- it's up to the user to install
-    const { detectResources } = await import('@opentelemetry/resources');
+    // to prevent pkgroll from bundling the module (module is not listed in package.json)
+    const autoInstrumentationsNodeName =
+      '@opentelemetry/auto-instrumentations-node';
+    const { getResourceDetectors } = await import(autoInstrumentationsNodeName);
+    // to prevent pkgroll from bundling the module (module is not listed in package.json)
+    const resourcesName = '@opentelemetry/resources';
+    const { detectResources } = await import(resourcesName);
     return detectResources({ detectors: getResourceDetectors() });
   }
   return undefined;
