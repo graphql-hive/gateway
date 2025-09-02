@@ -3,7 +3,7 @@ import {
   BatchSpanProcessor,
   SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
-import { getEnvStr } from '~internal/env';
+import { getEnvStr, isNode } from '~internal/env';
 import type { CLIContext } from '..';
 
 export async function handleOpenTelemetryConfig(
@@ -110,7 +110,21 @@ export async function handleOpenTelemetryConfig(
 
       openTelemetrySetup({
         traces: { processors },
-        resource: await detectResource(),
+        resource: await detectResource().catch((err) => {
+          if (
+            err &&
+            typeof err === 'object' &&
+            'code' in err &&
+            err.code === 'ERR_MODULE_NOT_FOUND'
+          ) {
+            ctx.log.warn(
+              err,
+              `NodeJS modules necessary for environment detection is missing, please install it to auto-detect the environment`,
+            );
+            return undefined;
+          }
+          throw err;
+        }),
         contextManager,
       });
 
@@ -124,12 +138,7 @@ export async function handleOpenTelemetryConfig(
 }
 
 async function detectResource() {
-  if (
-    typeof process !== 'undefined' &&
-    process.versions &&
-    process.versions.node &&
-    typeof Bun === 'undefined' // Bun also has process.versions.node
-  ) {
+  if (isNode()) {
     const { getResourceDetectors } = await import(
       '@opentelemetry/auto-instrumentations-node'
     );
