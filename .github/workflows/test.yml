@@ -156,7 +156,7 @@ jobs:
           echo "result=$(grep -r -h "image: '" e2e | shasum | base64)" >> "$GITHUB_OUTPUT"
       - if: runner.os == 'Linux'
         name: Cache Docker Images
-        uses: ScribeMD/docker-cache@fb28c93772363301b8d0a6072ce850224b73f74e # 0.5.0 + https://github.com/ScribeMD/docker-cache/pull/838
+        uses: ScribeMD/docker-cache@e1be5d7e63cc5f0c6400d8cb86d3d899a7fd71e2 # 0.5.0 + https://github.com/ScribeMD/docker-cache/pull/838
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
