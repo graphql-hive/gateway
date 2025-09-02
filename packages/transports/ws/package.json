@@ -46,7 +46,7 @@
     "@graphql-mesh/string-interpolation": "^0.5.6",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.8",
-    "@graphql-mesh/utils": "^0.104.8",
+    "@graphql-mesh/utils": "^0.104.10",
     "@graphql-tools/executor-graphql-ws": "workspace:^",
     "@graphql-tools/utils": "^10.9.1",
     "graphql-ws": "^6.0.6",
