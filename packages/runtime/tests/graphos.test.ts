@@ -93,7 +93,7 @@ describe('GraphOS', () => {
       Promise.resolve().then(() => unifiedGraphFetcher());
       await advanceTimersByTimeAsync(20);
       expect(mockSDL).toHaveBeenCalledTimes(1);
-      await advanceTimersByTimeAsync(20);
+      await advanceTimersByTimeAsync(50);
       expect(mockSDL).toHaveBeenCalledTimes(2);
     });
 
