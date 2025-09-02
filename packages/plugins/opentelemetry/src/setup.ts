@@ -98,7 +98,7 @@ type OpentelemetrySetupOptions = TracingOptions &
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   const log = options.log?.child('[OpenTelemetry] ');
 
-  if (!getEnvBool('OTEL_SDK_DISABLED')) {
+  if (getEnvBool('OTEL_SDK_DISABLED')) {
     log?.warn(
       'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is truthy',
     );
