@@ -143,35 +143,6 @@ export function getFieldsNotInSubschema(
           fieldsNotInSchema.add(subFieldNode);
         }
       }
-    } else {
-      for (const subFieldNode of subFieldNodes) {
-        const unavailableFields = extractUnavailableFields(
-          sourceSchema,
-          field,
-          subFieldNode,
-          (fieldType) => {
-            if (
-              stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
-                subschema,
-              )
-            ) {
-              return false;
-            }
-            return true;
-          },
-          fragments,
-        );
-        if (unavailableFields.length) {
-          fieldNotInSchema = true;
-          fieldsNotInSchema.add({
-            ...subFieldNode,
-            selectionSet: {
-              kind: Kind.SELECTION_SET,
-              selections: unavailableFields,
-            },
-          });
-        }
-      }
     }
     const isComputedField =
       subschema.merge?.[gatewayType.name]?.fields?.[fieldName]?.computed;
