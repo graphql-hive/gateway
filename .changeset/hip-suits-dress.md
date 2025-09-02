@@ -58,6 +58,30 @@ export interface PubSub<M extends TopicDataMap = TopicDataMap> {
 }
 ```
 
+## New `NATSPubSub` for a NATS-powered pubsub
+
+```sh
+npm i @nats-io/transport-node
+```
+
+```ts filename="gateway.config.ts"
+import { defineConfig } from '@graphql-hive/gateway';
+import { NATSPubSub } from '@graphql-hive/pubsub/nats';
+import { connect } from '@nats-io/transport-node';
+
+export const gatewayConfig = defineConfig({
+  maskedErrors: false,
+  pubsub: new NATSPubSub(
+    await connect(),
+    {
+      // we make sure to use the same prefix for all gateways to share the same channels and pubsub.
+      // meaning, all gateways using this channel prefix will receive and publish to the same topics
+      subjectPrefix: 'my-app',
+    },
+  ),
+});
+```
+
 ## New `RedisPubSub` for a Redis-powered pubsub
 
 ```sh
