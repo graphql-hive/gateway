@@ -1,5 +1,27 @@
 # @graphql-mesh/transport-http-callback
 
+## 0.7.3
+### Patch Changes
+
+
+
+- [#1408](https://github.com/graphql-hive/gateway/pull/1408) [`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.8) (from `^0.104.7`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.8) (from `^0.104.7`, in `dependencies`)
+
+
+- [#1411](https://github.com/graphql-hive/gateway/pull/1411) [`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/fetch@^0.10.10` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.10) (from `^0.10.9`, in `dependencies`)
+
+
+- [#1424](https://github.com/graphql-hive/gateway/pull/1424) [`fe9b42f`](https://github.com/graphql-hive/gateway/commit/fe9b42f02ca6e3fbe6defd83e21e283dedf7481a) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.11` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.11) (from `^0.104.8`, in `dependencies`)
+- Updated dependencies [[`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d)]:
+  - @graphql-mesh/transport-common@0.7.39
+
 ## 0.7.2
 
 ### Patch Changes

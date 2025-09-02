@@ -1,5 +1,45 @@
 # @graphql-hive/gateway-runtime
 
+## 1.11.0
+### Minor Changes
+
+
+
+- [#1403](https://github.com/graphql-hive/gateway/pull/1403) [`e5eb881`](https://github.com/graphql-hive/gateway/commit/e5eb881e8a063accc55b750e613f4baefa21dda5) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Allow configuring some of the batch delegation options
+  
+  Like the `maxBatchSize` which is used to limit the number of items requested in a single delegated batch.
+
+### Patch Changes
+
+
+
+- [#1408](https://github.com/graphql-hive/gateway/pull/1408) [`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.8) (from `^0.104.7`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.8) (from `^0.104.7`, in `dependencies`)
+
+
+- [#1411](https://github.com/graphql-hive/gateway/pull/1411) [`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/server@^0.10.12` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.12) (from `^0.10.11`, in `dependencies`)
+
+
+- [#1424](https://github.com/graphql-hive/gateway/pull/1424) [`fe9b42f`](https://github.com/graphql-hive/gateway/commit/fe9b42f02ca6e3fbe6defd83e21e283dedf7481a) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/utils@^0.104.11` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.11) (from `^0.104.8`, in `dependencies`)
+
+
+- [#1403](https://github.com/graphql-hive/gateway/pull/1403) [`e5eb881`](https://github.com/graphql-hive/gateway/commit/e5eb881e8a063accc55b750e613f4baefa21dda5) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Rename `__experimental__batchDelegation` to `__experimental__batchExecution`
+  
+  Because it enables/disabled batch execution, and not delegation.
+- Updated dependencies [[`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d), [`fe9b42f`](https://github.com/graphql-hive/gateway/commit/fe9b42f02ca6e3fbe6defd83e21e283dedf7481a), [`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d), [`fe9b42f`](https://github.com/graphql-hive/gateway/commit/fe9b42f02ca6e3fbe6defd83e21e283dedf7481a), [`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d), [`fe9b42f`](https://github.com/graphql-hive/gateway/commit/fe9b42f02ca6e3fbe6defd83e21e283dedf7481a), [`5aefad2`](https://github.com/graphql-hive/gateway/commit/5aefad2ac4abe40fd1cb141218bd2679b3e0047d), [`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df), [`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df), [`e5eb881`](https://github.com/graphql-hive/gateway/commit/e5eb881e8a063accc55b750e613f4baefa21dda5)]:
+  - @graphql-hive/logger-json@0.0.8
+  - @graphql-mesh/fusion-runtime@0.12.0
+  - @graphql-mesh/hmac-upstream-signature@1.2.32
+  - @graphql-mesh/transport-common@0.7.39
+  - @graphql-tools/executor-http@2.1.2
+  - @graphql-tools/federation@3.2.9
+
 ## 1.10.3
 
 ### Patch Changes
