@@ -1,5 +1,16 @@
 # @graphql-tools/federation
 
+## 3.2.9
+### Patch Changes
+
+
+
+- [#1411](https://github.com/graphql-hive/gateway/pull/1411) [`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/fetch@^0.10.10` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.10) (from `^0.10.9`, in `dependencies`)
+- Updated dependencies [[`37113d1`](https://github.com/graphql-hive/gateway/commit/37113d1a446748fd83da9823e27a0f56872317df)]:
+  - @graphql-tools/executor-http@2.1.2
+
 ## 3.2.8
 
 ### Patch Changes
