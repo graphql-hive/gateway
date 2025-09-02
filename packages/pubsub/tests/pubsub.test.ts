@@ -1,33 +1,51 @@
 import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
+import { connect as natsConnect } from '@nats-io/transport-node';
 import { crypto } from '@whatwg-node/fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import Redis from 'ioredis';
 import LeakDetector from 'jest-leak-detector';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { MemPubSub } from '../src/mem';
+import { NATSPubSub } from '../src/nats';
 import { PubSub as IPubSub, TopicDataMap } from '../src/pubsub';
-import { RedisPubSub, RedisPubSubOptions } from '../src/redis';
+import { RedisPubSub } from '../src/redis';
 
-const PubSubCtors = [MemPubSub, RedisPubSub];
+const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub];
 
 for (const PubSub of PubSubCtors) {
   describe.skipIf(process.env['LEAK_TEST'] && PubSub === RedisPubSub)(
     PubSub.name,
     () => {
       let redis: Container | null = null;
+      let nats: Container | null = null;
       beforeAll(async () => {
-        if (PubSub === RedisPubSub) {
-          const { container } = createTenv(__dirname);
-          redis = await container({
-            name: 'redis',
-            image: 'redis:8',
-            containerPort: 6379,
-            healthcheck: ['CMD-SHELL', 'redis-cli ping'],
-            env: {
-              LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
-            },
-          });
+        switch (PubSub) {
+          case RedisPubSub: {
+            const { container } = createTenv(__dirname);
+            redis = await container({
+              name: 'redis',
+              image: 'redis:8',
+              containerPort: 6379,
+              healthcheck: ['CMD-SHELL', 'redis-cli ping'],
+              env: {
+                LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+              },
+            });
+            return;
+          }
+          case NATSPubSub:
+            const { container } = createTenv(__dirname);
+            nats = await container({
+              name: 'nats',
+              image: 'nats:2.11-alpine', // we want alpine for healtcheck
+              containerPort: 4222,
+              healthcheck: [
+                'CMD-SHELL',
+                'wget --spider http://localhost:8222/healthz',
+              ],
+            });
+            break;
         }
       });
 
@@ -41,24 +59,42 @@ for (const PubSub of PubSubCtors) {
       }
 
       async function createPubSub<Data extends TopicDataMap>(
-        redisOpts: RedisPubSubOptions = { channelPrefix: crypto.randomUUID() },
+        opts: { topicPrefix: string } = { topicPrefix: crypto.randomUUID() },
       ): Promise<IPubSub<Data>> {
-        if (PubSub === MemPubSub) {
-          return new MemPubSub<Data>();
-        }
-        if (PubSub === RedisPubSub) {
-          if (!redis) {
-            throw new Error('Redis container is not initialized');
+        switch (PubSub) {
+          case MemPubSub:
+            return new MemPubSub<Data>();
+          case RedisPubSub: {
+            if (!redis) {
+              throw new Error('Redis container is not initialized');
+            }
+            const pub = new Redis({ port: redis.port, lazyConnect: false });
+            pub.once('error', () => {});
+            const sub = new Redis({ port: redis.port, lazyConnect: false });
+            sub.once('error', () => {});
+            // await pub.connect();
+            // await sub.connect();
+            return new RedisPubSub<Data>(
+              { pub, sub },
+              { channelPrefix: opts.topicPrefix },
+            );
           }
-          const pub = new Redis({ port: redis.port, lazyConnect: false });
-          pub.once('error', () => {});
-          const sub = new Redis({ port: redis.port, lazyConnect: false });
-          sub.once('error', () => {});
-          // await pub.connect();
-          // await sub.connect();
-          return new RedisPubSub<Data>({ pub, sub }, redisOpts);
+          case NATSPubSub: {
+            if (!nats) {
+              throw new Error('NATS container is not initialized');
+            }
+            const conn = await natsConnect({
+              servers: [`0.0.0.0:${nats.port}`],
+            });
+            return new NATSPubSub<Data>(conn, {
+              subjectPrefix: opts.topicPrefix,
+            });
+          }
+          default:
+            throw new Error(
+              `Unsupported PubSub implementation: ${PubSub.name}`,
+            );
         }
-        throw new Error(`Unsupported PubSub implementation: ${PubSub.name}`);
       }
 
       it('should respect topic data generic', async () => {
@@ -236,25 +272,27 @@ for (const PubSub of PubSubCtors) {
         expect(Array.from(topics)).toEqual(['hello', 'world', 'there']);
       });
 
-      it.skipIf(PubSub !== RedisPubSub)(
-        'should get subscribed topics across all pubsubs',
-        async () => {
-          const sharedChannel = crypto.randomUUID();
-          await using pubsub1 = await createPubSub({
-            channelPrefix: sharedChannel,
-          });
-          await using pubsub2 = await createPubSub({
-            channelPrefix: sharedChannel,
-          });
+      it.skipIf(
+        PubSub === MemPubSub ||
+          // TODO: do we even need it?
+          PubSub === NATSPubSub,
+      )('should get subscribed topics across all pubsubs', async () => {
+        const sharedChannel = crypto.randomUUID();
+        await using pubsub1 = await createPubSub({
+          topicPrefix: sharedChannel,
+        });
+        await using pubsub2 = await createPubSub({
+          topicPrefix: sharedChannel,
+        });
 
-          const noop = () => {};
-          await pubsub1.subscribe('hello1', noop);
-          await pubsub1.subscribe('world', noop); // duplicate
-          await pubsub2.subscribe('world', noop);
-          await pubsub2.subscribe('world2', noop);
+        const noop = () => {};
+        await pubsub1.subscribe('hello1', noop);
+        await pubsub1.subscribe('world', noop); // duplicate
+        await pubsub2.subscribe('world', noop);
+        await pubsub2.subscribe('world2', noop);
 
-          await expect(pubsub1.subscribedTopics()).resolves
-            .toMatchInlineSnapshot(`
+        await expect(pubsub1.subscribedTopics()).resolves
+          .toMatchInlineSnapshot(`
             [
               "hello1",
               "world",
@@ -262,16 +300,15 @@ for (const PubSub of PubSubCtors) {
             ]
           `);
 
-          await expect(pubsub2.subscribedTopics()).resolves
-            .toMatchInlineSnapshot(`
+        await expect(pubsub2.subscribedTopics()).resolves
+          .toMatchInlineSnapshot(`
             [
               "world",
               "world2",
               "hello1",
             ]
           `);
-        },
-      );
+      });
     },
   );
 }

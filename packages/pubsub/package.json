@@ -39,6 +39,16 @@
         "default": "./dist/redis.js"
       }
     },
+    "./nats": {
+      "require": {
+        "types": "./dist/nats.d.cts",
+        "default": "./dist/nats.cjs"
+      },
+      "import": {
+        "types": "./dist/nats.d.ts",
+        "default": "./dist/nats.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -49,9 +59,13 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
+    "@nats-io/nats-core": "^3",
     "ioredis": "^5"
   },
   "peerDependenciesMeta": {
+    "@nats-io/nats-core": {
+      "optional": true
+    },
     "ioredis": {
       "optional": true
     }
@@ -62,6 +76,8 @@
     "@whatwg-node/promise-helpers": "^1.3.0"
   },
   "devDependencies": {
+    "@nats-io/nats-core": "^3.1.0",
+    "@nats-io/transport-node": "^3.1.0",
     "ioredis": "^5.7.0",
     "pkgroll": "2.15.0"
   },
