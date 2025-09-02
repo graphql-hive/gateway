@@ -1,4 +1,5 @@
 import { context, diag, DiagLogLevel } from '@opentelemetry/api';
+import { getEnvStr } from '~internal/env';
 
 export async function tryContextManagerSetup(
   useContextManager: true | undefined,
@@ -32,12 +33,6 @@ export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
   });
 }
 
-export const getEnvVar =
-  'process' in globalThis
-    ? <T>(name: string, defaultValue: T): string | T =>
-        process.env[name] || defaultValue
-    : <T>(_name: string, defaultValue: T): string | T => defaultValue;
-
 const logLevelMap: Record<string, DiagLogLevel> = {
   ALL: DiagLogLevel.ALL,
   VERBOSE: DiagLogLevel.VERBOSE,
@@ -49,7 +44,7 @@ const logLevelMap: Record<string, DiagLogLevel> = {
 };
 
 export function diagLogLevelFromEnv(): DiagLogLevel | undefined {
-  const value = getEnvVar('OTEL_LOG_LEVEL', null);
+  const value = getEnvStr('OTEL_LOG_LEVEL');
 
   if (value == null) {
     return undefined;

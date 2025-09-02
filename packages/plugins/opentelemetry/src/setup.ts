@@ -32,16 +32,15 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
+import { getEnvBool, getEnvStr } from '~internal/env';
 import {
   HiveTracingSpanProcessor,
   HiveTracingSpanProcessorOptions,
 } from './hive-span-processor';
-import { getEnvVar } from './utils';
 
 export * from './attributes';
 export * from './log-writer';
 export * from './hive-span-processor';
-export { getEnvVar };
 
 // @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
 
@@ -99,9 +98,9 @@ type OpentelemetrySetupOptions = TracingOptions &
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   const log = options.log?.child('[OpenTelemetry] ');
 
-  if (getEnvVar('OTEL_SDK_DISABLED', false) === 'true') {
+  if (!getEnvBool('OTEL_SDK_DISABLED')) {
     log?.warn(
-      'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is set to `true`',
+      'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is truthy',
     );
     return;
   }
@@ -146,17 +145,13 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         [ATTR_SERVICE_NAME]:
           options.resource && 'serviceName' in options.resource
             ? options.resource?.serviceName
-            : getEnvVar(
-                'OTEL_SERVICE_NAME',
-                '@graphql-mesh/plugin-opentelemetry',
-              ),
+            : getEnvStr('OTEL_SERVICE_NAME') ||
+              '@graphql-mesh/plugin-opentelemetry',
         [ATTR_SERVICE_VERSION]:
           options.resource && 'serviceVersion' in options.resource
             ? options.resource?.serviceVersion
-            : getEnvVar(
-                'OTEL_SERVICE_VERSION',
-                globalThis.__OTEL_PLUGIN_VERSION__,
-              ),
+            : getEnvStr('OTEL_SERVICE_VERSION') ||
+              globalThis.__OTEL_PLUGIN_VERSION__,
         ['hive.gateway.version']: globalThis.__VERSION__,
         ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__,
       });
@@ -231,7 +226,7 @@ export function hiveTracingSetup(
   },
 ) {
   const log = config.log?.child('[OpenTelemetry] ');
-  config.target ??= getEnvVar('HIVE_TARGET', undefined);
+  config.target ??= getEnvStr('HIVE_TARGET');
 
   if (!config.target) {
     throw new Error(
@@ -243,8 +238,7 @@ export function hiveTracingSetup(
 
   if (!config.processor) {
     config.accessToken ??=
-      getEnvVar('HIVE_TRACING_ACCESS_TOKEN', undefined) ??
-      getEnvVar('HIVE_ACCESS_TOKEN', undefined);
+      getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
 
     if (!config.accessToken) {
       throw new Error(
