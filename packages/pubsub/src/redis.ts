@@ -24,7 +24,7 @@ export interface RedisPubSubOptions {
   channelPrefix: string;
 }
 
-/** In-memory {@link PubSub} implementation. */
+/** {@link PubSub Hive PubSub} implementation of [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/). */
 export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   implements PubSub<M>
 {
