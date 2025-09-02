@@ -3,6 +3,7 @@ import {
   BatchSpanProcessor,
   SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
+import { getEnvStr } from '~internal/env';
 import type { CLIContext } from '..';
 
 export async function handleOpenTelemetryConfig(
@@ -31,8 +32,9 @@ export async function handleOpenTelemetryConfig(
     );
 
     return fakePromise().then(async () => {
-      const { openTelemetrySetup, HiveTracingSpanProcessor, getEnvVar } =
-        await import('@graphql-mesh/plugin-opentelemetry/setup');
+      const { openTelemetrySetup, HiveTracingSpanProcessor } = await import(
+        '@graphql-mesh/plugin-opentelemetry/setup'
+      );
       const processors: SpanProcessor[] = [];
 
       const logAttributes = {
@@ -50,7 +52,7 @@ export async function handleOpenTelemetryConfig(
         const otelEndpoint =
           typeof openTelemetry === 'string'
             ? openTelemetry
-            : getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT', undefined);
+            : getEnvStr('OTEL_EXPORTER_OTLP_ENDPOINT');
 
         log.debug({ exporterType, otelEndpoint }, 'Setting up OTLP Exporter');
 
