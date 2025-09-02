@@ -1,7 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { isCI, isNode } from '@internal/testing';
+import { isCI } from '@internal/testing';
 import { crypto, fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -181,7 +181,11 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (isNode()) {
+          if (
+            gatewayRunner === 'node' ||
+            gatewayRunner === 'docker' ||
+            gatewayRunner === 'bin'
+          ) {
             const expectedTags = [
               'process.owner',
               'host.arch',
@@ -297,7 +301,11 @@ describe('OpenTelemetry', () => {
             return expect(tags).toContainEqual({ key, value });
           });
 
-          if (isNode()) {
+          if (
+            gatewayRunner === 'node' ||
+            gatewayRunner === 'docker' ||
+            gatewayRunner === 'bin'
+          ) {
             const expectedTags = [
               'process.owner',
               'host.arch',
