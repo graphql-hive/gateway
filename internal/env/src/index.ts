@@ -110,3 +110,13 @@ export function isDebug(): boolean {
 export function isCI(): boolean {
   return getEnvBool('CI');
 }
+
+/** Returns `true` if the runtime environment is Node.js. */
+export function isNode() {
+  return (
+    typeof process !== 'undefined' &&
+    process.versions &&
+    process.versions.node &&
+    typeof Bun === 'undefined' // Bun also has process.versions.node
+  );
+}
