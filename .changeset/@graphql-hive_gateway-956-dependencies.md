@@ -5,6 +5,7 @@
 dependencies updates: 
 
 - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
+- Added dependency [`@graphql-hive/plugin-opentelemetry@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-opentelemetry/v/workspace:^) (to `dependencies`)
 - Added dependency [`@opentelemetry/api@^1.9.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.0) (to `dependencies`)
 - Added dependency [`@opentelemetry/api-logs@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.203.0) (to `dependencies`)
 - Added dependency [`@opentelemetry/context-async-hooks@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.0.1) (to `dependencies`)
@@ -19,3 +20,4 @@ dependencies updates:
 - Added dependency [`@opentelemetry/sdk-metrics@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.0.1) (to `dependencies`)
 - Added dependency [`@opentelemetry/sdk-trace-base@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.0.1) (to `dependencies`)
 - Removed dependency [`@graphql-mesh/plugin-mock@^0.105.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-mock/v/0.105.8) (from `dependencies`)
+- Removed dependency [`@graphql-mesh/plugin-opentelemetry@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-opentelemetry/v/workspace:^) (from `dependencies`)
