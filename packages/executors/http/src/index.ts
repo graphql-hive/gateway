@@ -18,7 +18,11 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
-import { handleMaybePromise, isPromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  handleMaybePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
 import { handleEventStreamResponse } from './handleEventStreamResponse.js';
@@ -79,8 +83,8 @@ export interface HTTPExecutorOptions {
    * Additional headers to include when querying the original schema
    */
   headers?:
-  | HeadersConfig
-  | ((executorRequest?: ExecutionRequest) => HeadersConfig);
+    | HeadersConfig
+    | ((executorRequest?: ExecutionRequest) => HeadersConfig);
   /**
    * HTTP method to use when querying the original schema.x
    * @default 'POST'
@@ -338,17 +342,12 @@ export function buildHTTPExecutor(
         () => {
           upstreamErrorExtensions.response ||= {};
           upstreamErrorExtensions.response.status = fetchResult.status;
-          upstreamErrorExtensions.response.statusText =
-            fetchResult.statusText;
-          Object.defineProperty(
-            upstreamErrorExtensions.response,
-            'headers',
-            {
-              get() {
-                return Object.fromEntries(fetchResult.headers.entries());
-              },
+          upstreamErrorExtensions.response.statusText = fetchResult.statusText;
+          Object.defineProperty(upstreamErrorExtensions.response, 'headers', {
+            get() {
+              return Object.fromEntries(fetchResult.headers.entries());
             },
-          );
+          });
 
           // Retry should respect HTTP Errors
           if (
@@ -357,7 +356,7 @@ export function buildHTTPExecutor(
           ) {
             throw new Error(
               fetchResult.statusText ||
-              `Upstream HTTP Error: ${fetchResult.status}`,
+                `Upstream HTTP Error: ${fetchResult.status}`,
             );
           }
 
@@ -449,40 +448,43 @@ export function buildHTTPExecutor(
       context?: any,
       info?: GraphQLResolveInfo,
     ): MaybePromise<ExecutionResult> {
-      if (typeof inflightRequestOptions.body === "object") {
+      if (typeof inflightRequestOptions.body === 'object') {
         return handleMaybePromise(
-          () => fetchFn(
-            inflightRequestOptions.url,
-            {
-              method: inflightRequestOptions.method,
-              headers: inflightRequestOptions.headers,
-              body: inflightRequestOptions.body,
-              credentials: inflightRequestOptions.credentials,
-              signal: inflightRequestOptions.signal,
-            },
-            context,
-            info,
-          ),
+          () =>
+            fetchFn(
+              inflightRequestOptions.url,
+              {
+                method: inflightRequestOptions.method,
+                headers: inflightRequestOptions.headers,
+                body: inflightRequestOptions.body,
+                credentials: inflightRequestOptions.credentials,
+                signal: inflightRequestOptions.signal,
+              },
+              context,
+              info,
+            ),
           (fetchResult) => handleFetchResult(fetchResult as Response),
           handleError,
         );
       }
       const inflightRequestId = JSON.stringify(inflightRequestOptions);
-      let inflightRequest: MaybePromise<ExecutionResult> | undefined = inflightRequests.get(inflightRequestId);
+      let inflightRequest: MaybePromise<ExecutionResult> | undefined =
+        inflightRequests.get(inflightRequestId);
       if (!inflightRequest) {
         inflightRequest = handleMaybePromise(
-          () => fetchFn(
-            inflightRequestOptions.url,
-            {
-              method: inflightRequestOptions.method,
-              headers: inflightRequestOptions.headers,
-              body: inflightRequestOptions.body,
-              credentials: inflightRequestOptions.credentials,
-              signal: inflightRequestOptions.signal,
-            },
-            context,
-            info,
-          ),
+          () =>
+            fetchFn(
+              inflightRequestOptions.url,
+              {
+                method: inflightRequestOptions.method,
+                headers: inflightRequestOptions.headers,
+                body: inflightRequestOptions.body,
+                credentials: inflightRequestOptions.credentials,
+                signal: inflightRequestOptions.signal,
+              },
+              context,
+              info,
+            ),
           (fetchResult) => handleFetchResult(fetchResult as Response),
           handleError,
         );
@@ -498,8 +500,7 @@ export function buildHTTPExecutor(
 
     return handleMaybePromise(
       () => serializeFn(),
-      (body: SerializedExecutionRequest) =>
-      {
+      (body: SerializedExecutionRequest) => {
         switch (method) {
           case 'GET': {
             const finalUrl = prepareGETUrl({
@@ -512,7 +513,7 @@ export function buildHTTPExecutor(
               headers,
               signal,
               credentials: options?.credentials,
-            }
+            };
             upstreamErrorExtensions.request.url = finalUrl;
             return handleInflightRequest(
               inflightRequestOptions,
