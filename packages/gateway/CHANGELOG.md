@@ -1,5 +1,19 @@
 # @graphql-hive/gateway
 
+## 1.16.5
+### Patch Changes
+
+
+
+- [#1428](https://github.com/graphql-hive/gateway/pull/1428) [`5660dab`](https://github.com/graphql-hive/gateway/commit/5660dab0398deed34809ef71e9a0292cfd4ddefb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Resolve to latest @envelop/core that includes instrumentation changes
+
+- Updated dependencies [[`5660dab`](https://github.com/graphql-hive/gateway/commit/5660dab0398deed34809ef71e9a0292cfd4ddefb)]:
+  - @graphql-mesh/plugin-jwt-auth@1.5.10
+  - @graphql-hive/gateway-runtime@1.11.1
+  - @graphql-hive/plugin-aws-sigv4@1.0.19
+  - @graphql-hive/plugin-deduplicate-request@1.0.5
+  - @graphql-mesh/hmac-upstream-signature@1.2.32
+
 ## 1.16.4
 ### Patch Changes
 
