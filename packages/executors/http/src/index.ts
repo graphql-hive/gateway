@@ -338,121 +338,12 @@ export function buildHTTPExecutor(
       };
     }
 
-    function handleFetchResult(fetchResult: Response) {
-      return handleMaybePromise<
-        MaybeAsyncIterable<ExecutionResult> | string,
-        ExecutionResult
-      >(
-        () => {
-          upstreamErrorExtensions.response ||= {};
-          upstreamErrorExtensions.response.status = fetchResult.status;
-          upstreamErrorExtensions.response.statusText = fetchResult.statusText;
-          Object.defineProperty(upstreamErrorExtensions.response, 'headers', {
-            get() {
-              return Object.fromEntries(fetchResult.headers.entries());
-            },
-          });
-
-          // Retry should respect HTTP Errors
-          if (
-            options?.retry != null &&
-            !fetchResult.status.toString().startsWith('2')
-          ) {
-            throw new Error(
-              fetchResult.statusText ||
-                `Upstream HTTP Error: ${fetchResult.status}`,
-            );
-          }
-
-          const contentType = fetchResult.headers.get('content-type');
-          if (contentType?.includes('text/event-stream')) {
-            return handleEventStreamResponse(
-              fetchResult,
-              subscriptionCtrl,
-              signal,
-            );
-          } else if (contentType?.includes('multipart/mixed')) {
-            return handleMultipartMixedResponse(fetchResult);
-          }
-
-          return fetchResult.text();
-        },
-        (result) => {
-          if (typeof result === 'string') {
-            upstreamErrorExtensions.response ||= {};
-            upstreamErrorExtensions.response.body = result;
-            if (result) {
-              try {
-                const parsedResult = JSON.parse(result);
-                upstreamErrorExtensions.response.body = parsedResult;
-                if (
-                  parsedResult.data == null &&
-                  (parsedResult.errors == null ||
-                    parsedResult.errors.length === 0)
-                ) {
-                  const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
-                  return {
-                    errors: [
-                      createGraphQLError(message, {
-                        originalError: new Error(message),
-                        extensions: upstreamErrorExtensions,
-                      }),
-                    ],
-                  };
-                }
-                if (Array.isArray(parsedResult.errors)) {
-                  return {
-                    ...parsedResult,
-                    errors: parsedResult.errors.map(
-                      ({
-                        message,
-                        ...options
-                      }: {
-                        message: string;
-                        extensions: Record<string, unknown>;
-                      }) => createGraphQLError(message, options),
-                    ),
-                  };
-                }
-                return parsedResult;
-              } catch (e: any) {
-                return {
-                  errors: [
-                    createGraphQLError(
-                      `Unexpected response: ${JSON.stringify(result)}`,
-                      {
-                        extensions: upstreamErrorExtensions,
-                        originalError: e,
-                      },
-                    ),
-                  ],
-                };
-              }
-            } else {
-              const message = 'No response returned';
-              return {
-                errors: [
-                  createGraphQLError(message, {
-                    extensions: upstreamErrorExtensions,
-                    originalError: new Error(message),
-                  }),
-                ],
-              };
-            }
-          } else {
-            return result;
-          }
-        },
-        handleError,
-      );
-    }
-
     function handleInflightRequest(
       inflightRequestOptions: InflightRequestOptions,
       context?: any,
       info?: GraphQLResolveInfo,
     ): MaybePromise<ExecutionResult> {
-      if (typeof inflightRequestOptions.body === 'object') {
+      function runInflightRequest() {
         return handleMaybePromise(
           () =>
             fetchFn(
@@ -466,39 +357,136 @@ export function buildHTTPExecutor(
               },
               context,
               info,
+            ) as Promise<Response> | Response,
+          (fetchResult: Response) =>
+            handleMaybePromise<
+              MaybeAsyncIterable<ExecutionResult> | string,
+              ExecutionResult
+            >(
+              () => {
+                upstreamErrorExtensions.response ||= {};
+                upstreamErrorExtensions.response.status = fetchResult.status;
+                upstreamErrorExtensions.response.statusText =
+                  fetchResult.statusText;
+                Object.defineProperty(
+                  upstreamErrorExtensions.response,
+                  'headers',
+                  {
+                    get() {
+                      return Object.fromEntries(fetchResult.headers.entries());
+                    },
+                  },
+                );
+
+                // Retry should respect HTTP Errors
+                if (
+                  options?.retry != null &&
+                  !fetchResult.status.toString().startsWith('2')
+                ) {
+                  throw new Error(
+                    fetchResult.statusText ||
+                      `Upstream HTTP Error: ${fetchResult.status}`,
+                  );
+                }
+
+                const contentType = fetchResult.headers.get('content-type');
+                if (contentType?.includes('text/event-stream')) {
+                  return handleEventStreamResponse(
+                    fetchResult,
+                    subscriptionCtrl,
+                    signal,
+                  );
+                } else if (contentType?.includes('multipart/mixed')) {
+                  return handleMultipartMixedResponse(fetchResult);
+                }
+
+                return fetchResult.text();
+              },
+              (result) => {
+                if (typeof result === 'string') {
+                  upstreamErrorExtensions.response ||= {};
+                  upstreamErrorExtensions.response.body = result;
+                  if (result) {
+                    try {
+                      const parsedResult = JSON.parse(result);
+                      upstreamErrorExtensions.response.body = parsedResult;
+                      if (
+                        parsedResult.data == null &&
+                        (parsedResult.errors == null ||
+                          parsedResult.errors.length === 0)
+                      ) {
+                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
+                        return {
+                          errors: [
+                            createGraphQLError(message, {
+                              originalError: new Error(message),
+                              extensions: upstreamErrorExtensions,
+                            }),
+                          ],
+                        };
+                      }
+                      if (Array.isArray(parsedResult.errors)) {
+                        return {
+                          ...parsedResult,
+                          errors: parsedResult.errors.map(
+                            ({
+                              message,
+                              ...options
+                            }: {
+                              message: string;
+                              extensions: Record<string, unknown>;
+                            }) => createGraphQLError(message, options),
+                          ),
+                        };
+                      }
+                      return parsedResult;
+                    } catch (e: any) {
+                      return {
+                        errors: [
+                          createGraphQLError(
+                            `Unexpected response: ${JSON.stringify(result)}`,
+                            {
+                              extensions: upstreamErrorExtensions,
+                              originalError: e,
+                            },
+                          ),
+                        ],
+                      };
+                    }
+                  } else {
+                    const message = 'No response returned';
+                    return {
+                      errors: [
+                        createGraphQLError(message, {
+                          extensions: upstreamErrorExtensions,
+                          originalError: new Error(message),
+                        }),
+                      ],
+                    };
+                  }
+                } else {
+                  return result;
+                }
+              },
+              handleError,
             ),
-          (fetchResult) => handleFetchResult(fetchResult as Response),
           handleError,
         );
+      }
+      if (typeof inflightRequestOptions.body === 'object') {
+        return runInflightRequest();
       }
       let inflightRequestId = `${inflightRequestOptions.url}|${inflightRequestOptions.method}`;
       if (inflightRequestOptions.body) {
         inflightRequestId += `|${inflightRequestOptions.body}`;
       }
       if (isCustomHeader) {
-        process.exit(1);
         inflightRequestId += `|${JSON.stringify(inflightRequestOptions.headers)}`;
       }
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
       if (!inflightRequest) {
-        inflightRequest = handleMaybePromise(
-          () =>
-            fetchFn(
-              inflightRequestOptions.url,
-              {
-                method: inflightRequestOptions.method,
-                headers: inflightRequestOptions.headers,
-                body: inflightRequestOptions.body,
-                credentials: inflightRequestOptions.credentials,
-                signal: inflightRequestOptions.signal,
-              },
-              context,
-              info,
-            ),
-          (fetchResult) => handleFetchResult(fetchResult as Response),
-          handleError,
-        );
+        inflightRequest = runInflightRequest();
         if (isPromise(inflightRequest)) {
           inflightRequests.set(inflightRequestId, inflightRequest);
           inflightRequest.finally(() => {
