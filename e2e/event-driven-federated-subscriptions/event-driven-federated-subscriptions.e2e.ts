@@ -12,7 +12,7 @@ import { beforeAll, expect, it } from 'vitest';
 const { container, gateway, service, composeWithMesh, gatewayRunner } =
   createTenv(__dirname);
 
-const redisEnv = {
+const natsEnv = {
   NATS_HOST: '',
   NATS_PORT: 0,
 };
@@ -23,10 +23,10 @@ beforeAll(async () => {
     containerPort: 4222,
     healthcheck: ['CMD-SHELL', 'wget --spider http://localhost:8222/healthz'],
   });
-  redisEnv.NATS_HOST = gatewayRunner.includes('docker')
+  natsEnv.NATS_HOST = gatewayRunner.includes('docker')
     ? dockerHostName
     : '0.0.0.0';
-  redisEnv.NATS_PORT = nats.port;
+  natsEnv.NATS_PORT = nats.port;
 });
 
 it('should receive subscription published event on all distributed gateways', async () => {
@@ -40,9 +40,9 @@ it('should receive subscription published event on all distributed gateways', as
   }
 
   const gws = [
-    await gateway({ supergraph, env: redisEnv }),
-    await gateway({ supergraph, env: redisEnv }),
-    await gateway({ supergraph, env: redisEnv }),
+    await gateway({ supergraph, env: natsEnv }),
+    await gateway({ supergraph, env: natsEnv }),
+    await gateway({ supergraph, env: natsEnv }),
   ];
 
   const clients = gws.map((gw) =>
@@ -73,7 +73,7 @@ it('should receive subscription published event on all distributed gateways', as
     (async () => {
       await setTimeout(1_000);
       const nats = await natsConnect({
-        servers: [`${redisEnv.NATS_HOST}:${redisEnv.NATS_PORT}`],
+        servers: [`${natsEnv.NATS_HOST}:${natsEnv.NATS_PORT}`],
       });
       await using _ = {
         async [Symbol.asyncDispose]() {
