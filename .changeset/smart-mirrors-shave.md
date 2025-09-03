@@ -4,5 +4,5 @@
 "@graphql-hive/gateway-runtime": patch
 ---
 
-Resolve to latest @envelop/core that includes intrumentation changes
+Resolve to latest @envelop/core that includes instrumentation changes
   
