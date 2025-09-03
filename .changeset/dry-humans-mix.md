@@ -2,7 +2,7 @@
 '@graphql-mesh/hmac-upstream-signature': major
 '@graphql-hive/plugin-deduplicate-request': major
 '@graphql-mesh/transport-http-callback': major
-'@graphql-mesh/plugin-opentelemetry': major
+'@graphql-hive/plugin-opentelemetry': major
 '@graphql-tools/executor-graphql-ws': major
 '@graphql-tools/stitching-directives': major
 '@graphql-mesh/plugin-prometheus': major

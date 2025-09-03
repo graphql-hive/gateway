@@ -124,7 +124,7 @@ export async function getBuiltinPluginsFromConfig(
   }
   if (config.openTelemetry) {
     const { useOpenTelemetry } = await import(
-      '@graphql-mesh/plugin-opentelemetry'
+      '@graphql-hive/plugin-opentelemetry'
     );
     plugins.push(useOpenTelemetry({ ...config.openTelemetry, log: ctx.log }));
   }

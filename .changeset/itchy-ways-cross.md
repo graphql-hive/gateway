@@ -1,7 +1,7 @@
 ---
 '@graphql-mesh/hmac-upstream-signature': major
 '@graphql-mesh/transport-http-callback': major
-'@graphql-mesh/plugin-opentelemetry': major
+'@graphql-hive/plugin-opentelemetry': major
 '@graphql-mesh/plugin-prometheus': major
 '@graphql-mesh/transport-common': major
 '@graphql-mesh/plugin-jwt-auth': major

@@ -1,5 +1,5 @@
 ---
-'@graphql-mesh/plugin-opentelemetry': major
+'@graphql-hive/plugin-opentelemetry': major
 ---
 
 The OpenTelemetry integration have been entirely overhauled.

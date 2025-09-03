@@ -33,7 +33,7 @@ export async function handleOpenTelemetryConfig(
 
     return fakePromise().then(async () => {
       const { openTelemetrySetup, HiveTracingSpanProcessor } = await import(
-        '@graphql-mesh/plugin-opentelemetry/setup'
+        '@graphql-hive/plugin-opentelemetry/setup'
       );
       const processors: SpanProcessor[] = [];
 

@@ -1,7 +1,7 @@
 import { createGatewayRuntime, Logger } from '@graphql-hive/gateway-runtime';
 import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
-import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
-import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { useOpenTelemetry } from '@graphql-hive/plugin-opentelemetry';
+import { openTelemetrySetup } from '@graphql-hive/plugin-opentelemetry/setup';
 import { Opts } from '@internal/testing';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';

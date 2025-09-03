@@ -19,7 +19,7 @@ import {
   SEMATTRS_HTTP_STATUS_CODE,
   SEMATTRS_HTTP_URL,
   SEMATTRS_NET_HOST_NAME,
-} from '@graphql-mesh/plugin-opentelemetry/setup';
+} from '@graphql-hive/plugin-opentelemetry/setup';
 import {
   ROOT_CONTEXT,
   SpanStatusCode,
@@ -119,7 +119,7 @@ describe('useOpenTelemetry', () => {
 
       const resource = getResource();
       expect(resource?.attributes).toMatchObject({
-        'service.name': '@graphql-mesh/plugin-opentelemetry',
+        'service.name': '@graphql-hive/plugin-opentelemetry',
       });
     });
 

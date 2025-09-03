@@ -72,7 +72,7 @@ const deps = {
   'node_modules/@escape.tech/graphql-armor-block-field-suggestions/index':
     '../../node_modules/@escape.tech/graphql-armor-block-field-suggestions/dist/graphql-armor-block-field-suggestions.esm.js',
   // OpenTelemetry plugin is sometimes imported, and not re-used from the gateway itself. we therefore need to bundle it into node_modules
-  'node_modules/@graphql-mesh/plugin-opentelemetry/index':
+  'node_modules/@graphql-hive/plugin-opentelemetry/index':
     '../plugins/opentelemetry/src/index.ts',
   // Since `async_hooks` is not available in all runtime, it have to be bundle separately
   // The Async Local context manager of Opentelemetry can't be bundled correctly, so we use our own
@@ -85,9 +85,9 @@ const deps = {
     '../plugins/opentelemetry/src/sdk-node.ts',
   'node_modules/@opentelemetry/auto-instrumentations-node/index':
     '../plugins/opentelemetry/src/auto-instrumentations.ts',
-  'node_modules/@graphql-mesh/plugin-opentelemetry/setup':
+  'node_modules/@graphql-hive/plugin-opentelemetry/setup':
     '../plugins/opentelemetry/src/setup.ts',
-  'node_modules/@graphql-mesh/plugin-opentelemetry/api':
+  'node_modules/@graphql-hive/plugin-opentelemetry/api':
     '../plugins/opentelemetry/src/api.ts',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.

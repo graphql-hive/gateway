@@ -4180,6 +4180,7 @@ __metadata:
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-deduplicate-request": "workspace:^"
+    "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.8"
     "@graphql-mesh/cache-localforage": "npm:^0.105.9"
@@ -4190,7 +4191,6 @@ __metadata:
     "@graphql-mesh/plugin-http-cache": "npm:^0.105.8"
     "@graphql-mesh/plugin-jit": "npm:^0.2.7"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
-    "@graphql-mesh/plugin-opentelemetry": "workspace:^"
     "@graphql-mesh/plugin-prometheus": "workspace:^"
     "@graphql-mesh/plugin-rate-limit": "npm:^0.104.7"
     "@graphql-mesh/plugin-snapshot": "npm:^0.104.7"
@@ -4352,6 +4352,45 @@ __metadata:
     pkgroll: "npm:2.15.0"
   peerDependencies:
     graphql: ^16.9.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/plugin-opentelemetry@workspace:^, @graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
+  dependencies:
+    "@graphql-hive/core": "npm:^0.13.0"
+    "@graphql-hive/gateway-runtime": "workspace:^"
+    "@graphql-hive/logger": "workspace:^"
+    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
+    "@graphql-mesh/transport-common": "workspace:^"
+    "@graphql-mesh/types": "npm:^0.104.8"
+    "@graphql-mesh/utils": "npm:^0.104.11"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    "@opentelemetry/api": "npm:^1.9.0"
+    "@opentelemetry/api-logs": "npm:^0.203.0"
+    "@opentelemetry/auto-instrumentations-node": "npm:^0.62.1"
+    "@opentelemetry/context-async-hooks": "npm:^2.0.1"
+    "@opentelemetry/core": "npm:^2.0.1"
+    "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.203.0"
+    "@opentelemetry/exporter-trace-otlp-http": "npm:^0.203.0"
+    "@opentelemetry/instrumentation": "npm:^0.203.0"
+    "@opentelemetry/resources": "npm:^2.0.1"
+    "@opentelemetry/sdk-logs": "npm:^0.203.0"
+    "@opentelemetry/sdk-node": "npm:^0.203.0"
+    "@opentelemetry/sdk-trace-base": "npm:^2.0.1"
+    "@opentelemetry/semantic-conventions": "npm:^1.36.0"
+    "@whatwg-node/promise-helpers": "npm:1.3.0"
+    "@whatwg-node/server": "npm:^0.10.0"
+    graphql: "npm:^16.9.0"
+    graphql-yoga: "npm:^5.15.1"
+    pkgroll: "npm:2.15.0"
+    rimraf: "npm:^6.0.1"
+    rollup: "npm:^4.41.1"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.19.4"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
   linkType: soft
 
@@ -4718,45 +4757,6 @@ __metadata:
   checksum: 10c0/b3e916ba788b9838f99ce86b3703d4c9951ace88fc0989a25108579cc21553c0ae70edd747c075cbecb41ba3e1e8f75abf8a736f11b2ac544d5b5db74d7f4c5a
   languageName: node
   linkType: hard
-
-"@graphql-mesh/plugin-opentelemetry@workspace:^, @graphql-mesh/plugin-opentelemetry@workspace:packages/plugins/opentelemetry":
-  version: 0.0.0-use.local
-  resolution: "@graphql-mesh/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
-  dependencies:
-    "@graphql-hive/core": "npm:^0.13.0"
-    "@graphql-hive/gateway-runtime": "workspace:^"
-    "@graphql-hive/logger": "workspace:^"
-    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/transport-common": "workspace:^"
-    "@graphql-mesh/types": "npm:^0.104.8"
-    "@graphql-mesh/utils": "npm:^0.104.11"
-    "@graphql-tools/utils": "npm:^10.9.1"
-    "@opentelemetry/api": "npm:^1.9.0"
-    "@opentelemetry/api-logs": "npm:^0.203.0"
-    "@opentelemetry/auto-instrumentations-node": "npm:^0.62.1"
-    "@opentelemetry/context-async-hooks": "npm:^2.0.1"
-    "@opentelemetry/core": "npm:^2.0.1"
-    "@opentelemetry/exporter-trace-otlp-grpc": "npm:^0.203.0"
-    "@opentelemetry/exporter-trace-otlp-http": "npm:^0.203.0"
-    "@opentelemetry/instrumentation": "npm:^0.203.0"
-    "@opentelemetry/resources": "npm:^2.0.1"
-    "@opentelemetry/sdk-logs": "npm:^0.203.0"
-    "@opentelemetry/sdk-node": "npm:^0.203.0"
-    "@opentelemetry/sdk-trace-base": "npm:^2.0.1"
-    "@opentelemetry/semantic-conventions": "npm:^1.36.0"
-    "@whatwg-node/promise-helpers": "npm:1.3.0"
-    "@whatwg-node/server": "npm:^0.10.0"
-    graphql: "npm:^16.9.0"
-    graphql-yoga: "npm:^5.15.1"
-    pkgroll: "npm:2.15.0"
-    rimraf: "npm:^6.0.1"
-    rollup: "npm:^4.41.1"
-    tslib: "npm:^2.8.1"
-    tsx: "npm:^4.19.4"
-  peerDependencies:
-    graphql: ^15.9.0 || ^16.9.0
-  languageName: unknown
-  linkType: soft
 
 "@graphql-mesh/plugin-prometheus@workspace:^, @graphql-mesh/plugin-prometheus@workspace:packages/plugins/prometheus":
   version: 0.0.0-use.local

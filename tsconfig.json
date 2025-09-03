@@ -45,13 +45,13 @@
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
-      "@graphql-mesh/plugin-opentelemetry": [
+      "@graphql-hive/plugin-opentelemetry": [
         "./packages/plugins/opentelemetry/src/index.ts"
       ],
-      "@graphql-mesh/plugin-opentelemetry/setup": [
+      "@graphql-hive/plugin-opentelemetry/setup": [
         "./packages/plugins/opentelemetry/src/setup.ts"
       ],
-      "@graphql-mesh/plugin-opentelemetry/api": [
+      "@graphql-hive/plugin-opentelemetry/api": [
         "./packages/plugins/opentelemetry/src/api.ts"
       ],
       "@graphql-mesh/plugin-prometheus": [

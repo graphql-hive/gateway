@@ -3,8 +3,8 @@ import {
   createGatewayRuntime,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import { useOpenTelemetry } from '@graphql-mesh/plugin-opentelemetry';
-import { openTelemetrySetup } from '@graphql-mesh/plugin-opentelemetry/setup';
+import { useOpenTelemetry } from '@graphql-hive/plugin-opentelemetry';
+import { openTelemetrySetup } from '@graphql-hive/plugin-opentelemetry/setup';
 import http from '@graphql-mesh/transport-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 

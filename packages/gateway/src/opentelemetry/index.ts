@@ -1,1 +1,1 @@
-export * from '@graphql-mesh/plugin-opentelemetry';
+export * from '@graphql-hive/plugin-opentelemetry';

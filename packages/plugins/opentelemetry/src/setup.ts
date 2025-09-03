@@ -146,7 +146,7 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
           options.resource && 'serviceName' in options.resource
             ? options.resource?.serviceName
             : getEnvStr('OTEL_SERVICE_NAME') ||
-              '@graphql-mesh/plugin-opentelemetry',
+              '@graphql-hive/plugin-opentelemetry',
         [ATTR_SERVICE_VERSION]:
           options.resource && 'serviceVersion' in options.resource
             ? options.resource?.serviceVersion
