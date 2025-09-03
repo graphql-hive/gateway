@@ -235,9 +235,12 @@ export function buildHTTPExecutor(
       endpoint = '/graphql';
     }
 
+    let isCustomHeader = false;
+
     const headers: Record<string, any> = { accept };
 
     if (options?.headers) {
+      isCustomHeader = true;
       Object.assign(
         headers,
         typeof options?.headers === 'function'
@@ -247,6 +250,7 @@ export function buildHTTPExecutor(
     }
 
     if (request.extensions?.headers) {
+      isCustomHeader = true;
       const { headers: headersFromExtensions, ...restExtensions } =
         request.extensions;
       Object.assign(headers, headersFromExtensions);
@@ -467,7 +471,14 @@ export function buildHTTPExecutor(
           handleError,
         );
       }
-      const inflightRequestId = JSON.stringify(inflightRequestOptions);
+      let inflightRequestId = `${inflightRequestOptions.url}|${inflightRequestOptions.method}`;
+      if (inflightRequestOptions.body) {
+        inflightRequestId += `|${inflightRequestOptions.body}`;
+      }
+      if (isCustomHeader) {
+        process.exit(1);
+        inflightRequestId += `|${JSON.stringify(inflightRequestOptions.headers)}`;
+      }
       let inflightRequest: MaybePromise<ExecutionResult> | undefined =
         inflightRequests.get(inflightRequestId);
       if (!inflightRequest) {
