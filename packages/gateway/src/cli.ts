@@ -17,7 +17,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
-import { HivePubSub } from '@graphql-hive/pubsub';
+import type { PubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { OpenTelemetryGatewayPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
@@ -114,7 +114,7 @@ export interface GatewayCLIProxyConfig<
 
 export type KeyValueCacheFactoryFn = (ctx: {
   log: Logger;
-  pubsub: HivePubSub;
+  pubsub: PubSub;
   cwd: string;
 }) => KeyValueCache;
 

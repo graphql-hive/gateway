@@ -1,125 +1,51 @@
-import { Repeater } from '@repeaterjs/repeater';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import type { DisposableSymbols } from '@whatwg-node/disposablestack';
+import type { MaybePromise } from '@whatwg-node/promise-helpers';
 
-type TopicDataMap = Record<string, any>;
-
-export interface HivePubSub<Data extends TopicDataMap = TopicDataMap> {
-  /** @deprecated Please use {@link subscribedTopics} if implemented instead. This method will be removed in next major release. */
-  getEventNames(): Iterable<keyof Data>;
-  /** @important This method will be required starting next major release. */
-  subscribedTopics?(): Iterable<keyof Data>;
-  publish<Topic extends keyof Data>(topic: Topic, data: Data[Topic]): void;
-  subscribe<Topic extends keyof Data>(
-    topic: Topic,
-    listener: PubSubListener<Data, Topic>,
-  ): number;
-  unsubscribe(subId: number): void;
-  asyncIterator<Topic extends keyof Data>(
-    topic: Topic,
-  ): AsyncIterable<Data[Topic]>;
-  /** @important This method will be required starting next major release. */
-  dispose?(): void;
-  /** @important This method will be required starting next major release. */
-  [DisposableSymbols.dispose]?(): void;
-}
+export type TopicDataMap = { [topic: string]: any /* data */ };
 
 export type PubSubListener<
   Data extends TopicDataMap,
   Topic extends keyof Data,
 > = (data: Data[Topic]) => void;
 
-export class PubSub<Data extends TopicDataMap = TopicDataMap>
-  implements HivePubSub<Data>
-{
-  #topicListeners = new Map<keyof Data, Set<PubSubListener<Data, any>>>();
-  #subIdTopic = new Map<number, any>();
-  #subIdListeners = new Map<number, PubSubListener<Data, any>>();
+// DO NOT FORGET TO UPDATE DOCUMENTATION WHEN CHANGING THE INTERFACE
 
-  /** @deprecated Please use {@link subscribedTopics} instead. */
-  public getEventNames() {
-    return this.#topicListeners.keys();
-  }
-
-  public subscribedTopics() {
-    return this.#topicListeners.keys();
-  }
-
-  public publish<Topic extends keyof Data>(topic: Topic, data: Data[Topic]) {
-    const listeners = this.#topicListeners.get(topic);
-    if (listeners) {
-      for (const l of listeners) {
-        l(data);
-      }
-    }
-  }
-
-  public subscribe<Topic extends keyof Data>(
+export interface PubSub<M extends TopicDataMap = TopicDataMap> {
+  /**
+   * Publish {@link data} for a {@link topic}.
+   * @returns `void` or a `Promise` that resolves when the data has been successfully published
+   */
+  publish<Topic extends keyof M>(
     topic: Topic,
-    listener: PubSubListener<Data, Topic>,
-  ) {
-    let listeners = this.#topicListeners.get(topic);
-    if (!listeners) {
-      listeners = new Set<PubSubListener<Data, Topic>>();
-      this.#topicListeners.set(topic, listeners);
-    }
-    listeners.add(listener);
-
-    const subId = Math.floor(Math.random() * 100_000_000);
-    this.#subIdTopic.set(subId, topic);
-    this.#subIdListeners.set(subId, listener);
-
-    return subId;
-  }
-
-  public unsubscribe(subId: number): void {
-    const listener = this.#subIdListeners.get(subId);
-    if (!listener) {
-      return; // already unsubscribed
-    }
-    this.#subIdListeners.delete(subId);
-
-    const topic = this.#subIdTopic.get(subId);
-    if (!topic) {
-      return; // should not happen TODO: throw?
-    }
-    this.#subIdTopic.delete(subId);
-
-    const listeners = this.#topicListeners.get(topic);
-    if (!listeners) {
-      return; // should not happen TODO: throw?
-    }
-
-    listeners.delete(listener);
-    if (listeners.size === 0) {
-      this.#topicListeners.delete(topic);
-    }
-  }
-
-  #asyncIteratorStops = new Set<() => void>();
-
-  public asyncIterator<Topic extends keyof Data>(
+    data: M[Topic],
+  ): MaybePromise<void>;
+  /**
+   * A distinct list of all topics that are currently subscribed to.
+   * Can be a promise to accomodate distributed systems where subscribers exist on other
+   * locations and we need to know about all of them.
+   */
+  subscribedTopics(): MaybePromise<Iterable<keyof M>>;
+  /**
+   * Subscribe and listen to a {@link topic} receiving its data.
+   *
+   * If the {@link listener} is provided, it will be called whenever data is emitted for the {@link topic},
+   *
+   * @returns an unsubscribe function or a `Promise<unsubscribe function>` that resolves when the subscription is successfully established. the unsubscribe function returns `void` or a `Promise` that resolves on successful unsubscribe and subscription cleanup
+   *
+   * If the {@link listener} is not provided,
+   *
+   * @returns an `AsyncIterable` that yields data for the given {@link topic}
+   */
+  subscribe<Topic extends keyof M>(topic: Topic): AsyncIterable<M[Topic]>;
+  subscribe<Topic extends keyof M>(
     topic: Topic,
-  ): AsyncIterable<Data[Topic]> {
-    return new Repeater(async (push, stop) => {
-      const subId = this.subscribe(topic, push);
-      this.#asyncIteratorStops.add(stop);
-      await stop;
-      this.#asyncIteratorStops.delete(stop);
-      this.unsubscribe(subId);
-    });
-  }
-
-  public dispose() {
-    this.#topicListeners.clear();
-    this.#subIdListeners.clear();
-    this.#subIdTopic.clear();
-    for (const stop of this.#asyncIteratorStops) {
-      stop();
-    }
-    this.#asyncIteratorStops.clear();
-  }
-
-  [DisposableSymbols.dispose]() {
-    this.dispose();
-  }
+    listener: PubSubListener<M, Topic>,
+  ): MaybePromise<() => MaybePromise<void>>;
+  /**
+   * Closes active subscriptions and disposes of all resources. Publishing and subscribing after disposal
+   * is not possible and will throw an error if attempted.
+   */
+  dispose(): MaybePromise<void>;
+  /** @see {@link dispose} */
+  [DisposableSymbols.asyncDispose](): Promise<void>;
 }

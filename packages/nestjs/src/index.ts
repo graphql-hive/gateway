@@ -9,7 +9,7 @@ import {
   getBuiltinPluginsFromConfig,
   getCacheInstanceFromConfig,
   getGraphQLWSOptions,
-  PubSub,
+  MemPubSub,
   type GatewayRuntime,
 } from '@graphql-hive/gateway';
 import { Logger as HiveLogger } from '@graphql-hive/logger';
@@ -106,7 +106,7 @@ export class HiveGatewayDriver<
     const configCtx = {
       log,
       cwd: process.cwd(),
-      pubsub: options.pubsub || new PubSub(),
+      pubsub: options.pubsub || new MemPubSub(),
     };
     const cache = await getCacheInstanceFromConfig(options, configCtx);
     const builtinPlugins = await getBuiltinPluginsFromConfig(options, {
