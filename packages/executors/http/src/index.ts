@@ -18,7 +18,7 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, isPromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
 import { handleEventStreamResponse } from './handleEventStreamResponse.js';
@@ -79,8 +79,8 @@ export interface HTTPExecutorOptions {
    * Additional headers to include when querying the original schema
    */
   headers?:
-    | HeadersConfig
-    | ((executorRequest?: ExecutionRequest) => HeadersConfig);
+  | HeadersConfig
+  | ((executorRequest?: ExecutionRequest) => HeadersConfig);
   /**
    * HTTP method to use when querying the original schema.x
    * @default 'POST'
@@ -132,14 +132,20 @@ export interface HTTPExecutorOptions {
   getDisposeReason?(): Error | undefined;
 }
 
+export type HeadersConfig = Record<string, string>;
+
+export interface InflightRequestOptions {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: string | FormData;
+  credentials?: RequestCredentials;
+  signal?: AbortSignal;
+}
+
 type InflightRequestId = string;
 
-const inflightRequests = new Map<
-  InflightRequestId,
-  MaybePromise<ExecutionResult>
->();
-
-export type HeadersConfig = Record<string, string>;
+const inflightRequests = new Map<InflightRequestId, Promise<ExecutionResult>>();
 
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
@@ -324,193 +330,227 @@ export function buildHTTPExecutor(
       };
     }
 
+    function handleFetchResult(fetchResult: Response) {
+      return handleMaybePromise<
+        MaybeAsyncIterable<ExecutionResult> | string,
+        ExecutionResult
+      >(
+        () => {
+          upstreamErrorExtensions.response ||= {};
+          upstreamErrorExtensions.response.status = fetchResult.status;
+          upstreamErrorExtensions.response.statusText =
+            fetchResult.statusText;
+          Object.defineProperty(
+            upstreamErrorExtensions.response,
+            'headers',
+            {
+              get() {
+                return Object.fromEntries(fetchResult.headers.entries());
+              },
+            },
+          );
+
+          // Retry should respect HTTP Errors
+          if (
+            options?.retry != null &&
+            !fetchResult.status.toString().startsWith('2')
+          ) {
+            throw new Error(
+              fetchResult.statusText ||
+              `Upstream HTTP Error: ${fetchResult.status}`,
+            );
+          }
+
+          const contentType = fetchResult.headers.get('content-type');
+          if (contentType?.includes('text/event-stream')) {
+            return handleEventStreamResponse(
+              fetchResult,
+              subscriptionCtrl,
+              signal,
+            );
+          } else if (contentType?.includes('multipart/mixed')) {
+            return handleMultipartMixedResponse(fetchResult);
+          }
+
+          return fetchResult.text();
+        },
+        (result) => {
+          if (typeof result === 'string') {
+            upstreamErrorExtensions.response ||= {};
+            upstreamErrorExtensions.response.body = result;
+            if (result) {
+              try {
+                const parsedResult = JSON.parse(result);
+                upstreamErrorExtensions.response.body = parsedResult;
+                if (
+                  parsedResult.data == null &&
+                  (parsedResult.errors == null ||
+                    parsedResult.errors.length === 0)
+                ) {
+                  const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
+                  return {
+                    errors: [
+                      createGraphQLError(message, {
+                        originalError: new Error(message),
+                        extensions: upstreamErrorExtensions,
+                      }),
+                    ],
+                  };
+                }
+                if (Array.isArray(parsedResult.errors)) {
+                  return {
+                    ...parsedResult,
+                    errors: parsedResult.errors.map(
+                      ({
+                        message,
+                        ...options
+                      }: {
+                        message: string;
+                        extensions: Record<string, unknown>;
+                      }) => createGraphQLError(message, options),
+                    ),
+                  };
+                }
+                return parsedResult;
+              } catch (e: any) {
+                return {
+                  errors: [
+                    createGraphQLError(
+                      `Unexpected response: ${JSON.stringify(result)}`,
+                      {
+                        extensions: upstreamErrorExtensions,
+                        originalError: e,
+                      },
+                    ),
+                  ],
+                };
+              }
+            } else {
+              const message = 'No response returned';
+              return {
+                errors: [
+                  createGraphQLError(message, {
+                    extensions: upstreamErrorExtensions,
+                    originalError: new Error(message),
+                  }),
+                ],
+              };
+            }
+          } else {
+            return result;
+          }
+        },
+        handleError,
+      );
+    }
+
+    function handleInflightRequest(
+      inflightRequestOptions: InflightRequestOptions,
+      context?: any,
+      info?: GraphQLResolveInfo,
+    ): MaybePromise<ExecutionResult> {
+      if (typeof inflightRequestOptions.body === "object") {
+        return handleMaybePromise(
+          () => fetchFn(
+            inflightRequestOptions.url,
+            {
+              method: inflightRequestOptions.method,
+              headers: inflightRequestOptions.headers,
+              body: inflightRequestOptions.body,
+              credentials: inflightRequestOptions.credentials,
+              signal: inflightRequestOptions.signal,
+            },
+            context,
+            info,
+          ),
+          (fetchResult) => handleFetchResult(fetchResult as Response),
+          handleError,
+        );
+      }
+      const inflightRequestId = JSON.stringify(inflightRequestOptions);
+      let inflightRequest: MaybePromise<ExecutionResult> | undefined = inflightRequests.get(inflightRequestId);
+      if (!inflightRequest) {
+        inflightRequest = handleMaybePromise(
+          () => fetchFn(
+            inflightRequestOptions.url,
+            {
+              method: inflightRequestOptions.method,
+              headers: inflightRequestOptions.headers,
+              body: inflightRequestOptions.body,
+              credentials: inflightRequestOptions.credentials,
+              signal: inflightRequestOptions.signal,
+            },
+            context,
+            info,
+          ),
+          (fetchResult) => handleFetchResult(fetchResult as Response),
+          handleError,
+        );
+        if (isPromise(inflightRequest)) {
+          inflightRequests.set(inflightRequestId, inflightRequest);
+          inflightRequest.finally(() => {
+            inflightRequests.delete(inflightRequestId);
+          });
+        }
+      }
+      return inflightRequest;
+    }
+
     return handleMaybePromise(
       () => serializeFn(),
-      (body: SerializedExecutionRequest) => {
-        const inflightRequestId = `${method}:${endpoint}:${JSON.stringify(body)}:${JSON.stringify(headers)}`;
-        const inflightRequestRes = inflightRequests.get(inflightRequestId);
-        if (inflightRequestRes) {
-          return inflightRequestRes;
-        }
-        const promise = handleMaybePromise(
-          () => {
-            switch (method) {
-              case 'GET': {
-                const finalUrl = prepareGETUrl({
-                  baseUrl: endpoint,
+      (body: SerializedExecutionRequest) =>
+      {
+        switch (method) {
+          case 'GET': {
+            const finalUrl = prepareGETUrl({
+              baseUrl: endpoint,
+              body,
+            });
+            const inflightRequestOptions: InflightRequestOptions = {
+              url: finalUrl,
+              method: 'GET',
+              headers,
+              signal,
+              credentials: options?.credentials,
+            }
+            upstreamErrorExtensions.request.url = finalUrl;
+            return handleInflightRequest(
+              inflightRequestOptions,
+              request.context,
+              request.info,
+            );
+          }
+          case 'POST': {
+            upstreamErrorExtensions.request.body = body;
+            return handleMaybePromise(
+              () =>
+                createFormDataFromVariables(body, {
+                  File: options?.File,
+                  FormData: options?.FormData,
+                }),
+              (body) => {
+                if (typeof body === 'string' && !headers['content-type']) {
+                  upstreamErrorExtensions.request.body = body;
+                  headers['content-type'] = 'application/json';
+                }
+                const inflightRequestOptions: InflightRequestOptions = {
+                  url: endpoint!,
+                  method: 'POST',
                   body,
-                });
-                const fetchOptions: RequestInit = {
-                  method: 'GET',
                   headers,
+                  credentials: options?.credentials,
                   signal,
                 };
-                if (options?.credentials != null) {
-                  fetchOptions.credentials = options.credentials;
-                }
-                upstreamErrorExtensions.request.url = finalUrl;
-                return fetchFn(
-                  finalUrl,
-                  fetchOptions,
+                return handleInflightRequest(
+                  inflightRequestOptions,
                   request.context,
                   request.info,
                 );
-              }
-              case 'POST': {
-                upstreamErrorExtensions.request.body = body;
-                return handleMaybePromise(
-                  () =>
-                    createFormDataFromVariables(body, {
-                      File: options?.File,
-                      FormData: options?.FormData,
-                    }),
-                  (body) => {
-                    if (typeof body === 'string' && !headers['content-type']) {
-                      upstreamErrorExtensions.request.body = body;
-                      headers['content-type'] = 'application/json';
-                    }
-                    const fetchOptions: RequestInit = {
-                      method: 'POST',
-                      body,
-                      headers,
-                      signal,
-                    };
-                    if (options?.credentials != null) {
-                      fetchOptions.credentials = options.credentials;
-                    }
-                    return fetchFn(
-                      endpoint,
-                      fetchOptions,
-                      request.context,
-                      request.info,
-                    ) as any;
-                  },
-                  handleError,
-                );
-              }
-            }
-          },
-          (fetchResult: Response) =>
-            handleMaybePromise<
-              MaybeAsyncIterable<ExecutionResult> | string,
-              ExecutionResult
-            >(
-              () => {
-                upstreamErrorExtensions.response ||= {};
-                upstreamErrorExtensions.response.status = fetchResult.status;
-                upstreamErrorExtensions.response.statusText =
-                  fetchResult.statusText;
-                Object.defineProperty(
-                  upstreamErrorExtensions.response,
-                  'headers',
-                  {
-                    get() {
-                      return Object.fromEntries(fetchResult.headers.entries());
-                    },
-                  },
-                );
-
-                // Retry should respect HTTP Errors
-                if (
-                  options?.retry != null &&
-                  !fetchResult.status.toString().startsWith('2')
-                ) {
-                  throw new Error(
-                    fetchResult.statusText ||
-                      `Upstream HTTP Error: ${fetchResult.status}`,
-                  );
-                }
-
-                const contentType = fetchResult.headers.get('content-type');
-                if (contentType?.includes('text/event-stream')) {
-                  return handleEventStreamResponse(
-                    fetchResult,
-                    subscriptionCtrl,
-                    signal,
-                  );
-                } else if (contentType?.includes('multipart/mixed')) {
-                  return handleMultipartMixedResponse(fetchResult);
-                }
-
-                return fetchResult.text();
-              },
-              (result) => {
-                if (typeof result === 'string') {
-                  upstreamErrorExtensions.response ||= {};
-                  upstreamErrorExtensions.response.body = result;
-                  if (result) {
-                    try {
-                      const parsedResult = JSON.parse(result);
-                      upstreamErrorExtensions.response.body = parsedResult;
-                      if (
-                        parsedResult.data == null &&
-                        (parsedResult.errors == null ||
-                          parsedResult.errors.length === 0)
-                      ) {
-                        const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
-                        return {
-                          errors: [
-                            createGraphQLError(message, {
-                              originalError: new Error(message),
-                              extensions: upstreamErrorExtensions,
-                            }),
-                          ],
-                        };
-                      }
-                      if (Array.isArray(parsedResult.errors)) {
-                        return {
-                          ...parsedResult,
-                          errors: parsedResult.errors.map(
-                            ({
-                              message,
-                              ...options
-                            }: {
-                              message: string;
-                              extensions: Record<string, unknown>;
-                            }) => createGraphQLError(message, options),
-                          ),
-                        };
-                      }
-                      return parsedResult;
-                    } catch (e: any) {
-                      return {
-                        errors: [
-                          createGraphQLError(
-                            `Unexpected response: ${JSON.stringify(result)}`,
-                            {
-                              extensions: upstreamErrorExtensions,
-                              originalError: e,
-                            },
-                          ),
-                        ],
-                      };
-                    }
-                  } else {
-                    const message = 'No response returned';
-                    return {
-                      errors: [
-                        createGraphQLError(message, {
-                          extensions: upstreamErrorExtensions,
-                          originalError: new Error(message),
-                        }),
-                      ],
-                    };
-                  }
-                } else {
-                  return result;
-                }
               },
               handleError,
-            ),
-          handleError,
-        );
-        inflightRequests.set(inflightRequestId, promise);
-        handleMaybePromise(
-          () => promise,
-          () => inflightRequests.delete(inflightRequestId),
-          () => inflightRequests.delete(inflightRequestId),
-        );
-        return promise;
+            );
+          }
+        }
       },
       handleError,
     );
