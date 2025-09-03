@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 1.11.1
+### Patch Changes
+
+
+
+- [#1428](https://github.com/graphql-hive/gateway/pull/1428) [`5660dab`](https://github.com/graphql-hive/gateway/commit/5660dab0398deed34809ef71e9a0292cfd4ddefb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Resolve to latest @envelop/core that includes instrumentation changes
+
+- Updated dependencies [[`29f0409`](https://github.com/graphql-hive/gateway/commit/29f0409fe851b45d717ab5d0f5651dde3012e913)]:
+  - @graphql-tools/stitch@9.4.29
+  - @graphql-mesh/hmac-upstream-signature@1.2.32
+
 ## 1.11.0
 ### Minor Changes
 

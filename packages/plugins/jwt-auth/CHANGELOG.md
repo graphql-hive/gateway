@@ -1,5 +1,12 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 1.5.10
+### Patch Changes
+
+
+
+- [#1428](https://github.com/graphql-hive/gateway/pull/1428) [`5660dab`](https://github.com/graphql-hive/gateway/commit/5660dab0398deed34809ef71e9a0292cfd4ddefb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Resolve to latest @envelop/core that includes instrumentation changes
+
 ## 1.5.9
 ### Patch Changes
 

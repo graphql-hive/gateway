@@ -1,5 +1,12 @@
 # @graphql-tools/stitch
 
+## 9.4.29
+### Patch Changes
+
+
+
+- [#1405](https://github.com/graphql-hive/gateway/pull/1405) [`29f0409`](https://github.com/graphql-hive/gateway/commit/29f0409fe851b45d717ab5d0f5651dde3012e913) Thanks [@ardatan](https://github.com/ardatan)! - Handle `@oneOf` directive properly while stitching subschemas
+
 ## 9.4.28
 
 ### Patch Changes
