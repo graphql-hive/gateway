@@ -64,6 +64,9 @@ export function mergeCandidates<TContext = Record<string, any>>(
   typeMergingOptions?: TypeMergingOptions<TContext>,
 ): GraphQLNamedType {
   const initialCandidateType = candidates[0]?.type;
+  if (candidates.length === 1) {
+    return initialCandidateType!;
+  }
   if (
     candidates.some(
       (candidate) =>
@@ -165,6 +168,8 @@ function mergeObjectTypeCandidates<TContext = Record<string, any>>(
     astNode,
     extensionASTNodes,
     extensions,
+    // @ts-expect-error We know isOneOf exists here
+    isOneOf: candidates.every((candidate) => candidate.type.isOneOf),
   };
 
   return new GraphQLObjectType(typeConfig);
@@ -220,6 +225,8 @@ function mergeInputObjectTypeCandidates<TContext = Record<string, any>>(
     astNode,
     extensionASTNodes,
     extensions,
+    // @ts-expect-error We know isOneOf exists here
+    isOneOf: candidates.every((candidate) => candidate.type.isOneOf),
   };
 
   return new GraphQLInputObjectType(typeConfig);
