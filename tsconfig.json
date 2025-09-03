@@ -28,6 +28,15 @@
       "@graphql-hive/importer": ["./packages/importer/src/index.ts"],
       "@graphql-hive/importer/*": ["./packages/importer/src/*"],
       "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
+      "@graphql-hive/gateway/opentelemetry": [
+        "./packages/gateway/src/opentelemetry/index.ts"
+      ],
+      "@graphql-hive/gateway/opentelemetry/api": [
+        "./packages/gateway/src/opentelemetry/api.ts"
+      ],
+      "@graphql-hive/gateway/opentelemetry/setup": [
+        "./packages/gateway/src/opentelemetry/setup.ts"
+      ],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
