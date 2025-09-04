@@ -1,11 +1,11 @@
 diff --git a/dist/changesets-cli.cjs.js b/dist/changesets-cli.cjs.js
-index 986fdf27f1d85412f8a6b2f5cc026d811ea04372..1f9ce913c42e765c860ca97fff670c2f96c928fb 100644
+index 53fc925f8aa492e7333033483e9f3e45839963ad..81cc3183c9ce6097519c8a130ffc9f3087bca63c 100644
 --- a/dist/changesets-cli.cjs.js
 +++ b/dist/changesets-cli.cjs.js
-@@ -666,32 +666,6 @@ function getCorrectRegistry(packageJson) {
-   return !registry || registry === "https://registry.yarnpkg.com" ? "https://registry.npmjs.org" : registry;
+@@ -630,30 +630,6 @@ function getCorrectRegistry(packageJson) {
+     registry: !registry || registry === "https://registry.yarnpkg.com" ? "https://registry.npmjs.org" : registry
+   };
  }
- 
 -async function getPublishTool(cwd) {
 -  const pm = await packageManagerDetector.detect({
 -    cwd
@@ -13,7 +13,6 @@ index 986fdf27f1d85412f8a6b2f5cc026d811ea04372..1f9ce913c42e765c860ca97fff670c2f
 -  if (!pm || pm.name !== "pnpm") return {
 -    name: "npm"
 -  };
--
 -  try {
 -    let result = await spawn__default["default"]("pnpm", ["--version"], {
 -      cwd
@@ -31,30 +30,27 @@ index 986fdf27f1d85412f8a6b2f5cc026d811ea04372..1f9ce913c42e765c860ca97fff670c2f
 -    };
 -  }
 -}
--
  async function getTokenIsRequired() {
-   // Due to a super annoying issue in yarn, we have to manually override this env variable
-   // See: https://github.com/yarnpkg/yarn/issues/2935#issuecomment-355292633
-@@ -783,7 +757,6 @@ let getOtpCode = async twoFactorState => {
+   const {
+     scope,
+@@ -744,16 +720,12 @@ let getOtpCode = async twoFactorState => {
+ // we have this so that we can do try a publish again after a publish without
  // the call being wrapped in the npm request limit and causing the publishes to potentially never run
- 
- async function internalPublish(pkgName, opts, twoFactorState) {
+ async function internalPublish(packageJson, opts, twoFactorState) {
 -  let publishTool = await getPublishTool(opts.cwd);
    let publishFlags = opts.access ? ["--access", opts.access] : [];
    publishFlags.push("--tag", opts.tag);
- 
-@@ -792,9 +765,7 @@ async function internalPublish(pkgName, opts, twoFactorState) {
+   if ((await twoFactorState.isRequired) && !ciInfo.isCI) {
+     let otpCode = await getOtpCode(twoFactorState);
      publishFlags.push("--otp", otpCode);
    }
- 
 -  if (publishTool.name === "pnpm" && publishTool.shouldAddNoGitChecks) {
 -    publishFlags.push("--no-git-checks");
--  } // Due to a super annoying issue in yarn, we have to manually override this env variable
-+  // Due to a super annoying issue in yarn, we have to manually override this env variable
-   // See: https://github.com/yarnpkg/yarn/issues/2935#issuecomment-355292633
- 
- 
-@@ -805,11 +776,9 @@ async function internalPublish(pkgName, opts, twoFactorState) {
+-  }
+   const {
+     scope,
+     registry
+@@ -768,11 +740,9 @@ async function internalPublish(packageJson, opts, twoFactorState) {
      code,
      stdout,
      stderr
@@ -65,16 +61,16 @@ index 986fdf27f1d85412f8a6b2f5cc026d811ea04372..1f9ce913c42e765c860ca97fff670c2f
 -  }) : await spawn__default["default"](publishTool.name, ["publish", opts.publishDir, "--json", ...publishFlags], {
 -    env: Object.assign({}, process.env, envOverride)
    });
- 
    if (code !== 0) {
+     // NPM's --json output is included alongside the `prepublish` and `postpublish` output in terminal
 diff --git a/dist/changesets-cli.esm.js b/dist/changesets-cli.esm.js
-index f0c19f8f1130425be51c04743abd9f8f078ea840..976a84000179394fff29a180c4de63c67d565154 100644
+index 6c363c0551d7a5b69e2e48be0bcd757699609094..0981b98e21ef371ba3eb6a996a05046671736b57 100644
 --- a/dist/changesets-cli.esm.js
 +++ b/dist/changesets-cli.esm.js
-@@ -628,32 +628,6 @@ function getCorrectRegistry(packageJson) {
-   return !registry || registry === "https://registry.yarnpkg.com" ? "https://registry.npmjs.org" : registry;
+@@ -592,30 +592,6 @@ function getCorrectRegistry(packageJson) {
+     registry: !registry || registry === "https://registry.yarnpkg.com" ? "https://registry.npmjs.org" : registry
+   };
  }
- 
 -async function getPublishTool(cwd) {
 -  const pm = await detect({
 -    cwd
@@ -82,7 +78,6 @@ index f0c19f8f1130425be51c04743abd9f8f078ea840..976a84000179394fff29a180c4de63c6
 -  if (!pm || pm.name !== "pnpm") return {
 -    name: "npm"
 -  };
--
 -  try {
 -    let result = await spawn$1("pnpm", ["--version"], {
 -      cwd
@@ -100,30 +95,27 @@ index f0c19f8f1130425be51c04743abd9f8f078ea840..976a84000179394fff29a180c4de63c6
 -    };
 -  }
 -}
--
  async function getTokenIsRequired() {
-   // Due to a super annoying issue in yarn, we have to manually override this env variable
-   // See: https://github.com/yarnpkg/yarn/issues/2935#issuecomment-355292633
-@@ -745,7 +719,6 @@ let getOtpCode = async twoFactorState => {
+   const {
+     scope,
+@@ -706,16 +682,12 @@ let getOtpCode = async twoFactorState => {
+ // we have this so that we can do try a publish again after a publish without
  // the call being wrapped in the npm request limit and causing the publishes to potentially never run
- 
- async function internalPublish(pkgName, opts, twoFactorState) {
+ async function internalPublish(packageJson, opts, twoFactorState) {
 -  let publishTool = await getPublishTool(opts.cwd);
    let publishFlags = opts.access ? ["--access", opts.access] : [];
    publishFlags.push("--tag", opts.tag);
- 
-@@ -754,9 +727,7 @@ async function internalPublish(pkgName, opts, twoFactorState) {
+   if ((await twoFactorState.isRequired) && !isCI) {
+     let otpCode = await getOtpCode(twoFactorState);
      publishFlags.push("--otp", otpCode);
    }
- 
 -  if (publishTool.name === "pnpm" && publishTool.shouldAddNoGitChecks) {
 -    publishFlags.push("--no-git-checks");
--  } // Due to a super annoying issue in yarn, we have to manually override this env variable
-+  // Due to a super annoying issue in yarn, we have to manually override this env variable
-   // See: https://github.com/yarnpkg/yarn/issues/2935#issuecomment-355292633
- 
- 
-@@ -767,11 +738,9 @@ async function internalPublish(pkgName, opts, twoFactorState) {
+-  }
+   const {
+     scope,
+     registry
+@@ -730,11 +702,9 @@ async function internalPublish(packageJson, opts, twoFactorState) {
      code,
      stdout,
      stderr
@@ -134,5 +126,5 @@ index f0c19f8f1130425be51c04743abd9f8f078ea840..976a84000179394fff29a180c4de63c6
 -  }) : await spawn$1(publishTool.name, ["publish", opts.publishDir, "--json", ...publishFlags], {
 -    env: Object.assign({}, process.env, envOverride)
    });
- 
    if (code !== 0) {
+     // NPM's --json output is included alongside the `prepublish` and `postpublish` output in terminal
