@@ -84,6 +84,7 @@ export function handleReportingConfig(
   }
 
   if (
+    !opts.hiveRegistryToken &&
     (opts.hiveAccessToken ||
       opts.hiveUsageAccessToken ||
       opts.hiveTraceAccessToken) &&
