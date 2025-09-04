@@ -134,6 +134,13 @@ export interface HTTPExecutorOptions {
    * On dispose abort error
    */
   getDisposeReason?(): Error | undefined;
+  /**
+   * Whether to deduplicate inflight requests with the same parameters.
+   * This can be useful to avoid making multiple identical requests to the upstream service when
+   * multiple parts of the gateway are requesting the same data at the same time.
+   * @default true
+   */
+  deduplicateInflightRequests?: boolean;
 }
 
 export type HeadersConfig = Record<string, string>;
@@ -343,6 +350,9 @@ export function buildHTTPExecutor(
       context?: any,
       info?: GraphQLResolveInfo,
     ): MaybePromise<ExecutionResult> {
+      if (options?.deduplicateInflightRequests === false) {
+        return runInflightRequest();
+      }
       function runInflightRequest() {
         return handleMaybePromise(
           () =>
