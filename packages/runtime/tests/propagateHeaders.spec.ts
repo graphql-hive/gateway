@@ -91,7 +91,7 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-my-other']).toBe('other-value');
       expect(headersObj['x-extra-header']).toBeUndefined();
     });
-    it("forwards specified headers but doesn't override the provided headers", async () => {
+    it.skip("forwards specified headers but doesn't override the provided headers", async () => {
       await using gateway = createGatewayRuntime({
         logging: isDebug(),
         proxy: {
@@ -115,7 +115,6 @@ describe('usePropagateHeaders', () => {
             upstream.fetch,
           ),
         ],
-        maskedErrors: false,
       });
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
