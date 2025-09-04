@@ -7,6 +7,8 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "esnext",
+    // for landing page HTML generation
+    "jsx": "react-jsx",
     // TODO: set to true once dependencies (like yoga and whatwg server) add `| undefined` in addition to `?`
     "exactOptionalPropertyTypes": false,
     // packages
@@ -26,6 +28,15 @@
       "@graphql-hive/importer": ["./packages/importer/src/index.ts"],
       "@graphql-hive/importer/*": ["./packages/importer/src/*"],
       "@graphql-hive/gateway": ["./packages/gateway/src/index.ts"],
+      "@graphql-hive/gateway/opentelemetry": [
+        "./packages/gateway/src/opentelemetry/index.ts"
+      ],
+      "@graphql-hive/gateway/opentelemetry/api": [
+        "./packages/gateway/src/opentelemetry/api.ts"
+      ],
+      "@graphql-hive/gateway/opentelemetry/setup": [
+        "./packages/gateway/src/opentelemetry/setup.ts"
+      ],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
@@ -43,8 +54,14 @@
       "@graphql-mesh/hmac-upstream-signature": [
         "./packages/plugins/hmac-upstream-signature/src/index.ts"
       ],
-      "@graphql-mesh/plugin-opentelemetry": [
+      "@graphql-hive/plugin-opentelemetry": [
         "./packages/plugins/opentelemetry/src/index.ts"
+      ],
+      "@graphql-hive/plugin-opentelemetry/setup": [
+        "./packages/plugins/opentelemetry/src/setup.ts"
+      ],
+      "@graphql-hive/plugin-opentelemetry/api": [
+        "./packages/plugins/opentelemetry/src/api.ts"
       ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"
@@ -61,11 +78,13 @@
       ],
       "@graphql-tools/wrap": ["./packages/wrap/src/index.ts"],
       "@graphql-tools/executor-*": ["./packages/executors/*/src/index.ts"],
-      "@graphql-hive/logger-json": ["./packages/logger-json/src/index.ts"],
-      "@graphql-hive/logger-winston": [
-        "./packages/logger-winston/src/index.ts"
+      "@graphql-hive/logger": ["./packages/logger/src/index.ts"],
+      "@graphql-hive/logger/writers/pino": [
+        "./packages/logger/src/writers/pino.ts"
       ],
-      "@graphql-hive/logger-pino": ["./packages/logger-pino/src/index.ts"],
+      "@graphql-hive/logger/writers/winston": [
+        "./packages/logger/src/writers/winston.ts"
+      ],
       "@graphql-hive/plugin-aws-sigv4": [
         "./packages/plugins/aws-sigv4/src/index.ts"
       ],
@@ -78,6 +97,8 @@
       "@graphql-hive/nestjs": ["./packages/nestjs/src/index.ts"],
       "@graphql-hive/signal": ["./packages/signal/src/index.ts"],
       "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"],
+      "@graphql-hive/pubsub/redis": ["./packages/pubsub/src/redis.ts"],
+      "@graphql-hive/pubsub/nats": ["./packages/pubsub/src/nats.ts"],
       // paths starting with ~ are used by published packages and will be bundled
       "~internal/env": ["./internal/env/src/index.ts"],
       "~internal/env/node": ["./internal/env/src/node.ts"]

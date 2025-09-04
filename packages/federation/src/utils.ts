@@ -104,10 +104,10 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
     };
   }
   const allKeyProps = keys
-    .flatMap((key) => key.split(' '))
+    .flatMap((key) => key.trim().split(' '))
     .map((key) => key.trim());
   if (allKeyProps.length > 1) {
-    return function keyFn(root: any) {
+    return memoize1(function keyFn(root: any) {
       if (root == null) {
         return null;
       }
@@ -120,7 +120,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
         },
         { __typename: typeName },
       );
-    };
+    });
   }
   const keyProp = allKeyProps[0]!;
   return memoize1(function keyFn(root: any) {
@@ -150,20 +150,26 @@ export function getCacheKeyFnFromKey(key: string) {
   const keyTrimmed = key.trim();
   const keys = keyTrimmed.split(' ').map((key) => key.trim());
   if (keys.length > 1) {
-    return function cacheKeyFn(root: any) {
-      return keys
-        .map((key) => {
-          const keyVal = root[key];
-          if (keyVal == null) {
-            return '';
+    return memoize1(function cacheKeyFn(root: any) {
+      let cacheKeyStr = '';
+      for (const key of keys) {
+        const keyVal = root[key];
+        if (keyVal == null) {
+          continue;
+        } else if (typeof keyVal === 'object') {
+          if (cacheKeyStr) {
+            cacheKeyStr += ' ';
           }
-          if (typeof keyVal === 'object') {
-            return JSON.stringify(keyVal);
+          cacheKeyStr += JSON.stringify(keyVal);
+        } else {
+          if (cacheKeyStr) {
+            cacheKeyStr += ' ';
           }
-          return keyVal;
-        })
-        .join(' ');
-    };
+          cacheKeyStr += keyVal;
+        }
+      }
+      return cacheKeyStr;
+    });
   }
   return memoize1(function cacheKeyFn(root: any) {
     const keyVal = root[keyTrimmed];

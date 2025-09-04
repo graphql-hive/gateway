@@ -43,6 +43,8 @@ export default defineConfig({
                   '!**/e2e/mysql-employees',
                   '!**/e2e/opentelemetry',
                   '!**/e2e/graphos-polling',
+                  '!**/e2e/distributed-subscriptions-webhooks',
+                  '!**/e2e/event-driven-federated-subscriptions',
                 ]
               : []),
           ],

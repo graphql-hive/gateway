@@ -1027,10 +1027,14 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -1039,10 +1043,14 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -1057,44 +1065,14 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "3",
-                      },
-                      {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-      {
-        "reviews": [
-          {
-            "author": {
-              "reviews": [
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "1",
-                      },
-                      {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -1103,10 +1081,14 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -1125,10 +1107,14 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -1137,10 +1123,56 @@ exports[`should disable all armor features 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        "reviews": [
+          {
+            "author": {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -2182,10 +2214,14 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -2194,10 +2230,14 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -2212,44 +2252,14 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "3",
-                      },
-                      {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-      {
-        "reviews": [
-          {
-            "author": {
-              "reviews": [
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "1",
-                      },
-                      {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -2258,10 +2268,14 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -2280,10 +2294,14 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -2292,10 +2310,56 @@ exports[`should disable each armor feature when setting them to false 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        "reviews": [
+          {
+            "author": {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -3337,10 +3401,14 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -3349,10 +3417,14 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -3367,44 +3439,14 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "3",
-                      },
-                      {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-      {
-        "reviews": [
-          {
-            "author": {
-              "reviews": [
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "1",
-                      },
-                      {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -3413,10 +3455,14 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -3435,10 +3481,14 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -3447,10 +3497,56 @@ exports[`should enable only block field suggestions but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        "reviews": [
+          {
+            "author": {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -4492,10 +4588,14 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -4504,10 +4604,14 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -4522,44 +4626,14 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "3",
-                      },
-                      {
-                        "id": "4",
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-      {
-        "reviews": [
-          {
-            "author": {
-              "reviews": [
-                {
-                  "author": {
-                    "reviews": [
-                      {
-                        "id": "1",
-                      },
-                      {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -4568,10 +4642,14 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "1",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                       {
-                        "id": "2",
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },
@@ -4590,10 +4668,14 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                     ],
                   },
@@ -4602,10 +4684,56 @@ exports[`should enable only max tokens but disable others 2`] = `
                   "author": {
                     "reviews": [
                       {
-                        "id": "3",
+                        "author": {
+                          "id": "1",
+                        },
                       },
                       {
-                        "id": "4",
+                        "author": {
+                          "id": "1",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        "reviews": [
+          {
+            "author": {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "id": "2",
+                        },
+                      },
+                      {
+                        "author": {
+                          "id": "2",
+                        },
                       },
                     ],
                   },

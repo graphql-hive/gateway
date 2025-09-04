@@ -1,19 +1,16 @@
 import { ExportedHandler, Response } from '@cloudflare/workers-types';
 import {
   createGatewayRuntime,
-  DisposableSymbols,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import {
-  createOtlpHttpExporter,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { useOpenTelemetry } from '@graphql-hive/plugin-opentelemetry';
+import { openTelemetrySetup } from '@graphql-hive/plugin-opentelemetry/setup';
 import http from '@graphql-mesh/transport-http';
-import { fakePromise } from '@graphql-tools/utils';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
 interface Env {
   OTLP_EXPORTER_URL: string;
-  OTLP_SERVICE_NAME: string;
+  OTEL_SERVICE_NAME: string;
   DEBUG: string;
 }
 
@@ -37,36 +34,33 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
-export default {
-  async fetch(req, env, ctx) {
-    const runtime = createGatewayRuntime({
-      proxy: {
-        endpoint: 'https://countries.trevorblades.com',
+let runtime: ReturnType<typeof createGatewayRuntime>;
+function getRuntime(env: Env) {
+  if (!runtime) {
+    openTelemetrySetup({
+      contextManager: null,
+      resource: { serviceName: env.OTEL_SERVICE_NAME, serviceVersion: '1.0.0' },
+      traces: {
+        exporter: new OTLPTraceExporter({ url: env['OTLP_EXPORTER_URL'] }),
+        batching: false, // Disable batching to speedup tests
       },
-      transports: {
-        http,
-      },
+    });
+
+    runtime = createGatewayRuntime({
+      proxy: { endpoint: 'https://countries.trevorblades.com' },
+      transports: { http },
       plugins: (ctx) => [
-        useOpenTelemetry({
-          ...ctx,
-          exporters: [
-            createOtlpHttpExporter(
-              {
-                url: env['OTLP_EXPORTER_URL'],
-              },
-              // Batching config is set in order to make it easier to test.
-              {
-                scheduledDelayMillis: 1,
-              },
-            ),
-          ],
-          serviceName: env['OTLP_SERVICE_NAME'],
-        }),
+        useOpenTelemetry({ ...ctx, traces: true }),
         useOnFetchTracer(),
       ],
     });
-    const res = await runtime(req, env, ctx);
-    ctx.waitUntil(fakePromise(runtime[DisposableSymbols.asyncDispose]()));
+  }
+  return runtime;
+}
+
+export default {
+  async fetch(req, env, ctx) {
+    const res = await getRuntime(env)(req, env, ctx);
     return res as unknown as Response;
   },
 } satisfies ExportedHandler<Env>;

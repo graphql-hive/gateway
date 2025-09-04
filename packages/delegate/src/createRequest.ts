@@ -37,6 +37,7 @@ export function getDelegatingOperation(
 }
 
 export function createRequest({
+  subgraphName,
   sourceSchema,
   sourceParentType,
   sourceFieldName,
@@ -167,6 +168,7 @@ export function createRequest({
   };
 
   return {
+    subgraphName,
     document,
     variables: newVariables,
     rootValue: targetRootValue,

@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -45,6 +45,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
+    "@graphql-tools/mock": "^9.0.23",
     "graphql": "^16.9.0",
     "pkgroll": "2.15.0"
   },

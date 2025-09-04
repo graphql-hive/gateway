@@ -40,7 +40,16 @@ console.log('Bundling...');
  */
 const deps = {
   'node_modules/@graphql-hive/gateway/index': 'src/index.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/index':
+    'src/opentelemetry/index.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/api':
+    'src/opentelemetry/api.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/setup':
+    'src/opentelemetry/setup.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
+  'node_modules/@graphql-hive/pubsub/index': '../pubsub/src/index.ts',
+  'node_modules/@graphql-hive/pubsub/redis': '../pubsub/src/redis.ts',
+  'node_modules/@graphql-hive/pubsub/nats': '../pubsub/src/nats.ts',
   // the hooks are dynamically registered on startup, we need to bundle them at path
   'node_modules/@graphql-hive/importer/hooks': '../importer/src/hooks.ts',
   // include envelop core for ease of usage in the config files
@@ -62,9 +71,54 @@ const deps = {
     '../../node_modules/@escape.tech/graphql-armor-max-depth/dist/graphql-armor-max-depth.esm.js',
   'node_modules/@escape.tech/graphql-armor-block-field-suggestions/index':
     '../../node_modules/@escape.tech/graphql-armor-block-field-suggestions/dist/graphql-armor-block-field-suggestions.esm.js',
-  // OpenTelemetry plugin is built-in but it dynamically imports the gRPC exporter, we therefore need to bundle it
+  // OpenTelemetry plugin is sometimes imported, and not re-used from the gateway itself. we therefore need to bundle it into node_modules
+  'node_modules/@graphql-hive/plugin-opentelemetry/index':
+    '../plugins/opentelemetry/src/index.ts',
+  // Since `async_hooks` is not available in all runtime, it have to be bundle separately
+  // The Async Local context manager of Opentelemetry can't be bundled correctly, so we use our own
+  // proxy export file. It just re-export otel's package, which makes rollup happy
+  'node_modules/@opentelemetry/context-async-hooks/index':
+    '../plugins/opentelemetry/src/async-context-manager.ts',
   'node_modules/@opentelemetry/exporter-trace-otlp-grpc/index':
-    '../../node_modules/@opentelemetry/exporter-trace-otlp-grpc/build/src/index.js',
+    '../plugins/opentelemetry/src/exporter-trace-otlp-grpc.ts',
+  'node_modules/@opentelemetry/sdk-node/index':
+    '../plugins/opentelemetry/src/sdk-node.ts',
+  'node_modules/@opentelemetry/auto-instrumentations-node/index':
+    '../plugins/opentelemetry/src/auto-instrumentations.ts',
+  'node_modules/@graphql-hive/plugin-opentelemetry/setup':
+    '../plugins/opentelemetry/src/setup.ts',
+  'node_modules/@graphql-hive/plugin-opentelemetry/api':
+    '../plugins/opentelemetry/src/api.ts',
+  ...Object.fromEntries(
+    // To ease the OTEL setup, we need to bundle some important OTEL packages.
+    // Those are most used features.
+    [
+      // Common API base
+      ['api'],
+      ['api-logs'],
+      ['core'],
+      ['resources', 'esm/'],
+      ['sdk-trace-base'],
+      ['sdk-metrics'],
+      ['sdk-logs'],
+      ['semantic-conventions'],
+      ['instrumentation'],
+
+      // Exporters
+      ['exporter-trace-otlp-http'],
+      ['exporter-zipkin'],
+
+      // Propagators
+      ['propagator-b3'],
+      ['propagator-jaeger'],
+
+      // Context Managers
+      ['context-zone'], // An incomplete but Web compatible async context manager based on zone.js
+    ].map(([otelPackage, buildDir = 'esm']) => [
+      `node_modules/@opentelemetry/${otelPackage}/index`,
+      `../../node_modules/@opentelemetry/${otelPackage}/build/${buildDir}/index.js`,
+    ]),
+  ),
 };
 
 if (
@@ -99,7 +153,11 @@ export default defineConfig({
   external: ['tuql'],
   plugins: [
     tsConfigPaths(), // use tsconfig paths to resolve modules
-    nodeResolve({ preferBuiltins: true }), // resolve node_modules and bundle them too
+    nodeResolve({
+      preferBuiltins: true,
+      mainFields: ['esnext', 'module', 'main'],
+      exportConditions: ['esnext'],
+    }), // resolve node_modules and bundle them too
     graphql(), // handle graphql imports
     commonjs({ strictRequires: true }), // convert commonjs to esm
     json(), // support importing json files to esm (needed for commonjs() plugin)
@@ -119,6 +177,9 @@ function packagejson() {
     generateBundle(_outputs, bundles) {
       /** @type {string[]} */
       const e2eModules = [];
+      /** @type Record<string, {type?: string, exports?: Record<string, string>, main?: string}> */
+      const packages = {};
+
       for (const bundle of Object.values(bundles).filter((bundle) => {
         const bundleName = String(bundle.name);
         return (
@@ -138,23 +199,25 @@ function packagejson() {
         }
         const dir = path.dirname(bundle.fileName);
         const bundledFile = path.basename(bundle.fileName).replace(/\\/g, '/');
-        /** @type {Record<string, unknown>} */
-        const pkg = { type: 'module' };
-        if (bundledFile === 'index.mjs') {
-          pkg['main'] = bundledFile;
-        } else {
-          const mjsFile = path
-            .basename(bundle.fileName, '.mjs')
-            .replace(/\\/g, '/');
-          // if the bundled file is not "index", then it's an package.json exports path
-          pkg['exports'] = { [`./${mjsFile}`]: `./${bundledFile}` };
-        }
+        const pkgFileName = path.join(dir, 'package.json');
+        const pkg = packages[pkgFileName] ?? { type: 'module' };
+        const mjsFile =
+          bundledFile === 'index.mjs'
+            ? '.'
+            : './' + path.basename(bundle.fileName, '.mjs').replace(/\\/g, '/');
+        // if the bundled file is not "index", then it's an package.json exports path
+        pkg.exports = { ...pkg.exports, [mjsFile]: `./${bundledFile}` };
+        packages[pkgFileName] = pkg;
+      }
+
+      for (const [fileName, pkg] of Object.entries(packages)) {
         this.emitFile({
           type: 'asset',
-          fileName: path.join(dir, 'package.json'),
+          fileName,
           source: JSON.stringify(pkg),
         });
       }
+
       this.emitFile({
         type: 'asset',
         fileName: path.join('e2e', 'package.json'),

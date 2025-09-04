@@ -1,4 +1,4 @@
-import { defineConfig, useDeduplicateRequest } from '@graphql-hive/gateway';
+import { defineConfig, HTTPTransportOptions } from '@graphql-hive/gateway';
 
 let i = 0;
 export const gatewayConfig = defineConfig({
@@ -6,13 +6,19 @@ export const gatewayConfig = defineConfig({
     maxRetries: 4,
   },
   upstreamTimeout: 300,
-  plugins(ctx) {
+  transportEntries: {
+    '*.http': {
+      options: {
+        deduplicateInflightRequests: !!process.env['DEDUPLICATE_REQUEST'],
+      } as HTTPTransportOptions,
+    },
+  },
+  plugins() {
     return [
-      ...(process.env['DEDUPLICATE_REQUEST'] ? [useDeduplicateRequest()] : []),
       {
-        onFetch() {
+        onFetch({ context }) {
           i++;
-          ctx.logger.info(`[FETCHING] #${i}`);
+          context.log.info(`[FETCHING] #${i}`);
         },
       },
     ];

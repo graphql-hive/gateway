@@ -1,10 +1,10 @@
-import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { createLoggerFromPino } from '@graphql-hive/logger-pino';
-import {
-  createOtlpHttpExporter,
-  useOpenTelemetry,
-} from '@graphql-mesh/plugin-opentelemetry';
+import { createGatewayRuntime, Logger } from '@graphql-hive/gateway-runtime';
+import { PinoLogWriter } from '@graphql-hive/logger/writers/pino';
+import { useOpenTelemetry } from '@graphql-hive/plugin-opentelemetry';
+import { openTelemetrySetup } from '@graphql-hive/plugin-opentelemetry/setup';
 import { Opts } from '@internal/testing';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 
 /* --- E2E TEST SPECIFIC CONFIGURATION START---  */
@@ -16,6 +16,15 @@ const upLink = `http://0.0.0.0:${opts.getServicePort('graphos')}`;
 const port = opts.getServicePort('gateway-fastify');
 
 /*---  E2E TEST SPECIFIC CONFIGURATION END---  */
+
+openTelemetrySetup({
+  contextManager: new AsyncLocalStorageContextManager(),
+  traces: {
+    exporter: new OTLPTraceExporter({ url: process.env['OTLP_EXPORTER_URL'] }),
+    // Do not batch for test
+    batching: false,
+  },
+});
 
 const requestIdHeader = 'x-guild-request-id';
 
@@ -43,8 +52,7 @@ export interface FastifyContext {
 }
 
 const gw = createGatewayRuntime<FastifyContext>({
-  // Integrate Fastify's logger / Pino with the gateway logger
-  logging: createLoggerFromPino(app.log),
+  logging: new Logger({ writers: [new PinoLogWriter(app.log)] }),
   // Align with Fastify
   requestId: {
     // Use the same header name as Fastify
@@ -72,16 +80,7 @@ const gw = createGatewayRuntime<FastifyContext>({
   plugins: (ctx) => [
     useOpenTelemetry({
       ...ctx,
-      exporters: [
-        createOtlpHttpExporter(
-          {
-            url: process.env['OTLP_EXPORTER_URL'],
-          },
-          {
-            scheduledDelayMillis: 1,
-          },
-        ),
-      ],
+      traces: true,
     }),
   ],
 });

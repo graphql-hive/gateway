@@ -27,7 +27,7 @@ function checkMaxTokens(
   });
 }
 
-function checkMaxDepth(gw: Gateway, depth = 7) {
+function checkMaxDepth(gw: Gateway, depth = 8) {
   let query = '{ topProducts { ';
 
   for (
@@ -60,6 +60,38 @@ function checkBlockSuggestions(gw: Gateway) {
   });
 }
 
+it.concurrent('should have default armor features', async ({ expect }) => {
+  const gw = await gateway({
+    supergraph: await supergraph(),
+    env: {
+      ARMOR_OPT: 'default',
+    },
+  });
+
+  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "extensions": {
+            "code": "GRAPHQL_PARSE_FAILED",
+          },
+          "message": "Syntax Error: Token limit of 1000 exceeded.",
+        },
+      ],
+    }
+  `);
+
+  await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
+    {
+      "errors": [
+        {
+          "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
+        },
+      ],
+    }
+  `);
+});
+
 it.concurrent('should enable all armor features', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
@@ -85,7 +117,7 @@ it.concurrent('should enable all armor features', async ({ expect }) => {
     {
       "errors": [
         {
-          "message": "Syntax Error: Query depth limit of 6 exceeded, found 7.",
+          "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
         },
       ],
     }
@@ -268,7 +300,7 @@ it.concurrent(
       {
         "errors": [
           {
-            "message": "Syntax Error: Query depth limit of 6 exceeded, found 7.",
+            "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
           },
         ],
       }

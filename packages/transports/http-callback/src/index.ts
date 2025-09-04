@@ -76,7 +76,7 @@ export default {
     transportEntry,
     fetch,
     pubsub,
-    logger,
+    log: rootLog,
   }): DisposableExecutor {
     let headersInConfig: Record<string, string> | undefined;
     if (typeof transportEntry.headers === 'string') {
@@ -112,7 +112,7 @@ export default {
       executionRequest: ExecutionRequest,
     ) {
       const subscriptionId = crypto.randomUUID();
-      const subscriptionLogger = logger?.child({
+      const log = rootLog.child({
         executor: 'http-callback',
         subscription: subscriptionId,
       });
@@ -144,8 +144,9 @@ export default {
           stopSubscription(createTimeoutError());
         }, heartbeatIntervalMs),
       );
-      subscriptionLogger?.debug(
-        `Subscribing to ${transportEntry.location} with callbackUrl: ${callbackUrl}`,
+      log.debug(
+        { location: transportEntry.location, callbackUrl },
+        'Subscribing using callback',
       );
       let pushFn: Push<ExecutionResult> = () => {
         throw new Error(
@@ -213,7 +214,7 @@ export default {
                 }
                 return;
               }
-              logger?.debug(`Subscription request received`, resJson);
+              log.debug(resJson, 'Subscription request received');
               if (resJson.errors) {
                 if (resJson.errors.length === 1 && resJson.errors[0]) {
                   const error = resJson.errors[0];
@@ -235,12 +236,12 @@ export default {
             },
           ),
         (e) => {
-          logger?.debug(`Subscription request failed`, e);
+          log.error(e, 'Subscription request failed');
           stopSubscription(e);
         },
       );
       executionRequest.context?.waitUntil?.(subFetchCall$);
-      return new Repeater<ExecutionResult>((push, stop) => {
+      return new Repeater<ExecutionResult>(async (push, stop) => {
         if (signal) {
           if (signal.aborted) {
             stop(signal?.reason);
@@ -257,13 +258,13 @@ export default {
         pushFn = push;
         stopSubscription = stop;
         stopFnSet.add(stop);
-        logger?.debug(`Listening to ${subscriptionCallbackPath}`);
-        const subId = pubsub.subscribe(
+        log.debug(`Listening to ${subscriptionCallbackPath}`);
+        const unsubscribe = await pubsub.subscribe(
           `webhook:post:${subscriptionCallbackPath}`,
           (message: HTTPCallbackMessage) => {
-            logger?.debug(
-              `Received message from ${subscriptionCallbackPath}`,
+            log.debug(
               message,
+              `Received message from ${subscriptionCallbackPath}`,
             );
             if (message.verifier !== verifier) {
               return;
@@ -299,7 +300,7 @@ export default {
           },
         );
         stop.finally(() => {
-          pubsub.unsubscribe(subId);
+          unsubscribe();
           clearTimeout(heartbeats.get(subscriptionId));
           heartbeats.delete(subscriptionId);
           stopFnSet.delete(stop);

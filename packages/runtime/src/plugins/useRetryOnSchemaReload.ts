@@ -1,5 +1,4 @@
-import { Logger } from '@graphql-mesh/types';
-import { requestIdByRequest } from '@graphql-mesh/utils';
+import type { Logger } from '@graphql-hive/logger';
 import type { MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -7,15 +6,13 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { ExecutionArgs, getOperationAST, type ExecutionResult } from 'graphql';
 import { isAsyncIterable, YogaInitialContext } from 'graphql-yoga';
-import type { GatewayPlugin } from '../types';
+import type { GatewayConfigContext, GatewayPlugin } from '../types';
 
 type ExecHandler = () => MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 
-export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
-  logger,
-}: {
-  logger: Logger;
-}): GatewayPlugin<TContext> {
+export function useRetryOnSchemaReload<
+  TContext extends Record<string, any>,
+>(): GatewayPlugin<TContext> {
   const execHandlerByContext = new WeakMap<{}, ExecHandler>();
   function handleOnExecute(args: ExecutionArgs) {
     if (args.contextValue) {
@@ -30,25 +27,20 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
     context,
     result,
     setResult,
-    request,
   }: {
-    context: {};
+    context: { log: Logger };
     result?: ExecutionResult;
     setResult: (result: MaybeAsyncIterable<ExecutionResult>) => void;
-    request: Request;
+    // request wont be available over websockets
+    request: Request | undefined;
   }) {
     const execHandler = execHandlerByContext.get(context);
     if (
       execHandler &&
       result?.errors?.some((e) => e.extensions?.['code'] === 'SCHEMA_RELOAD')
     ) {
-      let requestLogger = logger;
-      const requestId = requestIdByRequest.get(request);
-      if (requestId) {
-        requestLogger = logger.child({ requestId });
-      }
-      requestLogger.info(
-        'The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
+      context.log.info(
+        '[useRetryOnSchemaReload] The operation has been aborted after the supergraph schema reloaded, retrying the operation...',
       );
       if (execHandler) {
         return handleMaybePromise(execHandler, (newResult) =>
@@ -63,7 +55,7 @@ export function useRetryOnSchemaReload<TContext extends Record<string, any>>({
         paramsHandler({
           request,
           params,
-          context: context as YogaInitialContext,
+          context: context as YogaInitialContext & GatewayConfigContext,
         }),
       );
     },

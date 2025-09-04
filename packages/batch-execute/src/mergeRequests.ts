@@ -61,6 +61,10 @@ export function mergeRequests(
     request: ExecutionRequest,
   ) => Record<string, any>,
 ): ExecutionRequest {
+  if (requests.length === 1) {
+    return requests[0]!;
+  }
+  const subgraphName = requests[0]!.subgraphName;
   const mergedVariables: Record<string, any> = Object.create(null);
   const mergedVariableDefinitions: Array<VariableDefinitionNode> = [];
   const mergedSelections: Array<SelectionNode> = [];
@@ -114,6 +118,7 @@ export function mergeRequests(
   }
 
   return {
+    subgraphName,
     document: {
       kind: Kind.DOCUMENT,
       definitions: [mergedOperationDefinition, ...mergedFragmentDefinitions],

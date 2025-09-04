@@ -1,4 +1,5 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { Logger } from '@graphql-hive/logger';
 import {
   OnDelegationPlanDoneHook,
   OnDelegationPlanHook,
@@ -264,7 +265,7 @@ describe('onDelegationPlanHook', () => {
       context,
       delegationPlanBuilder: expect.any(Function),
       setDelegationPlanBuilder: expect.any(Function),
-      logger: undefined,
+      log: expect.any(Logger),
       info: expect.any(Object),
     });
     expect(

@@ -1,5 +1,4 @@
 import { abortSignalAny } from '@graphql-hive/signal';
-import { subgraphNameByExecutionRequest } from '@graphql-mesh/fusion-runtime';
 import { UpstreamErrorExtensions } from '@graphql-mesh/transport-common';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import {
@@ -54,11 +53,6 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
               timeoutSignal,
             );
           }
-          const signals: AbortSignal[] = [];
-          signals.push(timeoutSignal);
-          if (executionRequest.signal) {
-            signals.push(executionRequest.signal);
-          }
           const timeoutDeferred = createDeferred<ExecutionResult>();
           function rejectDeferred() {
             timeoutDeferred.reject(timeoutSignal?.reason);
@@ -66,10 +60,17 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
           timeoutSignal.addEventListener('abort', rejectDeferred, {
             once: true,
           });
-          const combinedSignal = abortSignalAny(signals);
+          const signals: AbortSignal[] = [];
+          signals.push(timeoutSignal);
+          if (executionRequest.signal) {
+            signals.push(executionRequest.signal);
+          }
+          // we want to create a new executionrequest and not mutate the existing one becaus, when using
+          // this with useUpstreamRetry, the same executionRequest will be used for each retry and we need
+          // to timeoutSignalsByExecutionRequest.set(...) again above
           const res$ = executor({
             ...executionRequest,
-            signal: combinedSignal,
+            signal: abortSignalAny(signals),
           });
           if (!isPromise(res$)) {
             return res$;
@@ -125,9 +126,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
       return undefined;
     },
     onFetch({ url, executionRequest, options, setOptions }) {
-      const subgraphName =
-        executionRequest &&
-        subgraphNameByExecutionRequest.get(executionRequest);
+      const subgraphName = executionRequest?.subgraphName;
       if (
         !executionRequest ||
         !timeoutSignalsByExecutionRequest.has(executionRequest)

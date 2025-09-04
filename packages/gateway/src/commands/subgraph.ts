@@ -3,10 +3,11 @@ import { lstat } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import {
   createGatewayRuntime,
+  createLoggerFromLogging,
   type GatewayConfigSubgraph,
   type UnifiedGraphConfig,
 } from '@graphql-hive/gateway-runtime';
-import { PubSub } from '@graphql-hive/pubsub';
+import { MemPubSub } from '@graphql-hive/pubsub';
 import { isUrl } from '@graphql-mesh/utils';
 import { isValidPath } from '@graphql-tools/utils';
 import {
@@ -22,7 +23,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleLoggingConfig } from './handleLoggingOption';
+import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -37,14 +38,34 @@ export const addCommand: AddCommand = (ctx, cli) =>
     )
     .action(async function subgraph(schemaPathOrUrl) {
       const {
+        opentelemetry,
+        opentelemetryExporterType,
         maskedErrors,
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
+        hiveTraceEndpoint,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
         ...opts
       } = this.optsWithGlobals();
+
+      ctx.log.info(`Starting ${ctx.productName} ${ctx.version} as subgraph`);
+
+      // Handle hive OTEL tracing before loading config so that the tracer provider is registered
+      // if users needs it in a custom plugin.
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryCLIOpts(ctx, {
+        openTelemetry: opentelemetry,
+        openTelemetryExporterType: opentelemetryExporterType,
+        hiveTarget,
+        hiveAccessToken,
+        hiveTraceAccessToken,
+        hiveTraceEndpoint,
+      });
+
       const loadedConfig = await loadConfig({
         log: ctx.log,
         configPath: opts.configPath,
@@ -62,8 +83,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
       const registryConfig: Pick<SubgraphConfig, 'reporting'> = {};
       const reporting = handleReportingConfig(ctx, loadedConfig, {
         hiveRegistryToken,
+        hiveTarget,
         hiveUsageTarget,
+        hiveAccessToken,
         hiveUsageAccessToken,
+        hiveTraceAccessToken,
         // subgraph can only do reporting to hive registry
         apolloGraphRef: undefined,
         apolloKey: undefined,
@@ -72,23 +96,26 @@ export const addCommand: AddCommand = (ctx, cli) =>
         registryConfig.reporting = reporting;
       }
 
-      const pubsub = loadedConfig.pubsub || new PubSub();
+      const pubsub = loadedConfig.pubsub || new MemPubSub();
       const cwd = loadedConfig.cwd || process.cwd();
       if (loadedConfig.logging != null) {
-        handleLoggingConfig(loadedConfig.logging, ctx);
+        ctx.log = createLoggerFromLogging(loadedConfig.logging);
       }
       const cache = await getCacheInstanceFromConfig(loadedConfig, {
         pubsub,
-        logger: ctx.log,
+        log: ctx.log,
         cwd,
       });
       const builtinPlugins = await getBuiltinPluginsFromConfig(
         {
           ...loadedConfig,
           ...opts,
+          openTelemetry: openTelemetryEnabledByCLI
+            ? { ...loadedConfig.openTelemetry, traces: true }
+            : loadedConfig.openTelemetry,
         },
         {
-          logger: ctx.log,
+          log: ctx.log,
           cache,
           pubsub,
           cwd,
@@ -183,12 +210,14 @@ export async function runSubgraph({ log }: CLIContext, config: SubgraphConfig) {
   const runtime = createGatewayRuntime(config);
 
   if (absSchemaPath) {
-    log.info(`Serving local subgraph from ${absSchemaPath}`);
+    log.info(`Loading local subgraph from ${absSchemaPath}`);
   } else if (isUrl(String(config.subgraph))) {
-    log.info(`Serving remote subgraph from ${config.subgraph}`);
+    log.info(`Loading remote subgraph from ${config.subgraph}`);
   } else {
-    log.info('Serving subgraph from config');
+    log.info('Loading subgraph from config');
   }
+
+  await runtime.getSchema();
 
   await startServerForRuntime(runtime, {
     ...config,

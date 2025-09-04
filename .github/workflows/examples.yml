@@ -54,6 +54,9 @@ jobs:
           - subscriptions-with-transforms
           - type-merging-batching
           - operation-field-permissions
+          - operation-field-permissions
+          # TODO: support containers before enabling (we use nats image in e2e)
+          # - event-driven-federated-subscriptions
     name: Convert ${{matrix.e2e}}
     runs-on: ubuntu-latest
     steps:

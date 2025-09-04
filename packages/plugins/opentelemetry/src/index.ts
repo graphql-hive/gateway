@@ -1,5 +1,11 @@
-export * from './processors';
 export {
   useOpenTelemetry,
-  type OpenTelemetryGatewayPluginOptions as OpenTelemetryMeshPluginOptions,
+  type OpenTelemetryContextExtension,
+  type OpenTelemetryGatewayPluginOptions,
+  type OpenTelemetryPlugin,
+  type OpenTelemetryPluginUtils,
 } from './plugin';
+
+export { DiagLogLevel as OpenTelemetryDiagLogLevel } from '@opentelemetry/api';
+
+export * from './attributes';

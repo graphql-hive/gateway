@@ -99,6 +99,7 @@ export interface IDelegateRequestOptions<
 }
 
 export interface ICreateRequest {
+  subgraphName: string | undefined;
   sourceSchema?: GraphQLSchema;
   sourceParentType?: GraphQLObjectType;
   sourceFieldName?: string;

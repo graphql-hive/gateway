@@ -15,31 +15,32 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
+import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
-import { HivePubSub } from '@graphql-hive/pubsub';
+import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
+import type { PubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
-import type { OpenTelemetryMeshPluginOptions } from '@graphql-mesh/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
-import type { KeyValueCache, Logger, YamlConfig } from '@graphql-mesh/types';
+import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
-import { getEnvBool, getNodeEnv, isDebug } from '~internal/env';
+import { getEnvBool, isDebug } from '~internal/env';
 import parseDuration from 'parse-duration';
-import { getDefaultLogger } from '../../runtime/src/getDefaultLogger';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
 import { getMaxConcurrency } from './getMaxConcurrency';
 import type { ServerConfig } from './servers/types';
 
-export type GatewayCLIConfig = (
-  | GatewayCLISupergraphConfig
-  | GatewayCLISubgraphConfig
-  | GatewayCLIProxyConfig
+export type GatewayCLIConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> = (
+  | GatewayCLISupergraphConfig<TContext>
+  | GatewayCLISubgraphConfig<TContext>
+  | GatewayCLIProxyConfig<TContext>
 ) &
   ServerConfig & {
     /**
-     * Count of workers to spawn. Defaults to `os.availableParallelism()` when NODE_ENV
-     * is "production", otherwise only one (the main) worker.
+     * Count of workers to spawn.
      */
     fork?: number;
     /**
@@ -52,8 +53,12 @@ export type GatewayCLIConfig = (
     pollingInterval?: number;
   } & GatewayCLIBuiltinPluginConfig;
 
-export interface GatewayCLISupergraphConfig
-  extends Omit<GatewayConfigSupergraph, 'supergraph' | 'cache' | 'reporting'> {
+export interface GatewayCLISupergraphConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<
+    GatewayConfigSupergraph<TContext>,
+    'supergraph' | 'cache' | 'reporting'
+  > {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -62,7 +67,7 @@ export interface GatewayCLISupergraphConfig
    * @default 'supergraph.graphql'
    */
   // default matches commands/supergraph.ts
-  supergraph?: GatewayConfigSupergraph['supergraph'];
+  supergraph?: GatewayConfigSupergraph<TContext>['supergraph'];
 
   /** Usage reporting options. */
   reporting?: GatewayCLIHiveReportingOptions | GatewayGraphOSReportingOptions;
@@ -84,8 +89,9 @@ export interface GatewayCLIHiveReportingOptions
   token?: GatewayHiveReportingOptions['token'];
 }
 
-export interface GatewayCLISubgraphConfig
-  extends Omit<GatewayConfigSubgraph, 'subgraph' | 'cache'> {
+export interface GatewayCLISubgraphConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<GatewayConfigSubgraph<TContext>, 'subgraph' | 'cache'> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -94,20 +100,21 @@ export interface GatewayCLISubgraphConfig
    * @default 'subgraph.graphql'
    */
   // default matches commands/subgraph.ts
-  subgraph?: GatewayConfigSubgraph['subgraph'];
+  subgraph?: GatewayConfigSubgraph<TContext>['subgraph'];
 }
 
-export interface GatewayCLIProxyConfig
-  extends Omit<GatewayConfigProxy, 'proxy' | 'cache'> {
+export interface GatewayCLIProxyConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+> extends Omit<GatewayConfigProxy<TContext>, 'proxy' | 'cache'> {
   /**
    * HTTP executor to proxy all incoming requests to another HTTP endpoint.
    */
-  proxy?: GatewayConfigProxy['proxy'];
+  proxy?: GatewayConfigProxy<TContext>['proxy'];
 }
 
 export type KeyValueCacheFactoryFn = (ctx: {
-  logger: Logger;
-  pubsub: HivePubSub;
+  log: Logger;
+  pubsub: PubSub;
   cwd: string;
 }) => KeyValueCache;
 
@@ -129,7 +136,10 @@ export interface GatewayCLIBuiltinPluginConfig {
    *
    * @see https://graphql-hive.com/docs/gateway/monitoring-tracing
    */
-  openTelemetry?: Exclude<OpenTelemetryMeshPluginOptions, GatewayConfigContext>;
+  openTelemetry?: Exclude<
+    OpenTelemetryGatewayPluginOptions,
+    GatewayConfigContext
+  >;
   /**
    * Configure Rate Limiting
    *
@@ -164,18 +174,18 @@ export interface GatewayCLIBuiltinPluginConfig {
    * If you would like more configuration options, please disable this feature and
    * use the [`@escape.tech/graphql-armor-max-tokens` plugin](https://escape.tech/graphql-armor/docs/plugins/max-tokens/#with-envelopcore-from-the-guild-org) instead.
    *
-   * @default false
+   * @default true
    */
   maxTokens?: boolean | number;
   /**
    * Limit the depth of a GraphQL document.
    *
-   * Passing `true` will enable the feature with the default limit of `6` levels.
+   * Passing `true` will enable the feature with the default limit of `7` levels.
    *
    * If you would like more configuration options, please disable this feature and
    * use the [`@escape.tech/graphql-armor-max-depth` plugin](https://escape.tech/graphql-armor/docs/plugins/max-depth/#with-envelopcore-from-the-guild-org) instead
    *
-   * @default false
+   * @default true
    */
   maxDepth?: boolean | number;
   /**
@@ -212,7 +222,9 @@ export type GatewayCLIUpstashRedisCacheConfig = {
 /**
  * Type helper for defining the config.
  */
-export function defineConfig(config: GatewayCLIConfig) {
+export function defineConfig<
+  TContext extends Record<string, any> = Record<string, any>,
+>(config: GatewayCLIConfig<TContext>) {
   return config;
 }
 
@@ -222,7 +234,7 @@ export interface CLIContext {
   log: Logger;
   /** @default 'Hive Gateway' */
   productName: string;
-  /** @default 'Federated GraphQL Gateway' */
+  /** @default 'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.' */
   productDescription: string;
   /** @default '@graphql-hive/gateway' */
   productPackageName: string;
@@ -253,9 +265,8 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
-const maxFork = getMaxConcurrency();
 export const defaultOptions = {
-  fork: getNodeEnv() === 'production' ? maxFork : 1,
+  fork: 1,
   host:
     platform().toLowerCase() === 'win32' ||
     // is WSL?
@@ -275,21 +286,22 @@ let cli = new Command()
   })
   .addOption(
     new Option(
-      '--fork <count>',
-      `count of workers to spawn. uses "${maxFork}" (available parallelism) workers when NODE_ENV is "production", otherwise "1" (the main) worker (default: ${defaultOptions.fork})`,
+      '--fork <number>',
+      `number of workers to spawn. (default: ${defaultOptions.fork})`,
     )
       .env('FORK')
       .argParser((v) => {
-        const count = parseInt(v);
-        if (isNaN(count)) {
+        const number = parseInt(v);
+        if (isNaN(number)) {
           throw new InvalidArgumentError('not a number.');
         }
-        if (count > maxFork) {
+        const maxConcurrency = getMaxConcurrency();
+        if (number > maxConcurrency) {
           throw new InvalidArgumentError(
-            `exceedes number of available parallelism "${maxFork}".`,
+            `exceedes number of available concurrency "${maxConcurrency}".`,
           );
         }
-        return count;
+        return number;
       }),
   )
   .addOption(
@@ -343,29 +355,70 @@ let cli = new Command()
   )
   .addOption(
     new Option(
+      '--opentelemetry [exporter-endpoint]',
+      `Enable OpenTelemetry integration with an exporter using this option's value as endpoint. By default, it uses OTLP HTTP, use "--opentelemetry-exporter-type" to change the default.`,
+    ).env('OPENTELEMETRY'),
+  )
+  .addOption(
+    new Option(
+      '--opentelemetry-exporter-type <type>',
+      `OpenTelemetry exporter type to use when setting up OpenTelemetry integration. Requires "--opentelemetry" to set the endpoint.`,
+    )
+      .choices(['otlp-http', 'otlp-grpc'])
+      .default('otlp-http')
+      .env('OPENTELEMETRY_EXPORTER_TYPE'),
+  )
+  .addOption(
+    new Option(
       '--hive-registry-token <token>',
-      '[DEPRECATED: please use "--hive-usage-target" and "--hive-usage-access-token"] Hive registry token for usage metrics reporting',
+      '[DEPRECATED] please use "--hive-target" and "--hive-access-token"',
     ).env('HIVE_REGISTRY_TOKEN'),
   )
   .addOption(
     new Option(
       '--hive-usage-target <target>',
-      'Hive registry target to which the usage data should be reported to. requires the "--hive-usage-access-token <token>" option',
+      '[DEPRECATED] please use --hive-target instead.',
     ).env('HIVE_USAGE_TARGET'),
   )
   .addOption(
     new Option(
+      '--hive-target <target>',
+      'Hive registry target to which the usage and tracing data should be reported to. Requires either "--hive-access-token <token>", "--hive-usage-access-token <token>" or "--hive-trace-access-token" option',
+    ).env('HIVE_TARGET'),
+  )
+  .addOption(
+    new Option(
+      '--hive-access-token <token>',
+      'Hive registry access token for usage metrics reporting and tracing. Enables both usage reporting and tracing. Requires the "--hive-target <target>" option',
+    ).env('HIVE_ACCESS_TOKEN'),
+  )
+  .addOption(
+    new Option(
       '--hive-usage-access-token <token>',
-      'Hive registry access token for usage metrics reporting. requires the "--hive-usage-target <target>" option',
+      `Hive registry access token for usage reporting. Enables Hive usage report. Requires the "--hive-target <target>" option. It can't be used together with "--hive-access-token"`,
     ).env('HIVE_USAGE_ACCESS_TOKEN'),
+  )
+  .addOption(
+    new Option(
+      '--hive-trace-access-token <token>',
+      `Hive registry access token for tracing. Enables Hive tracing. Requires the "--hive-target <target>" option. It can't be used together with "--hive-access-token"`,
+    ).env('HIVE_TRACE_ACCESS_TOKEN'),
+  )
+  .addOption(
+    new Option(
+      '--hive-trace-endpoint <endpoint>',
+      `Hive registry tracing endpoint.`,
+    )
+      .env('HIVE_TRACE_ENDPOINT')
+      .default(`https://api.graphql-hive.com/otel/v1/traces`),
   )
   .option(
     '--hive-persisted-documents-endpoint <endpoint>',
-    '[EXPERIMENTAL] Hive CDN endpoint for fetching the persisted documents. requires the "--hive-persisted-documents-token <token>" option',
+    '[EXPERIMENTAL] Hive CDN endpoint for fetching the persisted documents. Requires the "--hive-persisted-documents-token <token>" option',
   )
   .option(
     '--hive-persisted-documents-token <token>',
-    '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. requires the "--hive-persisted-documents-endpoint <endpoint>" option',
+    '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. Requires the "--hive-persisted-documents-endpoint <endpoint>" option',
   )
   .addOption(
     new Option(
@@ -407,14 +460,15 @@ let cli = new Command()
 
 export async function run(userCtx: Partial<CLIContext>) {
   const ctx: CLIContext = {
-    log: userCtx.log || getDefaultLogger(),
+    log: userCtx.log || new Logger(),
     productName: 'Hive Gateway',
-    productDescription: 'Federated GraphQL Gateway',
+    productDescription:
+      'Unify and accelerate your data graph across diverse services with Hive Gateway, which seamlessly integrates with Apollo Federation.',
     productPackageName: '@graphql-hive/gateway',
     productLink: 'https://the-guild.dev/graphql/hive/docs/gateway',
     binName: 'hive-gateway',
     configFileName: 'gateway.config',
-    version: globalThis.__VERSION__ || 'dev',
+    version: globalThis.__VERSION__ || 'unknown',
     ...userCtx,
   };
 

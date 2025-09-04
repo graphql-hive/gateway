@@ -5,8 +5,9 @@ import type {
   GatewayConfig,
   GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
-import { HivePubSub } from '@graphql-hive/pubsub';
-import type { KeyValueCache, Logger } from '@graphql-mesh/types';
+import { LegacyLogger, type Logger } from '@graphql-hive/logger';
+import { PubSub } from '@graphql-hive/pubsub';
+import type { KeyValueCache } from '@graphql-mesh/types';
 import type { GatewayCLIBuiltinPluginConfig } from './cli';
 import type { ServerConfig } from './servers/types';
 
@@ -105,8 +106,8 @@ export async function getBuiltinPluginsFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
   ctx: {
     cache: KeyValueCache;
-    logger: Logger;
-    pubsub: HivePubSub;
+    log: Logger;
+    pubsub: PubSub;
     cwd: string;
   },
 ) {
@@ -123,14 +124,9 @@ export async function getBuiltinPluginsFromConfig(
   }
   if (config.openTelemetry) {
     const { useOpenTelemetry } = await import(
-      '@graphql-mesh/plugin-opentelemetry'
+      '@graphql-hive/plugin-opentelemetry'
     );
-    plugins.push(
-      useOpenTelemetry({
-        logger: ctx.logger,
-        ...config.openTelemetry,
-      }),
-    );
+    plugins.push(useOpenTelemetry({ ...config.openTelemetry, log: ctx.log }));
   }
 
   if (config.rateLimiting) {
@@ -159,12 +155,12 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
-  if (config.maxTokens) {
+  if (config.maxTokens || config.maxTokens === undefined) {
     const { maxTokensPlugin: useMaxTokens } = await import(
       '@escape.tech/graphql-armor-max-tokens'
     );
     const maxTokensPlugin = useMaxTokens({
-      n: config.maxTokens === true ? 1000 : config.maxTokens,
+      n: typeof config.maxTokens === 'number' ? config.maxTokens : 1000,
     });
     plugins.push(
       // @ts-expect-error the armor plugin does not inherit the context
@@ -172,12 +168,12 @@ export async function getBuiltinPluginsFromConfig(
     );
   }
 
-  if (config.maxDepth) {
+  if (config.maxDepth || config.maxDepth === undefined) {
     const { maxDepthPlugin: useMaxDepth } = await import(
       '@escape.tech/graphql-armor-max-depth'
     );
     const maxDepthPlugin = useMaxDepth({
-      n: config.maxDepth === true ? 6 : config.maxDepth,
+      n: typeof config.maxDepth === 'number' ? config.maxDepth : 7,
     });
     plugins.push(
       // @ts-expect-error the armor plugin does not inherit the context
@@ -204,7 +200,7 @@ export async function getBuiltinPluginsFromConfig(
  */
 export async function getCacheInstanceFromConfig(
   config: GatewayCLIBuiltinPluginConfig,
-  ctx: { logger: Logger; pubsub: HivePubSub; cwd: string },
+  ctx: { log: Logger; pubsub: PubSub; cwd: string },
 ): Promise<KeyValueCache> {
   if (typeof config.cache === 'function') {
     return config.cache(ctx);
@@ -219,6 +215,8 @@ export async function getCacheInstanceFromConfig(
         return new RedisCache({
           ...ctx,
           ...config.cache,
+          // TODO: use new logger
+          logger: LegacyLogger.from(ctx.log),
         }) as KeyValueCache;
       }
       case 'cfw-kv': {
@@ -241,7 +239,7 @@ export async function getCacheInstanceFromConfig(
       }
     }
     if (config.cache.type !== 'localforage') {
-      ctx.logger.warn(
+      ctx.log.warn(
         'Unknown cache type, falling back to localforage',
         config.cache,
       );

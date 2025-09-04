@@ -1,14 +1,11 @@
 export * from './cli';
+export * from '@graphql-hive/logger';
 export * from '@graphql-hive/gateway-runtime';
-export { LogLevel, DefaultLogger } from '@graphql-mesh/utils';
-export { PubSub } from '@graphql-hive/pubsub';
+export * from '@graphql-hive/pubsub';
 export * from '@graphql-mesh/plugin-jwt-auth';
-export * from '@graphql-mesh/plugin-opentelemetry';
 export * from '@graphql-mesh/plugin-prometheus';
 export { default as useRateLimit } from '@graphql-mesh/plugin-rate-limit';
 export { default as useHttpCache } from '@graphql-mesh/plugin-http-cache';
-export { useDeduplicateRequest } from '@graphql-hive/plugin-deduplicate-request';
-export { default as useMock } from '@graphql-mesh/plugin-mock';
 export { default as useSnapshot } from '@graphql-mesh/plugin-snapshot';
 export { default as CloudflareKVCacheStorage } from '@graphql-mesh/cache-cfw-kv';
 export { default as RedisCacheStorage } from '@graphql-mesh/cache-redis';

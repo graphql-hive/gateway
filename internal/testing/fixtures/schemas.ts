@@ -1,4 +1,4 @@
-import { PubSub } from '@graphql-hive/pubsub';
+import { MemPubSub } from '@graphql-hive/pubsub';
 import {
   createDefaultExecutor,
   SubschemaConfig,
@@ -628,7 +628,7 @@ const subscriptionTypeDefs = /* GraphQL */ `
   }
 `;
 
-export const subscriptionPubSub = new PubSub();
+export const subscriptionPubSub = new MemPubSub();
 export const subscriptionPubSubTrigger = 'pubSubTrigger';
 
 const subscriptionResolvers: IResolvers = {
@@ -637,8 +637,7 @@ const subscriptionResolvers: IResolvers = {
   },
   Subscription: {
     notifications: {
-      subscribe: () =>
-        subscriptionPubSub.asyncIterator(subscriptionPubSubTrigger),
+      subscribe: () => subscriptionPubSub.subscribe(subscriptionPubSubTrigger),
     },
   },
   Notification: {
