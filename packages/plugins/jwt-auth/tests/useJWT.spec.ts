@@ -2,18 +2,18 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import {
-  createInlineSigningKeyProvider,
-  type JWTExtendContextFields,
-} from '@graphql-yoga/plugin-jwt';
+import { createInlineSigningKeyProvider } from '@graphql-yoga/plugin-jwt';
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
 import jwt from 'jsonwebtoken';
 import { describe, expect, it, vi } from 'vitest';
-import useJWTAuth, { useForwardedJWT } from '../src/index';
+import useJWTAuth, {
+  JWTAuthContextExtension,
+  useForwardedJWT,
+} from '../src/index';
 
 describe('useExtractedJWT', () => {
   it('full flow with extraction on Yoga subgraph', async () => {
-    const upstream = createYoga<{ jwt?: JWTExtendContextFields }>({
+    const upstream = createYoga<JWTAuthContextExtension>({
       schema: createSchema({
         typeDefs: /* GraphQL */ `
           type Query {

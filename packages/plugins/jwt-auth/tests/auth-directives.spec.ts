@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 import { describe, expect, it } from 'vitest';
 import useJWT, {
   createInlineSigningKeyProvider,
-  type JWTExtendContextFields,
+  JWTAuthContextExtension,
 } from '../src/index';
 
 describe('Auth Directives', () => {
@@ -98,7 +98,7 @@ describe('Auth Directives', () => {
         schema: subgraphASchema,
       });
       const signingKey = 'secret';
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -109,7 +109,7 @@ describe('Auth Directives', () => {
           ]),
         genericAuth: {
           mode: 'protect-granular',
-          resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
+          resolveUserFn(context) {
             return context?.jwt?.payload;
           },
           rejectUnauthenticated: false,
@@ -224,7 +224,7 @@ describe('Auth Directives', () => {
       const subgraphAServer = createYoga({
         schema: subgraphASchema,
       });
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -235,7 +235,7 @@ describe('Auth Directives', () => {
           ]),
         genericAuth: {
           mode: 'protect-granular',
-          resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
+          resolveUserFn(context) {
             return context?.jwt?.payload;
           },
           rejectUnauthenticated: false,
@@ -386,53 +386,56 @@ describe('Auth Directives', () => {
       });
       const signingKey = 'secret';
       it('succeeds', async () => {
-        await using serveRuntime = createGatewayRuntime({
-          supergraph: () =>
-            composeLocalSchemasWithApollo([
-              {
-                name: 'product',
-                schema: productSchema,
-                url: 'http://localhost:4001/graphql',
+        await using serveRuntime =
+          createGatewayRuntime<JWTAuthContextExtension>({
+            supergraph: () =>
+              composeLocalSchemasWithApollo([
+                {
+                  name: 'product',
+                  schema: productSchema,
+                  url: 'http://localhost:4001/graphql',
+                },
+                {
+                  name: 'inventory',
+                  schema: inventorySchema,
+                  url: 'http://localhost:4002/graphql',
+                },
+              ]),
+            genericAuth: {
+              mode: 'protect-granular',
+              resolveUserFn(context) {
+                return context.jwt?.payload;
               },
-              {
-                name: 'inventory',
-                schema: inventorySchema,
-                url: 'http://localhost:4002/graphql',
-              },
-            ]),
-          genericAuth: {
-            mode: 'protect-granular',
-            resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
-              return context?.jwt?.payload;
+              rejectUnauthenticated: false,
             },
-            rejectUnauthenticated: false,
-          },
-          plugins: () => [
-            useCustomFetch(function (url, ...args) {
-              if (url === 'http://localhost:4001/graphql') {
-                return productServer.fetch(
-                  // @ts-expect-error fix this in whatwg
-                  url,
-                  ...args,
-                );
-              } else if (url === 'http://localhost:4002/graphql') {
-                return inventoryServer.fetch(
-                  // @ts-expect-error fix this in whatwg
-                  url,
-                  ...args,
-                );
-              }
-              return Response.error();
-            }),
-            useJWT({
-              signingKeyProviders: [createInlineSigningKeyProvider(signingKey)],
-              reject: {
-                invalidToken: false,
-                missingToken: false,
-              },
-            }),
-          ],
-        });
+            plugins: () => [
+              useCustomFetch(function (url, ...args) {
+                if (url === 'http://localhost:4001/graphql') {
+                  return productServer.fetch(
+                    // @ts-expect-error fix this in whatwg
+                    url,
+                    ...args,
+                  );
+                } else if (url === 'http://localhost:4002/graphql') {
+                  return inventoryServer.fetch(
+                    // @ts-expect-error fix this in whatwg
+                    url,
+                    ...args,
+                  );
+                }
+                return Response.error();
+              }),
+              useJWT({
+                signingKeyProviders: [
+                  createInlineSigningKeyProvider(signingKey),
+                ],
+                reject: {
+                  invalidToken: false,
+                  missingToken: false,
+                },
+              }),
+            ],
+          });
         const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
           method: 'POST',
           headers: {
@@ -460,53 +463,56 @@ describe('Auth Directives', () => {
         });
       });
       it('fails', async () => {
-        await using serveRuntime = createGatewayRuntime({
-          supergraph: () =>
-            composeLocalSchemasWithApollo([
-              {
-                name: 'product',
-                schema: productSchema,
-                url: 'http://localhost:4001/graphql',
+        await using serveRuntime =
+          createGatewayRuntime<JWTAuthContextExtension>({
+            supergraph: () =>
+              composeLocalSchemasWithApollo([
+                {
+                  name: 'product',
+                  schema: productSchema,
+                  url: 'http://localhost:4001/graphql',
+                },
+                {
+                  name: 'inventory',
+                  schema: inventorySchema,
+                  url: 'http://localhost:4002/graphql',
+                },
+              ]),
+            genericAuth: {
+              mode: 'protect-granular',
+              resolveUserFn(context) {
+                return context?.jwt?.payload;
               },
-              {
-                name: 'inventory',
-                schema: inventorySchema,
-                url: 'http://localhost:4002/graphql',
-              },
-            ]),
-          genericAuth: {
-            mode: 'protect-granular',
-            resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
-              return context?.jwt?.payload;
+              rejectUnauthenticated: false,
             },
-            rejectUnauthenticated: false,
-          },
-          plugins: () => [
-            useCustomFetch(function (url, ...args) {
-              if (url === 'http://localhost:4001/graphql') {
-                return productServer.fetch(
-                  // @ts-expect-error fix this in whatwg
-                  url,
-                  ...args,
-                );
-              } else if (url === 'http://localhost:4002/graphql') {
-                return inventoryServer.fetch(
-                  // @ts-expect-error fix this in whatwg
-                  url,
-                  ...args,
-                );
-              }
-              return Response.error();
-            }),
-            useJWT({
-              signingKeyProviders: [createInlineSigningKeyProvider(signingKey)],
-              reject: {
-                invalidToken: false,
-                missingToken: false,
-              },
-            }),
-          ],
-        });
+            plugins: () => [
+              useCustomFetch(function (url, ...args) {
+                if (url === 'http://localhost:4001/graphql') {
+                  return productServer.fetch(
+                    // @ts-expect-error fix this in whatwg
+                    url,
+                    ...args,
+                  );
+                } else if (url === 'http://localhost:4002/graphql') {
+                  return inventoryServer.fetch(
+                    // @ts-expect-error fix this in whatwg
+                    url,
+                    ...args,
+                  );
+                }
+                return Response.error();
+              }),
+              useJWT({
+                signingKeyProviders: [
+                  createInlineSigningKeyProvider(signingKey),
+                ],
+                reject: {
+                  invalidToken: false,
+                  missingToken: false,
+                },
+              }),
+            ],
+          });
         const res = await serveRuntime.fetch('http://localhost:4000/graphql', {
           method: 'POST',
           headers: {
@@ -600,7 +606,7 @@ describe('Auth Directives', () => {
         schema: subgraphSchema,
       });
       const signingKey = 'secret';
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -611,7 +617,7 @@ describe('Auth Directives', () => {
           ]),
         genericAuth: {
           mode: 'protect-granular',
-          resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
+          resolveUserFn(context) {
             return context?.jwt?.payload;
           },
           rejectUnauthenticated: false,
@@ -741,7 +747,7 @@ describe('Auth Directives', () => {
         schema: subgraph,
       });
       const signingKey = 'secret';
-      await using serveRuntime = createGatewayRuntime({
+      await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
         supergraph: () =>
           composeLocalSchemasWithApollo([
             {
@@ -752,7 +758,7 @@ describe('Auth Directives', () => {
           ]),
         genericAuth: {
           mode: 'protect-granular',
-          resolveUserFn(context: { jwt?: JWTExtendContextFields }) {
+          resolveUserFn(context) {
             return context?.jwt?.payload;
           },
           rejectUnauthenticated: false,

@@ -96,10 +96,10 @@ type OpentelemetrySetupOptions = TracingOptions &
   };
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  const log = options.log?.child('[OpenTelemetry] ');
+  const log = options.log || new Logger();
 
   if (getEnvBool('OTEL_SDK_DISABLED')) {
-    log?.warn(
+    log.warn(
       'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is truthy',
     );
     return;
@@ -205,7 +205,7 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
       );
   }
 
-  log?.info(logAttributes, logMessage);
+  log.info(logAttributes, logMessage);
 }
 
 export type HiveTracingOptions = { target?: string } & (
@@ -226,7 +226,7 @@ export function hiveTracingSetup(
     log?: Logger;
   },
 ) {
-  const log = config.log?.child('[OpenTelemetry] ');
+  const log = config.log || new Logger();
   config.target ??= getEnvStr('HIVE_TARGET');
 
   if (!config.target) {
@@ -252,6 +252,7 @@ export function hiveTracingSetup(
   }
 
   openTelemetrySetup({
+    log,
     contextManager: config.contextManager,
     resource: resourceFromAttributes({
       'hive.target_id': config.target,
@@ -263,7 +264,7 @@ export function hiveTracingSetup(
     },
   });
 
-  log?.info(logAttributes, 'Hive Tracing integration has been enabled');
+  log.info(logAttributes, 'Hive Tracing integration has been enabled');
 }
 
 export type BatchingConfig = boolean | BufferConfig;
