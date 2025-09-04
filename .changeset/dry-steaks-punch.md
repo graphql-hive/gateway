@@ -23,13 +23,13 @@ If you still want to use the deprecated plugin, you need to install it separatel
 npm i @graphql-hive/plugin-deduplicate-request
 ```
 
-```diff
+```ts
 import {
   defineConfig,
-  HTTPTransportOptions,
-- useDeduplicateRequest,
+  useDeduplicateRequest,
+  type HTTPTransportOptions, // only for typedefs, otherwise not necessary
 } from '@graphql-hive/gateway'
-+ import { useDeduplicateRequest } from '@graphql-hive/plugin-deduplicate-request'
+import { useDeduplicateRequest } from '@graphql-hive/plugin-deduplicate-request'
 
 export const gatewayConfig = defineConfig({
   transportEntries: {
