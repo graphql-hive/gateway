@@ -468,7 +468,7 @@ export async function run(userCtx: Partial<CLIContext>) {
     productLink: 'https://the-guild.dev/graphql/hive/docs/gateway',
     binName: 'hive-gateway',
     configFileName: 'gateway.config',
-    version: globalThis.__VERSION__ || 'dev',
+    version: globalThis.__VERSION__ || 'unknown',
     ...userCtx,
   };
 

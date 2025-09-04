@@ -42,7 +42,7 @@ export * from './attributes';
 export * from './log-writer';
 export * from './hive-span-processor';
 
-// @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here
+globalThis.__OTEL_PLUGIN_VERSION__ = 'dev';
 
 type TracingOptions = {
   traces?:
@@ -151,9 +151,10 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
           options.resource && 'serviceVersion' in options.resource
             ? options.resource?.serviceVersion
             : getEnvStr('OTEL_SERVICE_VERSION') ||
-              globalThis.__OTEL_PLUGIN_VERSION__,
+              globalThis.__OTEL_PLUGIN_VERSION__ ||
+              'unknown',
         ['hive.gateway.version']: globalThis.__VERSION__,
-        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__,
+        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
       });
 
       const resource =

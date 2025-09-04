@@ -7,7 +7,7 @@ const version = process.argv[2] || pkg.version;
 
 console.log(`Injecting version ${version} to build and bundle`);
 
-const source = '// @inject-version globalThis.__OTEL_PLUGIN_VERSION__ here';
+const source = /globalThis\.__OTEL_PLUGIN_VERSION__ = .*;/;
 const inject = `globalThis.__OTEL_PLUGIN_VERSION__ = '${version}';`;
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -19,10 +19,12 @@ for (const file of [
 ]) {
   try {
     const content = await readFile(file, 'utf-8');
-    if (content.includes(source)) {
+    if (content.match(source)) {
       await writeFile(file, content.replace(source, inject));
+      console.info(`✅ Version injected to "${file}"`);
+    } else {
+      console.info(`❌ Version cannot be injected to "${file}"`);
     }
-    console.info(`✅ Version injected to "${file}"`);
   } catch (e) {
     if (Object(e).code === 'ENOENT') {
       console.warn(
