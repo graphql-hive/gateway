@@ -109,6 +109,7 @@ export async function handleOpenTelemetryCLIOpts(
         .catch(() => null);
 
       openTelemetrySetup({
+        log,
         traces: { processors },
         resource: await detectResource().catch((err) => {
           if (
