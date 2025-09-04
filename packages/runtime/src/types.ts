@@ -1,5 +1,5 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
-import type { useGenericAuth } from '@envelop/generic-auth';
+import type { GenericAuthPluginOptions } from '@envelop/generic-auth';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
@@ -653,7 +653,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * @default false
    */
-  disableIntrospection?: DisableIntrospectionOptions;
+  disableIntrospection?: DisableIntrospectionOptions<TContext>;
 
   /**
    * CSRF Prevention
@@ -672,7 +672,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Generic Auth Configuration
    */
-  genericAuth?: Parameters<typeof useGenericAuth>[0];
+  genericAuth?: GenericAuthPluginOptions<{}, GatewayContext & TContext>;
 
   /**
    * HMAC Signature Handling
@@ -755,9 +755,9 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   cookies?: boolean;
 }
 
-interface DisableIntrospectionOptions {
+interface DisableIntrospectionOptions<TContext extends Record<string, any>> {
   disableIf?: (args: {
-    context: GatewayContext;
+    context: GatewayContext & TContext;
     params: ValidateFunctionParameters;
   }) => boolean;
 }

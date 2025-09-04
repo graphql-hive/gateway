@@ -33,7 +33,7 @@ export type JWTAuthPluginOptions = JwtPluginOptions & {
 export function useForwardedJWT(config: {
   extensionsFieldName?: string;
   extendContextFieldName?: string;
-}): YogaPlugin<{ jwt?: JWTExtendContextFields }> {
+}): YogaPlugin<JWTAuthContextExtension> {
   const extensionsJwtFieldName = config.extensionsFieldName ?? 'jwt';
   const extendContextFieldName = config.extendContextFieldName ?? 'jwt';
 
@@ -50,12 +50,16 @@ export function useForwardedJWT(config: {
   };
 }
 
+export interface JWTAuthContextExtension {
+  jwt?: JWTExtendContextFields;
+}
+
 /**
  * This Mesh Gateway plugin is used to extract the JWT token and payload from the request and forward it to the subgraph.
  */
 export function useJWT(
   options: JWTAuthPluginOptions,
-): GatewayPlugin<{ jwt?: JWTExtendContextFields }> {
+): GatewayPlugin<JWTAuthContextExtension> {
   const forwardPayload = options?.forward?.payload ?? true;
   const forwardToken = options?.forward?.token ?? false;
   const shouldForward = forwardPayload || forwardToken;
