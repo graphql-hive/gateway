@@ -4,7 +4,7 @@ let security;
 const securityOpt = process.env['ARMOR_OPT'];
 switch (securityOpt) {
   case 'default':
-    security = 'default';
+    security = undefined;
     break;
   case 'true':
     security = {
