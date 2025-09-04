@@ -26,11 +26,20 @@ npm i @graphql-hive/plugin-deduplicate-request
 ```diff
 import {
   defineConfig,
+  HTTPTransportOptions,
 - useDeduplicateRequest,
 } from '@graphql-hive/gateway'
 + import { useDeduplicateRequest } from '@graphql-hive/plugin-deduplicate-request'
 
 export const gatewayConfig = defineConfig({
+  transportEntries: {
+    '*.http': {
+      options: {
+        // disable the built in deduplication
+        deduplicateInflightRequests: false,
+      } as HTTPTransportOptions,
+    },
+  },
   plugins: ctx => [useDeduplicateRequest(ctx)]
 })
 ```
