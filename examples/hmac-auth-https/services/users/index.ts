@@ -2,7 +2,6 @@ import { readFileSync } from 'fs';
 import { createServer } from 'https';
 import { join } from 'path';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { Logger } from '@graphql-hive/logger';
 import { useHmacSignatureValidation } from '@graphql-mesh/hmac-upstream-signature';
 import {
   JWTExtendContextFields,
@@ -20,7 +19,6 @@ const yoga = createYoga({
   logging: true,
   plugins: [
     useHmacSignatureValidation({
-      log: new Logger({ level: 'debug' }),
       secret: 'HMAC_SIGNING_SECRET',
     }),
     useForwardedJWT({}),

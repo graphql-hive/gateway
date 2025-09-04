@@ -1,5 +1,4 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
-import type { Logger } from '@graphql-hive/logger';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
@@ -7,7 +6,7 @@ import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type { FetchAPI, GraphQLParams } from 'graphql-yoga';
+import type { FetchAPI, GraphQLParams, YogaLogger } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
 
 export type HMACUpstreamSignatureOptions = {
@@ -149,7 +148,6 @@ export function useHmacUpstreamSignature(
 }
 
 export type HMACUpstreamSignatureValidationOptions = {
-  log: Logger;
   secret: string;
   extensionName?: string;
   serializeParams?: (params: GraphQLParams) => string;
@@ -168,12 +166,12 @@ export function useHmacSignatureValidation(
   let key$: MaybePromise<CryptoKey>;
   let textEncoder: TextEncoder;
   const paramsSerializer = options.serializeParams || defaultParamsSerializer;
-
+  let logger: YogaLogger;
   return {
-    onParams({ params, fetchAPI, context }) {
-      // log will be missing from context if executing from Yoga (Yoga does not update serverContext)
-      let log = context?.log ?? options.log;
-      log = log.child('[useHmacSignatureValidation] ');
+    onYogaInit({ yoga }) {
+      logger = yoga.logger;
+    },
+    onParams({ params, fetchAPI }) {
       textEncoder ||= new fetchAPI.TextEncoder();
       const extension = params.extensions?.[extensionName];
 
@@ -197,9 +195,9 @@ export function useHmacSignatureValidation(
             c.charCodeAt(0),
           );
           const serializedParams = paramsSerializer(params);
-          log.debug(
+          logger.debug(
+            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
             { serializedParams },
-            'HMAC signature will be calculate based on serialized params',
           );
 
           return handleMaybePromise(
@@ -212,8 +210,8 @@ export function useHmacSignatureValidation(
               ),
             (result) => {
               if (!result) {
-                log.error(
-                  'HMAC signature does not match the body content. short circuit request.',
+                logger.error(
+                  '[useHmacSignatureValidation] HMAC signature does not match the body content. short circuit request.',
                 );
                 throw new Error(
                   `Invalid HMAC signature: extension ${extensionName} does not match the body content.`,
