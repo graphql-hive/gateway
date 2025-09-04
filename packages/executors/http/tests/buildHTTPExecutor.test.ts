@@ -353,4 +353,53 @@ describe('buildHTTPExecutor', () => {
     // then cancel
     await iter.return?.();
   });
+  it('deduplicates inflight requests', async () => {
+    let requestCount = 0;
+    await using executor = buildHTTPExecutor({
+      fetch: () => {
+        requestCount++;
+        return new Promise<Response>((resolve) => {
+          // resolve after a short delay to simulate network latency
+          setTimeout(50).then(() =>
+            resolve(
+              Response.json({
+                data: { hello: 'world' },
+              }),
+            ),
+          );
+        });
+      },
+    });
+
+    const promises = [
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+      executor({
+        document: parse(/* GraphQL */ `
+          query {
+            hello
+          }
+        `),
+      }),
+    ];
+    const results = await Promise.all(promises);
+    for (const res of results) {
+      expect(res).toEqual({
+        data: { hello: 'world' },
+      });
+    }
+    expect(requestCount).toBe(1);
+  });
 });

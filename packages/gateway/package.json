@@ -87,7 +87,6 @@
     "@graphql-hive/importer": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/plugin-aws-sigv4": "workspace:^",
-    "@graphql-hive/plugin-deduplicate-request": "workspace:^",
     "@graphql-hive/plugin-opentelemetry": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.8",

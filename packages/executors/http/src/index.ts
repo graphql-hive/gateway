@@ -18,7 +18,11 @@ import {
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch as defaultFetch } from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  handleMaybePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { DocumentNode, GraphQLResolveInfo } from 'graphql';
 import { createFormDataFromVariables } from './createFormDataFromVariables.js';
 import { handleEventStreamResponse } from './handleEventStreamResponse.js';
@@ -130,9 +134,29 @@ export interface HTTPExecutorOptions {
    * On dispose abort error
    */
   getDisposeReason?(): Error | undefined;
+  /**
+   * Whether to deduplicate inflight requests with the same parameters.
+   * This can be useful to avoid making multiple identical requests to the upstream service when
+   * multiple parts of the gateway are requesting the same data at the same time.
+   * @default true
+   */
+  deduplicateInflightRequests?: boolean;
 }
 
 export type HeadersConfig = Record<string, string>;
+
+export interface InflightRequestOptions {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: string | FormData;
+  credentials?: RequestCredentials;
+  signal?: AbortSignal;
+}
+
+type InflightRequestId = string;
+
+const inflightRequests = new Map<InflightRequestId, Promise<ExecutionResult>>();
 
 export function buildHTTPExecutor(
   options?: Omit<HTTPExecutorOptions, 'fetch'> & {
@@ -218,9 +242,12 @@ export function buildHTTPExecutor(
       endpoint = '/graphql';
     }
 
+    let isCustomHeader = false;
+
     const headers: Record<string, any> = { accept };
 
     if (options?.headers) {
+      isCustomHeader = true;
       Object.assign(
         headers,
         typeof options?.headers === 'function'
@@ -230,6 +257,7 @@ export function buildHTTPExecutor(
     }
 
     if (request.extensions?.headers) {
+      isCustomHeader = true;
       const { headers: headersFromExtensions, ...restExtensions } =
         request.extensions;
       Object.assign(headers, headersFromExtensions);
@@ -317,67 +345,29 @@ export function buildHTTPExecutor(
       };
     }
 
-    return handleMaybePromise(
-      () => serializeFn(),
-      (body: SerializedExecutionRequest) =>
-        handleMaybePromise(
-          () => {
-            switch (method) {
-              case 'GET': {
-                const finalUrl = prepareGETUrl({
-                  baseUrl: endpoint,
-                  body,
-                });
-                const fetchOptions: RequestInit = {
-                  method: 'GET',
-                  headers,
-                  signal,
-                };
-                if (options?.credentials != null) {
-                  fetchOptions.credentials = options.credentials;
-                }
-                upstreamErrorExtensions.request.url = finalUrl;
-                return fetchFn(
-                  finalUrl,
-                  fetchOptions,
-                  request.context,
-                  request.info,
-                );
-              }
-              case 'POST': {
-                upstreamErrorExtensions.request.body = body;
-                return handleMaybePromise(
-                  () =>
-                    createFormDataFromVariables(body, {
-                      File: options?.File,
-                      FormData: options?.FormData,
-                    }),
-                  (body) => {
-                    if (typeof body === 'string' && !headers['content-type']) {
-                      upstreamErrorExtensions.request.body = body;
-                      headers['content-type'] = 'application/json';
-                    }
-                    const fetchOptions: RequestInit = {
-                      method: 'POST',
-                      body,
-                      headers,
-                      signal,
-                    };
-                    if (options?.credentials != null) {
-                      fetchOptions.credentials = options.credentials;
-                    }
-                    return fetchFn(
-                      endpoint,
-                      fetchOptions,
-                      request.context,
-                      request.info,
-                    ) as any;
-                  },
-                  handleError,
-                );
-              }
-            }
-          },
+    function handleInflightRequest(
+      inflightRequestOptions: InflightRequestOptions,
+      context?: any,
+      info?: GraphQLResolveInfo,
+    ): MaybePromise<ExecutionResult> {
+      if (options?.deduplicateInflightRequests === false) {
+        return runInflightRequest();
+      }
+      function runInflightRequest() {
+        return handleMaybePromise(
+          () =>
+            fetchFn(
+              inflightRequestOptions.url,
+              {
+                method: inflightRequestOptions.method,
+                headers: inflightRequestOptions.headers,
+                body: inflightRequestOptions.body,
+                credentials: inflightRequestOptions.credentials,
+                signal: inflightRequestOptions.signal,
+              },
+              context,
+              info,
+            ) as Promise<Response> | Response,
           (fetchResult: Response) =>
             handleMaybePromise<
               MaybeAsyncIterable<ExecutionResult> | string,
@@ -491,7 +481,87 @@ export function buildHTTPExecutor(
               handleError,
             ),
           handleError,
-        ),
+        );
+      }
+      if (typeof inflightRequestOptions.body === 'object') {
+        return runInflightRequest();
+      }
+      let inflightRequestId = `${inflightRequestOptions.url}|${inflightRequestOptions.method}`;
+      if (inflightRequestOptions.body) {
+        inflightRequestId += `|${inflightRequestOptions.body}`;
+      }
+      if (isCustomHeader) {
+        inflightRequestId += `|${JSON.stringify(inflightRequestOptions.headers)}`;
+      }
+      let inflightRequest: MaybePromise<ExecutionResult> | undefined =
+        inflightRequests.get(inflightRequestId);
+      if (!inflightRequest) {
+        inflightRequest = runInflightRequest();
+        if (isPromise(inflightRequest)) {
+          inflightRequests.set(inflightRequestId, inflightRequest);
+          inflightRequest.finally(() => {
+            inflightRequests.delete(inflightRequestId);
+          });
+        }
+      }
+      return inflightRequest;
+    }
+
+    return handleMaybePromise(
+      () => serializeFn(),
+      (body: SerializedExecutionRequest) => {
+        switch (method) {
+          case 'GET': {
+            const finalUrl = prepareGETUrl({
+              baseUrl: endpoint,
+              body,
+            });
+            const inflightRequestOptions: InflightRequestOptions = {
+              url: finalUrl,
+              method: 'GET',
+              headers,
+              signal,
+              credentials: options?.credentials,
+            };
+            upstreamErrorExtensions.request.url = finalUrl;
+            return handleInflightRequest(
+              inflightRequestOptions,
+              request.context,
+              request.info,
+            );
+          }
+          case 'POST': {
+            upstreamErrorExtensions.request.body = body;
+            return handleMaybePromise(
+              () =>
+                createFormDataFromVariables(body, {
+                  File: options?.File,
+                  FormData: options?.FormData,
+                }),
+              (body) => {
+                if (typeof body === 'string' && !headers['content-type']) {
+                  upstreamErrorExtensions.request.body = body;
+                  headers['content-type'] = 'application/json';
+                }
+                const inflightRequestOptions: InflightRequestOptions = {
+                  url: endpoint!,
+                  method: 'POST',
+                  body,
+                  headers,
+                  credentials: options?.credentials,
+                  signal,
+                };
+                return handleInflightRequest(
+                  inflightRequestOptions,
+                  request.context,
+                  request.info,
+                );
+              },
+              handleError,
+            );
+          }
+        }
+      },
       handleError,
     );
   };
