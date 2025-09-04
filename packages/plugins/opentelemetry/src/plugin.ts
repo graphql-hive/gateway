@@ -268,6 +268,8 @@ export function useOpenTelemetry(
   let pluginLogger: Logger | undefined =
     options.log && options.log.child('[OpenTelemetry] ');
 
+  pluginLogger?.info('Enabled');
+
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
     return !parentState || !!parentState.otel;
@@ -307,6 +309,8 @@ export function useOpenTelemetry(
     } else {
       useContextManager = options.useContextManager ?? true;
     }
+
+    pluginLogger?.info('Initializing');
 
     tracer = traces.tracer || trace.getTracer('gateway');
 
@@ -699,7 +703,7 @@ export function useOpenTelemetry(
       }
 
       pluginLogger.debug(
-        `context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
+        `Context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
       );
     },
 
