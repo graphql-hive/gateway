@@ -4179,7 +4179,6 @@ __metadata:
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
-    "@graphql-hive/plugin-deduplicate-request": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.8"
@@ -4338,7 +4337,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/plugin-deduplicate-request@workspace:^, @graphql-hive/plugin-deduplicate-request@workspace:packages/plugins/deduplicate-request":
+"@graphql-hive/plugin-deduplicate-request@workspace:packages/plugins/deduplicate-request":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-deduplicate-request@workspace:packages/plugins/deduplicate-request"
   dependencies:
