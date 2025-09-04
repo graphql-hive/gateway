@@ -672,7 +672,10 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Generic Auth Configuration
    */
-  genericAuth?: GenericAuthPluginOptions<{}, GatewayContext & TContext>;
+  genericAuth?: GenericAuthPluginOptions<
+    Record<string, any>, // convenient for strict tsconfig environment
+    GatewayContext & TContext
+  >;
 
   /**
    * HMAC Signature Handling
