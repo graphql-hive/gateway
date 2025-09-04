@@ -2,10 +2,12 @@ import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { OnSubgraphExecutePayload } from '@graphql-mesh/fusion-runtime';
 import { serializeExecutionRequest } from '@graphql-tools/executor-common';
 import type { ExecutionRequest } from '@graphql-tools/utils';
-import { handleMaybePromise, type MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  handleMaybePromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type { FetchAPI, GraphQLParams, YogaLogger } from 'graphql-yoga';
 import jsonStableStringify from 'json-stable-stringify';
-
 
 export type HMACUpstreamSignatureOptions = {
   secret: string;

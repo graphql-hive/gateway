@@ -2,7 +2,6 @@ import { readFileSync } from 'fs';
 import { createServer } from 'https';
 import { join } from 'path';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { Logger } from '@graphql-hive/logger';
 import { useHmacSignatureValidation } from '@graphql-mesh/hmac-upstream-signature';
 import {
   JWTExtendContextFields,

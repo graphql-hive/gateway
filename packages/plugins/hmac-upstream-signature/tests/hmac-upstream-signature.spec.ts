@@ -4,7 +4,6 @@ import {
   GatewayPlugin,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { Logger } from '@graphql-hive/logger';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { MeshFetch } from '@graphql-mesh/types';
 import { GraphQLSchema, stripIgnoredCharacters } from 'graphql';
@@ -62,7 +61,6 @@ for (const [name, createConfig] of Object.entries(cases)) {
           ...createConfig(upstreamSchema),
           plugins: () => [
             useHmacSignatureValidation({
-              log: new Logger({ level: false }),
               secret: 'topSecret',
             }),
             useCustomFetch(upstream.fetch as MeshFetch),
@@ -121,7 +119,6 @@ for (const [name, createConfig] of Object.entries(cases)) {
           schema: upstreamSchema,
           plugins: [
             useHmacSignatureValidation({
-              log: new Logger({ level: false }),
               secret: sharedSecret,
             }),
           ],
