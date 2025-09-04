@@ -1,5 +1,168 @@
 # @graphql-hive/gateway
 
+## 2.0.0
+### Major Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Sane security defaults, max token and depths limits enabled by default
+  
+  Max token limit defaults to 1000 (can be configured via `maxTokens` option) and max depth limit defaults to 8 (can be configured via `maxDepth` option).
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Drop Node 18 support
+  
+  Least supported Node version is now v20.
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - `useDeduplicateRequest()` plugin has been removed in favour of the built-in inflight request deduplication
+  
+  To migrate, simply remove the plugin from your configuration and you're good to go!
+  
+  ```diff
+  import {
+    defineConfig,
+  - useDeduplicateRequest,
+  } from '@graphql-hive/gateway'
+  
+  export const gatewayConfig = defineConfig({
+  - plugins: ctx => [useDeduplicateRequest(ctx)]
+  })
+  ```
+  
+  If you still want to use the deprecated plugin, you need to install it separately and use it as before:
+  
+  ```sh
+  npm i @graphql-hive/plugin-deduplicate-request
+  ```
+  
+  ```ts
+  import {
+    defineConfig,
+    useDeduplicateRequest,
+    type HTTPTransportOptions, // only for typedefs, otherwise not necessary
+  } from '@graphql-hive/gateway'
+  import { useDeduplicateRequest } from '@graphql-hive/plugin-deduplicate-request'
+  
+  export const gatewayConfig = defineConfig({
+    transportEntries: {
+      '*.http': {
+        options: {
+          // disable the built in deduplication
+          deduplicateInflightRequests: false,
+        } as HTTPTransportOptions,
+      },
+    },
+    plugins: ctx => [useDeduplicateRequest(ctx)]
+  })
+  ```
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Introduce and use the new Hive Logger
+  
+  - [Read more about it on the Hive Logger documentation here.](https://the-guild.dev/graphql/hive/docs/logger)
+  
+  - If coming from Hive Gateway v1, [read the migration guide here.](https://the-guild.dev/graphql/hive/docs/migration-guides/gateway-v1-v2)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Disable forking even if NODE_ENV=production
+  
+  Forking workers for concurrent processing is a delicate process and if not done carefully can lead to performance degradations. It should be configured with careful consideration by advanced users.
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Remove mocking plugin from Hive Gateway built-ins
+  
+  There is no need to provide the `useMock` plugin alongside Hive Gateway built-ins. Not only is the mock plugin 2MB in size (minified), but installing and using it is very simple.
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Load schema on initialization
+  
+  Failing to start if the schema is not loaded for whatever reason.
+
+### Minor Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - The `defineConfig` accepts a TContext generic
+
+
+### Patch Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@opentelemetry/api@^1.9.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/context-zone@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/core@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/exporter-jaeger@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-jaeger/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/exporter-zipkin@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/propagator-b3@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/propagator-jaeger@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sampler-jaeger-remote@^0.202.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.202.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-metrics@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.0.1) (to `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@opentelemetry/api-logs@^0.202.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.202.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-logs@^0.202.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.202.0) (to `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@opentelemetry/context-async-hooks@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-trace-base@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.0.1) (to `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Removed dependency [`@graphql-hive/plugin-deduplicate-request@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-deduplicate-request/v/workspace:^) (from `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
+  - Added dependency [`@graphql-hive/plugin-opentelemetry@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-opentelemetry/v/workspace:^) (to `dependencies`)
+  - Added dependency [`@opentelemetry/api@^1.9.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/api-logs@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.203.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/context-async-hooks@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/context-zone@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/core@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/exporter-jaeger@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-jaeger/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/exporter-zipkin@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/propagator-b3@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/propagator-jaeger@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sampler-jaeger-remote@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.203.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-logs@^0.203.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.203.0) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-metrics@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.0.1) (to `dependencies`)
+  - Added dependency [`@opentelemetry/sdk-trace-base@^2.0.1` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.0.1) (to `dependencies`)
+  - Removed dependency [`@graphql-hive/plugin-deduplicate-request@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/plugin-deduplicate-request/v/workspace:^) (from `dependencies`)
+  - Removed dependency [`@graphql-mesh/plugin-mock@^0.105.8` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-mock/v/0.105.8) (from `dependencies`)
+  - Removed dependency [`@graphql-mesh/plugin-opentelemetry@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-opentelemetry/v/workspace:^) (from `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Inflight request deduplication
+
+- Updated dependencies [[`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a)]:
+  - @graphql-hive/gateway-runtime@2.0.0
+  - @graphql-hive/plugin-opentelemetry@1.0.0
+  - @graphql-hive/pubsub@2.0.0
+  - @graphql-mesh/plugin-prometheus@2.0.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.0
+  - @graphql-mesh/transport-http-callback@1.0.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.0
+  - @graphql-mesh/plugin-jwt-auth@2.0.0
+  - @graphql-mesh/transport-http@1.0.0
+  - @graphql-mesh/transport-ws@2.0.0
+  - @graphql-hive/importer@2.0.0
+  - @graphql-hive/logger@1.0.1
+
 ## 1.16.5
 ### Patch Changes
 

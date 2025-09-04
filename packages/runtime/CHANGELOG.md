@@ -1,5 +1,82 @@
 # @graphql-hive/gateway-runtime
 
+## 2.0.0
+### Major Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Drop Node 18 support
+  
+  Least supported Node version is now v20.
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Introduce and use the new Hive Logger
+  
+  - [Read more about it on the Hive Logger documentation here.](https://the-guild.dev/graphql/hive/docs/logger)
+  
+  - If coming from Hive Gateway v1, [read the migration guide here.](https://the-guild.dev/graphql/hive/docs/migration-guides/gateway-v1-v2)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - GraphQL multipart request support is disabled by default
+  
+  The only objective of [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec) is to support file uploads; however, file uploads are not native to GraphQL and are generally considered an anti-pattern.
+
+### Minor Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Added `subgraphName` to `ExecutionRequest` for easier plugin developpment.
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - No details landing page and improvements around it
+
+
+### Patch Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@envelop/instrumentation@^1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/1.0.0) (to `dependencies`)
+  - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
+  - Removed dependency [`@graphql-hive/logger-json@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger-json/v/workspace:^) (from `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@opentelemetry/api@^1.9.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.0) (to `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Removed dependency [`@opentelemetry/api@^1.9.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api/v/1.9.0) (from `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - dependencies updates:
+  
+  - Added dependency [`@envelop/instrumentation@^1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/1.0.0) (to `dependencies`)
+  - Added dependency [`@graphql-hive/logger@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger/v/workspace:^) (to `dependencies`)
+  - Removed dependency [`@graphql-hive/logger-json@workspace:^` ↗︎](https://www.npmjs.com/package/@graphql-hive/logger-json/v/workspace:^) (from `dependencies`)
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fixed subgraph name being lost when execution requests get batched together.
+
+- Updated dependencies [[`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a), [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a)]:
+  - @graphql-hive/pubsub@2.0.0
+  - @graphql-mesh/fusion-runtime@1.0.0
+  - @graphql-mesh/transport-common@1.0.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.0
+  - @graphql-tools/executor-common@1.0.0
+  - @graphql-tools/batch-delegate@10.0.0
+  - @graphql-tools/executor-http@3.0.0
+  - @graphql-tools/federation@4.0.0
+  - @graphql-tools/delegate@11.0.0
+  - @graphql-hive/signal@2.0.0
+  - @graphql-tools/stitch@10.0.0
+  - @graphql-tools/wrap@11.0.0
+  - @graphql-hive/logger@1.0.1
+
 ## 1.11.1
 ### Patch Changes
 

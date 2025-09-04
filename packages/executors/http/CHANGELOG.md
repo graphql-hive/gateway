@@ -1,5 +1,24 @@
 # @graphql-tools/executor-http
 
+## 3.0.0
+### Major Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Drop Node 18 support
+  
+  Least supported Node version is now v20.
+
+### Patch Changes
+
+
+
+- [#956](https://github.com/graphql-hive/gateway/pull/956) [`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Inflight request deduplication
+
+- Updated dependencies [[`46d2661`](https://github.com/graphql-hive/gateway/commit/46d26615c2c3c5f936c1d1bca1d03b025c1ce86a)]:
+  - @graphql-tools/executor-common@1.0.0
+  - @graphql-hive/signal@2.0.0
+
 ## 2.1.2
 ### Patch Changes
 
