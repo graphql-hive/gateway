@@ -4393,6 +4393,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/pubsub@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@graphql-hive/pubsub@npm:1.0.0"
+  dependencies:
+    "@repeaterjs/repeater": "npm:^3.0.6"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+  checksum: 10c0/2ec6d1883b05dabbcf7df271acd6183d356078de27a424a164efa6748270455a1fe562d3d59e598f55f434b4a12fa092865429917a274fb05a07f9695e745c0a
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/pubsub@npm:next":
   version: 2.0.0-next-4830ed6f34eb399e328ddb4d05f88aaff04fab46
   resolution: "@graphql-hive/pubsub@npm:2.0.0-next-4830ed6f34eb399e328ddb4d05f88aaff04fab46"
@@ -4430,6 +4440,13 @@ __metadata:
       optional: true
   languageName: unknown
   linkType: soft
+
+"@graphql-hive/signal@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@graphql-hive/signal@npm:1.0.0"
+  checksum: 10c0/5c771417b29fa793b93d5060753ff9470425dbafe186d2a652b464e9a2a58e5e885a0cdf84d8316acc30bd6c05608b778686bb482bfe311ca410349dcaa7731f
+  languageName: node
+  linkType: hard
 
 "@graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
   version: 0.0.0-use.local
@@ -4866,7 +4883,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-common@npm:^0.7.13, @graphql-mesh/transport-common@workspace:^, @graphql-mesh/transport-common@workspace:packages/transports/common":
+"@graphql-mesh/transport-common@npm:^0.7.13":
+  version: 0.7.39
+  resolution: "@graphql-mesh/transport-common@npm:0.7.39"
+  dependencies:
+    "@envelop/core": "npm:^5.3.0"
+    "@graphql-hive/pubsub": "npm:^1.0.0"
+    "@graphql-hive/signal": "npm:^1.0.0"
+    "@graphql-mesh/types": "npm:^0.104.8"
+    "@graphql-tools/executor": "npm:^1.4.9"
+    "@graphql-tools/executor-common": "npm:^0.0.6"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
+  checksum: 10c0/5f08b3f822befe0e9ac967fd0103759c021c1c67a5083c51b1c3fcb9d36dc9914b66c83ed8af507774edc7e42f9e5ce79a1ad32646e8bd4832b3f343f69be795
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/transport-common@workspace:^, @graphql-mesh/transport-common@workspace:packages/transports/common":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-common@workspace:packages/transports/common"
   dependencies:
@@ -5065,7 +5100,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/batch-delegate@npm:^9.0.10, @graphql-tools/batch-delegate@npm:^9.0.16, @graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
+"@graphql-tools/batch-delegate@npm:^9.0.10, @graphql-tools/batch-delegate@npm:^9.0.16":
+  version: 9.0.41
+  resolution: "@graphql-tools/batch-delegate@npm:9.0.41"
+  dependencies:
+    "@graphql-tools/delegate": "npm:^10.2.23"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    "@whatwg-node/promise-helpers": "npm:^1.3.0"
+    dataloader: "npm:^2.2.3"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/ce66700d48ee8fd2d69799ce895af9d5e17960b5c1153122d7870c266c069b86ad05724612ca08c71c5acf11c0c61427b1ddacc92eeb1550d94c3f876b08a719
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/batch-delegate@workspace:^, @graphql-tools/batch-delegate@workspace:packages/batch-delegate":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/batch-delegate@workspace:packages/batch-delegate"
   dependencies:
@@ -5147,6 +5197,18 @@ __metadata:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
+
+"@graphql-tools/executor-common@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "@graphql-tools/executor-common@npm:0.0.6"
+  dependencies:
+    "@envelop/core": "npm:^5.3.0"
+    "@graphql-tools/utils": "npm:^10.9.1"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/2f7dda600983a69f0f1524965f2c665195c46d986fb88e4e2fe4653c70e95c59b09a263a2fee3f8ebc4b8107180c9fa16d472454119f5e10f7745b9c1eb589d2
+  languageName: node
+  linkType: hard
 
 "@graphql-tools/executor-common@workspace:^, @graphql-tools/executor-common@workspace:packages/executors/common":
   version: 0.0.0-use.local
@@ -5525,7 +5587,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-tools/stitching-directives@npm:^3.1.9, @graphql-tools/stitching-directives@workspace:^, @graphql-tools/stitching-directives@workspace:packages/stitching-directives":
+"@graphql-tools/stitching-directives@npm:^3.1.9":
+  version: 3.1.38
+  resolution: "@graphql-tools/stitching-directives@npm:3.1.38"
+  dependencies:
+    "@graphql-tools/delegate": "npm:^10.2.23"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/f5d5f8e8319c1da4d3cfd80ff1e9e484175e49047f5c124a31be7a75e11e895d1b62910acd9129880edd1b4544b9e3c78e2e1ef84fb921c388b1f184e92fe4d0
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/stitching-directives@workspace:^, @graphql-tools/stitching-directives@workspace:packages/stitching-directives":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/stitching-directives@workspace:packages/stitching-directives"
   dependencies:
@@ -5593,7 +5668,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-tools/wrap@npm:^10.0.28, @graphql-tools/wrap@workspace:^, @graphql-tools/wrap@workspace:packages/wrap":
+"@graphql-tools/wrap@npm:^10.0.28":
+  version: 10.1.4
+  resolution: "@graphql-tools/wrap@npm:10.1.4"
+  dependencies:
+    "@graphql-tools/delegate": "npm:^10.2.23"
+    "@graphql-tools/schema": "npm:^10.0.25"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    "@whatwg-node/promise-helpers": "npm:^1.3.0"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/a89d92930b243683b4a7ae5a0104d75ae9b9e3e4cf030f9a25daa04760c7ff05861c108d1e50199091ce036e96cd85bf253a891aa2a87ef737a946b6bb99fd63
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/wrap@workspace:^, @graphql-tools/wrap@workspace:packages/wrap":
   version: 0.0.0-use.local
   resolution: "@graphql-tools/wrap@workspace:packages/wrap"
   dependencies:
