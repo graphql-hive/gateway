@@ -23,7 +23,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleOpenTelemetryConfig } from './handleOpenTelemetryConfig';
+import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -57,7 +57,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       // Handle hive OTEL tracing before loading config so that the tracer provider is registered
       // if users needs it in a custom plugin.
-      const openTelemetryEnabledByCLI = await handleOpenTelemetryConfig(ctx, {
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryCLIOpts(ctx, {
         openTelemetry: opentelemetry,
         openTelemetryExporterType: opentelemetryExporterType,
         hiveTarget,

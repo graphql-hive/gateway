@@ -19,7 +19,7 @@ import {
 } from '../config';
 import { startServerForRuntime } from '../servers/startServerForRuntime';
 import { handleFork } from './handleFork';
-import { handleOpenTelemetryConfig } from './handleOpenTelemetryConfig';
+import { handleOpenTelemetryCLIOpts } from './handleOpenTelemetryCLIOpts';
 import { handleReportingConfig } from './handleReportingConfig';
 
 export const addCommand: AddCommand = (ctx, cli) =>
@@ -54,7 +54,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
 
       ctx.log.info(`Starting ${ctx.productName} ${ctx.version} in proxy mode`);
 
-      const openTelemetryEnabledByCLI = await handleOpenTelemetryConfig(ctx, {
+      const openTelemetryEnabledByCLI = await handleOpenTelemetryCLIOpts(ctx, {
         openTelemetry: opentelemetry,
         openTelemetryExporterType: opentelemetryExporterType,
         hiveAccessToken,

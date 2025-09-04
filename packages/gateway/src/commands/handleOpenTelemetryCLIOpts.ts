@@ -6,7 +6,7 @@ import {
 import { getEnvStr, isNode } from '~internal/env';
 import type { CLIContext } from '..';
 
-export async function handleOpenTelemetryConfig(
+export async function handleOpenTelemetryCLIOpts(
   ctx: CLIContext,
   cliOpts: {
     hiveAccessToken: string | undefined; // TODO: Use it to enable tracing by default once stable
