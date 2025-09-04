@@ -155,12 +155,12 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
-  if (config.maxTokens) {
+  if (config.maxTokens || config.maxTokens === undefined) {
     const { maxTokensPlugin: useMaxTokens } = await import(
       '@escape.tech/graphql-armor-max-tokens'
     );
     const maxTokensPlugin = useMaxTokens({
-      n: config.maxTokens === true ? 1000 : config.maxTokens,
+      n: typeof config.maxTokens === 'number' ? config.maxTokens : 1000,
     });
     plugins.push(
       // @ts-expect-error the armor plugin does not inherit the context
@@ -168,12 +168,12 @@ export async function getBuiltinPluginsFromConfig(
     );
   }
 
-  if (config.maxDepth) {
+  if (config.maxDepth || config.maxDepth === undefined) {
     const { maxDepthPlugin: useMaxDepth } = await import(
       '@escape.tech/graphql-armor-max-depth'
     );
     const maxDepthPlugin = useMaxDepth({
-      n: config.maxDepth === true ? 6 : config.maxDepth,
+      n: typeof config.maxDepth === 'number' ? config.maxDepth : 7,
     });
     plugins.push(
       // @ts-expect-error the armor plugin does not inherit the context
