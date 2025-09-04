@@ -21,7 +21,6 @@ const yoga = createYoga({
   logging: true,
   plugins: [
     useHmacSignatureValidation({
-      log: new Logger({ level: 'debug' }),
       secret: 'HMAC_SIGNING_SECRET',
     }),
     useForwardedJWT({}),
