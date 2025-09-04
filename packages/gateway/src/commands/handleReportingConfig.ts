@@ -38,7 +38,13 @@ export function handleReportingConfig(
   };
   const opts = {
     ...confOpts,
-    ...cliOpts,
+    ...Object.entries(cliOpts).reduce((acc, [key, val]) => {
+      if (val != null) {
+        return { ...acc, [key]: val };
+      }
+      // omit nullish values so that the spread does not override available options
+      return acc;
+    }, {}),
     hiveTarget:
       // cli arguments always take precedence over config
       confOpts.hiveTarget ?? cliOpts.hiveTarget ?? cliOpts.hiveUsageTarget,
