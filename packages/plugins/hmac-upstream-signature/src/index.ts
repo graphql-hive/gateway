@@ -196,8 +196,7 @@ export function useHmacSignatureValidation(
           );
           const serializedParams = paramsSerializer(params);
           logger.debug(
-            '[useHmacSignatureValidation] ',
-            'HMAC signature will be calculate based on serialized params',
+            '[useHmacSignatureValidation] HMAC signature will be calculate based on serialized params',
             { serializedParams },
           );
 
