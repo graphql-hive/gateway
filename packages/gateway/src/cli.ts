@@ -17,10 +17,10 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
+import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
-import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
 import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
