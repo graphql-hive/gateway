@@ -102,11 +102,9 @@ jobs:
           - workflow-name: Node Binary on Ubuntu
             os: ubuntu-latest
             gateway-runner: bin
-          # TODO: windows started failing wirdly, enable when fixed
-          # https://github.com/graphql-hive/gateway/pull/1446
-          # - workflow-name: Node Binary on Windows
-          #   os: windows-latest
-          #   gateway-runner: bin
+          - workflow-name: Node Binary on Windows
+            os: windows-latest
+            gateway-runner: bin
 
           # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
@@ -134,6 +132,9 @@ jobs:
       - if: runner.os == 'Windows'
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
+      - if: runner.os == 'Windows'
+        name: Enable WMIC
+        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
