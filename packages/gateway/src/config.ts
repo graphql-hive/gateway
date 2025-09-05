@@ -173,7 +173,7 @@ export async function getBuiltinPluginsFromConfig(
       '@escape.tech/graphql-armor-max-depth'
     );
     const maxDepthPlugin = useMaxDepth({
-      n: typeof config.maxDepth === 'number' ? config.maxDepth : 7,
+      n: typeof config.maxDepth === 'number' ? config.maxDepth : 6,
     });
     plugins.push(
       // @ts-expect-error the armor plugin does not inherit the context
