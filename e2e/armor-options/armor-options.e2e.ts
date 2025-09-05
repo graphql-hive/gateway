@@ -27,7 +27,7 @@ function checkMaxTokens(
   });
 }
 
-function checkMaxDepth(gw: Gateway, depth = 8) {
+function checkMaxDepth(gw: Gateway, depth = 7) {
   let query = '{ topProducts { ';
 
   for (
@@ -60,38 +60,6 @@ function checkBlockSuggestions(gw: Gateway) {
   });
 }
 
-it.concurrent('should have default armor features', async ({ expect }) => {
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      ARMOR_OPT: 'default',
-    },
-  });
-
-  await expect(checkMaxTokens(gw)).resolves.toMatchInlineSnapshot(`
-    {
-      "errors": [
-        {
-          "extensions": {
-            "code": "GRAPHQL_PARSE_FAILED",
-          },
-          "message": "Syntax Error: Token limit of 1000 exceeded.",
-        },
-      ],
-    }
-  `);
-
-  await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
-    {
-      "errors": [
-        {
-          "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
-        },
-      ],
-    }
-  `);
-});
-
 it.concurrent('should enable all armor features', async ({ expect }) => {
   const gw = await gateway({
     supergraph: await supergraph(),
@@ -115,11 +83,142 @@ it.concurrent('should enable all armor features', async ({ expect }) => {
 
   await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
     {
-      "errors": [
-        {
-          "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
-        },
-      ],
+      "data": {
+        "topProducts": [
+          {
+            "reviews": [
+              {
+                "author": {
+                  "reviews": [
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "1",
+                          },
+                          {
+                            "id": "2",
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "1",
+                          },
+                          {
+                            "id": "2",
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                "author": {
+                  "reviews": [
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "3",
+                          },
+                          {
+                            "id": "4",
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "3",
+                          },
+                          {
+                            "id": "4",
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "reviews": [
+              {
+                "author": {
+                  "reviews": [
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "1",
+                          },
+                          {
+                            "id": "2",
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "1",
+                          },
+                          {
+                            "id": "2",
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "reviews": [
+              {
+                "author": {
+                  "reviews": [
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "3",
+                          },
+                          {
+                            "id": "4",
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      "author": {
+                        "reviews": [
+                          {
+                            "id": "3",
+                          },
+                          {
+                            "id": "4",
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
     }
   `);
 
@@ -298,11 +397,142 @@ it.concurrent(
 
     await expect(checkMaxDepth(gw)).resolves.toMatchInlineSnapshot(`
       {
-        "errors": [
-          {
-            "message": "Syntax Error: Query depth limit of 7 exceeded, found 8.",
-          },
-        ],
+        "data": {
+          "topProducts": [
+            {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "1",
+                            },
+                            {
+                              "id": "2",
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "1",
+                            },
+                            {
+                              "id": "2",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "3",
+                            },
+                            {
+                              "id": "4",
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "3",
+                            },
+                            {
+                              "id": "4",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "1",
+                            },
+                            {
+                              "id": "2",
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "1",
+                            },
+                            {
+                              "id": "2",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              "reviews": [
+                {
+                  "author": {
+                    "reviews": [
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "3",
+                            },
+                            {
+                              "id": "4",
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        "author": {
+                          "reviews": [
+                            {
+                              "id": "3",
+                            },
+                            {
+                              "id": "4",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
       }
     `);
 

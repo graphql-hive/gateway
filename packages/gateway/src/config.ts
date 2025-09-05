@@ -155,7 +155,7 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useAWSSigv4(config.awsSigv4));
   }
 
-  if (config.maxTokens || config.maxTokens === undefined) {
+  if (config.maxTokens) {
     const { maxTokensPlugin: useMaxTokens } = await import(
       '@escape.tech/graphql-armor-max-tokens'
     );
@@ -168,7 +168,7 @@ export async function getBuiltinPluginsFromConfig(
     );
   }
 
-  if (config.maxDepth || config.maxDepth === undefined) {
+  if (config.maxDepth) {
     const { maxDepthPlugin: useMaxDepth } = await import(
       '@escape.tech/graphql-armor-max-depth'
     );
