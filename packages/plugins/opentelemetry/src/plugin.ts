@@ -1,5 +1,4 @@
 import {
-  Attributes,
   GatewayConfigContext,
   getRetryInfo,
   isRetryExecutionRequest,
@@ -8,11 +7,9 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
-import { setGlobalErrorHandler } from '@opentelemetry/core';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   context,
-  diag,
   hive,
   propagation,
   ROOT_CONTEXT,
@@ -55,10 +52,7 @@ import {
   setUpstreamFetchAttributes,
   setUpstreamFetchResponseAttributes,
 } from './spans';
-import {
-  diagLogLevelFromEnv,
-  isContextManagerCompatibleWithAsync,
-} from './utils';
+import { isContextManagerCompatibleWithAsync } from './utils';
 
 const initializationTime =
   'performance' in globalThis ? performance.now() : undefined;
@@ -96,15 +90,6 @@ export type OpenTelemetryGatewayPluginOptions = {
    * See https://opentelemetry.io/docs/languages/js/propagation/
    */
   propagateContext?: boolean;
-  /**
-   * Configure Opentelemetry `diag` API to use Gateway's logger.
-   *
-   * @default true
-   *
-   * Note: Logger configuration respects OTEL environment variables standard.
-   *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
-   */
-  configureDiagLogger?: boolean;
   /**
    * The TraceProvider method to call on Gateway's disposal. By default, it tries to run `forceFlush` method on
    * the registered trace provider if it exists.
@@ -689,18 +674,6 @@ export function useOpenTelemetry(
           },
         ],
       }).child('[OpenTelemetry] ');
-
-      if (options.configureDiagLogger !== false) {
-        const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
-        if (logLevel) {
-          const diagLog = pluginLogger.child('[diag] ') as Logger & {
-            verbose: Logger['trace'];
-          };
-          diagLog.verbose = diagLog.trace;
-          diag.setLogger(diagLog, logLevel);
-          setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
-        }
-      }
 
       pluginLogger.debug(
         `Context manager is ${useContextManager ? 'enabled' : 'disabled'}`,

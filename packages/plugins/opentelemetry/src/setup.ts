@@ -2,6 +2,7 @@ import { Attributes, Logger } from '@graphql-hive/logger';
 import {
   context,
   ContextManager,
+  diag,
   propagation,
   TextMapPropagator,
   trace,
@@ -9,6 +10,7 @@ import {
 } from '@opentelemetry/api';
 import {
   CompositePropagator,
+  setGlobalErrorHandler,
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
 } from '@opentelemetry/core';
@@ -37,6 +39,7 @@ import {
   HiveTracingSpanProcessor,
   HiveTracingSpanProcessorOptions,
 } from './hive-span-processor';
+import { diagLogLevelFromEnv } from './utils';
 
 export * from './attributes';
 export * from './log-writer';
@@ -46,18 +49,34 @@ globalThis.__OTEL_PLUGIN_VERSION__ = 'dev';
 
 type TracingOptions = {
   traces?:
-    | { tracerProvider: TracerProvider }
+    | {
+        /**
+         * A custom Trace Provider.
+         */
+        tracerProvider: TracerProvider;
+      }
     | (TracerOptions &
         (
           | {
               // Processors
+              /**
+               * The span processors that will be used to process recorded spans.
+               * All processors will receive all recorded spans.
+               */
               processors: SpanProcessor[];
               tracerProvider?: never;
               exporter?: never;
             }
           | {
               // Exporter
+              /**
+               * The exporter that will be used to send spans.
+               */
               exporter: SpanExporter;
+              /**
+               * The batching options. By default, spans are batched using default BatchProcessor.
+               * You can pass `false` to entirely disable batching (not recommended for production).
+               */
               batching?: BatchingConfig | boolean;
               tracerProvider?: never;
               processors?: never;
@@ -72,27 +91,68 @@ type TracingOptions = {
 };
 
 type TracerOptions = {
+  /**
+   * If true, adds a Console Exporter that will write to stdout all spans.
+   * This can be used for debug purposes if you struggle to receive spans.
+   */
   console?: boolean;
+  /**
+   * The limits of the Span API like spans and attribute sizes
+   */
   spanLimits?: SpanLimits;
 };
 
 type SamplingOptions =
   | {
+      /**
+       * A custom sampling strategy
+       */
       sampler: Sampler;
       samplingRate?: never;
     }
   | {
       sampler?: never;
+      /**
+       * A sampler rate based on Parent First and Trace Id consistent probabilistic strategy.
+       * Set to 1 to record all traces, 0 to record none.
+       */
       samplingRate?: number;
     };
 
 type OpentelemetrySetupOptions = TracingOptions &
   SamplingOptions & {
+    /**
+     * The Resource that will be used to create the Trace Provider.
+     * Can be either a Resource instance, or an simple object with service name and version
+     */
     resource?: Resource | { serviceName: string; serviceVersion: string };
+    /**
+     * The Context Manager to be used to track OTEL Context.
+     * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
+     */
     contextManager: ContextManager | null;
+    /**
+     * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
+     */
     propagators?: TextMapPropagator[];
+    /**
+     * The general limits of OTEL attributes.
+     */
     generalLimits?: GeneralLimits;
+    /**
+     * The Logger to be used by this utility.
+     * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
+     */
     log?: Logger;
+    /**
+     * Configure Opentelemetry `diag` API to use Gateway's logger.
+     *
+     * @default true
+     *
+     * Note: Logger configuration respects OTEL environment variables standard.
+     *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
+     */
+    configureDiagLogger?: boolean;
   };
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
@@ -107,6 +167,18 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
 
   const logAttributes: Attributes = { registrationResults: {} };
   let logMessage = 'OpenTelemetry integration is enabled';
+
+  if (options.configureDiagLogger !== false) {
+    const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
+    if (logLevel) {
+      const diagLog = log.child('[diag] ') as Logger & {
+        verbose: Logger['trace'];
+      };
+      diagLog.verbose = diagLog.trace;
+      diag.setLogger(diagLog, logLevel);
+      setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
+    }
+  }
 
   if (options.traces) {
     if (options.traces.tracerProvider) {
