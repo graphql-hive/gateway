@@ -21,6 +21,7 @@ export function useContentEncoding<TContext extends Record<string, any>>({
       fetchAPI = yoga.fetchAPI;
     },
     onPluginInit({ addPlugin }) {
+      // @ts-ignore - this is flakey
       addPlugin(useOrigContentEncoding());
     },
     onSubgraphExecute({ subgraphName, executionRequest }) {
