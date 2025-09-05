@@ -1,6 +1,9 @@
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type { MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type { Redis, RedisKey } from 'ioredis';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
@@ -75,6 +78,9 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   }
 
   public async subscribedTopics() {
+    if (this.#disposed) {
+      throw new Error('PubSub is disposed, cannot get subscribed topics');
+    }
     const distinctTopics = Array.from(this.#subscribers.keys());
     for (const otherTopic of await this.#redis.pub.smembers(
       this.#subscribersSetKey,
@@ -143,14 +149,19 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       return new Repeater<M[Topic], any, any>(async (push, stop) => {
         await this.#redis.sub.subscribe(this.#topicToChannel(topic));
         await this.#redis.pub.sadd(...setArgs);
-        listeners.set(push, stop);
+        const { promise: settled, resolve: done } = createDeferredPromise();
+        listeners.set(push, () => (stop(), settled));
         await stop;
         listeners.delete(push);
         if (listeners.size === 0) {
           this.#subscribers.delete(topic);
         }
-        await this.#redis.pub.srem(...setArgs);
-        await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
+        try {
+          await this.#redis.pub.srem(...setArgs);
+          await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
+        } finally {
+          done();
+        }
       });
     }
 
@@ -177,18 +188,16 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
     this.#disposed = true;
     this.#redis.sub.off('message', this.#boundHandleMessage);
     for (const sub of this.#subscribers.values()) {
-      for (const stop of sub.values()) {
-        stop();
-      }
+      await Promise.all(sub.values().map((stop) => stop()));
       sub.clear(); // just in case
     }
     this.#subscribers.clear();
     if (this.#quitOnDispose) {
-      await Promise.all([this.#redis.pub.quit(), this.#redis.sub.quit()]).catch(
-        () => {
-          // noop, redis quit can fail if already closed
-        },
-      );
+      // noop on fail, redis quit can fail if already closed
+      await Promise.allSettled([
+        this.#redis.pub.quit(),
+        this.#redis.sub.quit(),
+      ]);
     }
   }
 
