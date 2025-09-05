@@ -132,6 +132,9 @@ jobs:
       - if: runner.os == 'Windows'
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
+      - if: runner.os == 'Windows'
+        name: Enable WMIC
+        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
