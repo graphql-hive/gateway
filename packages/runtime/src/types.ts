@@ -667,14 +667,14 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * [Learn more](https://graphql-hive.com/docs/gateway/other-features/security/https)
    */
-  customAgent?: AgentFactory<GatewayContext & TContext>;
+  customAgent?: AgentFactory<GatewayContext & Partial<TContext>>;
 
   /**
    * Generic Auth Configuration
    */
   genericAuth?: GenericAuthPluginOptions<
     Record<string, any>, // convenient for strict tsconfig environment
-    GatewayContext & TContext
+    GatewayContext & Partial<TContext>
   >;
 
   /**
@@ -692,7 +692,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Header Propagation
    */
-  propagateHeaders?: PropagateHeadersOpts;
+  propagateHeaders?: PropagateHeadersOpts<TContext>;
 
   /**
    * Upstream Timeout
@@ -713,7 +713,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
    *
    * @default true
    */
-  requestId?: boolean | RequestIdOptions<TContext>;
+  requestId?: boolean | RequestIdOptions<Partial<TContext>>;
 
   /**
    * Demand Control
@@ -760,7 +760,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
 
 interface DisableIntrospectionOptions<TContext extends Record<string, any>> {
   disableIf?: (args: {
-    context: GatewayContext & TContext;
+    context: GatewayContext & Partial<TContext>;
     params: ValidateFunctionParameters;
   }) => boolean;
 }
