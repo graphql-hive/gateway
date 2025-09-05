@@ -1,25 +1,27 @@
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import type { GatewayPlugin } from '../types';
+import type { GatewayContext, GatewayPlugin } from '../types';
 
-interface FromClientToSubgraphsPayload {
+interface FromClientToSubgraphsPayload<TContext extends Record<string, any>> {
+  context: GatewayContext & Partial<TContext>;
   request: Request;
   subgraphName: string;
 }
 
-interface FromSubgraphsToClientPayload {
+interface FromSubgraphsToClientPayload<TContext extends Record<string, any>> {
+  context: GatewayContext & Partial<TContext>;
   response: Response;
   subgraphName: string;
 }
 
-export interface PropagateHeadersOpts {
+export interface PropagateHeadersOpts<TContext extends Record<string, any>> {
   fromClientToSubgraphs?: (
-    payload: FromClientToSubgraphsPayload,
+    payload: FromClientToSubgraphsPayload<TContext>,
   ) =>
     | Record<string, string | null | undefined>
     | void
     | Promise<Record<string, string | null | undefined> | void>;
   fromSubgraphsToClient?: (
-    payload: FromSubgraphsToClientPayload,
+    payload: FromSubgraphsToClientPayload<TContext>,
   ) =>
     | Record<string, string | string[] | null | undefined>
     | void
@@ -27,7 +29,7 @@ export interface PropagateHeadersOpts {
 }
 
 export function usePropagateHeaders<TContext extends Record<string, any>>(
-  opts: PropagateHeadersOpts,
+  opts: PropagateHeadersOpts<TContext>,
 ): GatewayPlugin<TContext> {
   const resHeadersByRequest = new WeakMap<Request, Record<string, string[]>>();
   return {
@@ -38,6 +40,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           return handleMaybePromise(
             () =>
               opts.fromClientToSubgraphs?.({
+                context: executionRequest.context!,
                 request,
                 subgraphName,
               }),
@@ -72,7 +75,12 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           const subgraphName = executionRequest?.subgraphName;
           if (opts.fromSubgraphsToClient && subgraphName && request) {
             return handleMaybePromise(
-              () => opts.fromSubgraphsToClient?.({ response, subgraphName }),
+              () =>
+                opts.fromSubgraphsToClient?.({
+                  context: executionRequest.context!,
+                  response,
+                  subgraphName,
+                }),
               (headers) => {
                 if (headers && request) {
                   let existingHeaders = resHeadersByRequest.get(request);

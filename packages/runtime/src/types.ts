@@ -692,7 +692,7 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /**
    * Header Propagation
    */
-  propagateHeaders?: PropagateHeadersOpts;
+  propagateHeaders?: PropagateHeadersOpts<TContext>;
 
   /**
    * Upstream Timeout
