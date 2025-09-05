@@ -22,7 +22,6 @@ jobs:
         node-version:
           - 20
           - 22
-          - 23
           - 24
     name: Unit / Node v${{matrix.node-version}}
     runs-on: ubuntu-latest
@@ -56,7 +55,6 @@ jobs:
         node-version:
           - 20
           - 22
-          - 23
           - 24
     name: Leaks / Node v${{matrix.node-version}}
     needs: [unit] # leak tests run unit tests but check for leaks; if unit tests fail, leaks will fail too - avoid confusion by running them in series
@@ -90,10 +88,6 @@ jobs:
             os: ubuntu-latest
             gateway-runner: node
             node-version: 22
-          - workflow-name: Node 23 on Ubuntu
-            os: ubuntu-latest
-            gateway-runner: node
-            node-version: 23
           - workflow-name: Node 24 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
