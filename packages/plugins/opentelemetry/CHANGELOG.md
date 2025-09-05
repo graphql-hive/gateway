@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.0.1
+### Patch Changes
+
+
+
+- [#1439](https://github.com/graphql-hive/gateway/pull/1439) [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Create default logger if not supplied when setting up
+
+- Updated dependencies [[`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893)]:
+  - @graphql-hive/gateway-runtime@2.0.1
+  - @graphql-mesh/transport-common@1.0.1
+
 ## 1.0.0
 ### Major Changes
 

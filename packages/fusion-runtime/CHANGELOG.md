@@ -1,5 +1,11 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.0.1
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.0.1
+
 ## 1.0.0
 ### Major Changes
 
