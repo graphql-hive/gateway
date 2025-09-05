@@ -435,7 +435,7 @@ export function useAWSSigv4<TContext extends Record<string, any>>(
                 ...options,
                 method: modifiedAws4Request.method,
                 headers: modifiedAws4Request.headers as Record<string, string>,
-                body: modifiedAws4Request.body,
+                body: modifiedAws4Request.body as BodyInit,
               });
             },
           );
