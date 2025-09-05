@@ -1,5 +1,14 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 2.0.1
+### Patch Changes
+
+
+
+- [#1439](https://github.com/graphql-hive/gateway/pull/1439) [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Improve context usage and inheritance
+  
+  Now exports `JWTExtendContextFields` that can be directly used in the context generics, also updates the config making sure it's propagated.
+
 ## 2.0.0
 ### Major Changes
 

@@ -1,5 +1,14 @@
 # @graphql-hive/pubsub
 
+## 2.1.0
+### Minor Changes
+
+
+
+- [#1441](https://github.com/graphql-hive/gateway/pull/1441) [`2b3946f`](https://github.com/graphql-hive/gateway/commit/2b3946f418b0fb018ca792ff6a2c14fef7abb01d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Close the client connection on NATS and Redis pubsubs on dispose
+  
+  This will gracefully dispose the pubsub on gateway shutdown. There is an option to disable this behaviour `noCloseOnDispose` and `noQuitOnDispose` respectively.
+
 ## 2.0.0
 ### Major Changes
 

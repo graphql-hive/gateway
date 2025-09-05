@@ -1,5 +1,18 @@
 # @graphql-hive/gateway-runtime
 
+## 2.0.1
+### Patch Changes
+
+
+
+- [#1439](https://github.com/graphql-hive/gateway/pull/1439) [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Generic authentication options inherit the supplied context generic
+
+- Updated dependencies [[`2b3946f`](https://github.com/graphql-hive/gateway/commit/2b3946f418b0fb018ca792ff6a2c14fef7abb01d)]:
+  - @graphql-hive/pubsub@2.1.0
+  - @graphql-mesh/transport-common@1.0.1
+  - @graphql-mesh/hmac-upstream-signature@2.0.0
+  - @graphql-mesh/fusion-runtime@1.0.1
+
 ## 2.0.0
 ### Major Changes
 

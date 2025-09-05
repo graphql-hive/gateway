@@ -1,5 +1,25 @@
 # @graphql-hive/gateway
 
+## 2.0.1
+### Patch Changes
+
+
+
+- [#1441](https://github.com/graphql-hive/gateway/pull/1441) [`2b3946f`](https://github.com/graphql-hive/gateway/commit/2b3946f418b0fb018ca792ff6a2c14fef7abb01d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - maxDepth and maxTokens disabled by default
+  
+  Other gateways out there don't have these defaults and they might be too limiting, let's leave it for the users to decide. No new breaking change because it's too early for significant adoption.
+- Updated dependencies [[`2b3946f`](https://github.com/graphql-hive/gateway/commit/2b3946f418b0fb018ca792ff6a2c14fef7abb01d), [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893), [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893), [`65eef45`](https://github.com/graphql-hive/gateway/commit/65eef45eb372f20afa7907a2be1c9cef345bb893)]:
+  - @graphql-hive/pubsub@2.1.0
+  - @graphql-hive/plugin-opentelemetry@1.0.1
+  - @graphql-mesh/plugin-jwt-auth@2.0.1
+  - @graphql-hive/gateway-runtime@2.0.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.1
+  - @graphql-mesh/hmac-upstream-signature@2.0.0
+  - @graphql-mesh/plugin-prometheus@2.0.1
+  - @graphql-mesh/transport-http@1.0.1
+  - @graphql-mesh/transport-http-callback@1.0.1
+  - @graphql-mesh/transport-ws@2.0.1
+
 ## 2.0.0
 ### Major Changes
 
