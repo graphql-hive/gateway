@@ -199,6 +199,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
       - if: runner.os == 'Windows'
+        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
+      - if: runner.os == 'Windows'
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
       - name: Set up env
