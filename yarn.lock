@@ -3661,26 +3661,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/response-cache@npm:^7.1.3":
-  version: 7.1.3
-  resolution: "@envelop/response-cache@npm:7.1.3"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.0.3"
-    "@whatwg-node/fetch": "npm:^0.10.0"
-    "@whatwg-node/promise-helpers": "npm:^1.2.4"
-    fast-json-stable-stringify: "npm:^2.1.0"
-    lru-cache: "npm:^10.0.0"
-    tslib: "npm:^2.5.0"
-  peerDependencies:
-    "@envelop/core": ^5.2.3
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/e5f7f478d7f918157ae6d57b992aaa44c73241a50234c2a16709c622b2393dbfab2ff47ebce8f620eedbcaddda911fa6493abaa02619027fc7bd23879d769fbd
-  languageName: node
-  linkType: hard
-
 "@envelop/response-cache@npm:^8.0.0":
-  version: 8.0.0
-  resolution: "@envelop/response-cache@npm:8.0.0"
+  version: 8.0.1
+  resolution: "@envelop/response-cache@npm:8.0.1"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.3"
     "@whatwg-node/fetch": "npm:^0.10.0"
@@ -3689,9 +3672,9 @@ __metadata:
     lru-cache: "npm:^10.0.0"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.3.0
+    "@envelop/core": ^5.3.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/6b403aad3d19fb0ee9767639d03c99b2fa39c066541c08acd73ec589d31acefd347e14c853bc327716583a1c316ab79cb8f6f669b7546851efc258158bd86c9f
+  checksum: 10c0/b4c6cd734f0317aad15121b6de3f12a9683261b94def85f4ab8a7d158ac2bf29618051a2de0abe4457218a364fd06a0ea32b02a5dbebff2b0e4354775cda357d
   languageName: node
   linkType: hard
 
@@ -5825,16 +5808,16 @@ __metadata:
   linkType: hard
 
 "@graphql-yoga/plugin-response-cache@npm:^3.13.1":
-  version: 3.15.5
-  resolution: "@graphql-yoga/plugin-response-cache@npm:3.15.5"
+  version: 3.17.1
+  resolution: "@graphql-yoga/plugin-response-cache@npm:3.17.1"
   dependencies:
-    "@envelop/core": "npm:^5.2.3"
-    "@envelop/response-cache": "npm:^7.1.3"
+    "@envelop/core": "npm:^5.3.0"
+    "@envelop/response-cache": "npm:^8.0.0"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
-    graphql-yoga: ^5.13.4
-  checksum: 10c0/022979d5f19119d281fab581e4782a67f9cdfb951bdb189da0efe25e6abf58dbb6424a1f72fb9a1c552e744d7a5d9c9dec5db8b0bd341a66d7d6927ca9981738
+    graphql-yoga: ^5.15.1
+  checksum: 10c0/2391e67662e051980c8c1baaee914c2f623ed74c3575f427a6dd65d4add3bac0c51b2a33edff92106b730f5ff62abbc2254cd0aa6ea0f6b509d12e438b596e75
   languageName: node
   linkType: hard
 

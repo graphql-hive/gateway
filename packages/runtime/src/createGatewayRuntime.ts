@@ -970,16 +970,6 @@ export function createGatewayRuntime<
     extraPlugins.push(useWebhooks(configContext));
   }
 
-  if (config.responseCaching) {
-    extraPlugins.push(
-      // @ts-expect-error TODO: what's up with type narrowing
-      useMeshResponseCache({
-        ...configContext,
-        ...config.responseCaching,
-      }),
-    );
-  }
-
   if (config.contentEncoding) {
     extraPlugins.push(
       useContentEncoding(
@@ -1051,6 +1041,16 @@ export function createGatewayRuntime<
 
   if (config.cookies) {
     extraPlugins.push(useCookies());
+  }
+
+  if (config.responseCaching) {
+    extraPlugins.push(
+      // @ts-expect-error TODO: what's up with type narrowing
+      useMeshResponseCache({
+        ...configContext,
+        ...config.responseCaching,
+      }),
+    );
   }
 
   let isDebug: boolean = false;
