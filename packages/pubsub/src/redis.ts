@@ -188,7 +188,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
     this.#disposed = true;
     this.#redis.sub.off('message', this.#boundHandleMessage);
     for (const sub of this.#subscribers.values()) {
-      await Promise.all(sub.values().map((stop) => stop()));
+      await Promise.all(Array.from(sub.values()).map((stop) => stop()));
       sub.clear(); // just in case
     }
     this.#subscribers.clear();
