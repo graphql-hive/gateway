@@ -184,7 +184,11 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
     }
     this.#subscribers.clear();
     if (this.#quitOnDispose) {
-      await Promise.all([this.#redis.pub.quit(), this.#redis.sub.quit()]);
+      await Promise.all([this.#redis.pub.quit(), this.#redis.sub.quit()]).catch(
+        () => {
+          // noop, redis quit can fail if already closed
+        },
+      );
     }
   }
 
