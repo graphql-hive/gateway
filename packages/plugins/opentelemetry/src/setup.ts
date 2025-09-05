@@ -3,6 +3,7 @@ import {
   context,
   ContextManager,
   diag,
+  DiagLogLevel,
   propagation,
   TextMapPropagator,
   trace,
@@ -169,15 +170,15 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   let logMessage = 'OpenTelemetry integration is enabled';
 
   if (options.configureDiagLogger !== false) {
-    const logLevel = diagLogLevelFromEnv(); // We enable the diag only if it is explicitly enabled, as NodeSDK does
-    if (logLevel) {
-      const diagLog = log.child('[diag] ') as Logger & {
-        verbose: Logger['trace'];
-      };
-      diagLog.verbose = diagLog.trace;
-      diag.setLogger(diagLog, logLevel);
-      setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
-    }
+    // If the log level is not explicitly set, we use VERBOSE to let Hive Logger log level feature filter logs accordingly.
+    const logLevel = diagLogLevelFromEnv() ?? DiagLogLevel.VERBOSE;
+    const diagLog = log.child('[diag] ') as Logger & {
+      verbose: Logger['trace'];
+    };
+    diagLog.verbose = diagLog.trace;
+    diag.setLogger(diagLog, logLevel);
+    // Fix the default error handler that JSON.stringify all errors, even if it's already a string.
+    setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
   }
 
   if (options.traces) {
