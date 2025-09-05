@@ -171,12 +171,19 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
 
   if (options.configureDiagLogger !== false) {
     // If the log level is not explicitly set, we use VERBOSE to let Hive Logger log level feature filter logs accordingly.
-    const logLevel = diagLogLevelFromEnv() ?? DiagLogLevel.VERBOSE;
+    const [diagLogLevel, hiveLogLevel] = diagLogLevelFromEnv() ?? [
+      DiagLogLevel.VERBOSE,
+      null,
+    ];
     const diagLog = log.child('[diag] ') as Logger & {
       verbose: Logger['trace'];
     };
     diagLog.verbose = diagLog.trace;
-    diag.setLogger(diagLog, logLevel);
+    // If the log level as been specified via `OTEL_LOG_LEVEL` env, we set the Hive Log level accordingly
+    if (hiveLogLevel) {
+      diagLog.setLevel(hiveLogLevel);
+    }
+    diag.setLogger(diagLog, diagLogLevel);
     // Fix the default error handler that JSON.stringify all errors, even if it's already a string.
     setGlobalErrorHandler((err) => diagLog.error(err as Attributes));
   }
