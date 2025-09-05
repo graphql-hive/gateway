@@ -126,6 +126,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
+      - if: runner.os == 'Windows'
+        name: Enable WMIC
+        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
