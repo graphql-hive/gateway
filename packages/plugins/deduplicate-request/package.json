@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@graphql-hive/gateway-runtime": "workspace:*",
-    "@graphql-mesh/types": "^0.104.8",
+    "@graphql-mesh/types": "^0.104.11",
     "@whatwg-node/fetch": "^0.10.10",
     "graphql": "^16.9.0",
     "pkgroll": "2.15.0"

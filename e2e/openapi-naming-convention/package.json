@@ -2,7 +2,7 @@
   "name": "@e2e/openapi-naming-convention",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.4.12",
+    "@graphql-mesh/compose-cli": "^1.4.16",
     "@omnigraph/openapi": "^0.109.15",
     "graphql": "^16.9.0",
     "moment": "^2.30.1",
