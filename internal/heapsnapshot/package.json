@@ -23,6 +23,6 @@
     "@tsconfig/recommended": "^1.0.8",
     "@types/node": "^22.15.30",
     "pkgroll": "2.14.5",
-    "typescript": "5.8.3"
+    "typescript": "5.9.2"
   }
 }

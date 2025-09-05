@@ -30,7 +30,7 @@
 
 /* eslint-disable rulesdir/prefer-private-class-members */
 
-import { MessagePort } from 'node:worker_threads';
+import { MessagePort, type Transferable } from 'node:worker_threads';
 import { AllocationProfile } from './AllocationProfile.js';
 import * as HeapSnapshotModel from './HeapSnapshotModel.js';
 import { HeapSnapshotWorkerDispatcher } from './HeapSnapshotWorkerDispatcher.js';
@@ -947,7 +947,7 @@ export class SecondaryInitManager {
         results.retainingNodes.buffer,
         results.dominatedNodes.buffer,
         results.firstDominatedNodeIndex.buffer,
-      ]);
+      ] as Transferable[]);
     } catch (e: any) {
       port.postMessage({ error: e + '\n' + e?.stack });
     }
