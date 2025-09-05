@@ -33,7 +33,7 @@ jobs:
       value: ${{ steps.choose-tag.outputs.result }}
     steps:
       - name: Choose NPM Tag
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
         id: choose-tag
         with:
           result-encoding: string
@@ -101,7 +101,7 @@ jobs:
       )
     steps:
       - name: Version
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
         id: ver-gateway
         with:
           script: |
@@ -184,7 +184,7 @@ jobs:
           [ubuntu-latest, macos-13, macos-14, windows-latest, ubuntu-24.04-arm]
     steps:
       - name: Version
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
         id: ver-gateway
         with:
           result-encoding: string
