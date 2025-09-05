@@ -127,7 +127,11 @@ export function spawn(
         return Promise.resolve();
       }
       if (child.pid) {
-        await terminate(child.pid);
+        try {
+          await terminate(child.pid);
+        } catch (err) {
+          console.warn(`Failed to terminate process tree of pid ${child.pid}`, err);
+        }
       }
       child.kill();
       await waitForExit.catch(() => {
