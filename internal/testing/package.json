@@ -19,7 +19,7 @@
     "@whatwg-node/fetch": "^0.10.10",
     "@whatwg-node/promise-helpers": "^1.2.5",
     "graphql": "^16.10.0",
-    "jest-leak-detector": "30.0.5",
+    "jest-leak-detector": "30.1.0",
     "ws": "^8.18.3"
   }
 }
