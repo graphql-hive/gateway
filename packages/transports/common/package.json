@@ -46,7 +46,7 @@
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
-    "@graphql-mesh/types": "^0.104.8",
+    "@graphql-mesh/types": "^0.104.11",
     "@graphql-tools/executor": "^1.4.9",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.9.1",
