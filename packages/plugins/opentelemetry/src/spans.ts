@@ -286,7 +286,7 @@ export function setGraphQLValidateAttributes(input: {
       message: result.map((e) => e.message).join(', '),
     });
 
-    for (const error in result) {
+    for (const error of result) {
       span.recordException(error);
     }
   }
