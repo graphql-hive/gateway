@@ -2,7 +2,7 @@
   "name": "@example/operation-field-permissions",
   "private": true,
   "dependencies": {
-    "@envelop/core": "^5.3.0",
+    "@envelop/core": "^5.3.1",
     "@envelop/operation-field-permissions": "^7.0.0",
     "@graphql-mesh/compose-cli": "^1.4.16",
     "graphql": "^16.10.0",
