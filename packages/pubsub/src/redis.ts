@@ -1,6 +1,9 @@
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import type { MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type { Redis, RedisKey } from 'ioredis';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
@@ -22,6 +25,17 @@ export interface RedisPubSubOptions {
    * Intentionally no default because we don't want to accidentally share channels between different services.
    */
   channelPrefix: string;
+  /**
+   * By default, when the pub/sub instance is disposed, it will call
+   * `quit` on both Redis clients. Set this to `true` if you
+   * want to keep the clients alive after disposal.
+   *
+   * This might be useful if you want to manage the Redis clients' lifecycle
+   * outside of the pub/sub instance.
+   *
+   * @default false
+   */
+  noQuitOnDispose?: boolean;
 }
 
 /** {@link PubSub Hive PubSub} implementation of [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/). */
@@ -29,6 +43,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   implements PubSub<M>
 {
   #disposed = false;
+  #quitOnDispose: boolean;
   #subscribers = new Map<
     keyof M, // topic
     Map<
@@ -50,6 +65,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       throw new Error('RedisPubSub requires a non-empty channelPrefix');
     }
     this.#subscribersSetKey = `subscribers:${this.#channelPrefix}`;
+    this.#quitOnDispose = !options.noQuitOnDispose;
     this.#boundHandleMessage = this.#handleMessage.bind(this);
     this.#redis.sub.on('message', this.#boundHandleMessage);
   }
@@ -62,6 +78,9 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   }
 
   public async subscribedTopics() {
+    if (this.#disposed) {
+      throw new Error('PubSub is disposed, cannot get subscribed topics');
+    }
     const distinctTopics = Array.from(this.#subscribers.keys());
     for (const otherTopic of await this.#redis.pub.smembers(
       this.#subscribersSetKey,
@@ -130,14 +149,19 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       return new Repeater<M[Topic], any, any>(async (push, stop) => {
         await this.#redis.sub.subscribe(this.#topicToChannel(topic));
         await this.#redis.pub.sadd(...setArgs);
-        listeners.set(push, stop);
+        const { promise: settled, resolve: done } = createDeferredPromise();
+        listeners.set(push, () => (stop(), settled));
         await stop;
         listeners.delete(push);
         if (listeners.size === 0) {
           this.#subscribers.delete(topic);
         }
-        await this.#redis.pub.srem(...setArgs);
-        await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
+        try {
+          await this.#redis.pub.srem(...setArgs);
+          await this.#redis.sub.unsubscribe(this.#topicToChannel(topic));
+        } finally {
+          done();
+        }
       });
     }
 
@@ -164,12 +188,17 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
     this.#disposed = true;
     this.#redis.sub.off('message', this.#boundHandleMessage);
     for (const sub of this.#subscribers.values()) {
-      for (const stop of sub.values()) {
-        stop();
-      }
+      await Promise.all(Array.from(sub.values()).map((stop) => stop()));
       sub.clear(); // just in case
     }
     this.#subscribers.clear();
+    if (this.#quitOnDispose) {
+      // noop on fail, redis quit can fail if already closed
+      await Promise.allSettled([
+        this.#redis.pub.quit(),
+        this.#redis.sub.quit(),
+      ]);
+    }
   }
 
   [DisposableSymbols.asyncDispose]() {

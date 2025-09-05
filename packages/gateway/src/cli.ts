@@ -174,18 +174,18 @@ export interface GatewayCLIBuiltinPluginConfig {
    * If you would like more configuration options, please disable this feature and
    * use the [`@escape.tech/graphql-armor-max-tokens` plugin](https://escape.tech/graphql-armor/docs/plugins/max-tokens/#with-envelopcore-from-the-guild-org) instead.
    *
-   * @default true
+   * @default false
    */
   maxTokens?: boolean | number;
   /**
    * Limit the depth of a GraphQL document.
    *
-   * Passing `true` will enable the feature with the default limit of `7` levels.
+   * Passing `true` will enable the feature with the default limit of `6` levels.
    *
    * If you would like more configuration options, please disable this feature and
    * use the [`@escape.tech/graphql-armor-max-depth` plugin](https://escape.tech/graphql-armor/docs/plugins/max-depth/#with-envelopcore-from-the-guild-org) instead
    *
-   * @default true
+   * @default false
    */
   maxDepth?: boolean | number;
   /**
