@@ -1,5 +1,15 @@
 # @graphql-hive/gateway-runtime
 
+## 2.0.2
+### Patch Changes
+
+
+
+- [#1443](https://github.com/graphql-hive/gateway/pull/1443) [`20f4880`](https://github.com/graphql-hive/gateway/commit/20f48801dbab0aaccc7aa68f0447f7f5504cb0f7) Thanks [@ardatan](https://github.com/ardatan)! - Handle response caching after all other plugins
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.0
+
 ## 2.0.1
 ### Patch Changes
 
