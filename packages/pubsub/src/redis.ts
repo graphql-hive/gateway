@@ -22,6 +22,17 @@ export interface RedisPubSubOptions {
    * Intentionally no default because we don't want to accidentally share channels between different services.
    */
   channelPrefix: string;
+  /**
+   * By default, when the pub/sub instance is disposed, it will call
+   * `quit` on both Redis clients. Set this to `true` if you
+   * want to keep the clients alive after disposal.
+   *
+   * This might be useful if you want to manage the Redis clients' lifecycle
+   * outside of the pub/sub instance.
+   *
+   * @default false
+   */
+  noQuitOnDispose?: boolean;
 }
 
 /** {@link PubSub Hive PubSub} implementation of [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/). */
@@ -29,6 +40,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
   implements PubSub<M>
 {
   #disposed = false;
+  #quitOnDispose: boolean;
   #subscribers = new Map<
     keyof M, // topic
     Map<
@@ -50,6 +62,7 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       throw new Error('RedisPubSub requires a non-empty channelPrefix');
     }
     this.#subscribersSetKey = `subscribers:${this.#channelPrefix}`;
+    this.#quitOnDispose = !options.noQuitOnDispose;
     this.#boundHandleMessage = this.#handleMessage.bind(this);
     this.#redis.sub.on('message', this.#boundHandleMessage);
   }
@@ -170,6 +183,9 @@ export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
       sub.clear(); // just in case
     }
     this.#subscribers.clear();
+    if (this.#quitOnDispose) {
+      await Promise.all([this.#redis.pub.quit(), this.#redis.sub.quit()]);
+    }
   }
 
   [DisposableSymbols.asyncDispose]() {

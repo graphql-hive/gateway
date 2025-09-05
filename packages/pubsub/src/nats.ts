@@ -12,6 +12,17 @@ export interface NATSPubSubOptions {
    * Intentionally no default because we don't want to accidentally share channels between different services.
    */
   subjectPrefix: string;
+  /**
+   * By default, when the pub/sub instance is disposed, it will call
+   * `close` on the NATS connection. Set this to `true` if you
+   * want to keep the connection alive after disposal.
+   *
+   * This might be useful if you want to manage the NATS connection's lifecycle
+   * outside of the pub/sub instance.
+   *
+   * @default false
+   */
+  noCloseOnDispose?: boolean;
 }
 
 /** {@link PubSub Hive PubSub} implementation of the [NATS message broker](https://nats.io/). */
@@ -19,6 +30,7 @@ export class NATSPubSub<M extends TopicDataMap = TopicDataMap>
   implements PubSub<M>
 {
   #disposed = false;
+  #closeOnDispose: boolean;
   #activeSubscribers = new Map<() => Promise<void>, keyof M>();
   #nats: NatsConnection;
   #subjectPrefix: string;
@@ -26,6 +38,7 @@ export class NATSPubSub<M extends TopicDataMap = TopicDataMap>
   constructor(nats: NatsConnection, options: NATSPubSubOptions) {
     this.#nats = nats;
     this.#subjectPrefix = options.subjectPrefix;
+    this.#closeOnDispose = !options.noCloseOnDispose;
     if (String(this.#subjectPrefix || '').trim() === '') {
       throw new Error('NATSPubSub requires a non-empty subjectPrefix');
     }
@@ -118,6 +131,9 @@ export class NATSPubSub<M extends TopicDataMap = TopicDataMap>
       Array.from(this.#activeSubscribers.keys()).map((s) => s()),
     );
     this.#activeSubscribers.clear();
+    if (this.#closeOnDispose) {
+      await this.#nats.close();
+    }
   }
 
   [DisposableSymbols.asyncDispose]() {
