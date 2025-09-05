@@ -4,8 +4,8 @@ import { Attributes } from '../utils';
 import { LogWriter } from './common';
 
 export class PinoLogWriter implements LogWriter {
-  #pinoLogger: PinoLogger;
-  constructor(pinoLogger: PinoLogger) {
+  #pinoLogger: Partial<PinoLogger>;
+  constructor(pinoLogger: Partial<PinoLogger>) {
     this.#pinoLogger = pinoLogger;
   }
   write(
@@ -13,6 +13,6 @@ export class PinoLogWriter implements LogWriter {
     attrs: Attributes | null | undefined,
     msg: string | null | undefined,
   ): void {
-    this.#pinoLogger[level](attrs, msg || undefined);
+    this.#pinoLogger?.[level]?.(attrs, msg || undefined);
   }
 }

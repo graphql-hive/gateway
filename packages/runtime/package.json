@@ -45,7 +45,7 @@
     "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
-    "@envelop/core": "^5.3.0",
+    "@envelop/core": "^5.3.1",
     "@envelop/disable-introspection": "^8.0.0",
     "@envelop/generic-auth": "^9.0.0",
     "@envelop/instrumentation": "^1.0.0",
@@ -86,7 +86,7 @@
     "@apollo/subgraph": "^2.11.2",
     "@graphql-mesh/fusion-composition": "^0.8.15",
     "@graphql-mesh/transport-rest": "^0.9.12",
-    "@omnigraph/openapi": "^0.109.15",
+    "@omnigraph/openapi": "^0.109.18",
     "@types/html-minifier-terser": "^7.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -95,9 +95,9 @@
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.15.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "pkgroll": "2.15.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "tsx": "4.20.5"
   },
   "sideEffects": false

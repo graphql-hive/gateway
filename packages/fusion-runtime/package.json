@@ -43,7 +43,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
-    "@envelop/core": "^5.3.0",
+    "@envelop/core": "^5.3.1",
     "@envelop/instrumentation": "^1.0.0",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
@@ -67,7 +67,7 @@
   "devDependencies": {
     "change-case": "^5.4.4",
     "graphql": "^16.9.0",
-    "pkgroll": "2.15.0"
+    "pkgroll": "2.15.4"
   },
   "sideEffects": false
 }
