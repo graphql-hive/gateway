@@ -58,7 +58,7 @@ const gw = createGatewayRuntime<FastifyContext>({
     // Use the same header name as Fastify
     headerName: requestIdHeader,
     // Use the request id from Fastify
-    generateRequestId: ({ context }) => context.req.id,
+    generateRequestId: ({ context }) => context.req!.id,
   },
   // GraphOS configuration
   supergraph: {
