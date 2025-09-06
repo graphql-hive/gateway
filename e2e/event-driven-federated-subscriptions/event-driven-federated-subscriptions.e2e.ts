@@ -29,102 +29,105 @@ beforeAll(async () => {
   natsEnv.NATS_PORT = nats.port;
 });
 
-it('should receive subscription published event on all distributed gateways', async () => {
-  const { output: supergraph } = await composeWithMesh({
-    output: 'graphql',
-    services: [await service('products')],
-  });
+const fields = [`newProductSubgraph`, `newProductExtension`];
 
-  if (gatewayRunner.includes('docker')) {
-    await handleDockerHostNameInURLOrAtPath(supergraph, []);
-  }
+it.each(fields)(
+  'should receive subscription published event on all distributed gateways w/ "%s" field',
+  async (field) => {
+    const { output: supergraph } = await composeWithMesh({
+      output: 'graphql',
+      services: [await service('products')],
+    });
 
-  const gws = [
-    await gateway({ supergraph, env: natsEnv }),
-    await gateway({ supergraph, env: natsEnv }),
-    await gateway({ supergraph, env: natsEnv }),
-  ];
+    if (gatewayRunner.includes('docker')) {
+      await handleDockerHostNameInURLOrAtPath(supergraph, []);
+    }
 
-  const clients = gws.map((gw) =>
-    createClient({
-      url: `http://0.0.0.0:${gw.port}/graphql`,
-      fetchFn: fetch,
-      retryAttempts: 0,
-    }),
-  );
+    const gws = [
+      await gateway({ supergraph, env: natsEnv }),
+      await gateway({ supergraph, env: natsEnv }),
+      await gateway({ supergraph, env: natsEnv }),
+    ];
 
-  const subs = clients.map((client) =>
-    client.iterate({
-      query: /* GraphQL */ `
-        subscription {
-          newProduct {
-            name
-            price
+    const clients = gws.map((gw) =>
+      createClient({
+        url: `http://0.0.0.0:${gw.port}/graphql`,
+        fetchFn: fetch,
+        retryAttempts: 0,
+      }),
+    );
+
+    const subs = clients.map((client) =>
+      client.iterate({
+        query: /* GraphQL */ `
+          subscription {
+            ${field} {
+              name
+              price
+            }
           }
-        }
-      `,
-    }),
-  );
+        `,
+      }),
+    );
 
-  const msgs: any[] = [];
+    const msgs: any[] = [];
 
-  await Promise.all([
-    // either the publishing fails
-    (async () => {
-      await setTimeout(1_000);
-      const nats = await natsConnect({
-        servers: [`${natsEnv.NATS_HOST}:${natsEnv.NATS_PORT}`],
-      });
-      await using _ = {
-        async [Symbol.asyncDispose]() {
-          await nats.flush();
-          await nats.close();
-        },
-      };
-      nats.publish(
-        'my-shared-gateways:new_product',
-        JSON.stringify({
-          id: '60',
-        }),
-      );
-    })(),
-    // or the subscription events go through
-    ...subs.map((sub) =>
+    await Promise.all([
+      // either the publishing fails
       (async () => {
-        for await (const msg of sub) {
-          msgs.push(msg);
-          break; // we're intererested in only one message
-        }
+        await setTimeout(1_000);
+        const nats = await natsConnect({
+          servers: [`${natsEnv.NATS_HOST}:${natsEnv.NATS_PORT}`],
+        });
+        await using _ = {
+          async [Symbol.asyncDispose]() {
+            await nats.flush();
+            await nats.close();
+          },
+        };
+        nats.publish(
+          'my-shared-gateways:new_product',
+          JSON.stringify({
+            id: '60',
+          }),
+        );
       })(),
-    ),
-  ]);
+      // or the subscription events go through
+      ...subs.map((sub) =>
+        (async () => {
+          for await (const msg of sub) {
+            msgs.push(msg);
+            break; // we're intererested in only one message
+          }
+        })(),
+      ),
+    ]);
 
-  expect(msgs).toMatchInlineSnapshot(`
-    [
+    expect(msgs).toMatchObject([
       {
-        "data": {
-          "newProduct": {
-            "name": "Roomba X60",
-            "price": 100,
+        data: {
+          [field]: {
+            name: 'Roomba X60',
+            price: 100,
           },
         },
       },
       {
-        "data": {
-          "newProduct": {
-            "name": "Roomba X60",
-            "price": 100,
+        data: {
+          [field]: {
+            name: 'Roomba X60',
+            price: 100,
           },
         },
       },
       {
-        "data": {
-          "newProduct": {
-            "name": "Roomba X60",
-            "price": 100,
+        data: {
+          [field]: {
+            name: 'Roomba X60',
+            price: 100,
           },
         },
       },
-    ]
-  `);
-});
+    ]);
+  },
+);
