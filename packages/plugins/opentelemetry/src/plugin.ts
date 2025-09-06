@@ -926,7 +926,6 @@ export function useOpenTelemetry(
   plugin.getExecutionRequestContext = hive.getExecutionRequestContext;
   Object.defineProperty(plugin, 'tracer', {
     enumerable: true,
-    writable: false,
     get: () => tracer,
   });
 
