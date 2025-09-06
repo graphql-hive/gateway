@@ -15,6 +15,7 @@ export function useMaybeDelegationPlanDebug<
       rootLog.debug(() => (shouldLog = true));
       if (shouldLog) {
         activePlugin = useDelegationPlanDebug();
+        // plugins.push will run the plugin last, but addPlugin will run it after this plugin. we dont care?
         plugins.push(
           // @ts-expect-error TODO: fix types
           activePlugin,
