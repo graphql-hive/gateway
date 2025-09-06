@@ -1,5 +1,7 @@
 ---
 '@graphql-mesh/fusion-runtime': minor
+'@graphql-mesh/gateway-runtime': patch
+'@graphql-mesh/gateway': patch
 ---
 
 Support client side pubsub operation definition with `@pubsubOperation`

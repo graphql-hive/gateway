@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@graphql-hive/pubsub": "workspace:*",
-    "@graphql-mesh/types": "^0.104.11",
+    "@graphql-mesh/types": "^0.104.12",
     "@graphql-tools/utils": "^10.9.1",
     "@types/node": "^22.15.30",
     "@whatwg-node/disposablestack": "^0.0.6",
