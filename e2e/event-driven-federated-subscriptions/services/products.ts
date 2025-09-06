@@ -10,6 +10,23 @@ createServer(
   createYoga({
     schema: buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.6"
+            import: ["@key", "@composeDirective"]
+          )
+          @link(
+            url: "https://the-guild.dev/mesh/v1.0"
+            import: ["@pubsubOperation"]
+          )
+          @composeDirective(name: "@pubsubOperation")
+
+        directive @pubsubOperation(
+          pubsubTopic: String!
+          filterBy: String
+          result: String
+        ) on FIELD_DEFINITION
+
         type Query {
           hello: String!
         }
@@ -17,6 +34,11 @@ createServer(
           id: ID!
           name: String!
           price: Float!
+        }
+
+        type Subscription {
+          newProductSubgraph: Product!
+            @pubsubOperation(pubsubTopic: "new_product")
         }
       `),
       resolvers: {

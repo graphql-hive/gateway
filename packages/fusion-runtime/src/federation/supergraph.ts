@@ -1,7 +1,9 @@
 import { LegacyLogger, Logger } from '@graphql-hive/logger';
-import type { YamlConfig } from '@graphql-mesh/types';
+import { type YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
+  getResolverForPubSubOperation,
+  PubSubOperationOptions,
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
 import type {
@@ -358,6 +360,24 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         };
       }
     }
+  }
+  if (executableUnifiedGraph.getDirective('pubsubOperation')) {
+    executableUnifiedGraph = mapSchema(executableUnifiedGraph, {
+      [MapperKind.ROOT_FIELD](fieldConfig) {
+        const directiveExtensions = getDirectiveExtensions<{
+          pubsubOperation: PubSubOperationOptions;
+        }>(fieldConfig, executableUnifiedGraph);
+        if (directiveExtensions.pubsubOperation?.length) {
+          for (const pubsubOperationArgs of directiveExtensions.pubsubOperation) {
+            const { subscribe, resolve } =
+              getResolverForPubSubOperation(pubsubOperationArgs);
+            fieldConfig.subscribe = subscribe;
+            fieldConfig.resolve = resolve;
+          }
+        }
+        return fieldConfig;
+      },
+    });
   }
   return {
     unifiedGraph: executableUnifiedGraph,
