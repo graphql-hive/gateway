@@ -10,11 +10,8 @@ export function useSubgraphExecuteDebug<
       let log = executionRequest.context?.log.child(
         '[useSubgraphExecuteDebug] ',
       );
-      if (!log) {
-        throw new Error('Logger is not available in the execution context');
-      }
       let shouldLog = false;
-      log.debug(() => (shouldLog = true));
+      log?.debug(() => (shouldLog = true));
       if (!shouldLog) {
         return; // debug level is not enabled
       }
