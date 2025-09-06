@@ -1,5 +1,4 @@
-import { defineConfig } from '@graphql-hive/gateway';
-import { RedisPubSub } from '@graphql-hive/pubsub/redis';
+import { defineConfig, RedisPubSub } from '@graphql-hive/gateway';
 import Redis from 'ioredis';
 
 /**
