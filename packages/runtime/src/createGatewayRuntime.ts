@@ -99,7 +99,7 @@ import { useCacheDebug } from './plugins/useCacheDebug';
 import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
-import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
+import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
@@ -1058,7 +1058,7 @@ export function createGatewayRuntime<
   extraPlugins.push(
     useSubgraphExecuteDebug(),
     useFetchDebug(),
-    useDelegationPlanDebug(),
+    useMaybeDelegationPlanDebug({ log: configContext.log }),
     useCacheDebug({ log: configContext.log }),
   );
 

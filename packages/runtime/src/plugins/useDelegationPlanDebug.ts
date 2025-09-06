@@ -1,9 +1,42 @@
+import { Logger } from '@graphql-hive/logger';
 import { pathToArray } from '@graphql-tools/utils';
 import { print } from 'graphql';
 import { FetchAPI } from 'graphql-yoga';
 import type { GatewayContext, GatewayPlugin } from '../types';
 
-export function useDelegationPlanDebug<
+/** Will add the plugin only if the log level is debug. */
+export function useMaybeDelegationPlanDebug<
+  TContext extends Record<string, any>,
+>({ log: rootLog }: { log: Logger }): GatewayPlugin<TContext> {
+  let activePlugin: GatewayPlugin<TContext> | undefined;
+  return {
+    onPluginInit({ plugins }) {
+      let shouldLog = false;
+      rootLog.debug(() => (shouldLog = true));
+      if (shouldLog) {
+        activePlugin = useDelegationPlanDebug();
+        plugins.push(
+          // @ts-expect-error TODO: fix types
+          activePlugin,
+        );
+      } else if (activePlugin) {
+        const index = plugins.indexOf(
+          // @ts-expect-error TODO: fix types
+          activePlugin,
+        );
+        if (
+          // must be
+          index > -1
+        ) {
+          plugins.splice(index, 1);
+        }
+        activePlugin = undefined;
+      }
+    },
+  };
+}
+
+function useDelegationPlanDebug<
   TContext extends Record<string, any>,
 >(): GatewayPlugin<TContext> {
   let fetchAPI: FetchAPI;
@@ -20,11 +53,6 @@ export function useDelegationPlanDebug<
       context,
       info,
     }) {
-      let shouldLog = false;
-      context.log.debug(() => (shouldLog = true));
-      if (!shouldLog) {
-        return; // debug level is not enabled
-      }
       const planId = fetchAPI.crypto.randomUUID();
       const log = context.log.child(
         { planId, typeName },
@@ -76,11 +104,6 @@ export function useDelegationPlanDebug<
       key,
       typeName,
     }) {
-      let shouldLog = false;
-      context.log.debug(() => (shouldLog = true));
-      if (!shouldLog) {
-        return; // debug level is not enabled
-      }
       let contextLog = stageExecuteLogById.get(context);
       if (!contextLog) {
         contextLog = new Set();
