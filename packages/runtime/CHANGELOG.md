@@ -1,5 +1,69 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.0
+### Minor Changes
+
+
+
+- [#1458](https://github.com/graphql-hive/gateway/pull/1458) [`6495780`](https://github.com/graphql-hive/gateway/commit/6495780516c11e6668ab827113b7edfb6379b5f2) Thanks [@ardatan](https://github.com/ardatan)! - New directive `@pubsubPublish` to publish the payload to the pubsub engine directly
+  
+  
+  ```graphql
+          extend schema
+            @link(
+              url: "https://specs.apollo.dev/federation/v2.6"
+              import: ["@key", "@composeDirective"]
+            )
+            @link(
+              url: "https://the-guild.dev/mesh/v1.0"
+              import: ["@pubsubOperation", "@pubsubPublish"]
+            )
+            @composeDirective(name: "@pubsubOperation")
+            @composeDirective(name: "@pubsubPublish")
+  
+          directive @pubsubOperation(
+            pubsubTopic: String!
+            filterBy: String
+            result: String
+          ) on FIELD_DEFINITION
+  
+          directive @pubsubPublish(pubsubTopic: String!) on FIELD_DEFINITION
+  
+          type Query {
+            hello: String!
+          }
+          type Product @key(fields: "id") {
+            id: ID!
+            name: String!
+            price: Float!
+          }
+  
+          type Mutation {
+            createProduct(name: String!, price: Float!): Product!
+              @pubsubPublish(pubsubTopic: "new_product")
+          }
+  
+          type Subscription {
+            newProductSubgraph: Product!
+              @pubsubOperation(pubsubTopic: "new_product")
+          }
+  ```
+
+### Patch Changes
+
+
+
+- [#1463](https://github.com/graphql-hive/gateway/pull/1463) [`bcb9407`](https://github.com/graphql-hive/gateway/commit/bcb94071daccb1698439d364ccc37146aa4c5032) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`graphql-yoga@^5.15.2` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.15.2) (from `^5.15.1`, in `dependencies`)
+
+
+- [#1464](https://github.com/graphql-hive/gateway/pull/1464) [`e758071`](https://github.com/graphql-hive/gateway/commit/e758071ed64ec26baf8c2d1d71bc27275291b018) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Load debug plugins but noop if log level is not debug
+
+- Updated dependencies [[`bcb9407`](https://github.com/graphql-hive/gateway/commit/bcb94071daccb1698439d364ccc37146aa4c5032), [`6495780`](https://github.com/graphql-hive/gateway/commit/6495780516c11e6668ab827113b7edfb6379b5f2)]:
+  - @graphql-mesh/fusion-runtime@1.2.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.1
+
 ## 2.0.3
 ### Patch Changes
 
