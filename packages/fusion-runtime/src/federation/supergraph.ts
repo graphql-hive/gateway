@@ -385,7 +385,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
     executableUnifiedGraph = mapSchema(executableUnifiedGraph, {
       [MapperKind.ROOT_FIELD](fieldConfig) {
         const directiveExtensions = getDirectiveExtensions<{
-          pubsubPublish: YamlConfig.AdditionalSubscriptionObject;
+          pubsubPublish: PubSubOperationOptions;
         }>(fieldConfig, executableUnifiedGraph);
         if (directiveExtensions.pubsubPublish?.length) {
           const originalResolve = fieldConfig.resolve || defaultMergedResolver;
