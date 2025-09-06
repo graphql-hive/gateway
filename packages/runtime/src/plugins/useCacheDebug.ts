@@ -8,7 +8,7 @@ export function useCacheDebug<TContext extends Record<string, any>>({
 }): GatewayPlugin<TContext> {
   function shouldLog(log: Logger) {
     let shouldLog = false;
-    rootLog.debug(() => (shouldLog = true));
+    log.debug(() => (shouldLog = true));
     return shouldLog;
   }
   return {
