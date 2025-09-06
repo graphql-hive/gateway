@@ -1,5 +1,11 @@
 # @graphql-hive/gateway
 
+## 2.0.4
+### Patch Changes
+
+- Updated dependencies [[`a6cb800`](https://github.com/graphql-hive/gateway/commit/a6cb800337db07e9aa86092d17cc238346e722e4)]:
+  - @graphql-mesh/plugin-jwt-auth@2.0.3
+
 ## 2.0.3
 ### Patch Changes
 

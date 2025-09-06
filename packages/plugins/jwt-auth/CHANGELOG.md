@@ -1,5 +1,12 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 2.0.3
+### Patch Changes
+
+
+
+- [#1459](https://github.com/graphql-hive/gateway/pull/1459) [`a6cb800`](https://github.com/graphql-hive/gateway/commit/a6cb800337db07e9aa86092d17cc238346e722e4) Thanks [@ardatan](https://github.com/ardatan)! - `useForwardedJWT` no longer requires an object so `useForwardedJWT()` is possible to use it with defaults
+
 ## 2.0.2
 ### Patch Changes
 
