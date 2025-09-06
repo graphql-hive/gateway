@@ -319,283 +319,545 @@ export function useOpenTelemetry(
   }
 
   const plugin = withState<
-    OpenTelemetryPlugin,
+    GatewayPlugin<OpenTelemetryContextExtension>,
     OtelState,
     OtelState & { skipExecuteSpan?: true; subgraphNames: string[] },
     OtelState
-  >((getState) => ({
-    get tracer() {
-      return tracer;
-    },
-    getActiveContext: ({ state }) => getContext(state),
-    getHttpContext: (request) => {
-      return getState({ request }).forRequest.otel?.root;
-    },
-    getOperationContext: (context) => {
-      return getState({ context }).forOperation.otel?.root;
-    },
-    getExecutionRequestContext: (executionRequest) => {
-      return getState({ executionRequest }).forSubgraphExecution.otel?.root;
-    },
-    instrumentation: {
-      request({ state: { forRequest }, request }, wrapped) {
-        if (!shouldTrace(traces.spans?.http, { request })) {
-          return wrapped();
-        }
+  >((getState) => {
+    hive.setPluginUtils({
+      get tracer() {
+        return tracer;
+      },
+      getActiveContext: (matcher) => getContext(getState(matcher)),
+      getHttpContext: (request) => getState({ request }).forRequest.otel?.root,
+      getOperationContext: (context) =>
+        getState({ context }).forOperation.otel?.root,
+      getExecutionRequestContext: (executionRequest) =>
+        getState({ executionRequest }).forSubgraphExecution.otel?.root,
+    });
 
-        const url = getURL(request);
+    return {
+      get tracer() {
+        return tracer;
+      },
+      instrumentation: {
+        request({ state: { forRequest }, request }, wrapped) {
+          if (!shouldTrace(traces.spans?.http, { request })) {
+            return wrapped();
+          }
 
-        return unfakePromise(
-          preparation$
-            .then(() => {
-              const ctx = inheritContext
-                ? propagation.extract(
-                    context.active(),
-                    request.headers,
-                    HeadersTextMapGetter,
-                  )
-                : context.active();
+          const url = getURL(request);
 
-              forRequest.otel = new OtelContextStack(
-                createHttpSpan({ ctx, request, tracer, url }).ctx,
+          return unfakePromise(
+            preparation$
+              .then(() => {
+                const ctx = inheritContext
+                  ? propagation.extract(
+                      context.active(),
+                      request.headers,
+                      HeadersTextMapGetter,
+                    )
+                  : context.active();
+
+                forRequest.otel = new OtelContextStack(
+                  createHttpSpan({ ctx, request, tracer, url }).ctx,
+                );
+
+                if (useContextManager) {
+                  wrapped = context.bind(forRequest.otel.current, wrapped);
+                }
+
+                return wrapped();
+              })
+              .catch((error) => {
+                registerException(forRequest.otel?.current, error);
+                throw error;
+              })
+              .finally(() => {
+                const ctx = forRequest.otel?.root;
+                ctx && trace.getSpan(ctx)?.end();
+              }),
+          );
+        },
+
+        operation(
+          { context: gqlCtx, state: { forOperation, ...parentState } },
+          wrapped,
+        ) {
+          if (
+            !isParentEnabled(parentState) ||
+            !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
+          ) {
+            return wrapped();
+          }
+
+          return unfakePromise(
+            preparation$.then(() => {
+              const ctx = getContext(parentState);
+              forOperation.otel = new OtelContextStack(
+                createGraphQLSpan({ tracer, ctx }),
               );
 
               if (useContextManager) {
-                wrapped = context.bind(forRequest.otel.current, wrapped);
+                wrapped = context.bind(forOperation.otel.current, wrapped);
               }
 
-              return wrapped();
-            })
-            .catch((error) => {
-              registerException(forRequest.otel?.current, error);
-              throw error;
-            })
-            .finally(() => {
-              const ctx = forRequest.otel?.root;
-              ctx && trace.getSpan(ctx)?.end();
+              return fakePromise()
+                .then(wrapped)
+                .catch((err) => {
+                  registerException(forOperation.otel?.current, err);
+                  throw err;
+                })
+                .finally(() =>
+                  trace.getSpan(forOperation.otel!.current)?.end(),
+                );
             }),
-        );
-      },
+          );
+        },
 
-      operation(
-        { context: gqlCtx, state: { forOperation, ...parentState } },
-        wrapped,
-      ) {
-        if (
-          !isParentEnabled(parentState) ||
-          !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
-        ) {
-          return wrapped();
-        }
+        context({ state, context: gqlCtx }, wrapped) {
+          if (
+            !isParentEnabled(state) ||
+            !shouldTrace(traces.spans?.graphqlContextBuilding, {
+              context: gqlCtx,
+            })
+          ) {
+            return wrapped();
+          }
 
-        return unfakePromise(
-          preparation$.then(() => {
-            const ctx = getContext(parentState);
-            forOperation.otel = new OtelContextStack(
-              createGraphQLSpan({ tracer, ctx }),
-            );
+          const { forOperation } = state;
+          const ctx = getContext(state);
+          forOperation.otel!.push(
+            createGraphqlContextBuildingSpan({ ctx, tracer }),
+          );
 
-            if (useContextManager) {
-              wrapped = context.bind(forOperation.otel.current, wrapped);
-            }
+          if (useContextManager) {
+            wrapped = context.bind(forOperation.otel!.current, wrapped);
+          }
 
-            return fakePromise()
+          try {
+            wrapped();
+          } catch (err) {
+            registerException(forOperation.otel?.current, err);
+            throw err;
+          } finally {
+            trace.getSpan(forOperation.otel!.current)?.end();
+            forOperation.otel!.pop();
+          }
+        },
+
+        parse({ state, context: gqlCtx }, wrapped) {
+          if (
+            !isParentEnabled(state) ||
+            !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
+          ) {
+            return wrapped();
+          }
+
+          const ctx = getContext(state);
+          const { forOperation } = state;
+          forOperation.otel!.push(createGraphQLParseSpan({ ctx, tracer }));
+
+          if (useContextManager) {
+            wrapped = context.bind(forOperation.otel!.current, wrapped);
+          }
+
+          try {
+            wrapped();
+          } catch (err) {
+            registerException(forOperation.otel!.current, err);
+            throw err;
+          } finally {
+            trace.getSpan(forOperation.otel!.current)?.end();
+            forOperation.otel!.pop();
+          }
+        },
+
+        validate({ state, context: gqlCtx }, wrapped) {
+          if (
+            !isParentEnabled(state) ||
+            !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
+          ) {
+            return wrapped();
+          }
+
+          const { forOperation } = state;
+          forOperation.otel!.push(
+            createGraphQLValidateSpan({
+              ctx: getContext(state),
+              tracer,
+              query: gqlCtx.params.query?.trim(),
+              operationName: gqlCtx.params.operationName,
+            }),
+          );
+
+          if (useContextManager) {
+            wrapped = context.bind(forOperation.otel!.current, wrapped);
+          }
+
+          try {
+            wrapped();
+          } catch (err) {
+            registerException(forOperation.otel?.current, err);
+            throw err;
+          } finally {
+            trace.getSpan(forOperation.otel!.current)?.end();
+            forOperation.otel!.pop();
+          }
+        },
+
+        execute({ state, context: gqlCtx }, wrapped) {
+          if (
+            !isParentEnabled(state) ||
+            !shouldTrace(traces.spans?.graphqlExecute, { context: gqlCtx })
+          ) {
+            // Other parenting skipping are marked by the fact that `otel` is undefined in the state
+            // For execute, there is no specific state, so we keep track of it here.
+            state.forOperation.skipExecuteSpan = true;
+            return wrapped();
+          }
+
+          const ctx = getContext(state);
+          const { forOperation } = state;
+          forOperation.otel?.push(createGraphQLExecuteSpan({ ctx, tracer }));
+
+          if (useContextManager) {
+            wrapped = context.bind(forOperation.otel!.current, wrapped);
+          }
+
+          return unfakePromise(
+            fakePromise()
               .then(wrapped)
               .catch((err) => {
-                registerException(forOperation.otel?.current, err);
+                registerException(forOperation.otel!.current, err);
                 throw err;
               })
-              .finally(() => trace.getSpan(forOperation.otel!.current)?.end());
-          }),
+              .finally(() => {
+                trace.getSpan(forOperation.otel!.current)?.end();
+                forOperation.otel!.pop();
+              }),
+          );
+        },
+
+        subgraphExecute(
+          {
+            state: { forSubgraphExecution, ...parentState },
+            executionRequest,
+            subgraphName,
+          },
+          wrapped,
+        ) {
+          const isIntrospection = !executionRequest.context.params;
+
+          if (
+            !isParentEnabled(parentState) ||
+            parentState.forOperation?.skipExecuteSpan ||
+            !shouldTrace(
+              isIntrospection
+                ? traces.spans?.schema
+                : traces.spans?.subgraphExecute,
+              {
+                subgraphName,
+                executionRequest,
+              },
+            )
+          ) {
+            return wrapped();
+          }
+
+          // If a subgraph execution request doesn't belong to a graphql operation
+          // (such as Introspection requests in proxy mode), we don't want to use the active context,
+          // we want the span to be in it's own trace.
+          const parentContext = isIntrospection
+            ? context.active()
+            : getContext(parentState);
+
+          forSubgraphExecution.otel = new OtelContextStack(
+            createSubgraphExecuteSpan({
+              ctx: parentContext,
+              tracer,
+              executionRequest,
+              subgraphName,
+            }),
+          );
+
+          if (useContextManager) {
+            wrapped = context.bind(forSubgraphExecution.otel!.current, wrapped);
+          }
+
+          return unfakePromise(
+            fakePromise()
+              .then(wrapped)
+              .catch((err) => {
+                registerException(forSubgraphExecution.otel!.current, err);
+                throw err;
+              })
+              .finally(() => {
+                trace.getSpan(forSubgraphExecution.otel!.current)?.end();
+                forSubgraphExecution.otel!.pop();
+              }),
+          );
+        },
+
+        fetch({ state, executionRequest }, wrapped) {
+          if (isRetryExecutionRequest(executionRequest)) {
+            // Retry plugin overrides the executionRequest, by "forking" it so that multiple attempts
+            // of the same execution request can be made.
+            // We need to attach the fetch span to the original execution request, because attempt
+            // execution requests doesn't create a new `subgraph.execute` span.
+            state = getState(getRetryInfo(executionRequest));
+          }
+
+          if (
+            !isParentEnabled(state) ||
+            !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
+          ) {
+            return wrapped();
+          }
+
+          return unfakePromise(
+            preparation$.then(() => {
+              const { forSubgraphExecution } = state;
+              const ctx = createUpstreamHttpFetchSpan({
+                ctx: getContext(state),
+                tracer,
+              });
+
+              forSubgraphExecution?.otel!.push(ctx);
+
+              if (useContextManager) {
+                wrapped = context.bind(ctx, wrapped);
+              }
+
+              return fakePromise()
+                .then(wrapped)
+                .catch((err) => {
+                  registerException(ctx, err);
+                  throw err;
+                })
+                .finally(() => {
+                  trace.getSpan(ctx)?.end();
+                  forSubgraphExecution?.otel!.pop();
+                });
+            }),
+          );
+        },
+
+        schema(_, wrapped) {
+          if (!shouldTrace(traces.spans?.schema, null)) {
+            return wrapped();
+          }
+
+          return unfakePromise(
+            preparation$.then(() => {
+              const ctx = createSchemaLoadingSpan({
+                ctx: initSpan ?? ROOT_CONTEXT,
+                tracer,
+              });
+              return fakePromise()
+                .then(() => context.with(ctx, wrapped))
+                .catch((err) => {
+                  trace.getSpan(ctx)?.recordException(err);
+                })
+                .finally(() => {
+                  trace.getSpan(ctx)?.end();
+                });
+            }),
+          );
+        },
+      },
+
+      onYogaInit({ yoga }) {
+        //TODO remove this when Yoga will also use the new Logger API
+        pluginLogger ??= new Logger({
+          writers: [
+            {
+              write(level, attrs, msg) {
+                level = level === 'trace' ? 'debug' : level;
+                yoga.logger[level](msg, attrs);
+              },
+            },
+          ],
+        }).child('[OpenTelemetry] ');
+
+        pluginLogger.debug(
+          `Context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
         );
       },
 
-      context({ state, context: gqlCtx }, wrapped) {
+      onRequest({ state, serverContext }) {
+        // When running in a runtime without a context manager, we have to keep track of the
+        // span correlated to a log manually. For now, we just link all logs for a request to
+        // the HTTP root span
+        if (!useContextManager) {
+          const requestId =
+            // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+            serverContext.log?.attrs?.[
+              // @ts-expect-error even if the attrs is an array this will work
+              'requestId'
+            ];
+          if (typeof requestId === 'string') {
+            otelCtxForRequestId.set(requestId, getContext(state));
+          }
+        }
+      },
+
+      onEnveloped({ state, extendContext }) {
+        extendContext({
+          openTelemetry: {
+            tracer,
+            getHttpContext: (request) => {
+              const { forRequest } = request ? getState({ request }) : state;
+              return forRequest.otel?.root;
+            },
+            getOperationContext: (context) => {
+              const { forOperation } = context ? getState({ context }) : state;
+              return forOperation.otel?.root;
+            },
+            getExecutionRequestContext: (executionRequest) => {
+              return getState({ executionRequest }).forSubgraphExecution.otel
+                ?.root;
+            },
+            getActiveContext: (
+              contextMatcher?: Parameters<typeof getState>[0],
+            ) => getContext(contextMatcher ? getState(contextMatcher) : state),
+          },
+        });
+      },
+
+      onCacheGet: (payload) =>
+        shouldTrace(traces.events?.cache, { key: payload.key, action: 'read' })
+          ? {
+              onCacheMiss: () => recordCacheEvent('miss', payload),
+              onCacheHit: () => recordCacheEvent('hit', payload),
+              onCacheGetError: ({ error }) =>
+                recordCacheError('read', error, payload),
+            }
+          : undefined,
+
+      onCacheSet: (payload) =>
+        shouldTrace(traces.events?.cache, { key: payload.key, action: 'write' })
+          ? {
+              onCacheSetDone: () => recordCacheEvent('write', payload),
+              onCacheSetError: ({ error }) =>
+                recordCacheError('write', error, payload),
+            }
+          : undefined,
+
+      onResponse({ response, state, serverContext }) {
+        state.forRequest.otel &&
+          setResponseAttributes(state.forRequest.otel.root, response);
+
+        // Clean up Logging context tracking for runtimes without context manager
+        if (!useContextManager) {
+          const requestId =
+            // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
+            serverContext.log?.attrs?.[
+              // @ts-expect-error even if the attrs is an array this will work
+              'requestId'
+            ];
+          if (typeof requestId === 'string') {
+            otelCtxForRequestId.delete(requestId);
+          }
+        }
+      },
+
+      onParams({ state, context: gqlCtx, params }) {
         if (
           !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlContextBuilding, {
-            context: gqlCtx,
-          })
+          !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
         ) {
-          return wrapped();
+          return;
         }
 
-        const { forOperation } = state;
         const ctx = getContext(state);
-        forOperation.otel!.push(
-          createGraphqlContextBuildingSpan({ ctx, tracer }),
-        );
-
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel!.current, wrapped);
-        }
-
-        try {
-          wrapped();
-        } catch (err) {
-          registerException(forOperation.otel?.current, err);
-          throw err;
-        } finally {
-          trace.getSpan(forOperation.otel!.current)?.end();
-          forOperation.otel!.pop();
-        }
+        setParamsAttributes({ ctx, params });
       },
 
-      parse({ state, context: gqlCtx }, wrapped) {
+      onExecutionResult({ result, context: gqlCtx, state }) {
+        if (
+          !isParentEnabled(state) ||
+          !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
+        ) {
+          return;
+        }
+
+        setExecutionResultAttributes({ ctx: getContext(state), result });
+      },
+
+      onParse({ state, context: gqlCtx }) {
         if (
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
         ) {
-          return wrapped();
+          return;
         }
 
-        const ctx = getContext(state);
-        const { forOperation } = state;
-        forOperation.otel!.push(createGraphQLParseSpan({ ctx, tracer }));
-
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel!.current, wrapped);
-        }
-
-        try {
-          wrapped();
-        } catch (err) {
-          registerException(forOperation.otel!.current, err);
-          throw err;
-        } finally {
-          trace.getSpan(forOperation.otel!.current)?.end();
-          forOperation.otel!.pop();
-        }
+        return ({ result }) => {
+          setGraphQLParseAttributes({
+            ctx: getContext(state),
+            operationName: gqlCtx.params.operationName,
+            query: gqlCtx.params.query?.trim(),
+            result,
+          });
+        };
       },
 
-      validate({ state, context: gqlCtx }, wrapped) {
+      onValidate({ state, context: gqlCtx }) {
         if (
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
         ) {
-          return wrapped();
+          return;
         }
 
-        const { forOperation } = state;
-        forOperation.otel!.push(
-          createGraphQLValidateSpan({
-            ctx: getContext(state),
-            tracer,
-            query: gqlCtx.params.query?.trim(),
-            operationName: gqlCtx.params.operationName,
-          }),
-        );
-
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel!.current, wrapped);
-        }
-
-        try {
-          wrapped();
-        } catch (err) {
-          registerException(forOperation.otel?.current, err);
-          throw err;
-        } finally {
-          trace.getSpan(forOperation.otel!.current)?.end();
-          forOperation.otel!.pop();
-        }
+        return ({ result }) => {
+          setGraphQLValidateAttributes({ ctx: getContext(state), result });
+        };
       },
 
-      execute({ state, context: gqlCtx }, wrapped) {
-        if (
-          !isParentEnabled(state) ||
-          !shouldTrace(traces.spans?.graphqlExecute, { context: gqlCtx })
-        ) {
-          // Other parenting skipping are marked by the fact that `otel` is undefined in the state
-          // For execute, there is no specific state, so we keep track of it here.
-          state.forOperation.skipExecuteSpan = true;
-          return wrapped();
+      onExecute({ state, args }) {
+        if (!isParentEnabled(state)) {
+          return;
+        }
+
+        setExecutionAttributesOnOperationSpan({
+          ctx: state.forOperation.otel!.root,
+          args,
+          hashOperationFn: options.hashOperation,
+        });
+
+        if (state.forOperation.skipExecuteSpan) {
+          return;
         }
 
         const ctx = getContext(state);
-        const { forOperation } = state;
-        forOperation.otel?.push(createGraphQLExecuteSpan({ ctx, tracer }));
+        setGraphQLExecutionAttributes({ ctx, args });
 
-        if (useContextManager) {
-          wrapped = context.bind(forOperation.otel!.current, wrapped);
-        }
+        state.forOperation.subgraphNames = [];
 
-        return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(forOperation.otel!.current, err);
-              throw err;
-            })
-            .finally(() => {
-              trace.getSpan(forOperation.otel!.current)?.end();
-              forOperation.otel!.pop();
-            }),
-        );
+        return {
+          onExecuteDone({ result }) {
+            setGraphQLExecutionResultAttributes({
+              ctx,
+              result,
+              subgraphNames: state.forOperation.subgraphNames,
+            });
+          },
+        };
       },
 
-      subgraphExecute(
-        {
-          state: { forSubgraphExecution, ...parentState },
-          executionRequest,
-          subgraphName,
-        },
-        wrapped,
-      ) {
-        const isIntrospection = !executionRequest.context.params;
-
-        if (
-          !isParentEnabled(parentState) ||
-          parentState.forOperation?.skipExecuteSpan ||
-          !shouldTrace(
-            isIntrospection
-              ? traces.spans?.schema
-              : traces.spans?.subgraphExecute,
-            {
-              subgraphName,
-              executionRequest,
-            },
-          )
-        ) {
-          return wrapped();
-        }
-
-        // If a subgraph execution request doesn't belong to a graphql operation
-        // (such as Introspection requests in proxy mode), we don't want to use the active context,
-        // we want the span to be in it's own trace.
-        const parentContext = isIntrospection
-          ? context.active()
-          : getContext(parentState);
-
-        forSubgraphExecution.otel = new OtelContextStack(
-          createSubgraphExecuteSpan({
-            ctx: parentContext,
-            tracer,
-            executionRequest,
-            subgraphName,
-          }),
-        );
-
-        if (useContextManager) {
-          wrapped = context.bind(forSubgraphExecution.otel!.current, wrapped);
-        }
-
-        return unfakePromise(
-          fakePromise()
-            .then(wrapped)
-            .catch((err) => {
-              registerException(forSubgraphExecution.otel!.current, err);
-              throw err;
-            })
-            .finally(() => {
-              trace.getSpan(forSubgraphExecution.otel!.current)?.end();
-              forSubgraphExecution.otel!.pop();
-            }),
-        );
+      onSubgraphExecute({ subgraphName, state }) {
+        // Keep track of the list of subgraphs that has been hit for this operation
+        // This list will be added as attribute on onExecuteDone hook
+        state.forOperation?.subgraphNames?.push(subgraphName);
       },
 
-      fetch({ state, executionRequest }, wrapped) {
-        if (isRetryExecutionRequest(executionRequest)) {
+      onFetch(payload) {
+        const { url, setFetchFn, fetchFn, executionRequest } = payload;
+        let { state } = payload;
+
+        if (executionRequest && isRetryExecutionRequest(executionRequest)) {
           // Retry plugin overrides the executionRequest, by "forking" it so that multiple attempts
           // of the same execution request can be made.
           // We need to attach the fetch span to the original execution request, because attempt
@@ -603,317 +865,71 @@ export function useOpenTelemetry(
           state = getState(getRetryInfo(executionRequest));
         }
 
+        // We want to always propagate context, even if we are not tracing the fetch phase.
+        if (propagateContext) {
+          setFetchFn((url, options, ...args) => {
+            const reqHeaders = getHeadersObj(options?.headers || {});
+            propagation.inject(getContext(state), reqHeaders);
+            return fetchFn(url, { ...options, headers: reqHeaders }, ...args);
+          });
+        }
+
         if (
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
         ) {
-          return wrapped();
+          return;
         }
 
-        return unfakePromise(
-          preparation$.then(() => {
-            const { forSubgraphExecution } = state;
-            const ctx = createUpstreamHttpFetchSpan({
-              ctx: getContext(state),
-              tracer,
-            });
+        const ctx = getContext(state);
 
-            forSubgraphExecution?.otel!.push(ctx);
+        setUpstreamFetchAttributes({
+          ctx,
+          url,
+          options: payload.options,
+          executionRequest,
+        });
 
-            if (useContextManager) {
-              wrapped = context.bind(ctx, wrapped);
-            }
-
-            return fakePromise()
-              .then(wrapped)
-              .catch((err) => {
-                registerException(ctx, err);
-                throw err;
-              })
-              .finally(() => {
-                trace.getSpan(ctx)?.end();
-                forSubgraphExecution?.otel!.pop();
-              });
-          }),
-        );
+        return ({ response }) => {
+          setUpstreamFetchResponseAttributes({ ctx, response });
+        };
       },
 
-      schema(_, wrapped) {
-        if (!shouldTrace(traces.spans?.schema, null)) {
-          return wrapped();
-        }
+      onSchemaChange(payload) {
+        setSchemaAttributes(payload);
 
-        return unfakePromise(
-          preparation$.then(() => {
-            const ctx = createSchemaLoadingSpan({
-              ctx: initSpan ?? ROOT_CONTEXT,
-              tracer,
-            });
-            return fakePromise()
-              .then(() => context.with(ctx, wrapped))
-              .catch((err) => {
-                trace.getSpan(ctx)?.recordException(err);
-              })
-              .finally(() => {
-                trace.getSpan(ctx)?.end();
-              });
-          }),
-        );
+        if (initSpan) {
+          trace.getSpan(initSpan)?.end();
+          initSpan = null;
+        }
       },
-    },
 
-    onYogaInit({ yoga }) {
-      //TODO remove this when Yoga will also use the new Logger API
-      pluginLogger ??= new Logger({
-        writers: [
-          {
-            write(level, attrs, msg) {
-              level = level === 'trace' ? 'debug' : level;
-              yoga.logger[level](msg, attrs);
-            },
-          },
-        ],
-      }).child('[OpenTelemetry] ');
+      onDispose() {
+        if (options.flushOnDispose !== false) {
+          const flushMethod = options.flushOnDispose ?? 'forceFlush';
 
-      pluginLogger.debug(
-        `Context manager is ${useContextManager ? 'enabled' : 'disabled'}`,
-      );
-    },
-
-    onRequest({ state, serverContext }) {
-      // When running in a runtime without a context manager, we have to keep track of the
-      // span correlated to a log manually. For now, we just link all logs for a request to
-      // the HTTP root span
-      if (!useContextManager) {
-        const requestId =
-          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
-          serverContext.log?.attrs?.[
-            // @ts-expect-error even if the attrs is an array this will work
-            'requestId'
-          ];
-        if (typeof requestId === 'string') {
-          otelCtxForRequestId.set(requestId, getContext(state));
-        }
-      }
-    },
-
-    onEnveloped({ state, extendContext }) {
-      extendContext({
-        openTelemetry: {
-          tracer,
-          getHttpContext: (request) => {
-            const { forRequest } = request ? getState({ request }) : state;
-            return forRequest.otel?.root;
-          },
-          getOperationContext: (context) => {
-            const { forOperation } = context ? getState({ context }) : state;
-            return forOperation.otel?.root;
-          },
-          getExecutionRequestContext: (executionRequest) => {
-            return getState({ executionRequest }).forSubgraphExecution.otel
-              ?.root;
-          },
-          getActiveContext: (contextMatcher?: Parameters<typeof getState>[0]) =>
-            getContext(contextMatcher ? getState(contextMatcher) : state),
-        },
-      });
-    },
-
-    onCacheGet: (payload) =>
-      shouldTrace(traces.events?.cache, { key: payload.key, action: 'read' })
-        ? {
-            onCacheMiss: () => recordCacheEvent('miss', payload),
-            onCacheHit: () => recordCacheEvent('hit', payload),
-            onCacheGetError: ({ error }) =>
-              recordCacheError('read', error, payload),
+          const provider = trace.getTracerProvider() as Record<string, any>;
+          if (
+            flushMethod in provider &&
+            typeof provider[flushMethod] === 'function'
+          ) {
+            return provider[flushMethod]();
           }
-        : undefined,
-
-    onCacheSet: (payload) =>
-      shouldTrace(traces.events?.cache, { key: payload.key, action: 'write' })
-        ? {
-            onCacheSetDone: () => recordCacheEvent('write', payload),
-            onCacheSetError: ({ error }) =>
-              recordCacheError('write', error, payload),
-          }
-        : undefined,
-
-    onResponse({ response, state, serverContext }) {
-      state.forRequest.otel &&
-        setResponseAttributes(state.forRequest.otel.root, response);
-
-      // Clean up Logging context tracking for runtimes without context manager
-      if (!useContextManager) {
-        const requestId =
-          // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
-          serverContext.log?.attrs?.[
-            // @ts-expect-error even if the attrs is an array this will work
-            'requestId'
-          ];
-        if (typeof requestId === 'string') {
-          otelCtxForRequestId.delete(requestId);
         }
-      }
-    },
+      },
+    };
+  }) as OpenTelemetryPlugin;
 
-    onParams({ state, context: gqlCtx, params }) {
-      if (
-        !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
-      ) {
-        return;
-      }
+  plugin.getActiveContext = hive.getActiveContext;
+  plugin.getHttpContext = hive.getHttpContext;
+  plugin.getOperationContext = hive.getOperationContext;
+  plugin.getExecutionRequestContext = hive.getExecutionRequestContext;
+  Object.defineProperty(plugin, 'tracer', {
+    enumerable: true,
+    writable: false,
+    get: () => tracer,
+  });
 
-      const ctx = getContext(state);
-      setParamsAttributes({ ctx, params });
-    },
-
-    onExecutionResult({ result, context: gqlCtx, state }) {
-      if (
-        !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
-      ) {
-        return;
-      }
-
-      setExecutionResultAttributes({ ctx: getContext(state), result });
-    },
-
-    onParse({ state, context: gqlCtx }) {
-      if (
-        !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
-      ) {
-        return;
-      }
-
-      return ({ result }) => {
-        setGraphQLParseAttributes({
-          ctx: getContext(state),
-          operationName: gqlCtx.params.operationName,
-          query: gqlCtx.params.query?.trim(),
-          result,
-        });
-      };
-    },
-
-    onValidate({ state, context: gqlCtx }) {
-      if (
-        !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
-      ) {
-        return;
-      }
-
-      return ({ result }) => {
-        setGraphQLValidateAttributes({ ctx: getContext(state), result });
-      };
-    },
-
-    onExecute({ state, args }) {
-      if (!isParentEnabled(state)) {
-        return;
-      }
-
-      setExecutionAttributesOnOperationSpan({
-        ctx: state.forOperation.otel!.root,
-        args,
-        hashOperationFn: options.hashOperation,
-      });
-
-      if (state.forOperation.skipExecuteSpan) {
-        return;
-      }
-
-      const ctx = getContext(state);
-      setGraphQLExecutionAttributes({ ctx, args });
-
-      state.forOperation.subgraphNames = [];
-
-      return {
-        onExecuteDone({ result }) {
-          setGraphQLExecutionResultAttributes({
-            ctx,
-            result,
-            subgraphNames: state.forOperation.subgraphNames,
-          });
-        },
-      };
-    },
-
-    onSubgraphExecute({ subgraphName, state }) {
-      // Keep track of the list of subgraphs that has been hit for this operation
-      // This list will be added as attribute on onExecuteDone hook
-      state.forOperation?.subgraphNames?.push(subgraphName);
-    },
-
-    onFetch(payload) {
-      const { url, setFetchFn, fetchFn, executionRequest } = payload;
-      let { state } = payload;
-
-      if (executionRequest && isRetryExecutionRequest(executionRequest)) {
-        // Retry plugin overrides the executionRequest, by "forking" it so that multiple attempts
-        // of the same execution request can be made.
-        // We need to attach the fetch span to the original execution request, because attempt
-        // execution requests doesn't create a new `subgraph.execute` span.
-        state = getState(getRetryInfo(executionRequest));
-      }
-
-      // We want to always propagate context, even if we are not tracing the fetch phase.
-      if (propagateContext) {
-        setFetchFn((url, options, ...args) => {
-          const reqHeaders = getHeadersObj(options?.headers || {});
-          propagation.inject(getContext(state), reqHeaders);
-          return fetchFn(url, { ...options, headers: reqHeaders }, ...args);
-        });
-      }
-
-      if (
-        !isParentEnabled(state) ||
-        !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
-      ) {
-        return;
-      }
-
-      const ctx = getContext(state);
-
-      setUpstreamFetchAttributes({
-        ctx,
-        url,
-        options: payload.options,
-        executionRequest,
-      });
-
-      return ({ response }) => {
-        setUpstreamFetchResponseAttributes({ ctx, response });
-      };
-    },
-
-    onSchemaChange(payload) {
-      setSchemaAttributes(payload);
-
-      if (initSpan) {
-        trace.getSpan(initSpan)?.end();
-        initSpan = null;
-      }
-    },
-
-    onDispose() {
-      if (options.flushOnDispose !== false) {
-        const flushMethod = options.flushOnDispose ?? 'forceFlush';
-
-        const provider = trace.getTracerProvider() as Record<string, any>;
-        if (
-          flushMethod in provider &&
-          typeof provider[flushMethod] === 'function'
-        ) {
-          return provider[flushMethod]();
-        }
-      }
-    },
-  }));
-
-  hive.setPluginUtils(plugin);
   return plugin;
 }
 
