@@ -166,7 +166,7 @@ it('should send a payload from a mutation to another gateway using NATS', async 
       });
       for await (const _msg of sub) {
         msg = _msg;
-        break; // we're intererested in only one message
+        break; // we're interested in only one message
       }
     })(),
     (async () => {
