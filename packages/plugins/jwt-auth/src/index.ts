@@ -30,12 +30,12 @@ export type JWTAuthPluginOptions = JwtPluginOptions & {
  * This Yoga plugin is used to extract the forwarded (from Mesh gateway) the JWT token and claims.
  * Use this plugin in your Yoga server to extract the JWT token and claims from the forwarded extensions.
  */
-export function useForwardedJWT(config: {
+export function useForwardedJWT(config?: {
   extensionsFieldName?: string;
   extendContextFieldName?: string;
 }): YogaPlugin<JWTAuthContextExtension> {
-  const extensionsJwtFieldName = config.extensionsFieldName ?? 'jwt';
-  const extendContextFieldName = config.extendContextFieldName ?? 'jwt';
+  const extensionsJwtFieldName = config?.extensionsFieldName ?? 'jwt';
+  const extendContextFieldName = config?.extendContextFieldName ?? 'jwt';
 
   return {
     onContextBuilding({ context, extendContext }) {

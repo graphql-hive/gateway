@@ -21,7 +21,7 @@ const yoga = createYoga({
     useHmacSignatureValidation({
       secret: 'HMAC_SIGNING_SECRET',
     }),
-    useForwardedJWT({}),
+    useForwardedJWT(),
   ],
   schema: buildSubgraphSchema({
     typeDefs: parse(readFileSync(join(__dirname, 'typeDefs.graphql'), 'utf-8')),
