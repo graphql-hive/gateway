@@ -1,15 +1,16 @@
 import { LegacyLogger, Logger } from '@graphql-hive/logger';
-import { type YamlConfig } from '@graphql-mesh/types';
+import { HivePubSub, type YamlConfig } from '@graphql-mesh/types';
 import {
   getInContextSDK,
   getResolverForPubSubOperation,
   PubSubOperationOptions,
   resolveAdditionalResolversWithoutImport,
 } from '@graphql-mesh/utils';
-import type {
-  DelegationPlanBuilder,
-  StitchingInfo,
-  SubschemaConfig,
+import {
+  defaultMergedResolver,
+  type DelegationPlanBuilder,
+  type StitchingInfo,
+  type SubschemaConfig,
 } from '@graphql-tools/delegate';
 import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
 import { mergeTypeDefs } from '@graphql-tools/merge';
@@ -25,6 +26,7 @@ import {
   memoize1,
   TypeSource,
 } from '@graphql-tools/utils';
+import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
 import {
   isEnumType,
   Kind,
@@ -374,6 +376,45 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
             fieldConfig.subscribe = subscribe;
             fieldConfig.resolve = resolve;
           }
+        }
+        return fieldConfig;
+      },
+    });
+  }
+  if (executableUnifiedGraph.getDirective('pubsubPublish')) {
+    executableUnifiedGraph = mapSchema(executableUnifiedGraph, {
+      [MapperKind.ROOT_FIELD](fieldConfig) {
+        const directiveExtensions = getDirectiveExtensions<{
+          pubsubPublish: YamlConfig.AdditionalSubscriptionObject;
+        }>(fieldConfig, executableUnifiedGraph);
+        if (directiveExtensions.pubsubPublish?.length) {
+          const originalResolve = fieldConfig.resolve || defaultMergedResolver;
+          fieldConfig.resolve = function (
+            root,
+            args,
+            context: { pubsub?: HivePubSub },
+            info,
+          ) {
+            return handleMaybePromise(
+              () => originalResolve(root, args, context, info),
+              (payload) => {
+                const jobs: Promise<void>[] = [];
+                for (const pubsubPublishArgs of directiveExtensions.pubsubPublish!) {
+                  const job = context.pubsub?.publish(
+                    pubsubPublishArgs.pubsubTopic,
+                    payload,
+                  );
+                  if (isPromise(job)) {
+                    jobs.push(job);
+                  }
+                }
+                if (jobs.length) {
+                  return Promise.all(jobs).then(() => payload);
+                }
+                return payload;
+              },
+            );
+          };
         }
         return fieldConfig;
       },
