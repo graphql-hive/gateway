@@ -12,7 +12,7 @@ export function useSubgraphExecuteDebug<
       );
       let shouldLog = false;
       log?.debug(() => (shouldLog = true));
-      if (!shouldLog) {
+      if (!log || !shouldLog) {
         return; // debug level is not enabled
       }
       const logData: Record<string, any> = {};
