@@ -99,7 +99,7 @@ import { useCacheDebug } from './plugins/useCacheDebug';
 import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
-import { useDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
+import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
@@ -1053,25 +1053,14 @@ export function createGatewayRuntime<
     );
   }
 
-  let isDebug: boolean = false;
-
-  if (config.logging === 'debug') {
-    isDebug = true;
-  } else {
-    // we use the logger's debug option because the extra plugins only add more logs
-    log.debug(() => {
-      isDebug = true;
-    }, 'Debug mode enabled');
-  }
-
-  if (isDebug) {
-    extraPlugins.push(
-      useSubgraphExecuteDebug(),
-      useFetchDebug(),
-      useDelegationPlanDebug(),
-      useCacheDebug({ log: configContext.log }),
-    );
-  }
+  // we load the debug plugins, but they wont log unless the log level is set to debug
+  // this allows for dynamic log level switching without needing a server restart
+  extraPlugins.push(
+    useSubgraphExecuteDebug(),
+    useFetchDebug(),
+    useMaybeDelegationPlanDebug({ log: configContext.log }),
+    useCacheDebug({ log: configContext.log }),
+  );
 
   const yoga = createYoga({
     // @ts-expect-error Types???
