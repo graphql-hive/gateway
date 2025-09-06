@@ -1,15 +1,13 @@
-import { createServer } from 'node:http';
-import { buildSubgraphSchema } from '@apollo/subgraph';
-import { Opts } from '@internal/testing';
-import { parse } from 'graphql';
-import { createYoga } from 'graphql-yoga';
+---
+'@graphql-mesh/fusion-runtime': minor
+'@graphql-hive/gateway': minor
+'@graphql-hive/gateway-runtime': minor
+---
 
-const port = Opts(process.argv).getServicePort('products');
+New directive `@pubsubPublish` to publish the payload to the pubsub engine directly
 
-createServer(
-  createYoga({
-    schema: buildSubgraphSchema({
-      typeDefs: parse(/* GraphQL */ `
+
+```graphql
         extend schema
           @link(
             url: "https://specs.apollo.dev/federation/v2.6"
@@ -48,28 +46,4 @@ createServer(
           newProductSubgraph: Product!
             @pubsubOperation(pubsubTopic: "new_product")
         }
-      `),
-      resolvers: {
-        Query: {
-          hello: () => 'world',
-        },
-        Product: {
-          __resolveReference: (ref) => ({
-            id: ref.id,
-            name: `Roomba X${ref.id}`,
-            price: 100,
-          }),
-        },
-        Mutation: {
-          createProduct: (_parent, { name, price }) => ({
-            id: String(Math.floor(Math.random() * 1000)),
-            name,
-            price,
-          }),
-        },
-      },
-    }),
-  }),
-).listen(port, () => {
-  console.log(`Products subgraph running on http://localhost:${port}/graphql`);
-});
+```

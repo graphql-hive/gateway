@@ -131,3 +131,66 @@ it.each(fields)(
     ]);
   },
 );
+
+it('should send a payload from a mutation to another gateway using NATS', async () => {
+  const { output: supergraph } = await composeWithMesh({
+    output: 'graphql',
+    services: [await service('products')],
+  });
+
+  if (gatewayRunner.includes('docker')) {
+    await handleDockerHostNameInURLOrAtPath(supergraph, []);
+  }
+
+  const consumer = await gateway({ supergraph, env: natsEnv });
+  const producer = await gateway({ supergraph, env: natsEnv });
+
+  const client = createClient({
+    url: `http://0.0.0.0:${consumer.port}/graphql`,
+    fetchFn: fetch,
+    retryAttempts: 0,
+  });
+
+  let msg: any = null;
+  await Promise.all([
+    (async () => {
+      const sub = client.iterate({
+        query: /* GraphQL */ `
+          subscription {
+            newProductSubgraph {
+              name
+              price
+            }
+          }
+        `,
+      });
+      for await (const _msg of sub) {
+        msg = _msg;
+        break; // we're interested in only one message
+      }
+    })(),
+    (async () => {
+      await setTimeout(300);
+      await producer.execute({
+        query: /* GraphQL */ `
+          mutation {
+            createProduct(name: "Roomba X60", price: 100) {
+              id
+              name
+              price
+            }
+          }
+        `,
+      });
+    })(),
+  ]);
+
+  expect(msg).toMatchObject({
+    data: {
+      newProductSubgraph: {
+        name: 'Roomba X60',
+        price: 100,
+      },
+    },
+  });
+});
