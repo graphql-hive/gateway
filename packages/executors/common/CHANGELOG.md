@@ -1,5 +1,14 @@
 # @graphql-tools/executor-common
 
+## 1.0.1
+### Patch Changes
+
+
+
+- [#1452](https://github.com/graphql-hive/gateway/pull/1452) [`b0e5568`](https://github.com/graphql-hive/gateway/commit/b0e55688d4fc22d0bfbf664de52e78e9642d7014) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/core@^5.3.1` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.3.1) (from `^5.3.0`, in `dependencies`)
+
 ## 1.0.0
 ### Major Changes
 

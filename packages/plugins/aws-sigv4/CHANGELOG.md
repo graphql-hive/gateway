@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 2.0.2
+### Patch Changes
+
+
+
+- [#1452](https://github.com/graphql-hive/gateway/pull/1452) [`b0e5568`](https://github.com/graphql-hive/gateway/commit/b0e55688d4fc22d0bfbf664de52e78e9642d7014) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.882.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.882.0) (from `^3.858.0`, in `dependencies`)
+- Updated dependencies [[`ab05e3f`](https://github.com/graphql-hive/gateway/commit/ab05e3f899b017067e0eb42301516d4fdf3b816d), [`b0e5568`](https://github.com/graphql-hive/gateway/commit/b0e55688d4fc22d0bfbf664de52e78e9642d7014), [`b6f985b`](https://github.com/graphql-hive/gateway/commit/b6f985b0456ba7556cc299368892ffc5f7d4817e), [`b6f985b`](https://github.com/graphql-hive/gateway/commit/b6f985b0456ba7556cc299368892ffc5f7d4817e)]:
+  - @graphql-mesh/fusion-runtime@1.1.0
+
 ## 2.0.1
 ### Patch Changes
 
