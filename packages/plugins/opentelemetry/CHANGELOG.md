@@ -1,5 +1,23 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.0.4
+### Patch Changes
+
+
+
+- [#1454](https://github.com/graphql-hive/gateway/pull/1454) [`7020674`](https://github.com/graphql-hive/gateway/commit/70206747f0f1ffaddb4b77742bec053bcd90e494) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Moves the `configureDiagLogger` option from plugin to `openTelemetrySetup` utility. This fixes missing first logs, and allows us to correlate Hive log level with OTEL log level.
+
+
+
+- [#1454](https://github.com/graphql-hive/gateway/pull/1454) [`7020674`](https://github.com/graphql-hive/gateway/commit/70206747f0f1ffaddb4b77742bec053bcd90e494) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fix the recording of validation errors.
+
+
+
+- [#1454](https://github.com/graphql-hive/gateway/pull/1454) [`7020674`](https://github.com/graphql-hive/gateway/commit/70206747f0f1ffaddb4b77742bec053bcd90e494) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fix root OTEL context getters.
+
+- Updated dependencies [[`bcb9407`](https://github.com/graphql-hive/gateway/commit/bcb94071daccb1698439d364ccc37146aa4c5032), [`e758071`](https://github.com/graphql-hive/gateway/commit/e758071ed64ec26baf8c2d1d71bc27275291b018), [`6495780`](https://github.com/graphql-hive/gateway/commit/6495780516c11e6668ab827113b7edfb6379b5f2)]:
+  - @graphql-hive/gateway-runtime@2.1.0
+
 ## 1.0.3
 ### Patch Changes
 
