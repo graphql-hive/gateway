@@ -1,3 +1,4 @@
+import { LogLevel } from '@graphql-hive/logger';
 import { context, diag, DiagLogLevel } from '@opentelemetry/api';
 import { getEnvStr } from '~internal/env';
 
@@ -33,17 +34,17 @@ export function isContextManagerCompatibleWithAsync(): Promise<boolean> {
   });
 }
 
-const logLevelMap: Record<string, DiagLogLevel> = {
-  ALL: DiagLogLevel.ALL,
-  VERBOSE: DiagLogLevel.VERBOSE,
-  DEBUG: DiagLogLevel.DEBUG,
-  INFO: DiagLogLevel.INFO,
-  WARN: DiagLogLevel.WARN,
-  ERROR: DiagLogLevel.ERROR,
-  NONE: DiagLogLevel.NONE,
+const logLevelMap: Record<string, [DiagLogLevel, LogLevel | null]> = {
+  ALL: [DiagLogLevel.ALL, 'trace'],
+  VERBOSE: [DiagLogLevel.VERBOSE, 'trace'],
+  DEBUG: [DiagLogLevel.DEBUG, 'debug'],
+  INFO: [DiagLogLevel.INFO, 'info'],
+  WARN: [DiagLogLevel.WARN, 'warn'],
+  ERROR: [DiagLogLevel.ERROR, 'error'],
+  NONE: [DiagLogLevel.NONE, null],
 };
 
-export function diagLogLevelFromEnv(): DiagLogLevel | undefined {
+export function diagLogLevelFromEnv() {
   const value = getEnvStr('OTEL_LOG_LEVEL');
 
   if (value == null) {
@@ -55,7 +56,7 @@ export function diagLogLevelFromEnv(): DiagLogLevel | undefined {
     diag.warn(
       `Unknown log level "${value}", expected one of ${Object.keys(logLevelMap)}, using default`,
     );
-    return DiagLogLevel.INFO;
+    return logLevelMap['INFO'];
   }
   return resolvedLogLevel;
 }
