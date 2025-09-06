@@ -1,5 +1,11 @@
 # @graphql-tools/executor-graphql-ws
 
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [[`b0e5568`](https://github.com/graphql-hive/gateway/commit/b0e55688d4fc22d0bfbf664de52e78e9642d7014)]:
+  - @graphql-tools/executor-common@1.0.1
+
 ## 3.0.0
 ### Major Changes
 
