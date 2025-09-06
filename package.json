@@ -10,7 +10,7 @@
     "internal/*",
     "e2e/*"
   ],
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.9.4",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "yarn workspaces foreach -A -p run build",
