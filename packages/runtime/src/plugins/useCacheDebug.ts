@@ -6,12 +6,20 @@ export function useCacheDebug<TContext extends Record<string, any>>({
 }: {
   log: Logger;
 }): GatewayPlugin<TContext> {
+  function shouldLog(log: Logger) {
+    let shouldLog = false;
+    rootLog.debug(() => (shouldLog = true));
+    return shouldLog;
+  }
   return {
     onContextBuilding({ context }) {
       // onContextBuilding might not execute at all so we use the root log
       rootLog = context.log;
     },
     onCacheGet({ key }) {
+      if (!shouldLog(rootLog)) {
+        return; // debug level is not enabled
+      }
       const log = rootLog.child({ key }, '[useCacheDebug] ');
       log.debug('Get');
       return {
@@ -27,6 +35,9 @@ export function useCacheDebug<TContext extends Record<string, any>>({
       };
     },
     onCacheSet({ key, value, ttl }) {
+      if (!shouldLog(rootLog)) {
+        return; // debug level is not enabled
+      }
       const log = rootLog.child({ key, value, ttl }, '[useCacheDebug] ');
       log.debug('Set');
       return {
@@ -39,6 +50,9 @@ export function useCacheDebug<TContext extends Record<string, any>>({
       };
     },
     onCacheDelete({ key }) {
+      if (!shouldLog(rootLog)) {
+        return; // debug level is not enabled
+      }
       const log = rootLog.child({ key }, '[useCacheDebug] ');
       log.debug('Delete');
       return {

@@ -20,37 +20,39 @@ export function useDelegationPlanDebug<
       context,
       info,
     }) {
+      let shouldLog = false;
+      context.log.debug(() => (shouldLog = true));
+      if (!shouldLog) {
+        return; // debug level is not enabled
+      }
       const planId = fetchAPI.crypto.randomUUID();
       const log = context.log.child(
         { planId, typeName },
         '[useDelegationPlanDebug] ',
       );
-      log.debug(() => {
-        const logObj: Record<string, any> = {};
-        if (variables && Object.keys(variables).length) {
-          logObj['variables'] = variables;
-        }
-        if (fragments && Object.keys(fragments).length) {
-          logObj['fragments'] = Object.fromEntries(
-            Object.entries(fragments).map(([name, fragment]) => [
-              name,
-              print(fragment),
-            ]),
-          );
-        }
-        if (fieldNodes && fieldNodes.length) {
-          logObj['fieldNodes'] = fieldNodes.map((fieldNode) =>
-            print(fieldNode),
-          );
-        }
-        if (info?.path) {
-          logObj['path'] = pathToArray(info.path).join(' | ');
-        }
-        return logObj;
-      }, 'Start');
+
+      const logObj: Record<string, any> = {};
+      if (variables && Object.keys(variables).length) {
+        logObj['variables'] = variables;
+      }
+      if (fragments && Object.keys(fragments).length) {
+        logObj['fragments'] = Object.fromEntries(
+          Object.entries(fragments).map(([name, fragment]) => [
+            name,
+            print(fragment),
+          ]),
+        );
+      }
+      if (fieldNodes && fieldNodes.length) {
+        logObj['fieldNodes'] = fieldNodes.map((fieldNode) => print(fieldNode));
+      }
+      if (info?.path) {
+        logObj['path'] = pathToArray(info.path).join(' | ');
+      }
+      log.debug(logObj, 'Start');
       return ({ delegationPlan }) => {
         log.debug(
-          () => ({
+          {
             delegationPlan: delegationPlan.map((plan) => {
               const planObj: Record<string, string> = {};
               for (const [subschema, selectionSet] of plan) {
@@ -60,7 +62,7 @@ export function useDelegationPlanDebug<
               }
               return planObj;
             }),
-          }),
+          },
           'Done',
         );
       };
@@ -74,6 +76,11 @@ export function useDelegationPlanDebug<
       key,
       typeName,
     }) {
+      let shouldLog = false;
+      context.log.debug(() => (shouldLog = true));
+      if (!shouldLog) {
+        return; // debug level is not enabled
+      }
       let contextLog = stageExecuteLogById.get(context);
       if (!contextLog) {
         contextLog = new Set();
@@ -96,14 +103,14 @@ export function useDelegationPlanDebug<
       };
       const log = context.log.child(logMeta, '[useDelegationPlanDebug] ');
       log.debug(
-        () => ({
-          ...log,
+        {
+          ...logMeta,
           path: pathToArray(info.path).join(' | '),
-        }),
+        },
         'Stage start',
       );
       return ({ result }) => {
-        log.debug(() => result, 'Stage done');
+        log.debug(result, 'Stage done');
       };
     },
   };

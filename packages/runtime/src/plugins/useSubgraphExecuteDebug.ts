@@ -13,19 +13,22 @@ export function useSubgraphExecuteDebug<
       if (!log) {
         throw new Error('Logger is not available in the execution context');
       }
-      log.debug(() => {
-        const logData: Record<string, any> = {};
-        if (executionRequest.document) {
-          logData['query'] = defaultPrintFn(executionRequest.document);
-        }
-        if (
-          executionRequest.variables &&
-          Object.keys(executionRequest.variables).length
-        ) {
-          logData['variables'] = executionRequest.variables;
-        }
-        return logData;
-      }, 'Start');
+      let shouldLog = false;
+      log.debug(() => (shouldLog = true));
+      if (!shouldLog) {
+        return; // debug level is not enabled
+      }
+      const logData: Record<string, any> = {};
+      if (executionRequest.document) {
+        logData['query'] = defaultPrintFn(executionRequest.document);
+      }
+      if (
+        executionRequest.variables &&
+        Object.keys(executionRequest.variables).length
+      ) {
+        logData['variables'] = executionRequest.variables;
+      }
+      log.debug(logData, 'Start');
       const start = performance.now();
       return function onSubgraphExecuteDone({ result }) {
         if (isAsyncIterable(result)) {
@@ -34,12 +37,7 @@ export function useSubgraphExecuteDebug<
               log.debug(result, 'Next');
             },
             onEnd() {
-              log.debug(
-                () => ({
-                  duration: performance.now() - start,
-                }),
-                'End',
-              );
+              log.debug({ duration: performance.now() - start }, 'End');
             },
           };
         }
