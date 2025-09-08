@@ -1,5 +1,59 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.1
+### Patch Changes
+
+
+
+- [#1468](https://github.com/graphql-hive/gateway/pull/1468) [`7212b86`](https://github.com/graphql-hive/gateway/commit/7212b86f3de663d7026de1256494c2fd4fecc5b1) Thanks [@ardatan](https://github.com/ardatan)! - Also use `documentId` property or query param as the key for persisted documents when you use a custom store
+  
+  All of these will work:
+  
+  ```
+  http://localhost:4000/graphql?documentId=<hash>
+  ```
+  
+  ```json
+  {
+    "extensions" {
+      "persistedQuery": {
+        "version": 1,
+        "sha256Hash": "<hash>"
+      }
+    }
+  }
+  ```
+  
+  ```json
+  {
+    "documentId": "<hash>"
+  }
+  ```
+  
+  ```json
+  {
+    "extensions" {
+      "persistedQuery": {
+        "version": 1,
+        "sha256Hash": "<hash>"
+      }
+    }
+  }
+  ```
+  
+  ```json
+  {
+    "extensions" {
+      "persistedQuery": {
+        "version": 1,
+        "sha256Hash": "<hash>"
+      }
+    }
+  }
+  ```
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.1
+
 ## 2.1.0
 ### Minor Changes
 

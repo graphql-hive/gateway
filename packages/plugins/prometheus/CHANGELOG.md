@@ -1,5 +1,11 @@
 # @graphql-mesh/plugin-prometheus
 
+## 2.0.5
+### Patch Changes
+
+- Updated dependencies [[`7212b86`](https://github.com/graphql-hive/gateway/commit/7212b86f3de663d7026de1256494c2fd4fecc5b1)]:
+  - @graphql-hive/gateway-runtime@2.1.1
+
 ## 2.0.4
 ### Patch Changes
 
