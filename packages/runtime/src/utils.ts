@@ -5,11 +5,10 @@ import {
   getDirectiveExtensions,
   memoize1,
 } from '@graphql-tools/utils';
-import { ExtractPersistedOperationId } from '@graphql-yoga/plugin-persisted-operations';
-import { URL } from '@whatwg-node/fetch';
+import type { ExtractPersistedOperationId } from '@graphql-yoga/plugin-persisted-operations';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
 import type { GraphQLSchema, SelectionSetNode } from 'graphql';
-import { GraphQLParams } from 'graphql-yoga';
+import type { GraphQLParams } from 'graphql-yoga';
 import {
   OnCacheDeleteHook,
   OnCacheDeleteHookResult,
