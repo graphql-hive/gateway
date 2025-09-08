@@ -1320,7 +1320,7 @@ class HeapSnapshotNode {
   }
   setDetachedness(detachedness) {
     let value = this.#detachednessAndClassIndex();
-    value &= -4;
+    value &= ~BITMASK_FOR_DOM_LINK_STATE;
     value |= detachedness;
     this.#setDetachednessAndClassIndex(value);
   }
