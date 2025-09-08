@@ -5,8 +5,10 @@ import {
   getDirectiveExtensions,
   memoize1,
 } from '@graphql-tools/utils';
+import type { ExtractPersistedOperationId } from '@graphql-yoga/plugin-persisted-operations';
 import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
 import type { GraphQLSchema, SelectionSetNode } from 'graphql';
+import type { GraphQLParams } from 'graphql-yoga';
 import {
   OnCacheDeleteHook,
   OnCacheDeleteHookResult,
@@ -331,3 +333,47 @@ export function getDirectiveNameForFederationDirective({
   }
   return normalizedDirectiveName;
 }
+
+const specs: ExtractPersistedOperationId[] = [
+  function extractPersistedOperationIdByApolloSpec(params: GraphQLParams) {
+    const persistedQuery = params.extensions?.['persistedQuery'];
+    if (
+      persistedQuery != null &&
+      typeof persistedQuery === 'object' &&
+      persistedQuery['version'] === 1 &&
+      typeof persistedQuery['sha256Hash'] === 'string'
+    ) {
+      return persistedQuery['sha256Hash'];
+    }
+    return null;
+  },
+  function extractPersistedOperationIdByHiveSpec(
+    params: GraphQLParams,
+    request: Request,
+    _context: Record<string, any>,
+  ) {
+    if ('documentId' in params && typeof params.documentId === 'string') {
+      return params.documentId;
+    }
+    const documentId = new URL(request.url).searchParams.get('documentId');
+    if (documentId) {
+      return documentId;
+    }
+    return null;
+  },
+];
+
+export const defaultExtractPersistedOperationId: ExtractPersistedOperationId =
+  function defaultExtractPersistedOperationId(
+    params: GraphQLParams,
+    request: Request,
+    context: Record<string, any>,
+  ) {
+    for (const spec of specs) {
+      const id = spec(params, request, context);
+      if (id) {
+        return id;
+      }
+    }
+    return null;
+  };
