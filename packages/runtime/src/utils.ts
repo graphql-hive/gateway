@@ -336,15 +336,14 @@ export function getDirectiveNameForFederationDirective({
 
 const specs: ExtractPersistedOperationId[] = [
   function extractPersistedOperationIdByApolloSpec(params: GraphQLParams) {
+    const persistedQuery = params.extensions?.['persistedQuery'];
     if (
-      params.extensions != null &&
-      typeof params.extensions === 'object' &&
-      params.extensions?.['persistedQuery'] != null &&
-      typeof params.extensions?.['persistedQuery'] === 'object' &&
-      params.extensions?.['persistedQuery']?.['version'] === 1 &&
-      typeof params.extensions?.['persistedQuery']?.['sha256Hash'] === 'string'
+      persistedQuery != null &&
+      typeof persistedQuery === 'object' &&
+      persistedQuery['version'] === 1 &&
+      typeof persistedQuery['sha256Hash'] === 'string'
     ) {
-      return params.extensions?.['persistedQuery']?.['sha256Hash'];
+      return persistedQuery['sha256Hash'];
     }
     return null;
   },
