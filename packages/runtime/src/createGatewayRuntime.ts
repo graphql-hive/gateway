@@ -126,6 +126,7 @@ import type {
 } from './types';
 import {
   checkIfDataSatisfiesSelectionSet,
+  defaultExtractPersistedOperationId,
   defaultQueryText,
   getExecuteFnFromExecutor,
   wrapCacheWithHooks,
@@ -227,6 +228,7 @@ export function createGatewayRuntime<
     'getPersistedOperation' in config.persistedDocuments
   ) {
     const plugin = usePersistedOperations<GatewayContext>({
+      extractPersistedOperationId: defaultExtractPersistedOperationId,
       ...configContext,
       ...config.persistedDocuments,
     });
