@@ -1,5 +1,25 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.2
+### Patch Changes
+
+
+
+- [#1474](https://github.com/graphql-hive/gateway/pull/1474) [`70c5010`](https://github.com/graphql-hive/gateway/commit/70c5010b40643a6da0ca5e84a90a5c3ba126107f) Thanks [@ardatan](https://github.com/ardatan)! - In `persistedDocuments` options, `allowArbitraryOperations` flag has been deprecated, and introduced `allowArbitraryDocuments` for both Hive Console and custom store sources
+  
+  ```diff
+  defineConfig({
+  /* .. */
+  persistedDocuments: {
+     /* .. */
+  -   allowArbitraryOperations: true,
+  +   allowArbitraryDocuments: true,
+  },
+  });
+  ```
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.1
+
 ## 2.1.1
 ### Patch Changes
 
