@@ -3,11 +3,11 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.4.16",
-    "@omnigraph/openapi": "^0.109.18",
+    "@omnigraph/openapi": "^0.109.19",
     "fets": "^0.8.4",
     "graphql": "16.11.0",
     "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.1.1"
+    "@graphql-hive/gateway": "^2.1.2"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
