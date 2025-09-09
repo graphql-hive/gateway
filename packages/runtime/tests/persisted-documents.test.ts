@@ -99,4 +99,43 @@ describe('Persisted Documents', () => {
       },
     });
   });
+  it('supports `allowArbitraryDocuments` option with custom store', async () => {
+    const gatewayWithArbitraryDocs = createGatewayRuntime({
+      supergraph: getUnifiedGraphGracefully([
+        {
+          name: 'foo',
+          schema: subgraphSchema,
+          url: 'http://localhost:4001/graphql',
+        },
+      ]),
+      plugins: () => [
+        // @ts-expect-error
+        useCustomFetch(subgraphServer.fetch),
+      ],
+      persistedDocuments: {
+        allowArbitraryDocuments: true,
+        getPersistedOperation(id) {
+          return store[id] || null;
+        },
+      },
+    });
+    const response = await gatewayWithArbitraryDocs.fetch(
+      'http://gateway/graphql',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: '{ foo }',
+        }),
+      },
+    );
+    const result = await response.json();
+    expect(result).toEqual({
+      data: {
+        foo: 'bar',
+      },
+    });
+  });
 });
