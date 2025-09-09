@@ -1,3 +1,4 @@
+import { MaybePromise } from '@graphql-tools/utils';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
 import useHiveConsole, {
   HiveConsolePluginOptions,
@@ -11,6 +12,9 @@ import type {
 export function getReportingPlugin<TContext extends Record<string, any>>(
   config: GatewayConfig<TContext>,
   configContext: GatewayConfigContext,
+  allowArbitraryDocuments:
+    | boolean
+    | ((request: Request) => MaybePromise<boolean>) = false,
 ): GatewayPlugin<TContext> {
   if (config.reporting?.type === 'hive') {
     const { target, ...reporting } = config.reporting;
@@ -38,8 +42,8 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
                 endpoint: config.persistedDocuments.endpoint,
                 accessToken: config.persistedDocuments.token,
               },
-              allowArbitraryDocuments:
-                !!config.persistedDocuments.allowArbitraryDocuments,
+              // Trick to satisfy the Hive Console plugin types
+              allowArbitraryDocuments: allowArbitraryDocuments as boolean,
             },
           }
         : {}),

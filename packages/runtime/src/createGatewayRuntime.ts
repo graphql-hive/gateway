@@ -196,12 +196,23 @@ export function createGatewayRuntime<
   let replaceSchema: (schema: GraphQLSchema) => void = (newSchema) => {
     unifiedGraph = newSchema;
   };
+  let allowArbitraryDocumentsForPersistedDocuments:
+    | boolean
+    | ((request: Request) => MaybePromise<boolean>) = false;
+  if (config.persistedDocuments?.allowArbitraryDocuments != null) {
+    allowArbitraryDocumentsForPersistedDocuments =
+      config.persistedDocuments?.allowArbitraryDocuments;
+  } else if (config.persistedDocuments?.allowArbitraryOperations) {
+    allowArbitraryDocumentsForPersistedDocuments =
+      config.persistedDocuments?.allowArbitraryOperations;
+  }
   // when using hive reporting and hive persisted documents,
   // this plugin will contain both the registry and the persisted
   // documents plugin
   const reportingWithMaybePersistedDocumentsPlugin = getReportingPlugin(
     config,
     configContext,
+    allowArbitraryDocumentsForPersistedDocuments,
   );
   let persistedDocumentsPlugin: GatewayPlugin<GatewayContext> = {};
   if (
@@ -219,8 +230,8 @@ export function createGatewayRuntime<
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,
         },
-        allowArbitraryDocuments:
-          !!config.persistedDocuments.allowArbitraryDocuments,
+        // @ts-expect-error - Hive Console plugin options are not compatible yet
+        allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
       },
     });
   } else if (
@@ -231,6 +242,7 @@ export function createGatewayRuntime<
       extractPersistedOperationId: defaultExtractPersistedOperationId,
       ...configContext,
       ...config.persistedDocuments,
+      allowArbitraryOperations: allowArbitraryDocumentsForPersistedDocuments,
     });
     // @ts-expect-error the ServerContext does not match
     persistedDocumentsPlugin = plugin;

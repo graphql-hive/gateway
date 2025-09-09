@@ -420,6 +420,19 @@ export interface GatewayHivePersistedDocumentsOptions {
     | boolean
     // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
     | ((request: Request) => MaybePromise<boolean>);
+  /**
+   * Whether arbitrary documents should be allowed along-side persisted documents.
+   *
+   * Alternatively, you can provide a function that returns a boolean value based on
+   * the request's headers.
+   *
+   * @default false
+   *
+   * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
+   */
+  allowArbitraryOperations?:
+    | boolean
+    | ((request: Request) => MaybePromise<boolean>);
 }
 
 interface GatewayConfigBase<TContext extends Record<string, any>> {
@@ -428,7 +441,36 @@ interface GatewayConfigBase<TContext extends Record<string, any>> {
   /** Persisted documents options. */
   persistedDocuments?:
     | GatewayHivePersistedDocumentsOptions
-    | UsePersistedOperationsOptions<GatewayContext>;
+    | (Omit<
+        UsePersistedOperationsOptions<GatewayContext>,
+        'allowArbitraryOperations'
+      > & {
+        /**
+         * Whether arbitrary documents should be allowed along-side persisted documents.
+         *
+         * Alternatively, you can provide a function that returns a boolean value based on
+         * the request's headers.
+         *
+         * @default false
+         */
+        allowArbitraryDocuments?:
+          | boolean
+          // @graphql-hive/core/client#AllowArbitraryDocumentsFunction which uses yoga's allowArbitraryOperations(request: Request)
+          | ((request: Request) => MaybePromise<boolean>);
+        /**
+         * Whether arbitrary documents should be allowed along-side persisted documents.
+         *
+         * Alternatively, you can provide a function that returns a boolean value based on
+         * the request's headers.
+         *
+         * @default false
+         *
+         * @deprecated This option is deprecated and will be removed in the next major version. Use `allowArbitraryDocuments` instead.
+         */
+        allowArbitraryOperations?:
+          | boolean
+          | ((request: Request) => MaybePromise<boolean>);
+      });
   /**
    * A map, or factory function, of transport kinds to their implementations.
    *
