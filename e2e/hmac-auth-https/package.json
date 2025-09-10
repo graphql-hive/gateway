@@ -10,7 +10,7 @@
     "@apollo/subgraph": "^2.11.2",
     "@graphql-hive/gateway": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
-    "@graphql-mesh/compose-cli": "^1.4.16",
+    "@graphql-mesh/compose-cli": "^1.4.17",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
     "graphql": "^16.10.0",
