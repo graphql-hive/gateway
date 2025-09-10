@@ -4,7 +4,7 @@
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.4.17",
     "@graphql-mesh/transport-rest": "^0.9.13",
-    "@omnigraph/openapi": "^0.109.18",
+    "@omnigraph/openapi": "^0.109.19",
     "fets": "^0.8.4",
     "graphql": "^16.9.0"
   }

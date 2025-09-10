@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@apollo/subgraph": "^2.11.2",
-    "aws4-express": "^0.11.0",
+    "aws4-express": "^0.12.0",
     "express": "^5.0.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.15.2",
