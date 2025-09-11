@@ -201,10 +201,9 @@ function packagejson() {
 
         // Find the package root by keeping only the 2 (or 3 for package with organization) path segment.
         const isOrgPackage = dir.includes('@');
-        const pkgRoot = dir
-          .split('/')
-          .slice(0, isOrgPackage ? 3 : 2)
-          .join('/');
+        const pkgRoot = path.join(
+          ...dir.split(path.sep).slice(0, isOrgPackage ? 3 : 2),
+        );
 
         const pkgFileName = path.join(pkgRoot, 'package.json');
         const pkg = packages[pkgFileName] ?? { type: 'module' };
