@@ -198,15 +198,34 @@ function packagejson() {
           e2eModules.push(module);
         }
         const dir = path.dirname(bundle.fileName);
-        const bundledFile = path.basename(bundle.fileName).replace(/\\/g, '/');
-        const pkgFileName = path.join(dir, 'package.json');
+
+        // Find the package root by keeping only the 2 (or 3 for package with organization) path segment.
+        const isOrgPackage = dir.includes('@');
+        const pkgRoot = path.join(
+          ...dir.split(path.sep).slice(0, isOrgPackage ? 3 : 2),
+        );
+
+        const pkgFileName = path.join(pkgRoot, 'package.json');
         const pkg = packages[pkgFileName] ?? { type: 'module' };
-        const mjsFile =
-          bundledFile === 'index.mjs'
-            ? '.'
-            : './' + path.basename(bundle.fileName, '.mjs').replace(/\\/g, '/');
-        // if the bundled file is not "index", then it's an package.json exports path
-        pkg.exports = { ...pkg.exports, [mjsFile]: `./${bundledFile}` };
+
+        let bundledFileName = bundle.fileName.replaceAll(/\\/g, '');
+
+        // Make the filename relative to the package root.
+        // We need to do this to maintain sub-directory hierarchy for packages that have custom exports
+        if (bundledFileName.startsWith(pkgRoot)) {
+          bundledFileName = bundledFileName.replace(pkgRoot + '/', '');
+        }
+        bundledFileName = './' + bundledFileName;
+
+        // the export entry key never contains the file extension
+        let exportKey = bundledFileName.replace(/\.mjs$/, '');
+
+        // if the bundled file is an index file, is should be exported as the parent directory name
+        if (exportKey.endsWith('/index')) {
+          exportKey = exportKey.replace(/\/index$/, '');
+        }
+
+        pkg.exports = { ...pkg.exports, [exportKey]: bundledFileName };
         packages[pkgFileName] = pkg;
       }
 
