@@ -5,9 +5,9 @@
     "start": "wrangler dev src/index.ts"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250910.0",
+    "@cloudflare/workers-types": "^4.20250912.0",
     "@graphql-hive/gateway-runtime": "workspace:*",
     "graphql": "^16.9.0",
-    "wrangler": "^4.35.0"
+    "wrangler": "^4.36.0"
   }
 }
