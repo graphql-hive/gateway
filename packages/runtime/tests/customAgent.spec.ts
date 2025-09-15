@@ -36,10 +36,7 @@ describe('Custom Agent', () => {
       }),
     );
     using disposableAgent = createDisposableAgent();
-    const spy = vi.spyOn(
-      disposableAgent.agent,
-      'createConnection',
-    );
+    const spy = vi.spyOn(disposableAgent.agent, 'createConnection');
     await using gateway = createGatewayRuntime({
       proxy: {
         endpoint: `${upstreamServer.url}/graphql`,
