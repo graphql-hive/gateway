@@ -1,0 +1,4 @@
+{
+  "name": "@e2e/context-log-outside-graphql-execution",
+  "private": true
+}
