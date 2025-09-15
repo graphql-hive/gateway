@@ -38,7 +38,6 @@ describe('Custom Agent', () => {
     using disposableAgent = createDisposableAgent();
     const spy = vi.spyOn(
       disposableAgent.agent,
-      // @ts-expect-error - `createConnection` is not available in typings
       'createConnection',
     );
     await using gateway = createGatewayRuntime({
