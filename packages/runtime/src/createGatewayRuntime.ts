@@ -1107,9 +1107,9 @@ export function createGatewayRuntime<
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-      connectionParams = headers;
 
-      const baseContext = { ...ctx, headers, connectionParams: headers };
+
+      const baseContext = { ...ctx, headers, connectionParams };
       return contextBuilder?.(baseContext) ?? baseContext;
     },
     cors: config.cors,
