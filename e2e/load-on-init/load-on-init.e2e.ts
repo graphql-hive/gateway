@@ -9,7 +9,7 @@ it('should load the supergraph on init', async () => {
     gateway({
       supergraph: path.join(__dirname, 'malformed.graphql'),
     }),
-  ).rejects.toThrowError(/Syntax Error: Unexpected Name \\"skema\\"./);
+  ).rejects.toThrow(/Syntax Error: Unexpected Name \\"skema\\"./);
 });
 
 it('should load the subgraph on init', async () => {
@@ -17,7 +17,7 @@ it('should load the subgraph on init', async () => {
     gateway({
       subgraph: path.join(__dirname, 'malformed.graphql'),
     }),
-  ).rejects.toThrowError(/Syntax Error: Unexpected Name \\"skema\\"./);
+  ).rejects.toThrow(/Syntax Error: Unexpected Name \\"skema\\"./);
 });
 
 it('should load the proxy schema on init', async () => {
@@ -25,5 +25,5 @@ it('should load the proxy schema on init', async () => {
     gateway({
       args: ['proxy', 'http://localhost:65432'],
     }),
-  ).rejects.toThrowError(/DOWNSTREAM_SERVICE_ERROR/);
+  ).rejects.toThrow(/DOWNSTREAM_SERVICE_ERROR/);
 });
