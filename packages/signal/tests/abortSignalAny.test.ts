@@ -40,7 +40,7 @@ describe.skipIf(
 
     expect(signal).not.toBe(ctrl1.signal);
 
-    expect(() => signal!.throwIfAborted()).toThrowError('Test');
+    expect(() => signal!.throwIfAborted()).toThrow('Test');
   });
 
   it.skipIf(
@@ -55,7 +55,7 @@ describe.skipIf(
 
     expect(signal).toBe(ctrl1.signal);
 
-    expect(() => signal!.throwIfAborted()).toThrowError('Test');
+    expect(() => signal!.throwIfAborted()).toThrow('Test');
   });
 
   it.skipIf(

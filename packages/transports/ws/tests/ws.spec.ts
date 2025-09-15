@@ -112,7 +112,7 @@ describe('WS Transport', () => {
 
     await serv.executeHelloQuery({ token: 'test' });
 
-    expect(serv.onConnectFn).toBeCalledTimes(1);
+    expect(serv.onConnectFn).toHaveBeenCalledTimes(1);
     expect(serv.onConnectFn.mock.calls[0]![0].connectionParams).toEqual({
       'x-test': 'test',
     });
@@ -235,14 +235,14 @@ describe('WS Transport', () => {
 
     await serv.executeHelloQuery();
 
-    expect(onClient).toBeCalledTimes(1);
+    expect(onClient).toHaveBeenCalledTimes(1);
 
     close();
     await waitForClosed;
 
     await serv.executeHelloQuery();
 
-    expect(onClient).toBeCalledTimes(2);
+    expect(onClient).toHaveBeenCalledTimes(2);
   });
 
   it.skipIf(

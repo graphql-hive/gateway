@@ -349,7 +349,7 @@ describe('Gateway Runtime', () => {
       expect(res.ok).toBeTruthy();
 
       const supergraphCacheKey = 'hive-gateway:supergraph';
-      expect(cache.get).toBeCalledWith(supergraphCacheKey);
+      expect(cache.get).toHaveBeenCalledWith(supergraphCacheKey);
       expect(cache.set.mock.lastCall?.[0]).toBe(supergraphCacheKey);
       expect(cache.set.mock.lastCall?.[1]).toContain(
         'type Query @join__type(graph: UPSTREAM)',
