@@ -2912,6 +2912,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/context-log-outside-graphql-execution@workspace:e2e/context-log-outside-graphql-execution":
+  version: 0.0.0-use.local
+  resolution: "@e2e/context-log-outside-graphql-execution@workspace:e2e/context-log-outside-graphql-execution"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/demand-control@workspace:e2e/demand-control":
   version: 0.0.0-use.local
   resolution: "@e2e/demand-control@workspace:e2e/demand-control"
