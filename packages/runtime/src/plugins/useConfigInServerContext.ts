@@ -6,8 +6,6 @@ export interface ConfigInServerContextOptions {
   configContext: GatewayConfigContext;
 }
 
-export const contextHasHeadersAndConfigContext = new WeakSet<any>();
-
 export function useConfigInServerContext({
   configContext,
 }: ConfigInServerContextOptions): GatewayPlugin {
@@ -16,9 +14,9 @@ export function useConfigInServerContext({
       // we want to inject the GatewayConfigContext to the server context to
       // have it available always through the plugin system
       Object.assign(serverContext, configContext, {
-        headers: getHeadersObj(request.headers),
+        // @ts-expect-error - We know sometimes req is there
+        headers: serverContext.req?.headers || getHeadersObj(request.headers),
       });
-      contextHasHeadersAndConfigContext.add(serverContext);
     },
   };
   return {

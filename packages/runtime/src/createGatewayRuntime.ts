@@ -1090,22 +1090,13 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ req, connectionParams, ...ctx }) {
-      if (!req && !connectionParams) {
-        // context will not change, no need to do heavy object spreads
-        return contextBuilder?.(ctx) ?? ctx;
-      }
+    context({ request, req, connectionParams, ...ctx }) {
       // @ts-expect-error - ctx.headers might be present
       let headers: Record<string, string> | undefined = ctx.headers;
-      if (!contextHasHeadersAndConfigContext.has(ctx)) {
+      if (!headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        headers = getHeadersObj(req.headers);
-        // @ts-expect-error - ctx.headers might be present
-        if (ctx.headers) {
-          // @ts-expect-error - ctx.headers might be present
-          headers = { ...headers, ...ctx.headers };
-        }
+        headers = getHeadersObj(req?.headers || request?.headers);
       }
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
