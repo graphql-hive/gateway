@@ -96,7 +96,7 @@ import {
   logoSvg,
 } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import { useConfigInServerContext } from './plugins/useConfigInServerContext';
+import { contextHasHeadersAndConfigContext, useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -1092,20 +1092,23 @@ export function createGatewayRuntime<
         // context will not change, no need to do heavy object spreads
         return contextBuilder?.(ctx) ?? ctx;
       }
-
-      // context will change, for example: when we have an operation happening over WebSockets,
-      // there wont be a fetch Request - there'll only be the upgrade http node request
-      let headers = req
-        ? {
-            ...// @ts-expect-error there will be ctx.headers, see useConfigInServerContext.ts
-            (ctx.headers || {}),
-            ...getHeadersObj(req.headers),
-          }
-        : // @ts-expect-error there will be ctx.headers, see useConfigInServerContext.ts
-          ctx.headers;
+      // @ts-expect-error - ctx.headers might be present
+      let headers: Record<string, string> | undefined = ctx.headers;
+      if (!contextHasHeadersAndConfigContext.has(ctx)) {
+        // context will change, for example: when we have an operation happening over WebSockets,
+        // there wont be a fetch Request - there'll only be the upgrade http node request
+        headers = getHeadersObj(req.headers);
+        // @ts-expect-error - ctx.headers might be present
+        if (ctx.headers) {
+          // @ts-expect-error - ctx.headers might be present
+          headers = { ...headers, ...ctx.headers };
+        }
+      }
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
+      connectionParams = headers;
+
       const baseContext = { ...ctx, headers, connectionParams: headers };
       return contextBuilder?.(baseContext) ?? baseContext;
     },
