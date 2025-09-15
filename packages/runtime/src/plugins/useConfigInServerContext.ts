@@ -13,9 +13,9 @@ export function useConfigInServerContext({
     onRequest({ serverContext, request }) {
       // we want to inject the GatewayConfigContext to the server context to
       // have it available always through the plugin system
-      Object.assign(serverContext, {
-        ...configContext,
-        headers: getHeadersObj(request.headers),
+      Object.assign(serverContext, configContext, {
+        // @ts-expect-error - We know sometimes req is there
+        headers: serverContext.req?.headers || getHeadersObj(request.headers),
       });
     },
   };

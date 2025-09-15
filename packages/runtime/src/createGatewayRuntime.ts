@@ -1087,26 +1087,19 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ req, connectionParams, ...ctx }) {
-      if (!req && !connectionParams) {
-        // context will not change, no need to do heavy object spreads
-        return contextBuilder?.(ctx) ?? ctx;
+    context({ request, req, connectionParams, ...ctx }) {
+      // @ts-expect-error - ctx.headers might be present
+      let headers: Record<string, string> | undefined = ctx.headers;
+      if (!headers) {
+        // context will change, for example: when we have an operation happening over WebSockets,
+        // there wont be a fetch Request - there'll only be the upgrade http node request
+        headers = getHeadersObj(req?.headers || request?.headers);
       }
-
-      // context will change, for example: when we have an operation happening over WebSockets,
-      // there wont be a fetch Request - there'll only be the upgrade http node request
-      let headers = req
-        ? {
-            ...// @ts-expect-error there will be ctx.headers, see useConfigInServerContext.ts
-            (ctx.headers || {}),
-            ...getHeadersObj(req.headers),
-          }
-        : // @ts-expect-error there will be ctx.headers, see useConfigInServerContext.ts
-          ctx.headers;
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-      const baseContext = { ...ctx, headers, connectionParams: headers };
+
+      const baseContext = { ...ctx, headers, connectionParams };
       return contextBuilder?.(baseContext) ?? baseContext;
     },
     cors: config.cors,

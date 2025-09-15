@@ -2,7 +2,7 @@ import { createExampleSetup, createTenv } from '@internal/e2e';
 import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
 
-const { gateway } = createTenv(__dirname);
+const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph, query, result } = createExampleSetup(__dirname);
 
 it('should have the log available in context outside of graphql execution', async () => {
@@ -34,8 +34,18 @@ it('should have the log available in context outside of graphql execution', asyn
   ).resolves.toEqual(result);
 
   const gwOut = getStd('both');
-  expect(gwOut.match(/__CONTEXT_LOG_IS_AVAILABLE__/g)?.length).toBe(
-    // (availability check by tenv) + graphiql + readiness + healthcheck + graphql execution
-    5,
-  );
+
+  if (gatewayRunner.includes('docker')) {
+    expect(
+      gwOut.match(/__CONTEXT_LOG_IS_AVAILABLE__/g)?.length,
+    ).toBeGreaterThan(
+      // (availability check by tenv + docker healthchecks) + graphiql + readiness + healthcheck + graphql execution
+      5,
+    );
+  } else {
+    expect(gwOut.match(/__CONTEXT_LOG_IS_AVAILABLE__/g)?.length).toBe(
+      // (availability check by tenv) + graphiql + readiness + healthcheck + graphql execution
+      5,
+    );
+  }
 });
