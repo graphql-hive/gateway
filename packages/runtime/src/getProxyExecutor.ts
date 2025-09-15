@@ -5,7 +5,7 @@ import type {
   TransportEntry,
 } from '@graphql-mesh/fusion-runtime';
 import { getOnSubgraphExecute } from '@graphql-mesh/fusion-runtime';
-import type { Executor } from '@graphql-tools/utils';
+import { mergeDeep, type Executor } from '@graphql-tools/utils';
 import type { GraphQLSchema } from 'graphql';
 import type { GatewayConfigContext, GatewayConfigProxy } from './types';
 
@@ -39,6 +39,12 @@ export function getProxyExecutor<TContext extends Record<string, any>>({
             headers: config.proxy?.headers as any,
             options: config.proxy,
           };
+          if (config.transportEntries) {
+            fakeTransportEntryMap[subgraphNameProp] = mergeDeep([
+              fakeTransportEntryMap[subgraphNameProp],
+              ...Object.values(config.transportEntries),
+            ]) as TransportEntry;
+          }
         }
         return fakeTransportEntryMap[subgraphNameProp];
       },

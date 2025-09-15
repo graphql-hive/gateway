@@ -53,11 +53,19 @@ describe('Gateway Runtime', () => {
       typeDefs: /* GraphQL */ `
         type Query {
           foo: String
+          headers: [[String!]!]!
         }
       `,
       resolvers: {
         Query: {
           foo: () => 'bar',
+          headers: (_parent, _args, context) => {
+            const headersArray: [string, string][] = [];
+            context.request.headers.forEach((value, key) => {
+              headersArray.push([key, value]);
+            });
+            return headersArray;
+          },
         },
       },
     });
@@ -507,5 +515,50 @@ describe('Gateway Runtime', () => {
     });
     expect(resp2.ok).toBeTruthy();
     expect(subgraphCallCnt).toBe(1);
+  });
+
+  it('proxy mode respects transportEntries in the config', async () => {
+    const proxyWithCustomHeaders = createGatewayRuntime({
+      logging: isDebug(),
+      proxy: {
+        endpoint: 'http://localhost:4000/graphql',
+      },
+      transportEntries: {
+        '*.http': {
+          headers: [['x-custom-header', 'my-custom-value']],
+        },
+      },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          upstreamFetch,
+        ),
+      ],
+    });
+    const res = await proxyWithCustomHeaders.fetch(
+      'http://localhost:4000/graphql',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              headers
+            }
+          `,
+        }),
+      },
+    );
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json).toEqual({
+      data: {
+        headers: expect.arrayContaining([
+          expect.arrayContaining(['x-custom-header', 'my-custom-value']),
+        ]),
+      },
+    });
   });
 });
