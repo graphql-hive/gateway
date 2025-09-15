@@ -96,10 +96,7 @@ import {
   logoSvg,
 } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import {
-  contextHasHeadersAndConfigContext,
-  useConfigInServerContext,
-} from './plugins/useConfigInServerContext';
+import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
