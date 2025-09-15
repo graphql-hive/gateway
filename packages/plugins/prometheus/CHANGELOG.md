@@ -1,5 +1,17 @@
 # @graphql-mesh/plugin-prometheus
 
+## 2.0.7
+### Patch Changes
+
+
+
+- [#1484](https://github.com/graphql-hive/gateway/pull/1484) [`950ebd1`](https://github.com/graphql-hive/gateway/commit/950ebd1d1686846b59b555695c1738e25fd3268e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-prometheus@^6.10.2` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-prometheus/v/6.10.2) (from `^6.10.1`, in `dependencies`)
+- Updated dependencies [[`3751dbf`](https://github.com/graphql-hive/gateway/commit/3751dbf6a47fdb0312de41d72483862c6416c5db), [`838ffec`](https://github.com/graphql-hive/gateway/commit/838ffecb2ad3d4ef6bbb65607a56302cb45e2f14), [`950ebd1`](https://github.com/graphql-hive/gateway/commit/950ebd1d1686846b59b555695c1738e25fd3268e), [`d722331`](https://github.com/graphql-hive/gateway/commit/d722331dca64ecb5a61cf9c9ad4b93e42f737350), [`950ebd1`](https://github.com/graphql-hive/gateway/commit/950ebd1d1686846b59b555695c1738e25fd3268e), [`fe99f74`](https://github.com/graphql-hive/gateway/commit/fe99f74dd11fdf2928ca7080d4d2e5dfd1e2f18e), [`9b60107`](https://github.com/graphql-hive/gateway/commit/9b60107dbee1b6581679d25e52ce19c366bfe344), [`856f012`](https://github.com/graphql-hive/gateway/commit/856f01287f537c502b1bcec58799890572ddd009)]:
+  - @graphql-hive/gateway-runtime@2.1.3
+  - @graphql-hive/logger@1.0.3
+
 ## 2.0.6
 ### Patch Changes
 

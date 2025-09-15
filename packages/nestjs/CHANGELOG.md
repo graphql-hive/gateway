@@ -1,5 +1,17 @@
 # @graphql-hive/nestjs
 
+## 2.0.8
+### Patch Changes
+
+
+
+- [#1473](https://github.com/graphql-hive/gateway/pull/1473) [`838ffec`](https://github.com/graphql-hive/gateway/commit/838ffecb2ad3d4ef6bbb65607a56302cb45e2f14) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/promise-helpers@^1.3.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.3.2) (from `^1.3.0`, in `dependencies`)
+- Updated dependencies [[`3751dbf`](https://github.com/graphql-hive/gateway/commit/3751dbf6a47fdb0312de41d72483862c6416c5db), [`950ebd1`](https://github.com/graphql-hive/gateway/commit/950ebd1d1686846b59b555695c1738e25fd3268e), [`fe99f74`](https://github.com/graphql-hive/gateway/commit/fe99f74dd11fdf2928ca7080d4d2e5dfd1e2f18e)]:
+  - @graphql-hive/gateway@2.1.3
+  - @graphql-hive/logger@1.0.3
+
 ## 2.0.7
 ### Patch Changes
 
