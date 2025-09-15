@@ -137,6 +137,13 @@ jobs:
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
       - if: runner.os == 'Windows'
+        name: Cache WMIC
+        id: cache-wmic
+        uses: actions/cache@v3
+        with:
+          path: C:\Windows\System32\wbem\wmic.exe
+          key: wmic-${{ runner.os }}
+      - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Set up env
