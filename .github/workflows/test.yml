@@ -146,6 +146,12 @@ jobs:
       - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
+      - name: Add WMIC to PATH
+        if: runner.os == 'Windows'
+        run: echo "C:\Windows\System32\wbem" >> $GITHUB_PATH
+      - name: Check if WMIC works
+        if: runner.os == 'Windows'
+        run: wmic os get Caption
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
