@@ -96,7 +96,10 @@ import {
   logoSvg,
 } from './landing-page.generated';
 import { useCacheDebug } from './plugins/useCacheDebug';
-import { contextHasHeadersAndConfigContext, useConfigInServerContext } from './plugins/useConfigInServerContext';
+import {
+  contextHasHeadersAndConfigContext,
+  useConfigInServerContext,
+} from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
 import { useCustomAgent } from './plugins/useCustomAgent';
 import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
@@ -1107,7 +1110,6 @@ export function createGatewayRuntime<
       if (connectionParams) {
         headers = { ...headers, ...connectionParams };
       }
-
 
       const baseContext = { ...ctx, headers, connectionParams };
       return contextBuilder?.(baseContext) ?? baseContext;
