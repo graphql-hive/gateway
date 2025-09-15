@@ -141,8 +141,10 @@ jobs:
         id: cache-wmic
         uses: actions/cache@v3
         with:
-          path: C:\Windows\System32\wbem\wmic.exe
-          key: wmic-${{ runner.os }}
+          path: |
+            C:\Windows\System32\wbem\WMIC.exe
+            C:\Windows\System32\wbem\wmic.exe
+          key: wmic-${{ matrix.setup.os }}
       - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
