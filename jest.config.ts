@@ -3,8 +3,8 @@ import { resolve } from 'path';
 import type { Config } from 'jest';
 import JSON5 from 'json5';
 import { pathsToModuleNameMapper } from 'ts-jest';
-import { isCI } from './internal/env/src/index.ts';
 
+const isCI = () => !!process.env['CI'];
 const rootDir = process.cwd();
 const tsconfigPath = resolve(rootDir, 'tsconfig.json');
 const tsconfigContents = readFileSync(tsconfigPath, 'utf8');
