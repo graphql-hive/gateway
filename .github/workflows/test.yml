@@ -130,6 +130,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
+      - name: Setup RAM Disk
+        uses: chad-golden/setup-ramdisk@main
+        with:
+          copy-workspace: true
       - if: runner.os == 'Windows'
         name: Cache WMIC
         id: cache-wmic
@@ -162,9 +166,11 @@ jobs:
         with:
           node-version-file: .node-version # if matrix.setup.node-version is not provided, the version from the file will be used
           node-version: ${{matrix.setup.node-version}}
+          working-directory: ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }}
       - if: runner.os == 'Linux'
         name: Hash Docker Images
         id: hash-docker-images
+        working-directory: ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }}
         run: | # get all "image: '" occurrences in the e2e tests and hash them
           echo "result=$(grep -r -h "image: '" e2e | shasum | base64)" >> "$GITHUB_OUTPUT"
       - if: runner.os == 'Linux'
@@ -176,11 +182,13 @@ jobs:
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
         run: yarn build
+        working-directory: ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }}
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn workspace @graphql-hive/gateway bundle
+        working-directory: ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }}
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
         uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # v6
@@ -195,12 +203,13 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+        working-directory: ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }}
       - name: Test
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: yarn test:e2e
+          command: cd ${{ matrix.setup.os == 'Windows' && 'R:' || '.' }} && yarn test:e2e
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
           E2E_TEST_APOLLO_GRAPH_REF: ${{secrets.E2E_TEST_APOLLO_GRAPH_REF}}
