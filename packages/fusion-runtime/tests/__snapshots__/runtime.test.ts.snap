@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.fieldNodes[0] 1`] = `
 "author {

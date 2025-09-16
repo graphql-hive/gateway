@@ -7,7 +7,7 @@ index 970efe10b98682161182bd6cfd7ccdb601373274..e446a2a8e5e0eb8706a6c372287e0d0f
  async function saveSnapshotFile(environment, snapshotData, snapshotPath) {
  	const snapshots = Object.keys(snapshotData).sort(naturalCompare).map((key) => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`);
 -	const content = `${environment.getHeader()}\n\n${snapshots.join("\n\n")}\n`;
-+	const content = `// Jest Snapshot v1, https://goo.gl/fbAQLP\n\n${snapshots.join("\n\n")}\n`;
++	const content = `// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing\n\n${snapshots.join("\n\n")}\n`;
  	const oldContent = await environment.readSnapshotFile(snapshotPath);
  	const skipWriting = oldContent != null && oldContent === content;
  	if (skipWriting) {
