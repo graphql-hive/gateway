@@ -7,7 +7,7 @@ const { service, gateway } = createTenv(__dirname);
 
 describe('APQ to the upstream', () => {
   it('works', async () => {
-    await using gw = await gateway({
+    const gw = await gateway({
       supergraph: {
         with: 'mesh',
         services: [await service('greetings')],

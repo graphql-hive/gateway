@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 const { gateway, service } = createTenv(__dirname);
 
 it('propagates headers to subgraphs', async () => {
-  await using gw = await gateway({
+  const gw = await gateway({
     supergraph: {
       with: 'apollo',
       services: [await service('upstream')],
@@ -35,7 +35,7 @@ it('propagates headers to subgraphs', async () => {
 });
 
 it('propagates headers to subgraphs with batching', async () => {
-  await using gw = await gateway({
+  const gw = await gateway({
     supergraph: {
       with: 'apollo',
       services: [await service('upstream')],
@@ -70,7 +70,7 @@ it('propagates headers to subgraphs with batching', async () => {
 });
 
 it('sends default headers to subgraphs', async () => {
-  await using gw = await gateway({
+  const gw = await gateway({
     supergraph: {
       with: 'apollo',
       services: [await service('upstream')],
