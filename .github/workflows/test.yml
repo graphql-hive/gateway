@@ -141,7 +141,7 @@ jobs:
           key: wmic-${{ matrix.setup.os }}
       - name: Check if WMIC is installed
         if: runner.os == 'Windows'
-        run: C:\Windows\System32\wbem\wmic.exe os get Caption
+        run: C:/Windows/System32/wbem/wmic.exe os get Caption
       - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
