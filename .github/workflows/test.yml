@@ -144,10 +144,10 @@ jobs:
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Add WMIC to PATH
         if: runner.os == 'Windows'
-        run: echo "C:\Windows\System32\wbem" >> $GITHUB_PATH
+        run: set PATH=C:\Windows\System32\wbem;%PATH%
       - name: Check if WMIC works
         if: runner.os == 'Windows'
-        run: C:\Windows\System32\wbem\WMIC.exe
+        run: wmic os get Caption
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
