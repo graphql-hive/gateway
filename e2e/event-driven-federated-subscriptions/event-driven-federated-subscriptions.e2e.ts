@@ -79,7 +79,7 @@ it.each(fields)(
         const nats = await natsConnect({
           servers: [`${natsEnv.NATS_HOST}:${natsEnv.NATS_PORT}`],
         });
-        const _ = {
+        await using _ = {
           async [Symbol.asyncDispose]() {
             await nats.flush();
             await nats.close();
