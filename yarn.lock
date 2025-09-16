@@ -4163,7 +4163,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:^0.10.10"
     adm-zip: "npm:^0.5.15"
     bun: "npm:^1.2.22"
-    commander: "npm:^14.0.0"
+    commander: "npm:^14.0.1"
     dotenv: "npm:^17.2.2"
     graphql: "npm:^16.9.0"
     graphql-ws: "npm:^6.0.6"
@@ -12418,6 +12418,13 @@ __metadata:
   version: 14.0.0
   resolution: "commander@npm:14.0.0"
   checksum: 10c0/73c4babfa558077868d84522b11ef56834165d472b9e86a634cd4c3ae7fc72d59af6377d8878e06bd570fe8f3161eced3cbe383c38f7093272bb65bd242b595b
+  languageName: node
+  linkType: hard
+
+"commander@npm:^14.0.1":
+  version: 14.0.1
+  resolution: "commander@npm:14.0.1"
+  checksum: 10c0/64439c0651ddd01c1d0f48c8f08e97c18a0a1fa693879451f1203ad01132af2c2aa85da24cf0d8e098ab9e6dc385a756be670d2999a3c628ec745c3ec124587b
   languageName: node
   linkType: hard
 
