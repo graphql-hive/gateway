@@ -144,7 +144,7 @@ jobs:
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Add WMIC to PATH
         if: runner.os == 'Windows'
-        run: echo "##[add-path]C:\Windows\System32\wbem"
+        run: echo "C:\Windows\System32\wbem" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Check if WMIC works
         if: runner.os == 'Windows'
         run: wmic os get Caption
