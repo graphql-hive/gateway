@@ -141,8 +141,7 @@ jobs:
           key: wmic-${{ matrix.setup.os }}
       - name: Check if WMIC is installed
         if: runner.os == 'Windows'
-        run: C:\Windows\System32\wbem\wmic.exe os get Caption
-        shell: cmd
+        run: C:\Windows\System32\wbem\wmic.exe /?
       - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
@@ -151,7 +150,7 @@ jobs:
         run: echo "C:\Windows\System32\wbem" >> "$GITHUB_PATH"
       - name: Check if WMIC works
         if: runner.os == 'Windows'
-        run: wmic os get Caption
+        run: wmic /?
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
