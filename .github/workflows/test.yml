@@ -133,7 +133,7 @@ jobs:
       - if: runner.os == 'Windows'
         name: Cache WMIC
         id: cache-wmic
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             C:\Windows\System32\wbem\WMIC.exe
