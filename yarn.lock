@@ -5958,7 +5958,7 @@ __metadata:
     glob: "npm:^11.0.3"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:4.20.5"
-    zod: "npm:^3.25.64"
+    zod: "npm:^4.1.8"
   languageName: unknown
   linkType: soft
 
@@ -22666,10 +22666,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.64":
-  version: 3.25.64
-  resolution: "zod@npm:3.25.64"
-  checksum: 10c0/00d76093a999e377e4ffd037fa7185e861c35917e8c4272f514115c206a0654995168f57fb71708b11e0a9243206d988b7f63b543404e1796402e50d346a6bd7
+"zod@npm:^4.1.8":
+  version: 4.1.8
+  resolution: "zod@npm:4.1.8"
+  checksum: 10c0/5eae39da09d7bd0564a30dfd2348811e4e2e7dd15955d8f3444f8e196f35e5422b1482eda234b722fafb0738f4a8b718adb042b860936bfdd2cc19cdbdac8a9a
   languageName: node
   linkType: hard
 
