@@ -130,6 +130,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
+      - if: runner.os == 'Windows'
+        name: Cache WMIC
+        id: cache-wmic
+        uses: actions/cache@v3
+        with:
+          path: |
+            C:\Windows\System32\wbem\WMIC.exe
+            C:\Windows\System32\wbem\wmic.exe
+          key: wmic-${{ matrix.setup.os }}
+      - name: Check if WMIC is installed
+        if: runner.os == 'Windows'
+        run: C:\Windows\System32\wbem\wmic.exe /?
+      - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
+        name: Enable WMIC
+        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
+      - name: Add WMIC to PATH
+        if: runner.os == 'Windows'
+        run: echo "C:\Windows\System32\wbem" >> "$GITHUB_PATH"
+      - name: Check if WMIC works
+        if: runner.os == 'Windows'
+        run: wmic /?
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
