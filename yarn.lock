@@ -10193,12 +10193,12 @@ __metadata:
 
 "@vitest/snapshot@patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch":
   version: 3.1.2
-  resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch::version=3.1.2&hash=2cf17b"
+  resolution: "@vitest/snapshot@patch:@vitest/snapshot@npm%3A3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch::version=3.1.2&hash=c789f0"
   dependencies:
     "@vitest/pretty-format": "npm:3.1.2"
     magic-string: "npm:^0.30.17"
     pathe: "npm:^2.0.3"
-  checksum: 10c0/aeb436c87e15746f04f6ada6f16b7192db5d83734d617fa1ecad1dbc2f295f2fe24abe791f8ea1abc70839fd2570e41e24d32c6918bc311f2cbc74ecd07217ee
+  checksum: 10c0/d3f216df294759ec6bc2827529c49ff278643bd36535281813ad2378ee9a8f9f2c0dd1d3fa8ac4318968ea9c9955dbb31ebb3e5265661abaf68a89e20037a2dc
   languageName: node
   linkType: hard
 
