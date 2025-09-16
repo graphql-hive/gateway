@@ -144,7 +144,7 @@ jobs:
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Add WMIC to PATH
         if: runner.os == 'Windows'
-        run: set PATH=C:\Windows\System32\wbem;%PATH%
+        run: echo "##[add-path]C:\Windows\System32\wbem"
       - name: Check if WMIC works
         if: runner.os == 'Windows'
         run: wmic os get Caption
