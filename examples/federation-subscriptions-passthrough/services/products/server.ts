@@ -2,9 +2,9 @@ import { readFileSync } from 'fs';
 import { createServer, Server } from 'http';
 import { join } from 'path';
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { expressMiddleware } from '@as-integrations/express5';
 import { Repeater } from '@repeaterjs/repeater';
 import express from 'express';
 import { parse } from 'graphql';
@@ -119,7 +119,6 @@ const server = new ApolloServer({
 
 export async function start(port: number): Promise<Server> {
   await server.start();
-  // @ts-expect-error - ApolloServer's types are incorrect
   app.use('/graphql', express.json(), expressMiddleware(server));
   return new Promise((resolve) => {
     httpServer.listen(port, () => {
