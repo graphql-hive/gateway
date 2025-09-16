@@ -50,7 +50,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@apollo/server": "^4.12.2",
+    "@apollo/server": "^5.0.0",
     "@types/extract-files": "13.0.1",
     "@whatwg-node/disposablestack": "^0.0.6",
     "extract-files": "13.0.0",
