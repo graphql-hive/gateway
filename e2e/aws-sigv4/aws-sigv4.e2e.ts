@@ -7,7 +7,7 @@ const AWS_SECRET_ACCESS_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKE';
 describe('AWS Sigv4', () => {
   const { gateway, service } = createTenv(__dirname);
   it('signs the request correctly', async () => {
-    await using gw = await gateway({
+    const gw = await gateway({
       supergraph: {
         with: 'apollo',
         services: [
@@ -38,7 +38,7 @@ describe('AWS Sigv4', () => {
     });
   });
   it('fails when the request is not signed', async () => {
-    await using gw = await gateway({
+    const gw = await gateway({
       supergraph: {
         with: 'apollo',
         services: [

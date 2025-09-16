@@ -12,7 +12,7 @@ const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
 it('should execute persisted query and report usage', async () => {
-  await using hive = await createHiveConsole();
+  const hive = await createHiveConsole();
 
   const { execute } = await gateway({
     supergraph: await supergraph(),

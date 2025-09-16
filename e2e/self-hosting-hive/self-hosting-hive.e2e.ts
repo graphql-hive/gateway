@@ -8,7 +8,7 @@ describe('Self Hosting Hive', () => {
   const { supergraph, query, result } = createExampleSetup(__dirname);
   it('usage', async () => {
     const selfHostingHive = await service('selfHostingHive');
-    await using gw = await gateway({
+    const gw = await gateway({
       supergraph: await supergraph(),
       services: [selfHostingHive],
       args: [`--hive-registry-token=${TEST_TOKEN}`],

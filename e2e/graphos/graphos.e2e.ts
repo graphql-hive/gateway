@@ -15,7 +15,7 @@ const APOLLO_GRAPH_REF =
   process.env['E2E_TEST_APOLLO_GRAPH_REF'] || process.env['APOLLO_GRAPH_REF']!;
 
 it.skipIf(!APOLLO_KEY || !APOLLO_GRAPH_REF)('works', async () => {
-  await using gw = await gateway({
+  const gw = await gateway({
     args: ['supergraph'],
     env: {
       APOLLO_KEY,
