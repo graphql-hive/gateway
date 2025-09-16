@@ -139,12 +139,15 @@ jobs:
             C:\Windows\System32\wbem\WMIC.exe
             C:\Windows\System32\wbem\wmic.exe
           key: wmic-${{ matrix.setup.os }}
+      - name: Check if WMIC is installed
+        if: runner.os == 'Windows'
+        run: C:\Windows\System32\wbem\wmic.exe os get Caption
       - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
         name: Enable WMIC
         run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
       - name: Add WMIC to PATH
         if: runner.os == 'Windows'
-        run: echo "C:/Windows/System32/wbem" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        run: echo "C:/Windows/System32/wbem" >> "$GITHUB_PATH"
       - name: Check if WMIC works
         if: runner.os == 'Windows'
         run: wmic os get Caption
