@@ -1,10 +1,10 @@
 import { ApolloServer } from '@apollo/server';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
 import {
   ExpressContextFunctionArgument,
   expressMiddleware,
-} from '@apollo/server/express4';
-import { buildSubgraphSchema } from '@apollo/subgraph';
-import { GraphQLResolverMap } from '@apollo/subgraph/dist/schema-helper';
+} from '@as-integrations/express5';
 import { Opts } from '@internal/testing';
 import cors from 'cors';
 import express from 'express';

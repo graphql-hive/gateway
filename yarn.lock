@@ -3092,6 +3092,7 @@ __metadata:
   dependencies:
     "@apollo/server": "npm:^5.0.0"
     "@apollo/subgraph": "npm:^2.11.2"
+    "@as-integrations/express5": "npm:^1.1.2"
     "@types/cors": "npm:^2.8.19"
     "@types/express": "npm:^5.0.3"
     cors: "npm:^2.8.5"
