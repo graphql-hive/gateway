@@ -124,7 +124,7 @@
     "@opentelemetry/sdk-logs": "^0.205.0",
     "@opentelemetry/sdk-metrics": "^2.1.0",
     "@opentelemetry/sdk-trace-base": "^2.1.0",
-    "commander": "^14.0.0",
+    "commander": "^14.0.1",
     "dotenv": "^17.2.2",
     "graphql-ws": "^6.0.6",
     "graphql-yoga": "^5.15.2",
