@@ -175,8 +175,12 @@ function packagejson() {
   return {
     name: 'packagejson',
     generateBundle(_outputs, bundles) {
-      /** @type {string[]} */
-      const e2eModules = [];
+      /**
+       * E2E dependencies are used to simulate the user installing the packages when
+       * extending the docker image. The emitted files will be merged in (node|bun)_e2e.Dockerfile.
+       * @type {string[]}
+       */
+      const e2eDeps = [];
       /** @type Record<string, {type?: string, exports?: Record<string, string>, main?: string}> */
       const packages = {};
 
@@ -188,22 +192,31 @@ function packagejson() {
             bundleName.includes('node_modules\\'))
         );
       })) {
-        if (bundle.name?.startsWith('e2e/')) {
-          const module = bundle.name.match(/node_modules\/(.*)\/index/)?.[1];
+        const e2eDep = bundle.name?.startsWith('e2e/');
+        if (e2eDep) {
+          const module = bundle.name?.match(/node_modules\/(.*)\/index/)?.[1];
           if (!module) {
             throw new Error(
-              `Unable to extract module name in the bundle "${bundle.name}"`,
+              `Unable to extract dependency name in the bundle "${bundle.name}"`,
             );
           }
-          e2eModules.push(module);
+          e2eDeps.push(module);
         }
+
         const bundleFileParts = bundle.fileName.split(path.sep);
+        if (e2eDep) {
+          bundleFileParts.shift(); // remove the "e2e" part
+        }
 
         // the package.json can at most be 3 levels deep "node_modules/@<org>/<pkg>" or "node_modules/<pkg>"
         // all bundles deeper than that will share the same package.json and use "exports"
         // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
         const pkgDir = bundleFileParts.splice(0, 3).join(path.sep);
-        const pkgFile = path.join(pkgDir, 'package.json');
+        const pkgFile = path.join(
+          e2eDep ? 'e2e' : '', // add the "e2e" part back to emit the package.json in the right place
+          pkgDir,
+          'package.json',
+        );
         const pkg = packages[pkgFile] ?? { type: 'module' };
 
         const bundledFile = bundleFileParts
@@ -231,7 +244,7 @@ function packagejson() {
         type: 'asset',
         fileName: path.join('e2e', 'package.json'),
         source: JSON.stringify({
-          dependencies: e2eModules.reduce(
+          dependencies: e2eDeps.reduce(
             (acc, module) => ({
               ...acc,
               [module]: '', // empty version means "any" version, it'll keep the local module
