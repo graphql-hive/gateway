@@ -15,7 +15,7 @@ it('should subscribe over WS and propagate interpolated context', async () => {
   });
 
   const client = createClient({
-    url: `http://0.0.0.0:${gw.port}/graphql`,
+    url: `ws://0.0.0.0:${gw.port}/graphql`,
     webSocketImpl: WebSocket,
     retryAttempts: 0,
   });
