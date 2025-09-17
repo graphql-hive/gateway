@@ -215,10 +215,12 @@ function packagejson() {
         // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
         const pkgDir = bundleFileParts.splice(0, 3).join(pathSep);
         const pkgFile = [
-          e2eDep ? 'e2e' : '', // add the "e2e" part back to emit the package.json in the right place
+          e2eDep ? 'e2e' : null, // add the "e2e" part back to emit the package.json in the right place
           pkgDir,
           'package.json',
-        ].join(pathSep);
+        ]
+          .filter(Boolean)
+          .join(pathSep);
         const pkg = packages[pkgFile] ?? { type: 'module' };
 
         const bundledFile = bundleFileParts
