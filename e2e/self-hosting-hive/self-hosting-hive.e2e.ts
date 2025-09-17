@@ -23,10 +23,7 @@ describe('Self Hosting Hive', () => {
         : 'localhost'
     }:${selfHostingHive.port}`;
     const gw = await gateway({
-      supergraph: `http://${
-        // TODO: choose wisely
-        'localhost'
-      }:${selfHostingHive.port}/supergraph`,
+      supergraph: `${HIVE_URL}/supergraph`,
       services: [selfHostingHive],
       args: [
         `--hive-registry-token=${TEST_TOKEN}`,
