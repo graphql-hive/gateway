@@ -175,8 +175,12 @@ function packagejson() {
   return {
     name: 'packagejson',
     generateBundle(_outputs, bundles) {
-      /** @type {string[]} */
-      const e2eModules = [];
+      /**
+       * E2E dependencies are used to simulate the user installing the packages when
+       * extending the docker image. The emitted files will be merged in (node|bun)_e2e.Dockerfile.
+       * @type {string[]}
+       */
+      const e2eDeps = [];
       /** @type Record<string, {type?: string, exports?: Record<string, string>, main?: string}> */
       const packages = {};
 
@@ -188,26 +192,48 @@ function packagejson() {
             bundleName.includes('node_modules\\'))
         );
       })) {
-        if (bundle.name?.startsWith('e2e/')) {
-          const module = bundle.name.match(/node_modules\/(.*)\/index/)?.[1];
+        const e2eDep = bundle.name?.startsWith('e2e/');
+        if (e2eDep) {
+          const module = bundle.name?.match(/node_modules\/(.*)\/index/)?.[1];
           if (!module) {
             throw new Error(
-              `Unable to extract module name in the bundle "${bundle.name}"`,
+              `Unable to extract dependency name in the bundle "${bundle.name}"`,
             );
           }
-          e2eModules.push(module);
+          e2eDeps.push(module);
         }
-        const dir = path.dirname(bundle.fileName);
-        const bundledFile = path.basename(bundle.fileName).replace(/\\/g, '/');
-        const pkgFileName = path.join(dir, 'package.json');
-        const pkg = packages[pkgFileName] ?? { type: 'module' };
-        const mjsFile =
-          bundledFile === 'index.mjs'
-            ? '.'
-            : './' + path.basename(bundle.fileName, '.mjs').replace(/\\/g, '/');
-        // if the bundled file is not "index", then it's an package.json exports path
-        pkg.exports = { ...pkg.exports, [mjsFile]: `./${bundledFile}` };
-        packages[pkgFileName] = pkg;
+
+        const pathSep = '/'; // not "path.sep", because "/" will be used on Windows too when bundling
+
+        const bundleFileParts = bundle.fileName.split(pathSep);
+        if (e2eDep) {
+          bundleFileParts.shift(); // remove the "e2e" part
+        }
+
+        // the package.json can at most be 3 levels deep "node_modules/@<org>/<pkg>" or "node_modules/<pkg>"
+        // all bundles deeper than that will share the same package.json and use "exports"
+        // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
+        const pkgDir = bundleFileParts.splice(0, 3).join(pathSep);
+        const pkgFile = [
+          e2eDep ? 'e2e' : null, // add the "e2e" part back to emit the package.json in the right place
+          pkgDir,
+          'package.json',
+        ]
+          .filter(Boolean)
+          .join(pathSep);
+        const pkg = packages[pkgFile] ?? { type: 'module' };
+
+        const bundledFile = bundleFileParts
+          .join(pathSep)
+          // windows paths don't go in the package.json (just in case, even though we use "/" as pathSep)
+          .replace(/\\/g, '/');
+
+        let entryPoint = './' + bundledFile;
+        entryPoint = entryPoint.replace(/\.mjs$/, ''); // remove the mjs extension
+        entryPoint = entryPoint.replace(/\/index$/, ''); // remove the trailing /index because we dont specify it on import (we don't do "import '@graphql-hive/gateway/index'")
+
+        pkg.exports = { ...pkg.exports, [entryPoint]: `./${bundledFile}` };
+        packages[pkgFile] = pkg;
       }
 
       for (const [fileName, pkg] of Object.entries(packages)) {
@@ -222,7 +248,7 @@ function packagejson() {
         type: 'asset',
         fileName: path.join('e2e', 'package.json'),
         source: JSON.stringify({
-          dependencies: e2eModules.reduce(
+          dependencies: e2eDeps.reduce(
             (acc, module) => ({
               ...acc,
               [module]: '', // empty version means "any" version, it'll keep the local module
