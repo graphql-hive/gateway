@@ -1,5 +1,9 @@
 import { setTimeout } from 'node:timers/promises';
-import { createExampleSetup, createTenv } from '@internal/e2e';
+import {
+  createExampleSetup,
+  createTenv,
+  handleDockerHostNameInURLOrAtPath,
+} from '@internal/e2e';
 import { isCI } from '~internal/env';
 import { describe, expect, it } from 'vitest';
 
@@ -10,9 +14,13 @@ describe('Self Hosting Hive', () => {
   const TEST_TOKEN = 'my-token';
   const TEST_KEY = 'my-key';
   it('usage', async () => {
+    const supergraphPath = await supergraph();
+    if (gatewayRunner.includes('docker')) {
+      await handleDockerHostNameInURLOrAtPath(supergraphPath, []);
+    }
     const selfHostingHive = await service('selfHostingHive', {
       env: {
-        SUPERGRAPH_PATH: await supergraph(),
+        SUPERGRAPH_PATH: supergraphPath,
       },
     });
     const HIVE_URL = `http://${
