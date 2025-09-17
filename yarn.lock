@@ -3416,6 +3416,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/subscriptions-over-ws@workspace:e2e/subscriptions-over-ws":
+  version: 0.0.0-use.local
+  resolution: "@e2e/subscriptions-over-ws@workspace:e2e/subscriptions-over-ws"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.4.17"
+    graphql: "npm:^16.9.0"
+    graphql-ws: "npm:^6.0.6"
+    tslib: "npm:^2.8.1"
+    ws: "npm:^8.18.3"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms"
