@@ -200,7 +200,7 @@ function packagejson() {
         const bundleFileParts = bundle.fileName.split(path.sep);
 
         // the package.json can at most be 3 levels deep "node_modules/@<org>/<pkg>" or "node_modules/<pkg>"
-        // all bundles deeper than that will share the same package.json and use "exports
+        // all bundles deeper than that will share the same package.json and use "exports"
         // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
         const pkgDir = bundleFileParts.splice(0, 3).join(path.sep);
         const pkgFile = path.join(pkgDir, 'package.json');
