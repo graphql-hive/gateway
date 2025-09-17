@@ -64,10 +64,6 @@ describe('Federation Compatibility', () => {
   });
 
   for (const supergraphName of supergraphList) {
-    if (supergraphName === 'parent-entity-call') {
-      // Skip parent-entity-call test suite - to be enabled with coordinated audit repo changes
-      continue;
-    }
     describe(supergraphName, () => {
       let stitchedSchema: GraphQLSchema;
       let supergraphSdl: string;

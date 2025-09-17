@@ -1,4 +1,5 @@
 import {
+  extractUnavailableFields,
   StitchingInfo,
   Subschema,
   subtractSelectionSets,
@@ -27,6 +28,7 @@ export function getFieldsNotInSubschema(
   subschema: Subschema,
   providedSelectionNode: SelectionSetNode | undefined,
 ): Array<FieldNode> {
+  const sourceSchema = subschema.transformedSchema;
   let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
     schema,
     fragments,
@@ -139,6 +141,40 @@ export function getFieldsNotInSubschema(
         fieldNotInSchema = true;
         for (const subFieldNode of subFieldNodes) {
           fieldsNotInSchema.add(subFieldNode);
+        }
+      }
+    } else if (
+      // https://github.com/graphql-hive/gateway/pull/1423
+      typeof globalThis === 'undefined' ||
+      // @ts-expect-error
+      !globalThis['__internal__stitching_disable_extract_unavailable_fields__']
+    ) {
+      for (const subFieldNode of subFieldNodes) {
+        const unavailableFields = extractUnavailableFields(
+          sourceSchema,
+          field,
+          subFieldNode,
+          (fieldType) => {
+            if (
+              stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
+                subschema,
+              )
+            ) {
+              return false;
+            }
+            return true;
+          },
+          fragments,
+        );
+        if (unavailableFields.length) {
+          fieldNotInSchema = true;
+          fieldsNotInSchema.add({
+            ...subFieldNode,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: unavailableFields,
+            },
+          });
         }
       }
     }
