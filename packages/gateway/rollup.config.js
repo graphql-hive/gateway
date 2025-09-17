@@ -197,36 +197,26 @@ function packagejson() {
           }
           e2eModules.push(module);
         }
-        const dir = path.dirname(bundle.fileName);
+        const bundleFileParts = bundle.fileName.split(path.sep);
 
-        // Find the package root by keeping only the 2 (or 3 for package with organization) path segment.
-        const isOrgPackage = dir.includes('@');
-        const pkgRoot = path.join(
-          ...dir.split(path.sep).slice(0, isOrgPackage ? 3 : 2),
-        );
+        // the package.json can at most be 3 levels deep "node_modules/@<org>/<pkg>" or "node_modules/<pkg>"
+        // all bundles deeper than that will share the same package.json and use "exports
+        // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
+        const pkgDir = bundleFileParts.splice(0, 3).join(path.sep);
+        const pkgFile = path.join(pkgDir, 'package.json');
+        const pkg = packages[pkgFile] ?? { type: 'module' };
 
-        const pkgFileName = path.join(pkgRoot, 'package.json');
-        const pkg = packages[pkgFileName] ?? { type: 'module' };
+        const bundledFile = bundleFileParts
+          .join(path.sep)
+          // windows paths don't go in the package.json
+          .replace(/\\/g, '/');
 
-        let bundledFileName = bundle.fileName.replaceAll(/\\/g, '');
+        let entryPoint = './' + bundledFile;
+        entryPoint = entryPoint.replace(/\.mjs$/, ''); // remove the mjs extension
+        entryPoint = entryPoint.replace(/\/index$/, ''); // remove the trailing /index because we dont specify it on import (we don't do "import '@graphql-hive/gateway/index'")
 
-        // Make the filename relative to the package root.
-        // We need to do this to maintain sub-directory hierarchy for packages that have custom exports
-        if (bundledFileName.startsWith(pkgRoot)) {
-          bundledFileName = bundledFileName.replace(pkgRoot + '/', '');
-        }
-        bundledFileName = './' + bundledFileName;
-
-        // the export entry key never contains the file extension
-        let exportKey = bundledFileName.replace(/\.mjs$/, '');
-
-        // if the bundled file is an index file, is should be exported as the parent directory name
-        if (exportKey.endsWith('/index')) {
-          exportKey = exportKey.replace(/\/index$/, '');
-        }
-
-        pkg.exports = { ...pkg.exports, [exportKey]: bundledFileName };
-        packages[pkgFileName] = pkg;
+        pkg.exports = { ...pkg.exports, [entryPoint]: `./${bundledFile}` };
+        packages[pkgFile] = pkg;
       }
 
       for (const [fileName, pkg] of Object.entries(packages)) {
