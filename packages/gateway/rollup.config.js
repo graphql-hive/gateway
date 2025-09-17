@@ -203,6 +203,10 @@ function packagejson() {
           e2eDeps.push(module);
         }
 
+        console.log({
+          bundle,
+        });
+
         const bundleFileParts = bundle.fileName.split(path.sep);
         if (e2eDep) {
           bundleFileParts.shift(); // remove the "e2e" part
