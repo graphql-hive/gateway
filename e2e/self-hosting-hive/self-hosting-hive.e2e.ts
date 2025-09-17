@@ -46,5 +46,13 @@ describe('Self Hosting Hive', () => {
     // Check if `/usage` endpoint receives the POST request
     expect(incomingData).toContain('POST /usage');
     expect(incomingData).toContain(`"authorization":"Bearer ${TEST_TOKEN}"`);
+    // Check if appropriate logs
+    const gwLogs = gw.getStd('out');
+    expect(gwLogs).toMatch(
+      /\[hiveSupergraphFetcher\] GET .* succeeded with status 200/,
+    );
+    expect(gwLogs).toMatch(
+      /\[useHiveConsole\] \[hive\]\[usage\] POST .* succeeded with status 200/,
+    );
   });
 });

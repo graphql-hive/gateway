@@ -651,7 +651,9 @@ export function createGatewayRuntime<
         const fetcher = createSupergraphSDLFetcher({
           endpoint,
           key,
-          log: configContext.log.child('[hiveSupergraphFetcher] '),
+          logger: LegacyLogger.from(
+            configContext.log.child('[hiveSupergraphFetcher] '),
+          ),
 
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
           fetchImplementation: configContext.fetch,
