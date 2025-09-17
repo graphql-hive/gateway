@@ -1,5 +1,25 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.4
+### Patch Changes
+
+
+
+- [#1504](https://github.com/graphql-hive/gateway/pull/1504) [`babf7db`](https://github.com/graphql-hive/gateway/commit/babf7db20468b409af274974591eeadfd51b27b1) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.5.0` ↗︎](https://www.npmjs.com/package/@types/node/v/24.5.0) (from `^24.3.1`, in `dependencies`)
+
+
+- [#1506](https://github.com/graphql-hive/gateway/pull/1506) [`59739ea`](https://github.com/graphql-hive/gateway/commit/59739ea706d36d800f4d50b52be66ce4a6a892e2) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/generic-auth@^10.0.0` ↗︎](https://www.npmjs.com/package/@envelop/generic-auth/v/10.0.0) (from `^9.0.0`, in `dependencies`)
+
+
+- [#1510](https://github.com/graphql-hive/gateway/pull/1510) [`b343aad`](https://github.com/graphql-hive/gateway/commit/b343aadb7de0b1258d626fca504acb08ac01168c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Provide logger to Hive Console CDN supergraph fetcher
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.2
+
 ## 2.1.3
 ### Patch Changes
 
