@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { createServer } from 'http';
 import { Opts } from '@internal/testing';
 
@@ -6,22 +7,29 @@ const selfHostingPort = opts.getServicePort('selfHostingHive');
 
 // Echo server
 
+function log(msg: string) {
+  process.stdout.write(msg);
+}
+
 createServer((req, res) => {
-  function echo(msg: string) {
-    process.stdout.write(msg);
-    res.write(msg);
-  }
   res.writeHead(200, req.headers);
-  echo(`${req.method} ${req.url}\n`);
-  echo(`headers: ${JSON.stringify(req.headers)}\n`);
+  log(`${req.method} ${req.url}\n`);
+  log(`headers: ${JSON.stringify(req.headers)}\n`);
+
+  if (req.url?.endsWith('/supergraph')) {
+    res.end(fs.readFileSync(process.env['SUPERGRAPH_PATH']!, 'utf-8'));
+    return;
+  }
+
+  // usage
   req.on('data', (chunk) => {
-    echo(chunk.toString('utf8'));
+    log(chunk.toString('utf8'));
   });
   req.once('end', () => {
     res.end();
   });
 }).listen(selfHostingPort, () => {
   process.stderr.write(
-    `Echo server listening on http://localhost:${selfHostingPort}\n`,
+    `Hive Console listening on http://localhost:${selfHostingPort}\n`,
   );
 });
