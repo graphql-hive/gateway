@@ -222,7 +222,7 @@ function packagejson() {
         const pkg = packages[pkgFile] ?? { type: 'module' };
 
         const bundledFile = bundleFileParts
-          .join(path.sep)
+          .join(pathSep)
           // windows paths don't go in the package.json (just in case, even though we use "/" as pathSep)
           .replace(/\\/g, '/');
 
