@@ -38,7 +38,7 @@ it('should have the log available in context outside of graphql execution', asyn
   if (gatewayRunner.includes('docker')) {
     expect(
       gwOut.match(/__CONTEXT_LOG_IS_AVAILABLE__/g)?.length,
-    ).toBeGreaterThan(
+    ).toBeGreaterThanOrEqual(
       // (availability check by tenv + docker healthchecks) + graphiql + readiness + healthcheck + graphql execution
       5,
     );
