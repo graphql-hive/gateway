@@ -203,11 +203,9 @@ function packagejson() {
           e2eDeps.push(module);
         }
 
-        console.log({
-          bundle,
-        });
+        const pathSep = '/'; // not "path.sep", because "/" will be used on Windows too when bundling
 
-        const bundleFileParts = bundle.fileName.split(path.sep);
+        const bundleFileParts = bundle.fileName.split(pathSep);
         if (e2eDep) {
           bundleFileParts.shift(); // remove the "e2e" part
         }
@@ -215,17 +213,17 @@ function packagejson() {
         // the package.json can at most be 3 levels deep "node_modules/@<org>/<pkg>" or "node_modules/<pkg>"
         // all bundles deeper than that will share the same package.json and use "exports"
         // NOTE: intentionally "splice" because the leftover will be the relative path to the bundled file
-        const pkgDir = bundleFileParts.splice(0, 3).join(path.sep);
-        const pkgFile = path.join(
+        const pkgDir = bundleFileParts.splice(0, 3).join(pathSep);
+        const pkgFile = [
           e2eDep ? 'e2e' : '', // add the "e2e" part back to emit the package.json in the right place
           pkgDir,
           'package.json',
-        );
+        ].join(pathSep);
         const pkg = packages[pkgFile] ?? { type: 'module' };
 
         const bundledFile = bundleFileParts
           .join(path.sep)
-          // windows paths don't go in the package.json
+          // windows paths don't go in the package.json (just in case, even though we use "/" as pathSep)
           .replace(/\\/g, '/');
 
         let entryPoint = './' + bundledFile;
