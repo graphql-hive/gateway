@@ -148,7 +148,7 @@ export function getFieldsNotInSubschema(
       typeof globalThis === 'undefined' ||
       // @ts-expect-error
       !globalThis[
-        '__internal__stitching_disable_extract_unavailable_fields_for_fields_not_in_schema__'
+        '__DO_NOT_USE__stitching_disable_extract_unavailable_fields_for_fields_not_in_schema__'
       ]
     ) {
       for (const subFieldNode of subFieldNodes) {
