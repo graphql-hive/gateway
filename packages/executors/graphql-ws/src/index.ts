@@ -21,7 +21,7 @@ import {
   EventPongListener,
   type Client,
 } from 'graphql-ws';
-import WebSocket from 'isomorphic-ws';
+import { WebSocket } from 'isows';
 
 export interface GraphQLWSExecutorOptions {
   print?(doc: DocumentNode): string;
@@ -100,7 +100,12 @@ export function buildGraphQLWSExecutor(
     const webSocketImpl = headers
       ? class WebSocketWithHeaders extends WebSocket {
           constructor(url: string, protocol: string) {
-            super(url, protocol, { headers });
+            super(
+              url,
+              protocol,
+              // @ts-expect-error there will be a 3rd argument for server ws
+              { headers },
+            );
           }
         }
       : WebSocket;
