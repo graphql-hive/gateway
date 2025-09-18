@@ -143,7 +143,14 @@ export function getFieldsNotInSubschema(
           fieldsNotInSchema.add(subFieldNode);
         }
       }
-    } else {
+    } else if (
+      // https://github.com/graphql-hive/gateway/pull/1423
+      typeof globalThis === 'undefined' ||
+      // @ts-expect-error
+      !globalThis[
+        '__DO_NOT_USE__stitching_disable_extract_unavailable_fields_for_fields_not_in_schema__'
+      ]
+    ) {
       for (const subFieldNode of subFieldNodes) {
         const unavailableFields = extractUnavailableFields(
           sourceSchema,

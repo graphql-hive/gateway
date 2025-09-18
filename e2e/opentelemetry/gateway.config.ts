@@ -1,7 +1,7 @@
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
-import { openTelemetrySetup } from '@graphql-hive/plugin-opentelemetry/setup';
+import { trace } from '@graphql-hive/gateway/opentelemetry/api';
+import { openTelemetrySetup } from '@graphql-hive/gateway/opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
-import { trace } from '@opentelemetry/api';
 import {
   getNodeAutoInstrumentations,
   getResourceDetectors,

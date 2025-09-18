@@ -7,16 +7,6 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 const { gateway, container, gatewayRunner } = createTenv(__dirname);
 const exampleSetup = createExampleSetup(__dirname);
-const runner = {
-  docker: {
-    volumes: [
-      {
-        host: __dirname + '/otel-setup.ts',
-        container: `/gateway/otel-setup.ts`,
-      },
-    ],
-  },
-};
 
 let supergraph!: string;
 beforeAll(async () => {
@@ -146,7 +136,6 @@ describe('OpenTelemetry', () => {
       it('should report telemetry metrics correctly to jaeger', async () => {
         const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
-          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -262,7 +251,6 @@ describe('OpenTelemetry', () => {
       it('should report telemetry metrics correctly to jaeger using cli options', async () => {
         const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
-          runner,
           supergraph,
           env: {
             DISABLED_OPENTELEMETRY_SETUP: '1',
@@ -376,7 +364,6 @@ describe('OpenTelemetry', () => {
       it('should report parse failures correctly', async () => {
         const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
-          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -452,7 +439,6 @@ describe('OpenTelemetry', () => {
       it('should report validate failures correctly', async () => {
         const serviceName = crypto.randomUUID();
         const { execute } = await gateway({
-          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -532,7 +518,6 @@ describe('OpenTelemetry', () => {
       it('should report http failures', async () => {
         const serviceName = crypto.randomUUID();
         const { port } = await gateway({
-          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -576,7 +561,6 @@ describe('OpenTelemetry', () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         const serviceName = crypto.randomUUID();
         const { execute, port } = await gateway({
-          runner,
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,

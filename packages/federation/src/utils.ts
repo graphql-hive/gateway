@@ -107,7 +107,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
     .flatMap((key) => key.trim().split(' '))
     .map((key) => key.trim());
   if (allKeyProps.length > 1) {
-    return memoize1(function keyFn(root: any) {
+    return function keyFn(root: any) {
       if (root == null) {
         return null;
       }
@@ -120,7 +120,7 @@ export function getKeyFnForFederation(typeName: string, keys: string[]) {
         },
         { __typename: typeName },
       );
-    });
+    };
   }
   const keyProp = allKeyProps[0]!;
   return memoize1(function keyFn(root: any) {
@@ -150,7 +150,7 @@ export function getCacheKeyFnFromKey(key: string) {
   const keyTrimmed = key.trim();
   const keys = keyTrimmed.split(' ').map((key) => key.trim());
   if (keys.length > 1) {
-    return memoize1(function cacheKeyFn(root: any) {
+    return function cacheKeyFn(root: any) {
       let cacheKeyStr = '';
       for (const key of keys) {
         const keyVal = root[key];
@@ -169,7 +169,7 @@ export function getCacheKeyFnFromKey(key: string) {
         }
       }
       return cacheKeyStr;
-    });
+    };
   }
   return memoize1(function cacheKeyFn(root: any) {
     const keyVal = root[keyTrimmed];
