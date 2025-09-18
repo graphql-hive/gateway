@@ -17,7 +17,12 @@ export function wrapFetchWithHooks<TContext>(
   log: Logger,
   instrumentation?: () => FetchInstrumentation | undefined,
 ): MeshFetch {
-  let wrappedFetchFn = function wrappedFetchFn(url, options, context, info) {
+  let wrappedFetchFn = function wrappedFetchFn(
+    url,
+    options,
+    context = {},
+    info,
+  ) {
     let fetchFn: MeshFetch;
     let response$: MaybePromise<Response>;
     const onFetchDoneHooks: OnFetchHookDone[] = [];

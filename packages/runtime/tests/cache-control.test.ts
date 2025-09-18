@@ -163,58 +163,54 @@ describe.skipIf(process.env['LEAK_TEST'])(
       // GW received 3 requests but only 2 were forwarded to the subgraph
       expect(requestDidStart).toHaveBeenCalledTimes(2);
     });
-    // TODO: HTTP Cache plugin has issues with Bun
-    it.skipIf(globalThis.Bun)(
-      'http caching plugin should respect cache control headers',
-      async () => {
-        await using cache = new InmemoryLRUCache();
-        await using gw = createGatewayRuntime({
-          supergraph,
-          cache,
-          plugins: (ctx) => [useHttpCache(ctx)],
-        });
-        async function makeRequest() {
-          const res = await gw.fetch('http://localhost:4000/graphql', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: /* GraphQL */ `
-                query {
-                  products {
-                    id
-                    name
-                    price
-                  }
+    it('http caching plugin should respect cache control headers', async () => {
+      await using cache = new InmemoryLRUCache();
+      await using gw = createGatewayRuntime({
+        supergraph,
+        cache,
+        plugins: (ctx) => [useHttpCache(ctx)],
+      });
+      async function makeRequest() {
+        const res = await gw.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                products {
+                  id
+                  name
+                  price
                 }
-              `,
-            }),
-          });
-          return res.json();
-        }
-        await expect(makeRequest()).resolves.toEqual({
-          data: {
-            products,
-          },
+              }
+            `,
+          }),
         });
-        // 15 seconds later
-        await advanceTimersByTimeAsync(1_000);
-        await expect(makeRequest()).resolves.toEqual({
-          data: {
-            products,
-          },
-        });
-        // 15 seconds later but the cache is expired
-        await advanceTimersByTimeAsync(2_000);
-        await expect(makeRequest()).resolves.toEqual({
-          data: {
-            products,
-          },
-        });
-        // GW received 3 requests but only 2 were forwarded to the subgraph
-        expect(requestDidStart).toHaveBeenCalledTimes(2);
-      },
-    );
+        return res.json();
+      }
+      await expect(makeRequest()).resolves.toEqual({
+        data: {
+          products,
+        },
+      });
+      // 15 seconds later
+      await advanceTimersByTimeAsync(1_000);
+      await expect(makeRequest()).resolves.toEqual({
+        data: {
+          products,
+        },
+      });
+      // 15 seconds later but the cache is expired
+      await advanceTimersByTimeAsync(2_000);
+      await expect(makeRequest()).resolves.toEqual({
+        data: {
+          products,
+        },
+      });
+      // GW received 3 requests but only 2 were forwarded to the subgraph
+      expect(requestDidStart).toHaveBeenCalledTimes(2);
+    });
   },
 );
