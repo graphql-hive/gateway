@@ -2,4 +2,4 @@
 '@graphql-tools/executor-graphql-ws': minor
 ---
 
-Use `isows` instead of `isomorphic-ws` as modern solution for accurate native WS usage in Bun
+Use builtin isomorphic WS instead of `isomorphic-ws` as modern solution for accurate usage in all platforms that natively support WebSockets
