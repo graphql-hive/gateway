@@ -44,10 +44,10 @@
   "dependencies": {
     "@graphql-hive/signal": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
-    "@graphql-mesh/string-interpolation": "^0.5.6",
+    "@graphql-mesh/string-interpolation": "^0.5.9",
     "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/types": "^0.104.12",
-    "@graphql-mesh/utils": "^0.104.12",
+    "@graphql-mesh/types": "^0.104.13",
+    "@graphql-mesh/utils": "^0.104.13",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.9.1",
     "@repeaterjs/repeater": "^3.0.6",
