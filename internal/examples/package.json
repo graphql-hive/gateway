@@ -12,7 +12,7 @@
     "@types/jscodeshift": "^17.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
     "dedent": "^1.7.0",
-    "esbuild": "^0.25.9",
+    "esbuild": "^0.25.10",
     "glob": "^11.0.3",
     "jscodeshift": "^17.1.1",
     "tsx": "4.20.5",
