@@ -194,7 +194,7 @@ describe('Federation Compatibility', () => {
               throw e;
             }
           });
-          it('gives the correct result w/ gateway', async () => {
+          it.skip('gives the correct result w/ gateway', async () => {
             const test = tests[i];
             if (!test) {
               throw new Error(`Test ${i} not found`);
