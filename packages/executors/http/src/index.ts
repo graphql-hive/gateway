@@ -189,8 +189,11 @@ export function buildHTTPExecutor(
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
   ) => {
-    disposeCtrl ||= new AbortController();
-    if (disposeCtrl.signal.aborted) {
+    // @ts-expect-error Cloudflare Workers doesn't like the shared AbortController
+    if (!request.cf) {
+      disposeCtrl ||= new AbortController();
+    }
+    if (disposeCtrl?.signal.aborted) {
       return createResultForAbort(disposeCtrl.signal.reason);
     }
     const fetchFn = request.extensions?.fetch ?? options?.fetch ?? defaultFetch;
@@ -264,7 +267,10 @@ export function buildHTTPExecutor(
       request.extensions = restExtensions;
     }
 
-    const signals = [disposeCtrl.signal];
+    const signals = [];
+    if (disposeCtrl?.signal) {
+      signals.push(disposeCtrl.signal);
+    }
     const signalFromRequest = request.signal || request.info?.signal;
     if (signalFromRequest) {
       if (signalFromRequest.aborted) {
@@ -279,7 +285,7 @@ export function buildHTTPExecutor(
       signals.push(subscriptionCtrl.signal);
     }
 
-    const signal = abortSignalAny(signals);
+    const signal = signals.length ? abortSignalAny(signals) : undefined;
 
     const upstreamErrorExtensions: UpstreamErrorExtensions = {
       request: {
