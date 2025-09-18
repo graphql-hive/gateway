@@ -22,9 +22,7 @@ import {
   EventPongListener,
   type Client,
 } from 'graphql-ws';
-
-const IsomorphicWebSocket =
-  typeof WebSocket === 'undefined' ? require('ws') : WebSocket;
+import { WebSocket } from 'isows';
 
 export interface GraphQLWSExecutorOptions {
   print?(doc: DocumentNode): string;
@@ -101,17 +99,24 @@ export function buildGraphQLWSExecutor(
 
     const headers = clientOptionsOrClient.headers;
     const webSocketImpl = headers
-      ? class WebSocketWithHeaders extends IsomorphicWebSocket {
+      ? class WebSocketWithHeaders extends WebSocket {
           constructor(url: string, protocol: string) {
             if (isBrowser()) {
               // browser
               super(url, protocol);
             } else if (getNodeVer().major < 22) {
-              // require('ws')
-              super(url, protocol, { headers });
+              super(
+                url,
+                protocol,
+                // @ts-expect-error will require('ws') and headers are passed like this
+                { headers },
+              );
             } else {
-              // rest of environments supporting native WebSocket (Deno, Bun, Node 22+)
-              super(url, { protocols: protocol, headers });
+              super(
+                url,
+                // @ts-expect-error rest of environments supporting native WebSocket (Deno, Bun, Node 22+)
+                { protocols: protocol, headers },
+              );
             }
           }
         }
