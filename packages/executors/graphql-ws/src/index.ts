@@ -8,6 +8,7 @@ import {
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { getNodeVer, isBrowser } from '~internal/env';
 import type { DocumentNode } from 'graphql';
 import {
   createClient,
@@ -21,7 +22,7 @@ import {
   EventPongListener,
   type Client,
 } from 'graphql-ws';
-import WebSocket from 'isomorphic-ws';
+import { WebSocket } from 'isows';
 
 export interface GraphQLWSExecutorOptions {
   print?(doc: DocumentNode): string;
@@ -100,7 +101,25 @@ export function buildGraphQLWSExecutor(
     const webSocketImpl = headers
       ? class WebSocketWithHeaders extends WebSocket {
           constructor(url: string, protocol: string) {
-            super(url, protocol, { headers });
+            if (isBrowser()) {
+              // browser
+              super(url, protocol);
+            } else if (getNodeVer().major < 22) {
+              super(
+                url,
+                protocol,
+                // @ts-expect-error will require('ws') and headers are passed like this
+                { headers },
+              );
+            } else {
+              super(url, {
+                // we pass both protocols and protocol to satisfy different implementations
+                // @ts-expect-error rest of environments supporting native WebSocket (Deno, Bun, Node 22+)
+                protocols: [protocol],
+                protocol,
+                headers,
+              });
+            }
           }
         }
       : WebSocket;
