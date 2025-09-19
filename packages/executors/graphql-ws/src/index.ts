@@ -112,11 +112,13 @@ export function buildGraphQLWSExecutor(
                 { headers },
               );
             } else {
-              super(
-                url,
+              super(url, {
+                // we pass both protocols and protocol to satisfy different implementations
                 // @ts-expect-error rest of environments supporting native WebSocket (Deno, Bun, Node 22+)
-                { protocols: protocol, headers },
-              );
+                protocols: [protocol],
+                protocol,
+                headers,
+              });
             }
           }
         }
