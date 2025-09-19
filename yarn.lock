@@ -3416,6 +3416,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/subscriptions-over-ws@workspace:e2e/subscriptions-over-ws":
+  version: 0.0.0-use.local
+  resolution: "@e2e/subscriptions-over-ws@workspace:e2e/subscriptions-over-ws"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.4.17"
+    graphql: "npm:^16.9.0"
+    graphql-ws: "npm:^6.0.6"
+    tslib: "npm:^2.8.1"
+    ws: "npm:^8.18.3"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-with-transforms@workspace:e2e/subscriptions-with-transforms"
@@ -5213,7 +5225,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     graphql: "npm:^16.9.0"
     graphql-ws: "npm:^6.0.6"
-    isomorphic-ws: "npm:^5.0.0"
+    isows: "npm:^1.0.7"
     pkgroll: "npm:2.15.4"
     tslib: "npm:^2.8.1"
     ws: "npm:^8.18.3"
@@ -16318,12 +16330,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"isomorphic-ws@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "isomorphic-ws@npm:5.0.0"
+"isows@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "isows@npm:1.0.7"
   peerDependencies:
     ws: "*"
-  checksum: 10c0/a058ac8b5e6efe9e46252cb0bc67fd325005d7216451d1a51238bc62d7da8486f828ef017df54ddf742e0fffcbe4b1bcc2a66cc115b027ed0180334cd18df252
+  checksum: 10c0/43c41fe89c7c07258d0be3825f87e12da8ac9023c5b5ae6741ec00b2b8169675c04331ea73ef8c172d37a6747066f4dc93947b17cd369f92828a3b3e741afbda
   languageName: node
   linkType: hard
 

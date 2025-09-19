@@ -128,11 +128,9 @@ describe('WS Transport', () => {
     expect(serv.onConnectFn).toHaveBeenCalledTimes(1);
     expect(
       // @ts-expect-error headers will be injected for testing in bun
-      serv.onConnectFn.mock.calls[0]![0].extra.request,
+      serv.onConnectFn.mock.calls[0]![0].extra.request.headers,
     ).toMatchObject({
-      headers: {
-        'x-test': 'test',
-      },
+      'x-test': 'test',
     });
   });
 

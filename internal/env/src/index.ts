@@ -120,3 +120,24 @@ export function isNode() {
     typeof Bun === 'undefined' // Bun also has process.versions.node
   );
 }
+
+/** Returns `true` if the runtime environment is a browser. */
+export function isBrowser() {
+  return typeof window !== 'undefined';
+}
+
+/**
+ * Returns the Node.js version of the process.
+ *
+ * Will return `NaN` for every semver part if NOT Node.js. It's easeir to use `NaN` because all
+ * number comparisons will return false (NaN > 22 = false; NaN < 22 = false).
+ */
+export function getNodeVer(): {
+  major: number;
+  minor: number;
+  patch: number;
+} {
+  if (!isNode()) return { major: NaN, minor: NaN, patch: NaN };
+  const [major, minor, patch] = process.versions.node.split('.').map(Number);
+  return { major: major || NaN, minor: minor || NaN, patch: patch || NaN };
+}
