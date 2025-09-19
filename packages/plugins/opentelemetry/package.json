@@ -92,7 +92,7 @@
     "graphql-yoga": "^5.15.2",
     "pkgroll": "2.15.4",
     "rimraf": "^6.0.1",
-    "rollup": "^4.50.2",
+    "rollup": "^4.51.0",
     "tsx": "^4.19.4"
   },
   "sideEffects": false
