@@ -1699,11 +1699,7 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
         }
       }
     }
-    return makeExternalObject(
-      mergedData,
-      errors,
-      getFieldNames,
-    );
+    return makeExternalObject(mergedData, errors, getFieldNames);
   }
   if (errors.length) {
     if (errors.length === 1) {
