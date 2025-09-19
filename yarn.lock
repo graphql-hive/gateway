@@ -3631,9 +3631,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/rate-limiter@npm:^8.1.0":
-  version: 8.1.0
-  resolution: "@envelop/rate-limiter@npm:8.1.0"
+"@envelop/rate-limiter@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "@envelop/rate-limiter@npm:8.1.1"
   dependencies:
     "@envelop/on-resolve": "npm:^6.0.0"
     "@graphql-tools/utils": "npm:^10.5.4"
@@ -3646,7 +3646,7 @@ __metadata:
   peerDependencies:
     "@envelop/core": ^5.3.2
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/2a846ae76ca728a7e37c30bdff3d5096d5ae42dd4152c9c6218fd87b291463d070956890d0518b5e11b6a1126ad9a472edf5cd6949c862508620c675f8ca23ff
+  checksum: 10c0/fdcc545fa5589a73a04a15357c6b07f1db2ac1a75a0c20c55b3a1979669139705dfe5f6655ffcff85493f8bd6e5f18aa092eed8d1a3e565f1074aa598c54b486
   languageName: node
   linkType: hard
 
@@ -4187,7 +4187,7 @@ __metadata:
     "@graphql-mesh/plugin-jit": "npm:^0.2.13"
     "@graphql-mesh/plugin-jwt-auth": "workspace:^"
     "@graphql-mesh/plugin-prometheus": "workspace:^"
-    "@graphql-mesh/plugin-rate-limit": "npm:^0.105.0"
+    "@graphql-mesh/plugin-rate-limit": "npm:^0.105.1"
     "@graphql-mesh/plugin-snapshot": "npm:^0.104.13"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/transport-http": "workspace:^"
@@ -4792,11 +4792,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/plugin-rate-limit@npm:^0.105.0":
-  version: 0.105.0
-  resolution: "@graphql-mesh/plugin-rate-limit@npm:0.105.0"
+"@graphql-mesh/plugin-rate-limit@npm:^0.105.1":
+  version: 0.105.1
+  resolution: "@graphql-mesh/plugin-rate-limit@npm:0.105.1"
   dependencies:
-    "@envelop/rate-limiter": "npm:^8.1.0"
+    "@envelop/rate-limiter": "npm:^8.1.1"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/string-interpolation": "npm:0.5.9"
     "@graphql-mesh/types": "npm:^0.104.13"
@@ -4806,7 +4806,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/0a22f86c8af148a60959640f42704302facd8b3d9b7822a487ff61e6d17f80a9dd112901f7766cd33e43a5abeb7294ad28ff801633130d0e4b84d802258988be
+  checksum: 10c0/2f64b171a0f8f0951ec0194b6bf7eb0e996b7bd7d81926a683ed87542b7bd4041ac7c66959f3d4891f35404344c4fcef634c11d5260addeef3c94992a7088117
   languageName: node
   linkType: hard
 

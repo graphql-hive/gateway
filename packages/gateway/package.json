@@ -99,7 +99,7 @@
     "@graphql-mesh/plugin-jit": "^0.2.13",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
     "@graphql-mesh/plugin-prometheus": "workspace:^",
-    "@graphql-mesh/plugin-rate-limit": "^0.105.0",
+    "@graphql-mesh/plugin-rate-limit": "^0.105.1",
     "@graphql-mesh/plugin-snapshot": "^0.104.13",
     "@graphql-mesh/transport-http": "workspace:^",
     "@graphql-mesh/transport-http-callback": "workspace:^",
