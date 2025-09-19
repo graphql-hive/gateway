@@ -1,5 +1,39 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.5
+### Patch Changes
+
+
+
+- [#1511](https://github.com/graphql-hive/gateway/pull/1511) [`706b6f4`](https://github.com/graphql-hive/gateway/commit/706b6f47f1e06ec2460d7ae11307108ce08e2607) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.5.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.5.1) (from `^24.5.0`, in `dependencies`)
+
+
+- [#1523](https://github.com/graphql-hive/gateway/pull/1523) [`bb2621c`](https://github.com/graphql-hive/gateway/commit/bb2621ce85c42ccbc97c6ca128f959bcb2bb6475) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.5.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.5.2) (from `^24.5.1`, in `dependencies`)
+
+
+- [#1524](https://github.com/graphql-hive/gateway/pull/1524) [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/core@^5.3.2` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.3.2) (from `^5.3.1`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+
+
+- [#1527](https://github.com/graphql-hive/gateway/pull/1527) [`9da33f9`](https://github.com/graphql-hive/gateway/commit/9da33f960aaf9693f988e09396aa1d76ce890616) Thanks [@ardatan](https://github.com/ardatan)! - Make `onFetch`'s `context` referentially stable, and do not recreate the context object, so it becomes the same object referentially in the execution pipeline
+
+- Updated dependencies [[`bb2621c`](https://github.com/graphql-hive/gateway/commit/bb2621ce85c42ccbc97c6ca128f959bcb2bb6475), [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`e64a4e1`](https://github.com/graphql-hive/gateway/commit/e64a4e11db66be8bd9c3728eca1ac3d7d97c7d0e)]:
+  - @graphql-hive/logger@1.0.4
+  - @graphql-mesh/fusion-runtime@1.2.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/transport-common@1.0.4
+  - @graphql-tools/executor-common@1.0.2
+  - @graphql-tools/federation@4.0.3
+  - @graphql-tools/executor-http@3.0.3
+
 ## 2.1.4
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @graphql-tools/executor-http
 
+## 3.0.3
+### Patch Changes
+
+- Updated dependencies [[`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2)]:
+  - @graphql-tools/executor-common@1.0.2
+
 ## 3.0.2
 ### Patch Changes
 

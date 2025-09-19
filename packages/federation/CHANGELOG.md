@@ -1,5 +1,15 @@
 # @graphql-tools/federation
 
+## 4.0.3
+### Patch Changes
+
+
+
+- [#1522](https://github.com/graphql-hive/gateway/pull/1522) [`e64a4e1`](https://github.com/graphql-hive/gateway/commit/e64a4e11db66be8bd9c3728eca1ac3d7d97c7d0e) Thanks [@ardatan](https://github.com/ardatan)! - Revert an extra memoization
+
+- Updated dependencies []:
+  - @graphql-tools/executor-http@3.0.3
+
 ## 4.0.2
 ### Patch Changes
 

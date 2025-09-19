@@ -1,5 +1,24 @@
 # @graphql-tools/executor-graphql-ws
 
+## 3.1.0
+### Minor Changes
+
+
+
+- [#1518](https://github.com/graphql-hive/gateway/pull/1518) [`a9ec688`](https://github.com/graphql-hive/gateway/commit/a9ec6885f4e136f912ab66c18fa907adf1ff5cde) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Improve isomorphic WS, and drop `isomorphic-ws`, for accurate usage in all platforms that natively support WebSockets
+
+
+### Patch Changes
+
+
+
+- [#1518](https://github.com/graphql-hive/gateway/pull/1518) [`a9ec688`](https://github.com/graphql-hive/gateway/commit/a9ec6885f4e136f912ab66c18fa907adf1ff5cde) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Added dependency [`isows@^1.0.7` ↗︎](https://www.npmjs.com/package/isows/v/1.0.7) (to `dependencies`)
+  - Removed dependency [`isomorphic-ws@^5.0.0` ↗︎](https://www.npmjs.com/package/isomorphic-ws/v/5.0.0) (from `dependencies`)
+- Updated dependencies [[`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2)]:
+  - @graphql-tools/executor-common@1.0.2
+
 ## 3.0.1
 ### Patch Changes
 

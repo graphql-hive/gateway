@@ -1,5 +1,19 @@
 # @graphql-mesh/transport-ws
 
+## 2.0.4
+### Patch Changes
+
+
+
+- [#1524](https://github.com/graphql-hive/gateway/pull/1524) [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/string-interpolation@^0.5.9` ↗︎](https://www.npmjs.com/package/@graphql-mesh/string-interpolation/v/0.5.9) (from `^0.5.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+- Updated dependencies [[`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`a9ec688`](https://github.com/graphql-hive/gateway/commit/a9ec6885f4e136f912ab66c18fa907adf1ff5cde), [`a9ec688`](https://github.com/graphql-hive/gateway/commit/a9ec6885f4e136f912ab66c18fa907adf1ff5cde)]:
+  - @graphql-mesh/transport-common@1.0.4
+  - @graphql-tools/executor-graphql-ws@3.1.0
+
 ## 2.0.3
 ### Patch Changes
 
