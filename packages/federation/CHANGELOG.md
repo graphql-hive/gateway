@@ -1,5 +1,12 @@
 # @graphql-tools/federation
 
+## 4.0.4
+### Patch Changes
+
+
+
+- [#1533](https://github.com/graphql-hive/gateway/pull/1533) [`a6a3d4d`](https://github.com/graphql-hive/gateway/commit/a6a3d4d0ffba9d73a5151c747c281c25d0d26954) Thanks [@ardatan](https://github.com/ardatan)! - Fix shared root handling in case of heavily nested selections
+
 ## 4.0.3
 ### Patch Changes
 
