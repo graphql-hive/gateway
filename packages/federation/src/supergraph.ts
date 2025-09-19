@@ -2,10 +2,12 @@ import {
   BatchingOptions,
   delegateToSchema,
   extractUnavailableFieldsFromSelectionSet,
+  FIELD_SUBSCHEMA_MAP_SYMBOL,
   getTypeInfo,
   isExternalObject,
   MergedFieldConfig,
   MergedTypeConfig,
+  OBJECT_SUBSCHEMA_SYMBOL,
   SubschemaConfig,
   subtractSelectionSets,
   Transform,
@@ -1241,7 +1243,7 @@ export function getStitchingOptionsFromSupergraphSdl(
     if (operationType) {
       const defaultMergedField = defaultMerger(candidates);
       const mergedResolver: GraphQLFieldResolver<{}, {}> =
-        function mergedResolver(_root, _args, context, info) {
+        function mergedResolver(_root, args, context, info) {
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
@@ -1339,6 +1341,7 @@ export function getStitchingOptionsFromSupergraphSdl(
               rootTypeMap.get(info.parentType.name) ||
               ('query' as OperationTypeNode),
             context,
+            args,
             info: currentFriendSubschemas?.size
               ? {
                   ...info,
@@ -1367,6 +1370,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                   rootTypeMap.get(info.parentType.name) ||
                   ('query' as OperationTypeNode),
                 context,
+                args,
                 info: {
                   ...info,
                   fieldNodes: friendSelectionSet.selections as FieldNode[],
@@ -1676,11 +1680,26 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     if (datas.length === 1) {
       return makeExternalObject(datas[0], errors, getFieldNames);
     }
-    return makeExternalObject(
-      mergeDeep(datas, undefined, true, true),
-      errors,
-      getFieldNames,
-    );
+    const mergedData = mergeDeep(datas, undefined, true, true);
+    // Put original symbols on the merged object
+    const symbols = [
+      OBJECT_SUBSCHEMA_SYMBOL,
+      FIELD_SUBSCHEMA_MAP_SYMBOL,
+      UNPATHED_ERRORS_SYMBOL,
+    ];
+    for (const symbol of symbols) {
+      if (mergedData?.[symbol] == null) {
+        for (const data of datas) {
+          // @ts-expect-error - we know it is there
+          const symbolValue = data?.[symbol];
+          if (symbolValue != null) {
+            mergedData[symbol] = symbolValue;
+            break;
+          }
+        }
+      }
+    }
+    return makeExternalObject(mergedData, errors, getFieldNames);
   }
   if (errors.length) {
     if (errors.length === 1) {
