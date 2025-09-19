@@ -1,5 +1,15 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 2.0.5
+### Patch Changes
+
+
+
+- [#1524](https://github.com/graphql-hive/gateway/pull/1524) [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+
 ## 2.0.4
 ### Patch Changes
 

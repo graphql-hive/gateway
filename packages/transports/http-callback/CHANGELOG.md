@@ -1,5 +1,19 @@
 # @graphql-mesh/transport-http-callback
 
+## 1.0.4
+### Patch Changes
+
+
+
+- [#1524](https://github.com/graphql-hive/gateway/pull/1524) [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/string-interpolation@^0.5.9` ↗︎](https://www.npmjs.com/package/@graphql-mesh/string-interpolation/v/0.5.9) (from `^0.5.6`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.13` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.13) (from `^0.104.12`, in `dependencies`)
+- Updated dependencies [[`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2), [`d7b48a7`](https://github.com/graphql-hive/gateway/commit/d7b48a778344145478f0d3e1e1e188124181f0f2)]:
+  - @graphql-mesh/transport-common@1.0.4
+  - @graphql-tools/executor-common@1.0.2
+
 ## 1.0.3
 ### Patch Changes
 
