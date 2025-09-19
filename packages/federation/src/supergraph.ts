@@ -2,10 +2,12 @@ import {
   BatchingOptions,
   delegateToSchema,
   extractUnavailableFieldsFromSelectionSet,
+  FIELD_SUBSCHEMA_MAP_SYMBOL,
   getTypeInfo,
   isExternalObject,
   MergedFieldConfig,
   MergedTypeConfig,
+  OBJECT_SUBSCHEMA_SYMBOL,
   SubschemaConfig,
   subtractSelectionSets,
   Transform,
@@ -1678,20 +1680,30 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     if (datas.length === 1) {
       return makeExternalObject(datas[0], errors, getFieldNames);
     }
-    const mergedData = makeExternalObject(
-      mergeDeep(datas, undefined, true, true),
+    const mergedData = mergeDeep(datas, undefined, true, true);
+    // Put original symbols on the merged object
+    const symbols = [
+      OBJECT_SUBSCHEMA_SYMBOL,
+      FIELD_SUBSCHEMA_MAP_SYMBOL,
+      UNPATHED_ERRORS_SYMBOL,
+    ];
+    for (const symbol of symbols) {
+      if (mergedData?.[symbol] == null) {
+        for (const data of datas) {
+          // @ts-expect-error - we know it is there
+          const symbolValue = data?.[symbol];
+          if (symbolValue != null) {
+            mergedData[symbol] = symbolValue;
+            break;
+          }
+        }
+      }
+    }
+    return makeExternalObject(
+      mergedData,
       errors,
       getFieldNames,
     );
-    const firstData = datas[0];
-    const propertySymbols = Object.getOwnPropertySymbols(firstData);
-    for (const propertySymbol of propertySymbols) {
-      if (mergedData[propertySymbol] == null) {
-        // @ts-expect-error - we know it is there
-        mergedData[propertySymbol] = firstData[propertySymbol];
-      }
-    }
-    return mergedData;
   }
   if (errors.length) {
     if (errors.length === 1) {
