@@ -11,6 +11,7 @@ import {
   propagation,
   ProxyTracerProvider,
   trace,
+  TracerProvider,
   TraceState,
   type TextMapPropagator,
 } from '@opentelemetry/api';
@@ -245,10 +246,12 @@ const traceProvider = new BasicTracerProvider({
 
 export function setupOtelForTests({
   contextManager,
+  traceProvider: temporaryTraceProvider,
 }: {
   contextManager?: boolean;
+  traceProvider?: TracerProvider;
 } = {}) {
-  trace.setGlobalTracerProvider(traceProvider);
+  trace.setGlobalTracerProvider(temporaryTraceProvider ?? traceProvider);
   if (contextManager !== false) {
     context.setGlobalContextManager(new AsyncLocalStorageContextManager());
   }

@@ -67,6 +67,7 @@ import {
   getSpanProcessors,
   getTracerProvider,
   MockLogRecordExporter,
+  MockSpanExporter,
   setupOtelForTests,
   spanExporter,
 } from './utils';
@@ -768,7 +769,41 @@ describe('useOpenTelemetry', () => {
           initSpan.expectChild('http.fetch');
         });
       });
+
+      it('should handle validation error with hive processor', async () => {
+        disableAll();
+        const spanExporter = new MockSpanExporter();
+        const traceProvider = new BasicTracerProvider({
+          spanProcessors: [
+            new HiveTracingSpanProcessor({
+              processor: new SimpleSpanProcessor(spanExporter),
+            }),
+          ],
+        });
+        setupOtelForTests({ traceProvider });
+        await using gateway = await buildTestGatewayForCtx({
+          plugins: ({ fetch }) => {
+            return [
+              {
+                onPluginInit() {
+                  fetch('http://foo.bar', {});
+                },
+              },
+            ];
+          },
+        });
+        await gateway.query({
+          body: { query: 'query test{ unknown }' },
+          shouldReturnErrors: true,
+        });
+
+        const operationSpan = spanExporter.assertRoot('graphql.operation');
+        operationSpan.span.attributes['graphql.operation.name'] === 'test';
+        operationSpan.span.attributes['graphql.operation.type'] === 'query';
+        operationSpan.span.attributes['hive.graphql.error.count'] === 1;
+      });
     });
+
     it('should allow to create custom spans without explicit context passing', async () => {
       const expectedCustomSpans = {
         http: { root: 'POST /graphql', children: ['custom.request'] },
