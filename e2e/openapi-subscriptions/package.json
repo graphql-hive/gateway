@@ -2,7 +2,7 @@
   "name": "@e2e/openapi-subscriptions",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.4.17",
+    "@graphql-mesh/compose-cli": "^1.4.18",
     "@omnigraph/openapi": "^0.109.19",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
