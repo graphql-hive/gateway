@@ -1241,7 +1241,7 @@ export function getStitchingOptionsFromSupergraphSdl(
     if (operationType) {
       const defaultMergedField = defaultMerger(candidates);
       const mergedResolver: GraphQLFieldResolver<{}, {}> =
-        function mergedResolver(_root, _args, context, info) {
+        function mergedResolver(_root, args, context, info) {
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
@@ -1339,6 +1339,7 @@ export function getStitchingOptionsFromSupergraphSdl(
               rootTypeMap.get(info.parentType.name) ||
               ('query' as OperationTypeNode),
             context,
+            args,
             info: currentFriendSubschemas?.size
               ? {
                   ...info,
@@ -1367,6 +1368,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                   rootTypeMap.get(info.parentType.name) ||
                   ('query' as OperationTypeNode),
                 context,
+                args,
                 info: {
                   ...info,
                   fieldNodes: friendSelectionSet.selections as FieldNode[],
@@ -1676,11 +1678,20 @@ function mergeResults(results: unknown[], getFieldNames: () => Set<string>) {
     if (datas.length === 1) {
       return makeExternalObject(datas[0], errors, getFieldNames);
     }
-    return makeExternalObject(
+    const mergedData = makeExternalObject(
       mergeDeep(datas, undefined, true, true),
       errors,
       getFieldNames,
     );
+    const firstData = datas[0];
+    const propertySymbols = Object.getOwnPropertySymbols(firstData);
+    for (const propertySymbol of propertySymbols) {
+      if (mergedData[propertySymbol] == null) {
+        // @ts-expect-error - we know it is there
+        mergedData[propertySymbol] = firstData[propertySymbol];
+      }
+    }
+    return mergedData;
   }
   if (errors.length) {
     if (errors.length === 1) {
