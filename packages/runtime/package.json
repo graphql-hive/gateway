@@ -90,7 +90,7 @@
     "@types/html-minifier-terser": "^7.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@whatwg-node/fetch": "^0.10.10",
+    "@whatwg-node/fetch": "^0.10.11",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
