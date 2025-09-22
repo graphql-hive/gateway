@@ -7,7 +7,7 @@
     "@types/dockerode": "^3.3.44",
     "@types/node": "^24.5.2",
     "@whatwg-node/disposablestack": "^0.0.6",
-    "@whatwg-node/fetch": "^0.10.10",
+    "@whatwg-node/fetch": "^0.10.11",
     "dockerode": "^4.0.8",
     "glob": "^11.0.3",
     "graphql": "^16.9.0",
