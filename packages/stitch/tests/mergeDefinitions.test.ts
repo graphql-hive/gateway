@@ -10,7 +10,7 @@ import {
   assertGraphQLScalerType,
   assertGraphQLUnionType,
 } from '@internal/testing';
-import { graphql, GraphQLObjectType } from 'graphql';
+import { graphql, GraphQLObjectType, printSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
 describe('merge canonical types', () => {
@@ -496,4 +496,74 @@ describe('merge @canonical directives', () => {
     expect(objectType.getFields()['name']?.description).toEqual('second');
     expect(inputType.getFields()['value']?.description).toEqual('second');
   });
+});
+
+it('merge root types', () => {
+  const postsSchema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      schema {
+        query: query_root
+        subscription: subscription_root
+      }
+
+      type Post {
+        id: ID!
+        text: String
+        userId: ID!
+      }
+
+      type query_root {
+        postById(id: ID!): Post
+      }
+
+      type subscription_root {
+        postsByUserId(userId: ID!): [Post]!
+      }
+    `,
+  });
+
+  const usersSchema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type User {
+        id: ID!
+        email: String
+      }
+
+      type Query {
+        userById(id: ID!): User
+      }
+    `,
+  });
+
+  // setup subschema configurations
+  const postsSubschema = { schema: postsSchema };
+  const usersSubschema = { schema: usersSchema };
+
+  // build the combined schema
+  const gatewaySchema = stitchSchemas({
+    subschemas: [postsSubschema, usersSubschema],
+  });
+
+  expect(printSchema(gatewaySchema).trim()).toBe(
+    `
+type Query {
+  postById(id: ID!): Post
+  userById(id: ID!): User
+}
+
+type Subscription {
+  postsByUserId(userId: ID!): [Post]!
+}
+
+type Post {
+  id: ID!
+  text: String
+  userId: ID!
+}
+
+type User {
+  id: ID!
+  email: String
+}`.trim(),
+  );
 });
