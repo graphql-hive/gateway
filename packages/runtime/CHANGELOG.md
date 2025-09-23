@@ -1,5 +1,26 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.7
+### Patch Changes
+
+
+
+- [#1541](https://github.com/graphql-hive/gateway/pull/1541) [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-apollo-usage-report@^0.11.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-apollo-usage-report/v/0.11.0) (from `^0.10.2`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-csrf-prevention@^3.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-csrf-prevention/v/3.16.0) (from `^3.15.2`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-defer-stream@^3.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-defer-stream/v/3.16.0) (from `^3.15.2`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/plugin-persisted-operations@^3.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-persisted-operations/v/3.16.0) (from `^3.15.2`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.16.0` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.16.0) (from `^5.15.2`, in `dependencies`)
+- Updated dependencies [[`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`0a349fb`](https://github.com/graphql-hive/gateway/commit/0a349fbfd52eaf8a2b21c9669871c916d41b840f), [`0a349fb`](https://github.com/graphql-hive/gateway/commit/0a349fbfd52eaf8a2b21c9669871c916d41b840f), [`818461e`](https://github.com/graphql-hive/gateway/commit/818461e6ea55bb10ba4ead9ed214848e1ba4bfd2)]:
+  - @graphql-hive/logger@1.0.5
+  - @graphql-mesh/fusion-runtime@1.2.4
+  - @graphql-tools/executor-http@3.0.4
+  - @graphql-tools/federation@4.0.5
+  - @graphql-tools/stitch@10.0.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/transport-common@1.0.5
+
 ## 2.1.6
 ### Patch Changes
 

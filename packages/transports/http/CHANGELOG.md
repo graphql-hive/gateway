@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-http
 
+## 1.0.5
+### Patch Changes
+
+- Updated dependencies [[`0a349fb`](https://github.com/graphql-hive/gateway/commit/0a349fbfd52eaf8a2b21c9669871c916d41b840f)]:
+  - @graphql-tools/executor-http@3.0.4
+  - @graphql-mesh/transport-common@1.0.5
+
 ## 1.0.4
 ### Patch Changes
 

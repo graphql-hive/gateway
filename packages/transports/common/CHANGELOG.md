@@ -1,5 +1,11 @@
 # @graphql-mesh/transport-common
 
+## 1.0.5
+### Patch Changes
+
+- Updated dependencies [[`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e)]:
+  - @graphql-hive/logger@1.0.5
+
 ## 1.0.4
 ### Patch Changes
 
