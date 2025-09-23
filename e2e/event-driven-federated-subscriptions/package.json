@@ -2,7 +2,7 @@
   "name": "@e2e/event-driven-federated-subscriptions",
   "private": true,
   "dependencies": {
-    "@nats-io/transport-node": "^3.1.0",
+    "@nats-io/transport-node": "^3.2.0",
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3"
   }
