@@ -120,7 +120,7 @@ type SamplingOptions =
       samplingRate?: number;
     };
 
-type OpentelemetrySetupOptions = TracingOptions &
+export type OpentelemetrySetupOptions = TracingOptions &
   SamplingOptions & {
     /**
      * The Resource that will be used to create the Trace Provider.
@@ -303,6 +303,11 @@ export type HiveTracingOptions = { target?: string } & (
 export function hiveTracingSetup(
   config: HiveTracingOptions & {
     contextManager: ContextManager | null;
+    /**
+     * The Resource that will be used to create the Trace Provider.
+     * Can be either a Resource instance, or an simple object with service name and version
+     */
+    resource?: Resource | { serviceName: string; serviceVersion: string };
     log?: Logger;
   },
 ) {
@@ -331,12 +336,27 @@ export function hiveTracingSetup(
     logAttributes['batching'] = config.batching;
   }
 
+  let resource = resourceFromAttributes({
+    'hive.target_id': config.target,
+  });
+
+  if (config.resource) {
+    if ('serviceName' in config.resource) {
+      resource = resource.merge(
+        resourceFromAttributes({
+          [ATTR_SERVICE_NAME]: config.resource.serviceName,
+          [ATTR_SERVICE_VERSION]: config.resource.serviceVersion,
+        }),
+      );
+    } else {
+      resource = resource.merge(config.resource);
+    }
+  }
+
   openTelemetrySetup({
     log,
     contextManager: config.contextManager,
-    resource: resourceFromAttributes({
-      'hive.target_id': config.target,
-    }),
+    resource: resource,
     traces: {
       processors: [
         new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
