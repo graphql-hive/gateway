@@ -356,7 +356,7 @@ export function hiveTracingSetup(
   openTelemetrySetup({
     log,
     contextManager: config.contextManager,
-    resource: resource,
+    resource,
     traces: {
       processors: [
         new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
