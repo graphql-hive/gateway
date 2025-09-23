@@ -1,5 +1,69 @@
 # @graphql-tools/stitch
 
+## 10.0.2
+### Patch Changes
+
+
+
+- [#1546](https://github.com/graphql-hive/gateway/pull/1546) [`818461e`](https://github.com/graphql-hive/gateway/commit/818461e6ea55bb10ba4ead9ed214848e1ba4bfd2) Thanks [@ardatan](https://github.com/ardatan)! - Normalize the subschemas with root types in a custom names like `query_root` instead of `Query`, then stitch them
+  
+  ```graphql
+  schema {
+      query: query_root
+      subscription: subscription_root
+  }
+  
+  type Post {
+      id: ID!
+      text: String
+      userId: ID!
+  }
+  
+  type query_root {
+      postById(id: ID!): Post
+  }
+  
+  type subscription_root {
+      postsByUserId(userId: ID!): [Post]!
+  }
+  ```
+  
+  and
+  ```graphql
+  type User {
+      id: ID!
+      email: String
+  }
+  
+  type Query {
+      userById(id: ID!): User
+  }
+  ```
+  
+  should be stitched as;
+  
+  ```graphql
+  type Query {
+    postById(id: ID!): Post
+    userById(id: ID!): User
+  }
+  
+  type Subscription {
+    postsByUserId(userId: ID!): [Post]!
+  }
+  
+  type Post {
+    id: ID!
+    text: String
+    userId: ID!
+  }
+  
+  type User {
+    id: ID!
+    email: String
+  }
+  ```
+
 ## 10.0.1
 ### Patch Changes
 

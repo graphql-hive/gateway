@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.1.7
+### Patch Changes
+
+
+
+- [#1541](https://github.com/graphql-hive/gateway/pull/1541) [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/render-graphiql@^5.16.0` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/5.16.0) (from `^5.15.2`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.16.0` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.16.0) (from `^5.15.2`, in `dependencies`)
+- Updated dependencies [[`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`5e511ca`](https://github.com/graphql-hive/gateway/commit/5e511ca9cc555577936bba942c8b3ff0796b015e), [`0a349fb`](https://github.com/graphql-hive/gateway/commit/0a349fbfd52eaf8a2b21c9669871c916d41b840f)]:
+  - @graphql-hive/gateway-runtime@2.1.7
+  - @graphql-hive/logger@1.0.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.7
+  - @graphql-mesh/plugin-jwt-auth@2.0.6
+  - @graphql-mesh/plugin-prometheus@2.0.11
+  - @graphql-mesh/transport-http-callback@1.0.5
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-hive/plugin-opentelemetry@1.0.10
+  - @graphql-mesh/transport-http@1.0.5
+  - @graphql-mesh/transport-ws@2.0.5
+
 ## 2.1.6
 ### Patch Changes
 

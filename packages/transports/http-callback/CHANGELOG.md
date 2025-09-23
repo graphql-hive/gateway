@@ -1,5 +1,16 @@
 # @graphql-mesh/transport-http-callback
 
+## 1.0.5
+### Patch Changes
+
+
+
+- [#1542](https://github.com/graphql-hive/gateway/pull/1542) [`0a349fb`](https://github.com/graphql-hive/gateway/commit/0a349fbfd52eaf8a2b21c9669871c916d41b840f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/fetch@^0.10.11` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.11) (from `^0.10.10`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/transport-common@1.0.5
+
 ## 1.0.4
 ### Patch Changes
 
