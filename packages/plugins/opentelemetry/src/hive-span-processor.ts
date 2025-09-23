@@ -151,9 +151,12 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       return;
     }
 
-    if (span.name === 'graphql.execute') {
+    if (SPANS_WITH_ERRORS.includes(span.name)) {
       copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_CODES);
       copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT);
+    }
+
+    if (span.name === 'graphql.execute') {
       copyAttribute(
         span,
         operationSpan,
@@ -196,3 +199,9 @@ function copyAttribute(
 ) {
   target.attributes[targetAttrName] = source.attributes[sourceAttrName];
 }
+
+const SPANS_WITH_ERRORS = [
+  'graphql.parse',
+  'graphql.validate',
+  'graphql.execute',
+];

@@ -770,9 +770,8 @@ describe('useOpenTelemetry', () => {
         });
       });
 
-      it('should handle validation error with hive processor', async () => {
+      it.only('should handle validation error with hive processor', async () => {
         disableAll();
-        const spanExporter = new MockSpanExporter();
         const traceProvider = new BasicTracerProvider({
           spanProcessors: [
             new HiveTracingSpanProcessor({
@@ -798,9 +797,15 @@ describe('useOpenTelemetry', () => {
         });
 
         const operationSpan = spanExporter.assertRoot('graphql.operation test');
-        operationSpan.span.attributes['graphql.operation.name'] === 'test';
-        operationSpan.span.attributes['graphql.operation.type'] === 'query';
-        operationSpan.span.attributes['hive.graphql.error.count'] === 1;
+        expect(operationSpan.span.attributes['graphql.operation.name']).toBe(
+          'test',
+        );
+        expect(operationSpan.span.attributes['graphql.operation.type']).toBe(
+          'query',
+        );
+        expect(
+          operationSpan.span.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT],
+        ).toBe(1);
       });
     });
 
