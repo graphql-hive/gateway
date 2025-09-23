@@ -64,7 +64,7 @@ export function mergeCandidates<TContext = Record<string, any>>(
   typeMergingOptions?: TypeMergingOptions<TContext>,
 ): GraphQLNamedType {
   const initialCandidateType = candidates[0]?.type;
-  if (candidates.length === 1) {
+  if (candidates.length === 1 && initialCandidateType?.name === typeName) {
     return initialCandidateType!;
   }
   if (
