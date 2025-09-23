@@ -8,7 +8,6 @@ import {
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
-import { DocumentNode } from 'graphql';
 import {
   context,
   hive,
