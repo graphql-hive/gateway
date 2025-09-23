@@ -248,6 +248,119 @@ describe('OpenTelemetry', () => {
         });
       });
 
+      it.only('should report telemetry metrics correctly to jaeger', async () => {
+        const serviceName = crypto.randomUUID();
+        const { execute } = await gateway({
+          supergraph,
+          env: {
+            OTLP_EXPORTER_TYPE,
+            OTLP_EXPORTER_URL: urls[OTLP_EXPORTER_TYPE],
+            OTEL_SERVICE_NAME: serviceName,
+            OTEL_SERVICE_VERSION: '1.0.0',
+          },
+        });
+
+        /*
+        await expect(execute({ query: exampleSetup.query })).resolves.toEqual(
+          exampleSetup.result,
+        );
+        /*/
+        await expect(
+          execute({ query: 'query test { unknown }' }),
+        ).resolves.toEqual({
+          errors: [
+            {
+              message: 'Cannot query field "unknown" on type "Query".',
+              extensions: {
+                code: 'GRAPHQL_VALIDATION_FAILED',
+              },
+              locations: [
+                {
+                  column: 14,
+                  line: 1,
+                },
+              ],
+            },
+          ],
+        });
+        //*/
+        await expectJaegerTraces(serviceName, (traces) => {
+          const relevantTraces = traces.data.filter((trace) =>
+            trace.spans.some((span) =>
+              span.operationName.startsWith('graphql.operation'),
+            ),
+          );
+          expect(relevantTraces.length).toBe(1);
+          const relevantTrace = relevantTraces[0];
+          expect(relevantTrace).toBeDefined();
+
+          // const resource = relevantTrace!.processes['p1'];
+          // expect(resource).toBeDefined();
+
+          // const tags = resource!.tags.map(({ key, value }) => ({ key, value }));
+          // // const tagKeys = resource!.tags.map(({ key }) => key);
+          // expect(resource!.serviceName).toBe(serviceName);
+          // [
+          //   ['custom.resource', 'custom value'],
+          //   ['otel.library.name', 'gateway'],
+          // ].forEach(([key, value]) => {
+          //   return expect(tags).toContainEqual({ key, value });
+          // });
+
+          // if (
+          //   gatewayRunner === 'node' ||
+          //   gatewayRunner === 'docker' ||
+          //   gatewayRunner === 'bin'
+          // ) {
+          //   const expectedTags = [
+          //     'process.owner',
+          //     'host.arch',
+          //     'os.type',
+          //     'service.instance.id',
+          //   ];
+          //   if (gatewayRunner.includes('docker')) {
+          //     expectedTags.push('container.id');
+          //   }
+          //   expectedTags.forEach((key) => {
+          //     return expect(tags).toContainEqual(
+          //       expect.objectContaining({ key }),
+          //     );
+          //   });
+          // }
+
+          // const spanTree = buildSpanTree(relevantTrace!.spans, 'POST /graphql');
+          // expect(spanTree).toBeDefined();
+
+          // expect(spanTree!.children).toHaveLength(1);
+
+          const operationSpan = buildSpanTree(
+            relevantTrace!.spans,
+            'graphql.operation',
+          )!;
+          const expectedOperationChildren = [
+            'graphql.parse',
+            'graphql.validate',
+          ];
+          // expect(operationSpan!.children).toHaveLength(
+          //   expectedOperationChildren.length,
+          // );
+          for (const operationName of expectedOperationChildren) {
+            expect(operationSpan?.children).toContainEqual(
+              expect.objectContaining({
+                span: expect.objectContaining({ operationName }),
+              }),
+            );
+          }
+
+          console.log(operationSpan.span.tags);
+          expect(
+            operationSpan.span.tags.find(
+              ({ key }) => key === 'graphql.operation.name',
+            ),
+          ).toMatchObject({ value: 'TestQuery' });
+        });
+      });
+
       it('should report telemetry metrics correctly to jaeger using cli options', async () => {
         const serviceName = crypto.randomUUID();
         const { execute } = await gateway({

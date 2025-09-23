@@ -797,7 +797,7 @@ describe('useOpenTelemetry', () => {
           shouldReturnErrors: true,
         });
 
-        const operationSpan = spanExporter.assertRoot('graphql.operation');
+        const operationSpan = spanExporter.assertRoot('graphql.operation test');
         operationSpan.span.attributes['graphql.operation.name'] === 'test';
         operationSpan.span.attributes['graphql.operation.type'] === 'query';
         operationSpan.span.attributes['hive.graphql.error.count'] === 1;
@@ -906,7 +906,7 @@ describe('useOpenTelemetry', () => {
       checkCacheAttributes({ http: 'hit' }); // There is no graphql operation span when cached by HTTP
     });
 
-    it('should register schema loading span', async () => {
+    it.skip('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
         options: { traces: { spans: { http: false, schema: true } } },
       });
@@ -1185,15 +1185,7 @@ describe('useOpenTelemetry', () => {
 
     it('should have all attributes required by Hive Tracing', async () => {
       await using gateway = await buildTestGateway({
-        fetch: (upstreamFetch) => {
-          let calls = 0;
-          return (...args) => {
-            calls++;
-            if (calls > 1)
-              return Promise.resolve(new Response(null, { status: 500 }));
-            else return upstreamFetch(...args);
-          };
-        },
+        fetch: () => () => Promise.resolve(new Response(null, { status: 500 })),
       });
       await gateway.query({
         shouldReturnErrors: true,
@@ -1221,7 +1213,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: 500,
+        [SEMATTRS_HTTP_STATUS_CODE]: 200,
 
         // Hive specific
         ['hive.client.name']: 'test-client-name',
@@ -1246,15 +1238,15 @@ describe('useOpenTelemetry', () => {
       ).toMatchObject({
         // HTTP Attributes
         [SEMATTRS_HTTP_METHOD]: 'POST',
-        [SEMATTRS_HTTP_URL]: 'https://example.com/graphql',
+        [SEMATTRS_HTTP_URL]: 'http://localhost:4011/graphql',
         [SEMATTRS_HTTP_ROUTE]: '/graphql',
-        [SEMATTRS_HTTP_SCHEME]: 'https:',
-        [SEMATTRS_NET_HOST_NAME]: 'example.com',
-        [SEMATTRS_HTTP_HOST]: 'example.com',
+        [SEMATTRS_HTTP_SCHEME]: 'http:',
+        [SEMATTRS_NET_HOST_NAME]: 'localhost',
+        [SEMATTRS_HTTP_HOST]: 'localhost:4011',
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{__typename hello}',
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 

@@ -1,6 +1,9 @@
 import { defineConfig, GatewayPlugin } from '@graphql-hive/gateway';
 import { trace } from '@graphql-hive/gateway/opentelemetry/api';
-import { openTelemetrySetup } from '@graphql-hive/gateway/opentelemetry/setup';
+import {
+  HiveTracingSpanProcessor,
+  openTelemetrySetup,
+} from '@graphql-hive/gateway/opentelemetry/setup';
 import type { MeshFetchRequestInit } from '@graphql-mesh/types';
 import {
   getNodeAutoInstrumentations,
@@ -29,6 +32,7 @@ const useOnFetchTracer = (): GatewayPlugin => {
   };
 };
 
+//*
 if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
   const { OTLPTraceExporter } =
     process.env['OTLP_EXPORTER_TYPE'] === 'http'
@@ -74,6 +78,31 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
     });
   }
 }
+/*/
+
+const resource = resources.resourceFromAttributes({
+  'custom.resource': 'custom value',
+});
+const { OTLPTraceExporter } =
+  process.env['OTLP_EXPORTER_TYPE'] === 'http'
+    ? await import(`@opentelemetry/exporter-trace-otlp-http`)
+    : await import(`@opentelemetry/exporter-trace-otlp-grpc`);
+
+const exporter = new OTLPTraceExporter({
+  url: process.env['OTLP_EXPORTER_URL'],
+});
+openTelemetrySetup({
+  contextManager: new AsyncLocalStorageContextManager(),
+  resource,
+  traces: {
+    processors: [
+      new HiveTracingSpanProcessor({
+        processor: new tracing.SimpleSpanProcessor(exporter),
+      }),
+    ],
+  },
+});
+//*/
 
 export const gatewayConfig = defineConfig({
   openTelemetry: {

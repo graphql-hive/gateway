@@ -8,6 +8,7 @@ import {
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { DocumentNode } from 'graphql';
 import {
   context,
   hive,
@@ -40,7 +41,7 @@ import {
   recordCacheError,
   recordCacheEvent,
   registerException,
-  setExecutionAttributesOnOperationSpan,
+  setDocumentAttributesOnOperationSpan,
   setExecutionResultAttributes,
   setGraphQLExecutionAttributes,
   setGraphQLExecutionResultAttributes,
@@ -483,12 +484,7 @@ export function useOpenTelemetry(
 
           const { forOperation } = state;
           forOperation.otel!.push(
-            createGraphQLValidateSpan({
-              ctx: getContext(state),
-              tracer,
-              query: gqlCtx.params.query?.trim(),
-              operationName: gqlCtx.params.operationName,
-            }),
+            createGraphQLValidateSpan({ ctx: getContext(state), tracer }),
           );
 
           if (useContextManager) {
@@ -800,10 +796,17 @@ export function useOpenTelemetry(
             query: gqlCtx.params.query?.trim(),
             result,
           });
+          if (!(result instanceof Error)) {
+            setDocumentAttributesOnOperationSpan({
+              ctx: state.forOperation.otel!.root,
+              document: result,
+              operationName: gqlCtx.params.operationName,
+            });
+          }
         };
       },
 
-      onValidate({ state, context: gqlCtx }) {
+      onValidate({ state, context: gqlCtx, params }) {
         if (
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
@@ -812,7 +815,12 @@ export function useOpenTelemetry(
         }
 
         return ({ result }) => {
-          setGraphQLValidateAttributes({ ctx: getContext(state), result });
+          setGraphQLValidateAttributes({
+            ctx: getContext(state),
+            result,
+            document: params.documentAST,
+            operationName: gqlCtx.params.operationName,
+          });
         };
       },
 
@@ -821,18 +829,17 @@ export function useOpenTelemetry(
           return;
         }
 
-        setExecutionAttributesOnOperationSpan({
-          ctx: state.forOperation.otel!.root,
-          args,
-          hashOperationFn: options.hashOperation,
-        });
-
         if (state.forOperation.skipExecuteSpan) {
           return;
         }
 
         const ctx = getContext(state);
-        setGraphQLExecutionAttributes({ ctx, args });
+        setGraphQLExecutionAttributes({
+          ctx,
+          operationCtx: state.forOperation.otel!.root,
+          args,
+          hashOperationFn: options.hashOperation,
+        });
 
         state.forOperation.subgraphNames = [];
 
