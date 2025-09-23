@@ -592,7 +592,10 @@ export const getOperationFromDocument = (
       document,
       operationName || undefined,
     );
-  } catch {}
+  } catch {
+    // Return undefined if the operation is either not found, or multiple operations exists and no
+    // operationName has been provided
+  }
 
   let operationNameMap = operationByDocument.get(document);
   if (!operationNameMap) {
