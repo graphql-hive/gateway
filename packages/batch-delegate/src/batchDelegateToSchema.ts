@@ -1,5 +1,8 @@
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { GraphQLError } from 'graphql';
 import { getLoader } from './getLoader.js';
 import { BatchDelegateOptions } from './types.js';
+import { pathToArray, relocatedError } from '@graphql-tools/utils';
 
 export function batchDelegateToSchema<TContext = any, K = any, V = any, C = K>(
   options: BatchDelegateOptions<TContext, K, V, C>,
@@ -11,5 +14,14 @@ export function batchDelegateToSchema<TContext = any, K = any, V = any, C = K>(
     return [];
   }
   const loader = getLoader(options);
-  return Array.isArray(key) ? loader.loadMany(key) : loader.load(key);
+  return handleMaybePromise(
+    () => (Array.isArray(key) ? loader.loadMany(key) : loader.load(key)),
+    res => res,
+    error => {
+      if (options.info?.path && error instanceof GraphQLError) {
+        return relocatedError(error, pathToArray(options.info.path));
+      }
+      return error;
+    }
+  );
 }
