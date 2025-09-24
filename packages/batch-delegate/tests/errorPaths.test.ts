@@ -89,11 +89,11 @@ describe('preserves error path indices', () => {
             objects: [
                 {
                     id: '1',
-                    property: null as null,
+                    property: null,
                 },
                 {
                     id: '2',
-                    property: null as null,
+                    property: null,
                 },
             ],
         },
