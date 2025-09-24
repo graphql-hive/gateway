@@ -9,6 +9,7 @@ import {
   addResolversToSchema,
   makeExecutableSchema,
 } from '@graphql-tools/schema';
+import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import {
   assertSome,
   createGraphQLError,
@@ -16,6 +17,7 @@ import {
   getResolversFromSchema,
   IResolvers,
 } from '@graphql-tools/utils';
+import { assertAsyncIterable } from '@internal/testing';
 import {
   bookingSchema as localBookingSchema,
   productSchema as localProductSchema,
@@ -3634,4 +3636,216 @@ it('should respect selectionSet in the additional resolvers to override a field'
       },
     },
   });
+});
+
+it('should be able to extend a transformed schema', async () => {
+  const projects = [
+    {
+      id: '1',
+      name: 'Project 1',
+      rootFolderId: '1',
+    },
+    {
+      id: '2',
+      name: 'Project 2',
+      rootFolderId: '2',
+    },
+  ];
+  const projectSchema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      directive @key(selectionSet: String!) on OBJECT
+      type Project @key(selectionSet: "{ id }") {
+        id: ID!
+        name: String!
+        rootFolderId: ID!
+      }
+      type Query {
+        project(id: ID!): Project
+      }
+    `,
+    resolvers: {
+      Query: {
+        project: (_, { id }) => projects.find((project) => project.id === id),
+      },
+    },
+  });
+
+  const folders = [
+    {
+      id: '1',
+      name: 'Folder 1',
+    },
+    {
+      id: '2',
+      name: 'Folder 2',
+    },
+  ];
+  const folderSchema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      directive @key(selectionSet: String!) on OBJECT
+      directive @merge(
+        argsExpr: String
+        keyArg: String
+        keyField: String
+        key: [String!]
+        additionalArgs: String
+      ) on FIELD_DEFINITION
+      directive @computed(selectionSet: String!) on FIELD_DEFINITION
+      scalar _Any
+      union _Entity = Folder | Project
+      type Folder {
+        id: ID!
+        name: String!
+      }
+      type Project @key(selectionSet: "{ id }") {
+        id: ID!
+        rootFolder: Folder! @computed(selectionSet: "{ rootFolderId }")
+      }
+      type Query {
+        folder(id: ID!): Folder!
+        _entities(representations: [_Any!]!): [_Entity]! @merge
+      }
+    `,
+    resolvers: {
+      Query: {
+        folder: (_, { id }) => folders.find((folder) => folder.id === id),
+        _entities: (_, { representations }: { representations: any[] }) =>
+          representations.map((rep) => ({
+            ...rep,
+            rootFolder: folders.find(
+              (folder) => folder.id === rep.rootFolderId,
+            ),
+          })),
+      },
+    },
+  });
+  const subscriptionSchema = makeExecutableSchema({
+    typeDefs: /* GraphQL */ `
+      type Query {
+        _: String
+      }
+      type Subscription {
+        projectUsed: ProjectUsed!
+      }
+      type ProjectUsed {
+        projectId: ID!
+      }
+    `,
+    resolvers: {
+      Subscription: {
+        projectUsed: {
+          async *subscribe() {
+            for (const project of projects) {
+              yield {
+                projectUsed: {
+                  projectId: project.id,
+                },
+              };
+            }
+          },
+        },
+      },
+    },
+  });
+
+  const projectSubschema = {
+    name: 'project',
+    schema: projectSchema,
+  };
+
+  const folderSubschema = {
+    name: 'folder',
+    schema: folderSchema,
+  };
+
+  const subscriptionSubschema = {
+    name: 'subscription',
+    schema: subscriptionSchema,
+  };
+
+  const stitchedSchema = stitchSchemas({
+    subschemas: [projectSubschema, folderSubschema, subscriptionSubschema],
+    subschemaConfigTransforms: [
+      stitchingDirectives().stitchingDirectivesTransformer,
+    ],
+    typeDefs: /* GraphQL */ `
+      extend type ProjectUsed {
+        project: Project!
+      }
+    `,
+    resolvers: {
+      ProjectUsed: {
+        project: {
+          selectionSet: '{ projectId }',
+          resolve: (projectUsed, _, context, info) =>
+            delegateToSchema({
+              schema: projectSubschema,
+              operation: 'query' as any,
+              fieldName: 'project',
+              args: {
+                id: projectUsed.projectId,
+              },
+              context,
+              info,
+            }),
+        },
+      },
+    },
+  });
+
+  const result = await normalizedExecutor({
+    schema: stitchedSchema,
+    document: parse(/* GraphQL */ `
+      subscription {
+        projectUsed {
+          projectId
+          project {
+            id
+            name
+            rootFolder {
+              id
+              name
+            }
+          }
+        }
+      }
+    `),
+  });
+  assertAsyncIterable(result);
+  const payloads = [];
+  for await (const payload of result) {
+    payloads.push(payload);
+  }
+  expect(payloads).toEqual([
+    {
+      data: {
+        projectUsed: {
+          project: {
+            id: '1',
+            name: 'Project 1',
+            rootFolder: {
+              id: '1',
+              name: 'Folder 1',
+            },
+          },
+          projectId: '1',
+        },
+      },
+    },
+    {
+      data: {
+        projectUsed: {
+          project: {
+            id: '2',
+            name: 'Project 2',
+            rootFolder: {
+              id: '2',
+              name: 'Folder 2',
+            },
+          },
+          projectId: '2',
+        },
+      },
+    },
+  ]);
 });

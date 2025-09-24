@@ -146,6 +146,33 @@ function resolveExternalObject<TContext extends Record<string, any>>(
     }
   }
 
+  if (!mergedTypeInfo) {
+    for (const possibleTypeName of possibleTypeNames) {
+      const potentialMergedTypeInfo =
+        stitchingInfo.mergedTypes[possibleTypeName];
+      if (potentialMergedTypeInfo != null) {
+        for (const [
+          sourceSubschema,
+          targetSubschemas,
+        ] of potentialMergedTypeInfo.targetSubschemas) {
+          if (
+            targetSubschemas.length &&
+            sourceSubschema.name == (subschema as Subschema).name
+          ) {
+            subschema = sourceSubschema as SubschemaConfig<
+              any,
+              any,
+              any,
+              TContext
+            >;
+            mergedTypeInfo = potentialMergedTypeInfo;
+          }
+        }
+        break;
+      }
+    }
+  }
+
   // If there are no merge targets from the subschema, return.
   if (!mergedTypeInfo) {
     return object;
