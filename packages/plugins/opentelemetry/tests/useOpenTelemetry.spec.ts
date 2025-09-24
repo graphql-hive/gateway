@@ -67,7 +67,6 @@ import {
   getSpanProcessors,
   getTracerProvider,
   MockLogRecordExporter,
-  MockSpanExporter,
   setupOtelForTests,
   spanExporter,
 } from './utils';
