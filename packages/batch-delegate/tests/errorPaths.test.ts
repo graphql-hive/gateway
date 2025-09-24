@@ -126,7 +126,7 @@ describe('preserves error path indices', () => {
       document: parse(query),
     });
 
-    expect(getProperty).toBeCalledTimes(2);
+    expect(getProperty).toHaveBeenCalledTimes(2);
     expect(result).toMatchObject(expected);
   });
 
@@ -156,7 +156,7 @@ describe('preserves error path indices', () => {
       document: parse(query),
     });
 
-    expect(getProperty).toBeCalledTimes(1);
+    expect(getProperty).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject(expected);
   });
 });
