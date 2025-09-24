@@ -157,7 +157,7 @@ function resolveExternalObject<TContext extends Record<string, any>>(
         ] of potentialMergedTypeInfo.targetSubschemas) {
           if (
             targetSubschemas.length &&
-            sourceSubschema.name == (subschema as Subschema).name
+            sourceSubschema.name === (subschema as Subschema).name
           ) {
             subschema = sourceSubschema as SubschemaConfig<
               any,
