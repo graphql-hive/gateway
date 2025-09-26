@@ -296,7 +296,7 @@ export function setGraphQLValidateAttributes(input: {
 
     const codes = [];
     for (const error of result) {
-      if (error.extensions.code) {
+      if (error.extensions?.code) {
         codes.push(`${error.extensions.code}`);
       }
       span.recordException(error);
@@ -388,7 +388,7 @@ export function setGraphQLExecutionResultAttributes(input: {
     const codes: string[] = [];
     for (const error of result.errors) {
       span.recordException(error);
-      if (error.extensions['code']) {
+      if (error.extensions?.['code']) {
         codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
       }
     }
