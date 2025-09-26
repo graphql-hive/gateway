@@ -79,7 +79,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     }
 
     if (isOperationSpan(span)) {
-      span.setAttribute('hive.graphql', true)
+      span.setAttribute('hive.graphql', true);
       traceState?.operationRoots.set(spanId, span as SpanImpl);
       return;
     }
