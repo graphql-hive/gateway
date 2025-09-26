@@ -769,7 +769,7 @@ describe('useOpenTelemetry', () => {
         });
       });
 
-      it.only('should handle validation error with hive processor', async () => {
+      it('should handle validation error with hive processor', async () => {
         disableAll();
         const traceProvider = new BasicTracerProvider({
           spanProcessors: [
