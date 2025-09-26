@@ -2846,10 +2846,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20250924.0":
-  version: 4.20250924.0
-  resolution: "@cloudflare/workers-types@npm:4.20250924.0"
-  checksum: 10c0/334704ed59757bf1a84e5075a7a10cf6507659a4f8f790b3ebe0e077ce0bbc75049e7a62f0ad9b1bc7d3cb406e45ffdc9011d9920371c0640fa78de3fdf0d764
+"@cloudflare/workers-types@npm:^4.20250926.0":
+  version: 4.20250926.0
+  resolution: "@cloudflare/workers-types@npm:4.20250926.0"
+  checksum: 10c0/eb7efbde277599478d0642c06d2ca6b1de294d383c3fd5d9df7b6c476255c204ddadbdccff117eacd62c509b170fd73bbbd558eaea490b3f6813cd64600b01ab
   languageName: node
   linkType: hard
 
@@ -2935,10 +2935,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/cloudflare-workers@workspace:e2e/cloudflare-workers"
   dependencies:
-    "@cloudflare/workers-types": "npm:^4.20250924.0"
+    "@cloudflare/workers-types": "npm:^4.20250926.0"
     "@graphql-hive/gateway-runtime": "workspace:*"
     graphql: "npm:^16.9.0"
-    wrangler: "npm:^4.40.0"
+    wrangler: "npm:^4.40.2"
   languageName: unknown
   linkType: soft
 
@@ -22760,9 +22760,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.40.0":
-  version: 4.40.0
-  resolution: "wrangler@npm:4.40.0"
+"wrangler@npm:^4.40.2":
+  version: 4.40.2
+  resolution: "wrangler@npm:4.40.2"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.4.0"
     "@cloudflare/unenv-preset": "npm:2.7.4"
@@ -22784,7 +22784,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/d562b1e4dbf081171f9791cfef4c41b3476309f783ded4b4c47330eb21f66e88d0fb540eded7c516375eecd09f086e27e419f6066a9d727db980fe7ca16eb55a
+  checksum: 10c0/2bf97123134849e1348d53939102a4f2c4e8a15f5beb9442050ea16cfeb2c41be9afa4438ac339085214156a7254b667b0e3fa15320c405676ef7c46a54b5c6a
   languageName: node
   linkType: hard
 
