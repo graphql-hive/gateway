@@ -24,6 +24,7 @@ import {
 import {
   DocumentNode,
   GraphQLSchema,
+  OperationDefinitionNode,
   printSchema,
   TypeInfo,
   type ExecutionArgs,
@@ -163,32 +164,25 @@ export const defaultOperationHashingFn: OperationHashingFn = (input) => {
   });
 };
 
-export function setExecutionAttributesOnOperationSpan(input: {
+export function setDocumentAttributesOnOperationSpan(input: {
   ctx: Context;
-  args: ExecutionArgs;
-  hashOperationFn?: OperationHashingFn | null;
+  document: DocumentNode;
+  operationName: string | undefined | null;
 }) {
-  const { hashOperationFn = defaultOperationHashingFn, args, ctx } = input;
+  const { ctx, document } = input;
   const span = trace.getSpan(ctx);
   if (span) {
-    const operation = getOperationASTFromDocument(
-      args.document,
-      args.operationName || undefined,
-    );
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, defaultPrintFn(document));
 
-    const document = defaultPrintFn(args.document);
-    span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
+    const operation = getOperationFromDocument(document, input.operationName);
+    if (operation) {
+      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
 
-    const hash = hashOperationFn?.({ ...args });
-    if (hash) {
-      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH, hash);
-    }
-
-    const operationName = operation.name?.value;
-    if (operationName) {
-      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
-      span.updateName(`graphql.operation ${operationName}`);
+      const operationName = operation.name?.value;
+      if (operationName) {
+        span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+        span.updateName(`graphql.operation ${operationName}`);
+      }
     }
   }
 }
@@ -235,30 +229,32 @@ export function setGraphQLParseAttributes(input: {
   if (input.query) {
     span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, input.query);
   }
-  if (input.operationName) {
-    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, input.operationName);
-  }
 
   if (input.result instanceof Error) {
     span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
+  } else {
+    // result should be a document
+    const document = input.result as DocumentNode;
+    const operation = getOperationFromDocument(document, input.operationName);
+
+    if (operation) {
+      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+
+      const operationName = operation.name?.value;
+      if (operationName) {
+        span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+      }
+    }
   }
 }
 
 export function createGraphQLValidateSpan(input: {
   ctx: Context;
   tracer: Tracer;
-  query?: string;
-  operationName?: string;
 }): Context {
   const span = input.tracer.startSpan(
     'graphql.validate',
-    {
-      attributes: {
-        [SEMATTRS_GRAPHQL_DOCUMENT]: input.query,
-        [SEMATTRS_GRAPHQL_OPERATION_NAME]: input.operationName,
-      },
-      kind: SpanKind.INTERNAL,
-    },
+    { kind: SpanKind.INTERNAL },
     input.ctx,
   );
   return trace.setSpan(input.ctx, span);
@@ -266,29 +262,46 @@ export function createGraphQLValidateSpan(input: {
 
 export function setGraphQLValidateAttributes(input: {
   ctx: Context;
+  document: DocumentNode;
+  operationName: string | undefined | null;
   result: any[] | readonly Error[];
 }) {
-  const { result, ctx } = input;
+  const { result, ctx, document } = input;
   const span = trace.getSpan(ctx);
   if (!span) {
     return;
   }
 
+  const operation = getOperationFromDocument(document, input.operationName);
+  if (operation) {
+    const operationName = operation.name?.value;
+    span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
+    if (operationName) {
+      span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
+    }
+  }
+
+  const errors = Array.isArray(result) ? result : [];
+
   if (result instanceof Error) {
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: result.message,
-    });
-  } else if (Array.isArray(result) && result.length > 0) {
+    errors.push(result);
+  }
+
+  if (errors.length > 0) {
     span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.map((e) => e.message).join(', '),
     });
 
+    const codes = [];
     for (const error of result) {
+      if (error.extensions?.code) {
+        codes.push(`${error.extensions.code}`);
+      }
       span.recordException(error);
     }
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
   }
 }
 
@@ -307,27 +320,40 @@ export function createGraphQLExecuteSpan(input: {
 
 export function setGraphQLExecutionAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
+  hashOperationFn?: OperationHashingFn | null;
   args: ExecutionArgs;
 }) {
-  const { ctx, args } = input;
+  const {
+    ctx,
+    args,
+    hashOperationFn = defaultOperationHashingFn,
+    operationCtx,
+  } = input;
+
+  const operationSpan = trace.getSpan(operationCtx);
+  if (operationSpan) {
+    const hash = hashOperationFn?.({ ...args });
+    if (hash) {
+      operationSpan.setAttribute(SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH, hash);
+    }
+  }
+
   const span = trace.getSpan(ctx);
   if (!span) {
     return;
   }
 
-  const operation = getOperationASTFromDocument(
+  const operation = getOperationFromDocument(
     args.document,
-    args.operationName || undefined,
-  );
+    args.operationName,
+  )!;
   span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_TYPE, operation.operation);
 
   const operationName = operation.name?.value;
   if (operationName) {
     span.setAttribute(SEMATTRS_GRAPHQL_OPERATION_NAME, operationName);
   }
-
-  const document = defaultPrintFn(input.args.document);
-  span.setAttribute(SEMATTRS_GRAPHQL_DOCUMENT, document);
 }
 
 export function setGraphQLExecutionResultAttributes(input: {
@@ -362,7 +388,7 @@ export function setGraphQLExecutionResultAttributes(input: {
     const codes: string[] = [];
     for (const error of result.errors) {
       span.recordException(error);
-      if (error.extensions['code']) {
+      if (error.extensions?.['code']) {
         codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
       }
     }
@@ -546,3 +572,35 @@ export function registerException(ctx: Context | undefined, error: any) {
   span.setStatus({ code: SpanStatusCode.ERROR, message });
   span.recordException(error);
 }
+
+const operationByDocument = new WeakMap<
+  DocumentNode,
+  Map<string | null, OperationDefinitionNode | undefined>
+>();
+export const getOperationFromDocument = (
+  document: DocumentNode,
+  operationName?: string | null,
+): OperationDefinitionNode | undefined => {
+  let operation = operationByDocument.get(document)?.get(operationName ?? null);
+
+  if (operation) {
+    return operation;
+  }
+
+  try {
+    operation = getOperationASTFromDocument(
+      document,
+      operationName || undefined,
+    );
+  } catch {
+    // Return undefined if the operation is either not found, or multiple operations exists and no
+    // operationName has been provided
+  }
+
+  let operationNameMap = operationByDocument.get(document);
+  if (!operationNameMap) {
+    operationByDocument.set(document, (operationNameMap = new Map()));
+  }
+  operationNameMap.set(operationName ?? null, operation);
+  return operation;
+};
