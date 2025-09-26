@@ -1222,6 +1222,7 @@ describe('useOpenTelemetry', () => {
         // Hive specific
         ['hive.client.name']: 'test-client-name',
         ['hive.client.version']: 'test-client-version',
+        ['hive.graphql']: true,
 
         // Operation Attributes
         [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
