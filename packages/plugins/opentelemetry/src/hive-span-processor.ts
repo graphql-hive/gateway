@@ -78,7 +78,8 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       return;
     }
 
-    if (span.name.startsWith('graphql.operation')) {
+    if (isOperationSpan(span)) {
+      span.setAttribute('hive.graphql', true)
       traceState?.operationRoots.set(spanId, span as SpanImpl);
       return;
     }
@@ -198,6 +199,14 @@ function copyAttribute(
   targetAttrName: string = sourceAttrName,
 ) {
   target.attributes[targetAttrName] = source.attributes[sourceAttrName];
+}
+
+function isOperationSpan(span: Span): boolean {
+  if (!span.name.startsWith('graphql.operation')) {
+    return false;
+  }
+  const followingChar = span.name.at(17);
+  return !followingChar || followingChar === ' ';
 }
 
 const SPANS_WITH_ERRORS = [
