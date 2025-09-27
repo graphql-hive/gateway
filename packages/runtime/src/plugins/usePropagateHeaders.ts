@@ -118,8 +118,7 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           const value = headers[key];
           if (value) {
             for (const v of value) {
-              const current = response.headers.get(key);
-              if (v !== current) {
+              if (v !== response.headers.get(key)) {
                 response.headers.append(key, v);
               }
             }
