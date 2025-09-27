@@ -182,7 +182,7 @@ function resolveExternalList<TContext extends Record<string, any>>(
   );
 }
 
-const reportedErrors = new WeakMap<GraphQLError, boolean>();
+const reportedErrors = new WeakSet<GraphQLError>();
 
 function reportUnpathedErrorsViaNull(unpathedErrors: Array<GraphQLError>) {
   if (unpathedErrors.length) {
@@ -190,7 +190,7 @@ function reportUnpathedErrorsViaNull(unpathedErrors: Array<GraphQLError>) {
     for (const error of unpathedErrors) {
       if (!reportedErrors.has(error)) {
         unreportedErrors.push(error);
-        reportedErrors.set(error, true);
+        reportedErrors.add(error);
       }
     }
 
