@@ -49,5 +49,8 @@ RUN echo "omit=peer" > .npmrc && chown node .npmrc
 # we need to set NODE_PATH to include because the root node_modules will dynamically import modules and we want node to search user-installed modules too (when extending the docker image)
 ENV NODE_PATH=/gateway/node_modules
 
+# ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
