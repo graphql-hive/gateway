@@ -1,5 +1,21 @@
 # @graphql-hive/gateway
 
+## 2.1.8
+### Patch Changes
+
+
+
+- [#1548](https://github.com/graphql-hive/gateway/pull/1548) [`f6938a5`](https://github.com/graphql-hive/gateway/commit/f6938a5d20009351e7f9d3888925152826dabf38) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.1.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.1.2) (from `^8.1.1`, in `dependencies`)
+
+
+- [#1565](https://github.com/graphql-hive/gateway/pull/1565) [`1a0d955`](https://github.com/graphql-hive/gateway/commit/1a0d955e5679d923342ed539f7447ab9a8ae9277) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Include also system CA certificates for Node in Docker image
+  
+  In light of the cert removals from https://nodejs.org/en/blog/release/v24.7.0
+- Updated dependencies [[`f6938a5`](https://github.com/graphql-hive/gateway/commit/f6938a5d20009351e7f9d3888925152826dabf38), [`9c610b9`](https://github.com/graphql-hive/gateway/commit/9c610b989099f84ddb2a14a9846b4d13c957a444), [`a6a203c`](https://github.com/graphql-hive/gateway/commit/a6a203c90a0303c487661d1b8740fdde041fb313)]:
+  - @graphql-hive/plugin-aws-sigv4@2.0.8
+
 ## 2.1.7
 ### Patch Changes
 
