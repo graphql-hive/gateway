@@ -16,7 +16,7 @@
     "graphql-sse": "^2.5.3",
     "graphql-ws": "^6.0.6",
     "ws": "^8.18.3",
-    "@graphql-hive/gateway": "^2.1.7"
+    "@graphql-hive/gateway": "^2.1.8"
   },
   "devDependencies": {
     "tsx": "^4.20.3",
