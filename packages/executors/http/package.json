@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^5.0.0",
-    "@types/extract-files": "13.0.1",
+    "@types/extract-files": "13.0.2",
     "@whatwg-node/disposablestack": "^0.0.6",
     "extract-files": "13.0.0",
     "graphql": "^16.9.0",
