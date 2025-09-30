@@ -48,7 +48,7 @@ for (const PubSub of PubSubCtors) {
           });
           break;
       }
-    }, 60_000);
+    }, globalThis.Bun ? undefined : 60_000);
 
     /** Imitates a flush of data/operations by simply waiting, if the pubsub is async, like Redis. */
     function flush(ms: number = 100) {
