@@ -7,7 +7,7 @@
     "@graphql-hive/nestjs": "workspace:^",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
-    "@nestjs/graphql": "^13.0.3",
+    "@nestjs/graphql": "^13.2.0",
     "@nestjs/platform-express": "^11.1.6",
     "file-type": "^21.0.0",
     "graphql": "^16.10.0",
