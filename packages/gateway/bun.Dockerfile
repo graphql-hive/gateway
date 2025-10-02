@@ -19,6 +19,8 @@ RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list
 RUN apt-get dist-upgrade -y
 
 RUN apt-get install -y \
+  # for security updates
+  debian-security-support \
   # necessary for the gateway to run
   libc-bin \
   # for healthchecks
@@ -26,15 +28,18 @@ RUN apt-get install -y \
   # for proper signal propagation
   dumb-init
 
-# Install the latest OpenSSL
-RUN apt-get update && apt-get upgrade && apt-get install build-essential checkinstall zlib1g-dev -y
-RUN wget https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz && \
-  tar -xf openssl-3.5.4.tar.gz && \
-  cd openssl-3.5.4 && \
-  ./config && \
-  make && \
-  make install && \
-  ldconfig
+# Install specific security updates for openssl
+RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i openssl_3.5.1-1+deb13u1_amd64.deb \
+  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl3t64_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i libssl3t64_3.5.1-1+deb13u1_amd64.deb \
+  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb
+
+RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+ apt-get update && \
+ apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy && \
+ apt-get install -f -y
 
 # cleanup
 RUN apt-get autoremove -y && \
