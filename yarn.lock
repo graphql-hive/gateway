@@ -312,9 +312,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:0.35.0":
-  version: 0.35.0
-  resolution: "@apollo/rover@npm:0.35.0"
+"@apollo/rover@npm:0.36.1":
+  version: 0.36.1
+  resolution: "@apollo/rover@npm:0.36.1"
   dependencies:
     axios: "npm:^1.6.5"
     axios-proxy-builder: "npm:^0.1.1"
@@ -323,7 +323,7 @@ __metadata:
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/c53e812d1c131d05c48b69d028dab631c4032c76813ce707bb282fe574fea64322724ca7999b71fff9eb9af3de05f503765e15505d57c314bb45316579692151
+  checksum: 10c0/5bf8e04138f8d9b34aafcbb0be71e66ca5fe7108d12668f1d0fba5bb322b9863c6abd642e0c5f71b5ea27de032ad90a0701a70cde0be60c140b53465a2629e00
   languageName: node
   linkType: hard
 
@@ -5864,7 +5864,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:0.35.0"
+    "@apollo/rover": "npm:0.36.1"
     "@babel/parser": "npm:^7.28.4"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"

@@ -7,7 +7,7 @@
     "start": "tsx ./src/bin.ts"
   },
   "devDependencies": {
-    "@apollo/rover": "0.35.0",
+    "@apollo/rover": "0.36.1",
     "@babel/parser": "^7.28.4",
     "@types/jscodeshift": "^17.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
