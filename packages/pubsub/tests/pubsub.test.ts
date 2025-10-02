@@ -20,35 +20,38 @@ for (const PubSub of PubSubCtors) {
   )(PubSub.name, () => {
     let redis: Container | null = null;
     let nats: Container | null = null;
-    beforeAll(async () => {
-      switch (PubSub) {
-        case RedisPubSub: {
-          const { container } = createTenv(__dirname);
-          redis = await container({
-            name: 'redis',
-            image: 'redis:8',
-            containerPort: 6379,
-            healthcheck: ['CMD-SHELL', 'redis-cli ping'],
-            env: {
-              LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
-            },
-          });
-          return;
+    beforeAll(
+      async () => {
+        switch (PubSub) {
+          case RedisPubSub: {
+            const { container } = createTenv(__dirname);
+            redis = await container({
+              name: 'redis',
+              image: 'redis:8',
+              containerPort: 6379,
+              healthcheck: ['CMD-SHELL', 'redis-cli ping'],
+              env: {
+                LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+              },
+            });
+            return;
+          }
+          case NATSPubSub:
+            const { container } = createTenv(__dirname);
+            nats = await container({
+              name: 'nats',
+              image: 'nats:2.11-alpine', // we want alpine for healtcheck
+              containerPort: 4222,
+              healthcheck: [
+                'CMD-SHELL',
+                'wget --spider http://localhost:8222/healthz',
+              ],
+            });
+            break;
         }
-        case NATSPubSub:
-          const { container } = createTenv(__dirname);
-          nats = await container({
-            name: 'nats',
-            image: 'nats:2.11-alpine', // we want alpine for healtcheck
-            containerPort: 4222,
-            healthcheck: [
-              'CMD-SHELL',
-              'wget --spider http://localhost:8222/healthz',
-            ],
-          });
-          break;
-      }
-    }, 60_000);
+      },
+      globalThis.Bun ? undefined : 60_000,
+    );
 
     /** Imitates a flush of data/operations by simply waiting, if the pubsub is async, like Redis. */
     function flush(ms: number = 100) {
