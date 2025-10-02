@@ -21,10 +21,18 @@ RUN apt-get dist-upgrade -y
 RUN apt-get install -y \
   # for healthchecks
   wget curl \
-  # update openssl
-  openssl \
   # for proper signal propagation
   dumb-init
+
+# Install the latest OpenSSL
+RUN apt-get update && apt-get upgrade && apt-get install build-essential checkinstall zlib1g-dev -y
+RUN wget https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz && \
+  tar -xf openssl-3.5.4.tar.gz && \
+  cd openssl-3.5.4 && \
+  ./configure && \
+  make && \
+  make install && \
+  ldconfig
 
 # cleanup
 RUN apt-get autoremove -y && \
