@@ -1,5 +1,29 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.8
+### Patch Changes
+
+
+
+- [#1572](https://github.com/graphql-hive/gateway/pull/1572) [`a79f81e`](https://github.com/graphql-hive/gateway/commit/a79f81e04b17fcd089eff5839f4f6797c2ae1274) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.6.0` ↗︎](https://www.npmjs.com/package/@types/node/v/24.6.0) (from `^24.5.2`, in `dependencies`)
+
+
+- [#1576](https://github.com/graphql-hive/gateway/pull/1576) [`458db4c`](https://github.com/graphql-hive/gateway/commit/458db4cb53960d92ce81a148aaf63671bf7b01ee) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.6.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.6.1) (from `^24.6.0`, in `dependencies`)
+
+
+- [#1578](https://github.com/graphql-hive/gateway/pull/1578) [`91a848b`](https://github.com/graphql-hive/gateway/commit/91a848bf2db0b65f2751aaf0b2ebea9ae580e66d) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.6.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.6.2) (from `^24.6.1`, in `dependencies`)
+- Updated dependencies [[`883cd5a`](https://github.com/graphql-hive/gateway/commit/883cd5af9bc9badd0adc5596eb6a8cad741a3cb4), [`91a848b`](https://github.com/graphql-hive/gateway/commit/91a848bf2db0b65f2751aaf0b2ebea9ae580e66d)]:
+  - @graphql-hive/logger@1.0.6
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/fusion-runtime@1.2.5
+  - @graphql-mesh/transport-common@1.0.6
+
 ## 2.1.7
 ### Patch Changes
 

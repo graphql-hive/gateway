@@ -1,5 +1,29 @@
 # @graphql-hive/gateway
 
+## 2.1.9
+### Patch Changes
+
+
+
+- [#1572](https://github.com/graphql-hive/gateway/pull/1572) [`a79f81e`](https://github.com/graphql-hive/gateway/commit/a79f81e04b17fcd089eff5839f4f6797c2ae1274) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`dotenv@^17.2.3` ↗︎](https://www.npmjs.com/package/dotenv/v/17.2.3) (from `^17.2.2`, in `dependencies`)
+
+
+- [#1576](https://github.com/graphql-hive/gateway/pull/1576) [`458db4c`](https://github.com/graphql-hive/gateway/commit/458db4cb53960d92ce81a148aaf63671bf7b01ee) Thanks [@dependabot](https://github.com/apps/dependabot)! - Update OpenSSL in Docker images to address security vulnerabilities;
+  - https://avd.aquasec.com/nvd/cve-2025-9230
+  - https://avd.aquasec.com/nvd/cve-2025-9231
+- Updated dependencies [[`a79f81e`](https://github.com/graphql-hive/gateway/commit/a79f81e04b17fcd089eff5839f4f6797c2ae1274), [`458db4c`](https://github.com/graphql-hive/gateway/commit/458db4cb53960d92ce81a148aaf63671bf7b01ee), [`91a848b`](https://github.com/graphql-hive/gateway/commit/91a848bf2db0b65f2751aaf0b2ebea9ae580e66d), [`883cd5a`](https://github.com/graphql-hive/gateway/commit/883cd5af9bc9badd0adc5596eb6a8cad741a3cb4), [`91a848b`](https://github.com/graphql-hive/gateway/commit/91a848bf2db0b65f2751aaf0b2ebea9ae580e66d), [`a79f81e`](https://github.com/graphql-hive/gateway/commit/a79f81e04b17fcd089eff5839f4f6797c2ae1274), [`91a848b`](https://github.com/graphql-hive/gateway/commit/91a848bf2db0b65f2751aaf0b2ebea9ae580e66d), [`ad8ff45`](https://github.com/graphql-hive/gateway/commit/ad8ff4573f73a9f0e9fa96476c6a1647a97df4ec)]:
+  - @graphql-hive/gateway-runtime@2.1.8
+  - @graphql-hive/logger@1.0.6
+  - @graphql-hive/plugin-aws-sigv4@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.0.11
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/plugin-prometheus@2.0.12
+  - @graphql-mesh/transport-http@1.0.6
+  - @graphql-mesh/transport-http-callback@1.0.6
+  - @graphql-mesh/transport-ws@2.0.6
+
 ## 2.1.8
 ### Patch Changes
 
