@@ -86,3 +86,10 @@ updates:
           - 'major'
           - 'minor'
           - 'patch'
+      apollo:
+        patterns:
+          - '@apollo/*'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'

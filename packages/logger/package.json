@@ -102,7 +102,7 @@
     "pino": "^9.12.0",
     "pkgroll": "2.15.4",
     "quick-format-unescaped": "^4.0.4",
-    "winston": "^3.18.1"
+    "winston": "^3.18.3"
   },
   "sideEffects": false,
   "dependencies.info": "all of the dependencies are in devDependencies which will bundle them into the package using pkgroll making pkgroll ultimately zero-dep with a smaller footprint because of tree-shaking"

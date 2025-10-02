@@ -19,10 +19,25 @@ RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list
 RUN apt-get dist-upgrade -y
 
 RUN apt-get install -y \
+  # for security updates
+  debian-security-support \
   # for healthchecks
   wget curl \
   # for proper signal propagation
   dumb-init
+
+# Install specific security updates for openssl
+RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i openssl_3.5.1-1+deb13u1_amd64.deb \
+  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl3t64_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i libssl3t64_3.5.1-1+deb13u1_amd64.deb \
+  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb \
+  && dpkg -i openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb
+
+RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
+ apt-get update && \
+ apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy && \
+ apt-get install -f -y
 
 # cleanup
 RUN apt-get autoremove -y && \
