@@ -21,6 +21,8 @@ RUN apt-get dist-upgrade -y
 RUN apt-get install -y \
   # for healthchecks
   wget curl \
+  # update openssl
+  openssl \
   # for proper signal propagation
   dumb-init
 

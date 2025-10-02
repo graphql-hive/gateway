@@ -23,6 +23,8 @@ RUN apt-get install -y \
   libc-bin \
   # for healthchecks
   wget curl \
+  # update openssl
+  openssl \
   # for proper signal propagation
   dumb-init
 
