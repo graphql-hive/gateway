@@ -9,7 +9,7 @@
     "graphql-sse": "^2.5.3",
     "tslib": "^2.8.1",
     "url-join": "^5.0.0",
-    "@graphql-hive/gateway": "^2.1.8"
+    "@graphql-hive/gateway": "^2.1.9"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
