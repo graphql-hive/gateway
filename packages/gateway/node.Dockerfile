@@ -29,7 +29,7 @@ RUN apt-get update && apt-get upgrade && apt-get install build-essential checkin
 RUN wget https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz && \
   tar -xf openssl-3.5.4.tar.gz && \
   cd openssl-3.5.4 && \
-  ./configure && \
+  ./config && \
   make && \
   make install && \
   ldconfig
