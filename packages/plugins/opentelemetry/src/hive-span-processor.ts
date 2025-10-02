@@ -78,7 +78,8 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       return;
     }
 
-    if (span.name.startsWith('graphql.operation')) {
+    if (isOperationSpan(span)) {
+      span.setAttribute('hive.graphql', true);
       traceState?.operationRoots.set(spanId, span as SpanImpl);
       return;
     }
@@ -151,9 +152,12 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       return;
     }
 
-    if (span.name === 'graphql.execute') {
+    if (SPANS_WITH_ERRORS.includes(span.name)) {
       copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_CODES);
       copyAttribute(span, operationSpan, SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT);
+    }
+
+    if (span.name === 'graphql.execute') {
       copyAttribute(
         span,
         operationSpan,
@@ -196,3 +200,17 @@ function copyAttribute(
 ) {
   target.attributes[targetAttrName] = source.attributes[sourceAttrName];
 }
+
+function isOperationSpan(span: Span): boolean {
+  if (!span.name.startsWith('graphql.operation')) {
+    return false;
+  }
+  const followingChar = span.name.at(17);
+  return !followingChar || followingChar === ' ';
+}
+
+const SPANS_WITH_ERRORS = [
+  'graphql.parse',
+  'graphql.validate',
+  'graphql.execute',
+];
