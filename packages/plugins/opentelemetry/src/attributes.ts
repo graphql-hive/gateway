@@ -21,6 +21,9 @@ export {
 export const SEMATTRS_GRAPHQL_DOCUMENT = 'graphql.document';
 export const SEMATTRS_GRAPHQL_OPERATION_TYPE = 'graphql.operation.type';
 export const SEMATTRS_GRAPHQL_OPERATION_NAME = 'graphql.operation.name';
+
+// Identifies a graphql request
+export const SEMATTRS_HIVE_GRAPHQL = 'hive.graphql';
 export const SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH =
   'hive.graphql.operation.hash';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT = 'hive.graphql.error.count';

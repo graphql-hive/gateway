@@ -9,6 +9,7 @@ import {
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
   SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
@@ -1189,6 +1190,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Hive specific
+        [SEMATTRS_HIVE_GRAPHQL]: true,
         ['hive.client.name']: 'test-client-name',
         ['hive.client.version']: 'test-client-version',
 

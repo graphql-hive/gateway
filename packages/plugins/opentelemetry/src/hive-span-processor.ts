@@ -11,6 +11,7 @@ import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
 import { SEMATTRS_HTTP_METHOD } from '@opentelemetry/semantic-conventions';
 import {
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+  SEMATTRS_HIVE_GRAPHQL,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
 } from './attributes';
@@ -130,6 +131,8 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
         for (const attr in span.attributes) {
           operationSpan.attributes[attr] ??= span.attributes[attr];
         }
+
+        operationSpan.attributes[SEMATTRS_HIVE_GRAPHQL] = true;
 
         // Now that operation spans have been updated, we can report it
         this.processor.onEnd(operationSpan);
