@@ -92,16 +92,12 @@ const supergraph = await getStitchedSchemaFromLocalSchemas({
                 category: product.category,
               };
             },
-            shippingEstimate(
-              product: { price: number; weight: number },
-              args: { currency?: string },
-            ) {
+            shippingEstimate(product: { price: number; weight: number }) {
               const value = product.price * product.weight * 10;
-
-              if (args.currency === 'EUR') {
-                return value * 1.5;
-              }
-
+              return value;
+            },
+            shippingEstimateEUR(product: { price: number; weight: number }) {
+              const value = product.price * product.weight * 10;
               return value;
             },
             isExpensiveCategory(product: {
@@ -166,18 +162,21 @@ const supergraph = await getStitchedSchemaFromLocalSchemas({
                 category: product.category,
               };
             },
+            price(parent, args) {
+              if (args.currency === 'EUR') return parent.price * 2;
+              if (args.currency === 'USD') return parent.price;
+              throw new Error('Unsupported currency ' + args.currency);
+            },
           },
         },
       },
     ]),
   },
-  // onSubgraphExecute(subgraph, executionRequest, result) {
-  //   const query = print(executionRequest.document);
-  //   console.log(query);
-  //   // if (subgraph === 'a' && query.includes('_entities')) {
-  //   //   // debugger;
-  //   // }
-  // },
+  onSubgraphExecute(subgraph, executionRequest, result) {
+    const query = print(executionRequest.document);
+    console.log(query);
+    console.dir(result, { depth: 3000 });
+  },
 });
 
 it('test-query-0', { timeout: 1000 }, async () => {
@@ -202,15 +201,15 @@ it('test-query-0', { timeout: 1000 }, async () => {
         {
           upc: 'p1',
           name: 'p-name-1',
-          shippingEstimate: 110,
-          shippingEstimateEUR: 165,
+          shippingEstimate: 110, // 11 * 1 * 10
+          shippingEstimateEUR: 220, // (11 * 2) * 1 * 10
           isExpensiveCategory: false,
         },
         {
           upc: 'p2',
           name: 'p-name-2',
-          shippingEstimate: 440,
-          shippingEstimateEUR: 660,
+          shippingEstimate: 440, // 22 * 2 * 10
+          shippingEstimateEUR: 880, // (22 * 2) * 2 * 10
           isExpensiveCategory: true,
         },
       ],
