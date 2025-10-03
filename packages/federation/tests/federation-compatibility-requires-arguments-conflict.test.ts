@@ -174,7 +174,7 @@ const supergraph = await getStitchedSchemaFromLocalSchemas({
   },
   onSubgraphExecute(subgraph, executionRequest, result) {
     const query = print(executionRequest.document);
-    console.log(query);
+    console.log(subgraph, query, executionRequest.variables);
     console.dir(result, { depth: 3000 });
   },
 });
