@@ -149,13 +149,13 @@ const supergraph = await getStitchedSchemaFromLocalSchemas({
       },
     ]),
   },
-  onSubgraphExecute(subgraph, executionRequest, result) {
-    const query = print(executionRequest.document);
-    console.log(query);
-    // if (subgraph === 'a' && query.includes('_entities')) {
-    //   // debugger;
-    // }
-  },
+  // onSubgraphExecute(subgraph, executionRequest, result) {
+  //   const query = print(executionRequest.document);
+  //   console.log(query);
+  //   // if (subgraph === 'a' && query.includes('_entities')) {
+  //   //   // debugger;
+  //   // }
+  // },
 });
 
 it('test query 0', { timeout: 1000 }, async () => {
