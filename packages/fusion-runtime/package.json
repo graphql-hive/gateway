@@ -67,7 +67,7 @@
   "devDependencies": {
     "change-case": "^5.4.4",
     "graphql": "^16.9.0",
-    "pkgroll": "2.15.4"
+    "pkgroll": "2.17.0"
   },
   "sideEffects": false
 }

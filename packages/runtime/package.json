@@ -95,7 +95,7 @@
     "graphql": "^16.9.0",
     "graphql-sse": "^2.5.3",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.15.4",
+    "pkgroll": "2.17.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tsx": "4.20.6"
