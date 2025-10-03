@@ -304,13 +304,18 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                           nestedTypeName
                         ]?.resolvers.get(subschema);
                       if (resolver) {
+                        const subschemaTypes =
+                          stitchingInfo.mergedTypes[
+                            nestedTypeName
+                          ]!.typeMaps.get(subschema)!;
+                        const returnType = subschemaTypes[nestedTypeName];
                         const res = await resolver(
                           nestedParentItem,
                           context,
                           info,
                           subschema,
                           selectionSet,
-                          info.parentType,
+                          returnType, // returnType
                           info.parentType,
                         );
                         if (res) {
