@@ -305,6 +305,7 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                           nestedTypeName
                         ]?.resolvers.get(subschema);
                       if (resolver) {
+                        // TODO: quickfix, think about it
                         const subschemaTypes =
                           stitchingInfo.mergedTypes[
                             nestedTypeName
