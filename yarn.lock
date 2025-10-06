@@ -15228,7 +15228,7 @@ __metadata:
 
 "graphql-federation-gateway-audit@graphql-hive/federation-gateway-audit#main":
   version: 1.0.0
-  resolution: "graphql-federation-gateway-audit@https://github.com/graphql-hive/federation-gateway-audit.git#commit=82d615dc4353a02fb39b4086adb964c6c7441b4e"
+  resolution: "graphql-federation-gateway-audit@https://github.com/graphql-hive/federation-gateway-audit.git#commit=842c2f0eeeb571ba16c1abfe59929c161589f2d8"
   dependencies:
     "@apollo/composition": "npm:2.11.2"
     "@apollo/subgraph": "npm:2.11.2"
@@ -15245,7 +15245,7 @@ __metadata:
     yargs: "npm:18.0.0"
   bin:
     graphql-federation-audit: ./dist/cli.js
-  checksum: 10c0/d60f0bf837e3eac3e593e0675eb639c42daffce0bac6c40d89637a9caa28d62127d74d3f4eedd4bf16d6146a4aa8697bce5a43f49e7f6ea82e86433d1b67b366
+  checksum: 10c0/69e5ef728f9ed854610a40631f3f469d450f5b95b68e20f62952237bdaae4b744d4a03cf9bfacb8acc1fced885d2d578724dfb3f8ea7a05557765e09576be2a4
   languageName: node
   linkType: hard
 
