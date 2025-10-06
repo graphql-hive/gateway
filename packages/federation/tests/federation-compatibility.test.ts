@@ -5,7 +5,6 @@ import {
   GatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   ExecutionResult,
   filterSchema,
@@ -13,16 +12,13 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
-import { assertSingleExecutionValue } from '@internal/testing';
 import {
   buildSchema,
   getNamedType,
   GraphQLSchema,
   isEnumType,
   lexicographicSortSchema,
-  parse,
   printSchema,
-  validate,
 } from 'graphql';
 import { createRouter } from 'graphql-federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -154,84 +150,42 @@ describe('Federation Compatibility', () => {
         );
       });
       tests.forEach((_, i) => {
-        describe(`test-query-${i}`, () => {
-          // TODO: audit tests are not idempotent anymore, we need to restart the subgraphs
-          // it('gives the correct result w/ core', async () => {
-          //   const test = tests[i];
-          //   if (!test) {
-          //     throw new Error(`Test ${i} not found`);
-          //   }
-          //   const document = parse(test.query, { noLocation: true });
-          //   const validationErrors = validate(stitchedSchema, document);
-          //   let result: ExecutionResult;
-          //   if (validationErrors.length > 0) {
-          //     result = {
-          //       errors: validationErrors,
-          //     };
-          //   } else {
-          //     const execRes = await normalizedExecutor({
-          //       schema: stitchedSchema,
-          //       document,
-          //     });
-          //     assertSingleExecutionValue(execRes);
-          //     result = execRes;
-          //   }
-          //   const received = {
-          //     data: result.data ?? null,
-          //     errors: !!result.errors?.length,
-          //   };
-
-          //   const expected = {
-          //     data: test.expected.data ?? null,
-          //     errors: test.expected.errors ?? false,
-          //   };
-
-          //   try {
-          //     expect(received).toEqual(expected);
-          //   } catch (e) {
-          //     result.errors?.forEach((err) => {
-          //       console.error(err);
-          //     });
-          //     throw e;
-          //   }
-          // });
-          it('gives the correct result w/ gateway', async () => {
-            const test = tests[i];
-            if (!test) {
-              throw new Error(`Test ${i} not found`);
-            }
-            const response = await gatewayRuntime.fetch(
-              'http://localhost/graphql',
-              {
-                method: 'POST',
-                headers: {
-                  'content-type': 'application/json',
-                },
-                body: JSON.stringify({
-                  query: test.query,
-                }),
+        it(`test-query-${i}`, async () => {
+          const test = tests[i];
+          if (!test) {
+            throw new Error(`Test ${i} not found`);
+          }
+          const response = await gatewayRuntime.fetch(
+            'http://localhost/graphql',
+            {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
               },
-            );
-            const result: ExecutionResult = await response.json();
-            const received = {
-              data: result.data ?? null,
-              errors: !!result.errors?.length,
-            };
+              body: JSON.stringify({
+                query: test.query,
+              }),
+            },
+          );
+          const result: ExecutionResult = await response.json();
+          const received = {
+            data: result.data ?? null,
+            errors: !!result.errors?.length,
+          };
 
-            const expected = {
-              data: test.expected.data ?? null,
-              errors: test.expected.errors ?? false,
-            };
+          const expected = {
+            data: test.expected.data ?? null,
+            errors: test.expected.errors ?? false,
+          };
 
-            try {
-              expect(received).toEqual(expected);
-            } catch (e) {
-              result.errors?.forEach((err) => {
-                console.error(err);
-              });
-              throw e;
-            }
-          });
+          try {
+            expect(received).toEqual(expected);
+          } catch (e) {
+            result.errors?.forEach((err) => {
+              console.error(err);
+            });
+            throw e;
+          }
         });
       });
     });
