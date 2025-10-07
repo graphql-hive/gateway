@@ -90,7 +90,7 @@
     "@whatwg-node/server": "^0.10.0",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.16.0",
-    "pkgroll": "2.17.0",
+    "pkgroll": "2.18.0",
     "rimraf": "^6.0.1",
     "rollup": "^4.52.4",
     "tsx": "^4.20.6"
