@@ -118,8 +118,10 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           const value = headers[key];
           if (value) {
             for (const v of value) {
-              if (v !== response.headers.get(key)) {
-                response.headers.append(key, v);
+              if (key === 'set-cookie') {
+                response.headers.append(key, v); // only set-cookie allows duplicated headers
+              } else {
+                response.headers.set(key, v);
               }
             }
           }
