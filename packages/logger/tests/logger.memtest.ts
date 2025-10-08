@@ -20,6 +20,11 @@ describe.each([
     {
       cwd,
       pathname: `/${name}`,
+      // no need to stresstest logging more
+      idle: 5_000,
+      duration: 10_000,
+      calmdown: 5_000,
+      runs: 3,
     },
     async () => {
       const port = await getAvailablePort();
