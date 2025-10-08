@@ -90,6 +90,9 @@ export function spawn(
   let stdout = '';
   let stderr = '';
   let stdboth = '';
+  // Limit stored output to prevent memory issues with high-volume logging
+  // Keep last 10MB of output (approximately 10 million characters)
+  const MAX_OUTPUT_LENGTH = 10_000_000;
   const proc: Proc = {
     waitForExit,
     kill(signal) {
@@ -141,13 +144,25 @@ export function spawn(
   child.stdout.on('data', (x) => {
     const str = x.toString();
     stdout += str;
+    if (stdout.length > MAX_OUTPUT_LENGTH) {
+      stdout = stdout.slice(-MAX_OUTPUT_LENGTH);
+    }
     stdboth += str;
+    if (stdboth.length > MAX_OUTPUT_LENGTH) {
+      stdboth = stdboth.slice(-MAX_OUTPUT_LENGTH);
+    }
     pipeLog({ cwd, pipeLogs }, x);
   });
   child.stderr.on('data', (x) => {
     const str = replaceStderr(x.toString());
     stderr += str;
+    if (stderr.length > MAX_OUTPUT_LENGTH) {
+      stderr = stderr.slice(-MAX_OUTPUT_LENGTH);
+    }
     stdboth += str;
+    if (stdboth.length > MAX_OUTPUT_LENGTH) {
+      stdboth = stdboth.slice(-MAX_OUTPUT_LENGTH);
+    }
     pipeLog({ cwd, pipeLogs }, x);
   });
 
