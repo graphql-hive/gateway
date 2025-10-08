@@ -19,14 +19,20 @@ export interface LoadtestOptions extends ProcOptions {
   calmdown: number;
   /** How many times to run the loadtests? */
   runs: number;
-  /** The snapshotting window of the GraphQL server memory in milliseconds. */
+  /** The snapshotting window of the server memory in milliseconds. */
   memorySnapshotWindow: number;
-  /** The GraphQL server on which the loadtest is running. */
+  /** The server on which the loadtest is running. */
   server: Server;
   /**
    * The GraphQL query to execute for the loadtest.
+   * Either `query` or `pathname` must be provided.
    */
-  query: string;
+  query?: string;
+  /**
+   * The HTTP pathname to request for the loadtest.
+   * Either `query` or `pathname` must be provided.
+   */
+  pathname?: string;
   /**
    * Whether to take heap snapshots on the end of the `idle` phase and then at the end
    * of the `calmdown` {@link LoadtestPhase phase} in each of the {@link runs}.
@@ -104,6 +110,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     memorySnapshotWindow,
     server,
     query,
+    pathname,
     takeHeapSnapshots,
     performHeapSampling,
     allowFailingRequests,
@@ -120,36 +127,58 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     throw new Error(`At least one run is necessary, got "${runs}"`);
   }
 
+  if (!query && !pathname) {
+    throw new Error('Either "query" or "pathname" must be provided');
+  }
+
+  if (query && pathname) {
+    throw new Error('Cannot provide both "query" and "pathname"');
+  }
+
   const startTime = new Date();
 
   // we create a random id to make sure the heapsnapshot files are unique and easily distinguishable in the filesystem
   // when running multiple loadtests in parallel. see e2e/opentelemetry memtest as an example
   const id = Math.random().toString(36).slice(2, 6);
 
-  // make sure the query works before starting the loadtests
-  // the request here matches the request done in loadtest-script.ts
-  const res = await fetch(
-    `${server.protocol}://localhost:${server.port}/graphql`,
-    {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
+  // make sure the endpoint works before starting the loadtests
+  // the request here matches the request done in loadtest-script.ts or http-loadtest-script.ts
+  if (query) {
+    const res = await fetch(
+      `${server.protocol}://localhost:${server.port}/graphql`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
       },
-      body: JSON.stringify({ query }),
-    },
-  );
-  const text = await res.text();
-  if (!res.ok) {
-    const err = new Error(
-      `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
     );
-    err.name = 'ResponseError';
-    throw err;
-  }
-  if (!text.includes('"data":{')) {
-    const err = new Error(`Body does not contain "data":\n${text}`);
-    err.name = 'ResponseError';
-    throw err;
+    const text = await res.text();
+    if (!res.ok) {
+      const err = new Error(
+        `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
+      );
+      err.name = 'ResponseError';
+      throw err;
+    }
+    if (!text.includes('"data":{')) {
+      const err = new Error(`Body does not contain "data":\n${text}`);
+      err.name = 'ResponseError';
+      throw err;
+    }
+  } else if (pathname) {
+    const res = await fetch(
+      `${server.protocol}://localhost:${server.port}${pathname}`,
+    );
+    if (!res.ok) {
+      const text = await res.text();
+      const err = new Error(
+        `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
+      );
+      err.name = 'ResponseError';
+      throw err;
+    }
   }
 
   const ctrl = new AbortController();
@@ -244,9 +273,17 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
       'run',
       `--vus=${vus}`,
       `--duration=${duration}ms`,
-      `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
-      `--env=QUERY=${query}`,
-      path.join(__dirname, 'loadtest-script.ts'),
+      // graphql
+      query &&
+        `--env=URL=${server.protocol}://localhost:${server.port}/graphql`,
+      query && `--env=QUERY=${query}`,
+      // pathname
+      pathname &&
+        `--env=URL=${server.protocol}://localhost:${server.port}${pathname}`,
+      path.join(
+        __dirname,
+        query ? 'graphql-loadtest-script.ts' : 'pathname-loadtest-script.ts',
+      ),
     );
     await Promise.race([waitForExit, serverThrowOnExit, memorySnapshotting]);
 
