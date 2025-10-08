@@ -1,7 +1,16 @@
 import { createServer } from 'node:http';
 import { Logger } from '../src/logger';
 
-const syncLogger = new Logger({ level: 'debug' });
+const syncLogger = new Logger({
+  level: 'debug',
+  writers: [
+    {
+      write: () => {
+        // noop
+      },
+    },
+  ],
+});
 
 const asyncLogger = new Logger({
   level: 'debug',
