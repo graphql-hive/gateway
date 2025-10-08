@@ -14,6 +14,16 @@ interface FromSubgraphsToClientPayload<TContext extends Record<string, any>> {
 }
 
 export interface PropagateHeadersOpts<TContext extends Record<string, any>> {
+  /**
+   * When multiple subgraphs send the same header, should they be deduplicated?
+   * If so, the last subgraphs's header will be _set_ and propagated; otherwise,
+   * all headers will _appended_ and propagated.
+   *
+   * The only exception is `set-cookie`, which is always appended.
+   *
+   * @default false
+   */
+  deduplicateHeaders?: boolean;
   fromClientToSubgraphs?: (
     payload: FromClientToSubgraphsPayload<TContext>,
   ) =>
@@ -118,9 +128,13 @@ export function usePropagateHeaders<TContext extends Record<string, any>>(
           const value = headers[key];
           if (value) {
             for (const v of value) {
-              if (key === 'set-cookie') {
-                response.headers.append(key, v); // only set-cookie allows duplicated headers
+              if (
+                !opts.deduplicateHeaders ||
+                key === 'set-cookie' // only set-cookie allows duplicated headers
+              ) {
+                response.headers.append(key, v);
               } else {
+                // deduplicate headers active
                 response.headers.set(key, v);
               }
             }
