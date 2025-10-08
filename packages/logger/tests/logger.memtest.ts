@@ -10,6 +10,7 @@ describe.each([
   'sync-logging',
   'async-logging',
   'child-loggers',
+  'child-loggers-large',
   'large-attributes',
   'circular-refs',
   'lazy-attributes',

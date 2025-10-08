@@ -59,12 +59,27 @@ const server = createServer((req, res) => {
         );
         break;
 
-      case 'child-loggers':
+      case 'child-loggers': {
         // Create child loggers
         const child1 = syncLogger.child({ parent: 'root' }, 'child1 ');
         const child2 = child1.child({ parent: 'child1' }, 'child2 ');
         child2.info('Deep child message');
         break;
+      }
+
+      case 'child-loggers-large': {
+        // Create child loggers
+        const child1 = syncLogger.child(
+          { parent: 'root', l1: largeObject },
+          'child1 ',
+        );
+        const child2 = child1.child(
+          { parent: 'child1', l2: largeObject },
+          'child2 ',
+        );
+        child2.info(largeObject, 'Large object message');
+        break;
+      }
 
       case 'large-attributes':
         // Log large attribute objects
