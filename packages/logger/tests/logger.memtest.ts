@@ -6,7 +6,7 @@ import { describe } from 'vitest';
 
 const cwd = __dirname;
 
-describe.concurrent.each([
+describe.each([
   'sync-logging',
   'async-logging',
   'child-loggers',
