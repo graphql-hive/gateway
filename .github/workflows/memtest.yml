@@ -66,4 +66,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.test_name}}-heap-snapshots
-          path: e2e/${{matrix.test_name}}/*.heapsnapshot
+          path: |
+            e2e/${{matrix.test_name}}/*.heapsnapshot
+            packages/logger/tests/*.heapsnapshot
