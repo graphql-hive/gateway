@@ -164,6 +164,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       const loadtestResult = await loadtest({
         ...loadtestOpts,
+        id: task.id,
         cwd,
         memorySnapshotWindow,
         takeHeapSnapshots,
@@ -249,6 +250,8 @@ ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.
       } else {
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
+
+      return;
 
       // no leak, remove the heap snapshots
       await Promise.all(
