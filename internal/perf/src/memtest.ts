@@ -17,6 +17,7 @@ const __project = path.resolve(__dirname, '..', '..', '..');
 const supportedFlags = [
   'short' as const,
   'cleanheapsnaps' as const,
+  'keepheapsnaps' as const,
   'noheapsnaps' as const,
   'moreruns' as const,
   'chart' as const,
@@ -29,6 +30,7 @@ const supportedFlags = [
  * {@link supportedFlags Supported flags} are:
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
  * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
+ * - `keepheapsnaps` Keeps the heap snapshots (`*.heapsnapshot`) even if there are no leaks detected.
  * - `noheapsnaps` Disable taking heap snapshots.
  * - `moreruns` Does `10` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
@@ -251,12 +253,12 @@ ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
 
-      return;
-
-      // no leak, remove the heap snapshots
-      await Promise.all(
-        loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
-      );
+      if (!flags.includes('keepheapsnaps')) {
+        // no leak, remove the heap snapshots
+        await Promise.all(
+          loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
+        );
+      }
     },
   );
 }
