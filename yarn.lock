@@ -2990,6 +2990,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/execution-cancellation@workspace:e2e/execution-cancellation":
+  version: 0.0.0-use.local
+  resolution: "@e2e/execution-cancellation@workspace:e2e/execution-cancellation"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/extra-fields@workspace:e2e/extra-fields":
   version: 0.0.0-use.local
   resolution: "@e2e/extra-fields@workspace:e2e/extra-fields"
