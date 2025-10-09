@@ -1,3 +1,4 @@
 {
-  "name": "@e2e/execution-cancellation"
+  "name": "@e2e/execution-cancellation",
+  "private": true
 }
