@@ -49,9 +49,9 @@
     "prepack": "yarn build"
   },
   "devDependencies": {
-    "get-tsconfig": "^4.10.1",
+    "get-tsconfig": "^4.12.0",
     "glob": "^11.0.3",
-    "pkgroll": "2.17.0",
+    "pkgroll": "2.18.0",
     "sucrase": "^3.35.0"
   },
   "sideEffects": false

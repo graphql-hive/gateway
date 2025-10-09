@@ -425,5 +425,281 @@ describe('usePropagateHeaders', () => {
         );
       }
     });
+    it('should deduplicate non-cookie headers from multiple subgraphs when deduplicateHeaders is true', async () => {
+      const upstream1WithDuplicates = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello1: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello1: () => 'world1',
+            },
+          },
+        }),
+        plugins: [
+          {
+            onResponse: ({ response }) => {
+              response.headers.set('x-shared-header', 'value-from-upstream1');
+              response.headers.append('set-cookie', 'cookie1=value1');
+            },
+          },
+        ],
+      }).fetch;
+      const upstream2WithDuplicates = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello2: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello2: () => 'world2',
+            },
+          },
+        }),
+        plugins: [
+          {
+            onResponse: ({ response }) => {
+              response.headers.set('x-shared-header', 'value-from-upstream2');
+              response.headers.append('set-cookie', 'cookie2=value2');
+            },
+          },
+        ],
+      }).fetch;
+      await using gateway = createGatewayRuntime({
+        supergraph: () => {
+          return getUnifiedGraphGracefully([
+            {
+              name: 'upstream1',
+              schema: createSchema({
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    hello1: String
+                  }
+                `,
+              }),
+              url: 'http://localhost:4001/graphql',
+            },
+            {
+              name: 'upstream2',
+              schema: createSchema({
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    hello2: String
+                  }
+                `,
+              }),
+              url: 'http://localhost:4002/graphql',
+            },
+          ]);
+        },
+        propagateHeaders: {
+          deduplicateHeaders: true,
+          fromSubgraphsToClient({ response }) {
+            const cookies = response.headers.getSetCookie();
+            const sharedHeader = response.headers.get('x-shared-header');
+
+            const returns: Record<string, string | string[]> = {
+              'set-cookie': cookies,
+            };
+
+            if (sharedHeader) {
+              returns['x-shared-header'] = sharedHeader;
+            }
+
+            return returns;
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, options, context, info) => {
+            switch (url) {
+              case 'http://localhost:4001/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream1WithDuplicates(url, options, context, info);
+              case 'http://localhost:4002/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream2WithDuplicates(url, options, context, info);
+              default:
+                throw new Error('Invalid URL');
+            }
+          }),
+        ],
+        logging: isDebug(),
+      });
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello1
+              hello2
+            }
+          `,
+        }),
+      });
+
+      const resJson = await response.json();
+      expect(resJson).toEqual({
+        data: {
+          hello1: 'world1',
+          hello2: 'world2',
+        },
+      });
+
+      // Non-cookie headers should be deduplicated (only the last value is kept)
+      expect(response.headers.get('x-shared-header')).toBe(
+        'value-from-upstream2',
+      );
+
+      // set-cookie headers should still be aggregated (not deduplicated)
+      expect(response.headers.get('set-cookie')).toBe(
+        'cookie1=value1, cookie2=value2',
+      );
+    });
+    it('should append all non-cookie headers from multiple subgraphs when deduplicateHeaders is false', async () => {
+      const upstream1WithDuplicates = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello1: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello1: () => 'world1',
+            },
+          },
+        }),
+        plugins: [
+          {
+            onResponse: ({ response }) => {
+              response.headers.set('x-shared-header', 'value-from-upstream1');
+              response.headers.append('set-cookie', 'cookie1=value1');
+            },
+          },
+        ],
+      }).fetch;
+      const upstream2WithDuplicates = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello2: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello2: () => 'world2',
+            },
+          },
+        }),
+        plugins: [
+          {
+            onResponse: ({ response }) => {
+              response.headers.set('x-shared-header', 'value-from-upstream2');
+              response.headers.append('set-cookie', 'cookie2=value2');
+            },
+          },
+        ],
+      }).fetch;
+      await using gateway = createGatewayRuntime({
+        supergraph: () => {
+          return getUnifiedGraphGracefully([
+            {
+              name: 'upstream1',
+              schema: createSchema({
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    hello1: String
+                  }
+                `,
+              }),
+              url: 'http://localhost:4001/graphql',
+            },
+            {
+              name: 'upstream2',
+              schema: createSchema({
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    hello2: String
+                  }
+                `,
+              }),
+              url: 'http://localhost:4002/graphql',
+            },
+          ]);
+        },
+        propagateHeaders: {
+          deduplicateHeaders: false,
+          fromSubgraphsToClient({ response }) {
+            const cookies = response.headers.getSetCookie();
+            const sharedHeader = response.headers.get('x-shared-header');
+
+            const returns: Record<string, string | string[]> = {
+              'set-cookie': cookies,
+            };
+
+            if (sharedHeader) {
+              returns['x-shared-header'] = sharedHeader;
+            }
+
+            return returns;
+          },
+        },
+        plugins: () => [
+          useCustomFetch((url, options, context, info) => {
+            switch (url) {
+              case 'http://localhost:4001/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream1WithDuplicates(url, options, context, info);
+              case 'http://localhost:4002/graphql':
+                // @ts-expect-error TODO: url can be a string, not only an instance of URL
+                return upstream2WithDuplicates(url, options, context, info);
+              default:
+                throw new Error('Invalid URL');
+            }
+          }),
+        ],
+        logging: isDebug(),
+      });
+      const response = await gateway.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: /* GraphQL */ `
+            query {
+              hello1
+              hello2
+            }
+          `,
+        }),
+      });
+
+      const resJson = await response.json();
+      expect(resJson).toEqual({
+        data: {
+          hello1: 'world1',
+          hello2: 'world2',
+        },
+      });
+
+      // Non-cookie headers should NOT be deduplicated (all values are appended)
+      expect(response.headers.get('x-shared-header')).toBe(
+        'value-from-upstream1, value-from-upstream2',
+      );
+
+      // set-cookie headers should be aggregated as usual
+      expect(response.headers.get('set-cookie')).toBe(
+        'cookie1=value1, cookie2=value2',
+      );
+    });
   });
 });
