@@ -3659,9 +3659,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/response-cache@npm:^8.0.0, @envelop/response-cache@npm:^8.0.2":
-  version: 8.0.2
-  resolution: "@envelop/response-cache@npm:8.0.2"
+"@envelop/response-cache@npm:8.2.0-alpha-20251003143108-b56597767a1f741fbd6420f60af9abdf439fd4b8":
+  version: 8.2.0-alpha-20251003143108-b56597767a1f741fbd6420f60af9abdf439fd4b8
+  resolution: "@envelop/response-cache@npm:8.2.0-alpha-20251003143108-b56597767a1f741fbd6420f60af9abdf439fd4b8"
   dependencies:
     "@graphql-tools/utils": "npm:^10.0.3"
     "@whatwg-node/fetch": "npm:^0.10.0"
@@ -3672,7 +3672,7 @@ __metadata:
   peerDependencies:
     "@envelop/core": ^5.3.2
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/061435944d782263b52b85fa0cd49b23caa7a880c4a5fada3c4273f149c2ed25dc6ca4668f92283bf99ec0d13ca044581703fe69e7a5b67fdd6f3893f4ee0e13
+  checksum: 10c0/7ff40a8d2b88a15681b3412e467f3a1726d559c4d1fdec72cd46d612504ef6047ea8752d8aa47f9776d0a917d65474f47c9e0cfe5c1973ad3ee551f7e1fbd065
   languageName: node
   linkType: hard
 

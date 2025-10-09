@@ -81,6 +81,7 @@
     "tar-fs": "3.1.1",
     "tmp": "0.2.4",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
-    "vite": "7.1.9"
+    "vite": "7.1.9",
+    "@envelop/response-cache": "8.2.0-alpha-20251003143108-b56597767a1f741fbd6420f60af9abdf439fd4b8"
   }
 }

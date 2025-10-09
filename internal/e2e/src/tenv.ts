@@ -544,7 +544,8 @@ export function createTenv(cwd: string): Tenv {
             'node',
             // use next available port when starting inspector (note that this does not start inspect, this still needs to be done manually)
             // it's not set because in JIT mode because it does not work together (why? no clue)
-            args.includes('--jit') ? null : '--inspect-port=0',
+            args.includes('--jit') ? null : '--inspect-port=9999',
+            // '--inspect',
             '--import',
             'tsx',
             path.resolve(__project, 'packages', 'gateway', 'src', 'bin.ts'),
