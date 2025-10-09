@@ -910,9 +910,18 @@ describe('useOpenTelemetry', () => {
       checkCacheAttributes({ http: 'hit' }); // There is no graphql operation span when cached by HTTP
     });
 
-    it.skip('should register schema loading span', async () => {
+    it('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
-        options: { traces: { spans: { http: false, schema: true } } },
+        gatewayOptions: {
+          // @ts-expect-error Suppress the default supergraph from test setup
+          supergraph: undefined,
+          proxy: {
+            endpoint: 'https://example.com/graphql',
+          },
+        },
+        options: {
+          traces: { spans: { http: false, schema: true } },
+        },
       });
       await gateway.query();
 
