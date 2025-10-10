@@ -31,7 +31,19 @@ RUN apt-get install -y \
 # Install specific security updates for openssl
 ARG TARGETARCH
 RUN set -eux; \
-  arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
+  if [ -z "${TARGETARCH:-}" ]; then \
+    if ! command -v dpkg >/dev/null 2>&1; then \
+      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture." >&2; \
+      exit 1; \
+    fi; \
+    arch="$(dpkg --print-architecture)"; \
+  else \
+    arch="${TARGETARCH}"; \
+  fi; \
+  if [ -z "$arch" ]; then \
+    echo "Error: Could not determine architecture." >&2; \
+    exit 1; \
+  fi; \
   for pkg in openssl libssl3t64 openssl-provider-legacy; do \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_3.5.1-1+deb13u1_${arch}.deb"; \
     dpkg -i "${pkg}_3.5.1-1+deb13u1_${arch}.deb"; \
