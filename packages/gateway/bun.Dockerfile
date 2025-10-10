@@ -29,12 +29,13 @@ RUN apt-get install -y \
   dumb-init
 
 # Install specific security updates for openssl
-RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i openssl_3.5.1-1+deb13u1_amd64.deb \
-  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl3t64_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i libssl3t64_3.5.1-1+deb13u1_amd64.deb \
-  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb
+ARG TARGETARCH
+RUN set -eux; \
+  arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
+  for pkg in openssl libssl3t64 openssl-provider-legacy; do \
+    wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_3.5.1-1+deb13u1_${arch}.deb"; \
+    dpkg -i "${pkg}_3.5.1-1+deb13u1_${arch}.deb"; \
+  done
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
