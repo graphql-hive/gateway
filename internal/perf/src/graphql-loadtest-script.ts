@@ -13,7 +13,11 @@ export default function () {
     return test.abort('Environment variable "QUERY" not provided');
   }
 
-  const res = http.post(url, { query });
+  const res = http.post(
+    url,
+    { query },
+    { headers: { 'content-type': 'application/json' } },
+  );
 
   if (__ENV['ALLOW_FAILING_REQUESTS']) {
     check(res, {
