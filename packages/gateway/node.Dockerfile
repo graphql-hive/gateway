@@ -30,10 +30,6 @@ RUN apt-get install -y \
 ARG TARGETARCH
 RUN set -eux; \
   openssl_version = "3.5.1-1+deb13u1"; \
-  if [ -z "${TARGETARCH:-}" ]; then \
-    if ! command -v dpkg >/dev/null 2>&1; then \
-      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture." >&2; \
-      exit 1; \
     fi; \
     arch="$(dpkg --print-architecture)"; \
   else \
@@ -46,6 +42,7 @@ RUN set -eux; \
   for pkg in openssl libssl3t64 openssl-provider-legacy; do \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
+    rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
   done
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
