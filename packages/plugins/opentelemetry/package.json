@@ -87,7 +87,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@whatwg-node/server": "^0.10.0",
+    "@whatwg-node/server": "^0.10.13",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.16.0",
     "pkgroll": "2.18.0",
