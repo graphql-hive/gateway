@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^5.0.0",
-    "@apollo/subgraph": "^2.11.2",
+    "@apollo/subgraph": "^2.11.3",
     "@as-integrations/express5": "^1.1.2",
     "@repeaterjs/repeater": "^3.0.6",
     "@types/express": "^5.0.3",
