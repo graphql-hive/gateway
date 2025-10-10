@@ -32,10 +32,6 @@ RUN apt-get install -y \
 ARG TARGETARCH
 RUN set -eux; \
   openssl_version = "3.5.1-1+deb13u1"; \
-  if [ -z "${TARGETARCH:-}" ]; then \
-    if ! command -v dpkg >/dev/null 2>&1; then \
-      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture." >&2; \
-      exit 1; \
     fi; \
     arch="$(dpkg --print-architecture)"; \
   else \
