@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 2.1.10
+### Patch Changes
+
+
+
+- [#1589](https://github.com/graphql-hive/gateway/pull/1589) [`b08458f`](https://github.com/graphql-hive/gateway/commit/b08458f2a240e2bd8330aa6b14740b087072ead1) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.206.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.206.0) (from `^0.205.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.206.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.206.0) (from `^0.205.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.206.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.206.0) (from `^0.205.0`, in `dependencies`)
+- Updated dependencies [[`b535a8c`](https://github.com/graphql-hive/gateway/commit/b535a8cbac463e39c896e582692a282b22d6e84f), [`055fd6b`](https://github.com/graphql-hive/gateway/commit/055fd6bd52d0f35f009abe03fdc049e1132f5815), [`29e0608`](https://github.com/graphql-hive/gateway/commit/29e06081ead54a325232c6737dd6c2651f086099), [`b535a8c`](https://github.com/graphql-hive/gateway/commit/b535a8cbac463e39c896e582692a282b22d6e84f), [`055fd6b`](https://github.com/graphql-hive/gateway/commit/055fd6bd52d0f35f009abe03fdc049e1132f5815), [`b08458f`](https://github.com/graphql-hive/gateway/commit/b08458f2a240e2bd8330aa6b14740b087072ead1), [`8c4138d`](https://github.com/graphql-hive/gateway/commit/8c4138df152d195daa1d78ea22ddb7cea2387e20), [`1f419db`](https://github.com/graphql-hive/gateway/commit/1f419db02ebe493f3563e80e0890403a7c080d80)]:
+  - @graphql-hive/gateway-runtime@2.1.9
+  - @graphql-hive/plugin-aws-sigv4@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.0.12
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/plugin-prometheus@2.0.13
+
 ## 2.1.9
 ### Patch Changes
 
