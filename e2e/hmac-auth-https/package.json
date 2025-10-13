@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
-    "@apollo/subgraph": "^2.11.2",
+    "@apollo/subgraph": "^2.11.3",
     "@graphql-hive/gateway": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/compose-cli": "^1.4.18",
