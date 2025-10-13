@@ -31,7 +31,9 @@ for (const PubSub of PubSubCtors) {
               containerPort: 6379,
               healthcheck: ['CMD-SHELL', 'redis-cli ping'],
               env: {
-                LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+                // fixes "Failed to configure LOCALE for invalid locale name."
+                LANG: '',
+                LC_ALL: '',
               },
             });
             return;

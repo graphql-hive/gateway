@@ -768,7 +768,46 @@ describe('useOpenTelemetry', () => {
           initSpan.expectChild('http.fetch');
         });
       });
+
+      it('should handle validation error with hive processor', async () => {
+        disableAll();
+        const traceProvider = new BasicTracerProvider({
+          spanProcessors: [
+            new HiveTracingSpanProcessor({
+              processor: new SimpleSpanProcessor(spanExporter),
+            }),
+          ],
+        });
+        setupOtelForTests({ traceProvider });
+        await using gateway = await buildTestGatewayForCtx({
+          plugins: ({ fetch }) => {
+            return [
+              {
+                onPluginInit() {
+                  fetch('http://foo.bar', {});
+                },
+              },
+            ];
+          },
+        });
+        await gateway.query({
+          body: { query: 'query test{ unknown }' },
+          shouldReturnErrors: true,
+        });
+
+        const operationSpan = spanExporter.assertRoot('graphql.operation test');
+        expect(operationSpan.span.attributes['graphql.operation.name']).toBe(
+          'test',
+        );
+        expect(operationSpan.span.attributes['graphql.operation.type']).toBe(
+          'query',
+        );
+        expect(
+          operationSpan.span.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT],
+        ).toBe(1);
+      });
     });
+
     it('should allow to create custom spans without explicit context passing', async () => {
       const expectedCustomSpans = {
         http: { root: 'POST /graphql', children: ['custom.request'] },
@@ -873,7 +912,16 @@ describe('useOpenTelemetry', () => {
 
     it('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
-        options: { traces: { spans: { http: false, schema: true } } },
+        gatewayOptions: {
+          // @ts-expect-error Suppress the default supergraph from test setup
+          supergraph: undefined,
+          proxy: {
+            endpoint: 'https://example.com/graphql',
+          },
+        },
+        options: {
+          traces: { spans: { http: false, schema: true } },
+        },
       });
       await gateway.query();
 
@@ -1150,15 +1198,7 @@ describe('useOpenTelemetry', () => {
 
     it('should have all attributes required by Hive Tracing', async () => {
       await using gateway = await buildTestGateway({
-        fetch: (upstreamFetch) => {
-          let calls = 0;
-          return (...args) => {
-            calls++;
-            if (calls > 1)
-              return Promise.resolve(new Response(null, { status: 500 }));
-            else return upstreamFetch(...args);
-          };
-        },
+        fetch: () => () => Promise.resolve(new Response(null, { status: 500 })),
       });
       await gateway.query({
         shouldReturnErrors: true,
@@ -1186,11 +1226,12 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: 500,
+        [SEMATTRS_HTTP_STATUS_CODE]: 200,
 
         // Hive specific
         ['hive.client.name']: 'test-client-name',
         ['hive.client.version']: 'test-client-version',
+        ['hive.graphql']: true,
 
         // Operation Attributes
         [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
@@ -1211,15 +1252,15 @@ describe('useOpenTelemetry', () => {
       ).toMatchObject({
         // HTTP Attributes
         [SEMATTRS_HTTP_METHOD]: 'POST',
-        [SEMATTRS_HTTP_URL]: 'https://example.com/graphql',
+        [SEMATTRS_HTTP_URL]: 'http://localhost:4011/graphql',
         [SEMATTRS_HTTP_ROUTE]: '/graphql',
-        [SEMATTRS_HTTP_SCHEME]: 'https:',
-        [SEMATTRS_NET_HOST_NAME]: 'example.com',
-        [SEMATTRS_HTTP_HOST]: 'example.com',
+        [SEMATTRS_HTTP_SCHEME]: 'http:',
+        [SEMATTRS_NET_HOST_NAME]: 'localhost',
+        [SEMATTRS_HTTP_HOST]: 'localhost:4011',
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{__typename hello}',
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 

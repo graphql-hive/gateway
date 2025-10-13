@@ -11,6 +11,7 @@ import {
   propagation,
   ProxyTracerProvider,
   trace,
+  TracerProvider,
   TraceState,
   type TextMapPropagator,
 } from '@opentelemetry/api';
@@ -68,9 +69,37 @@ export async function buildTestGateway(
 
   const gateway = stack.use(
     gw.createGatewayRuntime({
-      proxy: {
-        endpoint: 'https://example.com/graphql',
-      },
+      supergraph: `
+        schema
+          @link(url: "https://specs.apollo.dev/link/v1.0")
+          @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+        {
+          query: Query
+        }
+
+        directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+
+        directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+        directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+        scalar join__FieldSet
+        enum join__Graph {
+          UPSTREAM @join__graph(name: "upstream", url: "http://localhost:4011/graphql")
+        }
+
+        scalar link__Import
+
+        enum link__Purpose {
+          EXECUTION
+        }
+        type Query
+          @join__type(graph: UPSTREAM)
+        {
+          hello: String @join__field(graph: UPSTREAM)
+        }
+      `,
       maskedErrors: false,
       plugins: (ctx) => {
         return [
@@ -245,10 +274,12 @@ const traceProvider = new BasicTracerProvider({
 
 export function setupOtelForTests({
   contextManager,
+  traceProvider: temporaryTraceProvider,
 }: {
   contextManager?: boolean;
+  traceProvider?: TracerProvider;
 } = {}) {
-  trace.setGlobalTracerProvider(traceProvider);
+  trace.setGlobalTracerProvider(temporaryTraceProvider ?? traceProvider);
   if (contextManager !== false) {
     context.setGlobalContextManager(new AsyncLocalStorageContextManager());
   }
