@@ -82,6 +82,7 @@
     "tmp": "0.2.4",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
     "vite": "7.1.9",
-    "@envelop/response-cache": "8.2.0-alpha-20251003143108-b56597767a1f741fbd6420f60af9abdf439fd4b8"
+    "@envelop/response-cache": "8.2.0-alpha-20251013081815-d6f74fceb1a32fd336b2664f90f87872e1bbf2fe",
+    "@graphql-mesh/cache-redis": "0.105.0-alpha-20251010093057-4eeae9412ec39cfbab6e001ecaf527cf94f4ea31"
   }
 }
