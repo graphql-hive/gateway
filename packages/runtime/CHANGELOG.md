@@ -1,5 +1,45 @@
 # @graphql-hive/gateway-runtime
 
+## 2.1.9
+### Patch Changes
+
+
+
+- [#1593](https://github.com/graphql-hive/gateway/pull/1593) [`b535a8c`](https://github.com/graphql-hive/gateway/commit/b535a8cbac463e39c896e582692a282b22d6e84f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.0` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.0) (from `^24.6.2`, in `dependencies`)
+
+
+- [#1596](https://github.com/graphql-hive/gateway/pull/1596) [`055fd6b`](https://github.com/graphql-hive/gateway/commit/055fd6bd52d0f35f009abe03fdc049e1132f5815) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.1) (from `^24.7.0`, in `dependencies`)
+
+
+- [#1597](https://github.com/graphql-hive/gateway/pull/1597) [`29e0608`](https://github.com/graphql-hive/gateway/commit/29e06081ead54a325232c6737dd6c2651f086099) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/server@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.13) (from `^0.10.12`, in `dependencies`)
+
+
+- [#1563](https://github.com/graphql-hive/gateway/pull/1563) [`8c4138d`](https://github.com/graphql-hive/gateway/commit/8c4138df152d195daa1d78ea22ddb7cea2387e20) Thanks [@zoontek](https://github.com/zoontek)! - Introduce `deduplicateHeaders` option for `propagateHeaders` configuration to control header handling behavior when multiple subgraphs return the same header
+  
+  When `deduplicateHeaders` is enabled (set to `true`), only the last value from subgraphs will be set for each header. When disabled (default `false`), all values are appended.
+  
+  The `set-cookie` header is always appended regardless of this setting, as per HTTP standards.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway'
+  export const gatewayConfig = defineConfig({
+    propagateHeaders: {
+      deduplicateHeaders: true, // default: false
+      fromSubgraphsToClient({ response }) {
+        // ...
+      }
+    }
+  })
+  ```
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+
 ## 2.1.8
 ### Patch Changes
 
