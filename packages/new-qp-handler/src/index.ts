@@ -15,9 +15,12 @@ import {
   memoize1,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { QueryPlanner as HiveQueryPlanner } from '/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon';
-import { getEnvStr } from '~internal/env';
+import { getEnvBool, getEnvStr } from '~internal/env';
 import { DocumentNode, print } from 'graphql';
+
+const queryPlannerIsAsync = getEnvBool('QUERY_PLANNER_IS_ASYNC');
 
 export function handleSupergraphWithQueryPlanner(
   opts: UnifiedGraphHandlerOpts,
@@ -48,7 +51,7 @@ export function handleSupergraphWithQueryPlanner(
     .toGraphQLJSSchema();
 
   // Memoization that would work with parse caching
-  const buildApolloQueryPlan = memoize1(function buildApolloQueryPlan(
+  const buildApolloQueryPlan = function buildApolloQueryPlan(
     document: DocumentNode,
   ) {
     const operationForQp = operationFromDocument(
@@ -57,12 +60,15 @@ export function handleSupergraphWithQueryPlanner(
     );
     const queryPlan = apolloQueryPlanner.buildQueryPlan(operationForQp);
     return queryPlan;
-  });
-  const hiveApolloQueryPlan = memoize1(function hiveApolloQueryPlan(
+  };
+  const hiveApolloQueryPlan = function hiveApolloQueryPlan(
     document: DocumentNode,
   ) {
+    if (queryPlannerIsAsync) {
+      return hiveQueryPlanner.planAsync(print(document));
+    }
     return hiveQueryPlanner.plan(print(document));
-  });
+  };
 
   return {
     unifiedGraph,
@@ -82,17 +88,20 @@ export function handleSupergraphWithQueryPlanner(
       context,
     }: ExecutionRequest) {
       if (getEnvStr('QUERY_PLANNER') === 'hive') {
-        return hiveApolloQueryPlan(document).then((queryPlan) => {
-          return executeQueryPlan({
-            supergraphSchema: unifiedGraph,
-            document,
-            operationName,
-            variables,
-            context,
-            onSubgraphExecute: opts.onSubgraphExecute,
-            queryPlan: queryPlan as any,
-          }) as any;
-        });
+        return handleMaybePromise(
+          () => hiveApolloQueryPlan(document),
+          (queryPlan) => {
+            return executeQueryPlan({
+              supergraphSchema: unifiedGraph,
+              document,
+              operationName,
+              variables,
+              context,
+              onSubgraphExecute: opts.onSubgraphExecute,
+              queryPlan: queryPlan as any,
+            }) as any;
+          },
+        );
       }
       const queryPlan = buildApolloQueryPlan(document);
       function removeOperationDocumentNode(node: any) {
