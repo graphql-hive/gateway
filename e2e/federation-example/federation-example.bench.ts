@@ -37,12 +37,22 @@ describe('Gateway', async () => {
         QUERY_PLANNER: 'apollo',
       },
     }),
-    'Hive Gateway w/ Hive Query Planner': await gateway({
+    'Hive Gateway w/ Async Hive Query Planner': await gateway({
       supergraph,
       env: {
         FORK: 1,
         NODE_ENV: 'production',
         QUERY_PLANNER: 'hive',
+        QUERY_PLANNER_IS_ASYNC: 1,
+      },
+    }),
+    'Hive Gateway w/ Sync Hive Query Planner': await gateway({
+      supergraph,
+      env: {
+        FORK: 1,
+        NODE_ENV: 'production',
+        QUERY_PLANNER: 'hive',
+        QUERY_PLANNER_IS_ASYNC: 0,
       },
     }),
   };
