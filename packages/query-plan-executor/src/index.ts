@@ -289,7 +289,7 @@ function executePlanNode(
         }
       }
       flattenNode.path = flattenNode.path.map((p) =>
-        // TODO: hive router qp has paths like { Field: 'friends' }
+        // hive router qp has paths in Flatten nodes like `[{ Field: 'friends' }]`
         typeof p === 'string' ? p : p['Field'],
       );
       iteratePathOverdata(
