@@ -896,6 +896,7 @@ describe('Demand Control', () => {
       /**
        * 1 Query (0) + 1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (5) = 8 total cost
        */
+      // Skipped in proxy mode because the proxy does not support custom directive aliasing (e.g., @cost as @myCost).
       it.skipIf(mode === 'proxy')('@cost in object but aliased as @myCost', async () => {
         const booksSubgraph = buildSubgraphSchema({
           typeDefs: parse(/* GraphQL */ `
