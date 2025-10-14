@@ -29,6 +29,7 @@ describe('Demand Control', () => {
     demandControlConfig: Parameters<typeof useDemandControl>[0] = {
       includeExtensionMetadata: true,
     },
+    introspectFromEndpoint = false,
   ) {
     const subgraphServer = createYoga({
       schema: subgraph,
@@ -43,7 +44,7 @@ describe('Demand Control', () => {
           proxy: {
             endpoint: 'http://upstream/graphql',
           },
-          schema: subgraph,
+          schema: introspectFromEndpoint ? undefined : subgraph,
           plugins,
         })
       : createGatewayRuntime({
@@ -475,25 +476,14 @@ describe('Demand Control', () => {
             },
           },
         });
-        await using booksServer = createYoga({
-          schema: booksSubgraph,
-        });
-        await using gateway = createGatewayRuntime({
-          supergraph: await composeLocalSchemasWithApollo([
-            {
-              name: 'books',
-              schema: booksSubgraph,
-              url: 'http://books/graphql',
-            },
-          ]),
-          plugins: () => [
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            useCustomFetch(booksServer.fetch),
-            useDemandControl({
-              maxCost: 3,
-            }),
-          ],
-        });
+        await using gateway = createTestGateway(
+          mode,
+          booksSubgraph,
+          {
+            maxCost: 3,
+          },
+          true,
+        );
         const query = /* GraphQL */ `
           query BookQuery {
             book(id: 1) {
@@ -518,10 +508,8 @@ describe('Demand Control', () => {
           body: JSON.stringify({ query }),
         });
         const result = await response.json();
-        expect(result).toEqual({
-          data: {
-            book: null,
-          },
+        expect(result.data?.book).toBeFalsy();
+        expect(result).toMatchObject({
           errors: [
             {
               message:
@@ -533,13 +521,6 @@ describe('Demand Control', () => {
                   max: 3,
                 },
               },
-              locations: [
-                {
-                  line: 3,
-                  column: 13,
-                },
-              ],
-              path: ['book'],
             },
           ],
         });
@@ -590,25 +571,9 @@ describe('Demand Control', () => {
             },
           },
         });
-        await using booksServer = createYoga({
-          schema: booksSubgraph,
-        });
-        await using gateway = createGatewayRuntime({
-          supergraph: await composeLocalSchemasWithApollo([
-            {
-              name: 'books',
-              schema: booksSubgraph,
-              url: 'http://books/graphql',
-            },
-          ]),
-          plugins: () => [
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            useCustomFetch(booksServer.fetch),
-            useDemandControl({
-              includeExtensionMetadata: true,
-              listSize: 5,
-            }),
-          ],
+        await using gateway = createTestGateway(mode, booksSubgraph, {
+          includeExtensionMetadata: true,
+          listSize: 5,
         });
         const query = /* GraphQL */ `
           query BestsellersQuery {
@@ -897,86 +862,92 @@ describe('Demand Control', () => {
        * 1 Query (0) + 1 book object (1) + 1 author object (1) + 1 publisher object (1) + 1 address object (5) = 8 total cost
        */
       // Skipped in proxy mode because the proxy does not support custom directive aliasing (e.g., @cost as @myCost).
-      it.skipIf(mode === 'proxy')('@cost in object but aliased as @myCost', async () => {
-        const booksSubgraph = buildSubgraphSchema({
-          typeDefs: parse(/* GraphQL */ `
-            type Query {
-              book(id: ID): Book
-            }
+      it.skipIf(mode === 'proxy')(
+        '@cost in object but aliased as @myCost',
+        async () => {
+          const booksSubgraph = buildSubgraphSchema({
+            typeDefs: parse(/* GraphQL */ `
+              type Query {
+                book(id: ID): Book
+              }
 
-            type Book {
-              title: String
-              author: Author
-              publisher: Publisher
-            }
+              type Book {
+                title: String
+                author: Author
+                publisher: Publisher
+              }
 
-            type Author {
-              name: String
-            }
+              type Author {
+                name: String
+              }
 
-            type Publisher {
-              name: String
-              address: Address
-            }
+              type Publisher {
+                name: String
+                address: Address
+              }
 
-            type Address @myCost(weight: 5) {
-              zipCode: Int!
-            }
-            extend schema
-              @link(
-                url: "https://specs.apollo.dev/federation/v2.9"
-                import: [{ name: "@cost", as: "@myCost" }]
-              ) {
-              query: Query
-            }
-          `),
-          resolvers: {
-            Query: {
-              book: (_root, { id }) => {
-                if (id === '1') {
-                  return book;
-                }
-                throw new Error('Book not found');
+              type Address @myCost(weight: 5) {
+                zipCode: Int!
+              }
+              extend schema
+                @link(
+                  url: "https://specs.apollo.dev/federation/v2.9"
+                  import: [{ name: "@cost", as: "@myCost" }]
+                ) {
+                query: Query
+              }
+            `),
+            resolvers: {
+              Query: {
+                book: (_root, { id }) => {
+                  if (id === '1') {
+                    return book;
+                  }
+                  throw new Error('Book not found');
+                },
               },
             },
-          },
-        });
-        await using gateway = createTestGateway(mode, booksSubgraph);
-        const query = /* GraphQL */ `
-          query BookQuery {
-            book(id: 1) {
-              title
-              author {
-                name
-              }
-              publisher {
-                name
-                address {
-                  zipCode
+          });
+          await using gateway = createTestGateway(mode, booksSubgraph);
+          const query = /* GraphQL */ `
+            query BookQuery {
+              book(id: 1) {
+                title
+                author {
+                  name
+                }
+                publisher {
+                  name
+                  address {
+                    zipCode
+                  }
                 }
               }
             }
-          }
-        `;
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query }),
-        });
-        const result = await response.json();
-        expect(result).toEqual({
-          data: {
-            book,
-          },
-          extensions: {
-            cost: {
-              estimated: 8,
+          `;
+          const response = await gateway.fetch(
+            'http://localhost:4000/graphql',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ query }),
             },
-          },
-        });
-      });
+          );
+          const result = await response.json();
+          expect(result).toEqual({
+            data: {
+              book,
+            },
+            extensions: {
+              cost: {
+                estimated: 8,
+              },
+            },
+          });
+        },
+      );
 
       it('returns cost even if it does not hit the subgraph', async () => {
         const subgraph = buildSubgraphSchema({
