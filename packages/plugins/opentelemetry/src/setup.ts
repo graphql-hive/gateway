@@ -120,41 +120,41 @@ type SamplingOptions =
       samplingRate?: number;
     };
 
-type OpentelemetrySetupOptions = TracingOptions &
-  SamplingOptions & {
-    /**
-     * The Resource that will be used to create the Trace Provider.
-     * Can be either a Resource instance, or an simple object with service name and version
-     */
-    resource?: Resource | { serviceName: string; serviceVersion: string };
-    /**
-     * The Context Manager to be used to track OTEL Context.
-     * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
-     */
-    contextManager: ContextManager | null;
-    /**
-     * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
-     */
-    propagators?: TextMapPropagator[];
-    /**
-     * The general limits of OTEL attributes.
-     */
-    generalLimits?: GeneralLimits;
-    /**
-     * The Logger to be used by this utility.
-     * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
-     */
-    log?: Logger;
-    /**
-     * Configure Opentelemetry `diag` API to use Gateway's logger.
-     *
-     * @default true
-     *
-     * Note: Logger configuration respects OTEL environment variables standard.
-     *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
-     */
-    configureDiagLogger?: boolean;
-  };
+type BaseOptions = {
+  /**
+   * The Resource that will be used to create the Trace Provider.
+   * Can be either a Resource instance, or an simple object with service name and version
+   */
+  resource?: Resource | { serviceName: string; serviceVersion: string };
+  /**
+   * The Context Manager to be used to track OTEL Context.
+   * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
+   */
+  contextManager: ContextManager | null;
+  /**
+   * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
+   */
+  propagators?: TextMapPropagator[];
+  /**
+   * The general limits of OTEL attributes.
+   */
+  generalLimits?: GeneralLimits;
+  /**
+   * The Logger to be used by this utility.
+   * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
+   */
+  log?: Logger;
+  /**
+   * Configure Opentelemetry `diag` API to use Gateway's logger.
+   *
+   * @default true
+   *
+   * Note: Logger configuration respects OTEL environment variables standard.
+   *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
+   */
+  configureDiagLogger?: boolean;
+};
+type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   const log = options.log || new Logger();
@@ -221,26 +221,21 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         logAttributes['console'] = true;
       }
 
-      const baseResource = resourceFromAttributes({
-        [ATTR_SERVICE_NAME]:
-          options.resource && 'serviceName' in options.resource
-            ? options.resource?.serviceName
-            : getEnvStr('OTEL_SERVICE_NAME') ||
-              '@graphql-hive/plugin-opentelemetry',
-        [ATTR_SERVICE_VERSION]:
-          options.resource && 'serviceVersion' in options.resource
-            ? options.resource?.serviceVersion
-            : getEnvStr('OTEL_SERVICE_VERSION') ||
-              globalThis.__OTEL_PLUGIN_VERSION__ ||
-              'unknown',
-        ['hive.gateway.version']: globalThis.__VERSION__,
-        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
-      });
-
-      const resource =
-        options.resource && !('serviceName' in options.resource)
-          ? baseResource.merge(options.resource)
-          : baseResource;
+      const resource = createResource(
+        resourceFromAttributes({
+          [ATTR_SERVICE_NAME]:
+            getEnvStr('OTEL_SERVICE_NAME') ||
+            '@graphql-hive/plugin-opentelemetry',
+          [ATTR_SERVICE_VERSION]:
+            getEnvStr('OTEL_SERVICE_VERSION') ||
+            globalThis.__OTEL_PLUGIN_VERSION__ ||
+            'unknown',
+          ['hive.gateway.version']: globalThis.__VERSION__,
+          ['hive.otel.version']:
+            globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
+        }),
+        options.resource,
+      );
 
       logAttributes['resource'] = resource.attributes;
       logAttributes['sampling'] = options.sampler
@@ -300,12 +295,9 @@ export type HiveTracingOptions = { target?: string } & (
     }
 );
 
-export function hiveTracingSetup(
-  config: HiveTracingOptions & {
-    contextManager: ContextManager | null;
-    log?: Logger;
-  },
-) {
+export type HiveTracingSetupOptions = BaseOptions & HiveTracingOptions;
+
+export function hiveTracingSetup(config: HiveTracingSetupOptions) {
   const log = config.log || new Logger();
   config.target ??= getEnvStr('HIVE_TARGET');
 
@@ -332,11 +324,19 @@ export function hiveTracingSetup(
   }
 
   openTelemetrySetup({
+    ...config,
     log,
-    contextManager: config.contextManager,
-    resource: resourceFromAttributes({
-      'hive.target_id': config.target,
-    }),
+    resource: createResource(
+      resourceFromAttributes({
+        'hive.target_id': config.target,
+        [ATTR_SERVICE_NAME]: getEnvStr('OTEL_SERVICE_NAME') || 'hive-gateway',
+        [ATTR_SERVICE_VERSION]:
+          getEnvStr('OTEL_SERVICE_VERSION') ||
+          globalThis.__OTEL_PLUGIN_VERSION__ ||
+          'unknown',
+      }),
+      config.resource,
+    ),
     traces: {
       processors: [
         new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
@@ -362,4 +362,24 @@ function resolveBatchingConfig(
   } else {
     return new BatchSpanProcessor(exporter, value);
   }
+}
+
+function createResource(
+  baseResource: Resource,
+  userResource?: OpentelemetrySetupOptions['resource'],
+): Resource {
+  if (!userResource) {
+    return baseResource;
+  }
+
+  if ('serviceName' in userResource) {
+    return baseResource.merge(
+      resourceFromAttributes({
+        [ATTR_SERVICE_NAME]: userResource.serviceName,
+        [ATTR_SERVICE_VERSION]: userResource.serviceVersion,
+      }),
+    );
+  }
+
+  return baseResource.merge(userResource);
 }
