@@ -3,7 +3,7 @@ import {
   operationFromDocument,
   Supergraph,
 } from '@apollo/federation-internals';
-import { QueryPlanner } from '@apollo/query-planner';
+import { QueryPlanner as ApolloQueryPlanner } from '@apollo/query-planner';
 import { executeQueryPlan } from '@graphql-hive/query-plan-executor';
 import type {
   UnifiedGraphHandlerOpts,
@@ -11,18 +11,23 @@ import type {
 } from '@graphql-mesh/fusion-runtime';
 import {
   ExecutionRequest,
-  ExecutionResult,
   getDocumentNodeFromSchema,
-  MaybeAsyncIterable,
-  MaybePromise,
   memoize1,
+  printSchemaWithDirectives,
 } from '@graphql-tools/utils';
-import { DocumentNode } from 'graphql';
+import { QueryPlanner as HiveQueryPlanner } from '/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon';
+import { getEnvStr } from '~internal/env';
+import { DocumentNode, print } from 'graphql';
 
 export function handleSupergraphWithQueryPlanner(
   opts: UnifiedGraphHandlerOpts,
 ): UnifiedGraphHandlerResult {
-  const queryPlanner = new QueryPlanner(
+  // TODO: the hive query planner is a quick and dirty implementation
+
+  const hiveQueryPlanner = new HiveQueryPlanner(
+    printSchemaWithDirectives(opts.unifiedGraph),
+  );
+  const apolloQueryPlanner = new ApolloQueryPlanner(
     new Supergraph(
       buildSchemaFromAST(getDocumentNodeFromSchema(opts.unifiedGraph)),
     ),
@@ -38,24 +43,33 @@ export function handleSupergraphWithQueryPlanner(
     },
   );
 
-  const unifiedGraph = queryPlanner.supergraph.apiSchema().toGraphQLJSSchema();
+  const unifiedGraph = apolloQueryPlanner.supergraph
+    .apiSchema()
+    .toGraphQLJSSchema();
 
   // Memoization that would work with parse caching
-  const buildQueryPlan = memoize1(function buildQueryPlan(
+  const buildApolloQueryPlan = memoize1(function buildApolloQueryPlan(
     document: DocumentNode,
   ) {
     const operationForQp = operationFromDocument(
-      queryPlanner.supergraph.schema,
+      apolloQueryPlanner.supergraph.schema,
       document,
     );
-    const queryPlan = queryPlanner.buildQueryPlan(operationForQp);
+    const queryPlan = apolloQueryPlanner.buildQueryPlan(operationForQp);
     return queryPlan;
+  });
+  const hiveApolloQueryPlan = memoize1(function hiveApolloQueryPlan(
+    document: DocumentNode,
+  ) {
+    return hiveQueryPlanner.plan(print(document));
   });
 
   return {
     unifiedGraph,
     getSubgraphSchema(subgraphName) {
-      const subgraphQp = queryPlanner.supergraph.subgraphs().get(subgraphName);
+      const subgraphQp = apolloQueryPlanner.supergraph
+        .subgraphs()
+        .get(subgraphName);
       if (!subgraphQp) {
         throw new Error(`Subgraph ${subgraphName} not found`);
       }
@@ -66,8 +80,36 @@ export function handleSupergraphWithQueryPlanner(
       variables,
       operationName,
       context,
-    }: ExecutionRequest): MaybePromise<MaybeAsyncIterable<ExecutionResult>> {
-      const queryPlan = buildQueryPlan(document);
+    }: ExecutionRequest) {
+      if (getEnvStr('QUERY_PLANNER') === 'hive') {
+        return hiveApolloQueryPlan(document).then((queryPlan) => {
+          return executeQueryPlan({
+            supergraphSchema: unifiedGraph,
+            document,
+            operationName,
+            variables,
+            context,
+            onSubgraphExecute: opts.onSubgraphExecute,
+            queryPlan: queryPlan as any,
+          }) as any;
+        });
+      }
+      const queryPlan = buildApolloQueryPlan(document);
+      function removeOperationDocumentNode(node: any) {
+        if (!node || typeof node !== 'object') {
+          return;
+        }
+        if ('operationDocumentNode' in node) {
+          delete node.operationDocumentNode;
+        }
+        if ('node' in node) {
+          removeOperationDocumentNode(node.node);
+        }
+        if ('nodes' in node && Array.isArray(node.nodes)) {
+          node.nodes.forEach(removeOperationDocumentNode);
+        }
+      }
+      removeOperationDocumentNode(queryPlan);
       const res = executeQueryPlan({
         supergraphSchema: unifiedGraph,
         document,
@@ -77,8 +119,7 @@ export function handleSupergraphWithQueryPlanner(
         onSubgraphExecute: opts.onSubgraphExecute,
         queryPlan: queryPlan as any,
       });
-      // @ts-expect-error
-      return res;
+      return res as any;
     },
     inContextSDK: {},
   };

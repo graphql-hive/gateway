@@ -28,7 +28,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { getEnvBool } from '~internal/env';
+import { getEnvBool, getEnvStr } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph } from './federation/supergraph';
@@ -175,9 +175,19 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
-    const defaultHandler = getEnvBool('TOOLS_FEDERATION')
-      ? handleFederationSupergraph
-      : handleSupergraphWithQueryPlanner;
+    const qp = getEnvStr('QUERY_PLANNER') || 'tools';
+    let defaultHandler: UnifiedGraphHandler;
+    switch (qp) {
+      case 'tools':
+        defaultHandler = handleFederationSupergraph;
+        break;
+      case 'apollo':
+      case 'hive': // will be toggled within new-qp-handler
+        defaultHandler = handleSupergraphWithQueryPlanner;
+        break;
+      default:
+        throw new Error(`Unknown query planner "${qp}"`);
+    }
     this.handleUnifiedGraph = opts.handleUnifiedGraph || defaultHandler;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];

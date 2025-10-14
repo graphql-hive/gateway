@@ -28,6 +28,7 @@ import {
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
+  parse,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -287,6 +288,10 @@ function executePlanNode(
           );
         }
       }
+      flattenNode.path = flattenNode.path.map((p) =>
+        // TODO: hive router qp has paths like { Field: 'friends' }
+        typeof p === 'string' ? p : p['Field'],
+      );
       iteratePathOverdata(
         executionContext.data,
         flattenNode.path[0]!,
@@ -362,8 +367,11 @@ function executePlanNode(
         if (fetchResult.errors) {
           let errors = fetchResult.errors;
           if (!path) {
+            const documentNode =
+              fetchNode.operationDocumentNode || parse(fetchNode.operation);
+
             const operationAst = getOperationAST(
-              fetchNode.operationDocumentNode,
+              documentNode,
               fetchNode.operationName,
             );
             if (operationAst) {
@@ -425,7 +433,8 @@ function executePlanNode(
       };
       return mapMaybePromise(
         executionContext.onSubgraphExecute(fetchNode.serviceName, {
-          document: fetchNode.operationDocumentNode,
+          document:
+            fetchNode.operationDocumentNode || parse(fetchNode.operation),
           variables: variablesForFetch,
           context: executionContext.context,
           operationName: fetchNode.operationName,
