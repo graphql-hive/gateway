@@ -21,8 +21,8 @@
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
     "@tsconfig/recommended": "^1.0.8",
-    "@types/node": "^24.7.2",
-    "pkgroll": "2.18.1",
+    "@types/node": "^24.8.0",
+    "pkgroll": "2.19.0",
     "typescript": "5.9.3"
   }
 }
