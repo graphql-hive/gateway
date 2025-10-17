@@ -7,8 +7,7 @@ export interface FetchNode {
   operationKind?: 'query' | 'mutation' | 'subscription';
   operationName?: string;
   operation: string;
-  /** Not available in Hive Router query planner. */
-  operationDocumentNode?: DocumentNode;
+  operationDocumentNode: DocumentNode;
   requires?: InlineFragmentRequiresNode[];
   inputRewrites?: InputRewrite[];
   outputRewrites?: OutputRewrite[];

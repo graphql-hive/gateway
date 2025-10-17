@@ -28,7 +28,6 @@ import {
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
-  parse,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -367,11 +366,8 @@ function executePlanNode(
         if (fetchResult.errors) {
           let errors = fetchResult.errors;
           if (!path) {
-            const documentNode =
-              fetchNode.operationDocumentNode || parse(fetchNode.operation);
-
             const operationAst = getOperationAST(
-              documentNode,
+              fetchNode.operationDocumentNode,
               fetchNode.operationName,
             );
             if (operationAst) {
@@ -433,8 +429,7 @@ function executePlanNode(
       };
       return mapMaybePromise(
         executionContext.onSubgraphExecute(fetchNode.serviceName, {
-          document:
-            fetchNode.operationDocumentNode || parse(fetchNode.operation),
+          document: fetchNode.operationDocumentNode,
           variables: variablesForFetch,
           context: executionContext.context,
           operationName: fetchNode.operationName,

@@ -104,21 +104,6 @@ export function handleSupergraphWithQueryPlanner(
         );
       }
       const queryPlan = buildApolloQueryPlan(document);
-      function removeOperationDocumentNode(node: any) {
-        if (!node || typeof node !== 'object') {
-          return;
-        }
-        if ('operationDocumentNode' in node) {
-          delete node.operationDocumentNode;
-        }
-        if ('node' in node) {
-          removeOperationDocumentNode(node.node);
-        }
-        if ('nodes' in node && Array.isArray(node.nodes)) {
-          node.nodes.forEach(removeOperationDocumentNode);
-        }
-      }
-      removeOperationDocumentNode(queryPlan);
       const res = executeQueryPlan({
         supergraphSchema: unifiedGraph,
         document,
