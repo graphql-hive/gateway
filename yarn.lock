@@ -4436,6 +4436,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/deepmerge@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@fastify/deepmerge@npm:3.1.0"
+  checksum: 10c0/57eda9079e9ed6d137f966e8b0d08f219cbca6e79706a1be76fe10ba2b8fd87c33846f1c653299b09a2e8260ffba8c8fc708f9b40b54243648d6821061999c9b
+  languageName: node
+  linkType: hard
+
 "@fastify/error@npm:^4.0.0":
   version: 4.1.0
   resolution: "@fastify/error@npm:4.1.0"
@@ -4867,6 +4874,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/query-plan-executor@workspace:packages/query-plan-executor"
   dependencies:
+    "@fastify/deepmerge": "npm:^3.1.0"
     "@graphql-tools/utils": "npm:^10.7.2"
     graphql: "npm:^16.9.0"
     pkgroll: "npm:2.8.0"

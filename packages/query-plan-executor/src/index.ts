@@ -9,8 +9,8 @@ import {
   mapMaybePromise,
   MaybeAsyncIterable,
   MaybePromise,
-  mergeDeep,
   relocatedError,
+  mergeDeep as toolsMergeDeep,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
@@ -28,6 +28,7 @@ import {
   Kind,
   OperationDefinitionNode,
   OperationTypeNode,
+  parse,
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
@@ -38,6 +39,7 @@ import {
 } from './types/execution';
 import { PlanNode, QueryPlan, RequiresSelection } from './types/plan-nodes';
 import { getOperationsAndFragments } from './utils/getOperationAndFragments';
+import { mergeDeep } from './utils/mergeDeep';
 
 export interface QueryPlanExecutorOptions {
   /**
@@ -408,28 +410,26 @@ function executePlanNode(
             const entity = returnedEntities[entityIndex];
             const representation = representations[entityIndex];
             if (representation && entity) {
+              // TODO: use mergedeep instead of tools, somethings wrong with our implementation
+              // Object.assign(representation, mergeDeep(representation, entity));
               Object.assign(
                 representation,
-                mergeDeep([representation, entity], undefined, true, true),
+                toolsMergeDeep([representation, entity], undefined, true, true),
               );
             }
           }
         } else {
           Object.assign(
             executionContext.data,
-            mergeDeep(
-              [executionContext.data, fetchResult.data],
-              undefined,
-              true,
-              true,
-            ),
+            mergeDeep(executionContext.data, fetchResult.data),
           );
         }
         return;
       };
       return mapMaybePromise(
         executionContext.onSubgraphExecute(fetchNode.serviceName, {
-          document: fetchNode.operationDocumentNode,
+          // document: fetchNode.operationDocumentNode,
+          document: parse(fetchNode.operation),
           variables: variablesForFetch,
           context: executionContext.context,
           operationName: fetchNode.operationName,
@@ -687,12 +687,7 @@ function projectSelectionSet(
         ) {
           result[responseKey] = Object.assign(
             result[responseKey],
-            mergeDeep(
-              [result[responseKey], projectedValue],
-              undefined,
-              true,
-              true,
-            ),
+            mergeDeep(result[responseKey], projectedValue),
           );
         } else {
           result[responseKey] = projectedValue;
@@ -730,13 +725,7 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        Object.assign(
-          result,
-          mergeDeep([result, projectedValue]),
-          undefined,
-          true,
-          true,
-        );
+        Object.assign(result, mergeDeep(result, projectedValue));
       }
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = executionContext.fragments[selection.name.value];
@@ -768,7 +757,7 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        Object.assign(result, mergeDeep([result, projectedValue]));
+        Object.assign(result, mergeDeep(result, projectedValue));
       }
     }
   }
@@ -854,10 +843,7 @@ function projectRequires(
             supergraphSchema,
           );
           if (projected) {
-            Object.assign(
-              result,
-              mergeDeep([result, projected], undefined, true, true),
-            );
+            Object.assign(result, mergeDeep(result, projected));
           }
         }
         break;
