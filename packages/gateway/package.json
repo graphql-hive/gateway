@@ -72,7 +72,8 @@
     "build": "pkgroll --clean-dist && tsx scripts/inject-version",
     "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
     "prepack": "yarn build",
-    "start": "tsx src/bin.ts"
+    "start": "tsx src/bin.ts",
+    "start:inspect": "node --import tsx --inspect src/bin.ts"
   },
   "peerDependencies": {
     "graphql": "^15.9.0 || ^16.9.0"
