@@ -20,7 +20,7 @@ import { QueryPlanner as HiveQueryPlanner } from '/Users/enisdenjo/Develop/src/g
 import { getEnvBool, getEnvStr } from '~internal/env';
 import { DocumentNode, print } from 'graphql';
 
-const queryPlannerIsAsync = getEnvBool('QUERY_PLANNER_IS_ASYNC');
+const isHiveQp = getEnvStr('QUERY_PLANNER') === 'hive';
 
 export function handleSupergraphWithQueryPlanner(
   opts: UnifiedGraphHandlerOpts,
@@ -61,12 +61,7 @@ export function handleSupergraphWithQueryPlanner(
     const queryPlan = apolloQueryPlanner.buildQueryPlan(operationForQp);
     return queryPlan;
   };
-  const hiveApolloQueryPlan = function hiveApolloQueryPlan(
-    document: DocumentNode,
-  ) {
-    if (queryPlannerIsAsync) {
-      return hiveQueryPlanner.planAsync(print(document));
-    }
+  const hiveQueryPlan = function hiveQueryPlan(document: DocumentNode) {
     return hiveQueryPlanner.plan(print(document));
   };
 
@@ -87,11 +82,10 @@ export function handleSupergraphWithQueryPlanner(
       operationName,
       context,
     }: ExecutionRequest) {
-      if (getEnvStr('QUERY_PLANNER') === 'hive') {
-        return handleMaybePromise(
-          () => hiveApolloQueryPlan(document),
-          (queryPlan) => {
-            return executeQueryPlan({
+      if (isHiveQp) {
+        return hiveQueryPlan(document).then(
+          (queryPlan) =>
+            executeQueryPlan({
               supergraphSchema: unifiedGraph,
               document,
               operationName,
@@ -99,8 +93,7 @@ export function handleSupergraphWithQueryPlanner(
               context,
               onSubgraphExecute: opts.onSubgraphExecute,
               queryPlan: queryPlan as any,
-            }) as any;
-          },
+            }) as any,
         );
       }
       const queryPlan = buildApolloQueryPlan(document);
