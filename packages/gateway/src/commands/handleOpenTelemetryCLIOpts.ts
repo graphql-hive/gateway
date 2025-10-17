@@ -1,4 +1,3 @@
-import { fakePromise } from '@graphql-tools/utils';
 import {
   BatchSpanProcessor,
   SpanProcessor,
@@ -31,108 +30,119 @@ export async function handleOpenTelemetryCLIOpts(
       'Initializing OpenTelemetry SDK',
     );
 
-    return fakePromise().then(async () => {
-      const { openTelemetrySetup, HiveTracingSpanProcessor } = await import(
-        '@graphql-hive/plugin-opentelemetry/setup'
-      );
-      const processors: SpanProcessor[] = [];
+    const { openTelemetrySetup, HiveTracingSpanProcessor } = await import(
+      '@graphql-hive/plugin-opentelemetry/setup'
+    );
+    const processors: SpanProcessor[] = [];
 
-      const logAttributes = {
-        traceEndpoints: [] as {
-          url: string | null;
-          type?: string;
-          target?: string;
-        }[],
-        contextManager: false,
+    const logAttributes = {
+      traceEndpoints: [] as {
+        url: string | null;
+        type?: string;
+        target?: string;
+      }[],
+      contextManager: false,
+    };
+
+    let integration: { name: string; source: { flag: string; env: string } };
+
+    if (openTelemetry) {
+      const otelEndpoint =
+        typeof openTelemetry === 'string'
+          ? openTelemetry
+          : getEnvStr('OTEL_EXPORTER_OTLP_ENDPOINT');
+
+      log.debug({ exporterType, otelEndpoint }, 'Setting up OTLP Exporter');
+
+      integration = {
+        name: 'OpenTelemetry',
+        source: { flag: '--opentelemetry', env: 'OPENTELEMETRY' },
       };
 
-      let integrationName: string;
-
-      if (openTelemetry) {
-        const otelEndpoint =
-          typeof openTelemetry === 'string'
-            ? openTelemetry
-            : getEnvStr('OTEL_EXPORTER_OTLP_ENDPOINT');
-
-        log.debug({ exporterType, otelEndpoint }, 'Setting up OTLP Exporter');
-
-        integrationName = 'OpenTelemetry';
-        logAttributes.traceEndpoints.push({
-          url: otelEndpoint ?? null,
-          type: exporterType,
-        });
-
-        log.debug({ type: exporterType }, 'Loading OpenTelemetry exporter');
-
-        const { OTLPTraceExporter } = await import(
-          `@opentelemetry/exporter-trace-${exporterType}`
-        );
-
-        processors.push(
-          new BatchSpanProcessor(new OTLPTraceExporter({ url: otelEndpoint })),
-        );
-      }
-
-      if (accessToken) {
-        log.debug({ target, traceEndpoint }, 'Setting up Hive Tracing');
-
-        integrationName ??= 'Hive Tracing';
-        if (!target) {
-          ctx.log.error(
-            'Hive tracing needs a target. Please provide it through "--hive-target <target>"',
-          );
-          process.exit(1);
-        }
-
-        logAttributes.traceEndpoints.push({
-          url: traceEndpoint,
-          type: 'hive tracing',
-          target,
-        });
-
-        processors.push(
-          new HiveTracingSpanProcessor({
-            accessToken,
-            target,
-            endpoint: traceEndpoint,
-          }),
-        );
-      }
-
-      log.debug('Trying to load AsyncLocalStorage based Context Manager');
-
-      const contextManager = await import('@opentelemetry/context-async-hooks')
-        .then((module) => {
-          logAttributes.contextManager = true;
-          return new module.AsyncLocalStorageContextManager();
-        })
-        .catch(() => null);
-
-      openTelemetrySetup({
-        log,
-        traces: { processors },
-        resource: await detectResource().catch((err) => {
-          if (
-            err &&
-            typeof err === 'object' &&
-            'code' in err &&
-            err.code === 'ERR_MODULE_NOT_FOUND'
-          ) {
-            ctx.log.warn(
-              err,
-              `NodeJS modules necessary for environment detection is missing, please install it to auto-detect the environment`,
-            );
-            return undefined;
-          }
-          throw err;
-        }),
-        contextManager,
+      logAttributes.traceEndpoints.push({
+        url: otelEndpoint ?? null,
+        type: exporterType,
       });
 
-      log.info(logAttributes, `${integrationName!} integration is enabled`);
+      log.debug({ type: exporterType }, 'Loading OpenTelemetry exporter');
 
-      return true;
+      const { OTLPTraceExporter } = await import(
+        `@opentelemetry/exporter-trace-${exporterType}`
+      );
+
+      processors.push(
+        new BatchSpanProcessor(new OTLPTraceExporter({ url: otelEndpoint })),
+      );
+    }
+
+    if (accessToken) {
+      log.debug({ target, traceEndpoint }, 'Setting up Hive Tracing');
+
+      integration ??= {
+        name: 'Hive Tracing',
+        source: {
+          flag: '--hive-trace-access-token',
+          env: 'HIVE_TRACE_ACCESS_TOKEN',
+        },
+      };
+      if (!target) {
+        ctx.log.error(
+          'Hive tracing needs a target. Please provide it through "--hive-target <target>"',
+        );
+        process.exit(1);
+      }
+
+      logAttributes.traceEndpoints.push({
+        url: traceEndpoint,
+        type: 'hive tracing',
+        target,
+      });
+
+      processors.push(
+        new HiveTracingSpanProcessor({
+          accessToken,
+          target,
+          endpoint: traceEndpoint,
+        }),
+      );
+    }
+
+    log.debug('Trying to load AsyncLocalStorage based Context Manager');
+
+    const contextManager = await import('@opentelemetry/context-async-hooks')
+      .then((module) => {
+        logAttributes.contextManager = true;
+        return new module.AsyncLocalStorageContextManager();
+      })
+      .catch(() => null);
+
+    openTelemetrySetup({
+      log,
+      traces: { processors },
+      resource: await detectResource().catch((err) => {
+        if (
+          err &&
+          typeof err === 'object' &&
+          'code' in err &&
+          err.code === 'ERR_MODULE_NOT_FOUND'
+        ) {
+          ctx.log.warn(
+            err,
+            `NodeJS modules necessary for environment detection is missing, please install it to auto-detect the environment`,
+          );
+          return undefined;
+        }
+        throw err;
+      }),
+      contextManager,
+      _initialization: {
+        name: integration!.name!,
+        source: `cli flag (${integration!.source.flag}) or environment variables (${integration!.source.env})`,
+        logAttributes,
+      },
     });
+
+    return true;
   }
 
   return false;

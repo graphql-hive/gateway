@@ -153,21 +153,44 @@ type BaseOptions = {
    *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
    */
   configureDiagLogger?: boolean;
+
+  /** @internal */
+  _initialization?: typeof initialized & { logAttributes: Attributes };
 };
+
 type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
 
+let initialized: false | { name: string; source: string } = false;
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   const log = options.log || new Logger();
 
+  if (initialized) {
+    log.error(
+      `${initialized.name} integration has already been initialized by ${initialized.source}`,
+    );
+    throw new Error(
+      `${initialized.name} integration already initialized. See previous logs for more information`,
+    );
+  }
+
+  initialized = options._initialization || {
+    name: 'OpenTelemetry',
+    source: `\`openTelemetrySetup\` utility function call ${getStackTrace()}`,
+  };
+
   if (getEnvBool('OTEL_SDK_DISABLED')) {
     log.warn(
-      'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is truthy',
+      `${initialized.name} integration is disabled because \`OTEL_SDK_DISABLED\` environment variable is truthy`,
     );
     return;
   }
 
-  const logAttributes: Attributes = { registrationResults: {} };
-  let logMessage = 'OpenTelemetry integration is enabled';
+  const logAttributes: Attributes = {
+    ...options._initialization?.logAttributes,
+    registrationResults: {},
+  };
+
+  let logMessage = `${initialized.name} integration is enabled`;
 
   if (options.configureDiagLogger !== false) {
     // If the log level is not explicitly set, we use VERBOSE to let Hive Logger log level feature filter logs accordingly.
@@ -297,54 +320,62 @@ export type HiveTracingOptions = { target?: string } & (
 
 export type HiveTracingSetupOptions = BaseOptions & HiveTracingOptions;
 
-export function hiveTracingSetup(config: HiveTracingSetupOptions) {
-  const log = config.log || new Logger();
-  config.target ??= getEnvStr('HIVE_TARGET');
+export function hiveTracingSetup(options: HiveTracingSetupOptions) {
+  const log = options.log || new Logger();
+  options.target ??= getEnvStr('HIVE_TARGET');
 
-  if (!config.target) {
+  if (!options.target) {
     throw new Error(
       'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
     );
   }
 
-  const logAttributes: Attributes = { target: config.target };
+  const logAttributes: Attributes = {
+    ...options._initialization?.logAttributes,
+    target: options.target,
+  };
 
-  if (!config.processor) {
-    config.accessToken ??=
+  if (!options.processor) {
+    options.accessToken ??=
       getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
 
-    if (!config.accessToken) {
+    if (!options.accessToken) {
       throw new Error(
         'You must specify the Hive Registry `accessToken`. Either provide `accessToken` option or `HIVE_ACCESS_TOKEN`/`HIVE_TRACE_ACCESS_TOKEN` environment variable.',
       );
     }
 
-    logAttributes['endpoint'] = config.endpoint;
-    logAttributes['batching'] = config.batching;
+    logAttributes['endpoint'] = options.endpoint;
+    logAttributes['batching'] = options.batching;
   }
 
   openTelemetrySetup({
-    ...config,
+    ...options,
     log,
     resource: createResource(
       resourceFromAttributes({
-        'hive.target_id': config.target,
+        'hive.target_id': options.target,
         [ATTR_SERVICE_NAME]: getEnvStr('OTEL_SERVICE_NAME') || 'hive-gateway',
         [ATTR_SERVICE_VERSION]:
           getEnvStr('OTEL_SERVICE_VERSION') ||
           globalThis.__OTEL_PLUGIN_VERSION__ ||
           'unknown',
       }),
-      config.resource,
+      options.resource,
     ),
     traces: {
       processors: [
-        new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
+        new HiveTracingSpanProcessor(
+          options as HiveTracingSpanProcessorOptions,
+        ),
       ],
     },
+    _initialization: options._initialization || {
+      name: 'Hive Tracing',
+      source: `\`hiveTracingSetup\` utility function call ${getStackTrace()}`,
+      logAttributes,
+    },
   });
-
-  log.info(logAttributes, 'Hive Tracing integration has been enabled');
 }
 
 export type BatchingConfig = boolean | BufferConfig;
@@ -382,4 +413,12 @@ function createResource(
   }
 
   return baseResource.merge(userResource);
+}
+
+/**
+ * Returns the call site of the calling function and the upper stack trace.
+ */
+function getStackTrace(): string {
+  // slice(3) to remove the error message + getStackTrace() call + calling function call
+  return new Error().stack!.split('\n').slice(3).join('\n').trim();
 }
