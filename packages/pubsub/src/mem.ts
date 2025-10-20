@@ -1,6 +1,6 @@
 import { Repeater } from '@repeaterjs/repeater';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { type MaybePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise, type MaybePromise } from '@whatwg-node/promise-helpers';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
 /** In-memory {@link PubSub} implementation. */
@@ -88,6 +88,6 @@ export class MemPubSub<M extends TopicDataMap = TopicDataMap>
   }
 
   [DisposableSymbols.asyncDispose]() {
-    return Promise.resolve(this.dispose());
+    return fakePromise(this.dispose());
   }
 }

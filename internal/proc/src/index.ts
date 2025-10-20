@@ -2,7 +2,7 @@ import childProcess from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
-import { createDeferred } from '@graphql-tools/utils';
+import { createDeferred, fakePromise } from '@graphql-tools/utils';
 import { hostnames, isDebug, trimError } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
@@ -127,7 +127,7 @@ export function spawn(
     [DisposableSymbols.asyncDispose]: async () => {
       if (exited) {
         // there's nothing to dispose since the process already exitted (error or not)
-        return Promise.resolve();
+        return fakePromise();
       }
       if (child.pid) {
         await terminate(child.pid);
