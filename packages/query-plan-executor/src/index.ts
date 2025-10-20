@@ -10,7 +10,6 @@ import {
   MaybeAsyncIterable,
   MaybePromise,
   relocatedError,
-  mergeDeep as toolsMergeDeep,
 } from '@graphql-tools/utils';
 import {
   DocumentNode,
@@ -411,33 +410,12 @@ function executePlanNode(
             const representation = representations[entityIndex];
             if (representation && entity) {
               Object.assign(representation, mergeDeep(representation, entity));
-              // Object.assign(
-              //   representation,
-              //   toolsMergeDeep([representation, entity]),
-              // );
-
-              if (
-                JSON.stringify(representation) ===
-                '{"__typename":"Product","upc":"1","inStock":true,"shippingEstimate":null}'
-              ) {
-                console.trace();
-                // console.log(JSON.stringify([representation, entity]));
-              }
             }
           }
         } else {
-          // Object.assign(
-          //   executionContext.data,
-          //   mergeDeep(executionContext.data, fetchResult.data),
-          // );
           Object.assign(
             executionContext.data,
-            toolsMergeDeep(
-              [executionContext.data, fetchResult.data],
-              undefined,
-              true,
-              true,
-            ),
+            mergeDeep(executionContext.data, fetchResult.data),
           );
         }
         return;
@@ -701,18 +679,9 @@ function projectSelectionSet(
           typeof result[responseKey] === 'object' &&
           projectedValue != null
         ) {
-          // result[responseKey] = Object.assign(
-          //   result[responseKey],
-          //   mergeDeep(result[responseKey], projectedValue),
-          // );
           result[responseKey] = Object.assign(
             result[responseKey],
-            toolsMergeDeep(
-              [result[responseKey], projectedValue],
-              undefined,
-              true,
-              true,
-            ),
+            mergeDeep(result[responseKey], projectedValue),
           );
         } else {
           result[responseKey] = projectedValue;
@@ -750,11 +719,7 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        Object.assign(
-          result,
-          // mergeDeep(result, projectedValue),
-          toolsMergeDeep([result, projectedValue], undefined, true, true),
-        );
+        Object.assign(result, mergeDeep(result, projectedValue));
       }
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = executionContext.fragments[selection.name.value];
@@ -786,8 +751,7 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        // Object.assign(result, mergeDeep(result, projectedValue));
-        Object.assign(result, toolsMergeDeep([result, projectedValue]));
+        Object.assign(result, mergeDeep(result, projectedValue));
       }
     }
   }
