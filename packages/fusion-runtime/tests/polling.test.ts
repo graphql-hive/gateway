@@ -336,7 +336,6 @@ describe('Polling', () => {
     // It can be 0 or 1 or any one-digit number
     expect(callTimes[0]?.toString()?.length).toBe(1);
     // It can be 10_000 or 10_001 or any five-digit number
-    console.log(callTimes[1]);
     expect(callTimes[1]?.toString()?.length).toBe(5);
   }, 20_000);
   it('does not block incoming requests while polling', async () => {
