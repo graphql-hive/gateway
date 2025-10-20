@@ -151,7 +151,7 @@
     "pkgroll": "2.20.1",
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.0.1",
-    "rollup": "4.52.4",
+    "rollup": "4.52.5",
     "rollup-plugin-tsconfig-paths": "^1.5.2",
     "tsx": "4.20.6"
   },
