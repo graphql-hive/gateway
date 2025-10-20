@@ -288,6 +288,7 @@ function executePlanNode(
           );
         }
       }
+      // TODO: fix fast somewhere else
       flattenNode.path = flattenNode.path.map((p) =>
         // hive router qp has paths in Flatten nodes like `[{ Field: 'friends' }]`
         typeof p === 'string' ? p : p['Field'],
