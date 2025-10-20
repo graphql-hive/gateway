@@ -53,13 +53,14 @@ export class MemPubSub<M extends TopicDataMap = TopicDataMap>
     }
 
     if (!listener) {
-      return new Repeater<M[Topic], any, any>(async (push, stop) => {
+      return new Repeater<M[Topic], any, any>((push, stop) => {
         listeners.set(push, stop);
-        await stop;
-        listeners.delete(push);
-        if (listeners.size === 0) {
-          this.#subscribers.delete(topic);
-        }
+        return stop.then(() => {
+          listeners.delete(push);
+          if (listeners.size === 0) {
+            this.#subscribers.delete(topic);
+          }
+        });
       });
     }
 
