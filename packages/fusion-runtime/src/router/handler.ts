@@ -18,8 +18,7 @@ export function handleFederationSupergraphWithRouter(
 
   const qp = new QueryPlanner(printSchemaWithDirectives(unifiedGraph));
   const plan = memoize1(function plan(document: DocumentNode) {
-    const queryPlan = qp.plan(print(document));
-    return queryPlan;
+    return qp.plan(print(document));
   });
   return {
     unifiedGraph,
