@@ -4739,7 +4739,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/new-qp-handler@workspace:^, @graphql-hive/new-qp-handler@workspace:packages/new-qp-handler":
+"@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler"
   dependencies:
@@ -4883,6 +4883,13 @@ __metadata:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
+
+"@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime":
+  version: 0.0.0
+  resolution: "@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon#/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::hash=b12510&locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime"
+  checksum: 10c0/46751919ec6a54c6dc370a50d56c69ca256f3e32809767436c1a0e654283b3689262ddcab05d601d2ee19ba2a93e9f9c49c0706db698bb53426ed77e3d1806b2
+  languageName: node
+  linkType: hard
 
 "@graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
   version: 0.0.0-use.local
@@ -5093,7 +5100,7 @@ __metadata:
     "@envelop/core": "npm:^5.3.2"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/logger": "workspace:^"
-    "@graphql-hive/new-qp-handler": "workspace:^"
+    "@graphql-hive/router": /Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.14"

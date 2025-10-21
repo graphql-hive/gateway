@@ -1,5 +1,4 @@
 import type { Logger } from '@graphql-hive/logger';
-import { handleSupergraphWithQueryPlanner } from '@graphql-hive/new-qp-handler';
 import type {
   TransportContext,
   TransportEntry,
@@ -28,10 +27,11 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { getEnvBool, getEnvStr } from '~internal/env';
+import { getEnvStr } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
+import { handleFederationSupergraph as handleFederationSupergraphWithTools } from './federation/supergraph';
+import { handleFederationSupergraphWithRouter } from './router/handler';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -175,15 +175,14 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
-    const qp = getEnvStr('QUERY_PLANNER') || 'tools';
+    const qp = getEnvStr('__EXPERIMENTAL__QUERY_PLANNER') || 'tools';
     let defaultHandler: UnifiedGraphHandler;
     switch (qp) {
       case 'tools':
-        defaultHandler = handleFederationSupergraph;
+        defaultHandler = handleFederationSupergraphWithTools;
         break;
-      case 'apollo':
-      case 'hive': // will be toggled within new-qp-handler
-        defaultHandler = handleSupergraphWithQueryPlanner;
+      case 'hive':
+        defaultHandler = handleFederationSupergraphWithRouter;
         break;
       default:
         throw new Error(`Unknown query planner "${qp}"`);
