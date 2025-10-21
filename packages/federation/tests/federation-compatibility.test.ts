@@ -91,6 +91,7 @@ describe('Federation Compatibility', () => {
           batch: true,
         });
         gatewayRuntime = createGatewayRuntime({
+          logging: false,
           supergraph: supergraphSdl,
           plugins: () => [useCustomFetch(auditRouter.fetch)],
         });
