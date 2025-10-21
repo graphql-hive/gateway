@@ -26,7 +26,6 @@ describe('Gateway', async () => {
       env: {
         FORK: 1,
         NODE_ENV: 'production',
-        __EXPERIMENTAL__QUERY_PLANNER: 'tools',
       },
     }),
     'Hive Gateway w/ Hive Router Query Planner': await gateway({
@@ -34,7 +33,7 @@ describe('Gateway', async () => {
       env: {
         FORK: 1,
         NODE_ENV: 'production',
-        __EXPERIMENTAL__QUERY_PLANNER: 'hive',
+        __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1,
       },
     }),
   };

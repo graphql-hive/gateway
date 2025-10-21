@@ -27,7 +27,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { getEnvStr } from '~internal/env';
+import { getEnvBool } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph as handleFederationSupergraphWithTools } from './federation/supergraph';
@@ -175,19 +175,18 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
-    const qp = getEnvStr('__EXPERIMENTAL__QUERY_PLANNER') || 'tools';
-    let defaultHandler: UnifiedGraphHandler;
-    switch (qp) {
-      case 'tools':
-        defaultHandler = handleFederationSupergraphWithTools;
-        break;
-      case 'hive':
-        defaultHandler = handleFederationSupergraphWithRouter;
-        break;
-      default:
-        throw new Error(`Unknown query planner "${qp}"`);
+    const hiveQueryPlanner = getEnvBool(
+      '__EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER',
+    );
+    if (hiveQueryPlanner) {
+      opts.transportContext?.log.warn(
+        '[EXPERIMENTAL] Using Query Planner from Hive Router. This feature is experimental and may have bugs or unexpected behavior.',
+      );
     }
-    this.handleUnifiedGraph = opts.handleUnifiedGraph || defaultHandler;
+    this.handleUnifiedGraph =
+      opts.handleUnifiedGraph || hiveQueryPlanner
+        ? handleFederationSupergraphWithRouter
+        : handleFederationSupergraphWithTools;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
