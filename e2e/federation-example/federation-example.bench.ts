@@ -9,7 +9,7 @@ import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
 
 describe('Gateway', async () => {
-  const { gateway, service } = createTenv(__dirname);
+  const { gateway, service: _service } = createTenv(__dirname);
   const example = createExampleSetup(__dirname, 1000);
 
   const supergraph = await example.supergraph();
@@ -26,33 +26,15 @@ describe('Gateway', async () => {
       env: {
         FORK: 1,
         NODE_ENV: 'production',
-        QUERY_PLANNER: 'tools',
+        __EXPERIMENTAL__QUERY_PLANNER: 'tools',
       },
     }),
-    'Hive Gateway w/ Apollo Query Planner': await gateway({
+    'Hive Gateway w/ Hive Router Query Planner': await gateway({
       supergraph,
       env: {
         FORK: 1,
         NODE_ENV: 'production',
-        QUERY_PLANNER: 'apollo',
-      },
-    }),
-    'Hive Gateway w/ Async Hive Query Planner': await gateway({
-      supergraph,
-      env: {
-        FORK: 1,
-        NODE_ENV: 'production',
-        QUERY_PLANNER: 'hive',
-        QUERY_PLANNER_IS_ASYNC: 1,
-      },
-    }),
-    'Hive Gateway w/ Sync Hive Query Planner': await gateway({
-      supergraph,
-      env: {
-        FORK: 1,
-        NODE_ENV: 'production',
-        QUERY_PLANNER: 'hive',
-        QUERY_PLANNER_IS_ASYNC: 0,
+        __EXPERIMENTAL__QUERY_PLANNER: 'hive',
       },
     }),
   };
