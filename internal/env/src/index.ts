@@ -141,3 +141,11 @@ export function getNodeVer(): {
   const [major, minor, patch] = process.versions.node.split('.').map(Number);
   return { major: major || NaN, minor: minor || NaN, patch: patch || NaN };
 }
+
+/**
+ * Whether the federation query planner is using Hive Router node-addon for query planning.
+ * @experimental
+ */
+export function usingHiveRouterQueryPlanner(): boolean {
+  return getEnvBool('__EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER');
+}

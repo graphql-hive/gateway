@@ -27,7 +27,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { getEnvBool } from '~internal/env';
+import { usingHiveRouterQueryPlanner } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
 import { handleFederationSupergraph as handleFederationSupergraphWithTools } from './federation/supergraph';
@@ -175,16 +175,13 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
-    const hiveQueryPlanner = getEnvBool(
-      '__EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER',
-    );
-    if (hiveQueryPlanner) {
+    if (usingHiveRouterQueryPlanner()) {
       opts.transportContext?.log.warn(
         '[EXPERIMENTAL] Using Query Planner from Hive Router. This feature is experimental and may have bugs or unexpected behavior.',
       );
     }
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || hiveQueryPlanner
+      opts.handleUnifiedGraph || usingHiveRouterQueryPlanner()
         ? handleFederationSupergraphWithRouter
         : handleFederationSupergraphWithTools;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
