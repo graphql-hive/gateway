@@ -9,6 +9,7 @@ import {
   mapMaybePromise,
   MaybeAsyncIterable,
   MaybePromise,
+  mergeDeep,
   relocatedError,
 } from '@graphql-tools/utils';
 import {
@@ -38,7 +39,6 @@ import {
 } from './types/execution';
 import { PlanNode, QueryPlan, RequiresSelection } from './types/plan-nodes';
 import { getOperationsAndFragments } from './utils/getOperationAndFragments';
-import { mergeDeep } from './utils/mergeDeep';
 
 export interface QueryPlanExecutorOptions {
   /**
@@ -410,13 +410,21 @@ function executePlanNode(
             const entity = returnedEntities[entityIndex];
             const representation = representations[entityIndex];
             if (representation && entity) {
-              Object.assign(representation, mergeDeep(representation, entity));
+              Object.assign(
+                representation,
+                mergeDeep([representation, entity], false, true, true),
+              );
             }
           }
         } else {
           Object.assign(
             executionContext.data,
-            mergeDeep(executionContext.data, fetchResult.data),
+            mergeDeep(
+              [executionContext.data, fetchResult.data],
+              false,
+              true,
+              true,
+            ),
           );
         }
         return;
@@ -720,7 +728,10 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        Object.assign(result, mergeDeep(result, projectedValue));
+        Object.assign(
+          result,
+          mergeDeep([result, projectedValue], false, true, true),
+        );
       }
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = executionContext.fragments[selection.name.value];
@@ -752,7 +763,10 @@ function projectSelectionSet(
         executionContext,
       );
       if (projectedValue != null) {
-        Object.assign(result, mergeDeep(result, projectedValue));
+        Object.assign(
+          result,
+          mergeDeep([result, projectedValue], false, true, true),
+        );
       }
     }
   }
@@ -838,7 +852,10 @@ function projectRequires(
             supergraphSchema,
           );
           if (projected) {
-            Object.assign(result, mergeDeep(result, projected));
+            Object.assign(
+              result,
+              mergeDeep([result, projected], false, true, true),
+            );
           }
         }
         break;
