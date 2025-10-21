@@ -6,6 +6,7 @@ import {
 } from '@graphql-mesh/fusion-runtime';
 import { Subschema } from '@graphql-tools/delegate';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { usingHiveRouterQueryPlanner } from '~internal/env';
 import { GraphQLSchema, Kind, parse, print } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { composeAndGetExecutor } from './utils';
@@ -144,7 +145,7 @@ describe('handleFederationSubschema', () => {
   });
 });
 
-describe('onDelegationPlanHook', () => {
+describe.skipIf(usingHiveRouterQueryPlanner())('onDelegationPlanHook', () => {
   it('should be called with the plan', async () => {
     const user = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
