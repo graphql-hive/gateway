@@ -806,10 +806,21 @@ export function getStitchingOptionsFromSupergraphSdl(
                   selection.kind === Kind.FIELD &&
                   selection.arguments?.length
                 ) {
+                  const argsHash = selection.arguments
+                    .map(
+                      (arg) =>
+                        arg.name.value +
+                        // TODO: slow? faster hash?
+                        memoizedASTPrint(arg.value).replace(
+                          /[^a-zA-Z0-9]/g,
+                          '',
+                        ),
+                    )
+                    .join('');
                   // @ts-expect-error it's ok we're mutating consciously
                   selection.alias = {
                     kind: Kind.NAME,
-                    value: '_' + selection.name.value,
+                    value: '_' + selection.name.value + '_' + argsHash,
                   };
                 }
                 if ('selectionSet' in selection && selection.selectionSet) {
