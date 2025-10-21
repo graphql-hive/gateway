@@ -165,18 +165,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/composition@npm:2.11.2":
-  version: 2.11.2
-  resolution: "@apollo/composition@npm:2.11.2"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.11.2"
-    "@apollo/query-graphs": "npm:2.11.2"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/ffb05a5a4857e25ee132b91c8720147a5a55ccfa19d10e9f40c78e79964fbff185311483b8d8f3b60d8e0cfc4e277dc363fcea36bf56b3764ef07807586d9bc5
-  languageName: node
-  linkType: hard
-
 "@apollo/composition@npm:2.11.3":
   version: 2.11.3
   resolution: "@apollo/composition@npm:2.11.3"
@@ -186,20 +174,6 @@ __metadata:
   peerDependencies:
     graphql: ^16.5.0
   checksum: 10c0/ec9093b33a705eb4c3177a3f9a2d1c3af82d25081280a567fa5a2181b5d5dcd962803eaa9e707b60bdb7e8d5e4dbf2a8a1f832e591aa75cb07f8c2b0141daff6
-  languageName: node
-  linkType: hard
-
-"@apollo/federation-internals@npm:2.11.2":
-  version: 2.11.2
-  resolution: "@apollo/federation-internals@npm:2.11.2"
-  dependencies:
-    "@types/uuid": "npm:^9.0.0"
-    chalk: "npm:^4.1.0"
-    js-levenshtein: "npm:^1.1.6"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/00f0b2bbb3e88c682101196864339abd4487516b8b6aad24cfc4e42a01f25f00f8c150bf4f480b4ab9d422483a2b0623f2a2a807c54aa47a1624ea5cbadd49ad
   languageName: node
   linkType: hard
 
@@ -265,20 +239,6 @@ __metadata:
     apollo-pbjs: bin/pbjs
     apollo-pbts: bin/pbts
   checksum: 10c0/24b08929c5216f75e3bf457cf7e132d957d6774b0feebb104e98d9b0c06e801ef3919ee23d6a63a6297fb4aa41da3491b8e9acc3481fea0909c90f41f1e5a0f6
-  languageName: node
-  linkType: hard
-
-"@apollo/query-graphs@npm:2.11.2":
-  version: 2.11.2
-  resolution: "@apollo/query-graphs@npm:2.11.2"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.11.2"
-    deep-equal: "npm:^2.0.5"
-    ts-graphviz: "npm:^1.5.4"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/177b38f4394050a1e4b2d7eca9229af2aca0c1842fa237c575bf3836170966d5ce27fdef556b8d811eac577362411f9fc3b2e0517a260625e4f9696fb945f64f
   languageName: node
   linkType: hard
 
@@ -385,19 +345,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.11.2":
-  version: 2.11.2
-  resolution: "@apollo/subgraph@npm:2.11.2"
-  dependencies:
-    "@apollo/cache-control-types": "npm:^1.0.2"
-    "@apollo/federation-internals": "npm:2.11.2"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/4e6a7e3d9e59393b1b85e4d0238d4b01e380dbf4a310b599644c16d973d1dfe95c35a2b344e1aba0bcf2bf753eef6715ae7b427e4ce2df2f9d3a0af904a7bb7f
-  languageName: node
-  linkType: hard
-
-"@apollo/subgraph@npm:^2.11.3":
+"@apollo/subgraph@npm:2.11.3, @apollo/subgraph@npm:^2.11.3":
   version: 2.11.3
   resolution: "@apollo/subgraph@npm:2.11.3"
   dependencies:
@@ -5174,7 +5122,7 @@ __metadata:
     "@whatwg-node/fetch": "npm:^0.10.11"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     graphql: "npm:^16.9.0"
-    graphql-federation-gateway-audit: "graphql-hive/federation-gateway-audit#main"
+    graphql-federation-gateway-audit: "graphql-hive/federation-gateway-audit#cc224d26da54ad1c2393dfef3346893c315f351d"
     pkgroll: "npm:2.20.1"
     tslib: "npm:^2.8.1"
   peerDependencies:
@@ -15226,12 +15174,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-federation-gateway-audit@graphql-hive/federation-gateway-audit#main":
+"graphql-federation-gateway-audit@graphql-hive/federation-gateway-audit#cc224d26da54ad1c2393dfef3346893c315f351d":
   version: 1.0.0
-  resolution: "graphql-federation-gateway-audit@https://github.com/graphql-hive/federation-gateway-audit.git#commit=842c2f0eeeb571ba16c1abfe59929c161589f2d8"
+  resolution: "graphql-federation-gateway-audit@https://github.com/graphql-hive/federation-gateway-audit.git#commit=cc224d26da54ad1c2393dfef3346893c315f351d"
   dependencies:
-    "@apollo/composition": "npm:2.11.2"
-    "@apollo/subgraph": "npm:2.11.2"
+    "@apollo/composition": "npm:2.11.3"
+    "@apollo/subgraph": "npm:2.11.3"
     async-retry: "npm:1.3.3"
     detect-port: "npm:2.1.0"
     dotenv: "npm:17.2.3"
@@ -15245,7 +15193,7 @@ __metadata:
     yargs: "npm:18.0.0"
   bin:
     graphql-federation-audit: ./dist/cli.js
-  checksum: 10c0/69e5ef728f9ed854610a40631f3f469d450f5b95b68e20f62952237bdaae4b744d4a03cf9bfacb8acc1fced885d2d578724dfb3f8ea7a05557765e09576be2a4
+  checksum: 10c0/c803d5e9a22d2567facb30d59c757a2654cdf29846875711a04d281be191f0c2301536a3188ef5512b8bd4534359b9a728001dac9110eb7bbeaff4715674976d
   languageName: node
   linkType: hard
 
