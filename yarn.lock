@@ -201,20 +201,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/federation-internals@npm:2.9.3, @apollo/federation-internals@npm:^2.9.3":
-  version: 2.9.3
-  resolution: "@apollo/federation-internals@npm:2.9.3"
-  dependencies:
-    "@types/uuid": "npm:^9.0.0"
-    chalk: "npm:^4.1.0"
-    js-levenshtein: "npm:^1.1.6"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/12729aefadb769d97db5b35c95f80d7b4455c2d72e6043a2569c7f6be14fa1e18d7788c24ce195b70f1e1136005824d3d5a679312f49f25e57e9787681844637
-  languageName: node
-  linkType: hard
-
 "@apollo/gateway@npm:^2.11.3":
   version: 2.11.3
   resolution: "@apollo/gateway@npm:2.11.3"
@@ -280,20 +266,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/query-graphs@npm:2.9.3":
-  version: 2.9.3
-  resolution: "@apollo/query-graphs@npm:2.9.3"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.9.3"
-    deep-equal: "npm:^2.0.5"
-    ts-graphviz: "npm:^1.5.4"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/bd656ee2d164c5c5c72665a3896488a1ba79b84b1fb572254ea495c123f08166c6e4dc4531e4e4f8e4822472ee38cfa790a3a16d8727b13f8a2d4cd5788f2366
-  languageName: node
-  linkType: hard
-
 "@apollo/query-planner@npm:2.11.3":
   version: 2.11.3
   resolution: "@apollo/query-planner@npm:2.11.3"
@@ -307,22 +279,6 @@ __metadata:
   peerDependencies:
     graphql: ^16.5.0
   checksum: 10c0/d927cdd826a91bdd742d982332cae6ecaae60bb4e740169e64fb0f2a17b9f859eb0c06aa5fee26c54f4d1a5ae9bf4fb1f24fd54729c853b47b2979bda85f7ca4
-  languageName: node
-  linkType: hard
-
-"@apollo/query-planner@npm:^2.9.3":
-  version: 2.9.3
-  resolution: "@apollo/query-planner@npm:2.9.3"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.9.3"
-    "@apollo/query-graphs": "npm:2.9.3"
-    "@apollo/utils.keyvaluecache": "npm:^2.1.0"
-    chalk: "npm:^4.1.0"
-    deep-equal: "npm:^2.0.5"
-    pretty-format: "npm:^29.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/05b954676d3f436f4c9654adf0ce1f787a4bd7639cb9ffbb38b4a33c70d3e18f4598ef4d60789b8beed395f0a12fd18711b4faa5e5119863e65340be4cc4a8ed
   languageName: node
   linkType: hard
 
@@ -4436,13 +4392,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/deepmerge@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "@fastify/deepmerge@npm:3.1.0"
-  checksum: 10c0/57eda9079e9ed6d137f966e8b0d08f219cbca6e79706a1be76fe10ba2b8fd87c33846f1c653299b09a2e8260ffba8c8fc708f9b40b54243648d6821061999c9b
-  languageName: node
-  linkType: hard
-
 "@fastify/error@npm:^4.0.0":
   version: 4.1.0
   resolution: "@fastify/error@npm:4.1.0"
@@ -4739,23 +4688,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/new-qp-handler@workspace:packages/new-qp-handler"
-  dependencies:
-    "@apollo/federation-internals": "npm:^2.9.3"
-    "@apollo/query-planner": "npm:^2.9.3"
-    "@graphql-hive/query-plan-executor": "workspace:^"
-    "@graphql-tools/batch-execute": "workspace:^"
-    "@graphql-tools/utils": "npm:^10.7.2"
-    graphql: "npm:^16.9.0"
-    pkgroll: "npm:2.8.0"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  languageName: unknown
-  linkType: soft
-
 "@graphql-hive/plugin-aws-sigv4@workspace:^, @graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-aws-sigv4@workspace:packages/plugins/aws-sigv4"
@@ -4867,20 +4799,6 @@ __metadata:
       optional: true
     ioredis:
       optional: true
-  languageName: unknown
-  linkType: soft
-
-"@graphql-hive/query-plan-executor@workspace:^, @graphql-hive/query-plan-executor@workspace:packages/query-plan-executor":
-  version: 0.0.0-use.local
-  resolution: "@graphql-hive/query-plan-executor@workspace:packages/query-plan-executor"
-  dependencies:
-    "@fastify/deepmerge": "npm:^3.1.0"
-    "@graphql-tools/utils": "npm:^10.7.2"
-    graphql: "npm:^16.9.0"
-    pkgroll: "npm:2.8.0"
-    tslib: "npm:^2.8.1"
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
 
