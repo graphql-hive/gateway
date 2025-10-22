@@ -1,6 +1,5 @@
 import {
   createGatewayRuntime,
-  GatewayConfig,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
 import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
