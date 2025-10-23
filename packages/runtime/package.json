@@ -93,7 +93,7 @@
     "@whatwg-node/fetch": "^0.10.11",
     "fets": "^0.8.4",
     "graphql": "^16.9.0",
-    "graphql-sse": "^2.5.3",
+    "graphql-sse": "^2.6.0",
     "html-minifier-terser": "7.2.0",
     "pkgroll": "2.20.1",
     "react": "^19.2.0",
