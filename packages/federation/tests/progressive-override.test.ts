@@ -1,9 +1,9 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
+import { extractPercentageFromLabel } from '@graphql-tools/federation';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
-import { extractPercentageFromLabel } from '@graphql-tools/federation';
 
 describe('Progressive Override', () => {
   describe('Label processing', () => {
