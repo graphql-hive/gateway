@@ -1037,9 +1037,17 @@ function projectRequires(
   const result = {} as EntityRepresentation;
   for (const requiresSelection of requiresSelections) {
     switch (requiresSelection.kind) {
-      case 'Field':
+      case 'Field': {
         const fieldName = requiresSelection.name;
-        const original = entity[fieldName];
+        const alias =
+          (requiresSelection as any).alias ??
+          (requiresSelection as any).responseKey ??
+          undefined;
+        const responseKey = alias ?? fieldName;
+        let original = entity[fieldName];
+        if (original === undefined && responseKey && responseKey !== fieldName) {
+          original = entity[responseKey];
+        }
         const projectedValue = requiresSelection.selections
           ? projectRequires(
               requiresSelection.selections,
@@ -1048,9 +1056,10 @@ function projectRequires(
             )
           : original;
         if (projectedValue != null) {
-          result[fieldName] = projectedValue;
+          result[responseKey] = projectedValue;
         }
         break;
+      }
       case 'InlineFragment':
         if (
           entitySatisfiesTypeCondition(
