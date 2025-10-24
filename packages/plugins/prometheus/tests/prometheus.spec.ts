@@ -1,12 +1,10 @@
-import {
-  createGatewayRuntime,
-  useCustomFetch,
-} from '@graphql-hive/gateway-runtime';
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { isDebug } from '@internal/testing';
-import { createSchema, createYoga } from 'graphql-yoga';
+import { createSchema } from 'graphql-yoga';
 import { Registry, register as registry } from 'prom-client';
 import { beforeEach, describe, expect, it } from 'vitest';
 import usePrometheus, {
@@ -281,23 +279,19 @@ describe('Prometheus', () => {
 
   it('should not increment fetch count on cached responses', async () => {
     const registry = new Registry();
-    const subgraph = createYoga({ schema: subgraphSchema });
     await using cache = new InMemoryLRUCache();
-    const gateway = createGatewayRuntime({
-      supergraph: getUnifiedGraphGracefully([
+    const gateway = createGatewayTester({
+      subgraphs: [
         {
           name: 'TEST_SUBGRAPH',
           schema: subgraphSchema,
-          url: 'http://subgraph/graphql',
         },
-      ]),
+      ],
       cache,
       responseCaching: {
         session: () => null,
       },
       plugins: (ctx) => [
-        // @ts-expect-error
-        useCustomFetch(subgraph.fetch),
         usePrometheus({
           ...ctx,
           registry,
