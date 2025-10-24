@@ -4805,8 +4805,8 @@ __metadata:
 
 "@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime":
   version: 0.0.0
-  resolution: "@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon#/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::hash=af1b79&locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime"
-  checksum: 10c0/925a3bac929841004b9df6ad52a384625dd365060c53eaaa95287aef8224f93e42deb23e7edb1dd93a6a210e6d73e2a0ccf058d8b140a2f3044039c623d01e1b
+  resolution: "@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon#/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::hash=5278ef&locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime"
+  checksum: 10c0/2e93c0b224dc545cd900f07dc84f3388cd5124fe1dfbd3450efb9da2129aa36392c06e88772151f6771a3741574a12df5d0d97ef431a49571adfb5aa30fd5bbc
   languageName: node
   linkType: hard
 
