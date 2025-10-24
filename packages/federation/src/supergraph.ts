@@ -1286,10 +1286,6 @@ export function getStitchingOptionsFromSupergraphSdl(
         if (!mergedConfig) {
           mergedConfig = mergeConfig[typeName] = {};
         }
-        let fieldsConfig = mergedConfig.fields;
-        if (!fieldsConfig) {
-          fieldsConfig = mergedConfig.fields = {};
-        }
         for (const fieldInfo of fieldInfos) {
           let fieldsConfig = mergedConfig.fields;
           if (!fieldsConfig) {
