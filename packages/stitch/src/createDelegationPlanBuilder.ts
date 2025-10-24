@@ -210,7 +210,6 @@ function calculateDelegationStage(
         const field = fields[fieldNode.name.value];
         if (field != null) {
           if (context != null && info != null) {
-            console.log('Checking override for', { f: fieldNode.name.value });
             const overrideConfig =
               nonUniqueSubschema.merge?.[mergedTypeInfo.typeName]?.fields?.[
                 fieldNode.name.value
@@ -512,14 +511,6 @@ export function createDelegationPlanBuilder(
           missingFieldsParentMap: new Map(),
           missingFieldsParentDeferredMap: new Map(),
         });
-      }
-      for (const delegationMap of delegationMaps) {
-        for (const [subschema, selectionSet] of delegationMap) {
-          console.log({
-            subschema: subschema.name,
-            selectionSet: print(selectionSet),
-          });
-        }
       }
       return delegationMaps;
     };

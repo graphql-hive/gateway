@@ -244,9 +244,7 @@ export type ProgressiveOverrideHandler = (
   context: any,
 ) => boolean;
 
-export const progressiveOverridePossibilityHandler = (
-  possibility: number,
-) => {
+export const progressiveOverridePossibilityHandler = (possibility: number) => {
   const rng = Math.random();
   return rng < possibility;
 };

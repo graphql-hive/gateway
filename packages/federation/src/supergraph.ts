@@ -1302,7 +1302,7 @@ export function getStitchingOptionsFromSupergraphSdl(
 
           const label = fieldInfo.label;
           // Extract 10 from percent(10) for example
-          const percentRegexp = /^percent\((\d{1,3})\)$/;
+          const percentRegexp = /^percent\((\d+)\)$/;
           const match = percentRegexp.exec(label);
           if (match) {
             const percent = Number(match[1]);
