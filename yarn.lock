@@ -4102,9 +4102,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway-testing@workspace:packages/gateway-testing":
+"@graphql-hive/gateway-testing@workspace:packages/testing":
   version: 0.0.0-use.local
-  resolution: "@graphql-hive/gateway-testing@workspace:packages/gateway-testing"
+  resolution: "@graphql-hive/gateway-testing@workspace:packages/testing"
   dependencies:
     "@graphql-mesh/fusion-composition": "npm:^0.8.17"
     "@graphql-tools/utils": "npm:^10.9.1"
