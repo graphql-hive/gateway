@@ -70,7 +70,7 @@ export function createGatewayTester<
     // compose subgraphs and create runtime
     const subgraphs = config.subgraphs.reduce(
       (acc, subgraph) => {
-        const url = `http://${subgraph.name}/graphql`;
+        const url = `http://subgraph-${subgraph.name}/graphql`;
         const schema =
           'typeDefs' in subgraph.schema
             ? makeExecutableSchema(subgraph.schema)
@@ -120,6 +120,7 @@ export function createGatewayTester<
   }
 
   const runtimeExecute = buildHTTPExecutor({
+    endpoint: 'http://gateway/graphql',
     fetch: runtime.fetch,
     headers: (execReq) => execReq?.rootValue.headers,
   });
