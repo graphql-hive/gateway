@@ -687,6 +687,15 @@ function projectSelectionSet(
   if (!isObjectType(parentType) && !isInterfaceType(parentType)) {
     return null;
   }
+  // Check if the type itself is marked with @inaccessible
+  if (isObjectType(parentType)) {
+    const inaccessibleDirective = parentType.astNode?.directives?.find(
+      (directive) => directive.name.value === 'inaccessible',
+    );
+    if (inaccessibleDirective) {
+      return null;
+    }
+  }
   const result: Record<string, any> = {};
   selectionLoop: for (const selection of selectionSet.selections) {
     if (selection.directives?.length) {
