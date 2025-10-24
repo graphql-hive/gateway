@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@graphql-mesh/fusion-composition": "^0.8.17",
+    "@graphql-tools/schema": "^10.0.25",
     "@graphql-tools/utils": "^10.9.1",
     "graphql-yoga": "^5.16.0"
   },

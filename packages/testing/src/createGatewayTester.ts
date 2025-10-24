@@ -5,18 +5,23 @@ import {
   UnifiedGraphConfig,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import {
-  getUnifiedGraphGracefully,
-  type SubgraphConfig,
-} from '@graphql-mesh/fusion-composition';
+import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
+import {
+  makeExecutableSchema,
+  type IExecutableSchemaDefinition,
+} from '@graphql-tools/schema';
 import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
-import { parse } from 'graphql';
+import { parse, type GraphQLSchema } from 'graphql';
 import { createYoga, type YogaServerInstance } from 'graphql-yoga';
 
-export interface GatewayTesterSubgraphConfig extends SubgraphConfig {
-  /** An optional GraphQL Yoga server instance that runs the provided schema. */
-  yoga?: YogaServerInstance<any, any>;
+export interface GatewayTesterSubgraphConfig {
+  /** The name of the subgraph. */
+  name: string;
+  /** The subgraph schema. */
+  schema: GraphQLSchema | IExecutableSchemaDefinition;
+  /** An optional GraphQL Yoga server instance that runs the {@link schema built subgraph}. */
+  yoga?: (schema: GraphQLSchema) => YogaServerInstance<any, any>;
 }
 
 export type GatewayTesterConfig<
@@ -60,24 +65,32 @@ export function createGatewayTester<
     // compose subgraphs and create runtime
     const subgraphs = config.subgraphs.reduce(
       (acc, subgraph) => {
-        const url = subgraph.url || `http://${subgraph.name}/graphql`;
+        const url = `http://${subgraph.name}/graphql`;
+        const schema =
+          'typeDefs' in subgraph.schema
+            ? makeExecutableSchema(subgraph.schema)
+            : subgraph.schema;
         return {
           ...acc,
           [url]: {
-            ...subgraph,
+            name: subgraph.name,
             url,
+            schema,
             yoga:
-              subgraph.yoga ||
-              createYoga({
-                schema: subgraph.schema,
-                maskedErrors: false,
-                // TODO: toggle if necessary for testing
-                logging: false,
-              }),
+              subgraph.yoga?.(schema) ||
+              createYoga({ schema, maskedErrors: false, logging: false }),
           },
         };
       },
-      {} as Record<string, GatewayTesterSubgraphConfig>,
+      {} as Record<
+        string,
+        {
+          name: string;
+          url: string;
+          schema: GraphQLSchema;
+          yoga: YogaServerInstance<any, any>;
+        }
+      >,
     );
     runtime = createGatewayRuntime({
       ...config,
