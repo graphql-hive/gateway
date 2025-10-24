@@ -14,6 +14,11 @@ import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
 import { parse } from 'graphql';
 import { createYoga, type YogaServerInstance } from 'graphql-yoga';
 
+export interface GatewayTesterSubgraphConfig extends SubgraphConfig {
+  /** An optional GraphQL Yoga server instance that runs the provided schema. */
+  yoga?: YogaServerInstance<any, any>;
+}
+
 export type GatewayTesterConfig<
   TContext extends Record<string, any> = Record<string, any>,
 > = GatewayConfigSchemaBase<TContext> &
@@ -24,7 +29,7 @@ export type GatewayTesterConfig<
       }
     | {
         // gateway (composes subgraphs)
-        subgraphs: SubgraphConfig[];
+        subgraphs: GatewayTesterSubgraphConfig[];
       }
   );
 // TODO: proxy mode
@@ -59,17 +64,17 @@ export function createGatewayTester<
         [subgraph.name]: {
           ...subgraph,
           url: subgraph.url || `http://${subgraph.name}/graphql`,
-          yoga: createYoga({
-            schema: subgraph.schema,
-            // TODO: toggle if necessary for testing
-            logging: false,
-          }),
+          yoga:
+            subgraph.yoga ||
+            createYoga({
+              schema: subgraph.schema,
+              maskedErrors: false,
+              // TODO: toggle if necessary for testing
+              logging: false,
+            }),
         },
       }),
-      {} as Record<
-        string,
-        SubgraphConfig & { yoga: YogaServerInstance<any, any> }
-      >,
+      {} as Record<string, GatewayTesterSubgraphConfig>,
     );
     runtime = createGatewayRuntime({
       ...config,
@@ -82,7 +87,7 @@ export function createGatewayTester<
               `Subgraph with name "${context.subgraphName}" not found`,
             );
           }
-          return subgraph.yoga.fetch(
+          return subgraph.yoga!.fetch(
             // @ts-expect-error TODO: url can be a string, not only an instance of URL
             url,
             options,
