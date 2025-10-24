@@ -13,15 +13,13 @@ export function handleFederationSupergraphWithRouter(
 ): UnifiedGraphHandlerResult {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const { getSubgraphSchema } = handleFederationSupergraph(opts);
-
   const supergraphSchema = opts.unifiedGraph;
   const qp = new QueryPlanner(printSchemaWithDirectives(supergraphSchema));
-  const consumerSchemaSdl = qp.consumerSchema;
   const plan = memoize1(function plan(document: DocumentNode) {
     return qp.plan(print(document));
   });
   return {
-    unifiedGraph: buildSchema(consumerSchemaSdl),
+    unifiedGraph: buildSchema(qp.consumerSchema, { assumeValid: true }),
     getSubgraphSchema,
     executor({ document, variables, operationName, context }) {
       return plan(document).then((queryPlan) => {
