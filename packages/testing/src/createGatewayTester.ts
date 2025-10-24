@@ -13,7 +13,11 @@ import {
 } from '@graphql-tools/schema';
 import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
 import { parse, type GraphQLSchema } from 'graphql';
-import { createYoga, type YogaServerInstance } from 'graphql-yoga';
+import {
+  createYoga,
+  DisposableSymbols,
+  type YogaServerInstance,
+} from 'graphql-yoga';
 
 export interface GatewayTesterSubgraphConfig {
   /** The name of the subgraph. */
@@ -42,7 +46,7 @@ export type GatewayTesterConfig<
 
 export interface GatewayTester<
   TContext extends Record<string, any> = Record<string, any>,
-> {
+> extends AsyncDisposable {
   runtime: GatewayRuntime<TContext>;
   fetch: typeof fetch;
   execute(args: {
@@ -121,6 +125,8 @@ export function createGatewayTester<
 
   return {
     runtime,
+    // @ts-expect-error native and whatwg-node fetch has conflicts
+    fetch: runtime.fetch,
     execute(args) {
       return runtimeExecute({
         document: parse(args.query),
@@ -130,7 +136,8 @@ export function createGatewayTester<
         rootValue: { headers: args.headers },
       });
     },
-    // @ts-expect-error native and whatwg-node fetch has conflicts
-    fetch: runtime.fetch,
+    [DisposableSymbols.asyncDispose]() {
+      return runtime[DisposableSymbols.asyncDispose]();
+    },
   };
 }
