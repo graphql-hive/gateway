@@ -4106,8 +4106,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-testing@workspace:packages/testing"
   dependencies:
+    "@apollo/subgraph": "npm:^2.11.3"
     "@graphql-mesh/fusion-composition": "npm:^0.8.17"
-    "@graphql-tools/schema": "npm:^10.0.25"
     "@graphql-tools/utils": "npm:^10.9.1"
     graphql: "npm:^16.9.0"
     graphql-yoga: "npm:^5.16.0"

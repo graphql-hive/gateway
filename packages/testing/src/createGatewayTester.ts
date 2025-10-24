@@ -1,3 +1,4 @@
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import {
   createGatewayRuntime,
   GatewayConfigSchemaBase,
@@ -7,23 +8,42 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import {
-  makeExecutableSchema,
-  type IExecutableSchemaDefinition,
-} from '@graphql-tools/schema';
 import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
-import { parse, type GraphQLSchema } from 'graphql';
+import {
+  GraphQLFieldResolver,
+  GraphQLScalarType,
+  parse,
+  type GraphQLSchema,
+} from 'graphql';
 import {
   createYoga,
   DisposableSymbols,
   type YogaServerInstance,
 } from 'graphql-yoga';
 
+/** Thanks @apollo/subgraph for not re-exporting this! */
+export interface GraphQLResolverMap<TContext = {}> {
+  [typeName: string]:
+    | {
+        [fieldName: string]:
+          | GraphQLFieldResolver<any, TContext>
+          | {
+              requires?: string;
+              resolve?: GraphQLFieldResolver<any, TContext>;
+              subscribe?: GraphQLFieldResolver<any, TContext>;
+            };
+      }
+    | GraphQLScalarType
+    | {
+        [enumValue: string]: string | number;
+      };
+}
+
 export interface GatewayTesterSubgraphConfig {
   /** The name of the subgraph. */
   name: string;
   /** The subgraph schema. */
-  schema: GraphQLSchema | IExecutableSchemaDefinition;
+  schema: GraphQLSchema | { typeDefs: string; resolvers?: GraphQLResolverMap };
   /** An optional GraphQL Yoga server instance that runs the {@link schema built subgraph}. */
   yoga?: (schema: GraphQLSchema) => YogaServerInstance<any, any>;
 }
@@ -73,7 +93,12 @@ export function createGatewayTester<
         const url = `http://subgraph-${subgraph.name}/graphql`;
         const schema =
           'typeDefs' in subgraph.schema
-            ? makeExecutableSchema(subgraph.schema)
+            ? buildSubgraphSchema([
+                {
+                  ...subgraph.schema,
+                  typeDefs: parse(subgraph.schema.typeDefs),
+                },
+              ])
             : subgraph.schema;
         return {
           ...acc,
