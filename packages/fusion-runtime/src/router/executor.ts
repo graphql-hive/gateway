@@ -751,8 +751,19 @@ function projectSelectionSet(
           )
         : data[responseKey];
       if (projectedValue !== undefined) {
-        if (isEnumType(fieldType) && !fieldType.getValue(projectedValue)) {
-          projectedValue = null;
+        if (isEnumType(fieldType)) {
+          const enumValue = fieldType.getValue(projectedValue);
+          if (!enumValue) {
+            projectedValue = null;
+          } else {
+            // Check if the enum value is marked with @inaccessible
+            const inaccessibleDirective = enumValue.astNode?.directives?.find(
+              (directive) => directive.name.value === 'inaccessible',
+            );
+            if (inaccessibleDirective) {
+              projectedValue = null;
+            }
+          }
         }
         if (result[responseKey] == null) {
           result[responseKey] = projectedValue;
