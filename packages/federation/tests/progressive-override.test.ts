@@ -1,8 +1,8 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { extractPercentageFromLabel } from '@graphql-tools/federation';
-import { parse } from 'graphql';
-import { describe, expect, it } from 'vitest';
+import { GraphQLSchema, parse } from 'graphql';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
 
 describe('Progressive Override', () => {
@@ -208,19 +208,22 @@ describe('Progressive Override', () => {
           },
         },
       });
-      const supergraph$ = getStitchedSchemaFromLocalSchemas({
-        localSchemas: {
-          SUBGRAPHA,
-          SUBGRAPHB,
-          SUBGRAPHC,
-        },
-        handleProgressiveOverride(label, context) {
-          return !!context[label];
-        },
+      let supergraph: GraphQLSchema;
+      beforeAll(async () => {
+        supergraph = await getStitchedSchemaFromLocalSchemas({
+          localSchemas: {
+            SUBGRAPHA,
+            SUBGRAPHB,
+            SUBGRAPHC,
+          },
+          handleProgressiveOverride(label, context) {
+            return !!context[label];
+          },
+        });
       });
       it('overrides if the flag is true', async () => {
         const result = await normalizedExecutor({
-          schema: await supergraph$,
+          schema: supergraph,
           document: parse(/* GraphQL */ `
             query {
               foo {
@@ -254,7 +257,7 @@ describe('Progressive Override', () => {
       });
       it('does not override if the flag is false', async () => {
         const result2 = await normalizedExecutor({
-          schema: await supergraph$,
+          schema: supergraph,
           document: parse(/* GraphQL */ `
             query {
               foo {
@@ -300,15 +303,15 @@ describe('Progressive Override', () => {
       expect(extractPercentageFromLabel('percentile(10)')).toBeUndefined();
     });
     it('throws for out-of-bound numbers', () => {
-      expect(() => extractPercentageFromLabel('percent(150)')).toThrowError(
+      expect(() => extractPercentageFromLabel('percent(150)')).toThrow(
         'Expected a percentage value between 0 and 100, got 150',
       );
     });
     it('throws for malformed percent labels', () => {
-      expect(() => extractPercentageFromLabel('percent()')).toThrowError(
+      expect(() => extractPercentageFromLabel('percent()')).toThrow(
         'Expected a number in percent(x), got: percent()',
       );
-      expect(() => extractPercentageFromLabel('percent(foo)')).toThrowError(
+      expect(() => extractPercentageFromLabel('percent(foo)')).toThrow(
         'Expected a number in percent(x), got: percent(foo)',
       );
     });
