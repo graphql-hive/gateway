@@ -70,6 +70,7 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import {
+  extractPercentageFromLabel,
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
@@ -1297,16 +1298,8 @@ export function getStitchingOptionsFromSupergraphSdl(
           }
 
           const label = fieldInfo.label;
-          // Extract 10 from percent(10) for example
-          const percentRegexp = /^percent\((\d+(?:\.\d+)?)\)$/;
-          const match = percentRegexp.exec(label);
-          if (match) {
-            const percent = Number(match[1]);
-            if (percent < 0 || percent > 100) {
-              throw new Error(
-                `Invalid progressive override percent value for field ${typeName}.${fieldInfo.field} in subgraph ${subgraphName}: ${label}`,
-              );
-            }
+          const percent = extractPercentageFromLabel(label);
+          if (percent != null) {
             const possibility = percent / 100;
             fieldConfig.override = () =>
               progressiveOverridePossibilityHandler(possibility);

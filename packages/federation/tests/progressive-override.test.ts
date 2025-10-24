@@ -3,6 +3,7 @@ import { normalizedExecutor } from '@graphql-tools/executor';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromLocalSchemas } from './getStitchedSchemaFromLocalSchemas';
+import { extractPercentageFromLabel } from '@graphql-tools/federation';
 
 describe('Progressive Override', () => {
   describe('Label processing', () => {
@@ -285,6 +286,31 @@ describe('Progressive Override', () => {
           },
         });
       });
+    });
+  });
+  describe('percent(x) parsing', () => {
+    it('support integers', () => {
+      expect(extractPercentageFromLabel('percent(10)')).toBe(10);
+    });
+    it('support floats', () => {
+      expect(extractPercentageFromLabel('percent(12.5)')).toBe(12.5);
+    });
+    it('returns undefined for non-matching labels', () => {
+      expect(extractPercentageFromLabel('custom_label')).toBeUndefined();
+      expect(extractPercentageFromLabel('percentile(10)')).toBeUndefined();
+    });
+    it('throws for out-of-bound numbers', () => {
+      expect(() => extractPercentageFromLabel('percent(150)')).toThrowError(
+        'Expected a percentage value between 0 and 100, got 150',
+      );
+    });
+    it('throws for malformed percent labels', () => {
+      expect(() => extractPercentageFromLabel('percent()')).toThrowError(
+        'Expected a number in percent(x), got: percent()',
+      );
+      expect(() => extractPercentageFromLabel('percent(foo)')).toThrowError(
+        'Expected a number in percent(x), got: percent(foo)',
+      );
     });
   });
 });

@@ -250,3 +250,25 @@ export const progressiveOverridePossibilityHandler = (possibility: number) => {
   const rng = Math.random();
   return rng < possibility;
 };
+
+export function extractPercentageFromLabel(label: string): number | undefined {
+  if (label.startsWith('percent(') && label.endsWith(')')) {
+    const regexp = /^percent\((\d+(?:\.\d+)?)\)$/;
+    const match = regexp.exec(label);
+    const percentageStr = match?.[1];
+    if (!percentageStr) {
+      throw new Error(`Expected a number in percent(x), got: ${label}`);
+    }
+    const parsedFloat = parseFloat(percentageStr);
+    if (isNaN(parsedFloat)) {
+      throw new Error(`Could not parse percentage value from label: ${label}`);
+    }
+    if (parsedFloat < 0 || parsedFloat > 100) {
+      throw new Error(
+        `Expected a percentage value between 0 and 100, got ${parsedFloat}`,
+      );
+    }
+    return parsedFloat;
+  }
+  return undefined;
+}
