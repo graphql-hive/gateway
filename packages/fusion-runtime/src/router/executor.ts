@@ -801,36 +801,63 @@ function projectSelectionSet(
       }
     } else if (selection.kind === 'InlineFragment') {
       const typeCondition = selection.typeCondition?.name.value;
-      if (!isEntityRepresentation(data)) {
-        throw new Error('Invalid entity');
-      }
-      if (
-        typeCondition &&
-        !entitySatisfiesTypeCondition(
-          executionContext.supergraphSchema,
+      // If data has a __typename, check if it matches the type condition
+      if (isEntityRepresentation(data)) {
+        if (
+          typeCondition &&
+          !entitySatisfiesTypeCondition(
+            executionContext.supergraphSchema,
+            data.__typename,
+            typeCondition,
+          )
+        ) {
+          continue;
+        }
+        const typeByTypename = executionContext.supergraphSchema.getType(
           data.__typename,
-          typeCondition,
-        )
-      ) {
-        continue;
-      }
-      const typeByTypename = executionContext.supergraphSchema.getType(
-        data.__typename,
-      );
-      if (!isOutputType(typeByTypename)) {
-        throw new Error('Invalid type');
-      }
-      const projectedValue = projectSelectionSet(
-        data,
-        selection.selectionSet,
-        typeByTypename,
-        executionContext,
-      );
-      if (projectedValue != null) {
-        Object.assign(
-          result,
-          mergeDeep([result, projectedValue], false, true, true),
         );
+        if (!isOutputType(typeByTypename)) {
+          throw new Error('Invalid type');
+        }
+        const projectedValue = projectSelectionSet(
+          data,
+          selection.selectionSet,
+          typeByTypename,
+          executionContext,
+        );
+        if (projectedValue != null) {
+          Object.assign(
+            result,
+            mergeDeep([result, projectedValue], false, true, true),
+          );
+        }
+      } else {
+        // If data doesn't have a __typename, use the current parentType
+        // and check if it satisfies the type condition
+        if (
+          typeCondition &&
+          !entitySatisfiesTypeCondition(
+            executionContext.supergraphSchema,
+            parentType.name,
+            typeCondition,
+          )
+        ) {
+          continue;
+        }
+        const projectedValue = projectSelectionSet(
+          data,
+          selection.selectionSet,
+          typeCondition
+            ? executionContext.supergraphSchema.getType(typeCondition)!
+            : parentType,
+          executionContext,
+        );
+        if (projectedValue != null) {
+          Object.assign(
+            result,
+            mergeDeep([result, projectedValue], false, true, true),
+          );
+        }
       }
     } else if (selection.kind === 'FragmentSpread') {
       const fragment = executionContext.fragments[selection.name.value];
