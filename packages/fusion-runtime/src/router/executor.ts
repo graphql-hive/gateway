@@ -15,7 +15,11 @@ import {
   mergeDeep,
   relocatedError,
 } from '@graphql-tools/utils';
-import type { FragmentDefinitionNode, GraphQLError } from 'graphql';
+import type {
+  FragmentDefinitionNode,
+  GraphQLError,
+  GraphQLNamedType,
+} from 'graphql';
 import {
   DocumentNode,
   getNamedType,
@@ -413,12 +417,16 @@ function executePlanNode(
             }
             if (fetchNode.inputRewrites) {
               for (const inputRewrite of fetchNode.inputRewrites) {
-                switch (inputRewrite.kind) {
+                const normalizedRewrite = normalizeFetchRewrite(inputRewrite);
+                if (!normalizedRewrite) {
+                  continue;
+                }
+                switch (normalizedRewrite.kind) {
                   case 'ValueSetter': {
                     const rewritten = applyValueSetter(
                       representation,
-                      inputRewrite.path,
-                      inputRewrite.setValueTo,
+                      normalizedRewrite.path,
+                      normalizedRewrite.setValueTo,
                       executionContext.supergraphSchema,
                     );
                     representation = rewritten;
@@ -469,12 +477,16 @@ function executePlanNode(
         }
         if (fetchNode.outputRewrites) {
           for (const outputRewrite of fetchNode.outputRewrites) {
-            switch (outputRewrite.kind) {
+            const normalizedRewrite = normalizeFetchRewrite(outputRewrite);
+            if (!normalizedRewrite) {
+              continue;
+            }
+            switch (normalizedRewrite.kind) {
               case 'KeyRenamer': {
                 applyKeyRenamer(
                   fetchResult.data,
-                  outputRewrite.path,
-                  outputRewrite.renameKeyTo,
+                  normalizedRewrite.path,
+                  normalizedRewrite.renameKeyTo,
                   executionContext.supergraphSchema,
                 );
                 break;
@@ -539,6 +551,81 @@ function executePlanNode(
       console.error('Invalid plan node:', planNode);
       throw new Error(`Invalid plan node: ${inspect(planNode)}`);
   }
+}
+
+type NormalizedFetchRewrite =
+  | {
+      kind: 'KeyRenamer';
+      path: string[];
+      renameKeyTo: string;
+    }
+  | {
+      kind: 'ValueSetter';
+      path: string[];
+      setValueTo: any;
+    };
+
+function normalizeFetchRewrite(rewrite: any): NormalizedFetchRewrite | null {
+  if (!rewrite) {
+    return null;
+  }
+  if (rewrite.kind === 'ValueSetter') {
+    rewrite.path = normalizeRewritePath(rewrite.path);
+    return rewrite as NormalizedFetchRewrite;
+  }
+  if (rewrite.kind === 'KeyRenamer') {
+    rewrite.path = normalizeRewritePath(rewrite.path);
+    return rewrite as NormalizedFetchRewrite;
+  }
+  if ('ValueSetter' in rewrite) {
+    const normalized: NormalizedFetchRewrite = {
+      kind: 'ValueSetter',
+      path: normalizeRewritePath(rewrite.ValueSetter?.path),
+      setValueTo: rewrite.ValueSetter?.setValueTo,
+    };
+    Object.assign(rewrite, normalized);
+    delete rewrite.ValueSetter;
+    return normalized;
+  }
+  if ('KeyRenamer' in rewrite) {
+    const normalized: NormalizedFetchRewrite = {
+      kind: 'KeyRenamer',
+      path: normalizeRewritePath(rewrite.KeyRenamer?.path),
+      renameKeyTo: rewrite.KeyRenamer?.renameKeyTo,
+    };
+    Object.assign(rewrite, normalized);
+    delete rewrite.KeyRenamer;
+    return normalized;
+  }
+  return null;
+}
+
+function normalizeRewritePath(path: Array<any> | undefined): string[] {
+  if (!Array.isArray(path)) {
+    return [];
+  }
+  return path
+    .map((segment) => {
+      if (segment == null) {
+        return undefined;
+      }
+      if (typeof segment === 'string') {
+        return segment;
+      }
+      if (typeof segment === 'object') {
+        if ('TypenameEquals' in segment) {
+          return `... on ${segment.TypenameEquals}`;
+        }
+        if ('Key' in segment) {
+          return segment.Key;
+        }
+        if ('Field' in segment) {
+          return segment.Field;
+        }
+      }
+      return undefined;
+    })
+    .filter((segment): segment is string => typeof segment === 'string');
 }
 
 function applyKeyRenamer(
@@ -677,7 +764,7 @@ function entitySatisfiesTypeCondition(
 function projectSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  type: GraphQLNamedOutputType,
+  type: GraphQLNamedType,
   executionContext: QueryPlanExecutionContext,
 ): any {
   if (data == null) {
