@@ -226,6 +226,12 @@ export interface MergedFieldConfig {
   computed?: boolean;
   canonical?: boolean;
   provides?: SelectionSetNode;
+  override?: OverrideConfig;
+}
+
+export interface OverrideConfig {
+  from: string;
+  handle(context: any): boolean;
 }
 
 export type MergedTypeResolver<TContext = Record<string, any>> = (

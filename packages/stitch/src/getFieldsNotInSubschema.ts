@@ -1,5 +1,6 @@
 import {
   extractUnavailableFields,
+  handleOverrideByDelegation,
   StitchingInfo,
   Subschema,
   subtractSelectionSets,
@@ -16,6 +17,7 @@ import {
   SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
+import { GraphQLResolveInfo } from 'graphql/type';
 
 export function getFieldsNotInSubschema(
   schema: GraphQLSchema,
@@ -27,6 +29,8 @@ export function getFieldsNotInSubschema(
   variableValues: Record<string, any>,
   subschema: Subschema,
   providedSelectionNode: SelectionSetNode | undefined,
+  context: any | undefined,
+  info: GraphQLResolveInfo | undefined,
 ): Array<FieldNode> {
   const sourceSchema = subschema.transformedSchema;
   let { fields: subFieldNodesByResponseKey, patches } = collectSubFields(
@@ -119,8 +123,22 @@ export function getFieldsNotInSubschema(
   for (const [, subFieldNodes] of subFieldNodesByResponseKey) {
     let fieldNotInSchema = false;
     const fieldName = subFieldNodes[0]?.name.value!;
-    const field =
+    let field =
       fieldName === '__typename' ? TypeNameMetaFieldDef : fields[fieldName];
+    if (context != null && info != null) {
+      const overrideConfig =
+        subschema?.merge?.[gatewayType.name]?.fields?.[fieldName]?.override;
+      if (overrideConfig != null) {
+        const overridden = handleOverrideByDelegation(
+          info,
+          context,
+          overrideConfig.handle,
+        );
+        if (!overridden) {
+          field = undefined;
+        }
+      }
+    }
     if (!field) {
       if (providedSelectionNode) {
         const subFieldSelection: SelectionSetNode = {

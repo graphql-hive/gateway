@@ -161,6 +161,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   onDelegationStageExecuteHooks,
   onDelegateHooks,
   batchDelegateOptions,
+  handleProgressiveOverride,
   additionalTypeDefs: additionalTypeDefsFromConfig = [],
   additionalResolvers: additionalResolversFromConfig = [],
   // no logger was provided, use a muted logger for consistency across plugin hooks
@@ -280,6 +281,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
         },
       });
     },
+    handleProgressiveOverride,
   });
   const inContextSDK = getInContextSDK(
     executableUnifiedGraph,

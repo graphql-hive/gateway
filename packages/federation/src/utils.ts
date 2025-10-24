@@ -238,3 +238,15 @@ export function getNamedTypeNode(typeNode: TypeNode) {
   }
   return typeNode;
 }
+
+export type ProgressiveOverrideHandler = (
+  label: string,
+  context: any,
+) => boolean;
+
+export const progressiveOverridePossibilityHandler = (
+  possibility: number,
+) => {
+  const rng = Math.random();
+  return rng < possibility;
+};

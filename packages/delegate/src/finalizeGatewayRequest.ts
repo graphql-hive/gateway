@@ -36,6 +36,7 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
+import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
 import { Subschema } from './Subschema.js';
 import { DelegationContext, StitchingInfo } from './types.js';
 import {
@@ -82,6 +83,7 @@ function finalizeGatewayDocument<TContext>(
       validFragmentsWithType,
       operation.selectionSet,
       onOverlappingAliases,
+      delegationContext,
     );
 
     usedFragments = union(usedFragments, operationUsedFragments);
@@ -97,6 +99,7 @@ function finalizeGatewayDocument<TContext>(
       validFragmentsWithType,
       usedFragments,
       onOverlappingAliases,
+      delegationContext,
     );
     const operationOrFragmentVariables = union(
       operationUsedVariables,
@@ -393,6 +396,7 @@ function collectFragmentVariables(
   validFragmentsWithType: { [name: string]: GraphQLType },
   usedFragments: Array<string>,
   onOverlappingAliases: () => void,
+  delegationContext: DelegationContext<any>,
 ) {
   let remainingFragments = usedFragments.slice();
 
@@ -423,6 +427,7 @@ function collectFragmentVariables(
         validFragmentsWithType,
         fragment.selectionSet,
         onOverlappingAliases,
+        delegationContext,
       );
       remainingFragments = union(remainingFragments, fragmentUsedFragments);
       usedVariables = union(usedVariables, fragmentUsedVariables);
@@ -477,6 +482,7 @@ function finalizeSelectionSet(
   validFragments: { [name: string]: GraphQLType },
   selectionSet: SelectionSetNode,
   onOverlappingAliases: () => void,
+  delegationContext: DelegationContext<any>,
 ) {
   const usedFragments: Array<string> = [];
   const usedVariables: Array<string> = [];
@@ -494,6 +500,7 @@ function finalizeSelectionSet(
     usedFragments,
     seenNonNullableMap,
     seenNullableMap,
+    delegationContext,
   );
 
   visit(
@@ -525,6 +532,7 @@ function filterSelectionSet(
   usedFragments: Array<string>,
   seenNonNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
   seenNullableMap: WeakMap<readonly ASTNode[], Set<string>>,
+  delegationContext: DelegationContext<any>,
 ) {
   return visit(
     selectionSet,
@@ -532,8 +540,29 @@ function filterSelectionSet(
       [Kind.FIELD]: {
         enter: (node) => {
           const parentType = typeInfo.getParentType();
+          const field = typeInfo.getFieldDef();
+          if (
+            delegationContext.context != null &&
+            delegationContext.info != null &&
+            parentType != null &&
+            field != null
+          ) {
+            const parentTypeName = parentType.name;
+            const overrideConfig =
+              delegationContext.subschemaConfig?.merge?.[parentTypeName]
+                ?.fields?.[field.name]?.override;
+            if (overrideConfig != null) {
+              const overridden = handleOverrideByDelegation(
+                delegationContext.info,
+                delegationContext.context,
+                overrideConfig.handle,
+              );
+              if (!overridden) {
+                return null;
+              }
+            }
+          }
           if (isObjectType(parentType) || isInterfaceType(parentType)) {
-            const field = typeInfo.getFieldDef();
             if (!field) {
               return null;
             }
@@ -624,6 +653,7 @@ function filterSelectionSet(
                   usedFragments,
                   seenNonNullableMap,
                   seenNullableMap,
+                  delegationContext,
                 );
 
                 if (!fieldFilteredSelectionSet.selections.length) {
