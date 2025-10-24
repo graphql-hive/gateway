@@ -59,21 +59,24 @@ export function createGatewayTester<
   } else {
     // compose subgraphs and create runtime
     const subgraphs = config.subgraphs.reduce(
-      (acc, subgraph) => ({
-        ...acc,
-        [subgraph.name]: {
-          ...subgraph,
-          url: subgraph.url || `http://${subgraph.name}/graphql`,
-          yoga:
-            subgraph.yoga ||
-            createYoga({
-              schema: subgraph.schema,
-              maskedErrors: false,
-              // TODO: toggle if necessary for testing
-              logging: false,
-            }),
-        },
-      }),
+      (acc, subgraph) => {
+        const url = subgraph.url || `http://${subgraph.name}/graphql`;
+        return {
+          ...acc,
+          [url]: {
+            ...subgraph,
+            url,
+            yoga:
+              subgraph.yoga ||
+              createYoga({
+                schema: subgraph.schema,
+                maskedErrors: false,
+                // TODO: toggle if necessary for testing
+                logging: false,
+              }),
+          },
+        };
+      },
       {} as Record<string, GatewayTesterSubgraphConfig>,
     );
     runtime = createGatewayRuntime({
@@ -81,11 +84,9 @@ export function createGatewayTester<
       supergraph: getUnifiedGraphGracefully(Object.values(subgraphs)),
       plugins: (ctx) => [
         useCustomFetch((url, options, context, info) => {
-          const subgraph = subgraphs[context.subgraphName];
+          const subgraph = subgraphs[url];
           if (!subgraph) {
-            throw new Error(
-              `Subgraph with name "${context.subgraphName}" not found`,
-            );
+            throw new Error(`Subgraph for URL "${url}" not found`);
           }
           return subgraph.yoga!.fetch(
             // @ts-expect-error TODO: url can be a string, not only an instance of URL
