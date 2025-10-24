@@ -18,7 +18,6 @@ import {
   InlineFragmentNode,
   isAbstractType,
   Kind,
-  print,
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';
