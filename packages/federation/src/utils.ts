@@ -8,6 +8,7 @@ import {
   parseSelectionSet,
 } from '@graphql-tools/utils';
 import { GraphQLSchema, Kind, SelectionSetNode, TypeNode } from 'graphql';
+import { GraphQLResolveInfo } from 'graphql/type';
 
 export const getArgsFromKeysForFederation = memoize1(
   function getArgsFromKeysForFederation(representations: readonly any[]) {
@@ -242,6 +243,7 @@ export function getNamedTypeNode(typeNode: TypeNode) {
 export type ProgressiveOverrideHandler = (
   label: string,
   context: any,
+  info: GraphQLResolveInfo,
 ) => boolean;
 
 export const progressiveOverridePossibilityHandler = (possibility: number) => {

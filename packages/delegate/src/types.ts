@@ -221,17 +221,17 @@ export interface MergedTypeResolverOptions<K = any, V = any> {
   dataLoaderOptions?: DataLoader.Options<K, V>;
 }
 
+export type OverrideHandler = (
+  context: any,
+  info: GraphQLResolveInfo,
+) => boolean;
+
 export interface MergedFieldConfig {
   selectionSet?: string;
   computed?: boolean;
   canonical?: boolean;
   provides?: SelectionSetNode;
-  override?: OverrideConfig;
-}
-
-export interface OverrideConfig {
-  from: string;
-  handle(context: any): boolean;
+  override?: OverrideHandler;
 }
 
 export type MergedTypeResolver<TContext = Record<string, any>> = (

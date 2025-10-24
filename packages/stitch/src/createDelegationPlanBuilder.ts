@@ -161,15 +161,15 @@ function calculateDelegationStage(
     let overridden = false;
     for (const nonUniqueSubschema of nonUniqueSubschemas) {
       if (context != null && info != null) {
-        const overrideConfig =
+        const overrideHandler =
           nonUniqueSubschema.merge?.[mergedTypeInfo.typeName]?.fields?.[
             fieldNode.name.value
           ]?.override;
-        if (overrideConfig != null) {
+        if (overrideHandler != null) {
           const overriddenBySubschema = handleOverrideByDelegation(
             info,
             context,
-            overrideConfig.handle,
+            overrideHandler,
           );
           if (overriddenBySubschema) {
             let subschemaSelections = delegationMap.get(nonUniqueSubschema);
@@ -209,15 +209,15 @@ function calculateDelegationStage(
         const field = fields[fieldNode.name.value];
         if (field != null) {
           if (context != null && info != null) {
-            const overrideConfig =
+            const overrideHandler =
               nonUniqueSubschema.merge?.[mergedTypeInfo.typeName]?.fields?.[
                 fieldNode.name.value
               ]?.override;
-            if (overrideConfig != null) {
+            if (overrideHandler != null) {
               const overridden = handleOverrideByDelegation(
                 info,
                 context,
-                overrideConfig.handle,
+                overrideHandler,
               );
               if (overridden) {
                 bestUniqueSubschema = nonUniqueSubschema;

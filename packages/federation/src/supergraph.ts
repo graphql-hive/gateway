@@ -1308,18 +1308,12 @@ export function getStitchingOptionsFromSupergraphSdl(
               );
             }
             const possibility = percent / 100;
-            fieldConfig.override = {
-              handle: () => progressiveOverridePossibilityHandler(possibility),
-              from: fieldInfo.from,
-            };
+            fieldConfig.override = () =>
+              progressiveOverridePossibilityHandler(possibility);
           } else if (opts.handleProgressiveOverride) {
             const progressiveOverrideHandler = opts.handleProgressiveOverride;
-            fieldConfig.override = {
-              handle(context) {
-                return progressiveOverrideHandler(fieldInfo.label, context);
-              },
-              from: fieldInfo.from,
-            };
+            fieldConfig.override = (context, info) =>
+              progressiveOverrideHandler(label, context, info);
           }
         }
       }
