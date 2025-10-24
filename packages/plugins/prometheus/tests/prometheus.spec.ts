@@ -305,20 +305,15 @@ describe('Prometheus', () => {
     });
 
     for (let i = 0; i < 3; i++) {
-      const res = await gateway.fetch('http://gateway/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      await expect(
+        gateway.execute({
           query: /* GraphQL */ `
             {
               hello
             }
           `,
         }),
-      });
-      await expect(res.json()).resolves.toEqual({
+      ).resolves.toEqual({
         data: { hello: 'Hello world!' },
       });
     }
