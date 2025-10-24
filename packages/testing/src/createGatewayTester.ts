@@ -56,6 +56,7 @@ export interface GatewayTester<
     extensions?: Record<string, unknown>;
     headers?: Record<string, string>;
   }): Promise<MaybeAsyncIterable<ExecutionResult<any>>>;
+  dispose(): Promise<void>;
 }
 
 export function createGatewayTester<
@@ -138,6 +139,9 @@ export function createGatewayTester<
     },
     [DisposableSymbols.asyncDispose]() {
       return runtime[DisposableSymbols.asyncDispose]();
+    },
+    async dispose() {
+      await runtime.dispose();
     },
   };
 }
