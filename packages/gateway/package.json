@@ -135,7 +135,7 @@
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/transport-soap": "^0.10.14",
     "@graphql-tools/executor": "^1.4.9",
-    "@rollup/plugin-commonjs": "^28.0.8",
+    "@rollup/plugin-commonjs": "^28.0.9",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@rollup/plugin-sucrase": "^5.0.2",
