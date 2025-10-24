@@ -4,6 +4,6 @@
   "dependencies": {
     "@nats-io/transport-node": "^3.2.0",
     "graphql": "^16.9.0",
-    "graphql-sse": "^2.5.3"
+    "graphql-sse": "^2.6.0"
   }
 }
