@@ -1,7 +1,6 @@
 import { PlanNode, QueryPlan, RequiresSelection } from '@graphql-hive/router';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import {
-  asArray,
   createGraphQLError,
   ExecutionRequest,
   inspect,
@@ -25,7 +24,6 @@ import {
   getNamedType,
   getOperationAST,
   getVariableValues,
-  GraphQLNamedOutputType,
   GraphQLSchema,
   isAbstractType,
   isEnumType,
@@ -300,6 +298,143 @@ function createQueryPlanExecutionContext({
   };
 }
 
+type ParsedFlattenPathSegment =
+  | { kind: 'Field'; name: string }
+  | { kind: 'Cast'; typeCondition: string }
+  | { kind: 'List' };
+
+function parseFlattenPath(path: readonly any[]): ParsedFlattenPathSegment[] {
+  if (!Array.isArray(path)) {
+    return [];
+  }
+  const segments: ParsedFlattenPathSegment[] = [];
+  for (const rawSegment of path) {
+    if (typeof rawSegment === 'string') {
+      if (rawSegment === '@') {
+        segments.push({ kind: 'List' });
+      } else if (rawSegment) {
+        segments.push({ kind: 'Field', name: rawSegment });
+      }
+      continue;
+    }
+    if (rawSegment && typeof rawSegment === 'object') {
+      if ('Field' in rawSegment && rawSegment.Field != null) {
+        segments.push({
+          kind: 'Field',
+          name: String(rawSegment.Field),
+        });
+        continue;
+      }
+      if ('Cast' in rawSegment && rawSegment.Cast != null) {
+        segments.push({
+          kind: 'Cast',
+          typeCondition: String(rawSegment.Cast),
+        });
+        continue;
+      }
+      if ('List' in rawSegment) {
+        segments.push({ kind: 'List' });
+        continue;
+      }
+    }
+    throw new Error(
+      `Unsupported flatten path segment received from query planner: ${inspect(
+        rawSegment,
+      )}`,
+    );
+  }
+  return segments;
+}
+
+function collectFlattenRepresentations(
+  source: Record<string, any>,
+  pathSegments: ParsedFlattenPathSegment[],
+  supergraphSchema: GraphQLSchema,
+  bucket: EntityRepresentation[],
+) {
+  traverseFlattenPath(
+    source,
+    pathSegments,
+    supergraphSchema,
+    (value: unknown) => {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item && typeof item === 'object') {
+            bucket.push(item as EntityRepresentation);
+          }
+        }
+        return;
+      }
+      if (value && typeof value === 'object') {
+        bucket.push(value as EntityRepresentation);
+      }
+    },
+  );
+}
+
+function traverseFlattenPath(
+  current: unknown,
+  remainingPath: ParsedFlattenPathSegment[],
+  supergraphSchema: GraphQLSchema,
+  callback: (value: unknown) => void,
+): void {
+  if (current == null) {
+    return;
+  }
+  const [segment, ...rest] = remainingPath;
+  if (!segment /* same as remainingPath.length === 0 */) {
+    callback(current);
+    return;
+  }
+  switch (segment!.kind) {
+    case 'Field': {
+      if (Array.isArray(current)) {
+        for (const item of current) {
+          traverseFlattenPath(item, remainingPath, supergraphSchema, callback);
+        }
+        return;
+      }
+      if (typeof current === 'object') {
+        const next = (current as Record<string, any>)[segment.name];
+        traverseFlattenPath(next, rest, supergraphSchema, callback);
+      }
+      return;
+    }
+    case 'List': {
+      if (Array.isArray(current)) {
+        for (const item of current) {
+          traverseFlattenPath(item, rest, supergraphSchema, callback);
+        }
+      }
+      return;
+    }
+    case 'Cast': {
+      if (Array.isArray(current)) {
+        for (const item of current) {
+          traverseFlattenPath(item, remainingPath, supergraphSchema, callback);
+        }
+        return;
+      }
+      if (typeof current === 'object') {
+        const candidate = current as EntityRepresentation;
+        const typename =
+          typeof candidate.__typename === 'string'
+            ? candidate.__typename
+            : segment.typeCondition;
+        if (
+          entitySatisfiesTypeCondition(
+            supergraphSchema,
+            typename,
+            segment.typeCondition,
+          )
+        ) {
+          traverseFlattenPath(current, rest, supergraphSchema, callback);
+        }
+      }
+    }
+  }
+}
+
 /**
  * Executes the individual plan node
  */
@@ -336,56 +471,26 @@ function executePlanNode(
       return Promise.all(promises);
     }
     case 'Flatten': {
-      const representations: any[] = [];
       const flattenNode = planNode;
-      function iteratePathOverdata(
-        parent: Record<string, any>,
-        currentPath: string,
-        remainingPaths: string[],
-      ): unknown {
-        if (currentPath === '@') {
-          return asArray(parent).map((currentData) =>
-            iteratePathOverdata(
-              currentData,
-              remainingPaths[0]!,
-              remainingPaths.slice(1),
-            ),
-          );
-        } else {
-          if (currentPath == null) {
-            representations.push(parent);
-            return;
-          }
-          const currentData = parent[currentPath];
-          return iteratePathOverdata(
-            currentData,
-            remainingPaths[0]!,
-            remainingPaths.slice(1),
-          );
-        }
-      }
-      // TODO: fix fast somewhere else
-      // console.log(flattenNode.path);
-      flattenNode.path = flattenNode.path
-        .map((p) =>
-          // hive router qp has paths in Flatten nodes like `[{ Field: 'friends' }]`
-          typeof p === 'string' ? p : p['Field'],
-        )
-        .filter(
-          // TODO: is this safe?
-          // the path may contain undefined because some parts hare `{ Cast: '<type>' }`, we dont need those
-          Boolean,
-        );
-      iteratePathOverdata(
+      const pathSegments = parseFlattenPath(flattenNode.path);
+      const errorPath = pathSegments
+        .map((segment) => (segment.kind === 'Field' ? segment.name : null))
+        .filter((segment): segment is string => segment != null);
+      const representations: EntityRepresentation[] = [];
+      collectFlattenRepresentations(
         executionContext.data,
-        flattenNode.path[0]!,
-        flattenNode.path.slice(1),
+        pathSegments,
+        executionContext.supergraphSchema,
+        representations,
       );
+      if (representations.length === 0) {
+        return;
+      }
       return executePlanNode(
         flattenNode.node,
         executionContext,
         representations,
-        flattenNode.path,
+        errorPath.length ? errorPath : undefined,
       );
     }
     case 'Fetch': {
@@ -1045,7 +1150,11 @@ function projectRequires(
           undefined;
         const responseKey = alias ?? fieldName;
         let original = entity[fieldName];
-        if (original === undefined && responseKey && responseKey !== fieldName) {
+        if (
+          original === undefined &&
+          responseKey &&
+          responseKey !== fieldName
+        ) {
           original = entity[responseKey];
         }
         const projectedValue = requiresSelection.selections
