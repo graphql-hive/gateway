@@ -27,6 +27,7 @@ import {
   type TracerConfig,
 } from '@opentelemetry/sdk-trace-base';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
 import { hive } from '../src/api';
@@ -182,11 +183,11 @@ export class MockSpanExporter implements SpanExporter {
   }
   shutdown() {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
   forceFlush() {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
   reset() {
     this.spans = [];
@@ -352,12 +353,12 @@ export class MockLogRecordExporter implements LogRecordExporter {
 
   shutdown(): Promise<void> {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
 
   forceFlush(): Promise<void> {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
 
   reset() {

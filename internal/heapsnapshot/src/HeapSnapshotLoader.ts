@@ -29,6 +29,7 @@
  */
 
 import { MessagePort } from 'node:worker_threads';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import {
   HeapSnapshotProgress,
   JSHeapSnapshot,
@@ -166,7 +167,7 @@ export class HeapSnapshotLoader {
     // sequentially. This means it's fine to stash away a single #dataCallback
     // instead of an array of them.
     if (this.#buffer.length > 0) {
-      return Promise.resolve(this.#buffer.shift() as string);
+      return fakePromise(this.#buffer.shift() as string);
     }
 
     const { promise, resolve } =

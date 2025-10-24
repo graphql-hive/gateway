@@ -865,7 +865,6 @@ describe('useOpenTelemetry', () => {
         const operationSpan = spanExporter.spans.find(({ name }) =>
           name.startsWith('graphql.operation'),
         );
-
         expect(httpSpan.attributes['gateway.cache.response_cache']).toBe(
           attrs.http,
         );
@@ -1198,7 +1197,7 @@ describe('useOpenTelemetry', () => {
 
     it('should have all attributes required by Hive Tracing', async () => {
       await using gateway = await buildTestGateway({
-        fetch: () => () => Promise.resolve(new Response(null, { status: 500 })),
+        fetch: () => () => new Response(null, { status: 500 }),
       });
       await gateway.query({
         shouldReturnErrors: true,

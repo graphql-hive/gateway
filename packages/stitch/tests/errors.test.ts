@@ -6,6 +6,7 @@ import {
   ExecutionResult,
   Executor,
 } from '@graphql-tools/utils';
+import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
 import { buildSchema, graphql, GraphQLError } from 'graphql';
 import { describe, expect, it, test } from 'vitest';
 
@@ -314,8 +315,8 @@ describe('executor errors are propagated', () => {
       },
     });
 
-    const rejectingExecutor = () =>
-      Promise.reject(new Error('Service is down'));
+    const rejectingExecutor: Executor = () =>
+      fakeRejectPromise(new Error('Service is down'));
 
     const schema = stitchSchemas({
       subschemas: [
