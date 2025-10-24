@@ -23,6 +23,7 @@ export function handleFederationSupergraphWithRouter(
     getSubgraphSchema,
     executor({ document, variables, operationName, context }) {
       return plan(document).then((queryPlan) => {
+        // console.log('Query Plan:', JSON.stringify(queryPlan, null, 2));
         return executeQueryPlan({
           supergraphSchema,
           document,

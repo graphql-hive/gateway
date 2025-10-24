@@ -1,5 +1,8 @@
 import {
+  FetchNodePathSegment,
   FlattenNodePathSegment,
+  InputRewrite,
+  OutputRewrite,
   PlanNode,
   QueryPlan,
   RequiresSelection,
@@ -505,7 +508,7 @@ function executePlanNode(
             }
             if (fetchNode.inputRewrites) {
               for (const inputRewrite of fetchNode.inputRewrites) {
-                const normalizedRewrite = normalizeFetchRewrite(inputRewrite);
+                const normalizedRewrite = normalizeRewrite(inputRewrite);
                 if (!normalizedRewrite) {
                   continue;
                 }
@@ -565,7 +568,7 @@ function executePlanNode(
         }
         if (fetchNode.outputRewrites) {
           for (const outputRewrite of fetchNode.outputRewrites) {
-            const normalizedRewrite = normalizeFetchRewrite(outputRewrite);
+            const normalizedRewrite = normalizeRewrite(outputRewrite);
             if (!normalizedRewrite) {
               continue;
             }
@@ -641,79 +644,50 @@ function executePlanNode(
   }
 }
 
-type NormalizedFetchRewrite =
-  | {
-      kind: 'KeyRenamer';
-      path: string[];
-      renameKeyTo: string;
-    }
-  | {
-      kind: 'ValueSetter';
-      path: string[];
-      setValueTo: any;
-    };
+type NormalizedRewrite =
+  | { kind: 'ValueSetter'; path: string[]; setValueTo: string }
+  | { kind: 'KeyRenamer'; path: string[]; renameKeyTo: string };
 
-function normalizeFetchRewrite(rewrite: any): NormalizedFetchRewrite | null {
-  if (!rewrite) {
-    return null;
-  }
-  if (rewrite.kind === 'ValueSetter') {
-    rewrite.path = normalizeRewritePath(rewrite.path);
-    return rewrite as NormalizedFetchRewrite;
-  }
-  if (rewrite.kind === 'KeyRenamer') {
-    rewrite.path = normalizeRewritePath(rewrite.path);
-    return rewrite as NormalizedFetchRewrite;
+function normalizeRewrite(
+  rewrite: InputRewrite | OutputRewrite,
+): NormalizedRewrite {
+  if ('kind' in rewrite) {
+    return {
+      ...rewrite,
+      path: normalizeRewritePath(rewrite.path),
+    };
   }
   if ('ValueSetter' in rewrite) {
-    const normalized: NormalizedFetchRewrite = {
+    return {
       kind: 'ValueSetter',
       path: normalizeRewritePath(rewrite.ValueSetter?.path),
       setValueTo: rewrite.ValueSetter?.setValueTo,
     };
-    Object.assign(rewrite, normalized);
-    delete rewrite.ValueSetter;
-    return normalized;
   }
   if ('KeyRenamer' in rewrite) {
-    const normalized: NormalizedFetchRewrite = {
+    return {
       kind: 'KeyRenamer',
       path: normalizeRewritePath(rewrite.KeyRenamer?.path),
       renameKeyTo: rewrite.KeyRenamer?.renameKeyTo,
     };
-    Object.assign(rewrite, normalized);
-    delete rewrite.KeyRenamer;
-    return normalized;
   }
-  return null;
+  throw new Error(`Unsupported fetch node rewrite: ${JSON.stringify(rewrite)}`);
 }
 
-function normalizeRewritePath(path: Array<any> | undefined): string[] {
-  if (!Array.isArray(path)) {
-    return [];
+function normalizeRewritePath(path: FetchNodePathSegment[]): string[] {
+  const normalized: string[] = [];
+  for (const segment of path) {
+    if ('TypenameEquals' in segment) {
+      normalized.push(`... on ${segment.TypenameEquals}`);
+    } else if ('Key' in segment) {
+      normalized.push(segment.Key);
+    } else {
+      throw new Error(
+        `Unsupported fetch node path segment: ${JSON.stringify(segment)}`,
+      );
+    }
   }
-  return path
-    .map((segment) => {
-      if (segment == null) {
-        return undefined;
-      }
-      if (typeof segment === 'string') {
-        return segment;
-      }
-      if (typeof segment === 'object') {
-        if ('TypenameEquals' in segment) {
-          return `... on ${segment.TypenameEquals}`;
-        }
-        if ('Key' in segment) {
-          return segment.Key;
-        }
-        if ('Field' in segment) {
-          return segment.Field;
-        }
-      }
-      return undefined;
-    })
-    .filter((segment): segment is string => typeof segment === 'string');
+  return normalized;
 }
 
 function applyKeyRenamer(
@@ -767,7 +741,7 @@ function applyKeyRenamer(
 function applyValueSetter(
   data: any,
   path: string[],
-  setValueTo: any,
+  setValueTo: string,
   supergraphSchema: GraphQLSchema,
 ): any {
   if (Array.isArray(data)) {
