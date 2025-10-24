@@ -12,6 +12,7 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
+import { usingHiveRouterQueryPlanner } from '~internal/env';
 import {
   buildSchema,
   getNamedType,
@@ -151,46 +152,46 @@ describe('Federation Compatibility', () => {
         );
       });
       tests.forEach((_, i) => {
-        (supergraphName === 'requires-with-argument-conflict' ? it.todo : it)(
-          `test-query-${i}`,
-          async () => {
-            const test = tests[i];
-            if (!test) {
-              throw new Error(`Test ${i} not found`);
-            }
-            const response = await gatewayRuntime.fetch(
-              'http://localhost/graphql',
-              {
-                method: 'POST',
-                headers: {
-                  'content-type': 'application/json',
-                },
-                body: JSON.stringify({
-                  query: test.query,
-                }),
+        (!usingHiveRouterQueryPlanner() &&
+          supergraphName === 'requires-with-argument-conflict'
+          ? it.todo // fails in stitching
+          : it)(`test-query-${i}`, async () => {
+          const test = tests[i];
+          if (!test) {
+            throw new Error(`Test ${i} not found`);
+          }
+          const response = await gatewayRuntime.fetch(
+            'http://localhost/graphql',
+            {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
               },
-            );
-            const result: ExecutionResult = await response.json();
-            const received = {
-              data: result.data ?? null,
-              errors: !!result.errors?.length,
-            };
+              body: JSON.stringify({
+                query: test.query,
+              }),
+            },
+          );
+          const result: ExecutionResult = await response.json();
+          const received = {
+            data: result.data ?? null,
+            errors: !!result.errors?.length,
+          };
 
-            const expected = {
-              data: test.expected.data ?? null,
-              errors: test.expected.errors ?? false,
-            };
+          const expected = {
+            data: test.expected.data ?? null,
+            errors: test.expected.errors ?? false,
+          };
 
-            try {
-              expect(received).toEqual(expected);
-            } catch (e) {
-              result.errors?.forEach((err) => {
-                console.error(err);
-              });
-              throw e;
-            }
-          },
-        );
+          try {
+            expect(received).toEqual(expected);
+          } catch (e) {
+            result.errors?.forEach((err) => {
+              console.error(err);
+            });
+            throw e;
+          }
+        });
       });
     });
   }
