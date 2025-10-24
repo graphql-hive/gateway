@@ -361,10 +361,17 @@ function executePlanNode(
         }
       }
       // TODO: fix fast somewhere else
-      flattenNode.path = flattenNode.path.map((p) =>
-        // hive router qp has paths in Flatten nodes like `[{ Field: 'friends' }]`
-        typeof p === 'string' ? p : p['Field'],
-      );
+      // console.log(flattenNode.path);
+      flattenNode.path = flattenNode.path
+        .map((p) =>
+          // hive router qp has paths in Flatten nodes like `[{ Field: 'friends' }]`
+          typeof p === 'string' ? p : p['Field'],
+        )
+        .filter(
+          // TODO: is this safe?
+          // the path may contain undefined because some parts hare `{ Cast: '<type>' }`, we dont need those
+          Boolean,
+        );
       iteratePathOverdata(
         executionContext.data,
         flattenNode.path[0]!,
