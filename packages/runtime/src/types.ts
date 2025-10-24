@@ -246,7 +246,7 @@ export interface GatewayConfigSubgraph<
   subgraph: UnifiedGraphConfig;
 }
 
-interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
+export interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
   extends GatewayConfigBase<TContext> {
   /**
    * Additional GraphQL schema type definitions.

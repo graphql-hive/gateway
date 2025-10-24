@@ -4102,6 +4102,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/gateway-testing@workspace:packages/gateway-testing":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/gateway-testing@workspace:packages/gateway-testing"
+  dependencies:
+    "@graphql-mesh/fusion-composition": "npm:^0.8.17"
+    "@graphql-tools/utils": "npm:^10.9.1"
+    graphql: "npm:^16.9.0"
+    graphql-yoga: "npm:^5.16.0"
+    pkgroll: "npm:2.20.1"
+  peerDependencies:
+    "@graphql-hive/gateway-runtime": "workspace:^"
+    graphql: ^15.9.0 || ^16.9.0
+  languageName: unknown
+  linkType: soft
+
 "@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
