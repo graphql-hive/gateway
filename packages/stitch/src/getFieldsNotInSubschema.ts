@@ -126,13 +126,13 @@ export function getFieldsNotInSubschema(
     let field =
       fieldName === '__typename' ? TypeNameMetaFieldDef : fields[fieldName];
     if (context != null && info != null) {
-      const overrideConfig =
+      const overrideHandler =
         subschema?.merge?.[gatewayType.name]?.fields?.[fieldName]?.override;
-      if (overrideConfig != null) {
+      if (overrideHandler != null) {
         const overridden = handleOverrideByDelegation(
           info,
           context,
-          overrideConfig.handle,
+          overrideHandler,
         );
         if (!overridden) {
           field = undefined;
