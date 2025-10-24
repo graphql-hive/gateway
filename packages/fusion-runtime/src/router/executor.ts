@@ -1,4 +1,9 @@
-import { PlanNode, QueryPlan, RequiresSelection } from '@graphql-hive/router';
+import {
+  FlattenNodePathSegment,
+  PlanNode,
+  QueryPlan,
+  RequiresSelection,
+} from '@graphql-hive/router';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import {
   createGraphQLError,
@@ -298,57 +303,35 @@ function createQueryPlanExecutionContext({
   };
 }
 
-type ParsedFlattenPathSegment =
+type NormalizedFlattenNodePathSegment =
   | { kind: 'Field'; name: string }
   | { kind: 'Cast'; typeCondition: string }
   | { kind: 'List' };
 
-function parseFlattenPath(path: readonly any[]): ParsedFlattenPathSegment[] {
-  if (!Array.isArray(path)) {
-    return [];
-  }
-  const segments: ParsedFlattenPathSegment[] = [];
-  for (const rawSegment of path) {
-    if (typeof rawSegment === 'string') {
-      if (rawSegment === '@') {
-        segments.push({ kind: 'List' });
-      } else if (rawSegment) {
-        segments.push({ kind: 'Field', name: rawSegment });
-      }
+function normalizeFlattenNodePath(
+  path: FlattenNodePathSegment[],
+): NormalizedFlattenNodePathSegment[] {
+  const normalized: NormalizedFlattenNodePathSegment[] = [];
+  for (const segment of path) {
+    if (segment === '@') {
+      normalized.push({ kind: 'List' });
       continue;
+    } else if ('Field' in segment) {
+      normalized.push({ kind: 'Field', name: segment.Field });
+    } else if ('Cast' in segment) {
+      normalized.push({ kind: 'Cast', typeCondition: segment.Cast });
+    } else {
+      throw new Error(
+        `Unsupported flatten path segment received from query planner: ${JSON.stringify(segment)}`,
+      );
     }
-    if (rawSegment && typeof rawSegment === 'object') {
-      if ('Field' in rawSegment && rawSegment.Field != null) {
-        segments.push({
-          kind: 'Field',
-          name: String(rawSegment.Field),
-        });
-        continue;
-      }
-      if ('Cast' in rawSegment && rawSegment.Cast != null) {
-        segments.push({
-          kind: 'Cast',
-          typeCondition: String(rawSegment.Cast),
-        });
-        continue;
-      }
-      if ('List' in rawSegment) {
-        segments.push({ kind: 'List' });
-        continue;
-      }
-    }
-    throw new Error(
-      `Unsupported flatten path segment received from query planner: ${inspect(
-        rawSegment,
-      )}`,
-    );
   }
-  return segments;
+  return normalized;
 }
 
 function collectFlattenRepresentations(
   source: Record<string, any>,
-  pathSegments: ParsedFlattenPathSegment[],
+  pathSegments: NormalizedFlattenNodePathSegment[],
   supergraphSchema: GraphQLSchema,
   bucket: EntityRepresentation[],
 ) {
@@ -374,7 +357,7 @@ function collectFlattenRepresentations(
 
 function traverseFlattenPath(
   current: unknown,
-  remainingPath: ParsedFlattenPathSegment[],
+  remainingPath: NormalizedFlattenNodePathSegment[],
   supergraphSchema: GraphQLSchema,
   callback: (value: unknown) => void,
 ): void {
@@ -472,7 +455,7 @@ function executePlanNode(
     }
     case 'Flatten': {
       const flattenNode = planNode;
-      const pathSegments = parseFlattenPath(flattenNode.path);
+      const pathSegments = normalizeFlattenNodePath(flattenNode.path);
       const errorPath = pathSegments
         .map((segment) => (segment.kind === 'Field' ? segment.name : null))
         .filter((segment): segment is string => segment != null);
