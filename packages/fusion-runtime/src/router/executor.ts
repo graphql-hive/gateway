@@ -11,15 +11,17 @@ import {
   createGraphQLError,
   ExecutionRequest,
   isAsyncIterable,
-  isPromise,
-  mapAsyncIterator,
-  mapMaybePromise,
   MaybeAsyncIterable,
-  MaybePromise,
   memoize1,
   mergeDeep,
   relocatedError,
 } from '@graphql-tools/utils';
+import {
+  handleMaybePromise,
+  isPromise,
+  mapAsyncIterator,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type {
   FragmentDefinitionNode,
   GraphQLError,
@@ -168,7 +170,8 @@ export function executeQueryPlan({
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
-  if (!queryPlan.node) {
+  const node = queryPlan.node;
+  if (!node) {
     throw new Error('Query plan has no root node.');
   }
   const executionContext = createQueryPlanExecutionContext({
@@ -189,8 +192,8 @@ export function executeQueryPlan({
     }
     return executionResult;
   }
-  return mapMaybePromise(
-    executePlanNode(queryPlan.node, executionContext),
+  return handleMaybePromise(
+    () => executePlanNode(node, executionContext),
     (res) => {
       if (isAsyncIterable(res)) {
         return mapAsyncIterator(res, handleResp);
@@ -721,16 +724,17 @@ function executeFetchPlanNode(
     return;
   };
 
-  return mapMaybePromise(
-    executionContext.onSubgraphExecute(fetchNode.serviceName, {
-      document: operationDocument,
-      variables: variablesForFetch,
-      context: executionContext.context,
-      operationName: fetchNode.operationName,
-      operationType:
-        (fetchNode.operationKind as OperationTypeNode | undefined) ??
-        executionContext.operation.operation,
-    }),
+  return handleMaybePromise(
+    () =>
+      executionContext.onSubgraphExecute(fetchNode.serviceName, {
+        document: operationDocument,
+        variables: variablesForFetch,
+        context: executionContext.context,
+        operationName: fetchNode.operationName,
+        operationType:
+          (fetchNode.operationKind as OperationTypeNode | undefined) ??
+          executionContext.operation.operation,
+      }),
     handleFetchResult,
   );
 }
@@ -993,8 +997,9 @@ function executePlanNode(
       for (const node of planNode.nodes) {
         const currentState = nextState;
         nextState = undefined;
-        pending = mapMaybePromise(pending, () =>
-          executePlanNode(node, executionContext, currentState),
+        pending = handleMaybePromise(
+          () => pending,
+          () => executePlanNode(node, executionContext, currentState),
         );
       }
       return pending;
