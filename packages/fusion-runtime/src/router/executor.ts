@@ -165,9 +165,11 @@ export function executeQueryPlan({
   onSubgraphExecute,
   supergraphSchema,
   context,
-}: QueryPlanExecutorOptions): any {
+}: QueryPlanExecutorOptions): MaybePromise<
+  MaybeAsyncIterable<ExecutionResult<any>>
+> {
   if (!queryPlan.node) {
-    return;
+    throw new Error('Query plan has no root node.');
   }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
@@ -232,6 +234,9 @@ interface CreateExecutionContextOpts {
 }
 
 const globalEmpty = {};
+
+const operationDocumentCache = new Map<string, DocumentNode>();
+const operationRootFieldCache = new Map<string, (string | number)[] | null>();
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
@@ -309,6 +314,25 @@ type NormalizedFlattenNodePathSegment =
   | { kind: 'Cast'; typeCondition: string }
   | { kind: 'List' };
 
+interface EntityLocation {
+  entity: EntityRepresentation;
+  path: (string | number)[];
+}
+
+interface FlattenPreparedContext {
+  entityRefs: EntityRepresentation[];
+  dedupedRepresentations: EntityRepresentation[];
+  entityPaths: (string | number)[][];
+  representationOrder: number[];
+  errorPath?: string[];
+}
+
+interface ExecutionState {
+  representations?: EntityRepresentation[];
+  errorPath?: (string | number)[];
+  flatten?: FlattenPreparedContext;
+}
+
 function normalizeFlattenNodePath(
   path: FlattenNodePathSegment[],
 ): NormalizedFlattenNodePathSegment[] {
@@ -330,64 +354,93 @@ function normalizeFlattenNodePath(
   return normalized;
 }
 
-function collectFlattenRepresentations(
+function collectFlattenEntities(
   source: Record<string, any>,
   pathSegments: NormalizedFlattenNodePathSegment[],
   supergraphSchema: GraphQLSchema,
-  bucket: EntityRepresentation[],
-) {
+): EntityLocation[] {
+  const entities: EntityLocation[] = [];
+  const activePath: (string | number)[] = [];
   traverseFlattenPath(
     source,
     pathSegments,
     supergraphSchema,
-    (value: unknown) => {
+    activePath,
+    (value: unknown, path) => {
       if (Array.isArray(value)) {
-        for (const item of value) {
+        for (let index = 0; index < value.length; index++) {
+          const item = value[index];
           if (item && typeof item === 'object') {
-            bucket.push(item as EntityRepresentation);
+            path.push(index);
+            entities.push({
+              entity: item as EntityRepresentation,
+              path: path.slice(),
+            });
+            path.pop();
           }
         }
         return;
       }
       if (value && typeof value === 'object') {
-        bucket.push(value as EntityRepresentation);
+        entities.push({
+          entity: value as EntityRepresentation,
+          path: path.slice(),
+        });
       }
     },
   );
+  return entities;
 }
 
 function traverseFlattenPath(
   current: unknown,
   remainingPath: NormalizedFlattenNodePathSegment[],
   supergraphSchema: GraphQLSchema,
-  callback: (value: unknown) => void,
+  path: (string | number)[],
+  callback: (value: unknown, path: (string | number)[]) => void,
 ): void {
   if (current == null) {
     return;
   }
   const [segment, ...rest] = remainingPath;
   if (!segment /* same as remainingPath.length === 0 */) {
-    callback(current);
+    callback(current, path);
     return;
   }
-  switch (segment!.kind) {
+  switch (segment.kind) {
     case 'Field': {
       if (Array.isArray(current)) {
         for (const item of current) {
-          traverseFlattenPath(item, remainingPath, supergraphSchema, callback);
+          traverseFlattenPath(
+            item,
+            remainingPath,
+            supergraphSchema,
+            path,
+            callback,
+          );
         }
         return;
       }
-      if (typeof current === 'object') {
+      if (typeof current === 'object' && current !== null) {
+        path.push(segment.name);
         const next = (current as Record<string, any>)[segment.name];
-        traverseFlattenPath(next, rest, supergraphSchema, callback);
+        traverseFlattenPath(next, rest, supergraphSchema, path, callback);
+        path.pop();
       }
       return;
     }
     case 'List': {
       if (Array.isArray(current)) {
-        for (const item of current) {
-          traverseFlattenPath(item, rest, supergraphSchema, callback);
+        for (let index = 0; index < current.length; index++) {
+          path.push(index);
+          traverseFlattenPath(
+            current[index],
+            rest,
+            supergraphSchema,
+            path,
+            callback,
+          );
+          path.pop();
         }
       }
       return;
@@ -395,11 +448,17 @@ function traverseFlattenPath(
     case 'Cast': {
       if (Array.isArray(current)) {
         for (const item of current) {
-          traverseFlattenPath(item, remainingPath, supergraphSchema, callback);
+          traverseFlattenPath(
+            item,
+            remainingPath,
+            supergraphSchema,
+            path,
+            callback,
+          );
         }
         return;
       }
-      if (typeof current === 'object') {
+      if (typeof current === 'object' && current !== null) {
         const candidate = current as EntityRepresentation;
         const typename =
           typeof candidate.__typename === 'string'
@@ -412,11 +471,511 @@ function traverseFlattenPath(
             segment.typeCondition,
           )
         ) {
-          traverseFlattenPath(current, rest, supergraphSchema, callback);
+          traverseFlattenPath(current, rest, supergraphSchema, path, callback);
         }
       }
     }
   }
+}
+
+function prepareFlattenContext(
+  flattenNode: Extract<PlanNode, { kind: 'Flatten' }>,
+  executionContext: QueryPlanExecutionContext,
+): FlattenPreparedContext | null {
+  if (!flattenNode.node || flattenNode.node.kind !== 'Fetch') {
+    return null;
+  }
+  const fetchNode = flattenNode.node;
+  const requires = fetchNode.requires;
+  if (!requires || requires.length === 0) {
+    return null;
+  }
+
+  const pathSegments = normalizeFlattenNodePath(flattenNode.path);
+  const entityLocations = collectFlattenEntities(
+    executionContext.data,
+    pathSegments,
+    executionContext.supergraphSchema,
+  );
+  if (entityLocations.length === 0) {
+    return null;
+  }
+
+  const entityRefs: EntityRepresentation[] = [];
+  const entityPaths: (string | number)[][] = [];
+  const representationOrder: number[] = [];
+  const dedupedRepresentations: EntityRepresentation[] = [];
+  const representationKeyToIndex = new Map<string, number>();
+
+  for (const location of entityLocations) {
+    const entityRef = location.entity;
+    if (!isEntityRepresentation(entityRef)) {
+      continue;
+    }
+
+    let representation = projectRequires(
+      requires,
+      entityRef,
+      executionContext.supergraphSchema,
+    );
+    if (!representation || Array.isArray(representation)) {
+      continue;
+    }
+    representation.__typename ??= entityRef.__typename;
+
+    if (fetchNode.inputRewrites?.length) {
+      representation = applyInputRewrites(
+        representation,
+        fetchNode.inputRewrites,
+        executionContext.supergraphSchema,
+      );
+    }
+
+    const dedupeKey = stableStringify(representation);
+    let dedupIndex = representationKeyToIndex.get(dedupeKey);
+    if (dedupIndex === undefined) {
+      dedupIndex = dedupedRepresentations.length;
+      representationKeyToIndex.set(dedupeKey, dedupIndex);
+      dedupedRepresentations.push(representation);
+    }
+
+    entityRefs.push(entityRef);
+    entityPaths.push(location.path);
+    representationOrder.push(dedupIndex);
+  }
+
+  if (dedupedRepresentations.length === 0) {
+    return null;
+  }
+
+  const errorPath = pathSegments
+    .filter(
+      (
+        segment,
+      ): segment is Extract<
+        NormalizedFlattenNodePathSegment,
+        { kind: 'Field' }
+      > => segment.kind === 'Field',
+    )
+    .map((segment) => segment.name);
+
+  return {
+    entityRefs,
+    dedupedRepresentations,
+    entityPaths,
+    representationOrder,
+    errorPath: errorPath.length ? errorPath : undefined,
+  };
+}
+
+function executeFetchPlanNode(
+  fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
+  executionContext: QueryPlanExecutionContext,
+  state?: ExecutionState,
+): MaybePromise<any> {
+  const flattenState = state?.flatten;
+  let representationTargets =
+    flattenState?.entityRefs ?? state?.representations;
+  let preparedRepresentations: EntityRepresentation[] | undefined;
+
+  if (flattenState) {
+    if (!flattenState.dedupedRepresentations.length) {
+      return;
+    }
+    preparedRepresentations = flattenState.dedupedRepresentations;
+  } else if (representationTargets?.length) {
+    const requires = fetchNode.requires;
+    if (requires && representationTargets.length) {
+      representationTargets = representationTargets.filter((entity) =>
+        requires.some(
+          (requiresNode) =>
+            entity &&
+            entitySatisfiesTypeCondition(
+              executionContext.supergraphSchema,
+              entity.__typename,
+              requiresNode.kind === 'InlineFragment'
+                ? requiresNode.typeCondition
+                : undefined,
+            ),
+        ),
+      );
+    }
+
+    if (!representationTargets || representationTargets.length === 0) {
+      return;
+    }
+
+    const nextTargets: EntityRepresentation[] = [];
+    const payloads: EntityRepresentation[] = [];
+    for (const entity of representationTargets) {
+      let projection = fetchNode.requires
+        ? projectRequires(
+            fetchNode.requires,
+            entity,
+            executionContext.supergraphSchema,
+          )
+        : entity;
+      if (!projection || Array.isArray(projection)) {
+        continue;
+      }
+      projection.__typename ??= entity.__typename;
+      if (fetchNode.inputRewrites?.length) {
+        projection = applyInputRewrites(
+          projection,
+          fetchNode.inputRewrites,
+          executionContext.supergraphSchema,
+        );
+      }
+      payloads.push(projection);
+      nextTargets.push(entity);
+    }
+
+    if (!payloads.length) {
+      return;
+    }
+
+    representationTargets = nextTargets;
+    preparedRepresentations = payloads;
+  }
+
+  const selectedVariables = selectFetchVariables(
+    executionContext.variableValues,
+    fetchNode.variableUsages,
+  );
+
+  let variablesForFetch: Record<string, any> | undefined;
+  if (preparedRepresentations?.length) {
+    variablesForFetch = {
+      representations: preparedRepresentations,
+    };
+  }
+  if (selectedVariables) {
+    variablesForFetch = variablesForFetch
+      ? { ...selectedVariables, ...variablesForFetch }
+      : { ...selectedVariables };
+  }
+
+  const operationDocument = getOperationDocument(fetchNode.operation);
+  const defaultErrorPath =
+    state?.errorPath ??
+    state?.flatten?.errorPath ??
+    getDefaultErrorPath(fetchNode, operationDocument);
+
+  const handleFetchResult = (
+    fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
+  ): MaybeAsyncIterable<unknown> | void => {
+    if (isAsyncIterable(fetchResult)) {
+      return mapAsyncIterator(fetchResult, handleFetchResult);
+    }
+
+    if (fetchResult.errors?.length) {
+      const normalizedErrors = normalizeFetchErrors(fetchResult.errors, {
+        fetchNode,
+        state,
+        operationDocument,
+        defaultPath: defaultErrorPath,
+      });
+      if (normalizedErrors.length) {
+        executionContext.errors.push(...normalizedErrors);
+      }
+    }
+
+    const responseData = fetchNode.outputRewrites
+      ? applyOutputRewrites(
+          fetchResult.data,
+          fetchNode.outputRewrites,
+          executionContext.supergraphSchema,
+        )
+      : fetchResult.data;
+
+    if (!responseData) {
+      return;
+    }
+
+    if (flattenState && flattenState.entityRefs.length) {
+      const returnedEntities = responseData._entities as
+        | EntityRepresentation[]
+        | undefined;
+      if (Array.isArray(returnedEntities)) {
+        mergeFlattenEntities(returnedEntities, flattenState);
+      }
+      return;
+    }
+
+    if (representationTargets?.length && responseData._entities) {
+      const returnedEntities: EntityRepresentation[] = responseData._entities;
+      for (let index = 0; index < returnedEntities.length; index++) {
+        const entity = returnedEntities[index];
+        const target = representationTargets[index];
+        if (target && entity) {
+          Object.assign(target, mergeDeep([target, entity], false, true, true));
+        }
+      }
+      return;
+    }
+
+    Object.assign(
+      executionContext.data,
+      mergeDeep([executionContext.data, responseData], false, true, true),
+    );
+    return;
+  };
+
+  return mapMaybePromise(
+    executionContext.onSubgraphExecute(fetchNode.serviceName, {
+      document: operationDocument,
+      variables: variablesForFetch,
+      context: executionContext.context,
+      operationName: fetchNode.operationName,
+      operationType:
+        (fetchNode.operationKind as OperationTypeNode | undefined) ??
+        executionContext.operation.operation,
+    }),
+    handleFetchResult,
+  );
+}
+
+function selectFetchVariables(
+  variableValues: Record<string, any> | undefined,
+  variableUsages: string[] | undefined,
+): Record<string, any> | undefined {
+  if (!variableValues || !variableUsages || variableUsages.length === 0) {
+    return undefined;
+  }
+  const selected: Record<string, any> = Object.create(null);
+  let hasValue = false;
+  for (const variableName of variableUsages) {
+    if (Object.prototype.hasOwnProperty.call(variableValues, variableName)) {
+      selected[variableName] = variableValues[variableName];
+      hasValue = true;
+    }
+  }
+  return hasValue ? selected : undefined;
+}
+
+function normalizeFetchErrors(
+  errors: readonly GraphQLError[],
+  options: {
+    fetchNode: Extract<PlanNode, { kind: 'Fetch' }>;
+    state?: ExecutionState;
+    operationDocument: DocumentNode;
+    defaultPath?: (string | number)[];
+  },
+): GraphQLError[] {
+  if (!errors.length) {
+    return [];
+  }
+  const { fetchNode, state, operationDocument } = options;
+  const flattenState = state?.flatten;
+  const fallbackPath =
+    options.defaultPath ?? getDefaultErrorPath(fetchNode, operationDocument);
+
+  if (!flattenState) {
+    if (!fallbackPath) {
+      return [...errors];
+    }
+    return errors.map((error) => relocatedError(error, fallbackPath));
+  }
+
+  const entityPathMap = buildFlattenEntityPathMap(flattenState);
+  const relocated: GraphQLError[] = [];
+
+  for (const error of errors) {
+    const errorPath = error.path;
+    if (errorPath) {
+      const entityIndexPosition = errorPath.indexOf('_entities');
+      if (entityIndexPosition !== -1) {
+        const dedupIndex = errorPath[entityIndexPosition + 1];
+        if (typeof dedupIndex === 'number') {
+          const mappedPaths = entityPathMap.get(dedupIndex);
+          if (mappedPaths && mappedPaths.length) {
+            const tail = errorPath.slice(entityIndexPosition + 2);
+            for (const mappedPath of mappedPaths) {
+              relocated.push(relocatedError(error, [...mappedPath, ...tail]));
+            }
+            continue;
+          }
+        }
+      }
+    }
+
+    if (fallbackPath) {
+      relocated.push(relocatedError(error, fallbackPath));
+    } else {
+      relocated.push(error);
+    }
+  }
+
+  return relocated;
+}
+
+function buildFlattenEntityPathMap(
+  flattenState: FlattenPreparedContext,
+): Map<number, (string | number)[][]> {
+  const map = new Map<number, (string | number)[][]>();
+  flattenState.representationOrder.forEach((dedupIndex, index) => {
+    const existing = map.get(dedupIndex);
+    if (existing) {
+      existing.push(flattenState.entityPaths[index]!);
+    } else {
+      map.set(dedupIndex, [flattenState.entityPaths[index]!]);
+    }
+  });
+  return map;
+}
+
+function mergeFlattenEntities(
+  returnedEntities: EntityRepresentation[],
+  flattenState: FlattenPreparedContext,
+) {
+  const { entityRefs, representationOrder } = flattenState;
+  for (let index = 0; index < entityRefs.length; index++) {
+    const target = entityRefs[index];
+    const dedupIndex = representationOrder[index]!; // there must be one
+    const entity = returnedEntities[dedupIndex];
+    if (!target || !entity) {
+      continue;
+    }
+    Object.assign(target, mergeDeep([target, entity], false, true, true));
+  }
+}
+
+function applyInputRewrites(
+  representation: EntityRepresentation,
+  rewrites: FetchRewrite[],
+  supergraphSchema: GraphQLSchema,
+): EntityRepresentation {
+  let current: any = representation;
+  for (const rewrite of rewrites) {
+    const normalizedRewrite = normalizeRewrite(rewrite);
+    if (!normalizedRewrite) {
+      continue;
+    }
+    switch (normalizedRewrite.kind) {
+      case 'ValueSetter':
+        current = applyValueSetter(
+          current,
+          normalizedRewrite.path,
+          normalizedRewrite.setValueTo,
+          supergraphSchema,
+        );
+        break;
+      case 'KeyRenamer':
+        applyKeyRenamer(
+          current,
+          normalizedRewrite.path,
+          normalizedRewrite.renameKeyTo,
+          supergraphSchema,
+        );
+        break;
+    }
+  }
+  return current as EntityRepresentation;
+}
+
+function applyOutputRewrites(
+  data: any,
+  rewrites: FetchRewrite[],
+  supergraphSchema: GraphQLSchema,
+) {
+  let current = data;
+  if (!current) {
+    return current;
+  }
+  for (const rewrite of rewrites) {
+    const normalizedRewrite = normalizeRewrite(rewrite);
+    if (!normalizedRewrite) {
+      continue;
+    }
+    switch (normalizedRewrite.kind) {
+      case 'KeyRenamer':
+        applyKeyRenamer(
+          current,
+          normalizedRewrite.path,
+          normalizedRewrite.renameKeyTo,
+          supergraphSchema,
+        );
+        break;
+      case 'ValueSetter':
+        current = applyValueSetter(
+          current,
+          normalizedRewrite.path,
+          normalizedRewrite.setValueTo,
+          supergraphSchema,
+        );
+        break;
+    }
+  }
+  return current;
+}
+
+function getOperationDocument(operation: string): DocumentNode {
+  let cached = operationDocumentCache.get(operation);
+  if (!cached) {
+    cached = parse(operation);
+    operationDocumentCache.set(operation, cached);
+  }
+  return cached;
+}
+
+function getOperationCacheKey(
+  fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
+): string {
+  return `${fetchNode.operationName ?? ''}|${fetchNode.operation}`;
+}
+
+function getDefaultErrorPath(
+  fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
+  document: DocumentNode,
+): (string | number)[] | undefined {
+  const cacheKey = getOperationCacheKey(fetchNode);
+  const cached = operationRootFieldCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached ?? undefined;
+  }
+  const operationAst = getOperationAST(document, fetchNode.operationName);
+  if (!operationAst) {
+    operationRootFieldCache.set(cacheKey, null);
+    return undefined;
+  }
+  const rootSelection = operationAst.selectionSet.selections.find(
+    (selection) => selection.kind === Kind.FIELD,
+  );
+  if (!rootSelection) {
+    operationRootFieldCache.set(cacheKey, null);
+    return undefined;
+  }
+  const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
+  const path = responseKey ? [responseKey] : undefined;
+  operationRootFieldCache.set(cacheKey, path ?? null);
+  return path;
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null) {
+    return 'null';
+  }
+  const type = typeof value;
+  if (type === 'number' || type === 'boolean') {
+    return JSON.stringify(value);
+  }
+  if (type === 'string') {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+  if (type === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, entryValue]) => entryValue !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(
+        ([key, entryValue]) =>
+          `${JSON.stringify(key)}:${stableStringify(entryValue)}`,
+      );
+    return `{${entries.join(',')}}`;
+  }
+  return JSON.stringify(null);
 }
 
 /**
@@ -425,27 +984,33 @@ function traverseFlattenPath(
 function executePlanNode(
   planNode: PlanNode,
   executionContext: QueryPlanExecutionContext,
-  representations?: EntityRepresentation[],
-  path?: string[],
+  state?: ExecutionState,
 ): MaybePromise<any> {
   switch (planNode.kind) {
     case 'Sequence': {
-      return planNode.nodes.reduce(
-        (maybePromise, node) =>
-          mapMaybePromise(maybePromise, () =>
-            executePlanNode(node, executionContext),
-          ),
-        null,
-      );
+      let pending: MaybePromise<unknown> | null = null;
+      let nextState: ExecutionState | undefined = state;
+      for (const node of planNode.nodes) {
+        const currentState = nextState;
+        nextState = undefined;
+        pending = mapMaybePromise(pending, () =>
+          executePlanNode(node, executionContext, currentState),
+        );
+      }
+      return pending;
     }
     case 'Parallel': {
       const promises: PromiseLike<unknown>[] = [];
-      for (const node of planNode.nodes) {
-        const maybePromise = executePlanNode(node, executionContext);
+      planNode.nodes.forEach((node, index) => {
+        const maybePromise = executePlanNode(
+          node,
+          executionContext,
+          index === 0 ? state : undefined,
+        );
         if (isPromise(maybePromise)) {
           promises.push(maybePromise);
         }
-      }
+      });
       if (promises.length === 1) {
         return promises[0];
       }
@@ -455,178 +1020,27 @@ function executePlanNode(
       return Promise.all(promises);
     }
     case 'Flatten': {
-      const flattenNode = planNode;
-      const pathSegments = normalizeFlattenNodePath(flattenNode.path);
-      const errorPath = pathSegments
-        .map((segment) => (segment.kind === 'Field' ? segment.name : null))
-        .filter((segment): segment is string => segment != null);
-      const representations: EntityRepresentation[] = [];
-      collectFlattenRepresentations(
-        executionContext.data,
-        pathSegments,
-        executionContext.supergraphSchema,
-        representations,
-      );
-      if (representations.length === 0) {
+      const flattenContext = prepareFlattenContext(planNode, executionContext);
+      if (!flattenContext) {
         return;
       }
-      return executePlanNode(
-        flattenNode.node,
-        executionContext,
-        representations,
-        errorPath.length ? errorPath : undefined,
-      );
+      const errorPath =
+        flattenContext.errorPath && flattenContext.errorPath.length
+          ? [...flattenContext.errorPath]
+          : undefined;
+      return executePlanNode(planNode.node, executionContext, {
+        representations: flattenContext.entityRefs,
+        errorPath,
+        flatten: flattenContext,
+      });
     }
     case 'Fetch': {
-      const fetchNode = planNode;
-      const requires = fetchNode.requires;
-      if (requires && representations) {
-        representations = representations.filter((entity) =>
-          requires.some(
-            (requiresNode) =>
-              entity &&
-              entitySatisfiesTypeCondition(
-                executionContext.supergraphSchema,
-                entity.__typename,
-                requiresNode.kind === 'InlineFragment'
-                  ? requiresNode.typeCondition
-                  : undefined,
-              ),
-          ),
-        );
-      }
-      const variablesForFetch: Record<string, any> = {};
-      if (representations) {
-        variablesForFetch['representations'] = representations
-          .map((representation) => {
-            if (requires) {
-              representation = projectRequires(
-                requires,
-                representation,
-                executionContext.supergraphSchema,
-              );
-            }
-            if (fetchNode.inputRewrites) {
-              for (const inputRewrite of fetchNode.inputRewrites) {
-                const normalizedRewrite = normalizeRewrite(inputRewrite);
-                if (!normalizedRewrite) {
-                  continue;
-                }
-                switch (normalizedRewrite.kind) {
-                  case 'ValueSetter': {
-                    const rewritten = applyValueSetter(
-                      representation,
-                      normalizedRewrite.path,
-                      normalizedRewrite.setValueTo,
-                      executionContext.supergraphSchema,
-                    );
-                    representation = rewritten;
-                    break;
-                  }
-                }
-              }
-            }
-            return representation;
-          })
-          .filter(Boolean);
-      }
-      if (fetchNode.variableUsages) {
-        for (const variableName of fetchNode.variableUsages) {
-          variablesForFetch[variableName] =
-            executionContext.variableValues?.[variableName];
-        }
-      }
-      const handleFetchResult = (
-        fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
-      ): MaybeAsyncIterable<unknown> | void => {
-        if (isAsyncIterable(fetchResult)) {
-          return mapAsyncIterator(fetchResult, handleFetchResult);
-        }
-
-        if (fetchResult.errors) {
-          let errors = fetchResult.errors;
-          if (!path) {
-            const operationAst = getOperationAST(
-              parse(fetchNode.operation),
-              fetchNode.operationName,
-            );
-            if (operationAst) {
-              const rootSelection = operationAst.selectionSet.selections.find(
-                (selection) => selection.kind === 'Field',
-              );
-              const responseKey =
-                rootSelection?.alias?.value || rootSelection?.name.value;
-              if (responseKey) {
-                path = [responseKey];
-              }
-            }
-          }
-          if (path) {
-            errors = errors.map((error) => relocatedError(error, path));
-          }
-          executionContext.errors.push(...errors);
-        }
-        if (fetchNode.outputRewrites) {
-          for (const outputRewrite of fetchNode.outputRewrites) {
-            const normalizedRewrite = normalizeRewrite(outputRewrite);
-            if (!normalizedRewrite) {
-              continue;
-            }
-            switch (normalizedRewrite.kind) {
-              case 'KeyRenamer': {
-                applyKeyRenamer(
-                  fetchResult.data,
-                  normalizedRewrite.path,
-                  normalizedRewrite.renameKeyTo,
-                  executionContext.supergraphSchema,
-                );
-                break;
-              }
-            }
-          }
-        }
-        if (representations && fetchResult.data?._entities) {
-          const returnedEntities: EntityRepresentation[] =
-            fetchResult.data._entities;
-          for (const entityIndex in returnedEntities) {
-            const entity = returnedEntities[entityIndex];
-            const representation = representations[entityIndex];
-            if (representation && entity) {
-              Object.assign(
-                representation,
-                mergeDeep([representation, entity], false, true, true),
-              );
-            }
-          }
-        } else {
-          Object.assign(
-            executionContext.data,
-            mergeDeep(
-              [executionContext.data, fetchResult.data],
-              false,
-              true,
-              true,
-            ),
-          );
-        }
-        return;
-      };
-      return mapMaybePromise(
-        executionContext.onSubgraphExecute(fetchNode.serviceName, {
-          // document: fetchNode.operationDocumentNode,
-          document: parse(fetchNode.operation),
-          variables: variablesForFetch,
-          context: executionContext.context,
-          operationName: fetchNode.operationName,
-          operationType: fetchNode.operationKind as OperationTypeNode,
-        }),
-        handleFetchResult,
-      );
+      return executeFetchPlanNode(planNode, executionContext, state);
     }
     case 'Condition': {
       const conditionValue =
         executionContext.variableValues?.[planNode.condition];
-      if (conditionValue) {
+      if (conditionValue === true) {
         if (planNode.ifClause) {
           return executePlanNode(planNode.ifClause, executionContext);
         }

@@ -21,10 +21,9 @@ export function handleFederationSupergraphWithRouter(
   return {
     unifiedGraph: buildSchema(qp.consumerSchema, { assumeValid: true }),
     getSubgraphSchema,
-    executor({ document, variables, operationName, context }) {
-      return plan(document).then((queryPlan) => {
-        // console.log('Query Plan:', JSON.stringify(queryPlan, null, 2));
-        return executeQueryPlan({
+    executor: ({ document, variables, operationName, context }) =>
+      plan(document).then((queryPlan) =>
+        executeQueryPlan({
           supergraphSchema,
           document,
           operationName,
@@ -32,9 +31,8 @@ export function handleFederationSupergraphWithRouter(
           context,
           onSubgraphExecute: opts.onSubgraphExecute,
           queryPlan,
-        });
-      });
-    },
+        }),
+      ),
     inContextSDK: {
       // TODO: do we need/want an SDK here?
     },
