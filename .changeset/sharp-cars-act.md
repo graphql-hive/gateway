@@ -2,4 +2,4 @@
 '@graphql-hive/fusion-runtime': minor
 ---
 
-[EXPERIMENTAL] Use Hive Router query planner
+Use Query Planner from Hive Router
