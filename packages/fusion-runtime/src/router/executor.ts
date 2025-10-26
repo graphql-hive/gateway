@@ -1101,17 +1101,9 @@ function projectRequires(
     switch (requiresSelection.kind) {
       case 'Field': {
         const fieldName = requiresSelection.name;
-        const alias =
-          (requiresSelection as any).alias ??
-          (requiresSelection as any).responseKey ??
-          undefined;
-        const responseKey = alias ?? fieldName;
+        const responseKey = requiresSelection.alias ?? fieldName;
         let original = entity[fieldName];
-        if (
-          original === undefined &&
-          responseKey &&
-          responseKey !== fieldName
-        ) {
+        if (original === undefined) {
           original = entity[responseKey];
         }
         const projectedValue = requiresSelection.selections
