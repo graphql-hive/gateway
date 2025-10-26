@@ -93,6 +93,7 @@ describe('Federation Compatibility', () => {
         });
         gatewayRuntime = createGatewayRuntime({
           logging: false,
+          maskedErrors: false,
           supergraph: supergraphSdl,
           plugins: () => [useCustomFetch(auditRouter.fetch)],
         });
@@ -187,7 +188,7 @@ describe('Federation Compatibility', () => {
             expect(received).toEqual(expected);
           } catch (e) {
             result.errors?.forEach((err) => {
-              // console.error(err);
+              console.error(err);
             });
             throw e;
           }
