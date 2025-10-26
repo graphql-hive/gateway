@@ -4803,10 +4803,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime":
-  version: 0.0.0
-  resolution: "@graphql-hive/router@file:/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon#/Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon::hash=abcd43&locator=%40graphql-mesh%2Ffusion-runtime%40workspace%3Apackages%2Ffusion-runtime"
-  checksum: 10c0/8216a9cf1eac9a5d8e645caeb7e0f9a5c10f35d81a98ac4c6766105d92e61d66545d39a795a7afeeaf8c9dc1950d9fc0074b1e1746465cbf7639db04c373dda0
+"@graphql-hive/router@npm:0.0.0-manual-f9542ee":
+  version: 0.0.0-manual-f9542ee
+  resolution: "@graphql-hive/router@npm:0.0.0-manual-f9542ee"
+  checksum: 10c0/1c5838929f325284e74798083ff217a11270b193b369baccecfd21c9a8f601d024389e18f10f2a2b0c201ff1dcb0a523f899337579de8e9f1336b999db151b76
   languageName: node
   linkType: hard
 
@@ -5019,7 +5019,7 @@ __metadata:
     "@envelop/core": "npm:^5.3.2"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/logger": "workspace:^"
-    "@graphql-hive/router": /Users/enisdenjo/Develop/src/github.com/graphql-hive/router/lib/node-addon
+    "@graphql-hive/router": "npm:0.0.0-manual-f9542ee"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.14"
