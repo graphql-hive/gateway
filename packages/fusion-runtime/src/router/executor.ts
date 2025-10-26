@@ -1,8 +1,7 @@
 import {
   FetchNodePathSegment,
+  FetchRewrite,
   FlattenNodePathSegment,
-  InputRewrite,
-  OutputRewrite,
   PlanNode,
   QueryPlan,
   RequiresSelection,
@@ -11,7 +10,6 @@ import type { ExecutionResult } from '@graphql-tools/utils';
 import {
   createGraphQLError,
   ExecutionRequest,
-  inspect,
   isAsyncIterable,
   isPromise,
   mapAsyncIterator,
@@ -490,7 +488,9 @@ function executePlanNode(
               entitySatisfiesTypeCondition(
                 executionContext.supergraphSchema,
                 entity.__typename,
-                requiresNode.typeCondition,
+                requiresNode.kind === 'InlineFragment'
+                  ? requiresNode.typeCondition
+                  : undefined,
               ),
           ),
         );
@@ -639,8 +639,7 @@ function executePlanNode(
       return executePlanNode(planNode.primary, executionContext);
     }
     default:
-      console.error('Invalid plan node:', planNode);
-      throw new Error(`Invalid plan node: ${inspect(planNode)}`);
+      throw new Error(`Invalid plan node: ${JSON.stringify(planNode)}`);
   }
 }
 
@@ -648,10 +647,9 @@ type NormalizedRewrite =
   | { kind: 'ValueSetter'; path: string[]; setValueTo: string }
   | { kind: 'KeyRenamer'; path: string[]; renameKeyTo: string };
 
-function normalizeRewrite(
-  rewrite: InputRewrite | OutputRewrite,
-): NormalizedRewrite {
-  if ('kind' in rewrite) {
+function normalizeRewrite(rewrite: FetchRewrite): NormalizedRewrite {
+  if ('kind' in rewrite && rewrite.kind === 'ValueSetter') {
+    // TODO: why sometimes rewrite.kind = 'ValueSetter'?
     return {
       ...rewrite,
       path: normalizeRewritePath(rewrite.path),
@@ -801,13 +799,16 @@ function applyValueSetter(
  *
  * @param supergraphSchema GraphQL Schema instance of Supergraph
  * @param typeNameInEntity The type name of the entity (entity.__typename)
- * @param typeConditionInInlineFragment The type condition in the inline fragment (... on Type)
+ * @param typeConditionInInlineFragment The type condition in the inline fragment (... on Type). If undefined, will return false at all times;
  */
 function entitySatisfiesTypeCondition(
   supergraphSchema: GraphQLSchema,
   typeNameInEntity: string,
-  typeConditionInInlineFragment: string,
+  typeConditionInInlineFragment: string | undefined,
 ) {
+  if (!typeConditionInInlineFragment) {
+    return false; // unknown actually
+  }
   if (typeNameInEntity === typeConditionInInlineFragment) {
     return true;
   }
