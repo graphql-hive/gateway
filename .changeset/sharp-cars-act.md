@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/fusion-runtime': minor
+'@graphql-mesh/fusion-runtime': minor
 ---
 
 Use Query Planner from Hive Router
