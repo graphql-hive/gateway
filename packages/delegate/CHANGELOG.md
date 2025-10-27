@@ -1,5 +1,30 @@
 # @graphql-tools/delegate
 
+## 11.1.0
+### Minor Changes
+
+
+
+- [#1624](https://github.com/graphql-hive/gateway/pull/1624) [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override for Safer Field Migrations
+  
+  Introduces Progressive Override, allowing you to safely migrate fields between subgraphs using the `@override` directive with a label. Control the rollout using custom logic in the gateway (e.g., percentage, headers) or the built-in percent(x) label for gradual, incremental traffic migration.
+  
+  Detailed documentation can be found [here](https://the-guild.dev/graphql/hive/docs/gateway/other-features/progressive-override).
+
+### Patch Changes
+
+
+
+- [#1557](https://github.com/graphql-hive/gateway/pull/1557) [`a54b0c1`](https://github.com/graphql-hive/gateway/commit/a54b0c1777229aaeea295bcd15d4f4d6e4e615f7) Thanks [@ardatan](https://github.com/ardatan)! - Apply type-merging correctly in extended fields
+
+
+
+- [#1556](https://github.com/graphql-hive/gateway/pull/1556) [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc) Thanks [@ardatan](https://github.com/ardatan)! - Correct error paths in case of batch delegation with the same error
+
+
+
+- [#1588](https://github.com/graphql-hive/gateway/pull/1588) [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Correctly resolve circular @requires in different subgraphs
+
 ## 11.0.1
 ### Patch Changes
 
