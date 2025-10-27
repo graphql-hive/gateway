@@ -185,10 +185,7 @@ export function createGatewayTester<
   const runtimeExecute = buildHTTPExecutor({
     endpoint: 'http://gateway/graphql',
     fetch: runtime.fetch,
-    headers: (execReq) => ({
-      ...config,
-      ...execReq?.rootValue.headers,
-    }),
+    headers: (execReq) => execReq?.rootValue.headers,
   });
 
   return {
