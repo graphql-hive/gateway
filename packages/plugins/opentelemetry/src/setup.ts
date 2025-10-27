@@ -422,3 +422,13 @@ function getStackTrace(): string {
   // slice(3) to remove the error message + getStackTrace() call + calling function call
   return new Error().stack!.split('\n').slice(3).join('\n').trim();
 }
+
+/**
+ * Reset OpenTelemetry setup by disabling `trace`, `context` and `propagation` OpenTelemetry APIs.
+ */
+export function disable() {
+  trace.disable();
+  context.disable();
+  propagation.disable();
+  initialized = false;
+}
