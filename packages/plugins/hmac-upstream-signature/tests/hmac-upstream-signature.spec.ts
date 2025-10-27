@@ -1,35 +1,18 @@
 import { createHmac } from 'node:crypto';
+import { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import {
-  createGatewayRuntime,
-  GatewayPlugin,
-  useCustomFetch,
-} from '@graphql-hive/gateway-runtime';
-import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
-import { MeshFetch } from '@graphql-mesh/types';
-import { GraphQLSchema, stripIgnoredCharacters } from 'graphql';
-import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
+  createGatewayTester,
+  GatewayTesterConfig,
+  GatewayTesterRemoteSchemaConfigYoga,
+} from '@graphql-hive/gateway-testing';
+import { stripIgnoredCharacters } from 'graphql';
+import { createSchema, type Plugin } from 'graphql-yoga';
 import { beforeEach, describe, expect, it, test, vi } from 'vitest';
 import {
   defaultParamsSerializer,
   useHmacSignatureValidation,
 } from '../src/index';
 
-const cases = {
-  asProxy: () => ({
-    proxy: {
-      endpoint: 'https://upstream/graphql',
-    },
-  }),
-  asSubgraph: (upstreamSchema: GraphQLSchema) => ({
-    supergraph: getUnifiedGraphGracefully([
-      {
-        name: 'upstream',
-        schema: upstreamSchema,
-        url: 'http://upstream/graphql',
-      },
-    ]),
-  }),
-};
 const upstreamSchema = createSchema({
   typeDefs: /* GraphQL */ `
     type Query {
@@ -48,92 +31,78 @@ const exampleQuery = stripIgnoredCharacters(/* GraphQL */ `
     hello
   }
 `);
-for (const [name, createConfig] of Object.entries(cases)) {
+for (const [name, configure] of Object.entries({
+  'as proxy': (yoga?: GatewayTesterRemoteSchemaConfigYoga) =>
+    ({
+      proxy: { name: 'upstream', schema: upstreamSchema, yoga },
+    }) as GatewayTesterConfig,
+  'as subgraph': (yoga?: GatewayTesterRemoteSchemaConfigYoga) =>
+    ({
+      subgraphs: [
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+          yoga,
+        },
+      ],
+    }) as GatewayTesterConfig,
+})) {
   describe(`when used ${name}`, () => {
     describe('useHmacSignatureValidation', () => {
       test('should throw when header is missing or invalid', async () => {
-        await using upstream = createYoga({
-          schema: upstreamSchema,
-          plugins: [],
-          logging: false,
-        });
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure(),
           plugins: () => [
             useHmacSignatureValidation({
               secret: 'topSecret',
             }),
-            useCustomFetch(upstream.fetch as MeshFetch),
           ],
-          logging: false,
         });
 
-        let response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
-
-        expect(await response.json()).toEqual({
+        ).resolves.toEqual({
           errors: [
-            {
-              extensions: {
-                code: 'INTERNAL_SERVER_ERROR',
-              },
-              message: 'Unexpected error.',
-            },
+            expect.objectContaining({
+              message:
+                'Missing HMAC signature: extension hmac-signature not found in request.',
+            }),
           ],
         });
-        response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+
+        await expect(
+          gateway.execute({
             query: exampleQuery,
             extensions: {
               'hmac-signature': 'invalid',
             },
           }),
-        });
-
-        expect(await response.json()).toEqual({
+        ).resolves.toEqual({
           errors: [
-            {
-              extensions: {
-                code: 'INTERNAL_SERVER_ERROR',
-              },
-              message: 'Unexpected error.',
-            },
+            expect.objectContaining({
+              message:
+                'Invalid HMAC signature: extension hmac-signature does not match the body content.',
+            }),
           ],
         });
       });
 
       test('should build a valid hmac and validate it correctly in a Yoga setup', async () => {
         const sharedSecret = 'topSecret';
-        await using upstream = createYoga({
-          schema: upstreamSchema,
-          plugins: [
-            useHmacSignatureValidation({
-              secret: sharedSecret,
-            }),
-          ],
-          logging: false,
-        });
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure({
+            plugins: [
+              useHmacSignatureValidation({
+                secret: sharedSecret,
+              }),
+            ],
+          }),
           hmacSignature: {
             secret: sharedSecret,
           },
           plugins: () => [
-            useCustomFetch(
-              // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-              upstream.fetch,
-            ),
             {
               onSubgraphExecute(payload) {
                 payload.executionRequest.extensions ||= {};
@@ -141,20 +110,20 @@ for (const [name, createConfig] of Object.entries(cases)) {
               },
             } satisfies GatewayPlugin,
           ],
-          logging: false,
         });
 
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
-
-        expect(response.status).toBe(200);
+        ).resolves.toMatchInlineSnapshot(`
+          {
+            "data": {
+              "__typename": "Query",
+              "hello": "world",
+            },
+          }
+        `);
       });
     });
 
@@ -169,31 +138,18 @@ for (const [name, createConfig] of Object.entries(cases)) {
       const requestTrackerPlugin = {
         onParams: vi.fn((() => {}) as Plugin['onParams']),
       };
-      function createUpstream() {
-        return createYoga({
-          schema: upstreamSchema,
-          plugins: [requestTrackerPlugin],
-          logging: false,
-        });
-      }
       beforeEach(() => {
         requestTrackerPlugin.onParams.mockClear();
       });
 
       it('should build valid hmac signature based on the request body even when its modified in other plugins', async () => {
         const secret = 'secret';
-        await using upstream = createUpstream();
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure({ plugins: [requestTrackerPlugin] }),
           hmacSignature: {
             secret,
           },
           plugins: () => [
-            useCustomFetch(
-              // We cast instead of using @ts-expect-error because when `upstream` is not defined, it doesn't error
-              // If you want to try, remove `upstream` variable above, then add ts-expect-error here.
-              upstream.fetch as MeshFetch,
-            ),
             {
               onSubgraphExecute(payload) {
                 payload.executionRequest.extensions ||= {};
@@ -204,143 +160,148 @@ for (const [name, createConfig] of Object.entries(cases)) {
           logging: false,
         });
 
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
+        ).resolves.toMatchInlineSnapshot(`
+          {
+            "data": {
+              "__typename": "Query",
+              "hello": "world",
+            },
+          }
+        `);
 
-        expect(response.status).toBe(200);
         expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(
-          name === 'asProxy' ? 2 : 1,
+          name === 'as proxy' ? 2 : 1,
         );
-        const callIndex = name === 'asProxy' ? 1 : 0;
         const upstreamReqParams =
-          requestTrackerPlugin.onParams.mock.calls[callIndex]![0].params;
-        const upstreamExtensions = upstreamReqParams.extensions!;
-        expect(upstreamExtensions['hmac-signature']).toBeDefined();
+          requestTrackerPlugin.onParams.mock.calls[
+            name === 'as proxy' ? 1 : 0
+          ]![0].params;
         const upstreamReqBody = defaultParamsSerializer(upstreamReqParams);
-        expect(upstreamReqParams.extensions?.['addedToPayload']).toBeTruthy();
-        // Signature on the upstream call should match when manually validated
-        expect(upstreamExtensions['hmac-signature']).toEqual(
-          hashSHA256(secret, upstreamReqBody),
-        );
+        expect(upstreamReqParams).toEqual({
+          extensions: {
+            addedToPayload: true,
+            'hmac-signature': hashSHA256(secret, upstreamReqBody),
+          },
+          query: '{__typename hello}',
+        });
       });
 
       it('should include hmac signature based on the request body', async () => {
         const secret = 'secret';
-        await using upstream = createUpstream();
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure({ plugins: [requestTrackerPlugin] }),
           hmacSignature: {
             secret,
           },
-          plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
-          logging: false,
         });
 
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
+        ).resolves.toMatchInlineSnapshot(`
+          {
+            "data": {
+              "__typename": "Query",
+              "hello": "world",
+            },
+          }
+        `);
 
-        expect(response.status).toBe(200);
         expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(
-          name === 'asProxy' ? 2 : 1,
+          name === 'as proxy' ? 2 : 1,
         );
-        const callIndex = name === 'asProxy' ? 1 : 0;
         const upstreamReqParams =
-          requestTrackerPlugin.onParams.mock.calls[callIndex]![0].params;
-        const upstreamExtensions = upstreamReqParams.extensions!;
-        const upstreamHmacExtension = upstreamExtensions['hmac-signature'];
-        expect(upstreamHmacExtension).toBeDefined();
+          requestTrackerPlugin.onParams.mock.calls[
+            name === 'as proxy' ? 1 : 0
+          ]![0].params;
         const upstreamReqBody = defaultParamsSerializer(upstreamReqParams);
-        // Signature on the upstream call should match when manually validated
-        expect(upstreamHmacExtension).toEqual(
-          hashSHA256(secret, upstreamReqBody),
-        );
+        expect(upstreamReqParams).toEqual({
+          extensions: {
+            // addedToPayload: true, not added by other plugin
+            'hmac-signature': hashSHA256(secret, upstreamReqBody),
+          },
+          query: '{__typename hello}',
+        });
       });
 
       it('should allow to customize header name', async () => {
         const secret = 'secret';
         const customExtensionName = 'custom-hmac-signature';
-        await using upstream = createUpstream();
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure({ plugins: [requestTrackerPlugin] }),
           hmacSignature: {
             secret,
             extensionName: customExtensionName,
           },
-          plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
-          logging: false,
         });
 
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
+        ).resolves.toMatchInlineSnapshot(`
+          {
+            "data": {
+              "__typename": "Query",
+              "hello": "world",
+            },
+          }
+        `);
 
-        expect(response.status).toBe(200);
         expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(
-          name === 'asProxy' ? 2 : 1,
+          name === 'as proxy' ? 2 : 1,
         );
-        const callIndex = name === 'asProxy' ? 1 : 0;
         const upstreamReqParams =
-          requestTrackerPlugin.onParams.mock.calls[callIndex]![0].params;
-        const upstreamExtensions = upstreamReqParams.extensions!;
-        const upstreamHmacExtension = upstreamExtensions[customExtensionName];
-        expect(upstreamHmacExtension).toBeDefined();
+          requestTrackerPlugin.onParams.mock.calls[
+            name === 'as proxy' ? 1 : 0
+          ]![0].params;
         const upstreamReqBody = defaultParamsSerializer(upstreamReqParams);
-        // Signature on the upstream call should match when manually validated
-        expect(upstreamHmacExtension).toEqual(
-          hashSHA256(secret, upstreamReqBody),
-        );
+        expect(upstreamReqParams).toEqual({
+          extensions: {
+            [customExtensionName]: hashSHA256(secret, upstreamReqBody),
+          },
+          query: '{__typename hello}',
+        });
       });
 
       it('should allow to filter upstream calls', async () => {
         const secret = 'secret';
-        await using upstream = createUpstream();
-        await using gateway = createGatewayRuntime({
-          ...createConfig(upstreamSchema),
+        await using gateway = createGatewayTester({
+          ...configure({ plugins: [requestTrackerPlugin] }),
           hmacSignature: {
             secret,
             shouldSign: () => false,
           },
-          plugins: () => [useCustomFetch(upstream.fetch as MeshFetch)],
-          logging: false,
         });
 
-        const response = await gateway.fetch('http://localhost:4000/graphql', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
+        await expect(
+          gateway.execute({
             query: exampleQuery,
           }),
-        });
+        ).resolves.toMatchInlineSnapshot(`
+          {
+            "data": {
+              "__typename": "Query",
+              "hello": "world",
+            },
+          }
+        `);
 
-        expect(response.status).toBe(200);
         expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(
-          name === 'asProxy' ? 2 : 1,
+          name === 'as proxy' ? 2 : 1,
         );
-        for (const call of requestTrackerPlugin.onParams.mock.calls) {
-          expect(call[0].params.extensions?.['hmac-signature']).toBeUndefined();
-        }
+        const upstreamReqParams =
+          requestTrackerPlugin.onParams.mock.calls[
+            name === 'as proxy' ? 1 : 0
+          ]![0].params;
+        expect(upstreamReqParams).toEqual({
+          query: '{__typename hello}',
+        });
       });
     });
   });
