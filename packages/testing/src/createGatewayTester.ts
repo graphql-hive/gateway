@@ -9,7 +9,11 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
+import type {
+  ExecutionResult,
+  MaybeAsyncIterable,
+  MaybePromise,
+} from '@graphql-tools/utils';
 import {
   GraphQLFieldResolver,
   GraphQLScalarType,
@@ -19,6 +23,7 @@ import {
 import {
   createYoga,
   DisposableSymbols,
+  YogaServerOptions,
   type YogaServerInstance,
 } from 'graphql-yoga';
 
@@ -40,6 +45,10 @@ export interface GraphQLResolverMap<TContext = {}> {
       };
 }
 
+export type GatewayTesterRemoteSchemaConfigYoga =
+  | Exclude<YogaServerOptions<any, any>, 'schema'>
+  | ((schema: GraphQLSchema) => YogaServerInstance<any, any>);
+
 export interface GatewayTesterRemoteSchemaConfig {
   /** The name of the remote schema / subgraph / proxied server. */
   name: string;
@@ -48,7 +57,7 @@ export interface GatewayTesterRemoteSchemaConfig {
   /** The hostname of the remote schema. URL will become `http://${host}${yoga.graphqlEndpoint}`. */
   host?: string;
   /** An optional GraphQL Yoga server instance that runs the {@link schema built schema}. */
-  yoga?: (schema: GraphQLSchema) => YogaServerInstance<any, any>;
+  yoga?: GatewayTesterRemoteSchemaConfigYoga;
 }
 
 export type GatewayTesterConfig<
@@ -163,7 +172,7 @@ export function createGatewayTester<
     runtime,
     // @ts-expect-error native and whatwg-node fetch has conflicts
     fetch: runtime.fetch,
-    execute(args) {
+    async execute(args) {
       return runtimeExecute({
         document: parse(args.query),
         variables: args.variables,
@@ -201,9 +210,15 @@ function buildRemoteSchema(
         ])
       : config.schema;
   const yoga =
-    config.yoga?.(schema) ||
-    createYoga({ schema, maskedErrors: false, logging: false });
-  const host = config.host || `config-${config.name}`;
+    typeof config.yoga === 'function'
+      ? config.yoga?.(schema)
+      : createYoga({
+          maskedErrors: false,
+          logging: false,
+          ...config.yoga,
+          schema,
+        });
+  const host = config.host || config.name;
   const url = `http://${host}${yoga.graphqlEndpoint}`;
   return {
     name: config.name,
