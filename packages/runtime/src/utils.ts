@@ -104,6 +104,7 @@ export const getExecuteFnFromExecutor = memoize1(
         rootValue: args.rootValue,
         context: args.contextValue,
         signal: args.signal,
+        schemaCoordinateInErrors: args.schemaCoordinateInErrors,
       });
     };
   },
