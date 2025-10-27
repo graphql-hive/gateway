@@ -7,7 +7,7 @@ describe.skipIf(
   // we confirm that there is no leaks directly in tests below
   // TODO: investigate why
   process.env['LEAK_TEST'],
-)('abortSignalAny', () => {
+)('abortSignalAll', () => {
   it('should return the single signal passed', () => {
     const ctrl = new AbortController();
 
