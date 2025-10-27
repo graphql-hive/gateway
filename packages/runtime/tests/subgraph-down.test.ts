@@ -3,7 +3,10 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
+import {
+  composeLocalSchemasWithApollo,
+  usingHiveRouterQueryPlanner,
+} from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -115,7 +118,7 @@ describe('Error handling', () => {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {
@@ -225,13 +228,20 @@ describe('Error handling', () => {
     });
     const res = await resp.json();
     expect(res).toEqual({
-      data: null,
+      data: usingHiveRouterQueryPlanner()
+        ? {
+            subgraph1: null,
+            subgraph2: {
+              subgraph2Field: 'hello from subgraph2',
+            },
+          }
+        : null,
       errors: [
         {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {
