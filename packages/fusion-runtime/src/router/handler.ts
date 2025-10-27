@@ -4,7 +4,13 @@ import {
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
 import { memoize1, printSchemaWithDirectives } from '@graphql-tools/utils';
-import { buildSchema, DocumentNode, print } from 'graphql';
+import {
+  buildSchema,
+  DocumentNode,
+  GraphQLSchema,
+  print,
+  printSchema,
+} from 'graphql';
 import { handleFederationSupergraph } from '../federation/supergraph';
 import { executeQueryPlan } from './executor';
 
@@ -19,7 +25,7 @@ export function handleFederationSupergraphWithRouter(
     return qp.plan(print(document));
   });
   return {
-    unifiedGraph: buildSchema(qp.consumerSchema, { assumeValid: true }),
+    unifiedGraph: buildAndRemoveIntrospectionFields(qp.consumerSchema),
     getSubgraphSchema,
     executor: ({ document, variables, operationName, context }) =>
       plan(document).then((queryPlan) =>
@@ -37,4 +43,17 @@ export function handleFederationSupergraphWithRouter(
       // TODO: do we need/want an SDK here?
     },
   };
+}
+
+function buildAndRemoveIntrospectionFields(schemaSdl: string): GraphQLSchema {
+  // we print a built schema because print will remove introspection types
+  let saneSchemaSdl = printSchema(
+    buildSchema(schemaSdl, { assumeValid: true }),
+  );
+
+  // introspection fields in the query type will stay, remove them manually
+  saneSchemaSdl = saneSchemaSdl.replace('__schema: __Schema!', '');
+  saneSchemaSdl = saneSchemaSdl.replace('__type(name: String!): __Type', '');
+
+  return buildSchema(saneSchemaSdl, { assumeValid: true });
 }
