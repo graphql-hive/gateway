@@ -36,7 +36,7 @@ export function handleFederationSupergraphWithRouter(
     unifiedGraph: consumerSchema,
     getSubgraphSchema,
     executor({ document, variables, operationName, context }) {
-      if (containsIntrospectionFields(document)) {
+      if (isIntrospection(document)) {
         // TODO: handle introspection fields with data fields where also the query planner needs to run
         return execute({
           schema: consumerSchema,
@@ -64,17 +64,32 @@ export function handleFederationSupergraphWithRouter(
   };
 }
 
-function containsIntrospectionFields(document: DocumentNode): boolean {
+/**
+ * Decides if the query is an introspection query by:
+ * - checking if it contains __schema or __type fields or;
+ * - checking if it only queries for __typename fields on the Query type.
+ */
+function isIntrospection(document: DocumentNode): boolean {
+  let onlyQueryTypenameFields = false;
   let containsIntrospectionField = false;
   visit(document, {
-    Field(node) {
-      if (node.name.value === '__schema' || node.name.value === '__type') {
-        containsIntrospectionField = true;
-        return BREAK;
+    OperationDefinition(node) {
+      for (const sel of node.selectionSet.selections) {
+        if (sel.kind !== 'Field') return BREAK;
+        if (sel.name.value === '__schema' || sel.name.value === '__type') {
+          containsIntrospectionField = true;
+          return BREAK;
+        }
+        if (sel.name.value === '__typename') {
+          onlyQueryTypenameFields = true;
+        } else {
+          onlyQueryTypenameFields = false;
+          return BREAK;
+        }
       }
     },
   });
-  return containsIntrospectionField;
+  return containsIntrospectionField || onlyQueryTypenameFields;
 }
 
 function buildAndRemoveIntrospectionFields(schemaSdl: string): GraphQLSchema {
