@@ -1,4 +1,5 @@
 import { createDefaultExecutor } from '@graphql-tools/delegate';
+import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
 import {
   ExecutionRequest,
   ExecutionResult,
@@ -21,6 +22,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   onSubgraphExecute,
   composeWith = 'apollo',
   ignoreRules,
+  handleProgressiveOverride,
 }: {
   localSchemas: Record<string, GraphQLSchema>;
   onSubgraphExecute?: (
@@ -30,6 +32,7 @@ export async function getStitchedSchemaFromLocalSchemas({
   ) => void;
   composeWith?: 'apollo' | 'guild';
   ignoreRules?: string[];
+  handleProgressiveOverride?: ProgressiveOverrideHandler;
 }): Promise<GraphQLSchema> {
   let supergraphSdl: string;
   if (composeWith === 'apollo') {
@@ -84,5 +87,6 @@ export async function getStitchedSchemaFromLocalSchemas({
         throw new Error(`Unknown subgraph ${subschemaConfig.name}`);
       }
     },
+    handleProgressiveOverride,
   });
 }

@@ -19,6 +19,7 @@ import type {
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
+import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   IResolvers,
@@ -235,6 +236,24 @@ export interface GatewayConfigSupergraph<
    * If {@link cache} is provided, the fetched {@link supergraph} will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
+
+  /**
+   * Enable or disable progressive override for labels.
+   *
+   * @example Using a custom header to enable progressive override for a given label.
+   * ```ts
+   * import { defineConfig } from '@graphql-hive/gateway';
+   *
+   * export const gatewayConfig = defineConfig({
+   *   progressiveOverride(label, context) {
+   *     if (label === "use-beta" && context.request.headers.has('use-beta')) {
+   *       return true;
+   *     }
+   *     return false;
+   *   }
+   * });
+   */
+  progressiveOverride?: ProgressiveOverrideHandler;
 }
 
 export interface GatewayConfigSubgraph<

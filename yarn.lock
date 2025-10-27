@@ -3486,6 +3486,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/progressive-override-example@workspace:e2e/progressive-override":
+  version: 0.0.0-use.local
+  resolution: "@e2e/progressive-override-example@workspace:e2e/progressive-override"
+  dependencies:
+    "@apollo/subgraph": "npm:2.11.3"
+    graphql: "npm:16.11.0"
+    graphql-yoga: "npm:5.16.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/regular-subgraph@workspace:e2e/regular-subgraph":
   version: 0.0.0-use.local
   resolution: "@e2e/regular-subgraph@workspace:e2e/regular-subgraph"

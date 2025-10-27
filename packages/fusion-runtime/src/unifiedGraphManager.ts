@@ -6,6 +6,7 @@ import type {
 import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
+import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   Executor,
@@ -76,6 +77,7 @@ export interface UnifiedGraphHandlerOpts {
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
+  handleProgressiveOverride?: ProgressiveOverrideHandler;
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
@@ -126,6 +128,8 @@ export interface UnifiedGraphManagerOptions<TContext> {
 
   instrumentation?: () => Instrumentation | undefined;
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
+
+  handleProgressiveOverride?: ProgressiveOverrideHandler;
 }
 
 export type Instrumentation = {
@@ -343,6 +347,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegateHooks: this.opts.onDelegateHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
+        handleProgressiveOverride: this.opts.handleProgressiveOverride,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({

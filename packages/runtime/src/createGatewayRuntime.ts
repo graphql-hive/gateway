@@ -723,6 +723,7 @@ export function createGatewayRuntime<
       instrumentation: () => instrumentation,
       batch: config.__experimental__batchExecution,
       batchDelegateOptions: config.__experimental__batchDelegateOptions,
+      handleProgressiveOverride: config.progressiveOverride,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {

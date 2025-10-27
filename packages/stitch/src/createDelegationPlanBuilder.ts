@@ -21,6 +21,7 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';
+import { handleOverrideByDelegation } from '../../delegate/src/handleOverrideByDelegation.js';
 import { getFieldsNotInSubschema } from './getFieldsNotInSubschema.js';
 import { memoize5of7 } from './memoize5of7.js';
 
@@ -30,6 +31,8 @@ function calculateDelegationStage(
   targetSubschemas: Array<Subschema>,
   fieldNodes: Array<FieldNode>,
   fragments: Record<string, FragmentDefinitionNode>,
+  context: any | undefined,
+  info: GraphQLResolveInfo | undefined,
 ): {
   delegationMap: Map<Subschema, SelectionSetNode>;
   proxiableSubschemas: Array<Subschema>;
@@ -84,6 +87,7 @@ function calculateDelegationStage(
   // 2. for each selection:
 
   const delegationMap: Map<Subschema, SelectionSetNode> = new Map();
+  let overriddenOverall = false;
   for (const fieldNode of fieldNodes) {
     const fieldName = fieldNode.name.value;
     if (fieldName === '__typename') {
@@ -136,7 +140,6 @@ function calculateDelegationStage(
 
     // 2b. use nonUniqueFields to assign to a possible subschema,
     //     preferring one of the subschemas already targets of delegation
-
     let nonUniqueSubschemas = nonUniqueFields[fieldNode.name.value];
     if (nonUniqueSubschemas == null) {
       unproxiableFieldNodes.push(fieldNode);
@@ -151,14 +154,50 @@ function calculateDelegationStage(
       continue;
     }
 
-    const existingSubschema = nonUniqueSubschemas.find((s) =>
+    let existingSubschema = nonUniqueSubschemas.find((s) =>
       delegationMap.has(s),
     );
+
+    let overridden = false;
+    for (const nonUniqueSubschema of nonUniqueSubschemas) {
+      if (context != null && info != null) {
+        const overrideHandler =
+          nonUniqueSubschema.merge?.[mergedTypeInfo.typeName]?.fields?.[
+            fieldNode.name.value
+          ]?.override;
+        if (overrideHandler != null) {
+          const overriddenBySubschema = handleOverrideByDelegation(
+            info,
+            context,
+            overrideHandler,
+          );
+          if (overriddenBySubschema) {
+            let subschemaSelections = delegationMap.get(nonUniqueSubschema);
+            if (subschemaSelections == null) {
+              subschemaSelections = {
+                kind: Kind.SELECTION_SET,
+                selections: [],
+              };
+              delegationMap.set(nonUniqueSubschema, subschemaSelections);
+            }
+            (subschemaSelections.selections as SelectionNode[]).push(fieldNode);
+            overridden = true;
+            break;
+          } else {
+            existingSubschema = undefined;
+            overriddenOverall = true;
+          }
+        }
+      }
+    }
+
     if (existingSubschema != null) {
-      // It is okay we previously explicitly check whether the map has the element.
-      (
-        delegationMap.get(existingSubschema)!.selections as SelectionNode[]
-      ).push(fieldNode);
+      if (!overridden) {
+        // It is okay we previously explicitly check whether the map has the element.
+        (
+          delegationMap.get(existingSubschema)!.selections as SelectionNode[]
+        ).push(fieldNode);
+      }
     } else {
       let bestUniqueSubschema = nonUniqueSubschemas[0];
       let bestScore = Infinity;
@@ -169,6 +208,25 @@ function calculateDelegationStage(
         const fields = typeInSubschema.getFields();
         const field = fields[fieldNode.name.value];
         if (field != null) {
+          if (context != null && info != null) {
+            const overrideHandler =
+              nonUniqueSubschema.merge?.[mergedTypeInfo.typeName]?.fields?.[
+                fieldNode.name.value
+              ]?.override;
+            if (overrideHandler != null) {
+              const overridden = handleOverrideByDelegation(
+                info,
+                context,
+                overrideHandler,
+              );
+              if (overridden) {
+                bestUniqueSubschema = nonUniqueSubschema;
+                break;
+              } else {
+                continue;
+              }
+            }
+          }
           const unavailableFields = extractUnavailableFields(
             nonUniqueSubschema.transformedSchema,
             field,
@@ -203,14 +261,19 @@ function calculateDelegationStage(
           }
         }
       }
-      delegationMap.set(bestUniqueSubschema!, {
-        kind: Kind.SELECTION_SET,
-        selections: [fieldNode],
-      });
+      let existingSelections = delegationMap.get(bestUniqueSubschema!);
+      if (existingSelections != null) {
+        (existingSelections.selections as SelectionNode[]).push(fieldNode);
+      } else {
+        delegationMap.set(bestUniqueSubschema!, {
+          kind: Kind.SELECTION_SET,
+          selections: [fieldNode],
+        });
+      }
     }
   }
 
-  if (delegationMap.size > 1) {
+  if (delegationMap.size > 1 && !overriddenOverall) {
     optimizeDelegationMap(delegationMap, mergedTypeInfo.typeName, fragments);
   }
 
@@ -280,7 +343,7 @@ export function createDelegationPlanBuilder(
       variableValues: Record<string, any>,
       fragments: Record<string, FragmentDefinitionNode>,
       fieldNodes: FieldNode[],
-      _context?: any,
+      context?: any,
       info?: GraphQLResolveInfo,
     ): Array<Map<Subschema, SelectionSetNode>> {
       const stitchingInfo = getStitchingInfo(schema);
@@ -319,6 +382,8 @@ export function createDelegationPlanBuilder(
         variableValues,
         sourceSubschema,
         providedSelectionNode,
+        context,
+        info,
       );
 
       if (!fieldsNotInSubschema.length) {
@@ -334,6 +399,8 @@ export function createDelegationPlanBuilder(
         targetSubschemas,
         fieldsNotInSubschema,
         fragments,
+        context,
+        info,
       );
       let { delegationMap } = delegationStage;
       while (delegationMap.size) {
@@ -356,6 +423,8 @@ export function createDelegationPlanBuilder(
           nonProxiableSubschemas,
           unproxiableFieldNodes,
           fragments,
+          context,
+          info,
         );
         delegationMap = delegationStage.delegationMap;
       }

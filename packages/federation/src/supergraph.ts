@@ -70,11 +70,14 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import {
+  extractPercentageFromLabel,
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
   getKeyFnForFederation,
   getNamedTypeNode,
+  ProgressiveOverrideHandler,
+  progressiveOverridePossibilityHandler,
 } from './utils.js';
 
 export function ensureSupergraphSDLAst(
@@ -131,6 +134,14 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
+
+  handleProgressiveOverride?: ProgressiveOverrideHandler;
+}
+
+export interface ProgressiveOverrideInfo {
+  field: string;
+  from: string;
+  label: string;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
@@ -157,6 +168,10 @@ export function getStitchingOptionsFromSupergraphSdl(
   const typeFieldASTMap = new Map<
     string,
     Map<string, FieldDefinitionNode | InputValueDefinitionNode>
+  >();
+  const progressiveOverrideInfos = new Map<
+    string,
+    Map<string, ProgressiveOverrideInfo[]>
   >();
 
   for (const definition of supergraphAst.definitions) {
@@ -343,6 +358,48 @@ export function getStitchingOptionsFromSupergraphSdl(
                       (directiveNode) =>
                         directiveNode.name.value !== 'join__field',
                     ),
+                  });
+                }
+
+                const overrideFromArg = joinFieldDirectiveNode.arguments?.find(
+                  (argumentNode) => argumentNode.name.value === 'override',
+                );
+                let overrideFromSubgraph: string | undefined = undefined;
+                if (overrideFromArg?.value?.kind === Kind.STRING) {
+                  overrideFromSubgraph = overrideFromArg.value.value;
+                }
+                const overrideLabelArg = joinFieldDirectiveNode.arguments?.find(
+                  (argumentNode) => argumentNode.name.value === 'overrideLabel',
+                );
+                let overrideLabel: string | undefined = undefined;
+                if (overrideLabelArg?.value?.kind === Kind.STRING) {
+                  overrideLabel = overrideLabelArg.value.value;
+                }
+
+                if (overrideFromSubgraph && overrideLabel != null) {
+                  let subgraphPossibilities =
+                    progressiveOverrideInfos.get(graphName);
+                  if (!subgraphPossibilities) {
+                    subgraphPossibilities = new Map();
+                    progressiveOverrideInfos.set(
+                      graphName,
+                      subgraphPossibilities,
+                    );
+                  }
+                  let existingInfos = subgraphPossibilities.get(
+                    typeNode.name.value,
+                  );
+                  if (!existingInfos) {
+                    existingInfos = [];
+                    subgraphPossibilities.set(
+                      typeNode.name.value,
+                      existingInfos,
+                    );
+                  }
+                  existingInfos.push({
+                    field: fieldNode.name.value,
+                    from: overrideFromSubgraph,
+                    label: overrideLabel,
                   });
                 }
 
@@ -1218,6 +1275,41 @@ export function getStitchingOptionsFromSupergraphSdl(
           };
         },
       });
+    }
+    const progressiveOverrideInfosForSubgraph =
+      progressiveOverrideInfos.get(subgraphName);
+    if (progressiveOverrideInfosForSubgraph != null) {
+      for (const [
+        typeName,
+        fieldInfos,
+      ] of progressiveOverrideInfosForSubgraph) {
+        let mergedConfig = mergeConfig[typeName];
+        if (!mergedConfig) {
+          mergedConfig = mergeConfig[typeName] = {};
+        }
+        for (const fieldInfo of fieldInfos) {
+          let fieldsConfig = mergedConfig.fields;
+          if (!fieldsConfig) {
+            fieldsConfig = mergedConfig.fields = {};
+          }
+          let fieldConfig = fieldsConfig[fieldInfo.field];
+          if (!fieldConfig) {
+            fieldConfig = fieldsConfig[fieldInfo.field] = {};
+          }
+
+          const label = fieldInfo.label;
+          const percent = extractPercentageFromLabel(label);
+          if (percent != null) {
+            const possibility = percent / 100;
+            fieldConfig.override = () =>
+              progressiveOverridePossibilityHandler(possibility);
+          } else if (opts.handleProgressiveOverride) {
+            const progressiveOverrideHandler = opts.handleProgressiveOverride;
+            fieldConfig.override = (context, info) =>
+              progressiveOverrideHandler(label, context, info);
+          }
+        }
+      }
     }
     const subschemaConfig: FederationSubschemaConfig = {
       name: subgraphName,
