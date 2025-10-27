@@ -2,7 +2,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import {
   createGatewayRuntime,
   GatewayConfigBase,
-  GatewayConfigSchemaBase,
+  GatewayConfigSupergraph,
   GatewayRuntime,
   UnifiedGraphConfig,
   useCustomFetch,
@@ -62,13 +62,13 @@ export type GatewayTesterConfig<
   | ({
       // gateway
       supergraph: UnifiedGraphConfig;
-    } & GatewayConfigSchemaBase<TContext>)
+    } & Omit<GatewayConfigSupergraph<TContext>, 'supergraph'>)
   | ({
       // gateway (composes subgraphs)
       subgraphs:
         | GatewayTesterRemoteSchemaConfig[]
         | (() => GatewayTesterRemoteSchemaConfig[]);
-    } & GatewayConfigSchemaBase<TContext>)
+    } & Omit<GatewayConfigSupergraph<TContext>, 'supergraph'>)
   | ({
       // proxy
       proxy: GatewayTesterRemoteSchemaConfig;
