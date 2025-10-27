@@ -44,6 +44,8 @@ export interface GatewayTesterSubgraphConfig {
   name: string;
   /** The subgraph schema. */
   schema: GraphQLSchema | { typeDefs: string; resolvers?: GraphQLResolverMap };
+  /** The hostname of the subgraph. URL will become `http://${host}${yoga.graphqlEndpoint}`. */
+  host?: string;
   /** An optional GraphQL Yoga server instance that runs the {@link schema built subgraph}. */
   yoga?: (schema: GraphQLSchema) => YogaServerInstance<any, any>;
 }
@@ -101,7 +103,8 @@ export function createGatewayTester<
         const yoga =
           subgraph.yoga?.(schema) ||
           createYoga({ schema, maskedErrors: false, logging: false });
-        const url = `http://subgraph-${subgraph.name}${yoga.graphqlEndpoint}`;
+        const host = subgraph.host || `subgraph-${subgraph.name}`;
+        const url = `http://${host}${yoga.graphqlEndpoint}`;
         return {
           ...acc,
           [url]: {
