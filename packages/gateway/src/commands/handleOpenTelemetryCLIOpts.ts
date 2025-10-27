@@ -136,7 +136,7 @@ export async function handleOpenTelemetryCLIOpts(
       }),
       contextManager,
       _initialization: {
-        name: integration!.name!,
+        name: integration!.name,
         source: `cli flag (${integration!.source.flag}) or environment variables (${integration!.source.env})`,
         logAttributes,
       },
