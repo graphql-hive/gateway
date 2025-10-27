@@ -89,7 +89,6 @@ export function createGatewayTester<
     // compose subgraphs and create runtime
     const subgraphs = config.subgraphs.reduce(
       (acc, subgraph) => {
-        const url = `http://subgraph-${subgraph.name}/graphql`;
         const schema =
           'typeDefs' in subgraph.schema
             ? buildSubgraphSchema([
@@ -99,15 +98,17 @@ export function createGatewayTester<
                 },
               ])
             : subgraph.schema;
+        const yoga =
+          subgraph.yoga?.(schema) ||
+          createYoga({ schema, maskedErrors: false, logging: false });
+        const url = `http://subgraph-${subgraph.name}${yoga.graphqlEndpoint}`;
         return {
           ...acc,
           [url]: {
             name: subgraph.name,
             url,
             schema,
-            yoga:
-              subgraph.yoga?.(schema) ||
-              createYoga({ schema, maskedErrors: false, logging: false }),
+            yoga,
           },
         };
       },
