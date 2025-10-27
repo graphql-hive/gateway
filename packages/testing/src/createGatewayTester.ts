@@ -82,10 +82,9 @@ export interface GatewayTester<
 export function createGatewayTester<
   TContext extends Record<string, any> = Record<string, any>,
 >(config: GatewayTesterConfig<TContext>): GatewayTester<TContext> {
-  //
   let runtime: GatewayRuntime<TContext>;
   if ('supergraph' in config) {
-    runtime = createGatewayRuntime(config);
+    runtime = createGatewayRuntime({ maskedErrors: false, ...config });
   } else {
     // compose subgraphs and create runtime
     const subgraphs = config.subgraphs.reduce(
@@ -123,6 +122,7 @@ export function createGatewayTester<
       >,
     );
     runtime = createGatewayRuntime({
+      maskedErrors: false,
       ...config,
       supergraph: getUnifiedGraphGracefully(Object.values(subgraphs)),
       plugins: (ctx) => [
