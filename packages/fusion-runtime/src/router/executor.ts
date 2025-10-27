@@ -727,6 +727,8 @@ function executeFetchPlanNode(
   return handleMaybePromise(
     () =>
       executionContext.onSubgraphExecute(fetchNode.serviceName, {
+        // signal: TODO: implement signal for aborting
+        subgraphName: fetchNode.serviceName,
         document: operationDocument,
         variables: variablesForFetch,
         context: executionContext.context,
