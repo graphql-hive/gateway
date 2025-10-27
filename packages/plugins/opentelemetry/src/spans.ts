@@ -2,7 +2,6 @@ import { hashOperation } from '@graphql-hive/core';
 import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
-  ERROR_EXTENSION_SCHEMA_COORDINATE,
   getOperationASTFromDocument,
   getSchemaCoordinate,
   isAsyncIterable,
@@ -20,9 +19,7 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import {
-  ATTR_EXCEPTION_MESSAGE,
   ATTR_EXCEPTION_STACKTRACE,
-  ATTR_EXCEPTION_TYPE,
   SEMATTRS_EXCEPTION_MESSAGE,
   SEMATTRS_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_TYPE,
