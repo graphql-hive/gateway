@@ -18,6 +18,7 @@ import {
   VariableNode,
   visit,
 } from 'graphql';
+import { abortSignalAll } from '../../signal/src/abortSignalAll.js';
 import { createPrefix } from './prefix.js';
 
 /**
@@ -70,11 +71,18 @@ export function mergeRequests(
   const mergedSelections: Array<SelectionNode> = [];
   const mergedFragmentDefinitions: Array<FragmentDefinitionNode> = [];
   let mergedExtensions: Record<string, any> = Object.create(null);
+  let schemaCoordinateInErrors: boolean | undefined = false;
+  const signals: AbortSignal[] = [];
 
   for (let index = 0; index < requests.length; index++) {
     const request = requests[index];
     if (request) {
+      schemaCoordinateInErrors ||= request.schemaCoordinateInErrors;
       const prefixedRequests = prefixRequest(createPrefix(index), request);
+
+      if (request.signal) {
+        signals.push(request.signal);
+      }
 
       for (const def of prefixedRequests.document.definitions) {
         if (isOperationDefinition(def)) {
@@ -129,6 +137,8 @@ export function mergeRequests(
     info: firstRequest.info,
     operationType,
     rootValue: firstRequest.rootValue,
+    signal: abortSignalAll(signals),
+    schemaCoordinateInErrors,
   };
 }
 
