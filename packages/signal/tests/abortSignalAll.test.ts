@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { abortSignalAll } from '../src/abortSignalAll';
 
 describe.skipIf(
-  // doesnt report leaks locally, but does in the CI.
+  // doesn't report leaks locally, but does in the CI.
   // we confirm that there is no leaks directly in tests below
   // TODO: investigate why
   process.env['LEAK_TEST'],
