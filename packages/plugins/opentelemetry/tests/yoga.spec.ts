@@ -1,5 +1,10 @@
 import { Logger } from '@graphql-hive/logger';
-import { createSchema, createYoga, Plugin as YogaPlugin } from 'graphql-yoga';
+import {
+  createGraphQLError,
+  createSchema,
+  createYoga,
+  Plugin as YogaPlugin,
+} from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { hive } from '../src/api';
 import { ContextMatcher, useOpenTelemetry } from '../src/plugin';
@@ -31,11 +36,27 @@ describe('useOpenTelemetry', () => {
             typeDefs: /* GraphQL */ `
               type Query {
                 hello: String
+                withFailing: WithFailing
+              }
+
+              type WithFailing {
+                failingField: String
               }
             `,
             resolvers: {
               Query: {
                 hello: () => 'World',
+                withFailing: () => ({}),
+              },
+              WithFailing: {
+                failingField: () => {
+                  throw createGraphQLError('Test', {
+                    extensions: {
+                      code: 'TEST',
+                      originalError: new Error('Test'),
+                    },
+                  });
+                },
               },
             },
           }),
@@ -51,20 +72,32 @@ describe('useOpenTelemetry', () => {
         });
 
         return {
-          query: async () => {
+          query: async (
+            queryOptions: {
+              query?: string;
+              shouldError?: boolean;
+            } = {},
+          ) => {
             const response = await yoga.fetch('http://yoga/graphql', {
               method: 'POST',
               headers: {
                 'content-type': 'application/json',
               },
-              body: JSON.stringify({ query: '{ hello }' }),
+              body: JSON.stringify({
+                query: queryOptions.query ?? '{ hello }',
+              }),
             });
             expect(response.status).toBe(200);
             const result = await response.json();
-            if (result.errors) {
-              console.error('Graphql Errors:', result.errors);
+            if (queryOptions.shouldError) {
+              expect(result.errors?.length).toBeGreaterThan(0);
+            } else {
+              if (result.errors) {
+                console.error('Graphql Errors:', result.errors);
+              }
+              expect(result.errors).not.toBeDefined();
             }
-            expect(result.errors).not.toBeDefined();
+            return result;
           },
           [Symbol.asyncDispose]: async () => {
             await yoga.dispose();
@@ -140,6 +173,43 @@ describe('useOpenTelemetry', () => {
             const spanTree = spanExporter.assertRoot(root);
             children.forEach(spanTree.expectChild);
           }
+        });
+      });
+
+      describe('error events', () => {
+        it('should report errors', async () => {
+          await using gateway = buildTest();
+          await gateway.query({
+            query: '{ withFailing { failingField } }',
+            shouldError: true,
+          });
+
+          const executionSpan =
+            spanExporter.assertSpanWithName('graphql.operation');
+
+          expect(executionSpan.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+            'hive.graphql.error.codes': ['TEST'],
+            'hive.graphql.error.schema-coordinates': [
+              'WithFailing.failingField',
+            ],
+          });
+
+          const exceptionEvent = executionSpan.events.find(
+            (event) => event.name === 'graphql.error',
+          );
+
+          expect(exceptionEvent?.attributes).toMatchObject({
+            'hive.graphql.error.message': 'Test',
+            'hive.graphql.error.code': 'TEST',
+            'hive.graphql.error.path': ['withFailing', 'failingField'],
+            'hive.graphql.error.locations': ['1:17'],
+            'hive.graphql.error.schema-coordinate': 'WithFailing.failingField',
+          });
+
+          expect(exceptionEvent?.attributes?.['exception.stacktrace']).toMatch(
+            /^Error: Test\n/,
+          );
         });
       });
     });

@@ -25,6 +25,15 @@ export const SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH =
   'hive.graphql.operation.hash';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT = 'hive.graphql.error.count';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_CODES = 'hive.graphql.error.codes';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES =
+  'hive.graphql.error.schema-coordinates';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_CODE = 'hive.graphql.error.code';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE =
+  'hive.graphql.error.schema-coordinate';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_PATH = 'hive.graphql.error.path';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE = 'hive.graphql.error.message';
+export const SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS =
+  'hive.graphql.error.locations';
 
 // Gateway-specific attributes
 export const SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME =

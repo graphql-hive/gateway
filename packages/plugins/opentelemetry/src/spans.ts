@@ -2,12 +2,15 @@ import { hashOperation } from '@graphql-hive/core';
 import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
+  ERROR_EXTENSION_SCHEMA_COORDINATE,
   getOperationASTFromDocument,
+  getSchemaCoordinate,
   isAsyncIterable,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
+  Attributes,
   context,
   ROOT_CONTEXT,
   SpanKind,
@@ -17,12 +20,16 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import {
+  ATTR_EXCEPTION_MESSAGE,
+  ATTR_EXCEPTION_STACKTRACE,
+  ATTR_EXCEPTION_TYPE,
   SEMATTRS_EXCEPTION_MESSAGE,
   SEMATTRS_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_TYPE,
 } from '@opentelemetry/semantic-conventions';
 import {
   DocumentNode,
+  GraphQLError,
   GraphQLSchema,
   OperationDefinitionNode,
   printSchema,
@@ -40,8 +47,14 @@ import {
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODE,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_PATH,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
   SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
   SEMATTRS_HTTP_CLIENT_IP,
   SEMATTRS_HTTP_HOST,
@@ -362,43 +375,73 @@ export function setGraphQLExecutionAttributes(input: {
 
 export function setGraphQLExecutionResultAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   result: ExecutionResult | AsyncIterableIterator<ExecutionResult>;
   subgraphNames?: string[];
 }) {
-  const { ctx, result } = input;
+  const { ctx, operationCtx, result } = input;
+
   const span = trace.getSpan(ctx);
-  if (!span) {
-    return;
+  if (span) {
+    if (input.subgraphNames?.length) {
+      span.setAttribute(
+        SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+        input.subgraphNames,
+      );
+    }
   }
 
-  if (input.subgraphNames?.length) {
-    span.setAttribute(
-      SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-      input.subgraphNames,
-    );
-  }
+  const operationSpan = trace.getSpan(operationCtx);
 
   if (
+    operationSpan &&
     !isAsyncIterable(result) && // FIXME: Handle async iterable too
     result.errors &&
     result.errors.length > 0
   ) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
-    span.setStatus({
+    operationSpan.setAttribute(
+      SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+      result.errors.length,
+    );
+    operationSpan.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: result.errors.map((e) => e.message).join(', '),
+    });
+
+    span?.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
+    span?.setStatus({
       code: SpanStatusCode.ERROR,
       message: result.errors.map((e) => e.message).join(', '),
     });
 
     const codes: string[] = [];
+    const schemaCoordinates: string[] = [];
     for (const error of result.errors) {
-      span.recordException(error);
-      if (error.extensions?.['code']) {
-        codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
+      const attributes = attributesFromGraphqlError(error);
+      if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE]) {
+        codes.push(attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] as string);
       }
+      if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE]) {
+        schemaCoordinates.push(
+          attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] as string,
+        );
+      }
+      operationSpan.addEvent('graphql.error', attributes);
     }
 
     if (codes.length > 0) {
-      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+      operationSpan.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+      span?.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+    }
+    if (schemaCoordinates.length > 0) {
+      operationSpan.setAttribute(
+        SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
+        schemaCoordinates,
+      );
+      span?.setAttribute(
+        SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
+        schemaCoordinates,
+      );
     }
   }
 }
@@ -608,3 +651,44 @@ export const getOperationFromDocument = (
   operationNameMap.set(operationName ?? null, operation);
   return operation;
 };
+
+function attributesFromGraphqlError(error: GraphQLError): Attributes {
+  const attributes: Attributes = {
+    [SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE]: error.message,
+  };
+
+  if (error.path) {
+    attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_PATH] = error.path.map((p) =>
+      p.toString(),
+    );
+  }
+
+  if (error.locations) {
+    attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS] = error.locations.map(
+      ({ line, column }) => `${line}:${column}`,
+    );
+  }
+
+  if (error.extensions) {
+    const code = error.extensions?.['code'];
+    if (code) {
+      const codeStr = `${code}`; // Ensure string using string interpolation
+      attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] = codeStr;
+    }
+
+    const schemaCoordinate = getSchemaCoordinate(error);
+    if (schemaCoordinate) {
+      attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] =
+        schemaCoordinate;
+    }
+
+    const originalError: Error | undefined = error.extensions[
+      'originalError'
+    ] as Error;
+    if (originalError?.stack) {
+      attributes[ATTR_EXCEPTION_STACKTRACE] = originalError.stack;
+    }
+  }
+
+  return attributes;
+}
