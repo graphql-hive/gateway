@@ -246,7 +246,7 @@ export interface GatewayConfigSubgraph<
   subgraph: UnifiedGraphConfig;
 }
 
-interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
+export interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
   extends GatewayConfigBase<TContext> {
   /**
    * Additional GraphQL schema type definitions.
@@ -435,7 +435,7 @@ export interface GatewayHivePersistedDocumentsOptions {
     | ((request: Request) => MaybePromise<boolean>);
 }
 
-interface GatewayConfigBase<TContext extends Record<string, any>> {
+export interface GatewayConfigBase<TContext extends Record<string, any>> {
   /** Usage reporting options. */
   reporting?: GatewayHiveReportingOptions | GatewayGraphOSReportingOptions;
   /** Persisted documents options. */

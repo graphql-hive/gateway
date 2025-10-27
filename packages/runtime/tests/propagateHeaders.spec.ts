@@ -1,41 +1,43 @@
+import {
+  createGatewayTester,
+  GatewayTesterRemoteSchemaConfig,
+} from '@graphql-hive/gateway-testing';
 import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
-import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import useHttpCache from '@graphql-mesh/plugin-http-cache';
-import { isDebug } from '@internal/testing';
-import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime';
-import { useCustomFetch } from '../src/plugins/useCustomFetch';
+import { createSchema, type Plugin } from 'graphql-yoga';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('usePropagateHeaders', () => {
   describe('From Client to the Subgraphs', () => {
-    const requestTrackerPlugin = {
-      onParams: vi.fn((() => {}) as Plugin['onParams']),
-    };
-    const upstream = createYoga({
-      schema: createSchema({
-        typeDefs: /* GraphQL */ `
-          type Query {
-            hello: String
-          }
-        `,
-        resolvers: {
-          Query: {
-            hello: () => 'world',
+    function prepare() {
+      const requestTrackerPlugin = {
+        onParams: vi.fn((() => {}) as Plugin['onParams']),
+      };
+      return {
+        requestTrackerPlugin,
+        name: 'upstream',
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello: () => 'world',
+            },
           },
+        }),
+        yoga: {
+          plugins: [requestTrackerPlugin],
         },
-      }),
-      plugins: [requestTrackerPlugin],
-      logging: isDebug(),
-    });
-    beforeEach(() => {
-      requestTrackerPlugin.onParams.mockClear();
-    });
+      };
+    }
+
     it('forwards specified headers', async () => {
-      await using gateway = createGatewayRuntime({
-        proxy: {
-          endpoint: 'http://localhost:4001/graphql',
-        },
+      const { requestTrackerPlugin, ...config } = prepare();
+      await using gateway = createGatewayTester({
+        proxy: config,
         propagateHeaders: {
           fromClientToSubgraphs({ request }) {
             return {
@@ -44,13 +46,6 @@ describe('usePropagateHeaders', () => {
             };
           },
         },
-        plugins: () => [
-          useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-        ],
-        logging: isDebug(),
       });
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
@@ -91,71 +86,10 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-my-other']).toBe('other-value');
       expect(headersObj['x-extra-header']).toBeUndefined();
     });
-    it.skip("forwards specified headers but doesn't override the provided headers", async () => {
-      await using gateway = createGatewayRuntime({
-        logging: isDebug(),
-        proxy: {
-          endpoint: 'http://localhost:4001/graphql',
-          headers: {
-            'x-my-header': 'my-value',
-            'x-extra-header': 'extra-value',
-          },
-        },
-        propagateHeaders: {
-          fromClientToSubgraphs({ request }) {
-            return {
-              'x-my-header': request.headers.get('x-my-header')!,
-              'x-my-other': request.headers.get('x-my-other')!,
-            };
-          },
-        },
-        plugins: () => [
-          useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-        ],
-      });
-      const response = await gateway.fetch('http://localhost:4000/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-my-header': 'my-new-value',
-          'x-my-other': 'other-value',
-        },
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              hello
-            }
-          `,
-        }),
-      });
-
-      const resJson = await response.json();
-      expect(resJson).toEqual({
-        data: {
-          hello: 'world',
-        },
-      });
-
-      // The first call is for the introspection
-      expect(requestTrackerPlugin.onParams).toHaveBeenCalledTimes(2);
-      const onParamsPayload = requestTrackerPlugin.onParams.mock.calls[1]?.[0]!;
-      // Do not pass extensions
-      expect(onParamsPayload.params.extensions).toBeUndefined();
-      const headersObj = Object.fromEntries(
-        onParamsPayload.request.headers.entries(),
-      );
-      expect(headersObj['x-my-header']).toBe('my-value');
-      expect(headersObj['x-extra-header']).toBe('extra-value');
-      expect(headersObj['x-my-other']).toBe('other-value');
-    });
     it("won't forward empty headers", async () => {
-      await using gateway = createGatewayRuntime({
-        proxy: {
-          endpoint: 'http://localhost:4001/graphql',
-        },
+      const { requestTrackerPlugin, ...config } = prepare();
+      await using gateway = createGatewayTester({
+        proxy: config,
         propagateHeaders: {
           fromClientToSubgraphs({ request }) {
             return {
@@ -163,20 +97,10 @@ describe('usePropagateHeaders', () => {
             };
           },
         },
-        plugins: () => [
-          useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-        ],
-        logging: isDebug(),
       });
-      const response = await gateway.fetch('http://localhost:4000/graphql', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
+
+      await expect(
+        gateway.execute({
           query: /* GraphQL */ `
             query {
               hello
@@ -186,10 +110,7 @@ describe('usePropagateHeaders', () => {
             randomThing: 'randomValue',
           },
         }),
-      });
-
-      const resJson = await response.json();
-      expect(resJson).toEqual({
+      ).resolves.toEqual({
         data: {
           hello: 'world',
         },
@@ -206,72 +127,67 @@ describe('usePropagateHeaders', () => {
       expect(headersObj['x-empty-header']).toBeUndefined();
     });
   });
+
   describe('From Subgraphs to the Client', () => {
-    const upstream1 = createSchema({
-      typeDefs: /* GraphQL */ `
-        type Query {
-          hello1: String
-        }
-      `,
-      resolvers: {
-        Query: {
-          hello1: () => 'world1',
-        },
-      },
-    });
-    const upstream1Fetch = createYoga({
-      schema: upstream1,
-      plugins: [
-        {
-          onResponse: ({ response }) => {
-            response.headers.set('cache-control', 'max-age=60, private');
-            response.headers.set('upstream1', 'upstream1');
-            response.headers.append('set-cookie', 'cookie1=value1');
-            response.headers.append('set-cookie', 'cookie2=value2');
+    const subgraphs: GatewayTesterRemoteSchemaConfig[] = [
+      {
+        name: 'upstream1',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello1: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello1: () => 'world1',
+            },
           },
         },
-      ],
-    }).fetch;
-    const upstream2 = createSchema({
-      typeDefs: /* GraphQL */ `
-        type Query {
-          hello2: String
-        }
-      `,
-      resolvers: {
-        Query: {
-          hello2: () => 'world2',
+        yoga: {
+          plugins: [
+            {
+              onResponse: ({ response }) => {
+                response.headers.set('cache-control', 'max-age=60, private');
+                response.headers.set('upstream1', 'upstream1');
+                response.headers.append('set-cookie', 'cookie1=value1');
+                response.headers.append('set-cookie', 'cookie2=value2');
+              },
+            } as Plugin,
+          ],
         },
       },
-    });
-    const upstream2Fetch = createYoga({
-      schema: upstream2,
-      plugins: [
-        {
-          onResponse: ({ response }) => {
-            response.headers.set('upstream2', 'upstream2');
-            response.headers.append('set-cookie', 'cookie3=value3');
-            response.headers.append('set-cookie', 'cookie4=value4');
+      {
+        name: 'upstream2',
+        schema: {
+          typeDefs: /* GraphQL */ `
+            type Query {
+              hello2: String
+            }
+          `,
+          resolvers: {
+            Query: {
+              hello2: () => 'world2',
+            },
           },
         },
-      ],
-    }).fetch;
+        yoga: {
+          plugins: [
+            {
+              onResponse: ({ response }) => {
+                response.headers.set('upstream2', 'upstream2');
+                response.headers.append('set-cookie', 'cookie3=value3');
+                response.headers.append('set-cookie', 'cookie4=value4');
+              },
+            } as Plugin,
+          ],
+        },
+      },
+    ];
+
     it('Aggregates cookies from all subgraphs', async () => {
-      await using gateway = createGatewayRuntime({
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
-            {
-              name: 'upstream1',
-              schema: upstream1,
-              url: 'http://localhost:4001/graphql',
-            },
-            {
-              name: 'upstream2',
-              schema: upstream2,
-              url: 'http://localhost:4002/graphql',
-            },
-          ]);
-        },
+      await using gateway = createGatewayTester({
+        subgraphs,
         propagateHeaders: {
           fromSubgraphsToClient({ response }) {
             const cookies = response.headers.getSetCookie();
@@ -292,22 +208,8 @@ describe('usePropagateHeaders', () => {
             return returns;
           },
         },
-        plugins: () => [
-          useCustomFetch((url, options, context, info) => {
-            switch (url) {
-              case 'http://localhost:4001/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream1Fetch(url, options, context, info);
-              case 'http://localhost:4002/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream2Fetch(url, options, context, info);
-              default:
-                throw new Error('Invalid URL');
-            }
-          }),
-        ],
-        logging: isDebug(),
       });
+
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
         headers: {
@@ -323,8 +225,7 @@ describe('usePropagateHeaders', () => {
         }),
       });
 
-      const resJson = await response.json();
-      expect(resJson).toEqual({
+      await expect(response.json()).resolves.toEqual({
         data: {
           hello1: 'world1',
           hello2: 'world2',
@@ -340,22 +241,9 @@ describe('usePropagateHeaders', () => {
     it('should propagate headers when caching upstream', async () => {
       await using cache = new InMemoryLRUCache();
 
-      await using gateway = createGatewayRuntime({
+      await using gateway = createGatewayTester({
+        subgraphs,
         cache,
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
-            {
-              name: 'upstream1',
-              schema: upstream1,
-              url: 'http://localhost:4001/graphql',
-            },
-            {
-              name: 'upstream2',
-              schema: upstream2,
-              url: 'http://localhost:4002/graphql',
-            },
-          ]);
-        },
         propagateHeaders: {
           fromSubgraphsToClient({ response }) {
             const cookies = response.headers.getSetCookie();
@@ -377,22 +265,7 @@ describe('usePropagateHeaders', () => {
             return returns;
           },
         },
-        plugins: (context) => [
-          useHttpCache(context),
-          useCustomFetch((url, options, context, info) => {
-            switch (url) {
-              case 'http://localhost:4001/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream1Fetch(url, options, context, info);
-              case 'http://localhost:4002/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream2Fetch(url, options, context, info);
-              default:
-                throw new Error('Invalid URL');
-            }
-          }),
-        ],
-        logging: isDebug(),
+        plugins: (context) => [useHttpCache(context)],
       });
 
       for (let i = 0; i < 3; i++) {
@@ -426,77 +299,65 @@ describe('usePropagateHeaders', () => {
       }
     });
     it('should deduplicate non-cookie headers from multiple subgraphs when deduplicateHeaders is true', async () => {
-      const upstream1WithDuplicates = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello1: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello1: () => 'world1',
+      await using gateway = createGatewayTester({
+        subgraphs: [
+          {
+            name: 'upstream1',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  hello1: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  hello1: () => 'world1',
+                },
+              },
+            },
+            yoga: {
+              plugins: [
+                {
+                  onResponse: ({ response }) => {
+                    response.headers.set(
+                      'x-shared-header',
+                      'value-from-upstream1',
+                    );
+                    response.headers.append('set-cookie', 'cookie1=value1');
+                  },
+                },
+              ],
             },
           },
-        }),
-        plugins: [
           {
-            onResponse: ({ response }) => {
-              response.headers.set('x-shared-header', 'value-from-upstream1');
-              response.headers.append('set-cookie', 'cookie1=value1');
+            name: 'upstream2',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  hello2: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  hello2: () => 'world2',
+                },
+              },
+            },
+            yoga: {
+              plugins: [
+                {
+                  onResponse: ({ response }) => {
+                    response.headers.set(
+                      'x-shared-header',
+                      'value-from-upstream2',
+                    );
+                    response.headers.append('set-cookie', 'cookie2=value2');
+                  },
+                },
+              ],
             },
           },
         ],
-      }).fetch;
-      const upstream2WithDuplicates = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello2: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello2: () => 'world2',
-            },
-          },
-        }),
-        plugins: [
-          {
-            onResponse: ({ response }) => {
-              response.headers.set('x-shared-header', 'value-from-upstream2');
-              response.headers.append('set-cookie', 'cookie2=value2');
-            },
-          },
-        ],
-      }).fetch;
-      await using gateway = createGatewayRuntime({
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
-            {
-              name: 'upstream1',
-              schema: createSchema({
-                typeDefs: /* GraphQL */ `
-                  type Query {
-                    hello1: String
-                  }
-                `,
-              }),
-              url: 'http://localhost:4001/graphql',
-            },
-            {
-              name: 'upstream2',
-              schema: createSchema({
-                typeDefs: /* GraphQL */ `
-                  type Query {
-                    hello2: String
-                  }
-                `,
-              }),
-              url: 'http://localhost:4002/graphql',
-            },
-          ]);
-        },
         propagateHeaders: {
           deduplicateHeaders: true,
           fromSubgraphsToClient({ response }) {
@@ -514,21 +375,6 @@ describe('usePropagateHeaders', () => {
             return returns;
           },
         },
-        plugins: () => [
-          useCustomFetch((url, options, context, info) => {
-            switch (url) {
-              case 'http://localhost:4001/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream1WithDuplicates(url, options, context, info);
-              case 'http://localhost:4002/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream2WithDuplicates(url, options, context, info);
-              default:
-                throw new Error('Invalid URL');
-            }
-          }),
-        ],
-        logging: isDebug(),
       });
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',
@@ -564,77 +410,65 @@ describe('usePropagateHeaders', () => {
       );
     });
     it('should append all non-cookie headers from multiple subgraphs when deduplicateHeaders is false', async () => {
-      const upstream1WithDuplicates = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello1: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello1: () => 'world1',
+      await using gateway = createGatewayTester({
+        subgraphs: [
+          {
+            name: 'upstream1',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  hello1: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  hello1: () => 'world1',
+                },
+              },
+            },
+            yoga: {
+              plugins: [
+                {
+                  onResponse: ({ response }) => {
+                    response.headers.set(
+                      'x-shared-header',
+                      'value-from-upstream1',
+                    );
+                    response.headers.append('set-cookie', 'cookie1=value1');
+                  },
+                },
+              ],
             },
           },
-        }),
-        plugins: [
           {
-            onResponse: ({ response }) => {
-              response.headers.set('x-shared-header', 'value-from-upstream1');
-              response.headers.append('set-cookie', 'cookie1=value1');
+            name: 'upstream2',
+            schema: {
+              typeDefs: /* GraphQL */ `
+                type Query {
+                  hello2: String
+                }
+              `,
+              resolvers: {
+                Query: {
+                  hello2: () => 'world2',
+                },
+              },
+            },
+            yoga: {
+              plugins: [
+                {
+                  onResponse: ({ response }) => {
+                    response.headers.set(
+                      'x-shared-header',
+                      'value-from-upstream2',
+                    );
+                    response.headers.append('set-cookie', 'cookie2=value2');
+                  },
+                },
+              ],
             },
           },
         ],
-      }).fetch;
-      const upstream2WithDuplicates = createYoga({
-        schema: createSchema({
-          typeDefs: /* GraphQL */ `
-            type Query {
-              hello2: String
-            }
-          `,
-          resolvers: {
-            Query: {
-              hello2: () => 'world2',
-            },
-          },
-        }),
-        plugins: [
-          {
-            onResponse: ({ response }) => {
-              response.headers.set('x-shared-header', 'value-from-upstream2');
-              response.headers.append('set-cookie', 'cookie2=value2');
-            },
-          },
-        ],
-      }).fetch;
-      await using gateway = createGatewayRuntime({
-        supergraph: () => {
-          return getUnifiedGraphGracefully([
-            {
-              name: 'upstream1',
-              schema: createSchema({
-                typeDefs: /* GraphQL */ `
-                  type Query {
-                    hello1: String
-                  }
-                `,
-              }),
-              url: 'http://localhost:4001/graphql',
-            },
-            {
-              name: 'upstream2',
-              schema: createSchema({
-                typeDefs: /* GraphQL */ `
-                  type Query {
-                    hello2: String
-                  }
-                `,
-              }),
-              url: 'http://localhost:4002/graphql',
-            },
-          ]);
-        },
         propagateHeaders: {
           deduplicateHeaders: false,
           fromSubgraphsToClient({ response }) {
@@ -652,21 +486,6 @@ describe('usePropagateHeaders', () => {
             return returns;
           },
         },
-        plugins: () => [
-          useCustomFetch((url, options, context, info) => {
-            switch (url) {
-              case 'http://localhost:4001/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream1WithDuplicates(url, options, context, info);
-              case 'http://localhost:4002/graphql':
-                // @ts-expect-error TODO: url can be a string, not only an instance of URL
-                return upstream2WithDuplicates(url, options, context, info);
-              default:
-                throw new Error('Invalid URL');
-            }
-          }),
-        ],
-        logging: isDebug(),
       });
       const response = await gateway.fetch('http://localhost:4000/graphql', {
         method: 'POST',

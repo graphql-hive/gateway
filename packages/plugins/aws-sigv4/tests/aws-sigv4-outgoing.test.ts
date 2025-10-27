@@ -1,12 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import {
-  createGatewayRuntime,
-  useCustomFetch,
-} from '@graphql-hive/gateway-runtime';
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { useAWSSigv4 } from '@graphql-hive/plugin-aws-sigv4';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { parse } from 'graphql';
-import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
 describe('AWS Sigv4', () => {
@@ -24,26 +19,25 @@ describe('AWS Sigv4', () => {
       },
     });
     let receivedSubgraphRequest: Request | undefined;
-    await using subgraphServer = createYoga({
-      schema: subgraphSchema,
-      plugins: [
-        {
-          onRequest({ request }) {
-            receivedSubgraphRequest = request;
-          },
-        },
-      ],
-      landingPage: false,
-      graphqlEndpoint: '/',
-    });
-    await using gw = createGatewayRuntime({
-      supergraph: await composeLocalSchemasWithApollo([
+    await using gw = createGatewayTester({
+      subgraphs: [
         {
           name: 'subgraph',
           schema: subgraphSchema,
-          url: 'http://sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+          host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
+          yoga: {
+            plugins: [
+              {
+                onRequest({ request }) {
+                  receivedSubgraphRequest = request;
+                },
+              },
+            ],
+            landingPage: false,
+            graphqlEndpoint: '/',
+          },
         },
-      ]),
+      ],
       transportEntries: {
         subgraph: {
           headers: [['Date', 'Mon, 29 Dec 2015 00:00:00 GMT']],
@@ -57,10 +51,6 @@ describe('AWS Sigv4', () => {
             secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
           },
         }),
-        useCustomFetch(
-          // @ts-expect-error - MeshFetch is not compatible with Yoga.fetch
-          subgraphServer.fetch,
-        ),
       ],
     });
     const res = await gw.fetch('http://localhost:4000/graphql', {

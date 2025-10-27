@@ -38,6 +38,7 @@
         "./packages/gateway/src/opentelemetry/setup.ts"
       ],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
+      "@graphql-hive/gateway-testing": ["./packages/testing/src/index.ts"],
       "@graphql-mesh/fusion-runtime": [
         "./packages/fusion-runtime/src/index.ts"
       ],
