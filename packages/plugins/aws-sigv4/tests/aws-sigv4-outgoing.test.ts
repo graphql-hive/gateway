@@ -2,7 +2,6 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { useAWSSigv4 } from '@graphql-hive/plugin-aws-sigv4';
 import { parse } from 'graphql';
-import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 
 describe('AWS Sigv4', () => {
@@ -26,19 +25,17 @@ describe('AWS Sigv4', () => {
           name: 'subgraph',
           schema: subgraphSchema,
           host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
-          yoga: (schema) =>
-            createYoga({
-              schema,
-              plugins: [
-                {
-                  onRequest({ request }) {
-                    receivedSubgraphRequest = request;
-                  },
+          yoga: {
+            plugins: [
+              {
+                onRequest({ request }) {
+                  receivedSubgraphRequest = request;
                 },
-              ],
-              landingPage: false,
-              graphqlEndpoint: '/',
-            }),
+              },
+            ],
+            landingPage: false,
+            graphqlEndpoint: '/',
+          },
         },
       ],
       transportEntries: {
