@@ -6,6 +6,7 @@ import {
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
+import { ExecutionArgs } from '@graphql-tools/executor';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import {
@@ -870,11 +871,18 @@ export function useOpenTelemetry(
         };
       },
 
-      onExecute({ state, args }) {
+      onExecute({ state, args, executeFn, setExecuteFn }) {
         // Check for execute span is done in `instrument.execute`
         if (state.forOperation.skipExecuteSpan) {
           return;
         }
+
+        setExecuteFn((args) =>
+          executeFn({
+            ...args,
+            schemaCoordinateInErrors: true,
+          } as ExecutionArgs),
+        );
 
         const ctx = getContext(state);
         setGraphQLExecutionAttributes({
@@ -891,6 +899,7 @@ export function useOpenTelemetry(
             setGraphQLExecutionResultAttributes({
               ctx,
               result,
+              operationCtx: state.forOperation.otel!.root,
               subgraphNames: state.forOperation.subgraphNames,
             });
           },
