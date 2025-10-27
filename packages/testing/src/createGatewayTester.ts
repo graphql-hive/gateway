@@ -11,6 +11,7 @@ import {
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
 import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
+import { isDebug } from '~internal/env';
 import {
   GraphQLFieldResolver,
   GraphQLScalarType,
@@ -72,7 +73,10 @@ export type GatewayTesterConfig<
     } & Omit<GatewayConfigSupergraph<TContext>, 'supergraph'>)
   | ({
       // proxy
-      proxy: GatewayTesterRemoteSchemaConfig;
+      proxy: GatewayTesterRemoteSchemaConfig & {
+        /** Additional headers to be sent to the remote schema on every request. */
+        headers?: Record<string, string>;
+      };
     } & GatewayConfigBase<TContext>);
 // TODO: subgraph mode
 
@@ -99,7 +103,7 @@ export function createGatewayTester<
     // use supergraph
     runtime = createGatewayRuntime({
       maskedErrors: false,
-      logging: false,
+      logging: isDebug(),
       ...config,
     });
   } else if ('subgraphs' in config) {
@@ -127,7 +131,7 @@ export function createGatewayTester<
     };
     runtime = createGatewayRuntime({
       maskedErrors: false,
-      logging: false,
+      logging: isDebug(),
       ...config,
       supergraph:
         typeof config.subgraphs === 'function'
@@ -158,9 +162,9 @@ export function createGatewayTester<
     const remoteSchema = buildRemoteSchema(config.proxy);
     runtime = createGatewayRuntime({
       maskedErrors: false,
-      logging: false,
+      logging: isDebug(),
       ...config,
-      proxy: { endpoint: remoteSchema.url },
+      proxy: { endpoint: remoteSchema.url, headers: config.proxy.headers },
       plugins: (ctx) => [
         useCustomFetch((url, options, context, info) => {
           return remoteSchema.yoga!.fetch(
@@ -181,7 +185,10 @@ export function createGatewayTester<
   const runtimeExecute = buildHTTPExecutor({
     endpoint: 'http://gateway/graphql',
     fetch: runtime.fetch,
-    headers: (execReq) => execReq?.rootValue.headers,
+    headers: (execReq) => ({
+      ...config,
+      ...execReq?.rootValue.headers,
+    }),
   });
 
   return {
@@ -230,7 +237,7 @@ function buildRemoteSchema(
       ? config.yoga?.(schema)
       : createYoga({
           maskedErrors: false,
-          logging: false,
+          logging: isDebug(),
           ...config.yoga,
           schema,
         });

@@ -157,7 +157,6 @@ for (const [name, configure] of Object.entries({
               },
             } satisfies GatewayPlugin,
           ],
-          logging: false,
         });
 
         await expect(

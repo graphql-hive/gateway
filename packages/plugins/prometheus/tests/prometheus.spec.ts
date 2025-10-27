@@ -62,7 +62,6 @@ describe('Prometheus', () => {
           },
         }),
       ],
-      logging: isDebug(),
       maskedErrors: false,
     });
   }

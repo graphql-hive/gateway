@@ -86,7 +86,6 @@ describe('Subscriptions', () => {
     let changeSchema = false;
 
     await using serve = createGatewayTester({
-      logging: isDebug(),
       pollingInterval: 500,
       subgraphs: () => {
         if (changeSchema) {
