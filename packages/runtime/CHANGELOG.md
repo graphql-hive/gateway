@@ -1,5 +1,44 @@
 # @graphql-hive/gateway-runtime
 
+## 2.2.0
+### Minor Changes
+
+
+
+- [#1624](https://github.com/graphql-hive/gateway/pull/1624) [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override for Safer Field Migrations
+  
+  Introduces Progressive Override, allowing you to safely migrate fields between subgraphs using the `@override` directive with a label. Control the rollout using custom logic in the gateway (e.g., percentage, headers) or the built-in percent(x) label for gradual, incremental traffic migration.
+  
+  Detailed documentation can be found [here](https://the-guild.dev/graphql/hive/docs/gateway/other-features/progressive-override).
+
+### Patch Changes
+
+
+
+- [#1605](https://github.com/graphql-hive/gateway/pull/1605) [`19a6cc4`](https://github.com/graphql-hive/gateway/commit/19a6cc45572afdfdae8d6daf6340da489ddd6b0f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.2) (from `^24.7.1`, in `dependencies`)
+
+
+- [#1616](https://github.com/graphql-hive/gateway/pull/1616) [`40139dc`](https://github.com/graphql-hive/gateway/commit/40139dcdc257785acba3126e22451b5688ff7773) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.8.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.8.1) (from `^24.7.2`, in `dependencies`)
+
+
+- [#1617](https://github.com/graphql-hive/gateway/pull/1617) [`d2b3dff`](https://github.com/graphql-hive/gateway/commit/d2b3dff99cc08c4e7a7c551c067e90239671febb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.9.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.9.1) (from `^24.8.1`, in `dependencies`)
+- Updated dependencies [[`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e), [`a54b0c1`](https://github.com/graphql-hive/gateway/commit/a54b0c1777229aaeea295bcd15d4f4d6e4e615f7), [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc), [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f), [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8)]:
+  - @graphql-hive/logger@1.0.7
+  - @graphql-tools/delegate@11.1.0
+  - @graphql-tools/batch-delegate@10.0.2
+  - @graphql-mesh/fusion-runtime@1.3.0
+  - @graphql-tools/federation@4.1.0
+  - @graphql-tools/stitch@10.1.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/transport-common@1.0.7
+  - @graphql-tools/wrap@11.0.2
+
 ## 2.1.9
 ### Patch Changes
 

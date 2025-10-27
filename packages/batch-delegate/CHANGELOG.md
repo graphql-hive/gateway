@@ -1,5 +1,15 @@
 # @graphql-tools/batch-delegate
 
+## 10.0.2
+### Patch Changes
+
+
+
+- [#1556](https://github.com/graphql-hive/gateway/pull/1556) [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc) Thanks [@ardatan](https://github.com/ardatan)! - Correct error paths in case of batch delegation with the same error
+
+- Updated dependencies [[`a54b0c1`](https://github.com/graphql-hive/gateway/commit/a54b0c1777229aaeea295bcd15d4f4d6e4e615f7), [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc), [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f), [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8)]:
+  - @graphql-tools/delegate@11.1.0
+
 ## 10.0.1
 ### Patch Changes
 

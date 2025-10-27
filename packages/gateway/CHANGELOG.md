@@ -1,5 +1,35 @@
 # @graphql-hive/gateway
 
+## 2.1.11
+### Patch Changes
+
+
+
+- [#1618](https://github.com/graphql-hive/gateway/pull/1618) [`c449385`](https://github.com/graphql-hive/gateway/commit/c449385cf7a80efbc0387798ab7a86a12f51d3d9) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-zone@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-jaeger@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-jaeger/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-zipkin@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-b3@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-jaeger@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-metrics@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+- Updated dependencies [[`19a6cc4`](https://github.com/graphql-hive/gateway/commit/19a6cc45572afdfdae8d6daf6340da489ddd6b0f), [`40139dc`](https://github.com/graphql-hive/gateway/commit/40139dcdc257785acba3126e22451b5688ff7773), [`d2b3dff`](https://github.com/graphql-hive/gateway/commit/d2b3dff99cc08c4e7a7c551c067e90239671febb), [`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e), [`19a6cc4`](https://github.com/graphql-hive/gateway/commit/19a6cc45572afdfdae8d6daf6340da489ddd6b0f), [`40139dc`](https://github.com/graphql-hive/gateway/commit/40139dcdc257785acba3126e22451b5688ff7773), [`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e), [`357d931`](https://github.com/graphql-hive/gateway/commit/357d931a715d58e7a70072e325774e650bf27446), [`02d9ec4`](https://github.com/graphql-hive/gateway/commit/02d9ec4f760b54e40dc1791685d047440de59f69), [`c449385`](https://github.com/graphql-hive/gateway/commit/c449385cf7a80efbc0387798ab7a86a12f51d3d9), [`606d649`](https://github.com/graphql-hive/gateway/commit/606d649a3a7e5eb0091b0125bf6cb83045f03e2d), [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f)]:
+  - @graphql-hive/gateway-runtime@2.2.0
+  - @graphql-hive/logger@1.0.7
+  - @graphql-hive/plugin-aws-sigv4@2.0.11
+  - @graphql-hive/plugin-opentelemetry@1.0.13
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/plugin-prometheus@2.0.14
+  - @graphql-mesh/transport-http@1.0.7
+  - @graphql-mesh/transport-http-callback@1.0.7
+  - @graphql-mesh/transport-ws@2.0.7
+
 ## 2.1.10
 ### Patch Changes
 
