@@ -1,3 +1,4 @@
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import useHttpCache from '@graphql-mesh/plugin-http-cache';
@@ -12,19 +13,20 @@ describe('usePropagateHeaders', () => {
     const requestTrackerPlugin = {
       onParams: vi.fn((() => {}) as Plugin['onParams']),
     };
-    const upstream = createYoga({
-      schema: createSchema({
-        typeDefs: /* GraphQL */ `
-          type Query {
-            hello: String
-          }
-        `,
-        resolvers: {
-          Query: {
-            hello: () => 'world',
-          },
+    const upstreamSchema = createSchema({
+      typeDefs: /* GraphQL */ `
+        type Query {
+          hello: String
+        }
+      `,
+      resolvers: {
+        Query: {
+          hello: () => 'world',
         },
-      }),
+      },
+    });
+    const upstream = createYoga({
+      schema: upstreamSchema,
       plugins: [requestTrackerPlugin],
       logging: isDebug(),
     });
@@ -32,9 +34,13 @@ describe('usePropagateHeaders', () => {
       requestTrackerPlugin.onParams.mockClear();
     });
     it('forwards specified headers', async () => {
-      await using gateway = createGatewayRuntime({
+      await using gateway = createGatewayTester({
         proxy: {
-          endpoint: 'http://localhost:4001/graphql',
+          name: 'upstream',
+          schema: upstreamSchema,
+          yoga: {
+            plugins: [requestTrackerPlugin],
+          },
         },
         propagateHeaders: {
           fromClientToSubgraphs({ request }) {
@@ -44,12 +50,6 @@ describe('usePropagateHeaders', () => {
             };
           },
         },
-        plugins: () => [
-          useCustomFetch(
-            // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-            upstream.fetch,
-          ),
-        ],
         logging: isDebug(),
       });
       const response = await gateway.fetch('http://localhost:4000/graphql', {
