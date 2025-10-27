@@ -7,7 +7,6 @@ import {
   type DisposableExecutor,
 } from '@graphql-mesh/transport-common';
 import { makeDisposable } from '@graphql-mesh/utils';
-import { normalizedExecutor } from '@graphql-tools/executor';
 import {
   createDeferred,
   fakePromise,
@@ -96,12 +95,11 @@ describe('Polling', () => {
 
     function getFetchedTimeFromResolvers() {
       return handleMaybePromise(
-        () => manager.getUnifiedGraph(),
-        (schema) =>
+        () => manager.getExecutor(),
+        (executor) =>
           handleMaybePromise(
             () =>
-              normalizedExecutor({
-                schema,
+              executor!({
                 document: parse(/* GraphQL */ `
                   query {
                     time
@@ -226,9 +224,8 @@ describe('Polling', () => {
       return lastFetchedDate;
     }
     async function getFetchedTimeFromResolvers() {
-      const schema = await manager.getUnifiedGraph();
-      const result = await normalizedExecutor({
-        schema,
+      const executor = await manager.getExecutor();
+      const result = await executor!({
         document: parse(/* GraphQL */ `
           query {
             time
