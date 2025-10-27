@@ -420,7 +420,7 @@ function createResource(
  */
 function getStackTrace(): string {
   // slice(3) to remove the error message + getStackTrace() call + calling function call
-  return new Error().stack!.split('\n').slice(3).join('\n').trim();
+  return (new Error().stack ?? '').split('\n').slice(3).join('\n').trim();
 }
 
 /**
