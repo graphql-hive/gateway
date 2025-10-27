@@ -1,16 +1,10 @@
-// https://github.com/unjs/std-env/blob/ab15595debec9e9115a9c1d31bc7597a8e71dbfd/src/runtimes.ts
-
 const allSignalRegistry = new FinalizationRegistry<() => void>((cb) => cb());
 
 const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
 
 /**
- * Memory safe ponyfill of `AbortSignal.any`. In Node environments, the native
- * `AbortSignal.any` seems to be leaky and can lead to subtle memory leaks over
- * a larger period of time.
- *
- * This ponyfill is a custom implementation that makes sure AbortSignals get properly
- * GC-ed as well as aborted.
+ * Memory safe AbortSignal merger.
+ * The resulting signal is aborted once all signals have aborted or GCed.
  */
 export function abortSignalAll(
   signals: AbortSignal[],
