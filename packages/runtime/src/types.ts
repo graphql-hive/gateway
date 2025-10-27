@@ -435,7 +435,7 @@ export interface GatewayHivePersistedDocumentsOptions {
     | ((request: Request) => MaybePromise<boolean>);
 }
 
-interface GatewayConfigBase<TContext extends Record<string, any>> {
+export interface GatewayConfigBase<TContext extends Record<string, any>> {
   /** Usage reporting options. */
   reporting?: GatewayHiveReportingOptions | GatewayGraphOSReportingOptions;
   /** Persisted documents options. */

@@ -1,6 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import {
   createGatewayRuntime,
+  GatewayConfigBase,
   GatewayConfigSchemaBase,
   GatewayRuntime,
   UnifiedGraphConfig,
@@ -39,31 +40,32 @@ export interface GraphQLResolverMap<TContext = {}> {
       };
 }
 
-export interface GatewayTesterSubgraphConfig {
-  /** The name of the subgraph. */
+export interface GatewayTesterRemoteSchemaConfig {
+  /** The name of the remote schema / subgraph / proxied server. */
   name: string;
-  /** The subgraph schema. */
+  /** The remote schema. */
   schema: GraphQLSchema | { typeDefs: string; resolvers?: GraphQLResolverMap };
-  /** The hostname of the subgraph. URL will become `http://${host}${yoga.graphqlEndpoint}`. */
+  /** The hostname of the remote schema. URL will become `http://${host}${yoga.graphqlEndpoint}`. */
   host?: string;
-  /** An optional GraphQL Yoga server instance that runs the {@link schema built subgraph}. */
+  /** An optional GraphQL Yoga server instance that runs the {@link schema built schema}. */
   yoga?: (schema: GraphQLSchema) => YogaServerInstance<any, any>;
 }
 
 export type GatewayTesterConfig<
   TContext extends Record<string, any> = Record<string, any>,
-> = GatewayConfigSchemaBase<TContext> &
-  (
-    | {
-        // gateway
-        supergraph: UnifiedGraphConfig;
-      }
-    | {
-        // gateway (composes subgraphs)
-        subgraphs: GatewayTesterSubgraphConfig[];
-      }
-  );
-// TODO: proxy mode
+> =
+  | ({
+      // gateway
+      supergraph: UnifiedGraphConfig;
+    } & GatewayConfigSchemaBase<TContext>)
+  | ({
+      // gateway (composes subgraphs)
+      subgraphs: GatewayTesterRemoteSchemaConfig[];
+    } & GatewayConfigSchemaBase<TContext>)
+  | ({
+      // proxy
+      proxy: GatewayTesterRemoteSchemaConfig;
+    } & GatewayConfigBase<TContext>);
 // TODO: subgraph mode
 
 export interface GatewayTester<
@@ -86,47 +88,27 @@ export function createGatewayTester<
 >(config: GatewayTesterConfig<TContext>): GatewayTester<TContext> {
   let runtime: GatewayRuntime<TContext>;
   if ('supergraph' in config) {
-    runtime = createGatewayRuntime({ maskedErrors: false, ...config });
-  } else {
-    // compose subgraphs and create runtime
+    // use supergraph
+    runtime = createGatewayRuntime({
+      maskedErrors: false,
+      logging: false,
+      ...config,
+    });
+  } else if ('subgraphs' in config) {
+    // compose subgraphs
     const subgraphs = config.subgraphs.reduce(
       (acc, subgraph) => {
-        const schema =
-          'typeDefs' in subgraph.schema
-            ? buildSubgraphSchema([
-                {
-                  ...subgraph.schema,
-                  typeDefs: parse(subgraph.schema.typeDefs),
-                },
-              ])
-            : subgraph.schema;
-        const yoga =
-          subgraph.yoga?.(schema) ||
-          createYoga({ schema, maskedErrors: false, logging: false });
-        const host = subgraph.host || `subgraph-${subgraph.name}`;
-        const url = `http://${host}${yoga.graphqlEndpoint}`;
+        const remoteSchema = buildRemoteSchema(subgraph);
         return {
           ...acc,
-          [url]: {
-            name: subgraph.name,
-            url,
-            schema,
-            yoga,
-          },
+          [remoteSchema.url]: remoteSchema,
         };
       },
-      {} as Record<
-        string,
-        {
-          name: string;
-          url: string;
-          schema: GraphQLSchema;
-          yoga: YogaServerInstance<any, any>;
-        }
-      >,
+      {} as Record<string, GatewayTesterRemoteSchema>,
     );
     runtime = createGatewayRuntime({
       maskedErrors: false,
+      logging: false,
       ...config,
       supergraph: getUnifiedGraphGracefully(Object.values(subgraphs)),
       plugins: (ctx) => [
@@ -146,6 +128,29 @@ export function createGatewayTester<
         ...(config.plugins?.(ctx) || []),
       ],
     });
+  } else if ('proxy' in config) {
+    // build remote schema and proxy
+    const remoteSchema = buildRemoteSchema(config.proxy);
+    runtime = createGatewayRuntime({
+      maskedErrors: false,
+      logging: false,
+      ...config,
+      proxy: { endpoint: remoteSchema.url },
+      plugins: (ctx) => [
+        useCustomFetch((url, options, context, info) => {
+          return remoteSchema.yoga!.fetch(
+            // @ts-expect-error TODO: url can be a string, not only an instance of URL
+            url,
+            options,
+            context,
+            info,
+          );
+        }),
+        ...(config.plugins?.(ctx) || []),
+      ],
+    });
+  } else {
+    throw new Error('Unsupported gateway tester configuration');
   }
 
   const runtimeExecute = buildHTTPExecutor({
@@ -173,5 +178,37 @@ export function createGatewayTester<
     async dispose() {
       await runtime.dispose();
     },
+  };
+}
+
+interface GatewayTesterRemoteSchema {
+  name: string;
+  url: string;
+  schema: GraphQLSchema;
+  yoga: YogaServerInstance<any, any>;
+}
+
+function buildRemoteSchema(
+  config: GatewayTesterRemoteSchemaConfig,
+): GatewayTesterRemoteSchema {
+  const schema =
+    'typeDefs' in config.schema
+      ? buildSubgraphSchema([
+          {
+            ...config.schema,
+            typeDefs: parse(config.schema.typeDefs),
+          },
+        ])
+      : config.schema;
+  const yoga =
+    config.yoga?.(schema) ||
+    createYoga({ schema, maskedErrors: false, logging: false });
+  const host = config.host || `config-${config.name}`;
+  const url = `http://${host}${yoga.graphqlEndpoint}`;
+  return {
+    name: config.name,
+    url,
+    schema,
+    yoga,
   };
 }
