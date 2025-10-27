@@ -3,6 +3,7 @@ import {
   createGatewayRuntime,
   GatewayConfigBase,
   GatewayConfigSupergraph,
+  GatewayPlugin,
   GatewayRuntime,
   UnifiedGraphConfig,
   useCustomFetch,
@@ -114,10 +115,10 @@ export function createGatewayTester<
           const remoteSchema = buildRemoteSchema(subgraph);
           return {
             ...acc,
-            [remoteSchema.url]: remoteSchema,
+            [remoteSchema.name]: remoteSchema,
           };
         },
-        {} as Record<string, GatewayTesterRemoteSchema>,
+        {} as { [subgraphName: string]: GatewayTesterRemoteSchema },
       );
       return Object.values(subgraphsRef.ref);
     }
@@ -133,19 +134,22 @@ export function createGatewayTester<
           ? () => getUnifiedGraphGracefully(buildSubgraphs())
           : getUnifiedGraphGracefully(buildSubgraphs()),
       plugins: (ctx) => [
-        useCustomFetch((url, options, context, info) => {
-          const subgraph = subgraphsRef.ref?.[url];
-          if (!subgraph) {
-            throw new Error(`Subgraph for URL "${url}" not found or not ready`);
-          }
-          return subgraph.yoga!.fetch(
-            // @ts-expect-error TODO: url can be a string, not only an instance of URL
-            url,
-            options,
-            context,
-            info,
-          );
-        }),
+        {
+          onFetch({ executionRequest, setFetchFn }) {
+            const subgraphName = executionRequest?.subgraphName;
+            if (!subgraphName) {
+              return;
+            }
+            if (!subgraphsRef.ref) {
+              throw new Error('Subgraphs are not built yet');
+            }
+            const subgraph = subgraphsRef.ref[subgraphName];
+            if (!subgraph) {
+              throw new Error(`Subgraph "${subgraphName}" not found`);
+            }
+            setFetchFn(subgraph.yoga.fetch);
+          },
+        } as GatewayPlugin,
         ...(config.plugins?.(ctx) || []),
       ],
     });

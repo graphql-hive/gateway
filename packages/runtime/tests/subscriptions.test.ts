@@ -1,12 +1,10 @@
-import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { type MaybePromise } from '@graphql-tools/utils';
 import { isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createClient as createSSEClient } from 'graphql-sse';
-import { createSchema, createYoga, Repeater } from 'graphql-yoga';
+import { createSchema, Repeater } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
-import { createGatewayRuntime } from '../src/createGatewayRuntime';
-import { useCustomFetch } from '../src/plugins/useCustomFetch';
 
 describe('Subscriptions', () => {
   const leftovers: (() => MaybePromise<void>)[] = [];
@@ -35,25 +33,14 @@ describe('Subscriptions', () => {
       },
     },
   });
-  const upstream = createYoga({ schema: upstreamSchema });
 
   it('should terminate subscriptions gracefully on shutdown', async () => {
-    await using serve = createGatewayRuntime({
-      logging: false,
-      supergraph() {
-        return getUnifiedGraphGracefully([
-          {
-            name: 'upstream',
-            schema: upstreamSchema,
-            url: 'http://upstream/graphql',
-          },
-        ]);
-      },
-      plugins: () => [
-        useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
-        ),
+    await using serve = createGatewayTester({
+      subgraphs: [
+        {
+          name: 'upstream',
+          schema: upstreamSchema,
+        },
       ],
     });
 
@@ -98,32 +85,32 @@ describe('Subscriptions', () => {
   it('should terminate subscriptions gracefully on schema update', async () => {
     let changeSchema = false;
 
-    await using serve = createGatewayRuntime({
+    await using serve = createGatewayTester({
       logging: isDebug(),
       pollingInterval: 500,
-      async supergraph() {
+      subgraphs: () => {
         if (changeSchema) {
-          return /* GraphQL */ `
-            type Query {
-              foo: String!
-            }
-          `;
+          return [
+            {
+              name: 'upstream',
+              schema: {
+                typeDefs: /* GraphQL */ `
+                  type Query {
+                    foo: String!
+                  }
+                `,
+              },
+            },
+          ];
         }
         changeSchema = true;
-        return getUnifiedGraphGracefully([
+        return [
           {
             name: 'upstream',
             schema: upstreamSchema,
-            url: 'http://upstream/graphql',
           },
-        ]);
+        ];
       },
-      plugins: () => [
-        useCustomFetch(
-          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
-          upstream.fetch,
-        ),
-      ],
     });
 
     const sse = createSSEClient({
@@ -141,20 +128,15 @@ describe('Subscriptions', () => {
 
     const msgs: unknown[] = [];
     globalThis.setTimeout(async () => {
-      const res = await serve.fetch('http://mesh/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      await expect(
+        serve.execute({
           query: /* GraphQL */ `
             query {
               __typename
             }
           `,
         }),
-      });
-      expect(await res.json()).toMatchObject({
+      ).resolves.toMatchObject({
         data: {
           __typename: 'Query',
         },
