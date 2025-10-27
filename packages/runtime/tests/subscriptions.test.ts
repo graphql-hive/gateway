@@ -1,6 +1,5 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { type MaybePromise } from '@graphql-tools/utils';
-import { isDebug } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createClient as createSSEClient } from 'graphql-sse';
 import { createSchema, Repeater } from 'graphql-yoga';

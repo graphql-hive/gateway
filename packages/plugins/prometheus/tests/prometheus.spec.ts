@@ -3,7 +3,6 @@ import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
-import { isDebug } from '@internal/testing';
 import { createSchema } from 'graphql-yoga';
 import { Registry, register as registry } from 'prom-client';
 import { beforeEach, describe, expect, it } from 'vitest';
