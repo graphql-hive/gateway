@@ -9,11 +9,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { buildHTTPExecutor } from '@graphql-tools/executor-http';
-import type {
-  ExecutionResult,
-  MaybeAsyncIterable,
-  MaybePromise,
-} from '@graphql-tools/utils';
+import type { ExecutionResult, MaybeAsyncIterable } from '@graphql-tools/utils';
 import {
   GraphQLFieldResolver,
   GraphQLScalarType,
@@ -69,7 +65,9 @@ export type GatewayTesterConfig<
     } & GatewayConfigSchemaBase<TContext>)
   | ({
       // gateway (composes subgraphs)
-      subgraphs: GatewayTesterRemoteSchemaConfig[];
+      subgraphs:
+        | GatewayTesterRemoteSchemaConfig[]
+        | (() => GatewayTesterRemoteSchemaConfig[]);
     } & GatewayConfigSchemaBase<TContext>)
   | ({
       // proxy
@@ -105,26 +103,40 @@ export function createGatewayTester<
     });
   } else if ('subgraphs' in config) {
     // compose subgraphs
-    const subgraphs = config.subgraphs.reduce(
-      (acc, subgraph) => {
-        const remoteSchema = buildRemoteSchema(subgraph);
-        return {
-          ...acc,
-          [remoteSchema.url]: remoteSchema,
-        };
-      },
-      {} as Record<string, GatewayTesterRemoteSchema>,
-    );
+    const subgraphsConfig = config.subgraphs;
+    function buildSubgraphs() {
+      subgraphsRef.ref = (
+        typeof subgraphsConfig === 'function'
+          ? subgraphsConfig()
+          : subgraphsConfig
+      ).reduce(
+        (acc, subgraph) => {
+          const remoteSchema = buildRemoteSchema(subgraph);
+          return {
+            ...acc,
+            [remoteSchema.url]: remoteSchema,
+          };
+        },
+        {} as Record<string, GatewayTesterRemoteSchema>,
+      );
+      return Object.values(subgraphsRef.ref);
+    }
+    const subgraphsRef = {
+      ref: null as Record<string, GatewayTesterRemoteSchema> | null,
+    };
     runtime = createGatewayRuntime({
       maskedErrors: false,
       logging: false,
       ...config,
-      supergraph: getUnifiedGraphGracefully(Object.values(subgraphs)),
+      supergraph:
+        typeof config.subgraphs === 'function'
+          ? () => getUnifiedGraphGracefully(buildSubgraphs())
+          : getUnifiedGraphGracefully(buildSubgraphs()),
       plugins: (ctx) => [
         useCustomFetch((url, options, context, info) => {
-          const subgraph = subgraphs[url];
+          const subgraph = subgraphsRef.ref?.[url];
           if (!subgraph) {
-            throw new Error(`Subgraph for URL "${url}" not found`);
+            throw new Error(`Subgraph for URL "${url}" not found or not ready`);
           }
           return subgraph.yoga!.fetch(
             // @ts-expect-error TODO: url can be a string, not only an instance of URL
