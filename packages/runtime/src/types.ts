@@ -238,19 +238,19 @@ export interface GatewayConfigSupergraph<
   pollingInterval?: number;
 
   /**
-   * Handle custom override labels in case of progressive overrides are used.
+   * Enable or disable progressive override for labels.
    *
-   * For example;
+   * @example Using a custom header to enable progressive override for a given label.
    * ```ts
    * import { defineConfig } from '@graphql-hive/gateway';
    *
    * export const gatewayConfig = defineConfig({
-   *  handleProgressiveOverride(label, context) {
-   *  if (label === "use-beta" && context.request.headers.has('use-beta')) {
-   *    return true;
-   *  }
-   *  return false;
-   * }
+   *   progressiveOverride(label, context) {
+   *     if (label === "use-beta" && context.request.headers.has('use-beta')) {
+   *       return true;
+   *     }
+   *     return false;
+   *   }
    * });
    */
   progressiveOverride?: ProgressiveOverrideHandler;
