@@ -3,7 +3,10 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
+import {
+  composeLocalSchemasWithApollo,
+  usingHiveRouterQueryPlanner,
+} from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
@@ -547,9 +550,11 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      data: {
-        book: null,
-      },
+      ...(usingHiveRouterQueryPlanner()
+        ? {
+            // data field completely omitted on errors from hive router qp
+          }
+        : { data: { book: null } }),
       errors: [
         {
           message: 'Operation estimated cost 4 exceeded configured maximum 3',
@@ -560,13 +565,19 @@ describe('Demand Control', () => {
               max: 3,
             },
           },
-          locations: [
-            {
-              line: 3,
-              column: 9,
-            },
-          ],
-          path: ['book'],
+          ...(usingHiveRouterQueryPlanner()
+            ? {
+                // path and locations not present in hive router qp
+              }
+            : {
+                locations: [
+                  {
+                    line: 3,
+                    column: 9,
+                  },
+                ],
+                path: ['book'],
+              }),
         },
       ],
     });
@@ -734,9 +745,15 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      data: {
-        items: null,
-      },
+      ...(usingHiveRouterQueryPlanner()
+        ? {
+            // data field completely omitted on errors from hive router qp
+          }
+        : {
+            data: {
+              items: null,
+            },
+          }),
       errors: [
         {
           message:
@@ -744,13 +761,19 @@ describe('Demand Control', () => {
           extensions: {
             code: 'COST_QUERY_PARSE_FAILURE',
           },
-          locations: [
-            {
-              line: 3,
-              column: 9,
-            },
-          ],
-          path: ['items'],
+          ...(usingHiveRouterQueryPlanner()
+            ? {
+                // path and locations not present in hive router qp
+              }
+            : {
+                locations: [
+                  {
+                    line: 3,
+                    column: 9,
+                  },
+                ],
+                path: ['items'],
+              }),
         },
       ],
       extensions: {
@@ -1138,46 +1161,69 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      data: {
-        foo: null,
-        bar: null,
-      },
-      errors: [
-        {
-          extensions: {
-            code: 'COST_ESTIMATED_TOO_EXPENSIVE',
-            cost: {
-              estimated: 2,
-              max: 1,
+      ...(usingHiveRouterQueryPlanner()
+        ? {
+            // data field completely omitted on errors from hive router qp
+          }
+        : {
+            data: {
+              foo: null,
+              bar: null,
             },
-          },
-          locations: [
+          }),
+      errors: usingHiveRouterQueryPlanner()
+        ? [
+            // only one error because there are no locations or paths in hive router qp
             {
-              column: 9,
-              line: 3,
+              extensions: {
+                code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                cost: {
+                  estimated: 2,
+                  max: 1,
+                },
+              },
+              message:
+                'Operation estimated cost 2 exceeded configured maximum 1',
+            },
+          ]
+        : [
+            {
+              extensions: {
+                code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                cost: {
+                  estimated: 2,
+                  max: 1,
+                },
+              },
+              locations: [
+                {
+                  column: 9,
+                  line: 3,
+                },
+              ],
+              message:
+                'Operation estimated cost 2 exceeded configured maximum 1',
+              path: ['foo'],
+            },
+            {
+              extensions: {
+                code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                cost: {
+                  estimated: 2,
+                  max: 1,
+                },
+              },
+              locations: [
+                {
+                  column: 9,
+                  line: 6,
+                },
+              ],
+              message:
+                'Operation estimated cost 2 exceeded configured maximum 1',
+              path: ['bar'],
             },
           ],
-          message: 'Operation estimated cost 2 exceeded configured maximum 1',
-          path: ['foo'],
-        },
-        {
-          extensions: {
-            code: 'COST_ESTIMATED_TOO_EXPENSIVE',
-            cost: {
-              estimated: 2,
-              max: 1,
-            },
-          },
-          locations: [
-            {
-              column: 9,
-              line: 6,
-            },
-          ],
-          message: 'Operation estimated cost 2 exceeded configured maximum 1',
-          path: ['bar'],
-        },
-      ],
       extensions: {
         cost: {
           estimated: 2,
