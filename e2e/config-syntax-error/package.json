@@ -2,7 +2,7 @@
   "name": "@e2e/config-syntax-error",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.0",
+    "@graphql-mesh/compose-cli": "^1.5.1",
     "@graphql-tools/utils": "^10.9.1",
     "graphql": "^16.9.0",
     "tslib": "^2.8.1"
