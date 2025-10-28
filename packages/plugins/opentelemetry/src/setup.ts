@@ -36,6 +36,7 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { getEnvBool, getEnvStr } from '~internal/env';
+import { LogLevel } from 'rollup';
 import {
   HiveTracingSpanProcessor,
   HiveTracingSpanProcessorOptions,
@@ -144,7 +145,7 @@ type OpentelemetrySetupOptions = TracingOptions &
      * The Logger to be used by this utility.
      * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
      */
-    log?: Logger;
+    log?: Logger | false | LogLevel;
     /**
      * Configure Opentelemetry `diag` API to use Gateway's logger.
      *
@@ -157,7 +158,10 @@ type OpentelemetrySetupOptions = TracingOptions &
   };
 
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  const log = options.log || new Logger();
+  const log =
+    !options.log || typeof options.log === 'string'
+      ? new Logger({ level: options.log })
+      : options.log;
 
   if (getEnvBool('OTEL_SDK_DISABLED')) {
     log.warn(
@@ -303,10 +307,14 @@ export type HiveTracingOptions = { target?: string } & (
 export function hiveTracingSetup(
   config: HiveTracingOptions & {
     contextManager: ContextManager | null;
-    log?: Logger;
+    log?: Logger | false | LogLevel;
   },
 ) {
-  const log = config.log || new Logger();
+  const log =
+    !config.log || typeof config.log === 'string'
+      ? new Logger({ level: config.log })
+      : config.log;
+
   config.target ??= getEnvStr('HIVE_TARGET');
 
   if (!config.target) {
