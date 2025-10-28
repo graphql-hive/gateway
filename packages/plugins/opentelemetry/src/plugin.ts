@@ -37,6 +37,7 @@ import {
   createSchemaLoadingSpan,
   createSubgraphExecuteSpan,
   createUpstreamHttpFetchSpan,
+  isGraphQLError,
   OperationHashingFn,
   recordCacheError,
   recordCacheEvent,
@@ -466,7 +467,9 @@ export function useOpenTelemetry(
           try {
             wrapped();
           } catch (err) {
-            registerException(forOperation.otel!.current, err);
+            if (err instanceof Error && !isGraphQLError(err)) {
+              registerException(forOperation.otel!.current, err);
+            }
             throw err;
           } finally {
             trace.getSpan(forOperation.otel!.current)?.end();
@@ -792,6 +795,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLParseAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             operationName: gqlCtx.params.operationName,
             query: gqlCtx.params.query?.trim(),
             result,
@@ -817,6 +821,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLValidateAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             result,
             document: params.documentAST,
             operationName: gqlCtx.params.operationName,
@@ -824,7 +829,7 @@ export function useOpenTelemetry(
         };
       },
 
-      onExecute({ state, args, executeFn, setExecuteFn }) {
+      onExecute({ state, args }) {
         if (!isParentEnabled(state)) {
           return;
         }
@@ -833,12 +838,7 @@ export function useOpenTelemetry(
           return;
         }
 
-        setExecuteFn((args) =>
-          executeFn({
-            ...args,
-            schemaCoordinateInErrors: true,
-          } as ExecutionArgs),
-        );
+        (args as ExecutionArgs).schemaCoordinateInErrors = true;
 
         const ctx = getContext(state);
         setGraphQLExecutionAttributes({
