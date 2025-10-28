@@ -12,6 +12,7 @@ import {
   Attributes,
   context,
   ROOT_CONTEXT,
+  Span,
   SpanKind,
   SpanStatusCode,
   trace,
@@ -231,6 +232,7 @@ export function createGraphQLParseSpan(input: {
 
 export function setGraphQLParseAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   query?: string;
   operationName?: string;
   result: unknown;
@@ -245,7 +247,28 @@ export function setGraphQLParseAttributes(input: {
   }
 
   if (input.result instanceof Error) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
+    if (isGraphQLError(input.result)) {
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: 'GraphQL Parse Error',
+      });
+      const operationSpan = trace.getSpan(input.operationCtx);
+      if (operationSpan) {
+        recordGraphqlErrors(
+          operationSpan,
+          [input.result as GraphQLError],
+          'GraphQL Parse Error',
+        );
+      }
+    } else {
+      // It is a JS Exception
+      span.recordException(input.result);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: input.result.message,
+      });
+    }
   } else {
     // result should be a document
     const document = input.result as DocumentNode;
@@ -276,6 +299,7 @@ export function createGraphQLValidateSpan(input: {
 
 export function setGraphQLValidateAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   document: DocumentNode;
   operationName: string | undefined | null;
   result: any[] | readonly Error[];
@@ -295,28 +319,45 @@ export function setGraphQLValidateAttributes(input: {
     }
   }
 
-  const errors = Array.isArray(result) ? result : [];
+  const errors: (Error | GraphQLError)[] = Array.isArray(result) ? result : [];
 
   if (result instanceof Error) {
     errors.push(result);
   }
 
-  if (errors.length > 0) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: result.map((e) => e.message).join(', '),
-    });
-
-    const codes = [];
-    for (const error of result) {
-      if (error.extensions?.code) {
-        codes.push(`${error.extensions.code}`);
-      }
-      span.recordException(error);
-    }
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+  if (errors.length === 0) {
+    return;
   }
+
+  const graphqlErrors: GraphQLError[] = [];
+  const exceptions: Error[] = [];
+  for (const error of errors) {
+    (isGraphQLError(error) ? graphqlErrors : exceptions).push(error);
+  }
+
+  if (graphqlErrors.length > 0) {
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
+
+    const operationSpan = trace.getSpan(input.operationCtx);
+    if (operationSpan) {
+      recordGraphqlErrors(
+        operationSpan,
+        graphqlErrors,
+        'GraphQL Validation Error',
+      );
+    }
+  }
+
+  if (exceptions.length > 0) {
+    for (const exception of exceptions) {
+      span.recordException(exception);
+    }
+  }
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: 'GraphQL Validation Error',
+  });
 }
 
 export function createGraphQLExecuteSpan(input: {
@@ -391,53 +432,21 @@ export function setGraphQLExecutionResultAttributes(input: {
   const operationSpan = trace.getSpan(operationCtx);
 
   if (
-    operationSpan &&
     !isAsyncIterable(result) && // FIXME: Handle async iterable too
     result.errors &&
     result.errors.length > 0
   ) {
-    operationSpan.setAttribute(
-      SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
-      result.errors.length,
-    );
-    operationSpan.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: result.errors.map((e) => e.message).join(', '),
-    });
-
     span?.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
     span?.setStatus({
       code: SpanStatusCode.ERROR,
-      message: result.errors.map((e) => e.message).join(', '),
+      message: 'GraphQL Execution Error',
     });
 
-    const codes: string[] = [];
-    const schemaCoordinates: string[] = [];
-    for (const error of result.errors) {
-      const attributes = attributesFromGraphqlError(error);
-      if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE]) {
-        codes.push(attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] as string);
-      }
-      if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE]) {
-        schemaCoordinates.push(
-          attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] as string,
-        );
-      }
-      operationSpan.addEvent('graphql.error', attributes);
-    }
-
-    if (codes.length > 0) {
-      operationSpan.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
-      span?.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
-    }
-    if (schemaCoordinates.length > 0) {
-      operationSpan.setAttribute(
-        SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
-        schemaCoordinates,
-      );
-      span?.setAttribute(
-        SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
-        schemaCoordinates,
+    if (operationSpan) {
+      recordGraphqlErrors(
+        operationSpan,
+        result.errors,
+        'GraphQL Execution Error',
       );
     }
   }
@@ -649,6 +658,46 @@ export const getOperationFromDocument = (
   return operation;
 };
 
+function recordGraphqlErrors(
+  span: Span,
+  errors: readonly GraphQLError[],
+  message?: string,
+): void {
+  const codes: string[] = [];
+  const schemaCoordinates: string[] = [];
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: message ?? 'GraphQL Error',
+  });
+  span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, errors.length);
+
+  for (const error of errors) {
+    const attributes = attributesFromGraphqlError(error);
+    if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE]) {
+      codes.push(attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] as string);
+    }
+    if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE]) {
+      schemaCoordinates.push(
+        attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] as string,
+      );
+    }
+
+    span.addEvent('graphql.error', attributes);
+  }
+
+  if (codes.length > 0) {
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+  }
+
+  if (schemaCoordinates.length > 0) {
+    span.setAttribute(
+      SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
+      schemaCoordinates,
+    );
+  }
+}
+
 function attributesFromGraphqlError(error: GraphQLError): Attributes {
   const attributes: Attributes = {
     [SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE]: error.message,
@@ -688,4 +737,10 @@ function attributesFromGraphqlError(error: GraphQLError): Attributes {
   }
 
   return attributes;
+}
+
+export function isGraphQLError(error: Error): error is GraphQLError {
+  // It is probably a GraphQLError if there is no name.
+  // We can't use instanceof in case of multiple `graphql` deps.
+  return !error.name || error.name === 'GraphQLError';
 }

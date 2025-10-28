@@ -26,10 +26,10 @@ export const SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH =
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT = 'hive.graphql.error.count';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_CODES = 'hive.graphql.error.codes';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES =
-  'hive.graphql.error.schema-coordinates';
+  'hive.graphql.error.coordinates';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_CODE = 'hive.graphql.error.code';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE =
-  'hive.graphql.error.schema-coordinate';
+  'hive.graphql.error.coordinate';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_PATH = 'hive.graphql.error.path';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE = 'hive.graphql.error.message';
 export const SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS =
