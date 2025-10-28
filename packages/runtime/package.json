@@ -86,7 +86,7 @@
     "@apollo/subgraph": "^2.11.3",
     "@graphql-mesh/fusion-composition": "^0.8.17",
     "@graphql-mesh/transport-rest": "^0.9.14",
-    "@omnigraph/openapi": "^0.109.20",
+    "@omnigraph/openapi": "^0.109.21",
     "@types/html-minifier-terser": "^7.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
