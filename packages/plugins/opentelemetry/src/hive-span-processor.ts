@@ -9,11 +9,7 @@ import {
 } from '@opentelemetry/sdk-trace-base';
 import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
 import { SEMATTRS_HTTP_METHOD } from '@opentelemetry/semantic-conventions';
-import {
-  SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-  SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
-  SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
-} from './attributes';
+import { SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES } from './attributes';
 
 export type HiveTracingSpanProcessorOptions =
   | {
