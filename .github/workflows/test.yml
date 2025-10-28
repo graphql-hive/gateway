@@ -19,12 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        hive-router-query-planner: [true, false]
         node-version:
           - 20
           - 22
           - 24
-    name: Unit / Node v${{matrix.node-version}} / ${{ matrix.hive-router-query-planner  && 'Hive Router Query Planner' || 'Stitching Executor'  }}
+    name: Unit / Node v${{matrix.node-version}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,17 +33,15 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
       - name: Test
+        run: yarn test
+      - name: "[EXPERIMENTAL] Test with Hive Router Query Planner"
         env:
-          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: ${{ matrix.hive-router-query-planner }}
+          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1
         run: yarn test
 
   unit-bun:
-    name: Unit / Bun / ${{ matrix.hive-router-query-planner  && 'Hive Router Query Planner' || 'Stitching Executor'  }}
+    name: Unit / Bun
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        hive-router-query-planner: [true, false]
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
@@ -54,8 +51,14 @@ jobs:
           node-version-file: .node-version
       - name: Test
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: yarn test:bun
+      - name: "[EXPERIMENTAL] Test with Hive Router Query Planner"
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
-          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: ${{ matrix.hive-router-query-planner }}
+          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -65,12 +68,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        hive-router-query-planner: [true, false]
         node-version:
           - 20
           - 22
           - 24
-    name: Leaks / Node v${{matrix.node-version}} / ${{ matrix.hive-router-query-planner  && 'Hive Router Query Planner' || 'Stitching Executor'  }}
+    name: Leaks / Node v${{matrix.node-version}}
     needs: [unit] # leak tests run unit tests but check for leaks; if unit tests fail, leaks will fail too - avoid confusion by running them in series
     runs-on: ubuntu-latest
     steps:
@@ -82,8 +84,14 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Run Tests
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: yarn test:leaks
+      - name: "[EXPERIMENTAL] Run Tests with Hive Router Query Planner"
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
-          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: ${{ matrix.hive-router-query-planner }}
+          __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1
         with:
           timeout_minutes: 10
           max_attempts: 3
