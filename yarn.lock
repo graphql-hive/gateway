@@ -4505,6 +4505,7 @@ __metadata:
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
+    "@graphql-tools/executor": "npm:^1.4.9"
     "@graphql-tools/utils": "npm:^10.10.3"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/api-logs": "npm:^0.208.0"
