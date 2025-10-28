@@ -69,7 +69,7 @@ describe.skipIf(
     expect(() => signal!.throwIfAborted()).toThrow('Test');
   });
 
-  it('should GC all signals after abort', async () => {
+  it.skipIf(!!global.Bun)('should GC all signals after abort', async () => {
     let ctrl1: AbortController | undefined = new AbortController();
     const ctrl1Detector = new LeakDetector(ctrl1);
     const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
@@ -99,7 +99,7 @@ describe.skipIf(
     await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
   });
 
-  it('should GC all signals without abort', async () => {
+  it.skipIf(!!global.Bun)('should GC all signals without abort', async () => {
     let ctrl1: AbortController | undefined = new AbortController();
     const ctrl1Detector = new LeakDetector(ctrl1);
     const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
@@ -127,29 +127,32 @@ describe.skipIf(
     await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
   });
 
-  it('should GC timeout signals without abort', async () => {
-    let ctrl1: AbortController | undefined = new AbortController();
-    const ctrl1Detector = new LeakDetector(ctrl1);
-    const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
-    let timeoutSignal: AbortSignal | undefined = AbortSignal.timeout(60_000); // longer than the test
-    const timeoutSignalDetector = new LeakDetector(timeoutSignal);
+  it.skipIf(!!global.Bun)(
+    'should GC timeout signals without abort',
+    async () => {
+      let ctrl1: AbortController | undefined = new AbortController();
+      const ctrl1Detector = new LeakDetector(ctrl1);
+      const ctrl1SignalDetector = new LeakDetector(ctrl1.signal);
+      let timeoutSignal: AbortSignal | undefined = AbortSignal.timeout(60_000); // longer than the test
+      const timeoutSignalDetector = new LeakDetector(timeoutSignal);
 
-    let signal: AbortSignal | undefined = abortSignalAll([
-      ctrl1.signal,
-      timeoutSignal,
-    ]);
-    const signalDetector = new LeakDetector(signal);
+      let signal: AbortSignal | undefined = abortSignalAll([
+        ctrl1.signal,
+        timeoutSignal,
+      ]);
+      const signalDetector = new LeakDetector(signal);
 
-    // no abort
-    // ctrl1.abort('Test');
+      // no abort
+      // ctrl1.abort('Test');
 
-    ctrl1 = undefined;
-    timeoutSignal = undefined;
-    signal = undefined;
+      ctrl1 = undefined;
+      timeoutSignal = undefined;
+      signal = undefined;
 
-    await expect(ctrl1Detector.isLeaking()).resolves.toBeFalsy();
-    await expect(ctrl1SignalDetector.isLeaking()).resolves.toBeFalsy();
-    await expect(timeoutSignalDetector.isLeaking()).resolves.toBeFalsy();
-    await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
-  });
+      await expect(ctrl1Detector.isLeaking()).resolves.toBeFalsy();
+      await expect(ctrl1SignalDetector.isLeaking()).resolves.toBeFalsy();
+      await expect(timeoutSignalDetector.isLeaking()).resolves.toBeFalsy();
+      await expect(signalDetector.isLeaking()).resolves.toBeFalsy();
+    },
+  );
 });
