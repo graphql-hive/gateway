@@ -6,7 +6,7 @@ import {
   Plugin as YogaPlugin,
 } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { hive } from '../src/api';
+import { hive, SpanStatusCode } from '../src/api';
 import { ContextMatcher, useOpenTelemetry } from '../src/plugin';
 import { disableAll, setupOtelForTests, spanExporter } from './utils';
 
@@ -176,40 +176,124 @@ describe('useOpenTelemetry', () => {
         });
       });
 
-      describe('error events', () => {
-        it('should report errors', async () => {
+      describe('error reporting', () => {
+        it('should report execution errors on operation span', async () => {
           await using gateway = buildTest();
           await gateway.query({
             query: '{ withFailing { failingField } }',
             shouldError: true,
           });
 
-          const executionSpan =
-            spanExporter.assertSpanWithName('graphql.operation');
-
-          expect(executionSpan.attributes).toMatchObject({
+          const operationSpan = spanExporter.assertRoot('graphql.operation');
+          expect(operationSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Execution Error',
+          });
+          expect(operationSpan.span.attributes).toMatchObject({
             'hive.graphql.error.count': 1,
             'hive.graphql.error.codes': ['TEST'],
-            'hive.graphql.error.schema-coordinates': [
-              'WithFailing.failingField',
-            ],
+            'hive.graphql.error.coordinates': ['WithFailing.failingField'],
           });
 
-          const exceptionEvent = executionSpan.events.find(
+          const executionSpan = operationSpan.expectChild('graphql.execute');
+          expect(executionSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Execution Error',
+          });
+          expect(executionSpan.span.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+          });
+
+          const errorEvent = operationSpan.span.events.find(
             (event) => event.name === 'graphql.error',
           );
 
-          expect(exceptionEvent?.attributes).toMatchObject({
+          expect(errorEvent?.attributes).toMatchObject({
             'hive.graphql.error.message': 'Test',
             'hive.graphql.error.code': 'TEST',
             'hive.graphql.error.path': ['withFailing', 'failingField'],
             'hive.graphql.error.locations': ['1:17'],
-            'hive.graphql.error.schema-coordinate': 'WithFailing.failingField',
+            'hive.graphql.error.coordinate': 'WithFailing.failingField',
           });
-
-          expect(exceptionEvent?.attributes?.['exception.stacktrace']).toMatch(
+          expect(errorEvent?.attributes?.['exception.stacktrace']).toMatch(
             /^Error: Test\n/,
           );
+        });
+
+        it('should report validation errors on operation span', async () => {
+          await using gateway = buildTest();
+          await gateway.query({
+            query: 'query test { unknown }',
+            shouldError: true,
+          });
+
+          const operationSpan = spanExporter.assertRoot(
+            'graphql.operation test',
+          );
+          expect(operationSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Validation Error',
+          });
+          expect(operationSpan.span.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+            'graphql.operation.type': 'query',
+            'graphql.operation.name': 'test',
+          });
+
+          const validateSpan = operationSpan.expectChild('graphql.validate');
+          expect(validateSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Validation Error',
+          });
+          expect(validateSpan.span.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+          });
+
+          const errorEvent = operationSpan.span.events.find(
+            (event) => event.name === 'graphql.error',
+          );
+
+          expect(errorEvent?.attributes).toMatchObject({
+            'hive.graphql.error.locations': ['1:14'],
+            'hive.graphql.error.message':
+              'Cannot query field "unknown" on type "Query".',
+          });
+        });
+
+        it('should report parsing errors on operation span', async () => {
+          await using gateway = buildTest();
+          await gateway.query({
+            query: 'parse error',
+            shouldError: true,
+          });
+
+          const operationSpan = spanExporter.assertRoot('graphql.operation');
+          expect(operationSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Parse Error',
+          });
+          expect(operationSpan.span.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+          });
+
+          const parseSpan = operationSpan.expectChild('graphql.parse');
+          expect(parseSpan.span.status).toMatchObject({
+            code: SpanStatusCode.ERROR,
+            message: 'GraphQL Parse Error',
+          });
+          expect(parseSpan.span.attributes).toMatchObject({
+            'hive.graphql.error.count': 1,
+          });
+
+          const errorEvent = operationSpan.span.events.find(
+            (event) => event.name === 'graphql.error',
+          );
+
+          expect(errorEvent?.attributes).toMatchObject({
+            'hive.graphql.error.locations': ['1:1'],
+            'hive.graphql.error.message':
+              'Syntax Error: Unexpected Name "parse".',
+          });
         });
       });
     });
