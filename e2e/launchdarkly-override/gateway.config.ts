@@ -37,7 +37,8 @@ export async function listenForFlagUpdates(
     !LAUNCH_DARKLY_PROJECT_ID ||
     !LAUNCH_DARKLY_ENVIRONMENT
   ) {
-    throw new Error('LaunchDarkly environment variables are not set');
+    console.error('LaunchDarkly environment variables are not set');
+    return;
   }
   const ldClient = ld.init(LAUNCH_DARKLY_SDK_KEY);
   await ldClient.waitForInitialization();
