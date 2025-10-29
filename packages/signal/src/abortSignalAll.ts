@@ -1,3 +1,6 @@
+// Some runtimes doesn't implement FinalizationRegistry. For those, we don't handle GC of signals
+// and only rely on signal abortion. It is ok because most of the time they are short live runtime,
+// and it's any just an optimization. It will not break the resolution, only miss or delay abortion.
 const allSignalRegistry = globalThis.FinalizationRegistry
   ? new FinalizationRegistry<() => void>((cb) => cb())
   : null;
