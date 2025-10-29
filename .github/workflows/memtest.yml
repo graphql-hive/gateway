@@ -26,6 +26,7 @@ jobs:
           - opentelemetry
           - programmatic-batching
           - logger
+          - execution-cancellation
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
