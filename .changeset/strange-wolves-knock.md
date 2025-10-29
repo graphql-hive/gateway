@@ -6,8 +6,8 @@
 
 Support promises in `progressiveOverride` option
 
-```ts
-defineConfig({
+import { defineConfig } from '@graphql-hive/gateway';
+export const gatewayConfig = defineConfig({
     async progressiveOverride(label: string, context: GatewayContext) {
         if (label === 'my_label') {
             const serviceResponse = await fetch('http://example.com/should_override', {
