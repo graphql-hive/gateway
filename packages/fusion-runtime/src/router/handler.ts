@@ -64,6 +64,7 @@ function isIntrospection(document: DocumentNode): boolean {
   let onlyQueryTypenameFields = false;
   let containsIntrospectionField = false;
   visit(document, {
+    // @ts-expect-error we dont have to return anything aside from break
     OperationDefinition(node) {
       for (const sel of node.selectionSet.selections) {
         if (sel.kind !== 'Field') return BREAK;
@@ -77,7 +78,6 @@ function isIntrospection(document: DocumentNode): boolean {
           onlyQueryTypenameFields = false;
           return BREAK;
         }
-        return void 0;
       }
     },
   });
