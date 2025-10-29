@@ -1,5 +1,18 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.0.14
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+- Updated dependencies [[`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d), [`bcadf1c`](https://github.com/graphql-hive/gateway/commit/bcadf1cee54b62ed13fbcc02d3e6624eddea707b), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d), [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437)]:
+  - @graphql-hive/gateway-runtime@2.3.0
+  - @graphql-mesh/transport-common@1.0.8
+
 ## 1.0.13
 ### Patch Changes
 
