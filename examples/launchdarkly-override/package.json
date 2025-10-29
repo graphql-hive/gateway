@@ -9,6 +9,9 @@
     "tslib": "^2.8.1",
     "@graphql-hive/gateway": "^2.1.11"
   },
+  "installConfig": {
+    "hoistingLimits": "dependencies"
+  },
   "devDependencies": {
     "tsx": "^4.20.3",
     "@apollo/rover": "^0.36.2"
