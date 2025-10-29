@@ -55,11 +55,17 @@ type JaegerTraceResource = {
   tags: JaegerTraceTag[];
 };
 
+type JaegerTraceLog = {
+  timestamp: number;
+  fields: JaegerTraceTag[];
+};
+
 type JaegerTraceSpan = {
   traceID: string;
   spanID: string;
   operationName: string;
   tags: Array<JaegerTraceTag>;
+  logs: Array<JaegerTraceLog>;
   references: Array<{ refType: string; spanID: string; traceID: string }>;
 };
 
@@ -402,6 +408,30 @@ describe('OpenTelemetry', () => {
           expect(relevantTrace?.spans).toContainEqual(
             expect.objectContaining({ operationName: 'POST /graphql' }),
           );
+
+          const operationSpan = relevantTrace!.spans.find(
+            (span) => span.operationName === 'graphql.operation',
+          );
+
+          expect(operationSpan?.logs).toContainEqual(
+            expect.objectContaining({
+              fields: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'event',
+                  value: 'graphql.error',
+                }),
+                expect.objectContaining({
+                  key: 'hive.graphql.error.locations',
+                  value: '["1:13"]',
+                }),
+                expect.objectContaining({
+                  key: 'hive.graphql.error.message',
+                  value: 'Syntax Error: Expected Name, found <EOF>.',
+                }),
+              ]),
+            }),
+          );
+
           expect(relevantTrace?.spans).toContainEqual(
             expect.objectContaining({
               operationName: 'graphql.parse',
@@ -416,7 +446,7 @@ describe('OpenTelemetry', () => {
                 }),
                 expect.objectContaining({
                   key: 'otel.status_description',
-                  value: 'Syntax Error: Expected Name, found <EOF>.',
+                  value: 'GraphQL Parse Error',
                 }),
                 expect.objectContaining({
                   key: 'hive.graphql.error.count',
@@ -478,6 +508,53 @@ describe('OpenTelemetry', () => {
             expect.objectContaining({ operationName: 'POST /graphql' }),
           );
           expect(relevantTrace?.spans).toContainEqual(
+            expect.objectContaining({
+              operationName: 'graphql.operation',
+              tags: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'otel.status_code',
+                  value: 'ERROR',
+                }),
+                expect.objectContaining({
+                  key: 'error',
+                  value: true,
+                }),
+                expect.objectContaining({
+                  key: 'otel.status_description',
+                  value: 'GraphQL Validation Error',
+                }),
+                expect.objectContaining({
+                  key: 'hive.graphql.error.count',
+                  value: 1,
+                }),
+              ]),
+            }),
+          );
+          const operationSpan = relevantTrace!.spans.find(
+            (span) => span.operationName === 'graphql.operation',
+          );
+
+          expect(operationSpan?.logs).toContainEqual(
+            expect.objectContaining({
+              fields: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'event',
+                  value: 'graphql.error',
+                }),
+                expect.objectContaining({
+                  key: 'hive.graphql.error.locations',
+                  value: '["1:9"]',
+                }),
+                expect.objectContaining({
+                  key: 'hive.graphql.error.message',
+                  value:
+                    'Cannot query field "nonExistentField" on type "Query".',
+                }),
+              ]),
+            }),
+          );
+
+          expect(relevantTrace?.spans).toContainEqual(
             expect.objectContaining({ operationName: 'graphql.parse' }),
           );
           expect(relevantTrace?.spans).toContainEqual(
@@ -494,8 +571,7 @@ describe('OpenTelemetry', () => {
                 }),
                 expect.objectContaining({
                   key: 'otel.status_description',
-                  value:
-                    'Cannot query field "nonExistentField" on type "Query".',
+                  value: 'GraphQL Validation Error',
                 }),
                 expect.objectContaining({
                   key: 'hive.graphql.error.count',
