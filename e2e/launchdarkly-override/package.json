@@ -7,5 +7,8 @@
     "graphql": "16.11.0",
     "graphql-yoga": "5.16.0",
     "tslib": "^2.8.1"
+  },
+  "installConfig": {
+    "hoistingLimits": "dependencies"
   }
 }
