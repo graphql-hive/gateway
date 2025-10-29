@@ -34,7 +34,7 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Test
         run: yarn test
-      - name: "[EXPERIMENTAL] Test with Hive Router Query Planner"
+      - name: '[EXPERIMENTAL] Test with Hive Router Query Planner'
         env:
           __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1
         run: yarn test
@@ -55,7 +55,7 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:bun
-      - name: "[EXPERIMENTAL] Test with Hive Router Query Planner"
+      - name: '[EXPERIMENTAL] Test with Hive Router Query Planner'
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
           __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1
@@ -88,7 +88,7 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:leaks
-      - name: "[EXPERIMENTAL] Run Tests with Hive Router Query Planner"
+      - name: '[EXPERIMENTAL] Run Tests with Hive Router Query Planner'
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
           __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1

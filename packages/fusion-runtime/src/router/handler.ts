@@ -77,6 +77,7 @@ function isIntrospection(document: DocumentNode): boolean {
           onlyQueryTypenameFields = false;
           return BREAK;
         }
+        return void 0;
       }
     },
   });
