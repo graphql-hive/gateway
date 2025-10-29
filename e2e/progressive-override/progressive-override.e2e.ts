@@ -13,6 +13,10 @@ describe('Progressive Override E2E', async () => {
           await service('reviews'),
         ],
       },
+      services: [
+        await service('label'), // ensure label service is running
+      ],
+      pipeLogs: true,
     });
     const result = await gw.execute({
       query: /* GraphQL */ `
@@ -68,6 +72,11 @@ describe('Progressive Override E2E', async () => {
           await service('reviews'),
         ],
       },
+      services: [
+        await service('label', {
+          pipeLogs: true,
+        }), // ensure label service is running
+      ],
     });
     const result = await gw.execute({
       query: /* GraphQL */ `

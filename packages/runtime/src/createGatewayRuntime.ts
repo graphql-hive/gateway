@@ -1090,20 +1090,21 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ request, req, connectionParams, ...ctx }) {
+    context(ctx) {
       // @ts-expect-error - ctx.headers might be present
-      let headers: Record<string, string> | undefined = ctx.headers;
-      if (!headers) {
+      if (!ctx.headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        headers = getHeadersObj(req?.headers || request?.headers);
+        // context will change, for example: when we have an operation happening over WebSockets,
+        // there wont be a fetch Request - there'll only be the upgrade http node request
+        ctx['headers'] = getHeadersObj(
+          ctx['req']?.headers || ctx?.request?.headers,
+        );
       }
-      if (connectionParams) {
-        headers = { ...headers, ...connectionParams };
+      if (ctx['connectionParams']) {
+        ctx['headers'] = { ...ctx['headers'], ...ctx['connectionParams'] };
       }
-
-      const baseContext = { ...ctx, headers, connectionParams };
-      return contextBuilder?.(baseContext) ?? baseContext;
+      return contextBuilder?.(ctx) ?? ctx;
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,

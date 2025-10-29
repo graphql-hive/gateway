@@ -32,6 +32,7 @@ import {
   memoize1,
   mergeDeep,
   parseSelectionSet,
+  SchemaExtensions,
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
@@ -173,6 +174,7 @@ export function getStitchingOptionsFromSupergraphSdl(
     string,
     Map<string, ProgressiveOverrideInfo[]>
   >();
+  const overrideLabels = new Set<string>();
 
   for (const definition of supergraphAst.definitions) {
     if ('fields' in definition) {
@@ -401,6 +403,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                     from: overrideFromSubgraph,
                     label: overrideLabel,
                   });
+                  overrideLabels.add(overrideLabel);
                 }
 
                 const providedExtraField =
@@ -1622,6 +1625,16 @@ export function getStitchingOptionsFromSupergraphSdl(
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
+  let schemaExtensions: SchemaExtensions | undefined;
+  if (overrideLabels.size) {
+    schemaExtensions = {
+      schemaExtensions: {
+        overrideLabels,
+      },
+      types: {},
+    };
+  }
+
   return {
     subschemas,
     typeDefs: additionalTypeDefs,
@@ -1634,6 +1647,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       },
       fieldConfigMerger,
     },
+    schemaExtensions,
   };
 }
 

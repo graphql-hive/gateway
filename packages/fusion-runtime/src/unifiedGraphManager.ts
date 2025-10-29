@@ -6,7 +6,6 @@ import type {
 import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
-import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   Executor,
@@ -77,7 +76,7 @@ export interface UnifiedGraphHandlerOpts {
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
-  handleProgressiveOverride?: ProgressiveOverrideHandler;
+  handleProgressiveOverride?(label: string, context: any): boolean;
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
@@ -129,7 +128,10 @@ export interface UnifiedGraphManagerOptions<TContext> {
   instrumentation?: () => Instrumentation | undefined;
   onUnifiedGraphChange?(newUnifiedGraph: GraphQLSchema): void;
 
-  handleProgressiveOverride?: ProgressiveOverrideHandler;
+  handleProgressiveOverride?(
+    label: string,
+    context: any,
+  ): MaybePromise<boolean>;
 }
 
 export type Instrumentation = {
@@ -169,6 +171,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private lastLoadTime?: number;
   private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
+  private overrideLabelsByContext: WeakMap<any, Set<string>> = new WeakMap();
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
@@ -347,7 +350,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegateHooks: this.opts.onDelegateHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
-        handleProgressiveOverride: this.opts.handleProgressiveOverride,
+        handleProgressiveOverride: this.opts.handleProgressiveOverride
+          ? (label, context) => {
+              const labels = this.overrideLabelsByContext.get(context);
+              if (labels?.has(label)) {
+                return true;
+              }
+              return false;
+            }
+          : undefined,
       });
       const transportExecutorStack = new AsyncDisposableStack();
       const onSubgraphExecute = getOnSubgraphExecute({
@@ -471,6 +482,36 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         )) {
           if (!(key in base)) {
             (base as any)[key] = value;
+          }
+        }
+        const handleProgressiveOverride = this.opts.handleProgressiveOverride;
+        if (handleProgressiveOverride) {
+          const overrideLabels = this.unifiedGraph?.extensions?.[
+            'overrideLabels'
+          ] as Set<string> | undefined;
+          if (overrideLabels) {
+            const jobs$: MaybePromise<void>[] = [];
+            for (const label of overrideLabels) {
+              const result$ = handleProgressiveOverride(label, base);
+              const handleResult = (shouldEnable: boolean) => {
+                if (shouldEnable) {
+                  let labels = this.overrideLabelsByContext.get(base);
+                  if (!labels) {
+                    labels = new Set<string>();
+                    this.overrideLabelsByContext.set(base, labels);
+                  }
+                  labels.add(label);
+                }
+              };
+              if (isPromise(result$)) {
+                jobs$.push(result$.then(handleResult));
+              } else {
+                handleResult(result$);
+              }
+            }
+            if (jobs$.length > 0) {
+              return Promise.all(jobs$).then(() => base);
+            }
           }
         }
         return base;
