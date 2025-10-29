@@ -3287,6 +3287,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/launchdarkly-override-example@workspace:e2e/launchdarkly-override":
+  version: 0.0.0-use.local
+  resolution: "@e2e/launchdarkly-override-example@workspace:e2e/launchdarkly-override"
+  dependencies:
+    "@apollo/subgraph": "npm:2.11.3"
+    "@launchdarkly/node-server-sdk": "npm:9.10.2"
+    graphql: "npm:16.11.0"
+    graphql-yoga: "npm:5.16.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/load-on-init@workspace:e2e/load-on-init":
   version: 0.0.0-use.local
   resolution: "@e2e/load-on-init@workspace:e2e/load-on-init"
@@ -6602,6 +6614,34 @@ __metadata:
   version: 0.3.4
   resolution: "@kurkle/color@npm:0.3.4"
   checksum: 10c0/0e9fd55c614b005c5f0c4c755bca19ec0293bc7513b4ea3ec1725234f9c2fa81afbc78156baf555c8b9cb0d305619253c3f5bca016067daeebb3d00ebb4ea683
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-sdk-common@npm:2.19.0":
+  version: 2.19.0
+  resolution: "@launchdarkly/js-sdk-common@npm:2.19.0"
+  checksum: 10c0/951a2206ccb61386f7659f6ac77e85ffaed8da86b1aa3ea2dcf210bf74638e94bd87e879e4083933967ea5eb60131ad03419b9bd918ea61f1ded01654c6a303b
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-server-sdk-common@npm:2.16.2":
+  version: 2.16.2
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.16.2"
+  dependencies:
+    "@launchdarkly/js-sdk-common": "npm:2.19.0"
+    semver: "npm:7.5.4"
+  checksum: 10c0/ca6114b2833beae297bdee9e9992a8cdd85d98b9d6fe491c43e226b3d05323c88c33af0a13228856a54e841cbb914721457dc5bca050af7e0fd7f94420cb21e9
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/node-server-sdk@npm:9.10.2":
+  version: 9.10.2
+  resolution: "@launchdarkly/node-server-sdk@npm:9.10.2"
+  dependencies:
+    "@launchdarkly/js-server-sdk-common": "npm:2.16.2"
+    https-proxy-agent: "npm:^7.0.6"
+    launchdarkly-eventsource: "npm:2.2.0"
+  checksum: 10c0/b97fbb3c35bcb4f261ca6124d516963f085ce6059fd16a5f71bb0dac61d868d01e278aec5d8ef6ed761f9cd8d86a599f122138e148b5eeaee98a669ead9ae407
   languageName: node
   linkType: hard
 
@@ -15829,7 +15869,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^7.0.1":
+"https-proxy-agent@npm:^7.0.1, https-proxy-agent@npm:^7.0.6":
   version: 7.0.6
   resolution: "https-proxy-agent@npm:7.0.6"
   dependencies:
@@ -17515,6 +17555,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"launchdarkly-eventsource@npm:2.2.0":
+  version: 2.2.0
+  resolution: "launchdarkly-eventsource@npm:2.2.0"
+  checksum: 10c0/fce94e58ef5eb560349b2f5405276c01b86d83afc3f7149c6e58ce4fcdf69f1ef8c97c9800bedf0986b41fa7a1f14740aee804d8c74f9fc81b6cf22f4bd5a7f1
+  languageName: node
+  linkType: hard
+
 "leven@npm:^3.1.0":
   version: 3.1.0
   resolution: "leven@npm:3.1.0"
@@ -17861,7 +17908,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:6.0.0":
+"lru-cache@npm:6.0.0, lru-cache@npm:^6.0.0":
   version: 6.0.0
   resolution: "lru-cache@npm:6.0.0"
   dependencies:
@@ -20472,6 +20519,17 @@ __metadata:
   version: 4.0.0
   resolution: "secure-json-parse@npm:4.0.0"
   checksum: 10c0/1a298cf00e1de91e833cee5eb406d6e77fb2f7eca9bef3902047d49e7f5d3e6c21b5de61ff73466c831e716430bfe87d732a6e645a7dabb5f1e8a8e4d3e15eb4
+  languageName: node
+  linkType: hard
+
+"semver@npm:7.5.4":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: "npm:^6.0.0"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
   languageName: node
   linkType: hard
 
