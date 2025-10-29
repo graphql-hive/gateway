@@ -19,7 +19,6 @@ import type {
 } from '@graphql-mesh/types';
 import type { FetchInstrumentation } from '@graphql-mesh/utils';
 import type { HTTPExecutorOptions } from '@graphql-tools/executor-http';
-import { ProgressiveOverrideHandler } from '@graphql-tools/federation';
 import type {
   ExecutionRequest,
   IResolvers,
@@ -255,6 +254,11 @@ export interface GatewayConfigSupergraph<
    */
   progressiveOverride?: ProgressiveOverrideHandler;
 }
+
+export type ProgressiveOverrideHandler = (
+  label: string,
+  context: GatewayContext,
+) => MaybePromise<boolean>;
 
 export interface GatewayConfigSubgraph<
   TContext extends Record<string, any> = Record<string, any>,
