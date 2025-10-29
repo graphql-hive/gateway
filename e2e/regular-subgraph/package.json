@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@graphql-hive/gateway": "workspace:*",
-    "@graphql-mesh/compose-cli": "^1.5.0",
+    "@graphql-mesh/compose-cli": "^1.5.1",
     "graphql": "16.11.0"
   }
 }
