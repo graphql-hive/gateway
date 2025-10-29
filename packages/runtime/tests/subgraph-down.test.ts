@@ -118,7 +118,9 @@ describe('Error handling', () => {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
+              body: usingHiveRouterQueryPlanner()
+                ? `{"query":"{subgraph1{subgraph1Field}}"}`
+                : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {
@@ -241,7 +243,9 @@ describe('Error handling', () => {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
+              body: usingHiveRouterQueryPlanner()
+                ? `{"query":"{subgraph1{subgraph1Field}}"}`
+                : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {
