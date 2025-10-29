@@ -1,0 +1,46 @@
+{
+  "setupTasks": [
+    {
+      "name": "Install",
+      "command": "npm i"
+    },
+    {
+      "name": "Start service inventory",
+      "command": "nohup npm run service:inventory &> service-inventory.out &"
+    },
+    {
+      "name": "Wait for service inventory",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4001"
+    },
+    {
+      "name": "Start service products",
+      "command": "nohup npm run service:products &> service-products.out &"
+    },
+    {
+      "name": "Wait for service products",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4002"
+    },
+    {
+      "name": "Start service reviews",
+      "command": "nohup npm run service:reviews &> service-reviews.out &"
+    },
+    {
+      "name": "Wait for service reviews",
+      "command": "curl --retry-connrefused --retry 10 --retry-delay 3 http://0.0.0.0:4003"
+    },
+    {
+      "name": "Compose",
+      "command": "npm run compose"
+    }
+  ],
+  "tasks": {
+    "gateway": {
+      "name": "Hive Gateway",
+      "runAtStart": true,
+      "command": "npm run gateway",
+      "preview": {
+        "port": 4000
+      }
+    }
+  }
+}
