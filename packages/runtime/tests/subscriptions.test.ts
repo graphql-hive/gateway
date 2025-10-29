@@ -97,6 +97,11 @@ describe('Subscriptions', () => {
                     foo: String!
                   }
                 `,
+                resolvers: {
+                  Query: {
+                    foo: () => 'bar',
+                  },
+                },
               },
             },
           ];
