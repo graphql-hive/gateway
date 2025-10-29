@@ -1,4 +1,6 @@
-const allSignalRegistry = new FinalizationRegistry<() => void>((cb) => cb());
+const allSignalRegistry = globalThis.FinalizationRegistry
+  ? new FinalizationRegistry<() => void>((cb) => cb())
+  : null;
 
 const controllerInSignalSy = Symbol('CONTROLLER_IN_SIGNAL');
 
@@ -40,7 +42,7 @@ export function abortSignalAll(
 
   function removeSignal(signal: AbortSignal, abortListener: () => void) {
     signal.removeEventListener('abort', abortListener);
-    allSignalRegistry!.unregister(signal);
+    allSignalRegistry?.unregister(signal);
     --retainedSignalsCount;
   }
 
@@ -58,7 +60,7 @@ export function abortSignalAll(
     }
     signal.addEventListener('abort', onAbort);
     eventListenerPairs.push([signalRef, onAbort]);
-    allSignalRegistry!.register(
+    allSignalRegistry?.register(
       signal,
       () => {
         removeSignal(signal, onAbort);
@@ -74,7 +76,7 @@ export function abortSignalAll(
   function dispose() {
     const ctrl = ctrlRef.deref();
     if (ctrl) {
-      allSignalRegistry!.unregister(ctrl.signal);
+      allSignalRegistry?.unregister(ctrl.signal);
       // @ts-expect-error
       delete ctrl.signal[controllerInSignalSy];
     }
@@ -90,7 +92,7 @@ export function abortSignalAll(
   // cleanup when aborted
   ctrl.signal.addEventListener('abort', dispose);
   // cleanup when GCed
-  allSignalRegistry!.register(ctrl.signal, dispose, ctrl.signal);
+  allSignalRegistry?.register(ctrl.signal, dispose, ctrl.signal);
 
   // keeping a strong reference of the controller binding it to the lifecycle of its signal
   // @ts-expect-error
