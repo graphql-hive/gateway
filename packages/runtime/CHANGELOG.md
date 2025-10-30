@@ -1,5 +1,59 @@
 # @graphql-hive/gateway-runtime
 
+## 2.3.0
+### Minor Changes
+
+
+
+- [#1642](https://github.com/graphql-hive/gateway/pull/1642) [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437) Thanks [@ardatan](https://github.com/ardatan)! - Support promises in `progressiveOverride` option
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  export const gatewayConfig = defineConfig({
+      async progressiveOverride(label: string, context: GatewayContext) {
+          if (label === 'my_label') {
+              const serviceResponse = await fetch('http://example.com/should_override', {
+                  headers: {
+                      'x-some-header': context.headers['x-some-header'],
+                  }
+              });
+              const result = await serviceResponse.json();
+              return result?.override;
+          }
+          return false;
+      }
+  })
+  ```
+
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+
+
+- [#1640](https://github.com/graphql-hive/gateway/pull/1640) [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/generic-auth@^10.0.1` ↗︎](https://www.npmjs.com/package/@envelop/generic-auth/v/10.0.1) (from `^10.0.0`, in `dependencies`)
+
+
+- [#1645](https://github.com/graphql-hive/gateway/pull/1645) [`bcadf1c`](https://github.com/graphql-hive/gateway/commit/bcadf1cee54b62ed13fbcc02d3e6624eddea707b) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.9.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.9.2) (from `^24.9.1`, in `dependencies`)
+
+
+- [#1640](https://github.com/graphql-hive/gateway/pull/1640) [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove empty and unused nodes from redacted query after validation of generic-auth directives when issuing requests to subgraphs
+
+- Updated dependencies [[`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437)]:
+  - @graphql-mesh/fusion-runtime@1.4.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.4
+  - @graphql-mesh/transport-common@1.0.8
+  - @graphql-tools/federation@4.2.0
+
 ## 2.2.0
 ### Minor Changes
 

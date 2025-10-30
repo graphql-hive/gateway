@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-testing
 
+## 2.0.0
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/fusion-composition@^0.8.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/fusion-composition/v/0.8.18) (from `^0.8.17`, in `dependencies`)
+- Updated dependencies [[`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d), [`bcadf1c`](https://github.com/graphql-hive/gateway/commit/bcadf1cee54b62ed13fbcc02d3e6624eddea707b), [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d), [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437)]:
+  - @graphql-hive/gateway-runtime@2.3.0
+
 ## 1.0.0
 ### Major Changes
 

@@ -1,5 +1,15 @@
 # @graphql-mesh/hmac-upstream-signature
 
+## 2.0.4
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+
 ## 2.0.3
 ### Patch Changes
 
