@@ -107,83 +107,85 @@ export type OpenTelemetryGatewayPluginOptions = {
   /**
    * Tracing configuration
    */
-  traces?:
-    | boolean
-    | {
-        /**
-         * Tracer instance to use for creating spans (default: a tracer with name 'gateway').
-         */
-        tracer?: Tracer;
-        /**
-         * Options to control which spans to create.
-         * By default, all spans are enabled.
-         *
-         * You may specify a boolean value to enable/disable all spans, or a function to dynamically enable/disable spans based on the input.
-         */
-        spans?: {
-          /**
-           * Enable/disable HTTP request spans (default: true).
-           *
-           * Disabling the HTTP span will also disable all other child spans.
-           */
-          http?: BooleanOrPredicate<{ request: Request }>;
-          /**
-           * Enable/disable GraphQL operation spans (default: true).
-           *
-           * Disabling the GraphQL operation spa will also disable all other child spans.
-           */
-          graphql?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
-          /**
-           * Enable/disable GraphQL context building phase (default: true).
-           */
-          graphqlContextBuilding?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
-          /**
-           * Enable/disable GraphQL parse spans (default: true).
-           */
-          graphqlParse?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
-          /**
-           * Enable/disable GraphQL validate spans (default: true).
-           */
-          graphqlValidate?: BooleanOrPredicate<{ context: unknown }>;
-          /**
-           * Enable/disable GraphQL execute spans (default: true).
-           *
-           * Disabling the GraphQL execute spans will also disable all other child spans.
-           */
-          graphqlExecute?: BooleanOrPredicate<{ context: unknown }>;
-          /**
-           * Enable/disable subgraph execute spans (default: true).
-           *
-           * Disabling the subgraph execute spans will also disable all other child spans.
-           */
-          subgraphExecute?: BooleanOrPredicate<{
-            executionRequest: ExecutionRequest;
-            subgraphName: string;
-          }>;
-          /**
-           * Enable/disable upstream HTTP fetch calls spans (default: true).
-           */
-          upstreamFetch?: BooleanOrPredicate<{
-            executionRequest: ExecutionRequest | undefined;
-          }>;
-          /**
-           * Enable/disable schema loading spans (default: true if context manager available).
-           *
-           * Note: This span requires an Async compatible context manager
-           */
-          schema?: boolean;
-          /**
-           * Enable/disable initialization span (default: true).
-           */
-          initialization?: boolean;
-        };
-        events?: {
-          /**
-           * Enable/Disable cache related span events (default: true).
-           */
-          cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
-        };
-      };
+  traces?: boolean | TracesConfig;
+};
+
+type TracesConfig = {
+  /**
+   * Tracer instance to use for creating spans (default: a tracer with name 'gateway').
+   */
+  tracer?: Tracer;
+  /**
+   * Options to control which spans to create.
+   * By default, all spans are enabled.
+   *
+   * You may specify a boolean value to enable/disable all spans, or a function to dynamically enable/disable spans based on the input.
+   */
+  spans?: SpansConfig;
+  events?: {
+    /**
+     * Enable/Disable cache related span events (default: true).
+     */
+    cache?: BooleanOrPredicate<{ key: string; action: 'read' | 'write' }>;
+  };
+};
+
+type SpansConfig = {
+  /**
+   * Enable/disable HTTP request spans (default: true).
+   *
+   * Disabling the HTTP span will also disable all other child spans.
+   */
+  http?: BooleanOrPredicate<{ request: Request }>;
+  /**
+   * Enable/disable GraphQL operation spans (default: true).
+   *
+   * Disabling the GraphQL operation spa will also disable all other child spans.
+   */
+  graphql?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
+  /**
+   * Enable/disable GraphQL context building phase (default: true).
+   */
+  graphqlContextBuilding?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
+  /**
+   * Enable/disable GraphQL parse spans (default: true).
+   */
+  graphqlParse?: BooleanOrPredicate<{ context: unknown }>; // FIXME: better type for graphql context
+  /**
+   * Enable/disable GraphQL validate spans (default: true).
+   */
+  graphqlValidate?: BooleanOrPredicate<{ context: unknown }>;
+  /**
+   * Enable/disable GraphQL execute spans (default: true).
+   *
+   * Disabling the GraphQL execute spans will also disable all other child spans.
+   */
+  graphqlExecute?: BooleanOrPredicate<{ context: unknown }>;
+  /**
+   * Enable/disable subgraph execute spans (default: true).
+   *
+   * Disabling the subgraph execute spans will also disable all other child spans.
+   */
+  subgraphExecute?: BooleanOrPredicate<{
+    executionRequest: ExecutionRequest;
+    subgraphName: string;
+  }>;
+  /**
+   * Enable/disable upstream HTTP fetch calls spans (default: true).
+   */
+  upstreamFetch?: BooleanOrPredicate<{
+    executionRequest: ExecutionRequest | undefined;
+  }>;
+  /**
+   * Enable/disable schema loading spans (default: true if context manager available).
+   *
+   * Note: This span requires an Async compatible context manager
+   */
+  schema?: boolean;
+  /**
+   * Enable/disable initialization span (default: true).
+   */
+  initialization?: boolean;
 };
 
 export const otelCtxForRequestId = new Map<string, Context>();
@@ -254,6 +256,19 @@ export function useOpenTelemetry(
     options.log && options.log.child('[OpenTelemetry] ');
 
   pluginLogger?.info('Enabled');
+
+  if (options.traces !== false) {
+    const httpSpanConfig =
+      options.traces === true ? null : options.traces?.spans?.http;
+
+    // Only override http filter if it's not disabled or already a function
+    if (httpSpanConfig ?? true === true) {
+      options.traces = {
+        ...(options.traces as object),
+        spans: { http: defaultHttpFilter },
+      };
+    }
+  }
 
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
@@ -959,3 +974,12 @@ function getURL(request: Request) {
 
   return new URL(request.url, 'http://localhost'); // to be iso with whatwg-node/server behavior
 }
+
+export const defaultHttpFilter: SpansConfig['http'] = ({ request }) => {
+  // Ignore Prometheus requests
+  if (request.url.endsWith('/metrics')) {
+    return false;
+  }
+
+  return true;
+};
