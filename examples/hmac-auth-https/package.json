@@ -12,11 +12,11 @@
   "dependencies": {
     "@apollo/server": "^5.1.0",
     "@apollo/subgraph": "^2.11.3",
-    "@graphql-hive/gateway": "^2.1.11",
+    "@graphql-hive/gateway": "^2.1.12",
     "@graphql-hive/logger": "^1.0.7",
     "@graphql-mesh/compose-cli": "^1.5.1",
-    "@graphql-mesh/hmac-upstream-signature": "^2.0.3",
-    "@graphql-mesh/plugin-jwt-auth": "^2.0.6",
+    "@graphql-mesh/hmac-upstream-signature": "^2.0.4",
+    "@graphql-mesh/plugin-jwt-auth": "^2.0.7",
     "graphql": "^16.10.0",
     "graphql-yoga": "^5.16.0"
   },
