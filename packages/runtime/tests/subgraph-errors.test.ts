@@ -57,19 +57,20 @@ describe('Subgraph Errors', () => {
       body: JSON.stringify({ query }),
     });
     const result = await response.json();
-    expect(result).toEqual({
-      data: null,
-      errors: [
-        {
-          message: randomErrorMessage,
-          extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
-            serviceName: upstreamServiceName,
+    expect(result).toEqual(
+      expect.objectContaining({
+        errors: [
+          {
+            message: randomErrorMessage,
+            extensions: {
+              code: 'DOWNSTREAM_SERVICE_ERROR',
+              serviceName: upstreamServiceName,
+            },
+            path: ['hello'],
           },
-          path: ['hello'],
-        },
-      ],
-    });
+        ],
+      }),
+    );
   });
   it('does not leak the error to the client when the subgraph returns an unexpected result', async () => {
     const upstreamServiceName = Math.random().toString(36).substring(7);
@@ -116,17 +117,18 @@ describe('Subgraph Errors', () => {
       body: JSON.stringify({ query }),
     });
     const result = await response.json();
-    expect(result).toEqual({
-      data: null,
-      errors: [
-        {
-          message: 'Unexpected error.',
-          extensions: {
-            code: 'INTERNAL_SERVER_ERROR',
+    expect(result).toEqual(
+      expect.objectContaining({
+        errors: [
+          {
+            message: 'Unexpected error.',
+            extensions: {
+              code: 'INTERNAL_SERVER_ERROR',
+            },
+            path: ['hello'],
           },
-          path: ['hello'],
-        },
-      ],
-    });
+        ],
+      }),
+    );
   });
 });

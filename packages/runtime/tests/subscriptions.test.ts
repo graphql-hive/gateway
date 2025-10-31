@@ -135,13 +135,13 @@ describe('Subscriptions', () => {
         serve.execute({
           query: /* GraphQL */ `
             query {
-              __typename
+              foo
             }
           `,
         }),
       ).resolves.toMatchObject({
         data: {
-          __typename: 'Query',
+          foo: 'bar',
         },
       });
     }, 1000);

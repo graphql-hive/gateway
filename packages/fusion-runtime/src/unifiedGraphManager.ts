@@ -3,7 +3,7 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { OnDelegateHook } from '@graphql-mesh/types';
+import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
@@ -26,9 +26,11 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
+import { usingHiveRouterQueryPlanner } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
+import { handleFederationSupergraph as handleFederationSupergraphWithTools } from './federation/supergraph';
+import { handleFederationSupergraphWithRouter } from './router/handler';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -86,6 +88,7 @@ export interface UnifiedGraphHandlerOpts {
   batchDelegateOptions?: BatchDelegateOptions;
 
   log?: Logger;
+  cache?: KeyValueCache;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -175,8 +178,15 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
+    if (usingHiveRouterQueryPlanner()) {
+      opts.transportContext?.log.warn(
+        '[EXPERIMENTAL] Using Query Planner from Hive Router. This feature is experimental and may have bugs or unexpected behavior.',
+      );
+    }
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph || usingHiveRouterQueryPlanner()
+        ? handleFederationSupergraphWithRouter
+        : handleFederationSupergraphWithTools;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
@@ -350,6 +360,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegateHooks: this.opts.onDelegateHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
+        cache: this.opts.transportContext?.cache,
         handleProgressiveOverride: this.opts.handleProgressiveOverride
           ? (label, context) => {
               const labels = this.overrideLabelsByContext.get(context);

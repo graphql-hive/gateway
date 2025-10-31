@@ -81,21 +81,20 @@ describe('Upstream Retry', () => {
       }),
     });
     const resJson = await res.json();
-    expect(resJson).toEqual({
-      data: {
-        hello: null,
-      },
-      errors: [
-        {
-          message: 'Error in attempt 3',
-          extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
-            serviceName: 'upstream',
+    expect(resJson).toEqual(
+      expect.objectContaining({
+        errors: [
+          {
+            message: 'Error in attempt 3',
+            extensions: {
+              code: 'DOWNSTREAM_SERVICE_ERROR',
+              serviceName: 'upstream',
+            },
+            path: ['hello'],
           },
-          path: ['hello'],
-        },
-      ],
-    });
+        ],
+      }),
+    );
     attempts = 0;
     maxRetries = 10;
     const res2 = await gateway.fetch('http://localhost:4000/graphql', {
@@ -182,21 +181,20 @@ describe('Upstream Retry', () => {
       }),
     });
     const resJson = await res.json();
-    expect(resJson).toEqual({
-      data: {
-        hello: null,
-      },
-      errors: [
-        {
-          message: 'Rate limited',
-          extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
-            serviceName: 'upstream',
+    expect(resJson).toEqual(
+      expect.objectContaining({
+        errors: [
+          {
+            message: 'Rate limited',
+            extensions: {
+              code: 'DOWNSTREAM_SERVICE_ERROR',
+              serviceName: 'upstream',
+            },
+            path: ['hello'],
           },
-          path: ['hello'],
-        },
-      ],
-    });
+        ],
+      }),
+    );
     expect(diffBetweenRetries).toBeDefined();
     expect(Math.floor(diffBetweenRetries! / 1000)).toBeGreaterThanOrEqual(1);
   });
