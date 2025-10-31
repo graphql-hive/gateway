@@ -63,7 +63,7 @@ jobs:
         run: yarn test:mem ${{matrix.test_name}}
       - name: Upload heap snapshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{matrix.test_name}}-heap-snapshots
           path: |

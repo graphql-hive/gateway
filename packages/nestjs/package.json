@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/nestjs",
-  "version": "2.0.16",
+  "version": "2.0.17",
   "type": "module",
   "repository": {
     "type": "git",
@@ -53,11 +53,11 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@nestjs/common": "11.1.7",
-    "@nestjs/core": "11.1.7",
+    "@nestjs/common": "11.1.8",
+    "@nestjs/core": "11.1.8",
     "@nestjs/graphql": "13.2.0",
     "@nestjs/platform-express": "^11.1.7",
-    "@nestjs/testing": "11.1.7",
+    "@nestjs/testing": "11.1.8",
     "@types/supertest": "6.0.3",
     "fastify": "5.6.1",
     "file-type": "^21.0.0",

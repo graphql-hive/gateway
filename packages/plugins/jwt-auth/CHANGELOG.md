@@ -1,5 +1,18 @@
 # @graphql-mesh/plugin-jwt-auth
 
+## 2.0.7
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+
+
+- [#1640](https://github.com/graphql-hive/gateway/pull/1640) [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove empty and unused nodes from redacted query after validation of generic-auth directives when issuing requests to subgraphs
+
 ## 2.0.6
 ### Patch Changes
 

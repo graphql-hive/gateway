@@ -1,5 +1,30 @@
 # @graphql-tools/federation
 
+## 4.2.0
+### Minor Changes
+
+
+
+- [#1642](https://github.com/graphql-hive/gateway/pull/1642) [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437) Thanks [@ardatan](https://github.com/ardatan)! - Support promises in `progressiveOverride` option
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  export const gatewayConfig = defineConfig({
+      async progressiveOverride(label: string, context: GatewayContext) {
+          if (label === 'my_label') {
+              const serviceResponse = await fetch('http://example.com/should_override', {
+                  headers: {
+                      'x-some-header': context.headers['x-some-header'],
+                  }
+              });
+              const result = await serviceResponse.json();
+              return result?.override;
+          }
+          return false;
+      }
+  })
+  ```
+
 ## 4.1.0
 ### Minor Changes
 

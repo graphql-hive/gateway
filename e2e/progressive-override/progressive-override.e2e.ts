@@ -1,9 +1,17 @@
-import { createTenv } from '@internal/e2e';
+import { createTenv, handleDockerHostNameInURLOrAtPath } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
-const { service, gateway } = createTenv(__dirname);
+const { service, gateway, gatewayRunner } = createTenv(__dirname);
 describe('Progressive Override E2E', async () => {
   it('overrides products if the header exists', async () => {
+    const labelService = await service('label');
+    let labelServiceUrl = `http://localhost:${labelService.port}`;
+    if (gatewayRunner.includes('docker')) {
+      labelServiceUrl = await handleDockerHostNameInURLOrAtPath(
+        labelServiceUrl,
+        [],
+      );
+    }
     const gw = await gateway({
       supergraph: {
         with: 'apollo',
@@ -12,6 +20,9 @@ describe('Progressive Override E2E', async () => {
           await service('products'),
           await service('reviews'),
         ],
+      },
+      env: {
+        LABEL_SERVICE_URL: labelServiceUrl,
       },
     });
     const result = await gw.execute({
@@ -58,8 +69,15 @@ describe('Progressive Override E2E', async () => {
     });
   });
   it('does not override products if the header does not exist', async () => {
+    const labelService = await service('label');
+    let labelServiceUrl = `http://localhost:${labelService.port}`;
+    if (gatewayRunner.includes('docker')) {
+      labelServiceUrl = await handleDockerHostNameInURLOrAtPath(
+        labelServiceUrl,
+        [],
+      );
+    }
     const gw = await gateway({
-      pipeLogs: 'gw.log',
       supergraph: {
         with: 'apollo',
         services: [
@@ -67,6 +85,9 @@ describe('Progressive Override E2E', async () => {
           await service('products'),
           await service('reviews'),
         ],
+      },
+      env: {
+        LABEL_SERVICE_URL: labelServiceUrl,
       },
     });
     const result = await gw.execute({
