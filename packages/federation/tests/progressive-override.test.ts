@@ -108,7 +108,7 @@ describe('Progressive Override', () => {
         },
       });
     });
-    describe('from a nested level', async () => {
+    describe('from a nested level', () => {
       function useGw() {
         return createGatewayTester({
           subgraphs: [
