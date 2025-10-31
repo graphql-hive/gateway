@@ -246,9 +246,9 @@ export function useOpenTelemetry(
   const inheritContext = options.inheritContext ?? true;
   const propagateContext = options.propagateContext ?? true;
   let useContextManager: boolean;
-  const traces = typeof options.traces === 'object' ? options.traces : {};
 
   let tracer: Tracer;
+  let traces: TracesConfig | undefined;
   let initSpan: Context | null;
 
   // TODO: Make it const once Yoga has the Hive Logger
@@ -257,19 +257,7 @@ export function useOpenTelemetry(
 
   pluginLogger?.info('Enabled');
 
-  if (options.traces !== false) {
-    const httpSpanConfig =
-      options.traces === true ? null : options.traces?.spans?.http;
-
-    // Only override http filter if it's not disabled or already a function
-    if (httpSpanConfig ?? true === true) {
-      options.traces = {
-        ...(options.traces as object),
-        spans: { http: defaultHttpFilter },
-      };
-    }
-  }
-
+  // Resolve tracing configuration. `undefined` means disabled
   function isParentEnabled(state: State): boolean {
     const parentState = getMostSpecificState(state);
     return !parentState || !!parentState.otel;
@@ -312,7 +300,8 @@ export function useOpenTelemetry(
 
     pluginLogger?.info('Initializing');
 
-    tracer = traces.tracer || trace.getTracer('gateway');
+    tracer = traces?.tracer ?? trace.getTracer('gateway');
+    traces = resolveTracesConfig(options, useContextManager, pluginLogger);
 
     initSpan = trace.setSpan(
       context.active(),
@@ -320,17 +309,6 @@ export function useOpenTelemetry(
         startTime: initializationTime,
       }),
     );
-
-    if (!useContextManager) {
-      if (traces.spans?.schema) {
-        pluginLogger?.warn(
-          'Schema loading spans are disabled because no context manager is available',
-        );
-      }
-
-      traces.spans = traces.spans ?? {};
-      traces.spans.schema = false;
-    }
   }
 
   const plugin = withState<
@@ -357,15 +335,15 @@ export function useOpenTelemetry(
       },
       instrumentation: {
         request({ state: { forRequest }, request }, wrapped) {
-          if (!shouldTrace(traces.spans?.http, { request })) {
-            return wrapped();
-          }
-
-          const url = getURL(request);
-
           return unfakePromise(
             preparation$
               .then(() => {
+                if (!traces || !shouldTrace(traces.spans?.http, { request })) {
+                  return wrapped();
+                }
+
+                const url = getURL(request);
+
                 const ctx = inheritContext
                   ? propagation.extract(
                       context.active(),
@@ -400,6 +378,7 @@ export function useOpenTelemetry(
           wrapped,
         ) {
           if (
+            !traces ||
             !isParentEnabled(parentState) ||
             !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
           ) {
@@ -432,6 +411,7 @@ export function useOpenTelemetry(
 
         context({ state, context: gqlCtx }, wrapped) {
           if (
+            !traces ||
             !isParentEnabled(state) ||
             !shouldTrace(traces.spans?.graphqlContextBuilding, {
               context: gqlCtx,
@@ -463,6 +443,7 @@ export function useOpenTelemetry(
 
         parse({ state, context: gqlCtx }, wrapped) {
           if (
+            !traces ||
             !isParentEnabled(state) ||
             !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
           ) {
@@ -490,6 +471,7 @@ export function useOpenTelemetry(
 
         validate({ state, context: gqlCtx }, wrapped) {
           if (
+            !traces ||
             !isParentEnabled(state) ||
             !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
           ) {
@@ -518,6 +500,7 @@ export function useOpenTelemetry(
 
         execute({ state, context: gqlCtx }, wrapped) {
           if (
+            !traces ||
             !isParentEnabled(state) ||
             !shouldTrace(traces.spans?.graphqlExecute, { context: gqlCtx })
           ) {
@@ -560,6 +543,7 @@ export function useOpenTelemetry(
           const isIntrospection = !executionRequest.context.params;
 
           if (
+            !traces ||
             !isParentEnabled(parentState) ||
             parentState.forOperation?.skipExecuteSpan ||
             !shouldTrace(
@@ -618,15 +602,16 @@ export function useOpenTelemetry(
             state = getState(getRetryInfo(executionRequest));
           }
 
-          if (
-            !isParentEnabled(state) ||
-            !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
-          ) {
-            return wrapped();
-          }
-
           return unfakePromise(
             preparation$.then(() => {
+              if (
+                !traces ||
+                !isParentEnabled(state) ||
+                !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
+              ) {
+                return wrapped();
+              }
+
               const { forSubgraphExecution } = state;
               const ctx = createUpstreamHttpFetchSpan({
                 ctx: getContext(state),
@@ -654,12 +639,12 @@ export function useOpenTelemetry(
         },
 
         schema(_, wrapped) {
-          if (!shouldTrace(traces.spans?.schema, null)) {
-            return wrapped();
-          }
-
           return unfakePromise(
             preparation$.then(() => {
+              if (!traces || !shouldTrace(traces.spans?.schema, null)) {
+                return wrapped();
+              }
+
               const ctx = createSchemaLoadingSpan({
                 ctx: initSpan ?? ROOT_CONTEXT,
                 tracer,
@@ -699,7 +684,7 @@ export function useOpenTelemetry(
         // When running in a runtime without a context manager, we have to keep track of the
         // span correlated to a log manually. For now, we just link all logs for a request to
         // the HTTP root span
-        if (!useContextManager) {
+        if (traces && !useContextManager) {
           const requestId =
             // TODO: serverContext.log will not be available in Yoga, this will be fixed when Hive Logger is integrated into Yoga
             serverContext.log?.attrs?.[
@@ -736,6 +721,7 @@ export function useOpenTelemetry(
       },
 
       onCacheGet: (payload) =>
+        traces &&
         shouldTrace(traces.events?.cache, { key: payload.key, action: 'read' })
           ? {
               onCacheMiss: () => recordCacheEvent('miss', payload),
@@ -746,6 +732,7 @@ export function useOpenTelemetry(
           : undefined,
 
       onCacheSet: (payload) =>
+        traces &&
         shouldTrace(traces.events?.cache, { key: payload.key, action: 'write' })
           ? {
               onCacheSetDone: () => recordCacheEvent('write', payload),
@@ -755,7 +742,8 @@ export function useOpenTelemetry(
           : undefined,
 
       onResponse({ response, state, serverContext }) {
-        state.forRequest.otel &&
+        traces &&
+          state.forRequest.otel &&
           setResponseAttributes(state.forRequest.otel.root, response);
 
         // Clean up Logging context tracking for runtimes without context manager
@@ -774,6 +762,7 @@ export function useOpenTelemetry(
 
       onParams({ state, context: gqlCtx, params }) {
         if (
+          !traces ||
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
         ) {
@@ -786,6 +775,7 @@ export function useOpenTelemetry(
 
       onExecutionResult({ result, context: gqlCtx, state }) {
         if (
+          !traces ||
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphql, { context: gqlCtx })
         ) {
@@ -797,6 +787,7 @@ export function useOpenTelemetry(
 
       onParse({ state, context: gqlCtx }) {
         if (
+          !traces ||
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphqlParse, { context: gqlCtx })
         ) {
@@ -822,6 +813,7 @@ export function useOpenTelemetry(
 
       onValidate({ state, context: gqlCtx, params }) {
         if (
+          !traces ||
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.graphqlValidate, { context: gqlCtx })
         ) {
@@ -839,10 +831,7 @@ export function useOpenTelemetry(
       },
 
       onExecute({ state, args }) {
-        if (!isParentEnabled(state)) {
-          return;
-        }
-
+        // Check for execute span is done in `instrument.execute`
         if (state.forOperation.skipExecuteSpan) {
           return;
         }
@@ -896,6 +885,7 @@ export function useOpenTelemetry(
         }
 
         if (
+          !traces ||
           !isParentEnabled(state) ||
           !shouldTrace(traces.spans?.upstreamFetch, { executionRequest })
         ) {
@@ -917,11 +907,13 @@ export function useOpenTelemetry(
       },
 
       onSchemaChange(payload) {
-        setSchemaAttributes(payload);
-
         if (initSpan) {
           trace.getSpan(initSpan)?.end();
           initSpan = null;
+        }
+
+        if (!traces || !shouldTrace(traces?.spans?.schema, null)) {
+          setSchemaAttributes(payload);
         }
       },
 
@@ -983,3 +975,40 @@ export const defaultHttpFilter: SpansConfig['http'] = ({ request }) => {
 
   return true;
 };
+
+/**
+ * Resolves the traces config.
+ * Returns `undefined` if tracing is disabled
+ */
+function resolveTracesConfig(
+  options: OpenTelemetryGatewayPluginOptions,
+  useContextManager: boolean,
+  log?: Logger,
+): TracesConfig | undefined {
+  if (options.traces === false) {
+    return undefined;
+  }
+
+  let traces: TracesConfig =
+    typeof options.traces === 'object' ? options.traces : {};
+
+  traces.spans ??= {};
+
+  // Only override http filter if it's not disabled or already a function
+  if (traces.spans.http ?? true === true) {
+    traces.spans = { ...traces.spans, http: defaultHttpFilter };
+  }
+
+  // Schema span is only working with a context manager, otherwise we can't correlate its sub-spans
+  if (!useContextManager) {
+    if (traces.spans.schema) {
+      log?.warn(
+        'Schema loading spans are disabled because no context manager is available',
+      );
+    }
+
+    traces.spans.schema = false;
+  }
+
+  return traces;
+}
