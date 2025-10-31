@@ -57,6 +57,8 @@ import { isContextManagerCompatibleWithAsync } from './utils';
 const initializationTime =
   'performance' in globalThis ? performance.now() : undefined;
 
+const ignoredRequests = new WeakSet<Request>();
+
 type BooleanOrPredicate<TInput = never> =
   | boolean
   | ((input: TInput) => boolean);
@@ -136,7 +138,10 @@ type SpansConfig = {
    *
    * Disabling the HTTP span will also disable all other child spans.
    */
-  http?: BooleanOrPredicate<{ request: Request }>;
+  http?: BooleanOrPredicate<{
+    request: Request;
+    ignoredRequests: WeakSet<Request>;
+  }>;
   /**
    * Enable/disable GraphQL operation spans (default: true).
    *
@@ -213,6 +218,7 @@ export type OpenTelemetryPluginUtils = {
   getExecutionRequestContext: (
     ExecutionRequest: ExecutionRequest,
   ) => Context | undefined;
+  ignoreRequest: (request: Request) => void;
 };
 
 export type OpenTelemetryContextExtension = {
@@ -327,6 +333,7 @@ export function useOpenTelemetry(
         getState({ context }).forOperation.otel?.root,
       getExecutionRequestContext: (executionRequest) =>
         getState({ executionRequest }).forSubgraphExecution.otel?.root,
+      ignoreRequest: (request) => ignoredRequests.add(request),
     });
 
     return {
@@ -338,7 +345,10 @@ export function useOpenTelemetry(
           return unfakePromise(
             preparation$
               .then(() => {
-                if (!traces || !shouldTrace(traces.spans?.http, { request })) {
+                if (
+                  !traces ||
+                  !shouldTrace(traces.spans?.http, { request, ignoredRequests })
+                ) {
                   return wrapped();
                 }
 
@@ -937,6 +947,7 @@ export function useOpenTelemetry(
   plugin.getHttpContext = hive.getHttpContext;
   plugin.getOperationContext = hive.getOperationContext;
   plugin.getExecutionRequestContext = hive.getExecutionRequestContext;
+  plugin.ignoreRequest = hive.ignoreRequest;
   Object.defineProperty(plugin, 'tracer', {
     enumerable: true,
     get: () => tracer,
@@ -968,8 +979,7 @@ function getURL(request: Request) {
 }
 
 export const defaultHttpFilter: SpansConfig['http'] = ({ request }) => {
-  // Ignore Prometheus requests
-  if (request.url.endsWith('/metrics')) {
+  if (ignoredRequests.has(request)) {
     return false;
   }
 
