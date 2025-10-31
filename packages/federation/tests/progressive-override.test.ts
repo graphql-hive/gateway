@@ -92,8 +92,8 @@ describe('Progressive Override', () => {
           query: /* GraphQL */ `
             {
               foo {
-                value
                 id
+                value
               }
             }
           `,
