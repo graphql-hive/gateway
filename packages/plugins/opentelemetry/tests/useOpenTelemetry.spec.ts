@@ -617,8 +617,8 @@ describe('useOpenTelemetry', () => {
               },
             },
           });
-          await gateway.fetch('/metrics');
-          await gateway.fetch('/not-found');
+          await gateway.fetch('http://localhost/metrics');
+          await gateway.fetch('http://localhost/not-found');
 
           spanExporter.assertNoSpanWithName('GET /metrics');
           spanExporter.assertSpanWithName('GET /not-found');
