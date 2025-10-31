@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@envelop/core": "^5.3.2",
-    "@graphql-tools/utils": "^10.9.1"
+    "@graphql-tools/utils": "^10.10.0"
   },
   "devDependencies": {
     "graphql": "^16.9.0",
