@@ -212,12 +212,42 @@ export type ContextMatcher = {
 
 export type OpenTelemetryPluginUtils = {
   tracer: Tracer;
+  /**
+   * Returns the current active OTEL context.
+   *
+   * Note: Defaults to `otel.context.active()` if no plugin is registered.
+   */
   getActiveContext: (payload: ContextMatcher) => Context;
+  /**
+   * Returns the http request root span context.
+   * Returns `undefined` if the current request is not being traced.
+   *
+   * Note: Defaults to `otel.context.active()` if no plugin is registered.
+   */
   getHttpContext: (request: Request) => Context | undefined;
+  /**
+   * Returns the current GraphQL operation root span context.
+   * Returns `undefined` if the current GraphQL operation is not being traced.
+   *
+   * Note: Defaults to `otel.context.active()` if no plugin is registered.
+   */
   getOperationContext: (context: any) => Context | undefined;
+  /**
+   * Returns the current subgraph Execution Request root span context.
+   * Returns `undefined` if the current subgraph Execution Request is not being traced.
+   *
+   * Note: Defaults to `otel.context.active()` if no plugin is registered.
+   */
   getExecutionRequestContext: (
     ExecutionRequest: ExecutionRequest,
   ) => Context | undefined;
+  /*
+   * Marks the request to be ignored. It will not be traced and no span will be created for it.
+   *
+   * Note: No-op if no plugin is registered.
+   * Note: This rely on HTTP span filtering and can stop working if you define a custom one without
+   *       respecting the `ignoredRequests` list payload attributes.
+   */
   ignoreRequest: (request: Request) => void;
 };
 
