@@ -1,4 +1,4 @@
-import {
+import type {
   FetchNodePathSegment,
   FetchRewrite,
   FlattenNodePathSegment,
@@ -20,29 +20,29 @@ import {
   handleMaybePromise,
   isPromise,
   mapAsyncIterator,
-  MaybePromise,
+  type MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import type {
+  DocumentNode,
   FragmentDefinitionNode,
   GraphQLError,
   GraphQLNamedType,
+  GraphQLSchema,
+  OperationDefinitionNode,
+  OperationTypeNode,
+  SelectionSetNode,
 } from 'graphql';
 import {
-  DocumentNode,
   getNamedType,
   getOperationAST,
   getVariableValues,
-  GraphQLSchema,
   isAbstractType,
   isEnumType,
   isInterfaceType,
   isObjectType,
   isOutputType,
   Kind,
-  OperationDefinitionNode,
-  OperationTypeNode,
   parse,
-  SelectionSetNode,
   TypeNameMetaFieldDef,
 } from 'graphql';
 
@@ -156,9 +156,6 @@ export const getOperationsAndFragments = memoize1(
   },
 );
 
-/**
- * TODO: fix the return type to match what is needed in ./handler.ts
- */
 export function executeQueryPlan({
   queryPlan,
   document,

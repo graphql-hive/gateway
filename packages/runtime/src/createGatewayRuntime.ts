@@ -702,6 +702,7 @@ export function createGatewayRuntime<
       )(...args);
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
+      handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher,
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
         unifiedGraph = newUnifiedGraph;

@@ -1,5 +1,6 @@
 import { QueryPlanner } from '@graphql-hive/router';
 import {
+  handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
@@ -10,10 +11,9 @@ import {
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
 import { BREAK, DocumentNode, execute, print, visit } from 'graphql';
-import { handleFederationSupergraph } from '../federation/supergraph';
 import { executeQueryPlan } from './executor';
 
-export function handleFederationSupergraphWithRouter(
+export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): UnifiedGraphHandlerResult {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs

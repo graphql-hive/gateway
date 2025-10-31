@@ -26,11 +26,9 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { usingHiveRouterQueryPlanner } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph as handleFederationSupergraphWithTools } from './federation/supergraph';
-import { handleFederationSupergraphWithRouter } from './router/handler';
+import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -178,15 +176,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
-    if (usingHiveRouterQueryPlanner()) {
-      opts.transportContext?.log.warn(
-        '[EXPERIMENTAL] Using Query Planner from Hive Router. This feature is experimental and may have bugs or unexpected behavior.',
-      );
-    }
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || usingHiveRouterQueryPlanner()
-        ? handleFederationSupergraphWithRouter
-        : handleFederationSupergraphWithTools;
+      opts.handleUnifiedGraph || handleFederationSupergraph;
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];

@@ -7,6 +7,7 @@ import type {
   Instrumentation as GatewayRuntimeInstrumentation,
   TransportEntryAdditions,
   Transports,
+  UnifiedGraphHandler,
   UnifiedGraphPlugin,
 } from '@graphql-mesh/fusion-runtime';
 import type { HMACUpstreamSignatureOptions } from '@graphql-mesh/hmac-upstream-signature';
@@ -253,6 +254,17 @@ export interface GatewayConfigSupergraph<
    * });
    */
   progressiveOverride?: ProgressiveOverrideHandler;
+
+  /**
+   * Custom handler for the unified graph which is responsible for planning the
+   * execution of federated queries.
+   *
+   * This option allows to provide a completely custom implementation of the unified graph handler.
+   * It can be used to implement custom federation behavior or to integrate with other systems.
+   *
+   * @experimental This option is experimental and may change in the future.
+   */
+  unifiedGraphHandler?: UnifiedGraphHandler;
 }
 
 export type ProgressiveOverrideHandler = (
