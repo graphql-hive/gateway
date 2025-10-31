@@ -609,6 +609,21 @@ describe('useOpenTelemetry', () => {
           allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
         });
 
+        it('should not trace prometheus metrics scraping by default', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            options: {
+              traces: {
+                spans: { schema: false },
+              },
+            },
+          });
+          await gateway.fetch('/metrics');
+          await gateway.fetch('/not-found');
+
+          spanExporter.assertNoSpanWithName('GET /metrics');
+          spanExporter.assertSpanWithName('GET /not-found');
+        });
+
         it('should not trace graphql operation if disable', async () => {
           await using gateway = await buildTestGatewayForCtx({
             options: {
