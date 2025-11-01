@@ -9,7 +9,7 @@
     "@apollo/server": "^5.1.0",
     "@apollo/subgraph": "^2.11.3",
     "graphql": "^16.9.0",
-    "@graphql-hive/gateway": "^2.1.12"
+    "@graphql-hive/gateway": "^2.1.13"
   },
   "overrides": {
     "esbuild": "^0.25.5"
