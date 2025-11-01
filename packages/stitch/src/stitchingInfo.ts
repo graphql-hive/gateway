@@ -336,7 +336,8 @@ function createMergedTypes<
         );
 
         if (hasOverrides) {
-          mergedTypeConfig.delegationPlanBuilder = mergedTypeConfig.nonMemoizedDelegationPlanBuilder;
+          mergedTypeConfig.delegationPlanBuilder =
+            mergedTypeConfig.nonMemoizedDelegationPlanBuilder;
         }
 
         // TODO: Workaround - Find a better way later
