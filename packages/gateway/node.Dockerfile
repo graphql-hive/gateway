@@ -4,8 +4,6 @@ FROM node:24-bookworm-slim AS install
 
 WORKDIR /install
 
-RUN npm i -g npm@latest
-
 RUN npm i graphql@^16.9.0
 
 #
@@ -78,7 +76,7 @@ RUN chown node . && \
 # npm install should ignore peer deps (which is often "graphql" which is available in root)
 RUN echo "omit=peer" > .npmrc && chown node .npmrc
 
-RUN npm i -g npm@latest
+RUN npm i -g tar@7.5.2
 
 # we need to set NODE_PATH to include because the root node_modules will dynamically import modules and we want node to search user-installed modules too (when extending the docker image)
 ENV NODE_PATH=/gateway/node_modules
