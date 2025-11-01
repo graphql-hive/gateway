@@ -1,5 +1,6 @@
 import type { GatewayPlugin, OnFetchHook } from '@graphql-hive/gateway-runtime';
 import type { Logger } from '@graphql-hive/logger';
+import { hive } from '@graphql-hive/plugin-opentelemetry/api';
 import type { OnSubgraphExecuteHook } from '@graphql-mesh/fusion-runtime';
 import type { TransportEntry } from '@graphql-mesh/transport-common';
 import type {
@@ -78,7 +79,7 @@ type MeshMetricsConfig = {
      *  - string[]: Enable the metric on a list of phases
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_fetch_duration: HistogramMetricOption<
+    graphql_gateway_fetch_duration?: HistogramMetricOption<
       'fetch',
       string,
       FetchMetricsLabelParams
@@ -96,7 +97,7 @@ type MeshMetricsConfig = {
      *  - string[]: Enable the metric on a list of phases
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_subgraph_execute_duration: HistogramMetricOption<
+    graphql_gateway_subgraph_execute_duration?: HistogramMetricOption<
       'subgraphExecute',
       string,
       SubgraphMetricsLabelParams
@@ -114,7 +115,7 @@ type MeshMetricsConfig = {
      *  - string[]: Enable the metric on a list of phases
      *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
      */
-    graphql_gateway_subgraph_execute_errors: CounterMetricOption<
+    graphql_gateway_subgraph_execute_errors?: CounterMetricOption<
       'subgraphExecute',
       string,
       SubgraphMetricsLabelParams
@@ -175,6 +176,7 @@ export default function useMeshPrometheus(
   > &
     YamlConfig, // Remove this after Mesh v1 is released,
 ): MeshPlugin<any> & YogaPlugin & GatewayPlugin {
+  const endpoint = pluginOptions.endpoint || '/metrics';
   let registry: Registry;
   if (!pluginOptions.registry) {
     registry = defaultRegistry;
@@ -352,6 +354,14 @@ export default function useMeshPrometheus(
     });
 
   return {
+    instrumentation: {
+      request({ request }, wrapped) {
+        if (new URL(request.url).pathname === endpoint) {
+          hive.ignoreRequest(request);
+        }
+        return wrapped();
+      },
+    },
     onPluginInit({ addPlugin }) {
       addPlugin(
         // @ts-expect-error TODO: plugin context generic is missing in yoga's prometheus plugin

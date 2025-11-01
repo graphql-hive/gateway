@@ -36,6 +36,7 @@ const defaultDelegate: HiveAPIDelegate = {
   getExecutionRequestContext: () => context.active(),
   getHttpContext: () => context.active(),
   getOperationContext: () => context.active(),
+  ignoreRequest: () => {},
   tracer: undefined,
 };
 
@@ -66,6 +67,8 @@ export const hive: HiveAPI = {
       return false;
     }
   },
+
+  ignoreRequest: (request) => delegate.ignoreRequest(request),
 
   disable() {
     delegate = defaultDelegate;
