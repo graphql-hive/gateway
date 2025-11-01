@@ -88,6 +88,7 @@ function createMergedTypes<
   }
 
   for (const typeName in typeCandidates) {
+    let hasOverrides = false;
     const typeCandidatesOfTypeName = typeCandidates[typeName];
     if (!typeCandidatesOfTypeName) {
       throw new Error(`Invalid type candidates for type name ${typeName}`);
@@ -176,6 +177,9 @@ function createMergedTypes<
           if (mergedTypeConfig.fields) {
             const parsedFieldSelectionSets = Object.create(null);
             for (const fieldName in mergedTypeConfig.fields) {
+              if (mergedTypeConfig.fields[fieldName]?.override) {
+                hasOverrides = true;
+              }
               if (mergedTypeConfig.fields[fieldName]?.selectionSet) {
                 const rawFieldSelectionSet =
                   mergedTypeConfig.fields[fieldName].selectionSet;
@@ -330,6 +334,12 @@ function createMergedTypes<
         mergedTypeConfig.delegationPlanBuilder = createDelegationPlanBuilder(
           mergedTypeConfig as MergedTypeInfo,
         );
+
+        if (hasOverrides) {
+          mergedTypeConfig.delegationPlanBuilder = mergedTypeConfig.nonMemoizedDelegationPlanBuilder;
+        }
+
+        // TODO: Workaround - Find a better way later
 
         for (const fieldName in supportedBySubschemas) {
           if (
