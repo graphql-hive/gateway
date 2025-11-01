@@ -98,6 +98,10 @@ jobs:
             os: ubuntu-latest
             gateway-runner: node
             node-version: 24
+          - workflow-name: Node 25 on Ubuntu
+            os: ubuntu-latest
+            gateway-runner: node
+            node-version: 25
 
           # Node on Docker
           - workflow-name: Node Docker on Ubuntu
