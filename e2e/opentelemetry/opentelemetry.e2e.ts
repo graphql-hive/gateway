@@ -253,7 +253,7 @@ describe('OpenTelemetry', () => {
         const { execute } = await gateway({
           supergraph,
           env: {
-            DISABLED_OPENTELEMETRY_SETUP: '1',
+            DISABLE_OPENTELEMETRY_SETUP: '1',
             OTEL_SERVICE_NAME: serviceName,
             OTEL_SERVICE_VERSION: '1.0.0',
           },
