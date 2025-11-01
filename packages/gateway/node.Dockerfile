@@ -84,9 +84,9 @@ ENV NODE_PATH=/gateway/node_modules
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
-RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
-
 RUN npm install tar@latest -g
+
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
