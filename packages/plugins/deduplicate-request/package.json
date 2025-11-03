@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/plugin-deduplicate-request",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "type": "module",
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@graphql-mesh/utils": "^0.104.14",
-    "@graphql-tools/utils": "^10.9.1",
+    "@graphql-tools/utils": "^10.10.0",
     "@whatwg-node/promise-helpers": "^1.3.2"
   },
   "devDependencies": {

@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.1.13
+### Patch Changes
+
+
+
+- [#1654](https://github.com/graphql-hive/gateway/pull/1654) [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/code-file-loader@^8.1.23` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.23) (from `^8.1.22`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.1.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.1.3) (from `^8.1.2`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/load@^8.1.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.1.3) (from `^8.1.2`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.0) (from `^10.9.1`, in `dependencies`)
+- Updated dependencies [[`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851)]:
+  - @graphql-hive/gateway-runtime@2.3.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.13
+  - @graphql-hive/plugin-opentelemetry@1.0.15
+  - @graphql-mesh/hmac-upstream-signature@2.0.5
+  - @graphql-mesh/plugin-prometheus@2.0.16
+  - @graphql-mesh/transport-http@1.0.9
+  - @graphql-mesh/transport-http-callback@1.0.9
+  - @graphql-mesh/transport-ws@2.0.9
+
 ## 2.1.12
 ### Patch Changes
 

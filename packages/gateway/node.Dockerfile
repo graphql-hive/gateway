@@ -1,14 +1,16 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:24-bookworm-slim AS install
+FROM node:25-bookworm-slim AS install
 
 WORKDIR /install
 
 RUN npm i graphql@^16.9.0
 
+RUN npm audit fix --force
+
 #
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 
 # use the upcoming debian release (trixie) to get the latest security updates
 RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
@@ -81,6 +83,10 @@ ENV NODE_PATH=/gateway/node_modules
 
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+RUN npm install tar@latest -g
+
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
