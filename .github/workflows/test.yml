@@ -56,7 +56,7 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:bun
-      # TODO: at the moment there is no plugin system in bun ts that can do what we do
+      # TODO: at the moment there is no plugin system in bun that can do what we do
       #       with injectRouterRuntime() inside vitest.config.ts
       # - name: Test with Router Runtime
       #   uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
@@ -92,14 +92,16 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:leaks
-      - name: Test with Router Runtime
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
-        env:
-          HIVE_ROUTER_RUNTIME: 1
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: yarn test:leaks
+      # TODO: at the moment there is no simple plugin system in js that can easily
+      #       do what we do with injectRouterRuntime() inside vitest.config.ts
+      # - name: Test with Router Runtime
+      #   uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+      #   env:
+      #     HIVE_ROUTER_RUNTIME: 1
+      #   with:
+      #     timeout_minutes: 10
+      #     max_attempts: 3
+      #     command: yarn test:leaks
 
   e2e:
     runs-on: ${{ matrix.setup.os }}
