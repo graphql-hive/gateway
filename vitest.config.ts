@@ -1,7 +1,7 @@
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, Plugin } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
-import { isCI } from './internal/env/src/index';
+import { isCI, usingHiveRouterRuntime } from './internal/env/src/index';
 import { isNotPlatform } from './internal/env/src/node';
 
 // By default, Vite bypasses node_packages to native Node; meaning, imports to
@@ -12,7 +12,7 @@ import { isNotPlatform } from './internal/env/src/node';
 const inline = [/@graphql-mesh\/.*/, /@omnigraph\/.*/];
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [tsconfigPaths(), injectRouterRuntime()],
   resolve: {
     alias: {
       graphql: 'graphql/index.js', // TODO: why duplicate graphql errors when there's no multiple graphqls installed? mistery
@@ -78,3 +78,25 @@ export default defineConfig({
     ],
   },
 });
+
+function injectRouterRuntime(): Plugin {
+  return {
+    name: 'inject-router-runtime',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!usingHiveRouterRuntime()) {
+        return; // disabled
+      }
+
+      if (id.includes('unifiedGraphManager.ts')) {
+        code = code.replace(
+          `import { handleFederationSupergraph } from './federation/supergraph';`,
+          `import { unifiedGraphHandler as handleFederationSupergraph } from '@graphql-hive/router-runtime';`,
+        );
+      }
+      return {
+        code,
+      };
+    },
+  };
+}

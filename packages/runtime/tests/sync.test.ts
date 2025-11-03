@@ -6,7 +6,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import {
   composeLocalSchemasWithApollo,
-  usingHiveRouterQueryPlanner,
+  usingHiveRouterRuntime,
 } from '@internal/testing';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { parse } from 'graphql';
@@ -17,7 +17,7 @@ it.skipIf(
   globalThis.Bun ||
     // The Hive Router Query Planner can only run async
     // NOTE: there was a variant of sync query planning for the from the QP but it was suboptimal and slow
-    usingHiveRouterQueryPlanner(),
+    usingHiveRouterRuntime(),
 )('should be sync if there is no async operations', async () => {
   const upstreamSchema = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `

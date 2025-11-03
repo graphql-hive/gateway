@@ -15,7 +15,7 @@ import {
 } from '@graphql-tools/utils';
 import {
   assertSingleExecutionValue,
-  usingHiveRouterQueryPlanner,
+  usingHiveRouterRuntime,
 } from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
@@ -98,7 +98,7 @@ describe('Polling', () => {
     }
 
     function getFetchedTimeFromResolvers() {
-      if (usingHiveRouterQueryPlanner()) {
+      if (usingHiveRouterRuntime()) {
         return handleMaybePromise(
           () => manager.getExecutor(),
           (executor) =>
@@ -251,7 +251,7 @@ describe('Polling', () => {
       return lastFetchedDate;
     }
     async function getFetchedTimeFromResolvers() {
-      if (usingHiveRouterQueryPlanner()) {
+      if (usingHiveRouterRuntime()) {
         const executor = await manager.getExecutor();
         const result = await executor!({
           document: parse(/* GraphQL */ `

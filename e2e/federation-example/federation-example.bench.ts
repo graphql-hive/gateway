@@ -33,7 +33,7 @@ describe('Gateway', async () => {
       env: {
         FORK: 1,
         NODE_ENV: 'production',
-        __EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER: 1,
+        HIVE_ROUTER_RUNTIME: 1,
       },
     }),
   };

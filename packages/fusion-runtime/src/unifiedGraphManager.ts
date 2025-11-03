@@ -28,7 +28,6 @@ import {
 } from '@whatwg-node/promise-helpers';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -39,6 +38,11 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
+// IMPORTANT: the following code will be replaced by vitest when testing the
+//            hive router query planner. please make sure to keep it in sync
+//            with the `injectRouterRuntime` plugin in vitest.config.ts.
+// prettier-ignore
+import { handleFederationSupergraph } from './federation/supergraph';
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;

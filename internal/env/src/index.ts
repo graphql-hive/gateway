@@ -146,6 +146,6 @@ export function getNodeVer(): {
  * Whether the federation query planner is using Hive Router node-addon for query planning.
  * @experimental
  */
-export function usingHiveRouterQueryPlanner(): boolean {
-  return getEnvBool('__EXPERIMENTAL__HIVE_ROUTER_QUERY_PLANNER');
+export function usingHiveRouterRuntime(): boolean {
+  return getEnvBool('HIVE_ROUTER_RUNTIME');
 }

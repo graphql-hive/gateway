@@ -5,7 +5,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import {
   composeLocalSchemasWithApollo,
-  usingHiveRouterQueryPlanner,
+  usingHiveRouterRuntime,
 } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
@@ -118,7 +118,7 @@ describe('Error handling', () => {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: usingHiveRouterQueryPlanner()
+              body: usingHiveRouterRuntime()
                 ? `{"query":"{subgraph1{subgraph1Field}}"}`
                 : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',
@@ -230,7 +230,7 @@ describe('Error handling', () => {
     });
     const res = await resp.json();
     expect(res).toEqual({
-      data: usingHiveRouterQueryPlanner()
+      data: usingHiveRouterRuntime()
         ? {
             subgraph1: null,
             subgraph2: {
@@ -243,7 +243,7 @@ describe('Error handling', () => {
           extensions: {
             code: 'DOWNSTREAM_SERVICE_ERROR',
             request: {
-              body: usingHiveRouterQueryPlanner()
+              body: usingHiveRouterRuntime()
                 ? `{"query":"{subgraph1{subgraph1Field}}"}`
                 : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',

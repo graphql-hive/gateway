@@ -6,7 +6,7 @@ import {
 } from '@graphql-mesh/fusion-runtime';
 import { Subschema } from '@graphql-tools/delegate';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
-import { usingHiveRouterQueryPlanner } from '~internal/env';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { GraphQLSchema, Kind, parse, print } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { composeAndGetExecutor } from './utils';
@@ -14,7 +14,7 @@ import { composeAndGetExecutor } from './utils';
 describe('handleFederationSubschema', () => {
   it.skipIf(
     // TODO: this needs to work with the Hive Router Query Planner as well
-    usingHiveRouterQueryPlanner(),
+    usingHiveRouterRuntime(),
   )('combine federation merging and custom merging', async () => {
     const users = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
@@ -148,7 +148,7 @@ describe('handleFederationSubschema', () => {
   });
 });
 
-describe.skipIf(usingHiveRouterQueryPlanner())('onDelegationPlanHook', () => {
+describe.skipIf(usingHiveRouterRuntime())('onDelegationPlanHook', () => {
   it('should be called with the plan', async () => {
     const user = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `

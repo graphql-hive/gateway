@@ -5,7 +5,7 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import {
   composeLocalSchemasWithApollo,
-  usingHiveRouterQueryPlanner,
+  usingHiveRouterRuntime,
 } from '@internal/testing';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -550,7 +550,7 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      ...(usingHiveRouterQueryPlanner()
+      ...(usingHiveRouterRuntime()
         ? {
             // data field completely omitted on errors from hive router qp
           }
@@ -565,7 +565,7 @@ describe('Demand Control', () => {
               max: 3,
             },
           },
-          ...(usingHiveRouterQueryPlanner()
+          ...(usingHiveRouterRuntime()
             ? {
                 // path and locations not present in hive router qp
               }
@@ -745,7 +745,7 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      ...(usingHiveRouterQueryPlanner()
+      ...(usingHiveRouterRuntime()
         ? {
             // data field completely omitted on errors from hive router qp
           }
@@ -761,7 +761,7 @@ describe('Demand Control', () => {
           extensions: {
             code: 'COST_QUERY_PARSE_FAILURE',
           },
-          ...(usingHiveRouterQueryPlanner()
+          ...(usingHiveRouterRuntime()
             ? {
                 // path and locations not present in hive router qp
               }
@@ -1161,7 +1161,7 @@ describe('Demand Control', () => {
     });
     const result = await response.json();
     expect(result).toEqual({
-      ...(usingHiveRouterQueryPlanner()
+      ...(usingHiveRouterRuntime()
         ? {
             // data field completely omitted on errors from hive router qp
           }
@@ -1171,7 +1171,7 @@ describe('Demand Control', () => {
               bar: null,
             },
           }),
-      errors: usingHiveRouterQueryPlanner()
+      errors: usingHiveRouterRuntime()
         ? [
             // only one error because there are no locations or paths in hive router qp
             {

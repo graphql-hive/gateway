@@ -12,7 +12,7 @@ import {
   MapperKind,
   mapSchema,
 } from '@graphql-tools/utils';
-import { usingHiveRouterQueryPlanner } from '~internal/env';
+import { usingHiveRouterRuntime } from '~internal/env';
 import {
   buildSchema,
   getNamedType,
@@ -153,7 +153,7 @@ describe('Federation Compatibility', () => {
         );
       });
       tests.forEach((_, i) => {
-        (!usingHiveRouterQueryPlanner() &&
+        (!usingHiveRouterRuntime() &&
           supergraphName === 'requires-with-argument-conflict'
           ? it.todo // fails in stitching
           : it)(`test-query-${i}`, async () => {

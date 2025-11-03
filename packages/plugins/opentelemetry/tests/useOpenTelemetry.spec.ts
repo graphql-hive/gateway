@@ -51,7 +51,7 @@ import {
   SpanProcessor,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
-import { usingHiveRouterQueryPlanner } from '~internal/env';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
 import type {
@@ -1226,7 +1226,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: usingHiveRouterQueryPlanner()
+        [SEMATTRS_HTTP_STATUS_CODE]: usingHiveRouterRuntime()
           ? // 500 because there wont be a data field with hive router query planner and it's a application graphql response json
             500
           : 200,
@@ -1263,7 +1263,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        ...(usingHiveRouterQueryPlanner()
+        ...(usingHiveRouterRuntime()
           ? {
               [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
               [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
