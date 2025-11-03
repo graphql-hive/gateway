@@ -54,7 +54,7 @@
     "@types/extract-files": "13.0.2",
     "@whatwg-node/disposablestack": "^0.0.6",
     "extract-files": "13.0.0",
-    "graphql": "^16.9.0",
+    "graphql": "^16.12.0",
     "graphql-yoga": "^5.16.0",
     "pkgroll": "2.20.1"
   },

@@ -3,6 +3,6 @@
   "private": true,
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.5.1",
-    "graphql": "^16.9.0"
+    "graphql": "^16.12.0"
   }
 }

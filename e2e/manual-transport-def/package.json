@@ -6,6 +6,6 @@
     "@graphql-mesh/transport-rest": "^0.9.15",
     "@omnigraph/openapi": "^0.109.21",
     "fets": "^0.8.4",
-    "graphql": "^16.9.0"
+    "graphql": "^16.12.0"
   }
 }

@@ -4,6 +4,6 @@
   "devDependencies": {
     "@apollo/server": "^5.1.0",
     "@apollo/subgraph": "^2.11.3",
-    "graphql": "^16.9.0"
+    "graphql": "^16.12.0"
   }
 }
