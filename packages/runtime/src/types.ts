@@ -51,6 +51,7 @@ import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
+export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
 
 export type GatewayConfig<
