@@ -90,7 +90,6 @@ export interface UnifiedGraphHandlerOpts {
   batchDelegateOptions?: BatchDelegateOptions;
 
   log?: Logger;
-  cache?: KeyValueCache;
 }
 
 export interface UnifiedGraphHandlerResult {
@@ -355,7 +354,6 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegateHooks: this.opts.onDelegateHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
-        cache: this.opts.transportContext?.cache,
         handleProgressiveOverride: this.opts.handleProgressiveOverride
           ? (label, context) => {
               const labels = this.overrideLabelsByContext.get(context);
