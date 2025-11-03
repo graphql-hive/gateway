@@ -2,6 +2,6 @@
   "name": "@e2e/supergraph-url",
   "private": true,
   "dependencies": {
-    "graphql": "^16.9.0"
+    "graphql": "^16.12.0"
   }
 }
