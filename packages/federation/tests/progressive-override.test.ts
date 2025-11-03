@@ -1,8 +1,9 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { extractPercentageFromLabel } from '@graphql-tools/federation';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { describe, expect, it } from 'vitest';
 
-describe('Progressive Override', () => {
+describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
   describe('Label processing', () => {
     it('from the root level', async () => {
       await using gw = createGatewayTester({
