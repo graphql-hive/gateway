@@ -4683,7 +4683,6 @@ __metadata:
     "@nestjs/common": "npm:11.1.8"
     "@nestjs/core": "npm:11.1.8"
     "@nestjs/graphql": "npm:13.2.0"
-    "@nestjs/platform-express": "npm:^11.1.7"
     "@nestjs/testing": "npm:11.1.8"
     "@types/supertest": "npm:6.0.3"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -7264,22 +7263,6 @@ __metadata:
     class-validator:
       optional: true
   checksum: 10c0/cd9f9236648d8a146a4e6890009415400cca7959c3976acdf6fec2ddddc73546d174e58f935b96c6b2319dc54c76e58a39bf47f41991bcd27d1cb55bca99474e
-  languageName: node
-  linkType: hard
-
-"@nestjs/platform-express@npm:^11.1.7":
-  version: 11.1.7
-  resolution: "@nestjs/platform-express@npm:11.1.7"
-  dependencies:
-    cors: "npm:2.8.5"
-    express: "npm:5.1.0"
-    multer: "npm:2.0.2"
-    path-to-regexp: "npm:8.3.0"
-    tslib: "npm:2.8.1"
-  peerDependencies:
-    "@nestjs/common": ^11.0.0
-    "@nestjs/core": ^11.0.0
-  checksum: 10c0/3906e9c63f21e7b003bf2d1fc75d51b33f2f50b2a174e5e6fa7369692e78cf0e17dac2c7d9b77bf95e54daa299dd0a4125e40862c1b23ac49eab7ab57550a790
   languageName: node
   linkType: hard
 
