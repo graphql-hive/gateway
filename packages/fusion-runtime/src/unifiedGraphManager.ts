@@ -3,7 +3,7 @@ import type {
   TransportContext,
   TransportEntry,
 } from '@graphql-mesh/transport-common';
-import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
+import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
 import { CRITICAL_ERROR } from '@graphql-tools/executor';
 import type {
