@@ -33,9 +33,9 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Test
+      - name: Test with Stitching Runtime
         run: yarn test
-      - name: '[EXPERIMENTAL] Test with Hive Router Query Planner'
+      - name: Test with Router Runtime
         env:
           HIVE_ROUTER_RUNTIME: 1
         run: yarn test
@@ -56,14 +56,16 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:bun
-      - name: '[EXPERIMENTAL] Test with Hive Router Query Planner'
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
-        env:
-          HIVE_ROUTER_RUNTIME: 1
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: yarn test:bun
+      # TODO: at the moment there is no plugin system in bun ts that can do what we do
+      #       with injectRouterRuntime() inside vitest.config.ts
+      # - name: Test with Router Runtime
+      #   uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+      #   env:
+      #     HIVE_ROUTER_RUNTIME: 1
+      #   with:
+      #     timeout_minutes: 10
+      #     max_attempts: 3
+      #     command: yarn test:bun
 
   leaks:
     strategy:
@@ -84,13 +86,13 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Run Tests
+      - name: Test with Stitching Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:leaks
-      - name: '[EXPERIMENTAL] Run Tests with Hive Router Query Planner'
+      - name: Test with Router Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
           HIVE_ROUTER_RUNTIME: 1
