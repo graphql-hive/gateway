@@ -38,7 +38,7 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
-// IMPORTANT: the following code will be replaced by vitest when testing the
+// IMPORTANT: the following import will be replaced by vitest when testing the
 //            hive router query planner. please make sure to keep it in sync
 //            with the `injectRouterRuntime` plugin in vitest.config.ts.
 // prettier-ignore
