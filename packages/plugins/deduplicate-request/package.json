@@ -39,7 +39,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^16.9.0"
+    "graphql": "^16.12.0"
   },
   "dependencies": {
     "@graphql-mesh/utils": "^0.104.14",
@@ -50,7 +50,7 @@
     "@graphql-hive/gateway-runtime": "workspace:*",
     "@graphql-mesh/types": "^0.104.14",
     "@whatwg-node/fetch": "^0.10.11",
-    "graphql": "^16.9.0",
+    "graphql": "^16.12.0",
     "pkgroll": "2.20.1"
   },
   "sideEffects": false
