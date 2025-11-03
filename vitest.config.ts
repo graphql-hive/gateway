@@ -88,11 +88,17 @@ function injectRouterRuntime(): Plugin {
         return; // disabled
       }
 
+      const origCode = code;
       if (id.includes('unifiedGraphManager.ts')) {
         code = code.replace(
           `import { handleFederationSupergraph } from './federation/supergraph';`,
           `import { unifiedGraphHandler as handleFederationSupergraph } from '@graphql-hive/router-runtime';`,
         );
+        if (origCode === code) {
+          throw new Error(
+            'Failed to inject router runtime. Code in "unifiedGraphManager.ts" stayed the same.',
+          );
+        }
       }
       return {
         code,
