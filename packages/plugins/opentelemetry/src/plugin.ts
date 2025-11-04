@@ -6,6 +6,7 @@ import {
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
+import { ExecutionArgs } from '@graphql-tools/executor';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
 import {
@@ -36,6 +37,7 @@ import {
   createSchemaLoadingSpan,
   createSubgraphExecuteSpan,
   createUpstreamHttpFetchSpan,
+  isGraphQLError,
   OperationHashingFn,
   recordCacheError,
   recordCacheEvent,
@@ -465,7 +467,9 @@ export function useOpenTelemetry(
           try {
             wrapped();
           } catch (err) {
-            registerException(forOperation.otel!.current, err);
+            if (err instanceof Error && !isGraphQLError(err)) {
+              registerException(forOperation.otel!.current, err);
+            }
             throw err;
           } finally {
             trace.getSpan(forOperation.otel!.current)?.end();
@@ -791,6 +795,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLParseAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             operationName: gqlCtx.params.operationName,
             query: gqlCtx.params.query?.trim(),
             result,
@@ -816,6 +821,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLValidateAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             result,
             document: params.documentAST,
             operationName: gqlCtx.params.operationName,
@@ -832,6 +838,8 @@ export function useOpenTelemetry(
           return;
         }
 
+        (args as ExecutionArgs).schemaCoordinateInErrors = true;
+
         const ctx = getContext(state);
         setGraphQLExecutionAttributes({
           ctx,
@@ -847,6 +855,7 @@ export function useOpenTelemetry(
             setGraphQLExecutionResultAttributes({
               ctx,
               result,
+              operationCtx: state.forOperation.otel!.root,
               subgraphNames: state.forOperation.subgraphNames,
             });
           },
