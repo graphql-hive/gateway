@@ -8,6 +8,7 @@ import {
   isAsyncIterable,
   Maybe,
   MaybeAsyncIterable,
+  mergeDeep,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import {
@@ -328,7 +329,7 @@ function setObjectKeyPath(
     ) {
       return;
     }
-    if (!(key in current)) {
+    if (current[key] == null) {
       current[key] = typeof path[i + 1] === 'number' ? [] : {};
     }
     current = current[key];
@@ -342,5 +343,6 @@ function setObjectKeyPath(
   ) {
     return;
   }
-  current[lastKey] = value;
+  const existingValue = current[lastKey];
+  current[lastKey] = existingValue ? mergeDeep([existingValue, value]) : value;
 }
