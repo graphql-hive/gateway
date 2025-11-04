@@ -67,7 +67,7 @@
     "@graphql-tools/executor-http": "workspace:^",
     "@graphql-tools/federation": "workspace:^",
     "@graphql-tools/stitch": "workspace:^",
-    "@graphql-tools/utils": "^10.10.0",
+    "@graphql-tools/utils": "^10.10.1",
     "@graphql-tools/wrap": "workspace:^",
     "@graphql-yoga/plugin-apollo-usage-report": "^0.11.0",
     "@graphql-yoga/plugin-csrf-prevention": "^3.16.0",
@@ -79,7 +79,7 @@
     "@whatwg-node/server": "^0.10.13",
     "@whatwg-node/server-plugin-cookies": "^1.0.5",
     "graphql-ws": "^6.0.6",
-    "graphql-yoga": "^5.16.0",
+    "graphql-yoga": "^5.16.1",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
