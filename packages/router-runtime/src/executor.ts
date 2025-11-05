@@ -6,9 +6,13 @@ import type {
   QueryPlan,
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
-import { getFragmentsFromDocument, getVariableValues } from '@graphql-tools/executor';
+import {
+  getFragmentsFromDocument,
+  getVariableValues,
+} from '@graphql-tools/executor';
 import {
   ExecutionRequest,
+  getOperationASTFromDocument,
   getOperationASTFromRequest,
   isAsyncIterable,
   MaybeAsyncIterable,
@@ -35,7 +39,6 @@ import type {
 } from 'graphql';
 import {
   getNamedType,
-  getOperationAST,
   isAbstractType,
   isEnumType,
   isInterfaceType,
@@ -681,8 +684,7 @@ function normalizeFetchErrors(
   }
   const { fetchNode, state } = options;
   const flattenState = state?.flatten;
-  const fallbackPath =
-    options.defaultPath ?? getDefaultErrorPath(fetchNode);
+  const fallbackPath = options.defaultPath ?? getDefaultErrorPath(fetchNode);
 
   if (!flattenState) {
     if (!fallbackPath) {
@@ -827,13 +829,16 @@ const getDocumentNodeOfFetchNode = memoize1(function getDocumentNodeOfFetchNode(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
 ): DocumentNode {
   return parse(fetchNode.operation, { noLocation: true });
-})
+});
 
-const getDefaultErrorPath = function getDefaultErrorPath(
+const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
 ): (string | number)[] {
   const document = getDocumentNodeOfFetchNode(fetchNode);
-  const operationAst = getOperationAST(document, undefined);
+  const operationAst = getOperationASTFromDocument(
+    document,
+    fetchNode.operationName,
+  );
   if (!operationAst) {
     return [];
   }
@@ -846,7 +851,7 @@ const getDefaultErrorPath = function getDefaultErrorPath(
   const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
   const path = responseKey ? [responseKey] : undefined;
   return path ?? [];
-}
+});
 
 function stableStringify(value: unknown): string {
   if (value === null) {
