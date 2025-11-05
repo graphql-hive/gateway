@@ -44,12 +44,14 @@ import {
 // prettier-ignore
 import { handleFederationSupergraph as handleFederationSupergraphWithStitching } from './federation/supergraph';
 // prettier-ignore
-import { unifiedGraphHandler as handleFederationSupergraphWithRouter } from '@graphql-hive/router-runtime';
-// prettier-ignore
 import { usingHiveRouterRuntime } from '~internal/env';
 
 let handleFederationSupergraph: UnifiedGraphHandler;
 if (usingHiveRouterRuntime()) {
+  // dynamic import to avoid loading router runtime unnecessarily
+  // in tests that dont run on node
+  const { unifiedGraphHandler: handleFederationSupergraphWithRouter } =
+    await import('@graphql-hive/router-runtime');
   handleFederationSupergraph = handleFederationSupergraphWithRouter;
 } else {
   handleFederationSupergraph = handleFederationSupergraphWithStitching;
