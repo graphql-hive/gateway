@@ -36,7 +36,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll --clean-dist && node scripts/replace-import-with-require.mjs",
+    "build": "bun ./scripts/build.ts",
     "prepack": "yarn build"
   },
   "peerDependencies": {
