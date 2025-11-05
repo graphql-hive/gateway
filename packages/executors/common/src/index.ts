@@ -1,12 +1,16 @@
 import { getDocumentString } from '@envelop/core';
-import { ExecutionRequest, memoize1 } from '@graphql-tools/utils';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import { DocumentNode, print, stripIgnoredCharacters } from 'graphql';
 
-export const defaultPrintFn = memoize1(function defaultPrintFn(
+function stripAndPrint(document: DocumentNode): string {
+  return stripIgnoredCharacters(print(document));
+}
+
+export const defaultPrintFn = function defaultPrintFn(
   document: DocumentNode,
-) {
-  return stripIgnoredCharacters(getDocumentString(document, print));
-});
+): string {
+  return getDocumentString(document, stripAndPrint);
+};
 
 interface ExecutionRequestToGraphQLParams {
   executionRequest: ExecutionRequest;
