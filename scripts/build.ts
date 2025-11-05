@@ -1,10 +1,23 @@
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { $ } from 'bun';
+
+const bundle = Bun.env['BUNDLE'] === 'true';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // change the unifiedGraphManager import to remove the marker comment
 console.log(
   'Modifying unifiedGraphManager.ts to use stitching-only runtime...',
 );
-const origGraphManagerPath = './src/unifiedGraphManager.ts';
+const origGraphManagerPath = resolve(
+  __dirname,
+  '..',
+  'packages',
+  'fusion-runtime',
+  'src',
+  'unifiedGraphManager.ts',
+);
 const origGraphManagerContent = await Bun.file(origGraphManagerPath).text();
 const updatedGraphManagerLines: string[] = [];
 let insideDeleteBlock = false;
@@ -26,13 +39,24 @@ for (const line of origGraphManagerContent.split('\n')) {
 }
 Bun.write(origGraphManagerPath, updatedGraphManagerLines.join('\n') + '\n');
 
-try {
-  console.log('Building...');
-  await $`yarn exec pkgroll --clean-dist`;
-} finally {
-  // restore the original file content
-  console.log('Restoring unifiedGraphManager.ts to original state...');
-  await Bun.write(origGraphManagerPath, origGraphManagerContent);
+if (bundle) {
+  try {
+    console.log('Bundling...');
+    await $`yarn exec rimraf bundle && yarn exec rollup -c && yarn exec rollup -c rollup.config.binary.js`;
+  } finally {
+    // restore the original file content
+    console.log('Restoring unifiedGraphManager.ts to original state...');
+    await Bun.write(origGraphManagerPath, origGraphManagerContent);
+  }
+} else {
+  try {
+    console.log('Building...');
+    await $`yarn exec pkgroll --clean-dist`;
+  } finally {
+    // restore the original file content
+    console.log('Restoring unifiedGraphManager.ts to original state...');
+    await Bun.write(origGraphManagerPath, origGraphManagerContent);
+  }
 }
 
 // replace import with require in the cjs build output

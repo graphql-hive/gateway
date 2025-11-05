@@ -70,7 +70,7 @@
   ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version",
-    "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
+    "bundle": "BUNDLE=true bun ../../scripts/build.ts",
     "prepack": "yarn build",
     "start": "tsx src/bin.ts",
     "start:inspect": "node --import tsx --inspect src/bin.ts"
@@ -146,6 +146,7 @@
     "@types/ws": "^8.5.12",
     "@whatwg-node/fetch": "^0.10.12",
     "adm-zip": "^0.5.15",
+    "bun": "1.3.1",
     "bun": "^1.3.1",
     "graphql": "^16.12.0",
     "parse-duration": "^2.0.0",
