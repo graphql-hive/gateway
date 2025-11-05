@@ -1291,7 +1291,7 @@ describe('useOpenTelemetry', () => {
         // Operation Attributes
         ...(usingHiveRouterRuntime()
           ? {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
+              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query{hello}',
               [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
             }
           : {

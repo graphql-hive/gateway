@@ -1,3 +1,4 @@
+import { documentStringMap } from '@envelop/core/document-string-map';
 import type {
   FetchNodePathSegment,
   FetchRewrite,
@@ -828,7 +829,10 @@ function applyOutputRewrites(
 const getDocumentNodeOfFetchNode = memoize1(function getDocumentNodeOfFetchNode(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
 ): DocumentNode {
-  return parse(fetchNode.operation, { noLocation: true });
+  const doc = parse(fetchNode.operation, { noLocation: true });
+  // Set this so that `getDocumentString` picks it up from cache
+  documentStringMap.set(doc, fetchNode.operation);
+  return doc;
 });
 
 const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
