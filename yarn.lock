@@ -4720,6 +4720,7 @@ __metadata:
     "@graphql-hive/router": "npm:0.0.0-manual-f9542ee"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/transport-common": "workspace:^"
+    "@graphql-tools/executor": "npm:^1.4.11"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/federation": "workspace:^"
     "@graphql-tools/utils": "npm:^10.9.1"
@@ -5491,6 +5492,22 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/cf5857897456b60ccfaaca7b596331c1666736ec31735069efa0e6c128ad2bec9bec503016c3dad46a537beab90ff62d9b69330e6184568ae3b8cd94612fc2ec
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/executor@npm:^1.4.11":
+  version: 1.4.11
+  resolution: "@graphql-tools/executor@npm:1.4.11"
+  dependencies:
+    "@graphql-tools/utils": "npm:^10.10.1"
+    "@graphql-typed-document-node/core": "npm:^3.2.0"
+    "@repeaterjs/repeater": "npm:^3.0.4"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/promise-helpers": "npm:^1.0.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/2db4a07c4c8bb72b259f7e827231bb41614662fe20b49e2454df5ded97dace7da16c43a41c779c6fa3288524b115f0421d76c2352404ce5f516ab1b315c2e5a8
   languageName: node
   linkType: hard
 

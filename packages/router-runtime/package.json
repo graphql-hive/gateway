@@ -45,6 +45,7 @@
     "@graphql-hive/router": "0.0.0-manual-f9542ee",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/transport-common": "workspace:^",
+    "@graphql-tools/executor": "^1.4.11",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/federation": "workspace:^",
     "@graphql-tools/utils": "^10.9.1",

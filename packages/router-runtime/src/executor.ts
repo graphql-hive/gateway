@@ -6,15 +6,15 @@ import type {
   QueryPlan,
   RequiresSelection,
 } from '@graphql-hive/router';
-import type { ExecutionResult } from '@graphql-tools/utils';
+import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
-  createGraphQLError,
   ExecutionRequest,
+  getOperationASTFromRequest,
   isAsyncIterable,
   MaybeAsyncIterable,
-  memoize1,
   mergeDeep,
   relocatedError,
+  type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
   handleMaybePromise,
@@ -118,30 +118,6 @@ export interface QueryPlanExecutorOptions {
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 }
 
-export const getOperationsAndFragments = memoize1(
-  function getOperationAndFragments(document) {
-    const operations: Record<string, any> = Object.create(null);
-    const fragments: Record<string, any> = Object.create(null);
-    let singleOperation: OperationDefinitionNode | undefined;
-    let operationCnt: number = 0;
-    for (const definition of document.definitions) {
-      if (definition.kind === 'OperationDefinition') {
-        if (definition.name) {
-          operations[definition.name.value] = definition;
-        }
-        singleOperation = definition;
-        operationCnt++;
-      } else if (definition.kind === 'FragmentDefinition') {
-        fragments[definition.name.value] = definition;
-      }
-    }
-    if (!singleOperation) {
-      throw createGraphQLError('Must provide an operation.');
-    }
-    return { operations, fragments, singleOperation, operationCnt };
-  },
-);
-
 export function executeQueryPlan({
   queryPlan,
   executionRequest,
@@ -210,35 +186,8 @@ function createQueryPlanExecutionContext({
   executionRequest,
   onSubgraphExecute,
 }: CreateExecutionContextOpts): QueryPlanExecutionContext {
-  const { operations, operationCnt, singleOperation, fragments } =
-    getOperationsAndFragments(executionRequest.document);
-  if (operationCnt === 0) {
-    throw createGraphQLError('Must provide an operation.');
-  }
-  let operation: OperationDefinitionNode;
-  if (executionRequest.operationName) {
-    // We have an operation name
-    operation = operations[executionRequest.operationName];
-    if (!operation) {
-      // We have an operation name but it doesn't exist in the document
-      throw createGraphQLError(
-        `Unknown operation named "${executionRequest.operationName}".`,
-      );
-    }
-  } else if (operationCnt === 1) {
-    if (!singleOperation) {
-      throw createGraphQLError('Should not happen');
-    }
-    // We have only one operation and no operation name
-    operation = singleOperation;
-  } else if (operationCnt > 1) {
-    // We have multiple operations and no operation name
-    throw createGraphQLError(
-      'Must provide operation name if query contains multiple operations.',
-    );
-  } else {
-    throw createGraphQLError('Should not happen');
-  }
+  const fragments = getFragmentsFromDocument(executionRequest.document);
+  const operation = getOperationASTFromRequest(executionRequest);
 
   let variableValues = executionRequest.variables;
   if (operation.variableDefinitions) {
@@ -264,8 +213,7 @@ function createQueryPlanExecutionContext({
   }
   return {
     supergraphSchema,
-    // We know it is there
-    operation: operation!,
+    operation,
     fragments,
     variableValues,
     data: {},
