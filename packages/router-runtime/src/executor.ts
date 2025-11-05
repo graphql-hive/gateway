@@ -6,12 +6,13 @@ import type {
   QueryPlan,
   RequiresSelection,
 } from '@graphql-hive/router-query-planner';
-import { getFragmentsFromDocument } from '@graphql-tools/executor';
+import { getFragmentsFromDocument, getVariableValues } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
   getOperationASTFromRequest,
   isAsyncIterable,
   MaybeAsyncIterable,
+  memoize1,
   mergeDeep,
   relocatedError,
   type ExecutionResult,
@@ -35,7 +36,6 @@ import type {
 import {
   getNamedType,
   getOperationAST,
-  getVariableValues,
   isAbstractType,
   isEnumType,
   isInterfaceType,
@@ -177,9 +177,6 @@ interface CreateExecutionContextOpts {
 }
 
 const globalEmpty = {};
-
-const operationDocumentCache = new Map<string, DocumentNode>();
-const operationRootFieldCache = new Map<string, (string | number)[] | null>();
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
@@ -569,11 +566,10 @@ function executeFetchPlanNode(
       : { ...selectedVariables };
   }
 
-  const operationDocument = getOperationDocument(fetchNode.operation);
   const defaultErrorPath =
     state?.errorPath ??
     state?.flatten?.errorPath ??
-    getDefaultErrorPath(fetchNode, operationDocument);
+    getDefaultErrorPath(fetchNode);
 
   const handleFetchResult = (
     fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
@@ -586,7 +582,6 @@ function executeFetchPlanNode(
       const normalizedErrors = normalizeFetchErrors(fetchResult.errors, {
         fetchNode,
         state,
-        operationDocument,
         defaultPath: defaultErrorPath,
       });
       if (normalizedErrors.length) {
@@ -638,7 +633,7 @@ function executeFetchPlanNode(
   return handleMaybePromise(
     () =>
       executionContext.onSubgraphExecute(fetchNode.serviceName, {
-        document: operationDocument,
+        document: getDocumentNodeOfFetchNode(fetchNode),
         variables: variablesForFetch,
         operationType:
           (fetchNode.operationKind as OperationTypeNode | undefined) ??
@@ -678,17 +673,16 @@ function normalizeFetchErrors(
   options: {
     fetchNode: Extract<PlanNode, { kind: 'Fetch' }>;
     state?: ExecutionState;
-    operationDocument: DocumentNode;
     defaultPath?: (string | number)[];
   },
 ): GraphQLError[] {
   if (!errors.length) {
     return [];
   }
-  const { fetchNode, state, operationDocument } = options;
+  const { fetchNode, state } = options;
   const flattenState = state?.flatten;
   const fallbackPath =
-    options.defaultPath ?? getDefaultErrorPath(fetchNode, operationDocument);
+    options.defaultPath ?? getDefaultErrorPath(fetchNode);
 
   if (!flattenState) {
     if (!fallbackPath) {
@@ -829,46 +823,29 @@ function applyOutputRewrites(
   return current;
 }
 
-function getOperationDocument(operation: string): DocumentNode {
-  let cached = operationDocumentCache.get(operation);
-  if (!cached) {
-    cached = parse(operation);
-    operationDocumentCache.set(operation, cached);
-  }
-  return cached;
-}
-
-function getOperationCacheKey(
+const getDocumentNodeOfFetchNode = memoize1(function getDocumentNodeOfFetchNode(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
-): string {
-  return `${fetchNode.operationName ?? ''}|${fetchNode.operation}`;
-}
+): DocumentNode {
+  return parse(fetchNode.operation, { noLocation: true });
+})
 
-function getDefaultErrorPath(
+const getDefaultErrorPath = function getDefaultErrorPath(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
-  document: DocumentNode,
-): (string | number)[] | undefined {
-  const cacheKey = getOperationCacheKey(fetchNode);
-  const cached = operationRootFieldCache.get(cacheKey);
-  if (cached !== undefined) {
-    return cached ?? undefined;
-  }
-  const operationAst = getOperationAST(document, fetchNode.operationName);
+): (string | number)[] {
+  const document = getDocumentNodeOfFetchNode(fetchNode);
+  const operationAst = getOperationAST(document, undefined);
   if (!operationAst) {
-    operationRootFieldCache.set(cacheKey, null);
-    return undefined;
+    return [];
   }
   const rootSelection = operationAst.selectionSet.selections.find(
     (selection) => selection.kind === Kind.FIELD,
   );
   if (!rootSelection) {
-    operationRootFieldCache.set(cacheKey, null);
-    return undefined;
+    return [];
   }
   const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
   const path = responseKey ? [responseKey] : undefined;
-  operationRootFieldCache.set(cacheKey, path ?? null);
-  return path;
+  return path ?? [];
 }
 
 function stableStringify(value: unknown): string {
