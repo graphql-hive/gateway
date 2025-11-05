@@ -39,7 +39,8 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
-// <will-be-replaced-during-prebuild>
+// <use-only-stitching-unified-handler>
+// see packages/fusion-runtime/scripts/build.ts
 // prettier-ignore
 import { handleFederationSupergraph as handleFederationSupergraphWithStitching } from './federation/supergraph';
 // prettier-ignore
@@ -54,7 +55,7 @@ if (usingHiveRouterRuntime()) {
   handleFederationSupergraph = handleFederationSupergraphWithStitching;
 }
 
-// </will-be-replaced-during-prebuild>
+// </use-only-stitching-unified-handler>
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
