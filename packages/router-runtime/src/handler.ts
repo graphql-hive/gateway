@@ -29,7 +29,7 @@ export function unifiedGraphHandler(
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   let _defaultExecutor: Executor;
   function getDefaultExecutor(): Executor {
-    _defaultExecutor = createDefaultExecutor(supergraphSchema);
+    _defaultExecutor ||= createDefaultExecutor(supergraphSchema);
     return _defaultExecutor;
   }
   return {
