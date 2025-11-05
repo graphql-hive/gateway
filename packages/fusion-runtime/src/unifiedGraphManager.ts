@@ -39,11 +39,22 @@ import {
   type OnSubgraphExecuteHook,
   type Transports,
 } from './utils';
-// IMPORTANT: the following import will be replaced by vitest when testing the
-//            hive router query planner. please make sure to keep it in sync
-//            with the `injectRouterRuntime` plugin in vitest.config.ts.
+// <will-be-replaced-during-prebuild>
 // prettier-ignore
-import { handleFederationSupergraph } from './federation/supergraph';
+import { handleFederationSupergraph as handleFederationSupergraphWithStitching } from './federation/supergraph';
+// prettier-ignore
+import { unifiedGraphHandler as handleFederationSupergraphWithRouter } from '@graphql-hive/router-runtime';
+// prettier-ignore
+import { usingHiveRouterRuntime } from '~internal/env';
+
+let handleFederationSupergraph: UnifiedGraphHandler;
+if (usingHiveRouterRuntime()) {
+  handleFederationSupergraph = handleFederationSupergraphWithRouter;
+} else {
+  handleFederationSupergraph = handleFederationSupergraphWithStitching;
+}
+
+// </will-be-replaced-during-prebuild>
 
 export type TransportEntryAdditions = {
   [subgraph: '*' | string]: Partial<TransportEntry>;
