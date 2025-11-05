@@ -37,7 +37,7 @@ for (const line of origGraphManagerContent.split('\n')) {
   }
   updatedGraphManagerLines.push(line);
 }
-Bun.write(origGraphManagerPath, updatedGraphManagerLines.join('\n') + '\n');
+Bun.write(origGraphManagerPath, updatedGraphManagerLines.join('\n'));
 
 if (bundle) {
   try {
