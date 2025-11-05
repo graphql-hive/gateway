@@ -82,7 +82,7 @@ describe('AWS Sigv4', () => {
           'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
           usingHiveRouterRuntime()
             ? // different body hash due to different query planner implementations
-              'Signature=6f39713ec7055a3c42088a38b76ebfc41623d805c13d1923397878f58a40ce0d'
+              'Signature=613f7d53223adaf9bda8658e78ba65fc5516147e781c5a5551d1c8a93daa95ed'
             : 'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
         ].join(', '),
     );
