@@ -286,9 +286,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       }
       let serializedUnifiedGraph: string | undefined;
       if (!doNotCache && this.opts.transportContext?.cache) {
-        serializedUnifiedGraph = serializeLoadedUnifiedGraph(
-          loadedUnifiedGraph,
-        );
+        serializedUnifiedGraph =
+          serializeLoadedUnifiedGraph(loadedUnifiedGraph);
         if (serializedUnifiedGraph != null) {
           try {
             const ttl = this.opts.pollingInterval
@@ -342,7 +341,8 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
       } = this.handleUnifiedGraph({
         unifiedGraph: ensuredSchema,
         getUnifiedGraphSDL() {
-          serializedUnifiedGraph ||= serializeLoadedUnifiedGraph(loadedUnifiedGraph);
+          serializedUnifiedGraph ||=
+            serializeLoadedUnifiedGraph(loadedUnifiedGraph);
           return serializedUnifiedGraph;
         },
         additionalTypeDefs: this.opts.additionalTypeDefs,

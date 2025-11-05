@@ -185,7 +185,7 @@ interface CreateExecutionContextOpts {
    * The public schema of the supergraph
    */
   supergraphSchema: GraphQLSchema;
-  
+
   /**
    * Execution request
    */
@@ -211,7 +211,7 @@ function createQueryPlanExecutionContext({
   onSubgraphExecute,
 }: CreateExecutionContextOpts): QueryPlanExecutionContext {
   const { operations, operationCnt, singleOperation, fragments } =
-    getOperationsAndFragments(document);
+    getOperationsAndFragments(executionRequest.document);
   if (operationCnt === 0) {
     throw createGraphQLError('Must provide an operation.');
   }
@@ -221,7 +221,9 @@ function createQueryPlanExecutionContext({
     operation = operations[executionRequest.operationName];
     if (!operation) {
       // We have an operation name but it doesn't exist in the document
-      throw createGraphQLError(`Unknown operation named "${executionRequest.operationName}".`);
+      throw createGraphQLError(
+        `Unknown operation named "${executionRequest.operationName}".`,
+      );
     }
   } else if (operationCnt === 1) {
     if (!singleOperation) {

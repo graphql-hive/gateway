@@ -4,13 +4,13 @@ import {
   type UnifiedGraphHandlerOpts,
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
+import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
 import { Executor } from '@graphql-tools/utils';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, GraphQLSchema, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
