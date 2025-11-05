@@ -37,9 +37,14 @@ export async function buildTestGateway(
   options: {
     gatewayOptions?: Omit<GatewayConfigProxy, 'proxy'>;
     options?: OpenTelemetryGatewayPluginOptions;
-    plugins?: (
-      ctx: GatewayConfigContext,
-    ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+    plugins?: {
+      before?: (
+        ctx: GatewayConfigContext,
+      ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+      after?: (
+        ctx: GatewayConfigContext,
+      ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+    };
     fetch?: (upstreamFetch: MeshFetch) => MeshFetch;
   } = {},
 ) {
@@ -104,6 +109,7 @@ export async function buildTestGateway(
       maskedErrors: false,
       plugins: (ctx) => {
         return [
+          ...(options.plugins?.before?.(ctx) ?? []),
           gw.useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
             options.fetch ? options.fetch(upstream.fetch) : upstream.fetch,
@@ -112,7 +118,7 @@ export async function buildTestGateway(
             ...ctx,
             ...options.options,
           }),
-          ...(options.plugins?.(ctx) ?? []),
+          ...(options.plugins?.after?.(ctx) ?? []),
         ];
       },
       logging: false,
