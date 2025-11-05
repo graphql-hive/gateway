@@ -4724,6 +4724,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/router-runtime@workspace:packages/router-runtime"
   dependencies:
+    "@envelop/core": "npm:^5.3.2"
     "@graphql-hive/router-query-planner": "npm:0.0.1-manual.1"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/transport-common": "workspace:^"
