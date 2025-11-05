@@ -18,18 +18,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_name:
-          - auto-type-merging
-          - federation-example
-          - federation-mixed
-          - federation-subscriptions-passthrough
-          - opentelemetry
-          - programmatic-batching
-          - logger
+        test:
+          - name: auto-type-merging
+            hive-router-runtime: false
+          - name: federation-example
+            hive-router-runtime: false
+          - name: federation-example
+            hive-router-runtime: true
+          - name: federation-mixed
+            hive-router-runtime: false
+          - name: federation-subscriptions-passthrough
+            hive-router-runtime: false
+          - name: opentelemetry
+            hive-router-runtime: false
+          - name: programmatic-batching
+            hive-router-runtime: false
+          - name: logger
+            hive-router-runtime: false
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
-    name: ${{matrix.e2e_runner}} / ${{matrix.test_name}}
+    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -60,6 +69,7 @@ jobs:
       - name: Test
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
+          HIVE_ROUTER_RUNTIME: ${{matrix.test.hive-router-runtime}}
         run: yarn test:mem ${{matrix.test_name}}
       - name: Upload heap snapshots
         if: failure()
