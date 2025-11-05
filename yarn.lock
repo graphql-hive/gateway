@@ -4713,11 +4713,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@graphql-hive/router-query-planner@npm:0.0.1-manual.1":
+  version: 0.0.1-manual.1
+  resolution: "@graphql-hive/router-query-planner@npm:0.0.1-manual.1"
+  checksum: 10c0/167e6eb6bf711f8db3e68457377fc6517a49cf7cebcb4ed0af091b500cef8c6c106176c350bebfebcc7228050f696c1f123378f281d4601f8f98a75ccdd699cb
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/router-runtime@workspace:packages/router-runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/router-runtime@workspace:packages/router-runtime"
   dependencies:
-    "@graphql-hive/router": "npm:0.0.0-manual-f9542ee"
+    "@graphql-hive/router-query-planner": "npm:0.0.1-manual.1"
     "@graphql-mesh/fusion-runtime": "workspace:^"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-tools/executor": "npm:^1.4.11"
@@ -4731,13 +4738,6 @@ __metadata:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
-
-"@graphql-hive/router@npm:0.0.0-manual-f9542ee":
-  version: 0.0.0-manual-f9542ee
-  resolution: "@graphql-hive/router@npm:0.0.0-manual-f9542ee"
-  checksum: 10c0/1c5838929f325284e74798083ff217a11270b193b369baccecfd21c9a8f601d024389e18f10f2a2b0c201ff1dcb0a523f899337579de8e9f1336b999db151b76
-  languageName: node
-  linkType: hard
 
 "@graphql-hive/signal@workspace:^, @graphql-hive/signal@workspace:packages/signal":
   version: 0.0.0-use.local

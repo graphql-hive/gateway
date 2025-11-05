@@ -42,7 +42,7 @@
     "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
-    "@graphql-hive/router": "0.0.0-manual-f9542ee",
+    "@graphql-hive/router-query-planner": "0.0.1-manual.1",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-tools/executor": "^1.4.11",

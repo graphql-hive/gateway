@@ -1,4 +1,4 @@
-import { QueryPlan, QueryPlanner } from '@graphql-hive/router';
+import { QueryPlan, QueryPlanner } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,

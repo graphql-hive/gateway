@@ -5,7 +5,7 @@ import type {
   PlanNode,
   QueryPlan,
   RequiresSelection,
-} from '@graphql-hive/router';
+} from '@graphql-hive/router-query-planner';
 import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
