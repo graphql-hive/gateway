@@ -50,8 +50,9 @@ let handleFederationSupergraph: UnifiedGraphHandler;
 if (usingHiveRouterRuntime()) {
   // dynamic import to avoid loading router runtime unnecessarily
   // in tests that dont run on node
-  const { unifiedGraphHandler: handleFederationSupergraphWithRouter } =
-    await import('@graphql-hive/router-runtime');
+  const {
+    unifiedGraphHandler: handleFederationSupergraphWithRouter,
+  } = require('@graphql-hive/router-runtime');
   handleFederationSupergraph = handleFederationSupergraphWithRouter;
 } else {
   handleFederationSupergraph = handleFederationSupergraphWithStitching;
