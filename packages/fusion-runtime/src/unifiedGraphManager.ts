@@ -1,7 +1,8 @@
 import type { Logger } from '@graphql-hive/logger';
-import type {
-  TransportContext,
-  TransportEntry,
+import {
+  defaultPrintFn,
+  type TransportContext,
+  type TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
@@ -27,7 +28,7 @@ import {
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
-import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
+import { buildASTSchema, buildSchema, isSchema } from 'graphql';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -77,6 +78,7 @@ export type UnifiedGraphHandler = (
 
 export interface UnifiedGraphHandlerOpts {
   unifiedGraph: GraphQLSchema;
+  getUnifiedGraphSDL(): string;
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
@@ -282,16 +284,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         }
         return this.unifiedGraph;
       }
+      let serializedUnifiedGraph: string | undefined;
       if (!doNotCache && this.opts.transportContext?.cache) {
-        let serializedUnifiedGraph: string | undefined;
-        if (typeof loadedUnifiedGraph === 'string') {
-          serializedUnifiedGraph = loadedUnifiedGraph;
-        } else if (isSchema(loadedUnifiedGraph)) {
-          serializedUnifiedGraph =
-            printSchemaWithDirectives(loadedUnifiedGraph);
-        } else if (isDocumentNode(loadedUnifiedGraph)) {
-          serializedUnifiedGraph = print(loadedUnifiedGraph);
-        }
+        serializedUnifiedGraph = serializeLoadedUnifiedGraph(
+          loadedUnifiedGraph,
+        );
         if (serializedUnifiedGraph != null) {
           try {
             const ttl = this.opts.pollingInterval
@@ -344,6 +341,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         executor,
       } = this.handleUnifiedGraph({
         unifiedGraph: ensuredSchema,
+        getUnifiedGraphSDL() {
+          serializedUnifiedGraph ||= serializeLoadedUnifiedGraph(loadedUnifiedGraph);
+          return serializedUnifiedGraph;
+        },
         additionalTypeDefs: this.opts.additionalTypeDefs,
         additionalResolvers: this.opts.additionalResolvers,
         onSubgraphExecute(subgraphName, execReq) {
@@ -579,4 +580,16 @@ function disposeAll(disposables: unknown[]) {
     return disposalJobs[0];
   }
   return Promise.all(disposalJobs).then(() => {});
+}
+
+function serializeLoadedUnifiedGraph(
+  loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
+): string {
+  if (typeof loadedUnifiedGraph === 'string') {
+    return loadedUnifiedGraph;
+  }
+  if (isSchema(loadedUnifiedGraph)) {
+    return printSchemaWithDirectives(loadedUnifiedGraph);
+  }
+  return defaultPrintFn(loadedUnifiedGraph);
 }

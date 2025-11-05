@@ -1,27 +1,31 @@
-import { QueryPlanner } from '@graphql-hive/router';
+import { QueryPlan, QueryPlanner } from '@graphql-hive/router';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
   type UnifiedGraphHandlerResult,
 } from '@graphql-mesh/fusion-runtime';
+import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import {
-  ExecutionResult,
-  memoize1,
-  printSchemaWithDirectives,
-} from '@graphql-tools/utils';
-import { BREAK, DocumentNode, execute, print, visit } from 'graphql';
+import { ExecutionResult } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { MaybePromise } from 'bun';
+import { BREAK, DocumentNode, execute, GraphQLSchema, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): UnifiedGraphHandlerResult {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
-  const { getSubgraphSchema } = handleFederationSupergraph(opts);
-  const qp = new QueryPlanner(printSchemaWithDirectives(opts.unifiedGraph));
-  const plan = memoize1(function plan(document: DocumentNode) {
-    return qp.plan(print(document));
-  });
+  let _getSubgraphSchema: (subgraphName: string) => GraphQLSchema;
+  function getSubgraphSchema(subgraphName: string): GraphQLSchema {
+    _getSubgraphSchema = handleFederationSupergraph(opts).getSubgraphSchema;
+    return _getSubgraphSchema(subgraphName);
+  }
+  const unifiedGraphSdl = opts.getUnifiedGraphSDL();
+  const qp = new QueryPlanner(unifiedGraphSdl);
+
+  const planByDocument = new WeakMap<DocumentNode, MaybePromise<QueryPlan>>();
+
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   return {
     unifiedGraph: supergraphSchema,
@@ -37,16 +41,33 @@ export function unifiedGraphHandler(
           contextValue: context,
         }) as ExecutionResult<any>; // TODO: graphql-js ExecutionResult uses `unknown` data and return and therefore fails
       }
-      return plan(document).then((queryPlan) =>
-        executeQueryPlan({
-          supergraphSchema,
-          document,
-          operationName,
-          variables,
-          context,
-          onSubgraphExecute: opts.onSubgraphExecute,
-          queryPlan,
-        }),
+      return handleMaybePromise(
+        () => {
+          let queryPlan = planByDocument.get(document);
+          if (!queryPlan) {
+            const documentStr = defaultPrintFn(document);
+            queryPlan = qp
+              .plan(documentStr, operationName)
+              .then((resolvedQueryPlan) => {
+                queryPlan = resolvedQueryPlan;
+                // Set the plan in the map after it's fully resolved to avoid multiple concurrent resolutions
+                planByDocument.set(document, queryPlan);
+                return queryPlan;
+              });
+            planByDocument.set(document, queryPlan);
+          }
+          return queryPlan;
+        },
+        (queryPlan) =>
+          executeQueryPlan({
+            supergraphSchema,
+            document,
+            operationName,
+            variables,
+            context,
+            onSubgraphExecute: opts.onSubgraphExecute,
+            queryPlan,
+          }),
       );
     },
     inContextSDK: {
