@@ -4812,6 +4812,7 @@ __metadata:
   dependencies:
     "@graphql-hive/router": "npm:0.0.0-manual-f9542ee"
     "@graphql-mesh/fusion-runtime": "workspace:^"
+    "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/federation": "workspace:^"
     "@graphql-tools/utils": "npm:^10.9.1"

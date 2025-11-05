@@ -73,9 +73,9 @@ export interface QueryPlanExecutionContext {
   errors: GraphQLError[];
 
   /**
-   * The context object
+   * Original ExecutionRequest
    */
-  context?: any;
+  executionRequest: ExecutionRequest;
 
   /**
    * The factory function that returns an executor for a subgraph
@@ -101,23 +101,14 @@ export interface QueryPlanExecutorOptions {
    */
   queryPlan: QueryPlan;
   /**
-   * The document AST node that contains the operation and fragments
+   * Execution request
    */
-  document: DocumentNode;
-  /**
-   * The operation name to execute
-   * Required if the document contains multiple operations
-   */
-  operationName?: string;
+  executionRequest: ExecutionRequest;
 
   /**
    * The public schema of the supergraph
    */
   supergraphSchema: GraphQLSchema;
-  /**
-   * Raw variables parsed from the GraphQL params
-   */
-  variables?: Record<string, any>;
   /**
    * The factory function that returns an executor for a subgraph
    */
@@ -125,11 +116,6 @@ export interface QueryPlanExecutorOptions {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
-
-  /**
-   * The context object to pass to the executor
-   */
-  context?: any;
 }
 
 export const getOperationsAndFragments = memoize1(
@@ -158,12 +144,9 @@ export const getOperationsAndFragments = memoize1(
 
 export function executeQueryPlan({
   queryPlan,
-  document,
-  operationName,
-  variables,
+  executionRequest,
   onSubgraphExecute,
   supergraphSchema,
-  context,
 }: QueryPlanExecutorOptions): MaybePromise<
   MaybeAsyncIterable<ExecutionResult<any>>
 > {
@@ -173,11 +156,8 @@ export function executeQueryPlan({
   }
   const executionContext = createQueryPlanExecutionContext({
     supergraphSchema,
-    document,
-    operationName,
-    variables,
+    executionRequest,
     onSubgraphExecute,
-    context,
   });
   function handleResp() {
     const executionResult = {} as ExecutionResult;
@@ -202,23 +182,15 @@ export function executeQueryPlan({
 
 interface CreateExecutionContextOpts {
   /**
-   * The document AST node that contains the operation and fragments
-   */
-  document: DocumentNode;
-  /**
-   * The operation name to execute
-   * Required if the document contains multiple operations
-   */
-  operationName?: string;
-
-  /**
    * The public schema of the supergraph
    */
   supergraphSchema: GraphQLSchema;
+  
   /**
-   * Raw variables parsed from the GraphQL params
+   * Execution request
    */
-  variables?: Record<string, any>;
+  executionRequest: ExecutionRequest;
+
   /**
    * The factory function that returns an executor for a subgraph
    */
@@ -226,11 +198,6 @@ interface CreateExecutionContextOpts {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
-
-  /**
-   * The context object to pass to the executor
-   */
-  context?: any;
 }
 
 const globalEmpty = {};
@@ -240,11 +207,8 @@ const operationRootFieldCache = new Map<string, (string | number)[] | null>();
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
-  document,
-  operationName,
-  variables,
+  executionRequest,
   onSubgraphExecute,
-  context,
 }: CreateExecutionContextOpts): QueryPlanExecutionContext {
   const { operations, operationCnt, singleOperation, fragments } =
     getOperationsAndFragments(document);
@@ -252,12 +216,12 @@ function createQueryPlanExecutionContext({
     throw createGraphQLError('Must provide an operation.');
   }
   let operation: OperationDefinitionNode;
-  if (operationName) {
+  if (executionRequest.operationName) {
     // We have an operation name
-    operation = operations[operationName];
+    operation = operations[executionRequest.operationName];
     if (!operation) {
       // We have an operation name but it doesn't exist in the document
-      throw createGraphQLError(`Unknown operation named "${operationName}".`);
+      throw createGraphQLError(`Unknown operation named "${executionRequest.operationName}".`);
     }
   } else if (operationCnt === 1) {
     if (!singleOperation) {
@@ -274,7 +238,7 @@ function createQueryPlanExecutionContext({
     throw createGraphQLError('Should not happen');
   }
 
-  let variableValues = variables;
+  let variableValues = executionRequest.variables;
   if (operation.variableDefinitions) {
     const variableValuesResult = getVariableValues(
       supergraphSchema,
@@ -305,7 +269,7 @@ function createQueryPlanExecutionContext({
     data: {},
     errors: [],
     onSubgraphExecute,
-    context,
+    executionRequest,
   };
 }
 
@@ -724,15 +688,18 @@ function executeFetchPlanNode(
   return handleMaybePromise(
     () =>
       executionContext.onSubgraphExecute(fetchNode.serviceName, {
-        // signal: TODO: implement signal for aborting
-        subgraphName: fetchNode.serviceName,
         document: operationDocument,
         variables: variablesForFetch,
-        context: executionContext.context,
-        operationName: fetchNode.operationName,
         operationType:
           (fetchNode.operationKind as OperationTypeNode | undefined) ??
           executionContext.operation.operation,
+        operationName: fetchNode.operationName,
+        extensions: executionContext.executionRequest.extensions,
+        rootValue: executionContext.executionRequest.rootValue,
+        context: executionContext.executionRequest.context,
+        subgraphName: fetchNode.serviceName,
+        info: executionContext.executionRequest.info,
+        signal: executionContext.executionRequest.signal,
       }),
     handleFetchResult,
   );

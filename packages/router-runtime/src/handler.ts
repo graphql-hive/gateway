@@ -6,11 +6,11 @@ import {
 } from '@graphql-mesh/fusion-runtime';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import { ExecutionResult } from '@graphql-tools/utils';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { MaybePromise } from 'bun';
-import { BREAK, DocumentNode, execute, GraphQLSchema, visit } from 'graphql';
+import { Executor } from '@graphql-tools/utils';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { BREAK, DocumentNode, GraphQLSchema, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
+import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -21,6 +21,11 @@ export function unifiedGraphHandler(
     _getSubgraphSchema = handleFederationSupergraph(opts).getSubgraphSchema;
     return _getSubgraphSchema(subgraphName);
   }
+  let _defaultExecutor: Executor;
+  function getDefaultExecutor(): Executor {
+    _defaultExecutor = createDefaultExecutor(opts.unifiedGraph);
+    return _defaultExecutor;
+  }
   const unifiedGraphSdl = opts.getUnifiedGraphSDL();
   const qp = new QueryPlanner(unifiedGraphSdl);
 
@@ -30,41 +35,31 @@ export function unifiedGraphHandler(
   return {
     unifiedGraph: supergraphSchema,
     getSubgraphSchema,
-    executor({ document, variables, operationName, context }) {
-      if (isIntrospection(document)) {
-        // TODO: handle introspection fields with data fields where also the query planner needs to run
-        return execute({
-          schema: supergraphSchema,
-          document,
-          variableValues: variables,
-          operationName,
-          contextValue: context,
-        }) as ExecutionResult<any>; // TODO: graphql-js ExecutionResult uses `unknown` data and return and therefore fails
+    executor(executionRequest) {
+      if (isIntrospection(executionRequest.document)) {
+        return getDefaultExecutor()(executionRequest);
       }
       return handleMaybePromise(
         () => {
-          let queryPlan = planByDocument.get(document);
+          let queryPlan = planByDocument.get(executionRequest.document);
           if (!queryPlan) {
-            const documentStr = defaultPrintFn(document);
+            const documentStr = defaultPrintFn(executionRequest.document);
             queryPlan = qp
-              .plan(documentStr, operationName)
+              .plan(documentStr, executionRequest.operationName)
               .then((resolvedQueryPlan) => {
                 queryPlan = resolvedQueryPlan;
                 // Set the plan in the map after it's fully resolved to avoid multiple concurrent resolutions
-                planByDocument.set(document, queryPlan);
+                planByDocument.set(executionRequest.document, queryPlan);
                 return queryPlan;
               });
-            planByDocument.set(document, queryPlan);
+            planByDocument.set(executionRequest.document, queryPlan);
           }
           return queryPlan;
         },
         (queryPlan) =>
           executeQueryPlan({
             supergraphSchema,
-            document,
-            operationName,
-            variables,
-            context,
+            executionRequest,
             onSubgraphExecute: opts.onSubgraphExecute,
             queryPlan,
           }),
