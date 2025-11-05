@@ -91,7 +91,7 @@
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-mesh/cache-cfw-kv": "^0.105.14",
     "@graphql-mesh/cache-localforage": "^0.105.15",
-    "@graphql-mesh/cache-redis": "^0.104.14",
+    "@graphql-mesh/cache-redis": "^0.105.0",
     "@graphql-mesh/cache-upstash-redis": "^0.1.14",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
