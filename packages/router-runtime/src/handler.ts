@@ -21,17 +21,17 @@ export function unifiedGraphHandler(
     _getSubgraphSchema = handleFederationSupergraph(opts).getSubgraphSchema;
     return _getSubgraphSchema(subgraphName);
   }
-  let _defaultExecutor: Executor;
-  function getDefaultExecutor(): Executor {
-    _defaultExecutor = createDefaultExecutor(opts.unifiedGraph);
-    return _defaultExecutor;
-  }
   const unifiedGraphSdl = opts.getUnifiedGraphSDL();
   const qp = new QueryPlanner(unifiedGraphSdl);
 
   const planByDocument = new WeakMap<DocumentNode, MaybePromise<QueryPlan>>();
 
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
+  let _defaultExecutor: Executor;
+  function getDefaultExecutor(): Executor {
+    _defaultExecutor = createDefaultExecutor(supergraphSchema);
+    return _defaultExecutor;
+  }
   return {
     unifiedGraph: supergraphSchema,
     getSubgraphSchema,
