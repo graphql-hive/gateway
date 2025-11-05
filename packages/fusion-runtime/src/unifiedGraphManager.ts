@@ -30,7 +30,7 @@ import {
 import { usingHiveRouterRuntime } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
+import { handleFederationSupergraph as stitchingUnifiedGraphHandler } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -157,6 +157,15 @@ export type Instrumentation = {
 };
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
+
+export let loadingRouter: Promise<void>;
+let handleFederationSupergraph = stitchingUnifiedGraphHandler;
+if (usingHiveRouterRuntime()) {
+  const moduleName = '@graphql-hive/router-runtime';
+  loadingRouter = import(moduleName).then(({ unifiedGraphHandler }) => {
+    handleFederationSupergraph = unifiedGraphHandler;
+  });
+}
 
 export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private batch: boolean;
@@ -331,109 +340,95 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           this.opts.transportEntryAdditions,
         );
 
-      return handleMaybePromise(
-        () => {
-          if (usingHiveRouterRuntime()) {
-            const moduleName = '@graphql-hive/router-runtime';
-            return import(moduleName).then(
-              ({ unifiedGraphHandler }) => unifiedGraphHandler,
-            );
-          }
-          return this.handleUnifiedGraph;
+      const {
+        unifiedGraph: newUnifiedGraph,
+        inContextSDK,
+        getSubgraphSchema,
+        executor,
+      } = this.handleUnifiedGraph({
+        unifiedGraph: ensuredSchema,
+        getUnifiedGraphSDL() {
+          serializedUnifiedGraph ||=
+            serializeLoadedUnifiedGraph(loadedUnifiedGraph);
+          return serializedUnifiedGraph;
         },
-        (handleUnifiedGraph: UnifiedGraphHandler) => {
-          const {
-            unifiedGraph: newUnifiedGraph,
-            inContextSDK,
-            getSubgraphSchema,
-            executor,
-          } = handleUnifiedGraph({
-            unifiedGraph: ensuredSchema,
-            getUnifiedGraphSDL() {
-              serializedUnifiedGraph ||=
-                serializeLoadedUnifiedGraph(loadedUnifiedGraph);
-              return serializedUnifiedGraph;
-            },
-            additionalTypeDefs: this.opts.additionalTypeDefs,
-            additionalResolvers: this.opts.additionalResolvers,
-            onSubgraphExecute(subgraphName, execReq) {
-              return onSubgraphExecute(subgraphName, execReq);
-            },
-            onDelegationPlanHooks: this.onDelegationPlanHooks,
-            onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
-            onDelegateHooks: this.opts.onDelegateHooks,
-            batchDelegateOptions: this.opts.batchDelegateOptions,
-            log: this.opts.transportContext?.log,
-            handleProgressiveOverride: this.opts.handleProgressiveOverride
-              ? (label, context) => {
-                  const labels = this.overrideLabelsByContext.get(context);
-                  if (labels?.has(label)) {
-                    return true;
-                  }
-                  return false;
-                }
-              : undefined,
-          });
-          const transportExecutorStack = new AsyncDisposableStack();
-          const onSubgraphExecute = getOnSubgraphExecute({
-            onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
-            transports: this.opts.transports,
-            transportContext: this.opts.transportContext,
-            transportEntryMap,
-            getSubgraphSchema,
-            transportExecutorStack,
-            getDisposeReason: () => this.disposeReason,
-            batch: this.batch,
-            instrumentation: () => this.instrumentation(),
-          });
+        additionalTypeDefs: this.opts.additionalTypeDefs,
+        additionalResolvers: this.opts.additionalResolvers,
+        onSubgraphExecute(subgraphName, execReq) {
+          return onSubgraphExecute(subgraphName, execReq);
+        },
+        onDelegationPlanHooks: this.onDelegationPlanHooks,
+        onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
+        onDelegateHooks: this.opts.onDelegateHooks,
+        batchDelegateOptions: this.opts.batchDelegateOptions,
+        log: this.opts.transportContext?.log,
+        handleProgressiveOverride: this.opts.handleProgressiveOverride
+          ? (label, context) => {
+              const labels = this.overrideLabelsByContext.get(context);
+              if (labels?.has(label)) {
+                return true;
+              }
+              return false;
+            }
+          : undefined,
+      });
+      const transportExecutorStack = new AsyncDisposableStack();
+      const onSubgraphExecute = getOnSubgraphExecute({
+        onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
+        transports: this.opts.transports,
+        transportContext: this.opts.transportContext,
+        transportEntryMap,
+        getSubgraphSchema,
+        transportExecutorStack,
+        getDisposeReason: () => this.disposeReason,
+        batch: this.batch,
+        instrumentation: () => this.instrumentation(),
+      });
 
-          const previousTransportExecutorStack = this._transportExecutorStack;
-          const previousExecutor = this.executor;
-          const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
+      const previousTransportExecutorStack = this._transportExecutorStack;
+      const previousExecutor = this.executor;
+      const previousUnifiedGraph = this.lastLoadedUnifiedGraph;
 
-          this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
-          this.unifiedGraph = newUnifiedGraph;
-          this.executor = executor;
-          this._transportExecutorStack = transportExecutorStack;
-          this.inContextSDK = inContextSDK;
-          this.lastLoadTime = Date.now();
-          this._transportEntryMap = transportEntryMap;
-          this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
+      this.lastLoadedUnifiedGraph = loadedUnifiedGraph;
+      this.unifiedGraph = newUnifiedGraph;
+      this.executor = executor;
+      this._transportExecutorStack = transportExecutorStack;
+      this.inContextSDK = inContextSDK;
+      this.lastLoadTime = Date.now();
+      this._transportEntryMap = transportEntryMap;
+      this.opts?.onUnifiedGraphChange?.(newUnifiedGraph);
 
-          this.polling$ = undefined;
-          if (previousUnifiedGraph != null) {
-            this.disposeReason = createGraphQLError(
-              'operation has been aborted due to a schema reload',
-              {
-                extensions: {
-                  code: 'SCHEMA_RELOAD',
-                  http: {
-                    status: 503,
-                  },
-                  [CRITICAL_ERROR]: true,
-                },
+      this.polling$ = undefined;
+      if (previousUnifiedGraph != null) {
+        this.disposeReason = createGraphQLError(
+          'operation has been aborted due to a schema reload',
+          {
+            extensions: {
+              code: 'SCHEMA_RELOAD',
+              http: {
+                status: 503,
               },
-            );
-            this.opts.transportContext?.log.debug(
-              'Supergraph has been changed, updating...',
-            );
-          }
-          return handleMaybePromise(
-            () =>
-              disposeAll([previousTransportExecutorStack, previousExecutor]),
-            () => {
-              this.disposeReason = undefined;
-              return this.unifiedGraph!;
+              [CRITICAL_ERROR]: true,
             },
-            (err) => {
-              this.disposeReason = undefined;
-              this.opts.transportContext?.log.error(
-                err,
-                'Failed to dispose the existing transports and executors',
-              );
-              return this.unifiedGraph!;
-            },
+          },
+        );
+        this.opts.transportContext?.log.debug(
+          'Supergraph has been changed, updating...',
+        );
+      }
+      return handleMaybePromise(
+        () => disposeAll([previousTransportExecutorStack, previousExecutor]),
+        () => {
+          this.disposeReason = undefined;
+          return this.unifiedGraph!;
+        },
+        (err) => {
+          this.disposeReason = undefined;
+          this.opts.transportContext?.log.error(
+            err,
+            'Failed to dispose the existing transports and executors',
           );
+          return this.unifiedGraph!;
         },
       );
     } else if (!this.unifiedGraph) {
