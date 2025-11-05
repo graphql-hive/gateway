@@ -4186,7 +4186,6 @@ __metadata:
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.12"
     adm-zip: "npm:^0.5.15"
-    bun: "npm:^1.3.1"
     commander: "npm:^14.0.2"
     dotenv: "npm:^17.2.3"
     graphql: "npm:^16.12.0"
@@ -4608,7 +4607,6 @@ __metadata:
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
-    bun: "npm:1.3.1"
     change-case: "npm:^5.4.4"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.1"
@@ -11828,7 +11826,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun@npm:1.3.1, bun@npm:^1.3.1":
+"bun@npm:1.3.1":
   version: 1.3.1
   resolution: "bun@npm:1.3.1"
   dependencies:
