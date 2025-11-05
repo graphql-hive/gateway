@@ -2,9 +2,6 @@ name = "hive-gateway"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
-# only for tests because hive router qp is included (wont be in release)
-compatibility_flags = [ "nodejs_compat" ]
-
 [alias]
 "@graphql-tools/wrap" = "../../packages/wrap/src/index.ts"
 "@graphql-tools/batch-delegate" = "../../packages/batch-delegate/src/index.ts"
