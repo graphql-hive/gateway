@@ -1,4 +1,4 @@
-import { documentStringMap } from '@envelop/core/document-string-map';
+import { documentStringMap } from '@envelop/core';
 import type {
   FetchNodePathSegment,
   FetchRewrite,
