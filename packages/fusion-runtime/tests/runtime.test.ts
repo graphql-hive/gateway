@@ -272,9 +272,28 @@ describe.skipIf(usingHiveRouterRuntime())('onDelegationPlanHook', () => {
       log: expect.any(Logger),
       info: expect.any(Object),
     });
-    expect(
-      printSchemaWithDirectives(onDelegationPlanPayload.supergraph),
-    ).toMatchSnapshot('onDelegationPlanPayload.supergraph');
+    expect(printSchemaWithDirectives(onDelegationPlanPayload.supergraph))
+      .toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        posts: [Post]
+        users: [User]
+      }
+
+      type Post {
+        id: ID!
+        title: String
+        author: User
+      }
+
+      type User {
+        id: ID!
+        name: String
+      }"
+    `);
     expect(onDelegationPlanPayload.subgraph).toMatchInlineSnapshot(`"posts"`);
     expect(onDelegationPlanPayload.typeName).toMatchInlineSnapshot(`"User"`);
     expect(onDelegationPlanPayload.variables).toMatchInlineSnapshot(`{}`);
