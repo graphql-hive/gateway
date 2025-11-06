@@ -49,6 +49,12 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'The URL of the managed federation up link. When retrying after a failure, you should cycle through the default up links using this option.',
       ).env('APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'),
     )
+    .addOption(
+      new Option(
+        '--hive-router-runtime',
+        'Use the Hive Router runtime for query planning and execution. (experimental)',
+      ).env('HIVE_ROUTER_RUNTIME'),
+    )
     .action(async function supergraph(schemaPathOrUrl) {
       const {
         opentelemetry,
@@ -242,6 +248,20 @@ export const addCommand: AddCommand = (ctx, cli) =>
           return [...builtinPlugins, ...userPlugins];
         },
       };
+      if (opts.hiveRouterRuntime && !config.unifiedGraphHandler) {
+        ctx.log.info('Using Hive Router runtime as per CLI flag');
+        ctx.log.info('Loading @graphql-hive/router-runtime package');
+        try {
+          const moduleName = '@graphql-hive/router-runtime';
+          const { unifiedGraphHandler } = await import(moduleName);
+          config.unifiedGraphHandler ||= unifiedGraphHandler;
+        } catch (e) {
+          ctx.log.warn(
+            'Could not load @graphql-hive/router-runtime package. Please install it first.' +
+              ' Falling back to the default runtime.',
+          );
+        }
+      }
       if (hivePersistedDocumentsEndpoint) {
         const token =
           hivePersistedDocumentsToken ||

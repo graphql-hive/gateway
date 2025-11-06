@@ -1,7 +1,4 @@
-import type {
-  QueryPlan,
-  QueryPlanner,
-} from '@graphql-hive/router-query-planner';
+import { QueryPlanner } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -10,13 +7,10 @@ import {
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import {
-  handleMaybePromise,
-  type MaybePromise,
-} from '@whatwg-node/promise-helpers';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, getLazyPromise, memoize1Promise } from './utils';
+import { getLazyFactory, memoize1Promise } from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -26,25 +20,14 @@ export function unifiedGraphHandler(
     () => handleFederationSupergraph(opts).getSubgraphSchema,
   );
 
-  const HIVE_ROUTER_QP_PKG_NAME = '@graphql-hive/router-query-planner';
-  const getQueryPlanner: () => MaybePromise<QueryPlanner> = getLazyPromise(() =>
-    handleMaybePromise(
-      () =>
-        // @ts-expect-error - in globalThis for jest environment
-        globalThis.HIVE_ROUTER_QP || import(HIVE_ROUTER_QP_PKG_NAME),
-      ({ QueryPlanner }) => new QueryPlanner(opts.getUnifiedGraphSDL()),
-    ),
-  );
+  const qp = new QueryPlanner(opts.getUnifiedGraphSDL());
 
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
   );
   const planDocument = memoize1Promise((document: DocumentNode) =>
-    handleMaybePromise<QueryPlanner, QueryPlan>(
-      () => getQueryPlanner(),
-      (qp) => qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
-    ),
+    qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
   );
   return {
     unifiedGraph: supergraphSchema,
