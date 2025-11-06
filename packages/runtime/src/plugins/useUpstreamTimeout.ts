@@ -105,7 +105,7 @@ export function useUpstreamTimeout<TContext extends Record<string, any>>(
                 throw createGraphQLError(e.message, {
                   extensions: {
                     ...upstreamErrorExtensions,
-                    code: 'TIMEOUT_ERROR',
+                    code: 'GATEWAY_TIMEOUT',
                     http: {
                       status: 504,
                     },
