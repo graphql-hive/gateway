@@ -1,14 +1,5 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.fieldNodes[0] 1`] = `
-"author {
-  id
-  name
-}"
-`;
-
-exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.subgraph 1`] = `"posts"`;
-
 exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.supergraph 1`] = `
 "schema {
   query: Query
@@ -30,7 +21,3 @@ type User {
   name: String
 }"
 `;
-
-exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.typeName 1`] = `"User"`;
-
-exports[`onDelegationPlanHook should be called with the plan: onDelegationPlanPayload.variables 1`] = `{}`;

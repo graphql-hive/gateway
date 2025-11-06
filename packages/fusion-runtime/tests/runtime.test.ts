@@ -275,17 +275,22 @@ describe.skipIf(usingHiveRouterRuntime())('onDelegationPlanHook', () => {
     expect(
       printSchemaWithDirectives(onDelegationPlanPayload.supergraph),
     ).toMatchSnapshot('onDelegationPlanPayload.supergraph');
-    expect(onDelegationPlanPayload.subgraph).toMatchSnapshot(
-      'onDelegationPlanPayload.subgraph',
+    expect(onDelegationPlanPayload.subgraph).toMatchInlineSnapshot(
+      `"posts"`,
     );
-    expect(onDelegationPlanPayload.typeName).toMatchSnapshot(
-      'onDelegationPlanPayload.typeName',
+    expect(onDelegationPlanPayload.typeName).toMatchInlineSnapshot(
+      `"User"`,
     );
-    expect(onDelegationPlanPayload.variables).toMatchSnapshot(
-      'onDelegationPlanPayload.variables',
+    expect(onDelegationPlanPayload.variables).toMatchInlineSnapshot(
+      `{}`,
     );
-    expect(print(onDelegationPlanPayload.fieldNodes[0]!)).toMatchSnapshot(
-      'onDelegationPlanPayload.fieldNodes[0]',
+    expect(print(onDelegationPlanPayload.fieldNodes[0]!)).toMatchInlineSnapshot(
+      `
+      "author {
+        id
+        name
+      }"
+    `,
     );
     expect(result).toEqual({
       posts: [
