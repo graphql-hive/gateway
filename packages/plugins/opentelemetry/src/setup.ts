@@ -318,7 +318,10 @@ export type HiveTracingOptions = { target?: string } & (
     }
 );
 
-export type HiveTracingSetupOptions = BaseOptions & HiveTracingOptions;
+export type HiveTracingSetupOptions = BaseOptions &
+  HiveTracingOptions &
+  SamplingOptions &
+  TracerOptions;
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
   const log = options.log || new Logger();
@@ -369,6 +372,8 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
           options as HiveTracingSpanProcessorOptions,
         ),
       ],
+      spanLimits: options.spanLimits,
+      console: options.console,
     },
     _initialization: options._initialization || {
       name: 'Hive Tracing',
