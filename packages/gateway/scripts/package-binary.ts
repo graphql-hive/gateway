@@ -25,7 +25,9 @@ console.log(
 );
 
 console.log('Generating blob');
-execSync(`node --experimental-sea-config sea-config.json`);
+console.log(
+  execSync(`node --experimental-sea-config sea-config.json`).toString('utf-8'),
+);
 
 console.log(`Using node from ${process.execPath}`);
 await fs.copyFile(process.execPath, dest);
@@ -66,4 +68,4 @@ if (isDarwin || isLinux) {
   execSync(`chmod +x ${dest}`);
 }
 
-console.log('Done');
+console.log(`Saved binary to ${dest}`);

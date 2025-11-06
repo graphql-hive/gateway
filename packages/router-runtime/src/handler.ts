@@ -1,4 +1,3 @@
-import { QueryPlanner } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -10,7 +9,7 @@ import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, memoize1Promise } from './utils';
+import { getLazyFactory, getLazyValue, memoize1Promise } from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -20,14 +19,23 @@ export function unifiedGraphHandler(
     () => handleFederationSupergraph(opts).getSubgraphSchema,
   );
 
-  const qp = new QueryPlanner(opts.getUnifiedGraphSDL());
+  const getQueryPlanner = getLazyValue(() => {
+    const moduleName = '@graphql-hive/router-query-planner';
+    const supergraphSdl = opts.getUnifiedGraphSDL();
+    return import(moduleName).then(
+      ({ QueryPlanner }: typeof import('@graphql-hive/router-query-planner')) =>
+        new QueryPlanner(supergraphSdl),
+    );
+  });
 
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
   );
   const planDocument = memoize1Promise((document: DocumentNode) =>
-    qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
+    handleMaybePromise(getQueryPlanner, (qp) =>
+      qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
+    ),
   );
   return {
     unifiedGraph: supergraphSchema,
