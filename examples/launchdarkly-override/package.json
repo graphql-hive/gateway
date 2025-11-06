@@ -17,7 +17,8 @@
     "@apollo/rover": "^0.36.2"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "tmp": "0.2.4"
   },
   "scripts": {
     "service:inventory": "tsx services/inventory.ts",

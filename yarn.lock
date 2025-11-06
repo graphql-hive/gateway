@@ -3118,7 +3118,7 @@ __metadata:
     "@apollo/subgraph": "npm:2.11.3"
     "@launchdarkly/node-server-sdk": "npm:9.10.2"
     graphql: "npm:16.12.0"
-    graphql-yoga: "npm:5.16.1"
+    graphql-yoga: "npm:5.16.0"
     tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
