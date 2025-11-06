@@ -9,16 +9,16 @@
     "tslib": "^2.8.1",
     "@graphql-hive/gateway": "^2.1.13"
   },
+  "overrides": {
+    "tmp": "0.2.4",
+    "esbuild": "^0.25.5"
+  },
   "installConfig": {
     "hoistingLimits": "dependencies"
   },
   "devDependencies": {
     "tsx": "^4.20.3",
     "@apollo/rover": "^0.36.2"
-  },
-  "overrides": {
-    "esbuild": "^0.25.5",
-    "tmp": "0.2.4"
   },
   "scripts": {
     "service:inventory": "tsx services/inventory.ts",
