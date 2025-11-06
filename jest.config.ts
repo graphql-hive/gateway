@@ -1,12 +1,12 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import type { Config } from 'jest';
-import JSON5 from 'json5';
-import { pathsToModuleNameMapper } from 'ts-jest';
 // by importing the router query planner binaries here
 // we allow leak tests to not get fail when detecting open handles
 // showing that jest wouldnt close due to napi-rs customgc
-import '@graphql-hive/router-query-planner';
+import * as HIVE_ROUTER_QP from '@graphql-hive/router-query-planner';
+import type { Config } from 'jest';
+import JSON5 from 'json5';
+import { pathsToModuleNameMapper } from 'ts-jest';
 
 const isCI = () => !!process.env['CI'];
 const rootDir = process.cwd();
@@ -52,4 +52,7 @@ export default {
     'internal/',
   ],
   testMatch: ['**/*.(test|spec).ts'],
+  globals: {
+    HIVE_ROUTER_QP,
+  },
 } satisfies Config;

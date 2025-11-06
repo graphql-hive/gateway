@@ -1,4 +1,5 @@
 import type { Logger } from '@graphql-hive/logger';
+import { unifiedGraphHandler as routerUnifiedGraphHandler } from '@graphql-hive/router-runtime';
 import {
   defaultPrintFn,
   type TransportContext,
@@ -95,7 +96,7 @@ export interface UnifiedGraphHandlerResult {
   unifiedGraph: GraphQLSchema;
   executor?: Executor;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
-  inContextSDK: any;
+  inContextSDK?: any;
 }
 
 export interface UnifiedGraphManagerOptions<TContext> {
@@ -158,15 +159,6 @@ export type Instrumentation = {
 
 const UNIFIEDGRAPH_CACHE_KEY = 'hive-gateway:supergraph';
 
-export let loadingRouter: Promise<void>;
-let handleFederationSupergraph = stitchingUnifiedGraphHandler;
-if (usingHiveRouterRuntime()) {
-  const moduleName = '@graphql-hive/router-runtime';
-  loadingRouter = import(moduleName).then(({ unifiedGraphHandler }) => {
-    handleFederationSupergraph = unifiedGraphHandler;
-  });
-}
-
 export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private batch: boolean;
   private handleUnifiedGraph: UnifiedGraphHandler;
@@ -188,7 +180,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph ||
+      (usingHiveRouterRuntime()
+        ? routerUnifiedGraphHandler
+        : stitchingUnifiedGraphHandler);
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];

@@ -1,4 +1,7 @@
-import { QueryPlan, QueryPlanner } from '@graphql-hive/router-query-planner';
+import type {
+  QueryPlan,
+  QueryPlanner,
+} from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -7,55 +10,51 @@ import {
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import { Executor } from '@graphql-tools/utils';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { BREAK, DocumentNode, GraphQLSchema, visit } from 'graphql';
+import {
+  handleMaybePromise,
+  type MaybePromise,
+} from '@whatwg-node/promise-helpers';
+import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
+import { getLazyFactory, getLazyPromise, memoize1Promise } from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
 ): UnifiedGraphHandlerResult {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
-  let _getSubgraphSchema: (subgraphName: string) => GraphQLSchema;
-  function getSubgraphSchema(subgraphName: string): GraphQLSchema {
-    _getSubgraphSchema = handleFederationSupergraph(opts).getSubgraphSchema;
-    return _getSubgraphSchema(subgraphName);
-  }
-  const unifiedGraphSdl = opts.getUnifiedGraphSDL();
-  const qp = new QueryPlanner(unifiedGraphSdl);
+  const getSubgraphSchema = getLazyFactory(
+    () => handleFederationSupergraph(opts).getSubgraphSchema,
+  );
 
-  const planByDocument = new WeakMap<DocumentNode, MaybePromise<QueryPlan>>();
+  const HIVE_ROUTER_QP_PKG_NAME = '@graphql-hive/router-query-planner';
+  const getQueryPlanner: () => MaybePromise<QueryPlanner> = getLazyPromise(() =>
+    handleMaybePromise(
+      () =>
+        // @ts-expect-error - in globalThis for jest environment
+        globalThis.HIVE_ROUTER_QP || import(HIVE_ROUTER_QP_PKG_NAME),
+      ({ QueryPlanner }) => new QueryPlanner(opts.getUnifiedGraphSDL()),
+    ),
+  );
 
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
-  let _defaultExecutor: Executor;
-  function getDefaultExecutor(): Executor {
-    _defaultExecutor ||= createDefaultExecutor(supergraphSchema);
-    return _defaultExecutor;
-  }
+  const defaultExecutor = getLazyFactory(() =>
+    createDefaultExecutor(supergraphSchema),
+  );
+  const planDocument = memoize1Promise((document: DocumentNode) =>
+    handleMaybePromise<QueryPlanner, QueryPlan>(
+      () => getQueryPlanner(),
+      (qp) => qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
+    ),
+  );
   return {
     unifiedGraph: supergraphSchema,
     getSubgraphSchema,
     executor(executionRequest) {
       if (isIntrospection(executionRequest.document)) {
-        return getDefaultExecutor()(executionRequest);
+        return defaultExecutor(executionRequest);
       }
       return handleMaybePromise(
-        () => {
-          let queryPlan = planByDocument.get(executionRequest.document);
-          if (!queryPlan) {
-            const documentStr = defaultPrintFn(executionRequest.document);
-            queryPlan = qp
-              .plan(documentStr, executionRequest.operationName)
-              .then((resolvedQueryPlan) => {
-                queryPlan = resolvedQueryPlan;
-                // Set the plan in the map after it's fully resolved to avoid multiple concurrent resolutions
-                planByDocument.set(executionRequest.document, queryPlan);
-                return queryPlan;
-              });
-            planByDocument.set(executionRequest.document, queryPlan);
-          }
-          return queryPlan;
-        },
+        () => planDocument(executionRequest.document),
         (queryPlan) =>
           executeQueryPlan({
             supergraphSchema,
@@ -64,9 +63,6 @@ export function unifiedGraphHandler(
             queryPlan,
           }),
       );
-    },
-    inContextSDK: {
-      // TODO: do we need/want an SDK here?
     },
   };
 }
