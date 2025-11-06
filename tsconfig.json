@@ -115,6 +115,7 @@
     "./eslint.config.js",
     "./vitest.config.ts",
     "./vitest.projects.ts",
+    "./jest.config.ts",
     "./scripts/*",
     "./internal/**/src",
     "./internal/**/tests",
