@@ -3,7 +3,10 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { composeLocalSchemasWithApollo, usingHiveRouterRuntime } from '@internal/testing';
+import {
+  composeLocalSchemasWithApollo,
+  usingHiveRouterRuntime,
+} from '@internal/testing';
 import { GraphQLSchema, parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
