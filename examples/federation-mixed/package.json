@@ -2,7 +2,7 @@
   "name": "@example/federation-mixed",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.1",
+    "@graphql-mesh/compose-cli": "^1.5.2",
     "@omnigraph/openapi": "^0.109.22",
     "graphql": "^16.12.0",
     "tslib": "^2.8.1",
