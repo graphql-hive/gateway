@@ -1,7 +1,7 @@
 import cluster from 'node:cluster';
 import { lstat, watch as watchFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
-import { Option } from '@commander-js/extra-typings';
+import { Command, Option } from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
   createLoggerFromLogging,
@@ -16,7 +16,7 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadTypedefs } from '@graphql-tools/load';
 import { asArray, isValidPath } from '@graphql-tools/utils';
-import { getNodeEnv } from '~internal/env';
+import { getEnvBool, getNodeEnv } from '~internal/env';
 import {
   defaultOptions,
   type AddCommand,
@@ -55,6 +55,16 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'Use the Hive Router runtime for query planning and execution. (experimental)',
       ).env('HIVE_ROUTER_RUNTIME'),
     )
+    .on('optionEnv:hive-router-runtime', function (this: Command) {
+      // we need this because commanderjs only checks for the existence of the
+      // variable, and not whether it is truthy (HIVE_ROUTER_RUNTIME=0 would be still true)
+      // TODO: this should be done in commanderjs itself, raise an issue
+      this.setOptionValueWithSource(
+        'hive-router-runtime',
+        getEnvBool('HIVE_ROUTER_RUNTIME'),
+        'env',
+      );
+    })
     .action(async function supergraph(schemaPathOrUrl) {
       const {
         opentelemetry,
