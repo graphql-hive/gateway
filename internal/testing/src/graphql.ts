@@ -1,6 +1,7 @@
 import { MeshFetch } from '@graphql-mesh/types';
 import { fetch as whatwgFetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
+import { ResponseError } from './ResponseError';
 
 type Fetch = typeof whatwgFetch | MeshFetch;
 
