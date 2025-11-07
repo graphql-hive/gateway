@@ -43,8 +43,8 @@
   },
   "dependencies": {
     "@graphql-mesh/cross-helpers": "^0.4.10",
-    "@graphql-mesh/types": "^0.104.14",
-    "@graphql-mesh/utils": "^0.104.14",
+    "@graphql-mesh/types": "^0.104.15",
+    "@graphql-mesh/utils": "^0.104.15",
     "@graphql-tools/executor-common": "workspace:^",
     "@graphql-tools/utils": "^10.10.1",
     "@whatwg-node/promise-helpers": "^1.3.2",
