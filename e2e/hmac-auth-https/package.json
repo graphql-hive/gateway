@@ -6,14 +6,14 @@
     "generate-users-cert": "openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ./services/users/key.pem -out ./services/users/cert.pem -subj \"/CN=users_subgraph\" -addext \"subjectAltName=DNS:users_subgraph,DNS:localhost,IP:172.17.0.1,DNS:host.docker.internal\" && cp ./services/users/cert.pem ./users_cert.pem"
   },
   "dependencies": {
-    "@apollo/server": "^5.0.0",
-    "@apollo/subgraph": "^2.11.2",
+    "@apollo/server": "^5.1.0",
+    "@apollo/subgraph": "^2.11.3",
     "@graphql-hive/gateway": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
-    "@graphql-mesh/compose-cli": "^1.4.18",
+    "@graphql-mesh/compose-cli": "^1.5.2",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
-    "graphql": "^16.10.0",
-    "graphql-yoga": "^5.16.0"
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.16.2"
   }
 }

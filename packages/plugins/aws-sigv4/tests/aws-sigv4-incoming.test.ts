@@ -1,12 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createInlineSigningKeyProvider, useJWT } from '@graphql-hive/gateway';
-import {
-  createGatewayRuntime,
-  useCustomFetch,
-} from '@graphql-hive/gateway-runtime';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { parse } from 'graphql';
-import { createYoga } from 'graphql-yoga';
 import { describe, expect, it } from 'vitest';
 import { useAWSSigv4 } from '../src';
 
@@ -23,18 +18,14 @@ describe('AWS Sigv4 Incoming requests', () => {
       },
     },
   });
-  const subgraphServer = createYoga({
-    schema: subgraphSchema,
-  });
   it('validates incoming requests', async () => {
-    await using gw = createGatewayRuntime({
-      supergraph: composeLocalSchemasWithApollo([
+    await using gw = createGatewayTester({
+      subgraphs: [
         {
           name: 'subgraph',
           schema: subgraphSchema,
-          url: 'http://localhost:4000/graphql',
         },
-      ]),
+      ],
       landingPage: false,
       graphqlEndpoint: '/',
       plugins: () => [
@@ -43,10 +34,6 @@ describe('AWS Sigv4 Incoming requests', () => {
             secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
           },
         }),
-        useCustomFetch(
-          // @ts-expect-error - MeshFetch is not compatible with Yoga.fetch
-          subgraphServer.fetch,
-        ),
       ],
     });
     const response = await gw.fetch(
@@ -59,7 +46,7 @@ describe('AWS Sigv4 Incoming requests', () => {
           Date: 'Mon, 29 Dec 2015 00:00:00 GMT',
           'content-type': 'application/json',
           Host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
-          'Content-Length': 30,
+          'Content-Length': '30',
           'X-Amz-Content-Sha256':
             '34c77dc7b593717e0231ac99a16ae3be5ee2e8d652bce6518738a6449dfd2647',
           'X-Amz-Date': '20151229T000000Z',
@@ -82,14 +69,13 @@ describe('AWS Sigv4 Incoming requests', () => {
   });
   it('works with JWT', async () => {
     const JWT_SECRET = 'a-string-secret-at-least-256-bits-long';
-    await using gw = createGatewayRuntime({
-      supergraph: composeLocalSchemasWithApollo([
+    await using gw = createGatewayTester({
+      subgraphs: [
         {
           name: 'subgraph',
           schema: subgraphSchema,
-          url: 'http://localhost:4000/graphql',
         },
-      ]),
+      ],
       landingPage: false,
       graphqlEndpoint: '/',
       plugins: () => [
@@ -108,10 +94,6 @@ describe('AWS Sigv4 Incoming requests', () => {
             secretAccessKey: () => 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
           },
         }),
-        useCustomFetch(
-          // @ts-expect-error - MeshFetch is not compatible with Yoga.fetch
-          subgraphServer.fetch,
-        ),
       ],
     });
 
@@ -125,7 +107,7 @@ describe('AWS Sigv4 Incoming requests', () => {
           Date: 'Mon, 29 Dec 2015 00:00:00 GMT',
           'content-type': 'application/json',
           Host: 'sigv4examplegraphqlbucket.s3-eu-central-1.amazonaws.com',
-          'Content-Length': 30,
+          'Content-Length': '30',
           'X-Amz-Content-Sha256':
             '34c77dc7b593717e0231ac99a16ae3be5ee2e8d652bce6518738a6449dfd2647',
           'X-Amz-Date': '20151229T000000Z',

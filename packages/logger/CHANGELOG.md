@@ -1,5 +1,14 @@
 # @graphql-hive/logger
 
+## 1.0.7
+### Patch Changes
+
+
+
+- [#1623](https://github.com/graphql-hive/gateway/pull/1623) [`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@logtape/logtape@^1.1.2` ↗︎](https://www.npmjs.com/package/@logtape/logtape/v/1.1.2) (from `^1.1.1`, in `peerDependencies`)
+
 ## 1.0.6
 ### Patch Changes
 

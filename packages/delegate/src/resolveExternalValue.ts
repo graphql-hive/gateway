@@ -146,6 +146,33 @@ function resolveExternalObject<TContext extends Record<string, any>>(
     }
   }
 
+  if (!mergedTypeInfo) {
+    for (const possibleTypeName of possibleTypeNames) {
+      const potentialMergedTypeInfo =
+        stitchingInfo.mergedTypes[possibleTypeName];
+      if (potentialMergedTypeInfo != null) {
+        for (const [
+          sourceSubschema,
+          targetSubschemas,
+        ] of potentialMergedTypeInfo.targetSubschemas) {
+          if (
+            targetSubschemas.length &&
+            sourceSubschema.name === (subschema as Subschema).name
+          ) {
+            subschema = sourceSubschema as SubschemaConfig<
+              any,
+              any,
+              any,
+              TContext
+            >;
+            mergedTypeInfo = potentialMergedTypeInfo;
+          }
+        }
+        break;
+      }
+    }
+  }
+
   // If there are no merge targets from the subschema, return.
   if (!mergedTypeInfo) {
     return object;
@@ -182,7 +209,7 @@ function resolveExternalList<TContext extends Record<string, any>>(
   );
 }
 
-const reportedErrors = new WeakMap<GraphQLError, boolean>();
+const reportedErrors = new WeakSet<GraphQLError>();
 
 function reportUnpathedErrorsViaNull(unpathedErrors: Array<GraphQLError>) {
   if (unpathedErrors.length) {
@@ -190,7 +217,7 @@ function reportUnpathedErrorsViaNull(unpathedErrors: Array<GraphQLError>) {
     for (const error of unpathedErrors) {
       if (!reportedErrors.has(error)) {
         unreportedErrors.push(error);
-        reportedErrors.set(error, true);
+        reportedErrors.add(error);
       }
     }
 

@@ -94,13 +94,14 @@ export function defaultMergedResolver(
       if (
         fieldNodesByType?.every((fieldNode) => {
           const responseKey = fieldNode.alias?.value ?? fieldNode.name.value;
-          if (Object.prototype.hasOwnProperty.call(parent, responseKey)) {
-            return true;
-          }
-          return false;
+          return Object.prototype.hasOwnProperty.call(parent, responseKey);
         })
       ) {
         handleResult(parent, responseKey, context, info);
+      } else {
+        // not all fields are present, we need to resolve more leftovers
+        // this can occur when there are circular @requires, see requires-circular audit test
+        handleLeftOver(parent, context, info, leftOver);
       }
       return deferred.promise;
     }
@@ -304,13 +305,18 @@ function handleFlattenedParent<TContext extends Record<string, any>>(
                           nestedTypeName
                         ]?.resolvers.get(subschema);
                       if (resolver) {
+                        const subschemaTypes =
+                          stitchingInfo.mergedTypes[
+                            nestedTypeName
+                          ]!.typeMaps.get(subschema)!;
+                        const returnType = subschemaTypes[nestedTypeName];
                         const res = await resolver(
                           nestedParentItem,
                           context,
                           info,
                           subschema,
                           selectionSet,
-                          info.parentType,
+                          returnType, // returnType
                           info.parentType,
                         );
                         if (res) {
@@ -383,15 +389,48 @@ function handleDeferredResolverResult<TContext extends Record<string, any>>(
   const deferredFields =
     leftOver.missingFieldsParentDeferredMap.get(leftOverParent);
   if (deferredFields) {
+    const stitchingInfo = info.schema.extensions?.[
+      'stitchingInfo'
+    ] as StitchingInfo;
+    const parentTypeName = leftOverParent?.__typename || info.parentType.name;
+    const resolvedKeys = new Set<string>();
     for (const [responseKey, deferred] of deferredFields) {
-      // If the deferred field is resolved, resolve the deferred field
-      if (Object.prototype.hasOwnProperty.call(resolverResult, responseKey)) {
+      // after handleResolverResult, check if the field is now in the parent
+      if (Object.prototype.hasOwnProperty.call(leftOverParent, responseKey)) {
+        // field was added to parent by handleResolverResult
         deferred.resolve(
           handleResult(leftOverParent, responseKey, context, info),
         );
+        resolvedKeys.add(responseKey);
+      } else {
+        // check if the required fields for this deferred field are now satisfied
+        const fieldNodesByType =
+          stitchingInfo?.fieldNodesByField?.[parentTypeName]?.[responseKey];
+        if (fieldNodesByType) {
+          if (
+            fieldNodesByType.every((fieldNode) => {
+              const requiredKey =
+                fieldNode.alias?.value ?? fieldNode.name.value;
+              return Object.prototype.hasOwnProperty.call(
+                leftOverParent,
+                requiredKey,
+              );
+            })
+          ) {
+            // requirements are satisfied, trigger handleLeftOver to fetch this field
+            handleLeftOver(leftOverParent, context, info, leftOver);
+          }
+        }
       }
     }
-    leftOver.missingFieldsParentDeferredMap.delete(leftOverParent);
+    // delete resolved deferred fields
+    for (const key of resolvedKeys) {
+      deferredFields.delete(key);
+    }
+    // and delete map if empty
+    if (deferredFields.size === 0) {
+      leftOver.missingFieldsParentDeferredMap.delete(leftOverParent);
+    }
   }
 }
 

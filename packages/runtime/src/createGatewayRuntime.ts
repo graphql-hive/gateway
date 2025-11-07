@@ -723,6 +723,7 @@ export function createGatewayRuntime<
       instrumentation: () => instrumentation,
       batch: config.__experimental__batchExecution,
       batchDelegateOptions: config.__experimental__batchDelegateOptions,
+      handleProgressiveOverride: config.progressiveOverride,
     });
     getSchema = () => unifiedGraphManager.getUnifiedGraph();
     readinessChecker = () => {
@@ -1052,6 +1053,13 @@ export function createGatewayRuntime<
   }
 
   if (config.demandControl) {
+    if ('proxy' in config && config.schema == null) {
+      log.warn(
+        '`demandControl` is enabled in proxy mode without a defined schema' +
+          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.' +
+          'You have to define "schema" in the gateway config to make them available.',
+      );
+    }
     extraPlugins.push(useDemandControl(config.demandControl));
   }
 
@@ -1089,20 +1097,21 @@ export function createGatewayRuntime<
       ...extraPlugins,
       ...(config.plugins?.(configContext) || []),
     ],
-    context({ request, req, connectionParams, ...ctx }) {
+    context(ctx) {
       // @ts-expect-error - ctx.headers might be present
-      let headers: Record<string, string> | undefined = ctx.headers;
-      if (!headers) {
+      if (!ctx.headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        headers = getHeadersObj(req?.headers || request?.headers);
+        // context will change, for example: when we have an operation happening over WebSockets,
+        // there wont be a fetch Request - there'll only be the upgrade http node request
+        ctx['headers'] = getHeadersObj(
+          ctx['req']?.headers || ctx?.request?.headers,
+        );
       }
-      if (connectionParams) {
-        headers = { ...headers, ...connectionParams };
+      if (ctx['connectionParams']) {
+        ctx['headers'] = { ...ctx['headers'], ...ctx['connectionParams'] };
       }
-
-      const baseContext = { ...ctx, headers, connectionParams };
-      return contextBuilder?.(baseContext) ?? baseContext;
+      return contextBuilder?.(ctx) ?? ctx;
     },
     cors: config.cors,
     graphiql: graphiqlOptionsOrFactory,

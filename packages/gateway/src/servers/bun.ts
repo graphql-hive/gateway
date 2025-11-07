@@ -1,5 +1,8 @@
-import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
-import type { Server, TLSServeOptions, WebSocketServeOptions } from 'bun';
+import {
+  DisposableSymbols,
+  getGraphQLWSOptions,
+} from '@graphql-hive/gateway-runtime';
+import type { Server, WebSocketOptions } from 'bun';
 import type { Extra } from 'graphql-ws/use/bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
@@ -8,7 +11,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
   gwRuntime: GatewayRuntime<TContext>,
   opts: ServerForRuntimeOptions,
 ): Promise<void> {
-  const serverOptions: TLSServeOptions & Partial<WebSocketServeOptions> = {
+  const serverOptions: Bun.Serve.Options<{}> & Partial<WebSocketOptions> = {
     fetch: gwRuntime,
     port: opts.port || defaultOptions.port,
     hostname: opts.host || defaultOptions.host,
@@ -16,28 +19,30 @@ export async function startBunServer<TContext extends Record<string, any>>(
     idleTimeout: opts.requestTimeout,
   };
   if (opts.sslCredentials) {
+    const tlsOptions: Bun.TLSOptions = {};
     if (opts.sslCredentials.ca_file_name) {
-      serverOptions.ca = Bun.file(opts.sslCredentials.ca_file_name);
+      tlsOptions.ca = Bun.file(opts.sslCredentials.ca_file_name);
     }
     if (opts.sslCredentials.cert_file_name) {
-      serverOptions.cert = Bun.file(opts.sslCredentials.cert_file_name);
+      tlsOptions.cert = Bun.file(opts.sslCredentials.cert_file_name);
     }
     if (opts.sslCredentials.dh_params_file_name) {
-      serverOptions.dhParamsFile = opts.sslCredentials.dh_params_file_name;
+      tlsOptions.dhParamsFile = opts.sslCredentials.dh_params_file_name;
     }
     if (opts.sslCredentials.key_file_name) {
-      serverOptions.key = Bun.file(opts.sslCredentials.key_file_name);
+      tlsOptions.key = Bun.file(opts.sslCredentials.key_file_name);
     }
     if (opts.sslCredentials.passphrase) {
-      serverOptions.passphrase = opts.sslCredentials.passphrase;
+      tlsOptions.passphrase = opts.sslCredentials.passphrase;
     }
     if (opts.sslCredentials.ssl_ciphers) {
       // TODO: Check if there is a correct way to set ciphers
     }
     if (opts.sslCredentials.ssl_prefer_low_memory_usage) {
-      serverOptions.lowMemoryMode =
+      tlsOptions.lowMemoryMode =
         opts.sslCredentials.ssl_prefer_low_memory_usage;
     }
+    serverOptions.tls = tlsOptions;
   }
   if (!opts.disableWebsockets) {
     const { makeHandler } = await import('graphql-ws/use/bun');
@@ -47,7 +52,7 @@ export async function startBunServer<TContext extends Record<string, any>>(
         ...(ctx.extra.socket.data || {}),
       })),
     );
-    serverOptions.fetch = function (request: Request, server: Server) {
+    serverOptions.fetch = function (request: Request, server: Server<{}>) {
       // header to check if websocket
       if (
         request.headers.has('Sec-WebSocket-Key') &&
@@ -65,5 +70,5 @@ export async function startBunServer<TContext extends Record<string, any>>(
   }
   const server = Bun.serve(serverOptions);
   opts.log.info(`Listening on ${server.url}`);
-  gwRuntime.disposableStack.use(server);
+  gwRuntime.disposableStack.defer(() => server[DisposableSymbols.dispose]());
 }

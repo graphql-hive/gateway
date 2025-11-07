@@ -3,9 +3,10 @@ import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
 import {
   createDeferred,
+  fakePromise,
   printSchemaWithDirectives,
 } from '@graphql-tools/utils';
-import { isDebug } from '@internal/testing';
+import { fakeRejectPromise, isDebug } from '@internal/testing';
 import { loadOpenAPISubgraph } from '@omnigraph/openapi';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createRouter, Response, Type } from 'fets';
@@ -310,16 +311,16 @@ describe('Gateway Runtime', () => {
     function createCache(cachedSupergraph?: string) {
       return {
         get: vi.fn((_key) => {
-          return Promise.resolve(cachedSupergraph);
+          return fakePromise(cachedSupergraph);
         }),
         set: vi.fn((_key, _value, _options) => {
-          return Promise.resolve();
+          return fakePromise();
         }),
         delete() {
-          return Promise.reject('noop');
+          return fakeRejectPromise('noop');
         },
         getKeysByPrefix() {
-          return Promise.reject('noop');
+          return fakeRejectPromise('noop');
         },
       } satisfies KeyValueCache;
     }

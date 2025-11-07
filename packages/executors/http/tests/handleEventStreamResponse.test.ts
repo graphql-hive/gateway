@@ -140,7 +140,7 @@ describe('handleEventStreamResponse', () => {
     );
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
-    Promise.resolve().then(() => {
+    queueMicrotask(() => {
       ctrl.abort(); // we abort
       readableStream.cancel(); // then cancel
       // so that the error reported is the abort error
@@ -188,7 +188,7 @@ describe('handleEventStreamResponse', () => {
     const iterator = asyncIterable[Symbol.asyncIterator]();
 
     const originalError = new Error('Oops!');
-    Promise.resolve().then(() => {
+    queueMicrotask(() => {
       readableStream.cancel(originalError); // this will throw in reader.read()
     });
 

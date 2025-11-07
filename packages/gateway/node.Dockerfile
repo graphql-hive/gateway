@@ -1,14 +1,16 @@
 # IMPORTANT: make sure bundle is ready with `yarn bundle`
 
-FROM node:24-bookworm-slim AS install
+FROM node:25-bookworm-slim AS install
 
 WORKDIR /install
 
 RUN npm i graphql@^16.9.0
 
+RUN npm audit fix --force
+
 #
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 
 # use the upcoming debian release (trixie) to get the latest security updates
 RUN echo "deb http://ftp.debian.org/debian trixie main" >> /etc/apt/sources.list && \
@@ -27,12 +29,27 @@ RUN apt-get install -y \
   dumb-init
 
 # Install specific security updates for openssl
-RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i openssl_3.5.1-1+deb13u1_amd64.deb \
-  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl3t64_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i libssl3t64_3.5.1-1+deb13u1_amd64.deb \
-  && wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb \
-  && dpkg -i openssl-provider-legacy_3.5.1-1+deb13u1_amd64.deb
+ARG TARGETARCH
+RUN set -eux; \
+  if [ -z "${TARGETARCH:-}" ]; then \
+    if ! command -v dpkg >/dev/null 2>&1; then \
+      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture." >&2; \
+      exit 1; \
+    fi; \
+    arch="$(dpkg --print-architecture)"; \
+  else \
+    arch="${TARGETARCH}"; \
+  fi; \
+  if [ -z "$arch" ]; then \
+    echo "Error: Could not determine architecture." >&2; \
+    exit 1; \
+  fi; \
+  openssl_version="3.5.1-1+deb13u1"; \
+  for pkg in openssl libssl3t64 openssl-provider-legacy; do \
+    wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
+    dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
+    rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
+  done
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
@@ -66,6 +83,10 @@ ENV NODE_PATH=/gateway/node_modules
 
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+RUN npm install tar@latest -g
+
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]

@@ -2,7 +2,10 @@ import { setTimeout } from 'timers/promises';
 import { Container, createTenv } from '@internal/e2e';
 import { connect as natsConnect } from '@nats-io/transport-node';
 import { crypto } from '@whatwg-node/fetch';
-import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  fakePromise,
+} from '@whatwg-node/promise-helpers';
 import Redis from 'ioredis';
 import LeakDetector from 'jest-leak-detector';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -31,7 +34,9 @@ for (const PubSub of PubSubCtors) {
               containerPort: 6379,
               healthcheck: ['CMD-SHELL', 'redis-cli ping'],
               env: {
-                LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+                // fixes "Failed to configure LOCALE for invalid locale name."
+                LANG: '',
+                LC_ALL: '',
               },
             });
             return;
@@ -57,7 +62,7 @@ for (const PubSub of PubSubCtors) {
     function flush(ms: number = 100) {
       if (PubSub === MemPubSub) {
         // MemPubSub is synchronous, no need to wait
-        return Promise.resolve();
+        return fakePromise();
       }
       return setTimeout(ms);
     }

@@ -1,6 +1,6 @@
 {
   "name": "@graphql-tools/executor-graphql-ws",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "type": "module",
   "description": "A set of utils for faster development of GraphQL tools",
   "repository": {
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.9.1",
+    "@graphql-tools/utils": "^10.10.1",
     "@whatwg-node/disposablestack": "^0.0.6",
     "graphql-ws": "^6.0.6",
     "isows": "^1.0.7",
@@ -49,8 +49,8 @@
   },
   "devDependencies": {
     "@types/ws": "^8.0.0",
-    "graphql": "^16.9.0",
-    "pkgroll": "2.15.4"
+    "graphql": "^16.12.0",
+    "pkgroll": "2.20.1"
   },
   "sideEffects": false
 }

@@ -1,5 +1,72 @@
 # @graphql-hive/plugin-aws-sigv4
 
+## 2.0.13
+### Patch Changes
+
+
+
+- [#1654](https://github.com/graphql-hive/gateway/pull/1654) [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.921.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.921.0) (from `^3.920.0`, in `dependencies`)
+- Updated dependencies [[`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851)]:
+  - @graphql-mesh/fusion-runtime@1.4.1
+
+## 2.0.12
+### Patch Changes
+
+
+
+- [#1645](https://github.com/graphql-hive/gateway/pull/1645) [`bcadf1c`](https://github.com/graphql-hive/gateway/commit/bcadf1cee54b62ed13fbcc02d3e6624eddea707b) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.920.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.920.0) (from `^3.916.0`, in `dependencies`)
+- Updated dependencies [[`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437)]:
+  - @graphql-mesh/fusion-runtime@1.4.0
+
+## 2.0.11
+### Patch Changes
+
+
+
+- [#1605](https://github.com/graphql-hive/gateway/pull/1605) [`19a6cc4`](https://github.com/graphql-hive/gateway/commit/19a6cc45572afdfdae8d6daf6340da489ddd6b0f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.908.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.908.0) (from `^3.907.0`, in `dependencies`)
+
+
+- [#1616](https://github.com/graphql-hive/gateway/pull/1616) [`40139dc`](https://github.com/graphql-hive/gateway/commit/40139dcdc257785acba3126e22451b5688ff7773) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.913.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.913.0) (from `^3.908.0`, in `dependencies`)
+
+
+- [#1623](https://github.com/graphql-hive/gateway/pull/1623) [`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.914.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.914.0) (from `^3.913.0`, in `dependencies`)
+
+
+- [#1625](https://github.com/graphql-hive/gateway/pull/1625) [`357d931`](https://github.com/graphql-hive/gateway/commit/357d931a715d58e7a70072e325774e650bf27446) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.916.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.916.0) (from `^3.914.0`, in `dependencies`)
+
+
+- [#1626](https://github.com/graphql-hive/gateway/pull/1626) [`02d9ec4`](https://github.com/graphql-hive/gateway/commit/02d9ec4f760b54e40dc1791685d047440de59f69) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.916.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.916.0) (from `^3.914.0`, in `dependencies`)
+- Updated dependencies [[`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f)]:
+  - @graphql-mesh/fusion-runtime@1.3.0
+
+## 2.0.10
+### Patch Changes
+
+
+
+- [#1593](https://github.com/graphql-hive/gateway/pull/1593) [`b535a8c`](https://github.com/graphql-hive/gateway/commit/b535a8cbac463e39c896e582692a282b22d6e84f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.906.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.906.0) (from `^3.901.0`, in `dependencies`)
+
+
+- [#1596](https://github.com/graphql-hive/gateway/pull/1596) [`055fd6b`](https://github.com/graphql-hive/gateway/commit/055fd6bd52d0f35f009abe03fdc049e1132f5815) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@aws-sdk/client-sts@^3.907.0` ↗︎](https://www.npmjs.com/package/@aws-sdk/client-sts/v/3.907.0) (from `^3.906.0`, in `dependencies`)
+
 ## 2.0.9
 ### Patch Changes
 

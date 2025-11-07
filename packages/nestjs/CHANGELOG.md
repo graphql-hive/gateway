@@ -1,5 +1,40 @@
 # @graphql-hive/nestjs
 
+## 2.0.18
+### Patch Changes
+
+
+
+- [#1654](https://github.com/graphql-hive/gateway/pull/1654) [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.0) (from `^10.9.1`, in `dependencies`)
+- Updated dependencies [[`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851)]:
+  - @graphql-hive/gateway@2.1.13
+
+## 2.0.17
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+- Updated dependencies [[`0e68c01`](https://github.com/graphql-hive/gateway/commit/0e68c01f53fa32ada1575ff7a0b4d31bbe48193b), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71)]:
+  - @graphql-hive/gateway@2.1.12
+
+## 2.0.16
+### Patch Changes
+
+- Updated dependencies [[`c449385`](https://github.com/graphql-hive/gateway/commit/c449385cf7a80efbc0387798ab7a86a12f51d3d9), [`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e)]:
+  - @graphql-hive/gateway@2.1.11
+  - @graphql-hive/logger@1.0.7
+
+## 2.0.15
+### Patch Changes
+
+- Updated dependencies [[`b08458f`](https://github.com/graphql-hive/gateway/commit/b08458f2a240e2bd8330aa6b14740b087072ead1)]:
+  - @graphql-hive/gateway@2.1.10
+
 ## 2.0.14
 ### Patch Changes
 

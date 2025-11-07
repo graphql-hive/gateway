@@ -1,3 +1,5 @@
+import { pathToArray, relocatedError } from '@graphql-tools/utils';
+import { GraphQLError } from 'graphql';
 import { getLoader } from './getLoader.js';
 import { BatchDelegateOptions } from './types.js';
 
@@ -11,5 +13,11 @@ export function batchDelegateToSchema<TContext = any, K = any, V = any, C = K>(
     return [];
   }
   const loader = getLoader(options);
-  return Array.isArray(key) ? loader.loadMany(key) : loader.load(key);
+  const res = Array.isArray(key) ? loader.loadMany(key) : loader.load(key);
+  return res.catch((error) => {
+    if (options.info?.path && error instanceof GraphQLError) {
+      return relocatedError(error, pathToArray(options.info.path));
+    }
+    return error;
+  });
 }

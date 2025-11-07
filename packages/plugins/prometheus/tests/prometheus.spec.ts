@@ -1,7 +1,8 @@
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { createGatewayTester } from '@graphql-hive/gateway-testing';
+import InMemoryLRUCache from '@graphql-mesh/cache-inmemory-lru';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
-import { isDebug } from '@internal/testing';
 import { createSchema } from 'graphql-yoga';
 import { Registry, register as registry } from 'prom-client';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -60,7 +61,6 @@ describe('Prometheus', () => {
           },
         }),
       ],
-      logging: isDebug(),
       maskedErrors: false,
     });
   }
@@ -273,5 +273,59 @@ describe('Prometheus', () => {
     expect(metrics).toContain('graphql_gateway_subgraph_execute_duration');
     expect(metrics).toContain('subgraphName="TEST_SUBGRAPH"');
     expect(metrics).toContain('operationType="query"');
+  });
+
+  it('should not increment fetch count on cached responses', async () => {
+    const registry = new Registry();
+    await using cache = new InMemoryLRUCache();
+    const gateway = createGatewayTester({
+      subgraphs: [
+        {
+          name: 'TEST_SUBGRAPH',
+          schema: subgraphSchema,
+        },
+      ],
+      cache,
+      responseCaching: {
+        session: () => null,
+      },
+      plugins: (ctx) => [
+        usePrometheus({
+          ...ctx,
+          registry,
+          metrics: {
+            graphql_gateway_subgraph_execute_duration: true,
+            graphql_gateway_subgraph_execute_errors: true,
+            graphql_gateway_fetch_duration: true,
+          },
+        }),
+      ],
+    });
+
+    for (let i = 0; i < 3; i++) {
+      await expect(
+        gateway.execute({
+          query: /* GraphQL */ `
+            {
+              hello
+            }
+          `,
+        }),
+      ).resolves.toEqual({
+        data: { hello: 'Hello world!' },
+      });
+    }
+
+    const metric = await registry
+      .getSingleMetric('graphql_gateway_fetch_duration')
+      ?.get();
+
+    const count = metric?.values.find(
+      (v) =>
+        // @ts-expect-error metricName does exist
+        v.metricName === 'graphql_gateway_fetch_duration_count',
+    )?.value;
+
+    expect(count).toBe(1);
   });
 });

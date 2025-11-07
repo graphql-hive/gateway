@@ -11,6 +11,7 @@ import {
   propagation,
   ProxyTracerProvider,
   trace,
+  TracerProvider,
   TraceState,
   type TextMapPropagator,
 } from '@opentelemetry/api';
@@ -26,6 +27,7 @@ import {
   type TracerConfig,
 } from '@opentelemetry/sdk-trace-base';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
 import { hive } from '../src/api';
@@ -35,9 +37,14 @@ export async function buildTestGateway(
   options: {
     gatewayOptions?: Omit<GatewayConfigProxy, 'proxy'>;
     options?: OpenTelemetryGatewayPluginOptions;
-    plugins?: (
-      ctx: GatewayConfigContext,
-    ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+    plugins?: {
+      before?: (
+        ctx: GatewayConfigContext,
+      ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+      after?: (
+        ctx: GatewayConfigContext,
+      ) => GatewayPlugin<OpenTelemetryGatewayPluginOptions>[];
+    };
     fetch?: (upstreamFetch: MeshFetch) => MeshFetch;
   } = {},
 ) {
@@ -68,12 +75,41 @@ export async function buildTestGateway(
 
   const gateway = stack.use(
     gw.createGatewayRuntime({
-      proxy: {
-        endpoint: 'https://example.com/graphql',
-      },
+      supergraph: `
+        schema
+          @link(url: "https://specs.apollo.dev/link/v1.0")
+          @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+        {
+          query: Query
+        }
+
+        directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+
+        directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+        directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+        scalar join__FieldSet
+        enum join__Graph {
+          UPSTREAM @join__graph(name: "upstream", url: "http://localhost:4011/graphql")
+        }
+
+        scalar link__Import
+
+        enum link__Purpose {
+          EXECUTION
+        }
+        type Query
+          @join__type(graph: UPSTREAM)
+        {
+          hello: String @join__field(graph: UPSTREAM)
+        }
+      `,
       maskedErrors: false,
       plugins: (ctx) => {
         return [
+          ...(options.plugins?.before?.(ctx) ?? []),
           gw.useCustomFetch(
             // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
             options.fetch ? options.fetch(upstream.fetch) : upstream.fetch,
@@ -82,7 +118,7 @@ export async function buildTestGateway(
             ...ctx,
             ...options.options,
           }),
-          ...(options.plugins?.(ctx) ?? []),
+          ...(options.plugins?.after?.(ctx) ?? []),
         ];
       },
       logging: false,
@@ -153,11 +189,11 @@ export class MockSpanExporter implements SpanExporter {
   }
   shutdown() {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
   forceFlush() {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
   reset() {
     this.spans = [];
@@ -245,10 +281,12 @@ const traceProvider = new BasicTracerProvider({
 
 export function setupOtelForTests({
   contextManager,
+  traceProvider: temporaryTraceProvider,
 }: {
   contextManager?: boolean;
+  traceProvider?: TracerProvider;
 } = {}) {
-  trace.setGlobalTracerProvider(traceProvider);
+  trace.setGlobalTracerProvider(temporaryTraceProvider ?? traceProvider);
   if (contextManager !== false) {
     context.setGlobalContextManager(new AsyncLocalStorageContextManager());
   }
@@ -321,12 +359,12 @@ export class MockLogRecordExporter implements LogRecordExporter {
 
   shutdown(): Promise<void> {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
 
   forceFlush(): Promise<void> {
     this.reset();
-    return Promise.resolve();
+    return fakePromise();
   }
 
   reset() {

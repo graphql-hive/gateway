@@ -54,7 +54,19 @@ export interface MemtestOptions
     | 'calmdown'
     | 'runs'
     | 'server'
+    | 'query'
+    | 'pathname'
   > {
+  /**
+   * The GraphQL query to execute for the loadtest.
+   * Either `query` or `pathname` must be provided.
+   */
+  query?: string;
+  /**
+   * The HTTP pathname to request for the loadtest.
+   * Either `query` or `pathname` must be provided.
+   */
+  pathname?: string;
   /**
    * The snapshotting window of the GraphQL server memory in milliseconds.
    *

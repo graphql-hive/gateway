@@ -5,12 +5,12 @@
   "private": true,
   "dependencies": {
     "@graphql-hive/nestjs": "workspace:^",
-    "@nestjs/common": "^11.1.6",
-    "@nestjs/core": "^11.1.6",
+    "@nestjs/common": "^11.1.8",
+    "@nestjs/core": "^11.1.8",
     "@nestjs/graphql": "^13.2.0",
-    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.8",
     "file-type": "^21.0.0",
-    "graphql": "^16.10.0",
+    "graphql": "^16.12.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   }

@@ -2,8 +2,8 @@
   "name": "@e2e/distributed-subscriptions-webhooks",
   "private": true,
   "dependencies": {
-    "graphql": "^16.9.0",
-    "graphql-sse": "^2.5.3",
-    "ioredis": "^5.8.0"
+    "graphql": "^16.12.0",
+    "graphql-sse": "^2.6.0",
+    "ioredis": "^5.8.2"
   }
 }

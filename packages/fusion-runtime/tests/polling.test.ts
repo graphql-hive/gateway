@@ -330,7 +330,7 @@ describe('Polling', () => {
       );
     }
     makeQuery(10_000);
-    await advanceTimersByTimeAsync(10_000);
+    await advanceTimersByTimeAsync(10_500);
     makeQuery(0);
     expect(callTimes).toHaveLength(2);
     // It can be 0 or 1 or any one-digit number

@@ -25,6 +25,7 @@ jobs:
           - federation-subscriptions-passthrough
           - opentelemetry
           - programmatic-batching
+          - logger
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
@@ -62,7 +63,9 @@ jobs:
         run: yarn test:mem ${{matrix.test_name}}
       - name: Upload heap snapshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{matrix.test_name}}-heap-snapshots
-          path: e2e/${{matrix.test_name}}/*.heapsnapshot
+          path: |
+            e2e/${{matrix.test_name}}/*.heapsnapshot
+            packages/logger/tests/*.heapsnapshot

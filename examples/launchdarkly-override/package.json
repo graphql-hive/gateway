@@ -1,0 +1,30 @@
+{
+  "name": "@example/launchdarkly-override",
+  "private": true,
+  "dependencies": {
+    "@apollo/subgraph": "2.11.3",
+    "@launchdarkly/node-server-sdk": "9.10.2",
+    "graphql": "16.12.0",
+    "graphql-yoga": "5.16.2",
+    "tslib": "^2.8.1",
+    "@graphql-hive/gateway": "^2.1.13"
+  },
+  "overrides": {
+    "tmp": "0.2.4",
+    "esbuild": "^0.25.5"
+  },
+  "installConfig": {
+    "hoistingLimits": "dependencies"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "@apollo/rover": "^0.36.2"
+  },
+  "scripts": {
+    "service:inventory": "tsx services/inventory.ts",
+    "service:products": "tsx services/products.ts",
+    "service:reviews": "tsx services/reviews.ts",
+    "compose": "rover supergraph compose --elv2-license=accept --config supergraph.json --output supergraph.graphql",
+    "gateway": "hive-gateway supergraph"
+  }
+}

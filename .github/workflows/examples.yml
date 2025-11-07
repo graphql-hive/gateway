@@ -54,6 +54,7 @@ jobs:
           - subscriptions-with-transforms
           - type-merging-batching
           - operation-field-permissions
+          - launchdarkly-override
           # TODO: support containers before enabling (we use nats image in e2e)
           # - event-driven-federated-subscriptions
     name: Convert ${{matrix.e2e}}
@@ -68,7 +69,7 @@ jobs:
       - name: Convert
         run: yarn workspace @internal/examples run start --e2e=${{matrix.e2e}} --clean=true --publishedPackages='${{inputs.publishedPackages}}'
       - name: Upload
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v4
         with:
           name: example-${{matrix.e2e}}
           # include all files and folders starting with a dot (.)
@@ -92,7 +93,7 @@ jobs:
         with:
           token: ${{secrets.token}}
       - name: Download
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v4
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v4
         with:
           pattern: example-*
           merge-multiple: true
@@ -100,7 +101,7 @@ jobs:
         run: git diff --pretty
       - name: Commit
         if: github.ref != 'refs/heads/main'
-        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           file_pattern: examples/
           commit_message: 'docs(examples): converted from e2es'

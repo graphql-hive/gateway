@@ -235,7 +235,30 @@ export interface GatewayConfigSupergraph<
    * If {@link cache} is provided, the fetched {@link supergraph} will be cached setting the TTL to this interval in seconds.
    */
   pollingInterval?: number;
+
+  /**
+   * Enable or disable progressive override for labels.
+   *
+   * @example Using a custom header to enable progressive override for a given label.
+   * ```ts
+   * import { defineConfig } from '@graphql-hive/gateway';
+   *
+   * export const gatewayConfig = defineConfig({
+   *   progressiveOverride(label, context) {
+   *     if (label === "use-beta" && context.request.headers.has('use-beta')) {
+   *       return true;
+   *     }
+   *     return false;
+   *   }
+   * });
+   */
+  progressiveOverride?: ProgressiveOverrideHandler;
 }
+
+export type ProgressiveOverrideHandler = (
+  label: string,
+  context: GatewayContext,
+) => MaybePromise<boolean>;
 
 export interface GatewayConfigSubgraph<
   TContext extends Record<string, any> = Record<string, any>,
@@ -246,7 +269,7 @@ export interface GatewayConfigSubgraph<
   subgraph: UnifiedGraphConfig;
 }
 
-interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
+export interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
   extends GatewayConfigBase<TContext> {
   /**
    * Additional GraphQL schema type definitions.
@@ -435,7 +458,7 @@ export interface GatewayHivePersistedDocumentsOptions {
     | ((request: Request) => MaybePromise<boolean>);
 }
 
-interface GatewayConfigBase<TContext extends Record<string, any>> {
+export interface GatewayConfigBase<TContext extends Record<string, any>> {
   /** Usage reporting options. */
   reporting?: GatewayHiveReportingOptions | GatewayGraphOSReportingOptions;
   /** Persisted documents options. */

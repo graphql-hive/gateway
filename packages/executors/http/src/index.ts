@@ -323,6 +323,7 @@ export function buildHTTPExecutor(
     }
 
     function handleError(e: any) {
+      upstreamErrorExtensions.code = 'SUBREQUEST_HTTP_ERROR';
       if (e.name === 'AggregateError') {
         return {
           errors: e.errors.map((e: any) =>
@@ -426,6 +427,8 @@ export function buildHTTPExecutor(
                           parsedResult.errors.length === 0)
                       ) {
                         const message = `Unexpected empty "data" and "errors" fields in result: ${result}`;
+                        upstreamErrorExtensions.code =
+                          'RESPONSE_VALIDATION_FAILED';
                         return {
                           errors: [
                             createGraphQLError(message, {
@@ -451,6 +454,8 @@ export function buildHTTPExecutor(
                       }
                       return parsedResult;
                     } catch (e: any) {
+                      upstreamErrorExtensions.code =
+                        'RESPONSE_VALIDATION_FAILED';
                       return {
                         errors: [
                           createGraphQLError(
@@ -465,6 +470,7 @@ export function buildHTTPExecutor(
                     }
                   } else {
                     const message = 'No response returned';
+                    upstreamErrorExtensions.code = 'RESPONSE_VALIDATION_FAILED';
                     return {
                       errors: [
                         createGraphQLError(message, {

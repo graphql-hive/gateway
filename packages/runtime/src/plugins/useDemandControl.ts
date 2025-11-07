@@ -70,6 +70,9 @@ export function useDemandControl<TContext extends Record<string, any>>({
   const costByContextMap = new WeakMap<any, number>();
   return {
     onSubgraphExecute({ subgraph, executionRequest, log }) {
+      if (!subgraph) {
+        return;
+      }
       let costByContext = executionRequest.context
         ? costByContextMap.get(executionRequest.context) || 0
         : 0;

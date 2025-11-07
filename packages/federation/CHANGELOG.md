@@ -1,5 +1,69 @@
 # @graphql-tools/federation
 
+## 4.2.1
+### Patch Changes
+
+
+
+- [#1654](https://github.com/graphql-hive/gateway/pull/1654) [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^1.4.10` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.4.10) (from `^1.4.9`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/merge@^9.1.2` ↗︎](https://www.npmjs.com/package/@graphql-tools/merge/v/9.1.2) (from `^9.1.1`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/schema@^10.0.26` ↗︎](https://www.npmjs.com/package/@graphql-tools/schema/v/10.0.26) (from `^10.0.25`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.0) (from `^10.9.1`, in `dependencies`)
+- Updated dependencies [[`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`3226919`](https://github.com/graphql-hive/gateway/commit/3226919d58930289491696fa3b56ed85c766e3f5)]:
+  - @graphql-tools/delegate@11.1.1
+  - @graphql-tools/executor-http@3.0.5
+  - @graphql-tools/stitch@10.1.1
+  - @graphql-tools/wrap@11.0.3
+
+## 4.2.0
+### Minor Changes
+
+
+
+- [#1642](https://github.com/graphql-hive/gateway/pull/1642) [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437) Thanks [@ardatan](https://github.com/ardatan)! - Support promises in `progressiveOverride` option
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  export const gatewayConfig = defineConfig({
+      async progressiveOverride(label: string, context: GatewayContext) {
+          if (label === 'my_label') {
+              const serviceResponse = await fetch('http://example.com/should_override', {
+                  headers: {
+                      'x-some-header': context.headers['x-some-header'],
+                  }
+              });
+              const result = await serviceResponse.json();
+              return result?.override;
+          }
+          return false;
+      }
+  })
+  ```
+
+## 4.1.0
+### Minor Changes
+
+
+
+- [#1624](https://github.com/graphql-hive/gateway/pull/1624) [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override for Safer Field Migrations
+  
+  Introduces Progressive Override, allowing you to safely migrate fields between subgraphs using the `@override` directive with a label. Control the rollout using custom logic in the gateway (e.g., percentage, headers) or the built-in percent(x) label for gradual, incremental traffic migration.
+  
+  Detailed documentation can be found [here](https://the-guild.dev/graphql/hive/docs/gateway/other-features/progressive-override).
+
+### Patch Changes
+
+
+
+- [#1588](https://github.com/graphql-hive/gateway/pull/1588) [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Correctly resolve circular @requires in different subgraphs
+
+- Updated dependencies [[`a54b0c1`](https://github.com/graphql-hive/gateway/commit/a54b0c1777229aaeea295bcd15d4f4d6e4e615f7), [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc), [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f), [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8)]:
+  - @graphql-tools/delegate@11.1.0
+  - @graphql-tools/stitch@10.1.0
+  - @graphql-tools/wrap@11.0.2
+
 ## 4.0.5
 ### Patch Changes
 

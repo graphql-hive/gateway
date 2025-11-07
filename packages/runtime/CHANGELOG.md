@@ -1,5 +1,158 @@
 # @graphql-hive/gateway-runtime
 
+## 2.3.1
+### Patch Changes
+
+
+
+- [#1654](https://github.com/graphql-hive/gateway/pull/1654) [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.0) (from `^10.9.1`, in `dependencies`)
+- Updated dependencies [[`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`efed5e0`](https://github.com/graphql-hive/gateway/commit/efed5e0c257edcacb51dae7f670c2026a747a851), [`3226919`](https://github.com/graphql-hive/gateway/commit/3226919d58930289491696fa3b56ed85c766e3f5)]:
+  - @graphql-mesh/fusion-runtime@1.4.1
+  - @graphql-mesh/hmac-upstream-signature@2.0.5
+  - @graphql-mesh/transport-common@1.0.9
+  - @graphql-tools/batch-delegate@10.0.3
+  - @graphql-tools/delegate@11.1.1
+  - @graphql-tools/executor-common@1.0.3
+  - @graphql-tools/executor-http@3.0.5
+  - @graphql-tools/federation@4.2.1
+  - @graphql-tools/stitch@10.1.1
+  - @graphql-tools/wrap@11.0.3
+
+## 2.3.0
+### Minor Changes
+
+
+
+- [#1642](https://github.com/graphql-hive/gateway/pull/1642) [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437) Thanks [@ardatan](https://github.com/ardatan)! - Support promises in `progressiveOverride` option
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway';
+  export const gatewayConfig = defineConfig({
+      async progressiveOverride(label: string, context: GatewayContext) {
+          if (label === 'my_label') {
+              const serviceResponse = await fetch('http://example.com/should_override', {
+                  headers: {
+                      'x-some-header': context.headers['x-some-header'],
+                  }
+              });
+              const result = await serviceResponse.json();
+              return result?.override;
+          }
+          return false;
+      }
+  })
+  ```
+
+### Patch Changes
+
+
+
+- [#1637](https://github.com/graphql-hive/gateway/pull/1637) [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+
+
+- [#1640](https://github.com/graphql-hive/gateway/pull/1640) [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/generic-auth@^10.0.1` ↗︎](https://www.npmjs.com/package/@envelop/generic-auth/v/10.0.1) (from `^10.0.0`, in `dependencies`)
+
+
+- [#1645](https://github.com/graphql-hive/gateway/pull/1645) [`bcadf1c`](https://github.com/graphql-hive/gateway/commit/bcadf1cee54b62ed13fbcc02d3e6624eddea707b) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.9.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.9.2) (from `^24.9.1`, in `dependencies`)
+
+
+- [#1640](https://github.com/graphql-hive/gateway/pull/1640) [`4a5b67d`](https://github.com/graphql-hive/gateway/commit/4a5b67de55f3aabb775903fb41d935fd64c5296d) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Remove empty and unused nodes from redacted query after validation of generic-auth directives when issuing requests to subgraphs
+
+- Updated dependencies [[`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`aa1cb63`](https://github.com/graphql-hive/gateway/commit/aa1cb635583e41ed0f8ebe7ae4897feedec50a71), [`af7a7de`](https://github.com/graphql-hive/gateway/commit/af7a7de0ebd81a5b41702052a3ddf466f5d84437)]:
+  - @graphql-mesh/fusion-runtime@1.4.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.4
+  - @graphql-mesh/transport-common@1.0.8
+  - @graphql-tools/federation@4.2.0
+
+## 2.2.0
+### Minor Changes
+
+
+
+- [#1624](https://github.com/graphql-hive/gateway/pull/1624) [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override for Safer Field Migrations
+  
+  Introduces Progressive Override, allowing you to safely migrate fields between subgraphs using the `@override` directive with a label. Control the rollout using custom logic in the gateway (e.g., percentage, headers) or the built-in percent(x) label for gradual, incremental traffic migration.
+  
+  Detailed documentation can be found [here](https://the-guild.dev/graphql/hive/docs/gateway/other-features/progressive-override).
+
+### Patch Changes
+
+
+
+- [#1605](https://github.com/graphql-hive/gateway/pull/1605) [`19a6cc4`](https://github.com/graphql-hive/gateway/commit/19a6cc45572afdfdae8d6daf6340da489ddd6b0f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.2` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.2) (from `^24.7.1`, in `dependencies`)
+
+
+- [#1616](https://github.com/graphql-hive/gateway/pull/1616) [`40139dc`](https://github.com/graphql-hive/gateway/commit/40139dcdc257785acba3126e22451b5688ff7773) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.8.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.8.1) (from `^24.7.2`, in `dependencies`)
+
+
+- [#1617](https://github.com/graphql-hive/gateway/pull/1617) [`d2b3dff`](https://github.com/graphql-hive/gateway/commit/d2b3dff99cc08c4e7a7c551c067e90239671febb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.9.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.9.1) (from `^24.8.1`, in `dependencies`)
+- Updated dependencies [[`b0cf7bb`](https://github.com/graphql-hive/gateway/commit/b0cf7bbb3ec1c1c1d18e7b064b2d9d7d2f8c9a2e), [`a54b0c1`](https://github.com/graphql-hive/gateway/commit/a54b0c1777229aaeea295bcd15d4f4d6e4e615f7), [`058ef2f`](https://github.com/graphql-hive/gateway/commit/058ef2f8373ea822fed985b705416cb39d5b6efc), [`a8458b2`](https://github.com/graphql-hive/gateway/commit/a8458b24e71fda37a515eaf9ac9af43a73e7823f), [`20f7a50`](https://github.com/graphql-hive/gateway/commit/20f7a50c5ddb862c2921e91ca43d9858bae1bce8)]:
+  - @graphql-hive/logger@1.0.7
+  - @graphql-tools/delegate@11.1.0
+  - @graphql-tools/batch-delegate@10.0.2
+  - @graphql-mesh/fusion-runtime@1.3.0
+  - @graphql-tools/federation@4.1.0
+  - @graphql-tools/stitch@10.1.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+  - @graphql-mesh/transport-common@1.0.7
+  - @graphql-tools/wrap@11.0.2
+
+## 2.1.9
+### Patch Changes
+
+
+
+- [#1593](https://github.com/graphql-hive/gateway/pull/1593) [`b535a8c`](https://github.com/graphql-hive/gateway/commit/b535a8cbac463e39c896e582692a282b22d6e84f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.0` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.0) (from `^24.6.2`, in `dependencies`)
+
+
+- [#1596](https://github.com/graphql-hive/gateway/pull/1596) [`055fd6b`](https://github.com/graphql-hive/gateway/commit/055fd6bd52d0f35f009abe03fdc049e1132f5815) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^24.7.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.7.1) (from `^24.7.0`, in `dependencies`)
+
+
+- [#1597](https://github.com/graphql-hive/gateway/pull/1597) [`29e0608`](https://github.com/graphql-hive/gateway/commit/29e06081ead54a325232c6737dd6c2651f086099) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/server@^0.10.13` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.13) (from `^0.10.12`, in `dependencies`)
+
+
+- [#1563](https://github.com/graphql-hive/gateway/pull/1563) [`8c4138d`](https://github.com/graphql-hive/gateway/commit/8c4138df152d195daa1d78ea22ddb7cea2387e20) Thanks [@zoontek](https://github.com/zoontek)! - Introduce `deduplicateHeaders` option for `propagateHeaders` configuration to control header handling behavior when multiple subgraphs return the same header
+  
+  When `deduplicateHeaders` is enabled (set to `true`), only the last value from subgraphs will be set for each header. When disabled (default `false`), all values are appended.
+  
+  The `set-cookie` header is always appended regardless of this setting, as per HTTP standards.
+  
+  ```ts
+  import { defineConfig } from '@graphql-hive/gateway'
+  export const gatewayConfig = defineConfig({
+    propagateHeaders: {
+      deduplicateHeaders: true, // default: false
+      fromSubgraphsToClient({ response }) {
+        // ...
+      }
+    }
+  })
+  ```
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.3
+
 ## 2.1.8
 ### Patch Changes
 

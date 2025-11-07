@@ -23,7 +23,9 @@ beforeAll(async () => {
     containerPort: 6379,
     healthcheck: ['CMD-SHELL', 'redis-cli ping'],
     env: {
-      LANG: '', // fixes "Failed to configure LOCALE for invalid locale name."
+      // fixes "Failed to configure LOCALE for invalid locale name."
+      LANG: '',
+      LC_ALL: '',
     },
   });
   redisEnv.REDIS_HOST = gatewayRunner.includes('docker')

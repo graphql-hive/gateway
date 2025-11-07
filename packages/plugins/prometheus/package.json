@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/plugin-prometheus",
-  "version": "2.0.12",
+  "version": "2.0.16",
   "type": "module",
   "repository": {
     "type": "git",
@@ -46,17 +46,17 @@
     "@graphql-hive/gateway-runtime": "workspace:^",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-mesh/cross-helpers": "^0.4.10",
-    "@graphql-mesh/types": "^0.104.13",
-    "@graphql-mesh/utils": "^0.104.13",
-    "@graphql-tools/utils": "^10.9.1",
-    "@graphql-yoga/plugin-prometheus": "^6.11.0",
+    "@graphql-mesh/types": "^0.104.15",
+    "@graphql-mesh/utils": "^0.104.15",
+    "@graphql-tools/utils": "^10.10.1",
+    "@graphql-yoga/plugin-prometheus": "^6.11.2",
     "prom-client": "^15.0.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "graphql": "^16.9.0",
-    "graphql-yoga": "^5.16.0",
-    "pkgroll": "2.15.4",
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.16.2",
+    "pkgroll": "2.20.1",
     "prom-client": "15.1.3"
   },
   "sideEffects": false

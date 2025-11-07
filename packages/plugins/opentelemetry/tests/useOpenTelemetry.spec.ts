@@ -1,3 +1,4 @@
+import { usePrometheus } from '@graphql-hive/gateway';
 import { Logger } from '@graphql-hive/logger';
 import {
   hiveTracingSetup,
@@ -480,25 +481,27 @@ describe('useOpenTelemetry', () => {
           };
 
           await using gateway = await buildTestGatewayForCtx({
-            plugins: () => {
-              const createSpan =
-                (name: string) => (matcher: ContextMatcher) => {
-                  hive.tracer
-                    ?.startSpan(name, {}, hive.getActiveContext(matcher))
-                    .end();
-                };
-              return [
-                {
-                  onRequest: createSpan('custom.request'),
-                  onParams: createSpan('custom.operation'),
-                  onParse: createSpan('custom.parse'),
-                  onValidate: createSpan('custom.validate'),
-                  onContextBuilding: createSpan('custom.context'),
-                  onExecute: createSpan('custom.execute'),
-                  onSubgraphExecute: createSpan('custom.subgraph'),
-                  onFetch: createSpan('custom.fetch'),
-                },
-              ];
+            plugins: {
+              after: () => {
+                const createSpan =
+                  (name: string) => (matcher: ContextMatcher) => {
+                    hive.tracer
+                      ?.startSpan(name, {}, hive.getActiveContext(matcher))
+                      .end();
+                  };
+                return [
+                  {
+                    onRequest: createSpan('custom.request'),
+                    onParams: createSpan('custom.operation'),
+                    onParse: createSpan('custom.parse'),
+                    onValidate: createSpan('custom.validate'),
+                    onContextBuilding: createSpan('custom.context'),
+                    onExecute: createSpan('custom.execute'),
+                    onSubgraphExecute: createSpan('custom.subgraph'),
+                    onFetch: createSpan('custom.fetch'),
+                  },
+                ];
+              },
             },
           });
           await gateway.query();
@@ -520,28 +523,30 @@ describe('useOpenTelemetry', () => {
           };
 
           await using gateway = await buildTestGatewayForCtx({
-            plugins: () => {
-              const createSpan = (name: string) => (payload: any) => {
-                try {
-                  const { context: gqlCtx, executionRequest } = payload;
-                  const ctx: OpenTelemetryContextExtension =
-                    gqlCtx ?? executionRequest?.context;
-                  return ctx.openTelemetry.tracer
-                    .startSpan(name, {}, ctx.openTelemetry.getActiveContext())
-                    .end();
-                } catch (err) {
-                  console.error(err);
-                }
-              };
+            plugins: {
+              after: () => {
+                const createSpan = (name: string) => (payload: any) => {
+                  try {
+                    const { context: gqlCtx, executionRequest } = payload;
+                    const ctx: OpenTelemetryContextExtension =
+                      gqlCtx ?? executionRequest?.context;
+                    return ctx.openTelemetry.tracer
+                      .startSpan(name, {}, ctx.openTelemetry.getActiveContext())
+                      .end();
+                  } catch (err) {
+                    console.error(err);
+                  }
+                };
 
-              return [
-                {
-                  onParse: createSpan('custom.parse'),
-                  onValidate: createSpan('custom.validate'),
-                  onContextBuilding: createSpan('custom.context'),
-                  onExecute: createSpan('custom.execute'),
-                },
-              ];
+                return [
+                  {
+                    onParse: createSpan('custom.parse'),
+                    onValidate: createSpan('custom.validate'),
+                    onContextBuilding: createSpan('custom.context'),
+                    onExecute: createSpan('custom.execute'),
+                  },
+                ];
+              },
             },
           });
           await gateway.query();
@@ -607,6 +612,19 @@ describe('useOpenTelemetry', () => {
           await gateway.query();
 
           allExpectedSpans.forEach(spanExporter.assertNoSpanWithName);
+        });
+
+        it('should not trace prometheus metrics scraping by default', async () => {
+          await using gateway = await buildTestGatewayForCtx({
+            plugins: {
+              before: (ctx) => [usePrometheus({ metrics: {}, ...ctx })],
+            },
+          });
+          await gateway.fetch('http://localhost/metrics');
+          await gateway.fetch('http://localhost/not-found');
+
+          spanExporter.assertNoSpanWithName('GET /metrics');
+          spanExporter.assertSpanWithName('GET /not-found');
         });
 
         it('should not trace graphql operation if disable', async () => {
@@ -752,14 +770,16 @@ describe('useOpenTelemetry', () => {
 
         it('should not trace fetch if disabled', async () => {
           await using gateway = await buildTestGatewayForCtx({
-            plugins: ({ fetch }) => {
-              return [
-                {
-                  onPluginInit() {
-                    fetch('http://foo.bar', {});
+            plugins: {
+              after: ({ fetch }) => {
+                return [
+                  {
+                    onPluginInit() {
+                      fetch('http://foo.bar', {});
+                    },
                   },
-                },
-              ];
+                ];
+              },
             },
           });
           await gateway.query();
@@ -768,7 +788,48 @@ describe('useOpenTelemetry', () => {
           initSpan.expectChild('http.fetch');
         });
       });
+
+      it('should handle validation error with hive processor', async () => {
+        disableAll();
+        const traceProvider = new BasicTracerProvider({
+          spanProcessors: [
+            new HiveTracingSpanProcessor({
+              processor: new SimpleSpanProcessor(spanExporter),
+            }),
+          ],
+        });
+        setupOtelForTests({ traceProvider });
+        await using gateway = await buildTestGatewayForCtx({
+          plugins: {
+            before: ({ fetch }) => {
+              return [
+                {
+                  onPluginInit() {
+                    fetch('http://foo.bar', {});
+                  },
+                },
+              ];
+            },
+          },
+        });
+        await gateway.query({
+          body: { query: 'query test{ unknown }' },
+          shouldReturnErrors: true,
+        });
+
+        const operationSpan = spanExporter.assertRoot('graphql.operation test');
+        expect(operationSpan.span.attributes['graphql.operation.name']).toBe(
+          'test',
+        );
+        expect(operationSpan.span.attributes['graphql.operation.type']).toBe(
+          'query',
+        );
+        expect(
+          operationSpan.span.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT],
+        ).toBe(1);
+      });
     });
+
     it('should allow to create custom spans without explicit context passing', async () => {
       const expectedCustomSpans = {
         http: { root: 'POST /graphql', children: ['custom.request'] },
@@ -791,22 +852,24 @@ describe('useOpenTelemetry', () => {
       };
 
       await using gateway = await buildTestGateway({
-        plugins: () => {
-          const createSpan = (name: string) => () =>
-            hive.tracer?.startSpan(name).end();
+        plugins: {
+          after: () => {
+            const createSpan = (name: string) => () =>
+              hive.tracer?.startSpan(name).end();
 
-          return [
-            {
-              onRequest: createSpan('custom.request'),
-              onParams: createSpan('custom.operation'),
-              onParse: createSpan('custom.parse'),
-              onValidate: createSpan('custom.validate'),
-              onContextBuilding: createSpan('custom.context'),
-              onExecute: createSpan('custom.execute'),
-              onSubgraphExecute: createSpan('custom.subgraph'),
-              onFetch: createSpan('custom.fetch'),
-            },
-          ];
+            return [
+              {
+                onRequest: createSpan('custom.request'),
+                onParams: createSpan('custom.operation'),
+                onParse: createSpan('custom.parse'),
+                onValidate: createSpan('custom.validate'),
+                onContextBuilding: createSpan('custom.context'),
+                onExecute: createSpan('custom.execute'),
+                onSubgraphExecute: createSpan('custom.subgraph'),
+                onFetch: createSpan('custom.fetch'),
+              },
+            ];
+          },
         },
       });
       await gateway.query();
@@ -826,7 +889,6 @@ describe('useOpenTelemetry', () => {
         const operationSpan = spanExporter.spans.find(({ name }) =>
           name.startsWith('graphql.operation'),
         );
-
         expect(httpSpan.attributes['gateway.cache.response_cache']).toBe(
           attrs.http,
         );
@@ -873,7 +935,16 @@ describe('useOpenTelemetry', () => {
 
     it('should register schema loading span', async () => {
       await using gateway = await buildTestGateway({
-        options: { traces: { spans: { http: false, schema: true } } },
+        gatewayOptions: {
+          // @ts-expect-error Suppress the default supergraph from test setup
+          supergraph: undefined,
+          proxy: {
+            endpoint: 'https://example.com/graphql',
+          },
+        },
+        options: {
+          traces: { spans: { http: false, schema: true } },
+        },
       });
       await gateway.query();
 
@@ -1036,29 +1107,31 @@ describe('useOpenTelemetry', () => {
               ],
             }),
           },
-          plugins: () => {
-            const createHook = (name: string): any => ({
-              [name]: (payload: any) => {
-                const log =
-                  // logger for the subgraph execution request
-                  payload.executionRequest?.context.log ??
-                  // logger before/outside graphql operation
-                  payload.serverContext?.log ??
-                  // graphql operation logger
-                  payload.context?.log;
-                const phase =
-                  (name as string).charAt(2).toLowerCase() +
-                  (name as string).substring(3);
-                log.info({ phase }, name);
-              },
-            });
+          plugins: {
+            after: () => {
+              const createHook = (name: string): any => ({
+                [name]: (payload: any) => {
+                  const log =
+                    // logger for the subgraph execution request
+                    payload.executionRequest?.context.log ??
+                    // logger before/outside graphql operation
+                    payload.serverContext?.log ??
+                    // graphql operation logger
+                    payload.context?.log;
+                  const phase =
+                    (name as string).charAt(2).toLowerCase() +
+                    (name as string).substring(3);
+                  log.info({ phase }, name);
+                },
+              });
 
-            let plugin = {};
-            for (let hook of hooks) {
-              plugin = { ...plugin, ...createHook(hook) };
-            }
+              let plugin = {};
+              for (let hook of hooks) {
+                plugin = { ...plugin, ...createHook(hook) };
+              }
 
-            return [plugin];
+              return [plugin];
+            },
           },
         });
 
@@ -1150,15 +1223,7 @@ describe('useOpenTelemetry', () => {
 
     it('should have all attributes required by Hive Tracing', async () => {
       await using gateway = await buildTestGateway({
-        fetch: (upstreamFetch) => {
-          let calls = 0;
-          return (...args) => {
-            calls++;
-            if (calls > 1)
-              return Promise.resolve(new Response(null, { status: 500 }));
-            else return upstreamFetch(...args);
-          };
-        },
+        fetch: () => () => new Response(null, { status: 500 }),
       });
       await gateway.query({
         shouldReturnErrors: true,
@@ -1186,11 +1251,12 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HTTP_SCHEME]: 'http:',
         [SEMATTRS_NET_HOST_NAME]: 'localhost',
         [SEMATTRS_HTTP_HOST]: 'localhost:4000',
-        [SEMATTRS_HTTP_STATUS_CODE]: 500,
+        [SEMATTRS_HTTP_STATUS_CODE]: 200,
 
         // Hive specific
         ['hive.client.name']: 'test-client-name',
         ['hive.client.version']: 'test-client-version',
+        ['hive.graphql']: true,
 
         // Operation Attributes
         [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
@@ -1199,7 +1265,7 @@ describe('useOpenTelemetry', () => {
         [SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH]:
           'd40f732de805d03db6284b9b8c6c6f0b',
         [SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT]: 1,
-        [SEMATTRS_HIVE_GRAPHQL_ERROR_CODES]: ['DOWNSTREAM_SERVICE_ERROR'],
+        [SEMATTRS_HIVE_GRAPHQL_ERROR_CODES]: ['RESPONSE_VALIDATION_FAILED'],
 
         // Execution Attributes
         [SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES]: ['upstream'],
@@ -1211,15 +1277,15 @@ describe('useOpenTelemetry', () => {
       ).toMatchObject({
         // HTTP Attributes
         [SEMATTRS_HTTP_METHOD]: 'POST',
-        [SEMATTRS_HTTP_URL]: 'https://example.com/graphql',
+        [SEMATTRS_HTTP_URL]: 'http://localhost:4011/graphql',
         [SEMATTRS_HTTP_ROUTE]: '/graphql',
-        [SEMATTRS_HTTP_SCHEME]: 'https:',
-        [SEMATTRS_NET_HOST_NAME]: 'example.com',
-        [SEMATTRS_HTTP_HOST]: 'example.com',
+        [SEMATTRS_HTTP_SCHEME]: 'http:',
+        [SEMATTRS_NET_HOST_NAME]: 'localhost',
+        [SEMATTRS_HTTP_HOST]: 'localhost:4011',
         [SEMATTRS_HTTP_STATUS_CODE]: 500,
 
         // Operation Attributes
-        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
+        [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{__typename hello}',
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
         [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
 

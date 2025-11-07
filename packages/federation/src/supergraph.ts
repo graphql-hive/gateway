@@ -32,6 +32,7 @@ import {
   memoize1,
   mergeDeep,
   parseSelectionSet,
+  SchemaExtensions,
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
@@ -70,11 +71,14 @@ import {
   visitWithTypeInfo,
 } from 'graphql';
 import {
+  extractPercentageFromLabel,
   filterInternalFieldsAndTypes,
   getArgsFromKeysForFederation,
   getCacheKeyFnFromKey,
   getKeyFnForFederation,
   getNamedTypeNode,
+  ProgressiveOverrideHandler,
+  progressiveOverridePossibilityHandler,
 } from './utils.js';
 
 export function ensureSupergraphSDLAst(
@@ -131,6 +135,14 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
    * Configure the batch delegation options for all merged types in all subschemas.
    */
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
+
+  handleProgressiveOverride?: ProgressiveOverrideHandler;
+}
+
+export interface ProgressiveOverrideInfo {
+  field: string;
+  from: string;
+  label: string;
 }
 
 export function getStitchingOptionsFromSupergraphSdl(
@@ -158,6 +170,11 @@ export function getStitchingOptionsFromSupergraphSdl(
     string,
     Map<string, FieldDefinitionNode | InputValueDefinitionNode>
   >();
+  const progressiveOverrideInfos = new Map<
+    string,
+    Map<string, ProgressiveOverrideInfo[]>
+  >();
+  const overrideLabels = new Set<string>();
 
   for (const definition of supergraphAst.definitions) {
     if ('fields' in definition) {
@@ -344,6 +361,49 @@ export function getStitchingOptionsFromSupergraphSdl(
                         directiveNode.name.value !== 'join__field',
                     ),
                   });
+                }
+
+                const overrideFromArg = joinFieldDirectiveNode.arguments?.find(
+                  (argumentNode) => argumentNode.name.value === 'override',
+                );
+                let overrideFromSubgraph: string | undefined = undefined;
+                if (overrideFromArg?.value?.kind === Kind.STRING) {
+                  overrideFromSubgraph = overrideFromArg.value.value;
+                }
+                const overrideLabelArg = joinFieldDirectiveNode.arguments?.find(
+                  (argumentNode) => argumentNode.name.value === 'overrideLabel',
+                );
+                let overrideLabel: string | undefined = undefined;
+                if (overrideLabelArg?.value?.kind === Kind.STRING) {
+                  overrideLabel = overrideLabelArg.value.value;
+                }
+
+                if (overrideFromSubgraph && overrideLabel != null) {
+                  let subgraphPossibilities =
+                    progressiveOverrideInfos.get(graphName);
+                  if (!subgraphPossibilities) {
+                    subgraphPossibilities = new Map();
+                    progressiveOverrideInfos.set(
+                      graphName,
+                      subgraphPossibilities,
+                    );
+                  }
+                  let existingInfos = subgraphPossibilities.get(
+                    typeNode.name.value,
+                  );
+                  if (!existingInfos) {
+                    existingInfos = [];
+                    subgraphPossibilities.set(
+                      typeNode.name.value,
+                      existingInfos,
+                    );
+                  }
+                  existingInfos.push({
+                    field: fieldNode.name.value,
+                    from: overrideFromSubgraph,
+                    label: overrideLabel,
+                  });
+                  overrideLabels.add(overrideLabel);
                 }
 
                 const providedExtraField =
@@ -806,10 +866,21 @@ export function getStitchingOptionsFromSupergraphSdl(
                   selection.kind === Kind.FIELD &&
                   selection.arguments?.length
                 ) {
+                  const argsHash = selection.arguments
+                    .map(
+                      (arg) =>
+                        arg.name.value +
+                        // TODO: slow? faster hash?
+                        memoizedASTPrint(arg.value).replace(
+                          /[^a-zA-Z0-9]/g,
+                          '',
+                        ),
+                    )
+                    .join('');
                   // @ts-expect-error it's ok we're mutating consciously
                   selection.alias = {
                     kind: Kind.NAME,
-                    value: '_' + selection.name.value,
+                    value: '_' + selection.name.value + '_' + argsHash,
                   };
                 }
                 if ('selectionSet' in selection && selection.selectionSet) {
@@ -1208,6 +1279,41 @@ export function getStitchingOptionsFromSupergraphSdl(
         },
       });
     }
+    const progressiveOverrideInfosForSubgraph =
+      progressiveOverrideInfos.get(subgraphName);
+    if (progressiveOverrideInfosForSubgraph != null) {
+      for (const [
+        typeName,
+        fieldInfos,
+      ] of progressiveOverrideInfosForSubgraph) {
+        let mergedConfig = mergeConfig[typeName];
+        if (!mergedConfig) {
+          mergedConfig = mergeConfig[typeName] = {};
+        }
+        for (const fieldInfo of fieldInfos) {
+          let fieldsConfig = mergedConfig.fields;
+          if (!fieldsConfig) {
+            fieldsConfig = mergedConfig.fields = {};
+          }
+          let fieldConfig = fieldsConfig[fieldInfo.field];
+          if (!fieldConfig) {
+            fieldConfig = fieldsConfig[fieldInfo.field] = {};
+          }
+
+          const label = fieldInfo.label;
+          const percent = extractPercentageFromLabel(label);
+          if (percent != null) {
+            const possibility = percent / 100;
+            fieldConfig.override = () =>
+              progressiveOverridePossibilityHandler(possibility);
+          } else if (opts.handleProgressiveOverride) {
+            const progressiveOverrideHandler = opts.handleProgressiveOverride;
+            fieldConfig.override = (context, info) =>
+              progressiveOverrideHandler(label, context, info);
+          }
+        }
+      }
+    }
     const subschemaConfig: FederationSubschemaConfig = {
       name: subgraphName,
       endpoint,
@@ -1519,6 +1625,16 @@ export function getStitchingOptionsFromSupergraphSdl(
       opts.onSubschemaConfig(subschema as FederationSubschemaConfig);
     }
   }
+  let schemaExtensions: SchemaExtensions | undefined;
+  if (overrideLabels.size) {
+    schemaExtensions = {
+      schemaExtensions: {
+        overrideLabels,
+      },
+      types: {},
+    };
+  }
+
   return {
     subschemas,
     typeDefs: additionalTypeDefs,
@@ -1531,6 +1647,7 @@ export function getStitchingOptionsFromSupergraphSdl(
       },
       fieldConfigMerger,
     },
+    schemaExtensions,
   };
 }
 

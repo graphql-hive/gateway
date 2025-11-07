@@ -8,13 +8,13 @@ import {
   isAsyncIterable,
   Maybe,
   MaybeAsyncIterable,
+  mergeDeep,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
 import {
   handleMaybePromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
-import { dset } from 'dset/merge';
 import {
   DocumentNode,
   FieldDefinitionNode,
@@ -132,7 +132,7 @@ export function delegateRequest<
                   for (const incrementalRes of result.incremental) {
                     if (incrementalRes.items?.length) {
                       for (const item of incrementalRes.items) {
-                        dset(
+                        setObjectKeyPath(
                           data,
                           (incrementalRes.path || []).slice(0, -1),
                           item,
@@ -312,3 +312,37 @@ function getExecutor<TContext extends Record<string, any>>(
 }
 
 export { executorFromSchema as createDefaultExecutor };
+
+function setObjectKeyPath(
+  obj: Record<string, any>,
+  path: Array<string | number>,
+  value: any,
+) {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    if (
+      key == null ||
+      key === '__proto__' ||
+      key === 'constructor' ||
+      key === 'prototype'
+    ) {
+      return;
+    }
+    if (current[key] == null) {
+      current[key] = typeof path[i + 1] === 'number' ? [] : {};
+    }
+    current = current[key];
+  }
+  const lastKey = path[path.length - 1];
+  if (
+    lastKey == null ||
+    lastKey === '__proto__' ||
+    lastKey === 'constructor' ||
+    lastKey === 'prototype'
+  ) {
+    return;
+  }
+  const existingValue = current[lastKey];
+  current[lastKey] = existingValue ? mergeDeep([existingValue, value]) : value;
+}
