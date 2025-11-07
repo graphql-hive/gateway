@@ -2,7 +2,7 @@
   "name": "@e2e/programmatic-batching-example",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.1",
+    "@graphql-mesh/compose-cli": "^1.5.2",
     "@omnigraph/openapi": "^0.109.22",
     "fets": "^0.8.4",
     "graphql": "16.12.0",
