@@ -2,7 +2,7 @@ import { HeapProfiler } from 'inspector';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 import { ProcOptions, Server, spawn } from '@internal/proc';
-import { trimError } from '@internal/testing';
+import { ResponseError, trimError } from '@internal/testing';
 import { cancelledSignal } from '@internal/testing/vitest';
 import { fetch } from '@whatwg-node/fetch';
 import { connectInspector, Inspector } from './inspector';
@@ -156,16 +156,19 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     );
     const text = await res.text();
     if (!res.ok) {
-      const err = new Error(
-        `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
-      );
-      err.name = 'ResponseError';
-      throw err;
+      throw new ResponseError({
+        status: res.status,
+        statusText: res.statusText,
+        resText: text,
+        proc: server,
+      });
     }
     if (!text.includes('"data":{')) {
-      const err = new Error(`Body does not contain "data":\n${text}`);
-      err.name = 'ResponseError';
-      throw err;
+      throw new ResponseError({
+        message: `Body does not contain "data":\n${text}`,
+        resText: text,
+        proc: server,
+      });
     }
   } else if (pathname) {
     const res = await fetch(
@@ -173,11 +176,12 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
     );
     if (!res.ok) {
       const text = await res.text();
-      const err = new Error(
-        `Status is not 200, got status ${res.status} ${res.statusText} and body:\n${text}`,
-      );
-      err.name = 'ResponseError';
-      throw err;
+      throw new ResponseError({
+        status: res.status,
+        statusText: res.statusText,
+        resText: text,
+        proc: server,
+      });
     }
   }
 

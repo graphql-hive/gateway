@@ -1,6 +1,7 @@
 import { MeshFetch } from '@graphql-mesh/types';
 import { fetch as whatwgFetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
+import { ResponseError } from '.';
 
 type Fetch = typeof whatwgFetch | MeshFetch;
 
@@ -52,9 +53,11 @@ export async function executeFetch(
     return JSON.parse(resText);
   } catch {
     // not a GraphQL error, something weird happened
-    const err = new Error(`${res.status} ${res.statusText}\n${resText}`);
-    err.name = 'ResponseError';
-    throw err;
+    throw new ResponseError({
+      status: res.status,
+      statusText: res.statusText,
+      resText,
+    });
   }
 }
 

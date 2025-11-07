@@ -150,3 +150,5 @@ export function usingHiveRouterRuntime(): boolean {
   // @ts-expect-error - pkgroll needs this for dead code elimination
   return process.env.HIVE_ROUTER_RUNTIME === '1';
 }
+
+export { ResponseError } from './ResponseError.js';
