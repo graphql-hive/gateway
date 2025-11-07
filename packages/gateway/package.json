@@ -79,7 +79,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
-    "@envelop/core": "^5.3.2",
+    "@envelop/core": "^5.4.0",
     "@escape.tech/graphql-armor-block-field-suggestions": "^3.0.0",
     "@escape.tech/graphql-armor-max-depth": "^2.4.2",
     "@escape.tech/graphql-armor-max-tokens": "^2.5.0",
@@ -110,7 +110,7 @@
     "@graphql-tools/graphql-file-loader": "^8.1.4",
     "@graphql-tools/load": "^8.1.4",
     "@graphql-tools/utils": "^10.10.1",
-    "@graphql-yoga/render-graphiql": "^5.16.1",
+    "@graphql-yoga/render-graphiql": "^5.16.2",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.208.0",
     "@opentelemetry/context-async-hooks": "^2.2.0",
@@ -127,7 +127,7 @@
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "graphql-ws": "^6.0.6",
-    "graphql-yoga": "^5.16.1",
+    "graphql-yoga": "^5.16.2",
     "tslib": "^2.8.1",
     "ws": "^8.18.3"
   },
