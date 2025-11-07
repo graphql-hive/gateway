@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/plugin-jwt-auth",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "type": "module",
   "repository": {
     "type": "git",
