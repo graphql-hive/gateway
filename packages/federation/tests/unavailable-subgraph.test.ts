@@ -188,6 +188,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
             {
               message: expect.stringContaining('connect'),
               extensions: {
+                code: 'SUBREQUEST_HTTP_ERROR',
                 request: {
                   body: '{"query":"{__typename testNestedField{subgraph2{testSuccessQuery{id email sub2}}}}"}',
                   method: 'POST',
@@ -229,6 +230,7 @@ describe('Yoga gateway - subgraph unavailable', () => {
             {
               message: expect.stringContaining('connect'),
               extensions: {
+                code: 'SUBREQUEST_HTTP_ERROR',
                 request: {
                   body: '{"query":"{__typename testNestedField{subgraph2{testErrorQuery{id email sub2}}}}"}',
                   method: 'POST',

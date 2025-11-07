@@ -113,7 +113,7 @@ describe('Error handling', () => {
       errors: [
         {
           extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
+            code: 'RESPONSE_VALIDATION_FAILED',
             request: {
               body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',
@@ -229,7 +229,7 @@ describe('Error handling', () => {
       errors: [
         {
           extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
+            code: 'RESPONSE_VALIDATION_FAILED',
             request: {
               body: `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
               method: 'POST',

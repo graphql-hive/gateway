@@ -25,5 +25,5 @@ it('should load the proxy schema on init', async () => {
     gateway({
       args: ['proxy', 'http://localhost:65432'],
     }),
-  ).rejects.toThrow(/DOWNSTREAM_SERVICE_ERROR/);
+  ).rejects.toThrow(/SUBREQUEST_HTTP_ERROR/);
 });
