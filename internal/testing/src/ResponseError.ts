@@ -1,4 +1,6 @@
-import type { Proc } from '@internal/proc';
+interface Proc {
+  getStd(stream: 'out' | 'err' | 'both'): string;
+}
 
 export type ResponseErrorOptions = (
   | {
