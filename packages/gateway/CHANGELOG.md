@@ -1,5 +1,100 @@
 # @graphql-hive/gateway
 
+## 2.1.14
+### Patch Changes
+
+
+
+- [#1608](https://github.com/graphql-hive/gateway/pull/1608) [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.105.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.105.14) (from `^0.105.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.15) (from `^0.105.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.105.0) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.1.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.1.14) (from `^0.1.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.15) (from `^0.105.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.2.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.2.14) (from `^0.2.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.105.2` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.105.2) (from `^0.105.1`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/code-file-loader@^8.1.24` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.24) (from `^8.1.22`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.1.4` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.1.4) (from `^8.1.2`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/load@^8.1.4` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.1.4) (from `^8.1.2`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.9.1`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/render-graphiql@^5.16.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/5.16.1) (from `^5.16.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/api-logs@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-async-hooks@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-async-hooks/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/context-zone@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/context-zone/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/core@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/core/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-jaeger@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-jaeger/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-zipkin@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-zipkin/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-b3@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-b3/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/propagator-jaeger@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/propagator-jaeger/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.207.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.207.0) (from `^0.206.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-metrics@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-metrics/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-trace-base@^2.2.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-trace-base/v/2.2.0) (from `^2.1.0`, in `dependencies`)
+  - Updated dependency [`commander@^14.0.2` ↗︎](https://www.npmjs.com/package/commander/v/14.0.2) (from `^14.0.1`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.16.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.16.1) (from `^5.16.0`, in `dependencies`)
+
+
+- [#1662](https://github.com/graphql-hive/gateway/pull/1662) [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.10.0`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.16.1` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.16.1) (from `^5.16.0`, in `dependencies`)
+
+
+- [#1663](https://github.com/graphql-hive/gateway/pull/1663) [`d678113`](https://github.com/graphql-hive/gateway/commit/d678113debfe28095ed6e09c2abba4451a42608a) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/code-file-loader@^8.1.24` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.24) (from `^8.1.23`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.1.4` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.1.4) (from `^8.1.3`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/load@^8.1.4` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.1.4) (from `^8.1.3`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/render-graphiql@^5.16.1` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/5.16.1) (from `^5.16.0`, in `dependencies`)
+
+
+- [#1664](https://github.com/graphql-hive/gateway/pull/1664) [`d355e9b`](https://github.com/graphql-hive/gateway/commit/d355e9b73227804f75944ca4836aef2a57251b0e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.105.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.105.0) (from `^0.104.14`, in `dependencies`)
+
+
+- [#1669](https://github.com/graphql-hive/gateway/pull/1669) [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/cache-cfw-kv@^0.105.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-cfw-kv/v/0.105.15) (from `^0.105.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-localforage@^0.105.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-localforage/v/0.105.16) (from `^0.105.15`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-redis@^0.105.1` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-redis/v/0.105.1) (from `^0.105.0`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/cache-upstash-redis@^0.1.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/cache-upstash-redis/v/0.1.15) (from `^0.1.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-http-cache@^0.105.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-http-cache/v/0.105.16) (from `^0.105.15`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-jit@^0.2.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-jit/v/0.2.15) (from `^0.2.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.105.4` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.105.4) (from `^0.105.2`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/plugin-snapshot@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-snapshot/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+
+
+- [#1670](https://github.com/graphql-hive/gateway/pull/1670) [`49e3623`](https://github.com/graphql-hive/gateway/commit/49e362308a09837561b6b509a822d6b62237c54e) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.208.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.208.0) (from `^0.207.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.208.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.208.0) (from `^0.207.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.208.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.208.0) (from `^0.207.0`, in `dependencies`)
+
+
+- [#1672](https://github.com/graphql-hive/gateway/pull/1672) [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/core@^5.4.0` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.4.0) (from `^5.3.2`, in `dependencies`)
+  - Updated dependency [`@graphql-yoga/render-graphiql@^5.16.2` ↗︎](https://www.npmjs.com/package/@graphql-yoga/render-graphiql/v/5.16.2) (from `^5.16.1`, in `dependencies`)
+  - Updated dependency [`graphql-yoga@^5.16.2` ↗︎](https://www.npmjs.com/package/graphql-yoga/v/5.16.2) (from `^5.16.1`, in `dependencies`)
+- Updated dependencies [[`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`810e12b`](https://github.com/graphql-hive/gateway/commit/810e12bd5d24f90ade73f3b257a16277d2731355), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`d678113`](https://github.com/graphql-hive/gateway/commit/d678113debfe28095ed6e09c2abba4451a42608a), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`17bbebd`](https://github.com/graphql-hive/gateway/commit/17bbebd241c4285068a6f7045427869d3ca1b1ec), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151), [`1f58197`](https://github.com/graphql-hive/gateway/commit/1f58197a60882c79430e59638b9396071137a221), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`810e12b`](https://github.com/graphql-hive/gateway/commit/810e12bd5d24f90ade73f3b257a16277d2731355), [`155d423`](https://github.com/graphql-hive/gateway/commit/155d4236f2c02e0778d3eb1ee50b94c000f8b852), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`49e3623`](https://github.com/graphql-hive/gateway/commit/49e362308a09837561b6b509a822d6b62237c54e), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`d678113`](https://github.com/graphql-hive/gateway/commit/d678113debfe28095ed6e09c2abba4451a42608a), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`d678113`](https://github.com/graphql-hive/gateway/commit/d678113debfe28095ed6e09c2abba4451a42608a), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`810e12b`](https://github.com/graphql-hive/gateway/commit/810e12bd5d24f90ade73f3b257a16277d2731355), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f), [`a3f2811`](https://github.com/graphql-hive/gateway/commit/a3f28110786231b95fe906914ac903eec6280899), [`c754a96`](https://github.com/graphql-hive/gateway/commit/c754a96d49ea69f54f57a8f1b01baf9d2fb947b6)]:
+  - @graphql-hive/gateway-runtime@2.3.2
+  - @graphql-hive/logger@1.0.8
+  - @graphql-hive/plugin-aws-sigv4@2.0.14
+  - @graphql-hive/plugin-opentelemetry@1.1.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.6
+  - @graphql-mesh/plugin-jwt-auth@2.0.8
+  - @graphql-mesh/plugin-prometheus@2.1.0
+  - @graphql-mesh/transport-http@1.0.10
+  - @graphql-mesh/transport-http-callback@1.0.10
+  - @graphql-mesh/transport-ws@2.0.10
+
 ## 2.1.13
 ### Patch Changes
 

@@ -1,5 +1,30 @@
 # @graphql-tools/executor-http
 
+## 3.0.6
+### Patch Changes
+
+
+
+- [#1608](https://github.com/graphql-hive/gateway/pull/1608) [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.9.1`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/fetch@^0.10.12` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.12) (from `^0.10.11`, in `dependencies`)
+
+
+- [#1662](https://github.com/graphql-hive/gateway/pull/1662) [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.10.0`, in `dependencies`)
+  - Updated dependency [`@whatwg-node/fetch@^0.10.12` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.12) (from `^0.10.11`, in `dependencies`)
+
+
+- [`c754a96`](https://github.com/graphql-hive/gateway/commit/c754a96d49ea69f54f57a8f1b01baf9d2fb947b6) Thanks [@ardatan](https://github.com/ardatan)! - Use more specific error codes;
+  
+  `GATEWAY_TIMEOUT` -> Server could not get a response from upstream in time
+  `SUBREQUEST_HTTP_ERROR` -> An error occurred while making the HTTP request to the upstream
+  `RESPONSE_VALIDATION_FAILED` -> The response from upstream did not conform to the expected GraphQL response format
+- Updated dependencies [[`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151)]:
+  - @graphql-tools/executor-common@1.0.4
+
 ## 3.0.5
 ### Patch Changes
 

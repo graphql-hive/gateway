@@ -1,5 +1,39 @@
 # @graphql-mesh/transport-common
 
+## 1.0.10
+### Patch Changes
+
+
+
+- [#1608](https://github.com/graphql-hive/gateway/pull/1608) [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.14` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.14) (from `^0.104.13`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/executor@^1.4.11` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.4.11) (from `^1.4.9`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.9.1`, in `dependencies`)
+
+
+- [#1662](https://github.com/graphql-hive/gateway/pull/1662) [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^10.10.1` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.1) (from `^10.10.0`, in `dependencies`)
+
+
+- [#1663](https://github.com/graphql-hive/gateway/pull/1663) [`d678113`](https://github.com/graphql-hive/gateway/commit/d678113debfe28095ed6e09c2abba4451a42608a) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^1.4.11` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.4.11) (from `^1.4.10`, in `dependencies`)
+
+
+- [#1669](https://github.com/graphql-hive/gateway/pull/1669) [`1bfac64`](https://github.com/graphql-hive/gateway/commit/1bfac649f00f1b5ac830813030cec64522fea29f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/types@^0.104.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.15) (from `^0.104.14`, in `dependencies`)
+
+
+- [#1672](https://github.com/graphql-hive/gateway/pull/1672) [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/core@^5.4.0` ↗︎](https://www.npmjs.com/package/@envelop/core/v/5.4.0) (from `^5.3.2`, in `dependencies`)
+- Updated dependencies [[`1f58197`](https://github.com/graphql-hive/gateway/commit/1f58197a60882c79430e59638b9396071137a221), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`9c789fb`](https://github.com/graphql-hive/gateway/commit/9c789fb11f6de80e781ff056cb5b98c548938bea), [`27789de`](https://github.com/graphql-hive/gateway/commit/27789de7967cb5299d471c00434591f309b978ff), [`3f6b99d`](https://github.com/graphql-hive/gateway/commit/3f6b99d152cbcc17d4ec3c97bc48dae452982151)]:
+  - @graphql-hive/logger@1.0.8
+  - @graphql-tools/executor-common@1.0.4
+
 ## 1.0.9
 ### Patch Changes
 
