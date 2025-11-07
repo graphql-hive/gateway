@@ -14,6 +14,6 @@
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
     "@graphql-mesh/plugin-jwt-auth": "workspace:^",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.16.1"
+    "graphql-yoga": "^5.16.2"
   }
 }
