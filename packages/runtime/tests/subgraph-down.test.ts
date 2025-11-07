@@ -116,7 +116,7 @@ describe('Error handling', () => {
       errors: [
         {
           extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
+            code: 'RESPONSE_VALIDATION_FAILED',
             request: {
               body: usingHiveRouterRuntime()
                 ? `{"query":"query{subgraph1{subgraph1Field}}"}`
@@ -241,7 +241,7 @@ describe('Error handling', () => {
       errors: [
         {
           extensions: {
-            code: 'DOWNSTREAM_SERVICE_ERROR',
+            code: 'RESPONSE_VALIDATION_FAILED',
             request: {
               body: usingHiveRouterRuntime()
                 ? `{"query":"query{subgraph1{subgraph1Field}}"}`
