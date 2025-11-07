@@ -3449,7 +3449,7 @@ __metadata:
   resolution: "@e2e/usage-reporting-persisted-operations@workspace:e2e/usage-reporting-persisted-operations"
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.6"
-    "@whatwg-node/server": "npm:^0.10.13"
+    "@whatwg-node/server": "npm:^0.10.15"
   languageName: unknown
   linkType: soft
 
@@ -4098,7 +4098,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.12"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
-    "@whatwg-node/server": "npm:^0.10.13"
+    "@whatwg-node/server": "npm:^0.10.15"
     "@whatwg-node/server-plugin-cookies": "npm:^1.0.5"
     fets: "npm:^0.8.4"
     graphql: "npm:^16.12.0"
@@ -4347,7 +4347,7 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^2.2.0"
     "@opentelemetry/semantic-conventions": "npm:^1.37.0"
     "@whatwg-node/promise-helpers": "npm:1.3.2"
-    "@whatwg-node/server": "npm:^0.10.13"
+    "@whatwg-node/server": "npm:^0.10.15"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.1"
     pkgroll: "npm:2.20.1"
@@ -10423,7 +10423,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.13, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.5":
+"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.5":
   version: 0.10.14
   resolution: "@whatwg-node/server@npm:0.10.14"
   dependencies:
@@ -10433,6 +10433,19 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
     tslib: "npm:^2.6.3"
   checksum: 10c0/5884c0351e06910cbd746231e66a6706df4db1d9fb9308521265612359dd8944d613fd0f4335bd554367dbef5a6aa02d520a6d5443b44211756777dd0a486fe7
+  languageName: node
+  linkType: hard
+
+"@whatwg-node/server@npm:^0.10.15":
+  version: 0.10.15
+  resolution: "@whatwg-node/server@npm:0.10.15"
+  dependencies:
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@whatwg-node/disposablestack": "npm:^0.0.6"
+    "@whatwg-node/fetch": "npm:^0.10.12"
+    "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    tslib: "npm:^2.6.3"
+  checksum: 10c0/6391cec0a829f436ba3d79dd761c9d473cc5b2892a6065d2e87f94aab5ffd1773b899f1d98b524f5e7ada80117ef0d7624cac9c2ee517f9261abad920528b270
   languageName: node
   linkType: hard
 
