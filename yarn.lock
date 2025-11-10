@@ -2843,6 +2843,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/auth-on-interfaces@workspace:e2e/auth-on-interfaces":
+  version: 0.0.0-use.local
+  resolution: "@e2e/auth-on-interfaces@workspace:e2e/auth-on-interfaces"
+  dependencies:
+    "@apollo/subgraph": "npm:^2.11.3"
+    graphql: "npm:^16.12.0"
+    jsonwebtoken: "npm:^9.0.2"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/auto-type-merging@workspace:e2e/auto-type-merging":
   version: 0.0.0-use.local
   resolution: "@e2e/auto-type-merging@workspace:e2e/auto-type-merging"
@@ -16908,7 +16918,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:9.0.2, jsonwebtoken@npm:^9.0.0":
+"jsonwebtoken@npm:9.0.2, jsonwebtoken@npm:^9.0.0, jsonwebtoken@npm:^9.0.2":
   version: 9.0.2
   resolution: "jsonwebtoken@npm:9.0.2"
   dependencies:
