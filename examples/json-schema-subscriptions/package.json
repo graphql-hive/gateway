@@ -5,7 +5,7 @@
     "@graphql-mesh/compose-cli": "^1.5.2",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/plugin-live-query": "^0.104.16",
-    "@omnigraph/json-schema": "^0.109.16",
+    "@omnigraph/json-schema": "^0.109.17",
     "fets": "^0.8.4",
     "graphql": "^16.12.0",
     "graphql-sse": "^2.6.0",
