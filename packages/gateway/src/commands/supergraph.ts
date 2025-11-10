@@ -259,15 +259,15 @@ export const addCommand: AddCommand = (ctx, cli) =>
         },
       };
       if (opts.hiveRouterRuntime && !config.unifiedGraphHandler) {
-        ctx.log.info('Using Hive Router runtime as per CLI flag');
-        ctx.log.info('Loading @graphql-hive/router-runtime package');
+        ctx.log.warn('Using Hive Router Runtime');
         try {
+          ctx.log.debug('Loading @graphql-hive/router-runtime package');
           const moduleName = '@graphql-hive/router-runtime';
           const { unifiedGraphHandler } = await import(moduleName);
           config.unifiedGraphHandler ||= unifiedGraphHandler;
         } catch (e) {
           ctx.log.warn(
-            'Could not load @graphql-hive/router-runtime package. Please install it first.' +
+            'Could not load the @graphql-hive/router-runtime package. Please install it to use the Router Runtime.' +
               ' Falling back to the default runtime.',
           );
         }
