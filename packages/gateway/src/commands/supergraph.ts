@@ -52,7 +52,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
     .addOption(
       new Option(
         '--hive-router-runtime',
-        'Use the Hive Router runtime for query planning and execution. (experimental)',
+        'Use the Hive Router runtime for query planning and execution.',
       ).env('HIVE_ROUTER_RUNTIME'),
     )
     .on('optionEnv:hive-router-runtime', function (this: Command) {
