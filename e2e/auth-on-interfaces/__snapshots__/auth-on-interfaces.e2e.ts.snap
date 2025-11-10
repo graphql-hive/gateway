@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`should decide authorization scopes for query { a { a } } 1`] = `
+exports[`should decide authorization scopes when auth directives are on interface fields for query { a { a } } 1`] = `
 {
   "allowed": [
     [
@@ -36,7 +36,7 @@ exports[`should decide authorization scopes for query { a { a } } 1`] = `
 }
 `;
 
-exports[`should decide authorization scopes for query { a { id } } 1`] = `
+exports[`should decide authorization scopes when auth directives are on interface fields for query { a { id } } 1`] = `
 {
   "allowed": [
     [
@@ -72,7 +72,7 @@ exports[`should decide authorization scopes for query { a { id } } 1`] = `
 }
 `;
 
-exports[`should decide authorization scopes for query { i { ... on A { id } ... on B { id } } 1`] = `
+exports[`should decide authorization scopes when auth directives are on interface fields for query { i { ... on A { id } ... on B { id } } 1`] = `
 {
   "allowed": [],
   "denied": [
@@ -107,7 +107,7 @@ exports[`should decide authorization scopes for query { i { ... on A { id } ... 
 }
 `;
 
-exports[`should decide authorization scopes for query { i { ... on A { id } } 1`] = `
+exports[`should decide authorization scopes when auth directives are on interface fields for query { i { ... on A { id } } 1`] = `
 {
   "allowed": [],
   "denied": [
@@ -142,7 +142,185 @@ exports[`should decide authorization scopes for query { i { ... on A { id } } 1`
 }
 `;
 
-exports[`should decide authorization scopes for query { i { id } } 1`] = `
+exports[`should decide authorization scopes when auth directives are on interface fields for query { i { id } } 1`] = `
+{
+  "allowed": [
+    [
+      "i",
+    ],
+    [
+      "a",
+      "i",
+    ],
+    [
+      "b",
+      "i",
+    ],
+    [
+      "a",
+      "b",
+      "i",
+    ],
+  ],
+  "denied": [
+    [],
+    [
+      "a",
+    ],
+    [
+      "b",
+    ],
+    [
+      "a",
+      "b",
+    ],
+  ],
+}
+`;
+
+exports[`should decide authorization scopes when auth directives are on interface types for query { a { a } } 1`] = `
+{
+  "allowed": [
+    [
+      "a",
+    ],
+    [
+      "a",
+      "b",
+    ],
+    [
+      "a",
+      "i",
+    ],
+    [
+      "a",
+      "b",
+      "i",
+    ],
+  ],
+  "denied": [
+    [],
+    [
+      "b",
+    ],
+    [
+      "i",
+    ],
+    [
+      "b",
+      "i",
+    ],
+  ],
+}
+`;
+
+exports[`should decide authorization scopes when auth directives are on interface types for query { a { id } } 1`] = `
+{
+  "allowed": [
+    [
+      "a",
+    ],
+    [
+      "a",
+      "b",
+    ],
+    [
+      "a",
+      "i",
+    ],
+    [
+      "a",
+      "b",
+      "i",
+    ],
+  ],
+  "denied": [
+    [],
+    [
+      "b",
+    ],
+    [
+      "i",
+    ],
+    [
+      "b",
+      "i",
+    ],
+  ],
+}
+`;
+
+exports[`should decide authorization scopes when auth directives are on interface types for query { i { ... on A { id } ... on B { id } } 1`] = `
+{
+  "allowed": [],
+  "denied": [
+    [],
+    [
+      "a",
+    ],
+    [
+      "b",
+    ],
+    [
+      "a",
+      "b",
+    ],
+    [
+      "i",
+    ],
+    [
+      "a",
+      "i",
+    ],
+    [
+      "b",
+      "i",
+    ],
+    [
+      "a",
+      "b",
+      "i",
+    ],
+  ],
+}
+`;
+
+exports[`should decide authorization scopes when auth directives are on interface types for query { i { ... on A { id } } 1`] = `
+{
+  "allowed": [],
+  "denied": [
+    [],
+    [
+      "a",
+    ],
+    [
+      "b",
+    ],
+    [
+      "a",
+      "b",
+    ],
+    [
+      "i",
+    ],
+    [
+      "a",
+      "i",
+    ],
+    [
+      "b",
+      "i",
+    ],
+    [
+      "a",
+      "b",
+      "i",
+    ],
+  ],
+}
+`;
+
+exports[`should decide authorization scopes when auth directives are on interface types for query { i { id } } 1`] = `
 {
   "allowed": [
     [

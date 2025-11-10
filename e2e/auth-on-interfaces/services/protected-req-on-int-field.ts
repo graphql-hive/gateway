@@ -19,8 +19,8 @@ const schema = buildSubgraphSchema([
         a: A
         i: I
       }
-      interface I @requiresScopes(scopes: ["i"]) {
-        id: ID
+      interface I {
+        id: ID @requiresScopes(scopes: ["i"])
       }
       type A implements I @requiresScopes(scopes: ["a"]) {
         id: ID
@@ -51,4 +51,4 @@ const yoga = createYoga({ schema });
 
 const httpServer = createServer(yoga);
 
-httpServer.listen(opts.getServicePort('protected-req-on-int'));
+httpServer.listen(opts.getServicePort('protected-req-on-int-field'));

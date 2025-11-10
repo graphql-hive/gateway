@@ -12,12 +12,53 @@ it.concurrent.for([
   '{ a { id } }',
   '{ a { a } }',
 ])(
-  'should decide authorization scopes for query %s',
+  'should decide authorization scopes when auth directives are on interface types for query %s',
   async (query, { expect }) => {
     const gw = await gateway({
       supergraph: {
         with: 'apollo',
-        services: [await service('protected-req-on-int')],
+        services: [await service('protected-req-on-int-type')],
+      },
+    });
+
+    const scopes: {
+      allowed: Scope[][];
+      denied: Scope[][];
+    } = {
+      allowed: [],
+      denied: [],
+    };
+    for (const scope of getPossibleScopes()) {
+      const res = await gw.execute({
+        query,
+        headers: {
+          Authorization: `Bearer ${jwt.sign({ scope }, JWT_SECRET)}`,
+        },
+      });
+      if (res.data && !res.errors) {
+        scopes.allowed.push(scope);
+      } else {
+        scopes.denied.push(scope);
+      }
+    }
+
+    expect(scopes).toMatchSnapshot();
+  },
+);
+
+it.concurrent.for([
+  '{ i { id } }',
+  '{ i { ... on A { id } }',
+  '{ i { ... on A { id } ... on B { id } }',
+  '{ a { id } }',
+  '{ a { a } }',
+])(
+  'should decide authorization scopes when auth directives are on interface fields for query %s',
+  async (query, { expect }) => {
+    const gw = await gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [await service('protected-req-on-int-field')],
       },
     });
 
