@@ -147,6 +147,5 @@ export function getNodeVer(): {
  * @experimental
  */
 export function usingHiveRouterRuntime(): boolean {
-  // @ts-expect-error - pkgroll needs this for dead code elimination
-  return process.env.HIVE_ROUTER_RUNTIME === '1';
+  return getEnvBool('HIVE_ROUTER_RUNTIME');
 }
