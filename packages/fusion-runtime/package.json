@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/fusion-runtime",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "type": "module",
   "description": "Runtime for GraphQL Mesh Fusion Supergraph",
   "repository": {
