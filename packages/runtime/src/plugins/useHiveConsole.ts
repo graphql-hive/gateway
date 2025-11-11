@@ -1,9 +1,9 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
 import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
+import { MeshFetch } from '@graphql-mesh/types';
 import { isDebug } from '~internal/env';
 import { GatewayPlugin } from '../types';
-import { MeshFetch } from '@graphql-mesh/types';
 
 export interface HiveConsolePluginOptions
   extends Omit<HivePluginOptions, 'usage'> {
@@ -34,7 +34,7 @@ export default function useHiveConsole<
   enabled,
   token,
   ...options
-}: HiveConsolePluginOptions & { log: Logger, fetch: MeshFetch, }): GatewayPlugin<
+}: HiveConsolePluginOptions & { log: Logger; fetch: MeshFetch }): GatewayPlugin<
   TPluginContext,
   TContext
 > {
