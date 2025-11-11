@@ -52,7 +52,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
     .addOption(
       new Option(
         '--hive-router-runtime',
-        'Use the Hive Router runtime for query planning and execution.',
+        'Use the Hive Router runtime for query planning and execution (env: HIVE_ROUTER_RUNTIME)',
       ).env('HIVE_ROUTER_RUNTIME'),
     )
     .on('optionEnv:hive-router-runtime', function (this: Command) {
@@ -60,7 +60,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
       // variable, and not whether it is truthy (HIVE_ROUTER_RUNTIME=0 would be still true)
       // TODO: this should be done in commanderjs itself, raise an issue
       this.setOptionValueWithSource(
-        'hive-router-runtime',
+        'hiveRouterRuntime', // must be camelCase
         getEnvBool('HIVE_ROUTER_RUNTIME'),
         'env',
       );
