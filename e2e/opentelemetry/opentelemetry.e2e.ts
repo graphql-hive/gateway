@@ -1,7 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { isCI } from '@internal/testing';
+import { isCI, usingHiveRouterRuntime } from '@internal/testing';
 import { crypto, fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -225,8 +225,8 @@ describe('OpenTelemetry', () => {
           const expectedExecuteChildren = [
             ['subgraph.execute (accounts)', 2],
             ['subgraph.execute (products)', 2],
-            ['subgraph.execute (inventory)', 1],
-            ['subgraph.execute (reviews)', 2],
+            ['subgraph.execute (inventory)', usingHiveRouterRuntime() ? 2 : 1],
+            ['subgraph.execute (reviews)', usingHiveRouterRuntime() ? 1 : 2],
           ] as const;
 
           for (const [operationName, count] of expectedExecuteChildren) {
@@ -338,8 +338,8 @@ describe('OpenTelemetry', () => {
           const expectedExecuteChildren = [
             ['subgraph.execute (accounts)', 2],
             ['subgraph.execute (products)', 2],
-            ['subgraph.execute (inventory)', 1],
-            ['subgraph.execute (reviews)', 2],
+            ['subgraph.execute (inventory)', usingHiveRouterRuntime() ? 2 : 1],
+            ['subgraph.execute (reviews)', usingHiveRouterRuntime() ? 1 : 2],
           ] as const;
 
           for (const [operationName, count] of expectedExecuteChildren) {
