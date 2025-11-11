@@ -1,5 +1,20 @@
 # @graphql-hive/gateway-runtime
 
+## 2.3.3
+### Patch Changes
+
+
+
+- [#1677](https://github.com/graphql-hive/gateway/pull/1677) [`3fbf360`](https://github.com/graphql-hive/gateway/commit/3fbf3602bedbc4c4bb1947fcdca60bc27789ceb7) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.18` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.18) (from `^0.104.17`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/types@^0.104.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/types/v/0.104.16) (from `^0.104.15`, in `dependencies`)
+  - Updated dependency [`@graphql-mesh/utils@^0.104.16` ↗︎](https://www.npmjs.com/package/@graphql-mesh/utils/v/0.104.16) (from `^0.104.15`, in `dependencies`)
+- Updated dependencies [[`3fbf360`](https://github.com/graphql-hive/gateway/commit/3fbf3602bedbc4c4bb1947fcdca60bc27789ceb7), [`3fbf360`](https://github.com/graphql-hive/gateway/commit/3fbf3602bedbc4c4bb1947fcdca60bc27789ceb7), [`3fbf360`](https://github.com/graphql-hive/gateway/commit/3fbf3602bedbc4c4bb1947fcdca60bc27789ceb7)]:
+  - @graphql-mesh/fusion-runtime@1.4.3
+  - @graphql-mesh/hmac-upstream-signature@2.0.7
+  - @graphql-mesh/transport-common@1.0.11
+
 ## 2.3.2
 ### Patch Changes
 
