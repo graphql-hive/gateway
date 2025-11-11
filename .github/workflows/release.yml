@@ -181,7 +181,13 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          [ubuntu-latest, macos-15, macos-15-intel, windows-latest, ubuntu-24.04-arm]
+          [
+            ubuntu-latest,
+            macos-15,
+            macos-15-intel,
+            windows-latest,
+            ubuntu-24.04-arm,
+          ]
     steps:
       - name: Version
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v7
