@@ -147,5 +147,23 @@ export function getNodeVer(): {
  * @experimental
  */
 export function usingHiveRouterRuntime(): boolean {
-  return getEnvBool('HIVE_ROUTER_RUNTIME');
+  // we dont use getEnvBool here because pkgroll will remove dead code
+  // in fusion-runtime since we are hard-coding the env var to 0 during build
+  // see fusion-runtime/package.json build script
+  return (
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === '1' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 't' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'true' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'y' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'yes' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'on' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'enabled'
+  );
 }
