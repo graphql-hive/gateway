@@ -1,5 +1,5 @@
 ---
-'@graphql-mesh/router-runtime': major
+'@graphql-hive/router-runtime': major
 ---
 
 Hive Router Runtime for Hive Gateway
