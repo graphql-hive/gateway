@@ -2,4 +2,4 @@
 '@graphql-hive/gateway': patch
 ---
 
-Build binaries on MacOS 15 (arm and x86)
+Build binaries on macOS 15 (arm and x86)
