@@ -38,13 +38,13 @@ export default function useHiveConsole<
   TPluginContext,
   TContext
 > {
-  const agent: HiveConsolePluginOptions['agent'] = {
+  const agent = {
     name: 'hive-gateway',
     version: globalThis.__VERSION__,
     fetch,
     logger: LegacyLogger.from(options.log),
     ...options.agent,
-  };
+  } as HiveConsolePluginOptions['agent'];
 
   // avoiding a breaking change by supporting the old usage option
   // which allowed passing an object to the clientInfo instead of a function
