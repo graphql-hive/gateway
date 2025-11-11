@@ -39,24 +39,3 @@ export function getLazyFactory<T extends (...args: any) => any>(
     return _value(...args);
   } as T;
 }
-
-export function memoize1Promise<A extends WeakKey, R>(
-  fn: (arg: A) => MaybePromise<R>,
-): (arg: A) => MaybePromise<R> {
-  const cache = new WeakMap<A, MaybePromise<R>>();
-  return function memoize1PromiseHandler(arg: A): MaybePromise<R> {
-    let cached = cache.get(arg);
-    if (cached == null) {
-      cached = handleMaybePromise(
-        () => fn(arg),
-        (result) => {
-          cached = result;
-          cache.set(arg, cached);
-          return cached;
-        },
-      );
-      cache.set(arg, cached);
-    }
-    return cached;
-  };
-}

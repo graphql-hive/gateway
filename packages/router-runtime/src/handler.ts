@@ -1,3 +1,4 @@
+import { QueryPlan } from '@graphql-hive/router-query-planner';
 import {
   handleFederationSupergraph,
   type UnifiedGraphHandlerOpts,
@@ -6,10 +7,10 @@ import {
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, getLazyValue, memoize1Promise } from './utils';
+import { getLazyFactory, getLazyValue } from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -32,11 +33,36 @@ export function unifiedGraphHandler(
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
   );
-  const planDocument = memoize1Promise((document: DocumentNode) =>
-    handleMaybePromise(getQueryPlanner, (qp) =>
-      qp.plan(defaultPrintFn(document)).then((queryPlan) => queryPlan),
-    ),
-  );
+
+  const documentOperationPlanCache = new WeakMap<
+    DocumentNode,
+    Map<string | null, MaybePromise<QueryPlan>>
+  >();
+  function planDocument(document: DocumentNode, operationName: string | null) {
+    let operationCache = documentOperationPlanCache.get(document);
+
+    // we dont need to worry about releasing values. the map values in weakmap
+    // will all be released when document node is GCed
+    if (operationCache) {
+      const plan = operationCache.get(operationName);
+      if (plan) {
+        return plan;
+      }
+    } else {
+      operationCache = new Map<string, MaybePromise<QueryPlan>>();
+      documentOperationPlanCache.set(document, operationCache);
+    }
+
+    const plan = handleMaybePromise(getQueryPlanner, (qp) =>
+      qp.plan(defaultPrintFn(document), operationName).then((queryPlan) => {
+        operationCache.set(operationName, queryPlan);
+        return queryPlan;
+      }),
+    );
+    operationCache.set(operationName, plan);
+    return plan;
+  }
+
   return {
     unifiedGraph: supergraphSchema,
     getSubgraphSchema,
@@ -45,7 +71,11 @@ export function unifiedGraphHandler(
         return defaultExecutor(executionRequest);
       }
       return handleMaybePromise(
-        () => planDocument(executionRequest.document),
+        () =>
+          planDocument(
+            executionRequest.document,
+            executionRequest.operationName || null,
+          ),
         (queryPlan) =>
           executeQueryPlan({
             supergraphSchema,

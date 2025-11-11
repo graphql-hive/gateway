@@ -3,7 +3,7 @@ import {
   DeferredPromise,
 } from '@whatwg-node/promise-helpers';
 import { describe, expect, it, vi } from 'vitest';
-import { getLazyFactory, getLazyPromise, memoize1Promise } from '../src/utils';
+import { getLazyFactory, getLazyPromise } from '../src/utils';
 
 describe('utils', () => {
   it('getLazyPromise', async () => {
@@ -60,28 +60,5 @@ describe('utils', () => {
     expect(addFn).toHaveBeenCalledTimes(2);
     expect(multiplyFn).toHaveBeenCalledTimes(0);
     expect(factorySpy).toHaveBeenCalledTimes(1); // Still only called once
-  });
-  it('memoize1Promise', async () => {
-    const weakKey = {
-      id: 1,
-    };
-    const expectedValue = 'computed value';
-    let deferred: DeferredPromise<string>;
-    const handlerSpy = vi.fn(() => {
-      deferred = createDeferredPromise<string>();
-      return deferred.promise;
-    });
-    const memoizedFn = memoize1Promise(handlerSpy);
-    const res1 = memoizedFn(weakKey);
-    expect(res1).toBeInstanceOf(Promise);
-    expect(handlerSpy).toHaveBeenCalledTimes(1);
-
-    // Resolve the promise
-    deferred!.resolve(expectedValue);
-    await new Promise(process.nextTick); // Wait a tick for the promise to resolve
-
-    const res2 = memoizedFn(weakKey);
-    expect(res2).toBe(expectedValue);
-    expect(handlerSpy).toHaveBeenCalledTimes(1); // Still only called once
   });
 });
