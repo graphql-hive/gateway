@@ -2,7 +2,7 @@
   "name": "@e2e/openapi-subgraph",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.2",
+    "@graphql-mesh/compose-cli": "^1.5.3",
     "@omnigraph/openapi": "^0.109.23",
     "fets": "^0.8.4",
     "graphql": "^16.12.0",
