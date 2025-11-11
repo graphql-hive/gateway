@@ -43,9 +43,7 @@ it('should execute persisted query and report usage', async () => {
     expect(req.headers['authorization']).toMatchInlineSnapshot(
       `"Bearer great-token"`,
     );
-    expect(req.headers['user-agent']).toMatchInlineSnapshot(
-      `"hive-gateway/0.13.0"`,
-    );
+    expect(req.headers['user-agent']).toContain('hive-gateway/');
 
     expect(req.body.map).toMatchInlineSnapshot(`
       {

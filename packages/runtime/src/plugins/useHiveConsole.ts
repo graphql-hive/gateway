@@ -3,6 +3,7 @@ import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
 import { isDebug } from '~internal/env';
 import { GatewayPlugin } from '../types';
+import { MeshFetch } from '@graphql-mesh/types';
 
 export interface HiveConsolePluginOptions
   extends Omit<HivePluginOptions, 'usage'> {
@@ -33,12 +34,14 @@ export default function useHiveConsole<
   enabled,
   token,
   ...options
-}: HiveConsolePluginOptions & { log: Logger }): GatewayPlugin<
+}: HiveConsolePluginOptions & { log: Logger, fetch: MeshFetch, }): GatewayPlugin<
   TPluginContext,
   TContext
 > {
   const agent: HiveConsolePluginOptions['agent'] = {
     name: 'hive-gateway',
+    version: globalThis.__VERSION__,
+    fetch,
     logger: LegacyLogger.from(options.log),
     ...options.agent,
   };
