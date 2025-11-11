@@ -150,11 +150,11 @@ jobs:
 
           # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
-          #   os: macos-14 # MacOS Arm64
+          #   os: macos-15 # MacOS Arm64
           #   gateway-runner: bin
           #   hive-router-runtime: 0
           # - workflow-name: Node Binary on MacOS x86_64
-          #   os: macos-13 # MacOS x86_64
+          #   os: macos-15-intel # MacOS x86_64
           #   gateway-runner: bin
           #   hive-router-runtime: 0
 
