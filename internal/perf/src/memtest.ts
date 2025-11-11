@@ -16,7 +16,8 @@ const __project = path.resolve(__dirname, '..', '..', '..');
 
 const supportedFlags = [
   'short' as const,
-  'cleanheapsnaps' as const,
+  'clean' as const,
+  'keepheapsnaps' as const,
   'noheapsnaps' as const,
   'moreruns' as const,
   'chart' as const,
@@ -28,7 +29,8 @@ const supportedFlags = [
  *
  * {@link supportedFlags Supported flags} are:
  * - `short` Runs the loadtest for `30s` and the calmdown for `10s` instead of the defaults.
- * - `cleanheapsnaps` Remove any existing heap snapshot (`*.heapsnapshot`) files before the test.
+ * - `clean` Remove any existing heap snapshot (`*.heapsnapshot`), allocation profiles (`*.heapprofile`) and charts (`.svg`) files before the test.
+ * - `keepheapsnaps` Keeps the heap snapshots (`*.heapsnapshot`) even if there are no leaks detected.
  * - `noheapsnaps` Disable taking heap snapshots.
  * - `moreruns` Does `10` runs instead of the defaults.
  * - `chart` Writes the memory consumption chart.
@@ -144,10 +146,15 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
         runs,
     },
     async ({ expect, task }) => {
-      if (flags.includes('cleanheapsnaps')) {
+      if (flags.includes('clean')) {
         const filesInCwd = await fs.readdir(cwd, { withFileTypes: true });
         for (const file of filesInCwd) {
-          if (file.isFile() && file.name.endsWith('.heapsnapshot')) {
+          if (
+            file.isFile() &&
+            (file.name.endsWith('.heapsnapshot') ||
+              file.name.endsWith('.heapprofile') ||
+              file.name.endsWith('.svg'))
+          ) {
             await fs.unlink(path.join(cwd, file.name));
           }
         }
@@ -164,6 +171,7 @@ export function memtest(opts: MemtestOptions, setup: () => Promise<Server>) {
 
       const loadtestResult = await loadtest({
         ...loadtestOpts,
+        id: task.id,
         cwd,
         memorySnapshotWindow,
         takeHeapSnapshots,
@@ -250,10 +258,12 @@ ${loadtestResult.heapSnapshots.map(({ file }, index) => `\t${index + 1}. ${path.
         expect.fail('Expected to diff heap snapshots, but none were taken.');
       }
 
-      // no leak, remove the heap snapshots
-      await Promise.all(
-        loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
-      );
+      if (!flags.includes('keepheapsnaps')) {
+        // no leak, remove the heap snapshots
+        await Promise.all(
+          loadtestResult.heapSnapshots.map(({ file }) => fs.unlink(file)),
+        );
+      }
     },
   );
 }

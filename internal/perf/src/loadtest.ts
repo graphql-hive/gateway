@@ -9,6 +9,11 @@ import { connectInspector, Inspector } from './inspector';
 
 export interface LoadtestOptions extends ProcOptions {
   cwd: string;
+  /**
+   * The ID of the loadtest, when running with test, prefer using the task id.
+   * @default Math.random().toString(36).slice(2, 6)
+   */
+  id?: string;
   /** @default 100 */
   vus?: number;
   /** Idling duration before loadtest in milliseconds. */
@@ -139,7 +144,7 @@ export async function loadtest(opts: LoadtestOptions): Promise<{
 
   // we create a random id to make sure the heapsnapshot files are unique and easily distinguishable in the filesystem
   // when running multiple loadtests in parallel. see e2e/opentelemetry memtest as an example
-  const id = Math.random().toString(36).slice(2, 6);
+  const id = opts.id || Math.random().toString(36).slice(2, 6);
 
   // make sure the endpoint works before starting the loadtests
   // the request here matches the request done in loadtest-script.ts or http-loadtest-script.ts
