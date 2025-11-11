@@ -403,7 +403,9 @@ export function createGatewayRuntime<
       handleMaybePromise(
         () =>
           proxyExecutor({
-            document: parse(`query ReadinessCheck { __typename }`),
+            document: parse(`query ReadinessCheck { __typename }`, {
+              noLocation: true,
+            }),
           }),
         (res) => !isAsyncIterable(res) && !!res.data?.__typename,
       );
@@ -702,6 +704,7 @@ export function createGatewayRuntime<
       )(...args);
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
+      handleUnifiedGraph: config.unifiedGraphHandler,
       getUnifiedGraph: unifiedGraphFetcher,
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
         unifiedGraph = newUnifiedGraph;
@@ -1167,7 +1170,7 @@ function isDynamicUnifiedGraphSchema(
       return false;
     }
     try {
-      parse(schema);
+      parse(schema, { noLocation: true });
       // valid AST
       return false;
     } catch (e) {

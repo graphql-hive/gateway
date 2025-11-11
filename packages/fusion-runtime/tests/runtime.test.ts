@@ -6,12 +6,16 @@ import {
 } from '@graphql-mesh/fusion-runtime';
 import { Subschema } from '@graphql-tools/delegate';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { GraphQLSchema, Kind, parse, print } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { composeAndGetExecutor } from './utils';
 
 describe('handleFederationSubschema', () => {
-  it('combine federation merging and custom merging', async () => {
+  it.skipIf(
+    // TODO: this needs to work with the Hive Router Query Planner as well
+    usingHiveRouterRuntime(),
+  )('combine federation merging and custom merging', async () => {
     const users = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
         directive @merge(keyField: String) on FIELD_DEFINITION
@@ -144,7 +148,7 @@ describe('handleFederationSubschema', () => {
   });
 });
 
-describe('onDelegationPlanHook', () => {
+describe.skipIf(usingHiveRouterRuntime())('onDelegationPlanHook', () => {
   it('should be called with the plan', async () => {
     const user = buildSubgraphSchema({
       typeDefs: parse(/* GraphQL */ `
@@ -268,20 +272,38 @@ describe('onDelegationPlanHook', () => {
       log: expect.any(Logger),
       info: expect.any(Object),
     });
-    expect(
-      printSchemaWithDirectives(onDelegationPlanPayload.supergraph),
-    ).toMatchSnapshot('onDelegationPlanPayload.supergraph');
-    expect(onDelegationPlanPayload.subgraph).toMatchSnapshot(
-      'onDelegationPlanPayload.subgraph',
-    );
-    expect(onDelegationPlanPayload.typeName).toMatchSnapshot(
-      'onDelegationPlanPayload.typeName',
-    );
-    expect(onDelegationPlanPayload.variables).toMatchSnapshot(
-      'onDelegationPlanPayload.variables',
-    );
-    expect(print(onDelegationPlanPayload.fieldNodes[0]!)).toMatchSnapshot(
-      'onDelegationPlanPayload.fieldNodes[0]',
+    expect(printSchemaWithDirectives(onDelegationPlanPayload.supergraph))
+      .toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        posts: [Post]
+        users: [User]
+      }
+
+      type Post {
+        id: ID!
+        title: String
+        author: User
+      }
+
+      type User {
+        id: ID!
+        name: String
+      }"
+    `);
+    expect(onDelegationPlanPayload.subgraph).toMatchInlineSnapshot(`"posts"`);
+    expect(onDelegationPlanPayload.typeName).toMatchInlineSnapshot(`"User"`);
+    expect(onDelegationPlanPayload.variables).toMatchInlineSnapshot(`{}`);
+    expect(print(onDelegationPlanPayload.fieldNodes[0]!)).toMatchInlineSnapshot(
+      `
+      "author {
+        id
+        name
+      }"
+    `,
     );
     expect(result).toEqual({
       posts: [

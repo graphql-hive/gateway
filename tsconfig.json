@@ -100,6 +100,9 @@
       "@graphql-hive/pubsub": ["./packages/pubsub/src/index.ts"],
       "@graphql-hive/pubsub/redis": ["./packages/pubsub/src/redis.ts"],
       "@graphql-hive/pubsub/nats": ["./packages/pubsub/src/nats.ts"],
+      "@graphql-hive/router-runtime": [
+        "./packages/router-runtime/src/index.ts"
+      ],
       // paths starting with ~ are used by published packages and will be bundled
       "~internal/env": ["./internal/env/src/index.ts"],
       "~internal/env/node": ["./internal/env/src/node.ts"]
@@ -112,6 +115,8 @@
     "./eslint.config.js",
     "./vitest.config.ts",
     "./vitest.projects.ts",
+    "./jest.config.ts",
+    "./scripts/*",
     "./internal/**/src",
     "./internal/**/tests",
     "./internal/**/fixtures",

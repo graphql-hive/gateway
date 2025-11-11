@@ -18,6 +18,7 @@ import {
   createServicePortOpt,
   getLocalhost,
   isDebug,
+  ResponseError,
 } from '@internal/testing';
 import { cancelledSignal } from '@internal/testing/vitest';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -595,14 +596,12 @@ export function createTenv(cwd: string): Tenv {
               } catch {
                 // not a GraphQL error, something weird happened
               }
-              const err = new Error(
-                `${res.status} ${res.statusText}\n${resText}`,
-              );
-              err.name = 'ResponseError';
-              if (resText.includes('Unexpected')) {
-                process.stderr.write(proc.getStd('both'));
-              }
-              throw err;
+              throw new ResponseError({
+                status: res.status,
+                statusText: res.statusText,
+                resText,
+                proc,
+              });
             }
             const resBody: ExecutionResult = await res.json();
             if (

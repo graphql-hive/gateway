@@ -185,7 +185,7 @@ for (const [name, configure] of Object.entries({
             addedToPayload: true,
             'hmac-signature': hashSHA256(secret, upstreamReqBody),
           },
-          query: '{__typename hello}',
+          query: expect.stringContaining('{__typename hello}'),
         });
       });
 
@@ -224,7 +224,7 @@ for (const [name, configure] of Object.entries({
             // addedToPayload: true, not added by other plugin
             'hmac-signature': hashSHA256(secret, upstreamReqBody),
           },
-          query: '{__typename hello}',
+          query: expect.stringContaining('{__typename hello}'),
         });
       });
 
@@ -264,7 +264,7 @@ for (const [name, configure] of Object.entries({
           extensions: {
             [customExtensionName]: hashSHA256(secret, upstreamReqBody),
           },
-          query: '{__typename hello}',
+          query: expect.stringContaining('{__typename hello}'),
         });
       });
 
@@ -299,7 +299,7 @@ for (const [name, configure] of Object.entries({
             name === 'as proxy' ? 1 : 0
           ]![0].params;
         expect(upstreamReqParams).toEqual({
-          query: '{__typename hello}',
+          query: expect.stringContaining('{__typename hello}'),
         });
       });
     });

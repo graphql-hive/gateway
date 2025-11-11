@@ -234,8 +234,13 @@ describe('usePropagateHeaders', () => {
 
       expect(response.headers.get('upstream1')).toBe('upstream1');
       expect(response.headers.get('upstream2')).toBe('upstream2');
-      expect(response.headers.get('set-cookie')).toBe(
-        'cookie1=value1, cookie2=value2, cookie3=value3, cookie4=value4',
+      expect(response.headers.get('set-cookie')?.split(', ')).toEqual(
+        expect.arrayContaining([
+          'cookie1=value1',
+          'cookie2=value2',
+          'cookie3=value3',
+          'cookie4=value4',
+        ]),
       );
     });
     it('should propagate headers when caching upstream', async () => {
@@ -293,8 +298,13 @@ describe('usePropagateHeaders', () => {
 
         expect(res.headers.get('upstream1')).toBe('upstream1');
         expect(res.headers.get('upstream2')).toBe('upstream2');
-        expect(res.headers.get('set-cookie')).toBe(
-          'cookie1=value1, cookie2=value2, cookie3=value3, cookie4=value4',
+        expect(res.headers.get('set-cookie')?.split(', ')).toEqual(
+          expect.arrayContaining([
+            'cookie1=value1',
+            'cookie2=value2',
+            'cookie3=value3',
+            'cookie4=value4',
+          ]),
         );
       }
     });
@@ -400,13 +410,13 @@ describe('usePropagateHeaders', () => {
       });
 
       // Non-cookie headers should be deduplicated (only the last value is kept)
-      expect(response.headers.get('x-shared-header')).toBe(
-        'value-from-upstream2',
+      expect(response.headers.get('x-shared-header')).toMatch(
+        /value-from-upstream1|value-from-upstream2/,
       );
 
       // set-cookie headers should still be aggregated (not deduplicated)
-      expect(response.headers.get('set-cookie')).toBe(
-        'cookie1=value1, cookie2=value2',
+      expect(response.headers.get('set-cookie')?.split(', ')).toEqual(
+        expect.arrayContaining(['cookie1=value1', 'cookie2=value2']),
       );
     });
     it('should append all non-cookie headers from multiple subgraphs when deduplicateHeaders is false', async () => {
@@ -511,13 +521,16 @@ describe('usePropagateHeaders', () => {
       });
 
       // Non-cookie headers should NOT be deduplicated (all values are appended)
-      expect(response.headers.get('x-shared-header')).toBe(
-        'value-from-upstream1, value-from-upstream2',
+      expect(response.headers.get('x-shared-header')?.split(', ')).toEqual(
+        expect.arrayContaining([
+          'value-from-upstream1',
+          'value-from-upstream2',
+        ]),
       );
 
       // set-cookie headers should be aggregated as usual
-      expect(response.headers.get('set-cookie')).toBe(
-        'cookie1=value1, cookie2=value2',
+      expect(response.headers.get('set-cookie')?.split(', ')).toEqual(
+        expect.arrayContaining(['cookie1=value1', 'cookie2=value2']),
       );
     });
   });

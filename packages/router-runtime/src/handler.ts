@@ -1,0 +1,118 @@
+import { QueryPlan } from '@graphql-hive/router-query-planner';
+import {
+  handleFederationSupergraph,
+  type UnifiedGraphHandlerOpts,
+  type UnifiedGraphHandlerResult,
+} from '@graphql-mesh/fusion-runtime';
+import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import { defaultPrintFn } from '@graphql-tools/executor-common';
+import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { BREAK, DocumentNode, visit } from 'graphql';
+import { executeQueryPlan } from './executor';
+import { getLazyFactory, getLazyValue } from './utils';
+
+export function unifiedGraphHandler(
+  opts: UnifiedGraphHandlerOpts,
+): UnifiedGraphHandlerResult {
+  // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
+  const getSubgraphSchema = getLazyFactory(
+    () => handleFederationSupergraph(opts).getSubgraphSchema,
+  );
+
+  const getQueryPlanner = getLazyValue(() => {
+    const moduleName = '@graphql-hive/router-query-planner';
+    const supergraphSdl = opts.getUnifiedGraphSDL();
+    return import(moduleName).then(
+      ({ QueryPlanner }: typeof import('@graphql-hive/router-query-planner')) =>
+        new QueryPlanner(supergraphSdl),
+    );
+  });
+
+  const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
+  const defaultExecutor = getLazyFactory(() =>
+    createDefaultExecutor(supergraphSchema),
+  );
+
+  const documentOperationPlanCache = new WeakMap<
+    DocumentNode,
+    Map<string | null, MaybePromise<QueryPlan>>
+  >();
+  function planDocument(document: DocumentNode, operationName: string | null) {
+    let operationCache = documentOperationPlanCache.get(document);
+
+    // we dont need to worry about releasing values. the map values in weakmap
+    // will all be released when document node is GCed
+    if (operationCache) {
+      const plan = operationCache.get(operationName);
+      if (plan) {
+        return plan;
+      }
+    } else {
+      operationCache = new Map<string, MaybePromise<QueryPlan>>();
+      documentOperationPlanCache.set(document, operationCache);
+    }
+
+    const plan = handleMaybePromise(getQueryPlanner, (qp) =>
+      qp.plan(defaultPrintFn(document), operationName).then((queryPlan) => {
+        operationCache.set(operationName, queryPlan);
+        return queryPlan;
+      }),
+    );
+    operationCache.set(operationName, plan);
+    return plan;
+  }
+
+  return {
+    unifiedGraph: supergraphSchema,
+    getSubgraphSchema,
+    executor(executionRequest) {
+      if (isIntrospection(executionRequest.document)) {
+        return defaultExecutor(executionRequest);
+      }
+      return handleMaybePromise(
+        () =>
+          planDocument(
+            executionRequest.document,
+            executionRequest.operationName || null,
+          ),
+        (queryPlan) =>
+          executeQueryPlan({
+            supergraphSchema,
+            executionRequest,
+            onSubgraphExecute: opts.onSubgraphExecute,
+            queryPlan,
+          }),
+      );
+    },
+  };
+}
+
+/**
+ * Decides if the query is an introspection query by:
+ * - checking if it contains __schema or __type fields or;
+ * - checking if it only queries for __typename fields on the Query type.
+ */
+function isIntrospection(document: DocumentNode): boolean {
+  let onlyQueryTypenameFields = false;
+  let containsIntrospectionField = false;
+  visit(document, {
+    // @ts-expect-error we dont have to return anything aside from break
+    OperationDefinition(node) {
+      for (const sel of node.selectionSet.selections) {
+        if (sel.kind !== 'Field') return BREAK;
+        if (sel.name.value === '__schema' || sel.name.value === '__type') {
+          containsIntrospectionField = true;
+          return BREAK;
+        }
+        if (sel.name.value === '__typename') {
+          onlyQueryTypenameFields = true;
+        } else {
+          onlyQueryTypenameFields = false;
+          return BREAK;
+        }
+      }
+    },
+  });
+  return containsIntrospectionField || onlyQueryTypenameFields;
+}

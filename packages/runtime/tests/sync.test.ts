@@ -4,7 +4,10 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import { composeLocalSchemasWithApollo } from '@internal/testing';
+import {
+  composeLocalSchemasWithApollo,
+  usingHiveRouterRuntime,
+} from '@internal/testing';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -53,17 +56,31 @@ it.skipIf(globalThis.Bun)(
       ],
       __experimental__batchExecution: false,
     });
+    // Make an initial request for planning
+    const query = /* GraphQL */ `
+      query {
+        hello
+      }
+    `;
+    if (usingHiveRouterRuntime()) {
+      const res = await gw.fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+        }),
+      });
+      await res.text();
+    }
     const res = gw.fetch('http://localhost:4000/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: /* GraphQL */ `
-          query {
-            hello
-          }
-        `,
+        query,
       }),
     });
     assertSyncValue(res);

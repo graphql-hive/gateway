@@ -21,6 +21,7 @@ export default defineConfig({
   external: [
     /node_modules\/graphql/, // will be packed as dep
     /node_modules\\graphql/, // will be packed as dep
+    '@graphql-hive/router-query-planner',
   ],
   plugins: [
     nodeResolve({ preferBuiltins: true }), // resolve node_modules and bundle them too

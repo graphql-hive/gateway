@@ -13,7 +13,10 @@ import {
   fakePromise,
   isAsyncIterable,
 } from '@graphql-tools/utils';
-import { assertSingleExecutionValue } from '@internal/testing';
+import {
+  assertSingleExecutionValue,
+  usingHiveRouterRuntime,
+} from '@internal/testing';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
   DeferredPromise,
@@ -95,6 +98,28 @@ describe('Polling', () => {
     }
 
     function getFetchedTimeFromResolvers() {
+      if (usingHiveRouterRuntime()) {
+        return handleMaybePromise(
+          () => manager.getExecutor(),
+          (executor) =>
+            handleMaybePromise(
+              () =>
+                executor!({
+                  document: parse(/* GraphQL */ `
+                    query {
+                      time
+                    }
+                  `),
+                }),
+              (result) => {
+                if (isAsyncIterable(result)) {
+                  throw new Error('Unexpected async iterable');
+                }
+                return new Date(result.data.time);
+              },
+            ),
+        );
+      }
       return handleMaybePromise(
         () => manager.getUnifiedGraph(),
         (schema) =>
@@ -226,6 +251,20 @@ describe('Polling', () => {
       return lastFetchedDate;
     }
     async function getFetchedTimeFromResolvers() {
+      if (usingHiveRouterRuntime()) {
+        const executor = await manager.getExecutor();
+        const result = await executor!({
+          document: parse(/* GraphQL */ `
+            query {
+              time
+            }
+          `),
+        });
+        if (isAsyncIterable(result)) {
+          throw new Error('Unexpected async iterable');
+        }
+        return new Date(result.data.time);
+      }
       const schema = await manager.getUnifiedGraph();
       const result = await normalizedExecutor({
         schema,

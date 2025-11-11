@@ -1,6 +1,7 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
 import { useAWSSigv4 } from '@graphql-hive/plugin-aws-sigv4';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
@@ -79,7 +80,10 @@ describe('AWS Sigv4', () => {
           // s3 and eu-central-1 extracted from the URL
           'Credential=AKIAIOSFODNN7EXAMPLE/20151229/eu-central-1/s3/aws4_request',
           'SignedHeaders=accept;content-length;content-type;date;host;x-amz-content-sha256;x-amz-date',
-          'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
+          usingHiveRouterRuntime()
+            ? // different body hash due to different query planner implementations
+              'Signature=613f7d53223adaf9bda8658e78ba65fc5516147e781c5a5551d1c8a93daa95ed'
+            : 'Signature=80917aae9a6fcd148c4db418f37bcdc303143dba565be0c0c37bff19710a6f23',
         ].join(', '),
     );
   });

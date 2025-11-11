@@ -1,7 +1,7 @@
 import cluster from 'node:cluster';
 import { lstat, watch as watchFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
-import { Option } from '@commander-js/extra-typings';
+import { Command, Option } from '@commander-js/extra-typings';
 import {
   createGatewayRuntime,
   createLoggerFromLogging,
@@ -16,7 +16,7 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
 import { loadTypedefs } from '@graphql-tools/load';
 import { asArray, isValidPath } from '@graphql-tools/utils';
-import { getNodeEnv } from '~internal/env';
+import { getEnvBool, getNodeEnv } from '~internal/env';
 import {
   defaultOptions,
   type AddCommand,
@@ -49,6 +49,22 @@ export const addCommand: AddCommand = (ctx, cli) =>
         'The URL of the managed federation up link. When retrying after a failure, you should cycle through the default up links using this option.',
       ).env('APOLLO_SCHEMA_CONFIG_DELIVERY_ENDPOINT'),
     )
+    .addOption(
+      new Option(
+        '--hive-router-runtime',
+        'Use the Hive Router runtime for query planning and execution (env: HIVE_ROUTER_RUNTIME)',
+      ).env('HIVE_ROUTER_RUNTIME'),
+    )
+    .on('optionEnv:hive-router-runtime', function (this: Command) {
+      // we need this because commanderjs only checks for the existence of the
+      // variable, and not whether it is truthy (HIVE_ROUTER_RUNTIME=0 would be still true)
+      // TODO: this should be done in commanderjs itself, raise an issue
+      this.setOptionValueWithSource(
+        'hiveRouterRuntime', // must be camelCase
+        getEnvBool('HIVE_ROUTER_RUNTIME'),
+        'env',
+      );
+    })
     .action(async function supergraph(schemaPathOrUrl) {
       const {
         opentelemetry,
@@ -242,6 +258,20 @@ export const addCommand: AddCommand = (ctx, cli) =>
           return [...builtinPlugins, ...userPlugins];
         },
       };
+      if (opts.hiveRouterRuntime && !config.unifiedGraphHandler) {
+        ctx.log.warn('Using Hive Router Runtime');
+        try {
+          ctx.log.debug('Loading @graphql-hive/router-runtime package');
+          const moduleName = '@graphql-hive/router-runtime';
+          const { unifiedGraphHandler } = await import(moduleName);
+          config.unifiedGraphHandler ||= unifiedGraphHandler;
+        } catch (e) {
+          ctx.log.warn(
+            'Could not load the @graphql-hive/router-runtime package. Please install it to use the Router Runtime.' +
+              ' Falling back to the default runtime.',
+          );
+        }
+      }
       if (hivePersistedDocumentsEndpoint) {
         const token =
           hivePersistedDocumentsToken ||

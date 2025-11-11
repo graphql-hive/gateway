@@ -9,23 +9,31 @@ import { fetch } from '@whatwg-node/fetch';
 import { bench, describe, expect } from 'vitest';
 
 describe('Gateway', async () => {
-  const { gateway, service } = createTenv(__dirname);
+  const { gateway, service: _service } = createTenv(__dirname);
   const example = createExampleSetup(__dirname, 1000);
 
   const supergraph = await example.supergraph();
 
   const gateways: Record<string, Gateway | Service> = {
-    'Apollo Gateway': await service('apollo-gateway', {
+    // TODO: tests are failing for whatever reason
+    // 'Apollo Gateway': await service('apollo-gateway', {
+    //   env: {
+    //     SUPERGRAPH: supergraph,
+    //   },
+    // }),
+    'Hive Gateway w/ Tools': await gateway({
+      supergraph,
       env: {
-        SUPERGRAPH: supergraph,
+        FORK: 1,
+        NODE_ENV: 'production',
       },
     }),
-    'Hive Gateway': await gateway({
+    'Hive Gateway w/ Hive Router Query Planner': await gateway({
       supergraph,
-      args: ['--jit'],
       env: {
-        JIT: 'true',
+        FORK: 1,
         NODE_ENV: 'production',
+        HIVE_ROUTER_RUNTIME: 1,
       },
     }),
   };

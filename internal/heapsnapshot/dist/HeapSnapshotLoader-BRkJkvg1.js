@@ -4160,6 +4160,119 @@ var HeapSnapshot$1 = /*#__PURE__*/Object.freeze({
   serializeUIString: serializeUIString
 });
 
+const kFakePromise = Symbol.for('@whatwg-node/promise-helpers/FakePromise');
+function isPromise(value) {
+    return value?.then != null;
+}
+function isActualPromise(value) {
+    const maybePromise = value;
+    return maybePromise && maybePromise.then && maybePromise.catch && maybePromise.finally;
+}
+function fakePromise(value) {
+    if (value && isActualPromise(value)) {
+        return value;
+    }
+    if (isPromise(value)) {
+        return {
+            then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
+            catch: reject => fakePromise(value.then(res => res, reject)),
+            finally: cb => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
+            [Symbol.toStringTag]: 'Promise',
+        };
+    }
+    // Write a fake promise to avoid the promise constructor
+    // being called with `new Promise` in the browser.
+    return {
+        then(resolve) {
+            if (resolve) {
+                try {
+                    return fakePromise(resolve(value));
+                }
+                catch (err) {
+                    return fakeRejectPromise(err);
+                }
+            }
+            return this;
+        },
+        catch() {
+            return this;
+        },
+        finally(cb) {
+            if (cb) {
+                try {
+                    return fakePromise(cb()).then(() => value, () => value);
+                }
+                catch (err) {
+                    return fakeRejectPromise(err);
+                }
+            }
+            return this;
+        },
+        [Symbol.toStringTag]: 'Promise',
+        __fakePromiseValue: value,
+        [kFakePromise]: 'resolved',
+    };
+}
+function fakeRejectPromise(error) {
+    return {
+        then(_resolve, reject) {
+            if (reject) {
+                try {
+                    return fakePromise(reject(error));
+                }
+                catch (err) {
+                    return fakeRejectPromise(err);
+                }
+            }
+            return this;
+        },
+        catch(reject) {
+            if (reject) {
+                try {
+                    return fakePromise(reject(error));
+                }
+                catch (err) {
+                    return fakeRejectPromise(err);
+                }
+            }
+            return this;
+        },
+        finally(cb) {
+            if (cb) {
+                try {
+                    cb();
+                }
+                catch (err) {
+                    return fakeRejectPromise(err);
+                }
+            }
+            return this;
+        },
+        __fakeRejectError: error,
+        [Symbol.toStringTag]: 'Promise',
+        [kFakePromise]: 'rejected',
+    };
+}
+function promiseLikeFinally(value, onFinally) {
+    if ('finally' in value) {
+        return value.finally(onFinally);
+    }
+    return value.then(res => {
+        const finallyRes = onFinally();
+        return isPromise(finallyRes) ? finallyRes.then(() => res) : res;
+    }, err => {
+        const finallyRes = onFinally();
+        if (isPromise(finallyRes)) {
+            return finallyRes.then(() => {
+                throw err;
+            });
+        }
+        else {
+            throw err;
+        }
+    });
+}
+
 class HeapSnapshotWorkerDispatcher {
   // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -4426,7 +4539,7 @@ class HeapSnapshotLoader {
   }
   #fetchChunk() {
     if (this.#buffer.length > 0) {
-      return Promise.resolve(this.#buffer.shift());
+      return fakePromise(this.#buffer.shift());
     }
     const { promise, resolve } = withResolvers();
     this.#dataCallback = resolve;

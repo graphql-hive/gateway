@@ -141,3 +141,29 @@ export function getNodeVer(): {
   const [major, minor, patch] = process.versions.node.split('.').map(Number);
   return { major: major || NaN, minor: minor || NaN, patch: patch || NaN };
 }
+
+/**
+ * Whether the federation query planner is using Hive Router node-addon for query planning.
+ * @experimental
+ */
+export function usingHiveRouterRuntime(): boolean {
+  // we dont use getEnvBool here because pkgroll will remove dead code
+  // in fusion-runtime since we are hard-coding the env var to 0 during build
+  // see fusion-runtime/package.json build script
+  return (
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === '1' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 't' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'true' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'y' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'yes' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'on' ||
+    // @ts-expect-error pkgroll needs dot access
+    process.env.HIVE_ROUTER_RUNTIME === 'enabled'
+  );
+}

@@ -18,18 +18,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_name:
-          - auto-type-merging
-          - federation-example
-          - federation-mixed
-          - federation-subscriptions-passthrough
-          - opentelemetry
-          - programmatic-batching
-          - logger
+        test:
+          - name: auto-type-merging
+            hive-router-runtime: 0
+          - name: federation-example
+            hive-router-runtime: 0
+          - name: federation-example
+            hive-router-runtime: 1
+          - name: federation-mixed
+            hive-router-runtime: 0
+          - name: federation-subscriptions-passthrough
+            hive-router-runtime: 0
+          - name: opentelemetry
+            hive-router-runtime: 0
+          - name: programmatic-batching
+            hive-router-runtime: 0
+          - name: logger
+            hive-router-runtime: 0
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
-    name: ${{matrix.e2e_runner}} / ${{matrix.test_name}}
+    name: ${{matrix.e2e_runner}} / ${{matrix.test.name}} ${{ matrix.test.hive-router-runtime && 'with hive router runtime' || '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,13 +68,14 @@ jobs:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
       - name: Test
         env:
+          HIVE_ROUTER_RUNTIME: ${{matrix.test.hive-router-runtime}}
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
-        run: yarn test:mem ${{matrix.test_name}}
+        run: yarn test:mem ${{matrix.test.name}}
       - name: Upload heap snapshots
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: ${{matrix.test_name}}-heap-snapshots
+          name: ${{matrix.test.name}}-heap-snapshots
           path: |
-            e2e/${{matrix.test_name}}/*.heapsnapshot
+            e2e/${{matrix.test.name}}/*.heapsnapshot
             packages/logger/tests/*.heapsnapshot

@@ -1,7 +1,9 @@
 import type { Logger } from '@graphql-hive/logger';
-import type {
-  TransportContext,
-  TransportEntry,
+import { unifiedGraphHandler as routerUnifiedGraphHandler } from '@graphql-hive/router-runtime';
+import {
+  defaultPrintFn,
+  type TransportContext,
+  type TransportEntry,
 } from '@graphql-mesh/transport-common';
 import type { OnDelegateHook } from '@graphql-mesh/types';
 import { dispose, isDisposable } from '@graphql-mesh/utils';
@@ -26,9 +28,10 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
+import { usingHiveRouterRuntime } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
-import { buildASTSchema, buildSchema, isSchema, print } from 'graphql';
-import { handleFederationSupergraph } from './federation/supergraph';
+import { buildASTSchema, buildSchema, isSchema } from 'graphql';
+import { handleFederationSupergraph as stitchingUnifiedGraphHandler } from './federation/supergraph';
 import {
   compareSchemas,
   getOnSubgraphExecute,
@@ -73,6 +76,7 @@ export type UnifiedGraphHandler = (
 
 export interface UnifiedGraphHandlerOpts {
   unifiedGraph: GraphQLSchema;
+  getUnifiedGraphSDL(): string;
   additionalTypeDefs?: TypeSource;
   additionalResolvers?: IResolvers<unknown, any> | IResolvers<unknown, any>[];
   onSubgraphExecute: ReturnType<typeof getOnSubgraphExecute>;
@@ -92,7 +96,7 @@ export interface UnifiedGraphHandlerResult {
   unifiedGraph: GraphQLSchema;
   executor?: Executor;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
-  inContextSDK: any;
+  inContextSDK?: any;
 }
 
 export interface UnifiedGraphManagerOptions<TContext> {
@@ -176,7 +180,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
     this.handleUnifiedGraph =
-      opts.handleUnifiedGraph || handleFederationSupergraph;
+      opts.handleUnifiedGraph ||
+      (usingHiveRouterRuntime()
+        ? routerUnifiedGraphHandler
+        : stitchingUnifiedGraphHandler);
     this.instrumentation = opts.instrumentation ?? (() => undefined);
     this.onSubgraphExecuteHooks = opts?.onSubgraphExecuteHooks || [];
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
@@ -278,16 +285,10 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         }
         return this.unifiedGraph;
       }
+      let serializedUnifiedGraph: string | undefined;
       if (!doNotCache && this.opts.transportContext?.cache) {
-        let serializedUnifiedGraph: string | undefined;
-        if (typeof loadedUnifiedGraph === 'string') {
-          serializedUnifiedGraph = loadedUnifiedGraph;
-        } else if (isSchema(loadedUnifiedGraph)) {
-          serializedUnifiedGraph =
-            printSchemaWithDirectives(loadedUnifiedGraph);
-        } else if (isDocumentNode(loadedUnifiedGraph)) {
-          serializedUnifiedGraph = print(loadedUnifiedGraph);
-        }
+        serializedUnifiedGraph =
+          serializeLoadedUnifiedGraph(loadedUnifiedGraph);
         if (serializedUnifiedGraph != null) {
           try {
             const ttl = this.opts.pollingInterval
@@ -333,6 +334,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           ensuredSchema,
           this.opts.transportEntryAdditions,
         );
+
       const {
         unifiedGraph: newUnifiedGraph,
         inContextSDK,
@@ -340,6 +342,11 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         executor,
       } = this.handleUnifiedGraph({
         unifiedGraph: ensuredSchema,
+        getUnifiedGraphSDL() {
+          serializedUnifiedGraph ||=
+            serializeLoadedUnifiedGraph(loadedUnifiedGraph);
+          return serializedUnifiedGraph;
+        },
         additionalTypeDefs: this.opts.additionalTypeDefs,
         additionalResolvers: this.opts.additionalResolvers,
         onSubgraphExecute(subgraphName, execReq) {
@@ -575,4 +582,16 @@ function disposeAll(disposables: unknown[]) {
     return disposalJobs[0];
   }
   return Promise.all(disposalJobs).then(() => {});
+}
+
+function serializeLoadedUnifiedGraph(
+  loadedUnifiedGraph: string | GraphQLSchema | DocumentNode,
+): string {
+  if (typeof loadedUnifiedGraph === 'string') {
+    return loadedUnifiedGraph;
+  }
+  if (isSchema(loadedUnifiedGraph)) {
+    return printSchemaWithDirectives(loadedUnifiedGraph);
+  }
+  return defaultPrintFn(loadedUnifiedGraph);
 }

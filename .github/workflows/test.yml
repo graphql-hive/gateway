@@ -33,7 +33,11 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Test
+      - name: Test with Stitching Runtime
+        run: yarn test
+      - name: Test with Router Runtime
+        env:
+          HIVE_ROUTER_RUNTIME: 1
         run: yarn test
 
   unit-bun:
@@ -46,8 +50,16 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Test
+      - name: Test with Stitching Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: yarn test:bun
+      - name: Test with Router Runtime
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        env:
+          HIVE_ROUTER_RUNTIME: 1
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -72,8 +84,16 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Run Tests
+      - name: Test with Stitching Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: yarn test:leaks
+      - name: Test with Router Runtime
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        env:
+          HIVE_ROUTER_RUNTIME: 1
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -89,48 +109,68 @@ jobs:
           - workflow-name: Node 20 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
+            hive-router-runtime: 0
             node-version: 20
           - workflow-name: Node 22 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
+            hive-router-runtime: 0
             node-version: 22
           - workflow-name: Node 24 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
+            hive-router-runtime: 0
             node-version: 24
           - workflow-name: Node 25 on Ubuntu
             os: ubuntu-latest
             gateway-runner: node
+            hive-router-runtime: 0
+            node-version: 25
+          - workflow-name: Node 25 on Ubuntu with Router Runtime
+            os: ubuntu-latest
+            gateway-runner: node
+            hive-router-runtime: 1
             node-version: 25
 
           # Node on Docker
           - workflow-name: Node Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: docker
+            hive-router-runtime: 0
 
           # Node Binary
           - workflow-name: Node Binary on Ubuntu
             os: ubuntu-latest
             gateway-runner: bin
+            hive-router-runtime: 0
           - workflow-name: Node Binary on Windows
             os: windows-latest
             gateway-runner: bin
+            hive-router-runtime: 0
 
           # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
           #   os: macos-14 # MacOS Arm64
           #   gateway-runner: bin
+          #   hive-router-runtime: 0
           # - workflow-name: Node Binary on MacOS x86_64
           #   os: macos-13 # MacOS x86_64
           #   gateway-runner: bin
+          #   hive-router-runtime: 0
 
           # Bun
           - workflow-name: Bun on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun
+            hive-router-runtime: 0
+          - workflow-name: Bun on Ubuntu with Router Runtime
+            os: ubuntu-latest
+            gateway-runner: bun
+            hive-router-runtime: 1
           - workflow-name: Bun Docker on Ubuntu
             os: ubuntu-latest
             gateway-runner: bun-docker
+            hive-router-runtime: 0
 
     name: E2E / ${{matrix.setup.workflow-name}}
     steps:
@@ -208,6 +248,7 @@ jobs:
           max_attempts: 3
           command: yarn test:e2e
         env:
+          HIVE_ROUTER_RUNTIME: ${{matrix.setup.hive-router-runtime}}
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
           E2E_TEST_APOLLO_GRAPH_REF: ${{secrets.E2E_TEST_APOLLO_GRAPH_REF}}
           E2E_TEST_APOLLO_KEY: ${{secrets.E2E_TEST_APOLLO_KEY}}

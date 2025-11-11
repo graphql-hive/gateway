@@ -1,4 +1,5 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { describe, expect, it } from 'vitest';
 
 const AWS_ACCESS_KEY_ID = 'AKIAIOSFODNN7EXAMPLE';
@@ -63,9 +64,13 @@ describe('AWS Sigv4', () => {
       `,
     });
     expect(result).toEqual({
-      data: {
-        hello: null,
-      },
+      ...(usingHiveRouterRuntime()
+        ? {}
+        : {
+            data: {
+              hello: null,
+            },
+          }),
       errors: [
         {
           message: 'Expected access key AKIAIOSFODNN7EXAMPLE, but got invalid',
