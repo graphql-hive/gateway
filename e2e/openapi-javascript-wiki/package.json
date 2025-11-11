@@ -2,7 +2,7 @@
   "name": "@e2e/openapi-javascript-wiki",
   "private": true,
   "dependencies": {
-    "@graphql-mesh/compose-cli": "^1.5.2",
+    "@graphql-mesh/compose-cli": "^1.5.3",
     "@omnigraph/openapi": "^0.109.23",
     "graphql": "^16.12.0",
     "moment": "^2.30.1",
