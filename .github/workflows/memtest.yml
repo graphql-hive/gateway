@@ -20,21 +20,21 @@ jobs:
       matrix:
         test:
           - name: auto-type-merging
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: federation-example
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: federation-example
-            hive-router-runtime: true
+            hive-router-runtime: 1
           - name: federation-mixed
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: federation-subscriptions-passthrough
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: opentelemetry
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: programmatic-batching
-            hive-router-runtime: false
+            hive-router-runtime: 0
           - name: logger
-            hive-router-runtime: false
+            hive-router-runtime: 0
         e2e_runner:
           - node
           # - bun TODO: get memory snaps and heap sampling for bun. is it even necessary?
@@ -66,11 +66,9 @@ jobs:
         continue-on-error: true
         with:
           key: docker-images-${{ runner.os }}-${{ steps.hash-docker-images.outputs.result }}
-      - if: matrix.test.hive-router-runtime == 'true'
-        name: Enable Hive Router Runtime
-        run: echo "HIVE_ROUTER_RUNTIME=1" >> $GITHUB_ENV
       - name: Test
         env:
+          HIVE_ROUTER_RUNTIME: ${{matrix.test.hive-router-runtime}}
           E2E_GATEWAY_RUNNER: ${{matrix.e2e_runner}}
         run: yarn test:mem ${{matrix.test.name}}
       - name: Upload heap snapshots
