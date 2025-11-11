@@ -659,6 +659,9 @@ export function createGatewayRuntime<
 
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
           fetchImplementation: configContext.fetch,
+
+          name: 'hive-gateway',
+          version: globalThis.__VERSION__,
         });
         unifiedGraphFetcher = () =>
           fetcher().then(({ supergraphSdl }) => supergraphSdl);
