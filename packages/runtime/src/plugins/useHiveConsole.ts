@@ -1,6 +1,7 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
 import { LegacyLogger, type Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
+import { MeshFetch } from '@graphql-mesh/types';
 import { isDebug } from '~internal/env';
 import { GatewayPlugin } from '../types';
 
@@ -33,15 +34,17 @@ export default function useHiveConsole<
   enabled,
   token,
   ...options
-}: HiveConsolePluginOptions & { log: Logger }): GatewayPlugin<
+}: HiveConsolePluginOptions & { log: Logger; fetch: MeshFetch }): GatewayPlugin<
   TPluginContext,
   TContext
 > {
-  const agent: HiveConsolePluginOptions['agent'] = {
+  const agent = {
     name: 'hive-gateway',
+    version: globalThis.__VERSION__,
+    fetch,
     logger: LegacyLogger.from(options.log),
     ...options.agent,
-  };
+  } as HiveConsolePluginOptions['agent'];
 
   // avoiding a breaking change by supporting the old usage option
   // which allowed passing an object to the clientInfo instead of a function
