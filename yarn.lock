@@ -3495,7 +3495,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/extended-validation@npm:^6.0.0, @envelop/extended-validation@npm:^6.1.0":
+"@envelop/extended-validation@npm:^6.0.0":
   version: 6.1.0
   resolution: "@envelop/extended-validation@npm:6.1.0"
   dependencies:
@@ -3508,19 +3508,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/generic-auth@npm:^10.0.1":
-  version: 10.0.1
-  resolution: "@envelop/generic-auth@npm:10.0.1"
+"@envelop/extended-validation@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@envelop/extended-validation@npm:7.0.0"
   dependencies:
-    "@envelop/extended-validation": "npm:^6.1.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    tslib: "npm:^2.5.0"
+  peerDependencies:
+    "@envelop/core": ^5.4.0
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/982fa72c6cf050cfb954f9d43b8afd3be76bd6b6e0d659a6b9bd5480ddf7daa5bbb4578ca6df435a18ca81851e0977eaed5f5c37a1e3db7874d58eaad6ff6637
+  languageName: node
+  linkType: hard
+
+"@envelop/generic-auth@npm:^11.0.0":
+  version: 11.0.0
+  resolution: "@envelop/generic-auth@npm:11.0.0"
+  dependencies:
+    "@envelop/extended-validation": "npm:^7.0.0"
     "@graphql-tools/executor": "npm:^1.3.6"
     "@graphql-tools/utils": "npm:^10.5.1"
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.3.2
+    "@envelop/core": ^5.4.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/0befd12cf9b9ced5a0df623573e41176f5f47bb09409ddefa258eaf9c3fe4d7e9e9da90c3dc8218c606c3e9428e83163125d847d72d6acdc832c270c189c59d0
+  checksum: 10c0/828af7788b94684744f7559ae40c7d2a5ceefbd2a356a30b1a6c39fb6d2e5f6e33671ee508791b2fb8364475f5314db26d2ebdd0b0f4c5f8dcf0e9f199f57e29
   languageName: node
   linkType: hard
 
@@ -4069,7 +4082,7 @@ __metadata:
     "@apollo/subgraph": "npm:^2.11.3"
     "@envelop/core": "npm:^5.4.0"
     "@envelop/disable-introspection": "npm:^8.0.0"
-    "@envelop/generic-auth": "npm:^10.0.1"
+    "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/core": "npm:^0.13.1"
     "@graphql-hive/logger": "workspace:^"
@@ -4708,7 +4721,7 @@ __metadata:
   resolution: "@graphql-mesh/plugin-jwt-auth@workspace:packages/plugins/jwt-auth"
   dependencies:
     "@envelop/core": "npm:^5.4.0"
-    "@envelop/generic-auth": "npm:^10.0.1"
+    "@envelop/generic-auth": "npm:^11.0.0"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
     "@graphql-yoga/plugin-jwt": "npm:^3.10.2"
