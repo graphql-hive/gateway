@@ -82,6 +82,7 @@
     "tar-fs": "3.1.1",
     "tmp": "0.2.4",
     "tsx": "patch:tsx@npm%3A4.20.3#~/.yarn/patches/tsx-npm-4.20.3-7de67a623f.patch",
-    "vite": "7.2.2"
+    "vite": "7.2.2",
+    "jest-environment-node@npm:30.2.0": "patch:jest-environment-node@npm%3A30.2.0#~/.yarn/patches/jest-environment-node-npm-30.2.0-b72db4433a.patch"
   }
 }

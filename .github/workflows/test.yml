@@ -84,10 +84,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{matrix.node-version}}
-      - name: Disable localStorage on Node 25
-        if: matrix.node-version == '25'
-        run: |
-          echo "NODE_OPTIONS=\"--no-webstorage\"" >> $GITHUB_ENV
       - name: Test with Stitching Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
