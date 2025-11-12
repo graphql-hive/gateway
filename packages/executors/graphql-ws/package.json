@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@graphql-tools/executor-common": "workspace:^",
-    "@graphql-tools/utils": "^10.10.1",
+    "@graphql-tools/utils": "^10.10.3",
     "@whatwg-node/disposablestack": "^0.0.6",
     "graphql-ws": "^6.0.6",
     "isows": "^1.0.7",

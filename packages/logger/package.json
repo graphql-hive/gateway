@@ -79,7 +79,7 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "@logtape/logtape": "^1.1.2",
+    "@logtape/logtape": "^1.2.0",
     "pino": "^9.13.0 || ^10.0.0"
   },
   "peerDependenciesMeta": {
@@ -94,7 +94,7 @@
     }
   },
   "devDependencies": {
-    "@logtape/logtape": "^1.1.2",
+    "@logtape/logtape": "^1.2.0",
     "@types/quick-format-unescaped": "^4.0.3",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/promise-helpers": "^1.3.2",
