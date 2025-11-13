@@ -19,8 +19,8 @@
     "start": "yarn build --watch"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.4",
-    "@tsconfig/recommended": "^1.0.12",
+    "@tsconfig/node18": "^18.2.5",
+    "@tsconfig/recommended": "^1.0.13",
     "@types/node": "^24.10.1",
     "pkgroll": "2.20.1",
     "typescript": "5.9.3"
