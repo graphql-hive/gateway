@@ -189,8 +189,8 @@ export function buildHTTPExecutor(
     request: ExecutionRequest<any, any, any, HTTPExecutorOptions>,
     excludeQuery?: boolean,
   ) => {
-    // @ts-expect-error Cloudflare Workers doesn't like the shared AbortController
-    if (!request.cf) {
+    // Cloudflare Workers doesn't like the shared AbortController
+    if (!request.context?.request?.cf) {
       disposeCtrl ||= new AbortController();
     }
     if (disposeCtrl?.signal.aborted) {
