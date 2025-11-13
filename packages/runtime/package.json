@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@envelop/core": "^5.4.0",
-    "@envelop/disable-introspection": "^8.0.0",
+    "@envelop/disable-introspection": "^9.0.0",
     "@envelop/generic-auth": "^11.0.0",
     "@envelop/instrumentation": "^1.0.0",
     "@graphql-hive/core": "^0.13.2",

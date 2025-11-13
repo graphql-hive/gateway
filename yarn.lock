@@ -3493,15 +3493,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/disable-introspection@npm:^8.0.0":
-  version: 8.0.0
-  resolution: "@envelop/disable-introspection@npm:8.0.0"
+"@envelop/disable-introspection@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@envelop/disable-introspection@npm:9.0.0"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.3.0
+    "@envelop/core": ^5.4.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/e82386ffa688a421ac863ccecf6536c5782d6ca231c7fae28f79536d489f991e83f8acd3c160d10f6585b9f39b3ff6aebb940ff65acb14c159c47fa0d7dd4018
+  checksum: 10c0/b3ab079960c8e711f1afc7aefbab33a9798160e9cd51761aeafd09bddfc9f57b363f1d77f4605f20167be8df17853d0326eb613f552654f4413f9ba8d1148b26
   languageName: node
   linkType: hard
 
@@ -4091,7 +4091,7 @@ __metadata:
   dependencies:
     "@apollo/subgraph": "npm:^2.11.3"
     "@envelop/core": "npm:^5.4.0"
-    "@envelop/disable-introspection": "npm:^8.0.0"
+    "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
     "@graphql-hive/core": "npm:^0.13.2"
