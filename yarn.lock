@@ -3293,7 +3293,7 @@ __metadata:
   resolution: "@e2e/operation-field-permissions@workspace:e2e/operation-field-permissions"
   dependencies:
     "@envelop/core": "npm:^5.4.0"
-    "@envelop/operation-field-permissions": "npm:^8.0.0"
+    "@envelop/operation-field-permissions": "npm:^9.0.0"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
     graphql: "npm:^16.12.0"
   languageName: unknown
@@ -3505,19 +3505,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/extended-validation@npm:^6.0.0":
-  version: 6.1.0
-  resolution: "@envelop/extended-validation@npm:6.1.0"
-  dependencies:
-    "@graphql-tools/utils": "npm:^10.0.0"
-    tslib: "npm:^2.5.0"
-  peerDependencies:
-    "@envelop/core": ^5.3.2
-    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/0b44a393e69dec354f6babd9f33d780d1256418dafb2953d54e187c8f7c3615c70b3bfa4aff834bff1d30783003c174f27afff17c180febf139c1336ccc91115
-  languageName: node
-  linkType: hard
-
 "@envelop/extended-validation@npm:^7.0.0":
   version: 7.0.0
   resolution: "@envelop/extended-validation@npm:7.0.0"
@@ -3585,17 +3572,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@envelop/operation-field-permissions@npm:^8.0.0":
-  version: 8.0.0
-  resolution: "@envelop/operation-field-permissions@npm:8.0.0"
+"@envelop/operation-field-permissions@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@envelop/operation-field-permissions@npm:9.0.0"
   dependencies:
-    "@envelop/extended-validation": "npm:^6.0.0"
+    "@envelop/extended-validation": "npm:^7.0.0"
     "@whatwg-node/promise-helpers": "npm:^1.2.4"
     tslib: "npm:^2.5.0"
   peerDependencies:
-    "@envelop/core": ^5.3.0
+    "@envelop/core": ^5.4.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/b9d0cdc8618083ed42b4a02a8fd9a63419f4bf7d2b856c99b0dea57f989347697dc62bc1a705d48ea97a808119e472d83903f556f6f1c19db473159eb3c70f3b
+  checksum: 10c0/e27c5ff3821270c598056ce260ee7633eac0c71d92baddb0068b412ae2243f22b19d41c718719b35e4362c1b465af6d0fd90f61751d9d6b3967fbb02f1000c6f
   languageName: node
   linkType: hard
 
