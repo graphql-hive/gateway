@@ -63,11 +63,12 @@
     "vitest": "3.2.4"
   },
   "resolutions": {
+    "graphql-yoga": "5.17.0-alpha-20251114095508-2f60bef8687586cf6bd70c56f5c2b127ea53f61f",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
-    "@graphql-tools/executor": "1.5.0-alpha-20251028202445-48fa8e9d55723fbb44d9d07fdcd9585d7c50607b",
-    "@graphql-tools/utils": "10.10.0-alpha-20251028202445-48fa8e9d55723fbb44d9d07fdcd9585d7c50607b",
+    "@graphql-tools/executor": "1.5.0-alpha-20251114103641-9f5dd54441b8068214cc1ae9afe2803485cf9d9d",
+    "@graphql-tools/utils": "10.11.0-alpha-20251114103641-9f5dd54441b8068214cc1ae9afe2803485cf9d9d",
     "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@vitest/snapshot": "patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch",
