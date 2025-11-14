@@ -120,54 +120,77 @@ type SamplingOptions =
       samplingRate?: number;
     };
 
-type OpentelemetrySetupOptions = TracingOptions &
-  SamplingOptions & {
-    /**
-     * The Resource that will be used to create the Trace Provider.
-     * Can be either a Resource instance, or an simple object with service name and version
-     */
-    resource?: Resource | { serviceName: string; serviceVersion: string };
-    /**
-     * The Context Manager to be used to track OTEL Context.
-     * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
-     */
-    contextManager: ContextManager | null;
-    /**
-     * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
-     */
-    propagators?: TextMapPropagator[];
-    /**
-     * The general limits of OTEL attributes.
-     */
-    generalLimits?: GeneralLimits;
-    /**
-     * The Logger to be used by this utility.
-     * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
-     */
-    log?: Logger;
-    /**
-     * Configure Opentelemetry `diag` API to use Gateway's logger.
-     *
-     * @default true
-     *
-     * Note: Logger configuration respects OTEL environment variables standard.
-     *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
-     */
-    configureDiagLogger?: boolean;
-  };
+type BaseOptions = {
+  /**
+   * The Resource that will be used to create the Trace Provider.
+   * Can be either a Resource instance, or an simple object with service name and version
+   */
+  resource?: Resource | { serviceName: string; serviceVersion: string };
+  /**
+   * The Context Manager to be used to track OTEL Context.
+   * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
+   */
+  contextManager: ContextManager | null;
+  /**
+   * A custom list of propagators that will replace the default ones (Trace Context and Baggage)
+   */
+  propagators?: TextMapPropagator[];
+  /**
+   * The general limits of OTEL attributes.
+   */
+  generalLimits?: GeneralLimits;
+  /**
+   * The Logger to be used by this utility.
+   * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
+   */
+  log?: Logger;
+  /**
+   * Configure Opentelemetry `diag` API to use Gateway's logger.
+   *
+   * @default true
+   *
+   * Note: Logger configuration respects OTEL environment variables standard.
+   *       This means that the logger will be enabled only if `OTEL_LOG_LEVEL` variable is set.
+   */
+  configureDiagLogger?: boolean;
 
+  /** @internal */
+  _initialization?: typeof initialized & { logAttributes: Attributes };
+};
+
+type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
+
+let initialized: false | { name: string; source: string } = false;
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
   const log = options.log || new Logger();
 
+  if (initialized) {
+    log.error(
+      `${initialized.name} integration has already been initialized by ${initialized.source}`,
+    );
+    throw new Error(
+      `${initialized.name} integration already initialized. See previous logs for more information`,
+    );
+  }
+
+  initialized = options._initialization || {
+    name: 'OpenTelemetry',
+    source: `\`openTelemetrySetup\` utility function call ${getStackTrace()}`,
+  };
+
   if (getEnvBool('OTEL_SDK_DISABLED')) {
     log.warn(
-      'OpenTelemetry integration is disabled because `OTEL_SDK_DISABLED` environment variable is truthy',
+      `${initialized.name} integration is disabled because \`OTEL_SDK_DISABLED\` environment variable is truthy`,
     );
     return;
   }
 
-  const logAttributes: Attributes = { registrationResults: {} };
-  let logMessage = 'OpenTelemetry integration is enabled';
+  const logAttributes: Attributes = {
+    ...options._initialization?.logAttributes,
+    registrationResults: {},
+  };
+
+  let logMessage = `${initialized.name} integration is enabled`;
 
   if (options.configureDiagLogger !== false) {
     // If the log level is not explicitly set, we use VERBOSE to let Hive Logger log level feature filter logs accordingly.
@@ -221,26 +244,21 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         logAttributes['console'] = true;
       }
 
-      const baseResource = resourceFromAttributes({
-        [ATTR_SERVICE_NAME]:
-          options.resource && 'serviceName' in options.resource
-            ? options.resource?.serviceName
-            : getEnvStr('OTEL_SERVICE_NAME') ||
-              '@graphql-hive/plugin-opentelemetry',
-        [ATTR_SERVICE_VERSION]:
-          options.resource && 'serviceVersion' in options.resource
-            ? options.resource?.serviceVersion
-            : getEnvStr('OTEL_SERVICE_VERSION') ||
-              globalThis.__OTEL_PLUGIN_VERSION__ ||
-              'unknown',
-        ['hive.gateway.version']: globalThis.__VERSION__,
-        ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
-      });
-
-      const resource =
-        options.resource && !('serviceName' in options.resource)
-          ? baseResource.merge(options.resource)
-          : baseResource;
+      const resource = createResource(
+        resourceFromAttributes({
+          [ATTR_SERVICE_NAME]:
+            getEnvStr('OTEL_SERVICE_NAME') ||
+            '@graphql-hive/plugin-opentelemetry',
+          [ATTR_SERVICE_VERSION]:
+            getEnvStr('OTEL_SERVICE_VERSION') ||
+            globalThis.__OTEL_PLUGIN_VERSION__ ||
+            'unknown',
+          ['hive.gateway.version']: globalThis.__VERSION__,
+          ['hive.otel.version']:
+            globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
+        }),
+        options.resource,
+      );
 
       logAttributes['resource'] = resource.attributes;
       logAttributes['sampling'] = options.sampler
@@ -300,51 +318,69 @@ export type HiveTracingOptions = { target?: string } & (
     }
 );
 
-export function hiveTracingSetup(
-  config: HiveTracingOptions & {
-    contextManager: ContextManager | null;
-    log?: Logger;
-  },
-) {
-  const log = config.log || new Logger();
-  config.target ??= getEnvStr('HIVE_TARGET');
+export type HiveTracingSetupOptions = BaseOptions &
+  HiveTracingOptions &
+  SamplingOptions &
+  TracerOptions;
 
-  if (!config.target) {
+export function hiveTracingSetup(options: HiveTracingSetupOptions) {
+  const log = options.log || new Logger();
+  options.target ??= getEnvStr('HIVE_TARGET');
+
+  if (!options.target) {
     throw new Error(
       'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
     );
   }
 
-  const logAttributes: Attributes = { target: config.target };
+  const logAttributes: Attributes = {
+    ...options._initialization?.logAttributes,
+    target: options.target,
+  };
 
-  if (!config.processor) {
-    config.accessToken ??=
+  if (!options.processor) {
+    options.accessToken ??=
       getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
 
-    if (!config.accessToken) {
+    if (!options.accessToken) {
       throw new Error(
         'You must specify the Hive Registry `accessToken`. Either provide `accessToken` option or `HIVE_ACCESS_TOKEN`/`HIVE_TRACE_ACCESS_TOKEN` environment variable.',
       );
     }
 
-    logAttributes['endpoint'] = config.endpoint;
-    logAttributes['batching'] = config.batching;
+    logAttributes['endpoint'] = options.endpoint;
+    logAttributes['batching'] = options.batching;
   }
 
   openTelemetrySetup({
+    ...options,
     log,
-    contextManager: config.contextManager,
-    resource: resourceFromAttributes({
-      'hive.target_id': config.target,
-    }),
+    resource: createResource(
+      resourceFromAttributes({
+        'hive.target_id': options.target,
+        [ATTR_SERVICE_NAME]: getEnvStr('OTEL_SERVICE_NAME') || 'hive-gateway',
+        [ATTR_SERVICE_VERSION]:
+          getEnvStr('OTEL_SERVICE_VERSION') ||
+          globalThis.__OTEL_PLUGIN_VERSION__ ||
+          'unknown',
+      }),
+      options.resource,
+    ),
     traces: {
       processors: [
-        new HiveTracingSpanProcessor(config as HiveTracingSpanProcessorOptions),
+        new HiveTracingSpanProcessor(
+          options as HiveTracingSpanProcessorOptions,
+        ),
       ],
+      spanLimits: options.spanLimits,
+      console: options.console,
+    },
+    _initialization: options._initialization || {
+      name: 'Hive Tracing',
+      source: `\`hiveTracingSetup\` utility function call ${getStackTrace()}`,
+      logAttributes,
     },
   });
-
-  log.info(logAttributes, 'Hive Tracing integration has been enabled');
 }
 
 export type BatchingConfig = boolean | BufferConfig;
@@ -362,4 +398,42 @@ function resolveBatchingConfig(
   } else {
     return new BatchSpanProcessor(exporter, value);
   }
+}
+
+function createResource(
+  baseResource: Resource,
+  userResource?: OpentelemetrySetupOptions['resource'],
+): Resource {
+  if (!userResource) {
+    return baseResource;
+  }
+
+  if ('serviceName' in userResource) {
+    return baseResource.merge(
+      resourceFromAttributes({
+        [ATTR_SERVICE_NAME]: userResource.serviceName,
+        [ATTR_SERVICE_VERSION]: userResource.serviceVersion,
+      }),
+    );
+  }
+
+  return baseResource.merge(userResource);
+}
+
+/**
+ * Returns the call site of the calling function and the upper stack trace.
+ */
+function getStackTrace(): string {
+  // slice(3) to remove the error message + getStackTrace() call + calling function call
+  return (new Error().stack ?? '').split('\n').slice(3).join('\n').trim();
+}
+
+/**
+ * Reset OpenTelemetry setup by disabling `trace`, `context` and `propagation` OpenTelemetry APIs.
+ */
+export function disable() {
+  trace.disable();
+  context.disable();
+  propagation.disable();
+  initialized = false;
 }

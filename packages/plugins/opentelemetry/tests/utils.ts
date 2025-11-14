@@ -32,6 +32,7 @@ import { createSchema, createYoga, type GraphQLParams } from 'graphql-yoga';
 import { expect } from 'vitest';
 import { hive } from '../src/api';
 import type { OpenTelemetryGatewayPluginOptions } from '../src/plugin';
+import * as otelSetup from '../src/setup';
 
 export async function buildTestGateway(
   options: {
@@ -338,6 +339,7 @@ export const disableAll = () => {
   diag.disable();
   logs.disable();
   hive.disable();
+  otelSetup.disable();
 };
 
 export class MockLogRecordExporter implements LogRecordExporter {
