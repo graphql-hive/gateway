@@ -1,5 +1,31 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.2.0
+### Minor Changes
+
+
+
+- [#1611](https://github.com/graphql-hive/gateway/pull/1611) [`6a64d1d`](https://github.com/graphql-hive/gateway/commit/6a64d1d52e8cb4d845aae9696e1811ded9dbdd03) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - It is now possible to fully configure the OpenTelemetry setup when using `hiveTracingSetup`. You can now provide a `resource` and a `samplingRate` (among other options).
+
+
+### Patch Changes
+
+
+
+- [#1683](https://github.com/graphql-hive/gateway/pull/1683) [`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.13.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.1) (from `^0.13.0`, in `dependencies`)
+
+
+- [#1691](https://github.com/graphql-hive/gateway/pull/1691) [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.13.2` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.2) (from `^0.13.1`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.3) (from `^10.10.1`, in `dependencies`)
+- Updated dependencies [[`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`a81b8b2`](https://github.com/graphql-hive/gateway/commit/a81b8b20ecdfda53fb77ae5fae3cbd508ab08936), [`ce83f35`](https://github.com/graphql-hive/gateway/commit/ce83f356cbeb2f8413689204275710e7d7a27822), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb)]:
+  - @graphql-hive/gateway-runtime@2.3.5
+  - @graphql-hive/logger@1.0.9
+  - @graphql-mesh/transport-common@1.0.12
+
 ## 1.1.2
 ### Patch Changes
 
