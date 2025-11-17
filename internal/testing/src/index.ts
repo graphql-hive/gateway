@@ -10,3 +10,4 @@ export * from './composeLocalSchemasWithApollo';
 export * from './graphql';
 export * from '@whatwg-node/promise-helpers';
 export * from './ResponseError';
+export * from './isolate';

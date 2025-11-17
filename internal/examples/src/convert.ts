@@ -3,6 +3,7 @@ import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { spawn, waitForPort } from '@internal/proc';
+import { isolate } from '@internal/testing';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
 import dedent from 'dedent';
 import { glob } from 'glob';
@@ -506,31 +507,7 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
   if (!config.skipTest) {
     console.log('Testing example...');
 
-    console.log('Hiding root node_modules and tsconfig.json');
-    const hiddenPrefix = 'HIDDEN_';
-    await Promise.all([
-      fs.rename(
-        path.join(__project, 'node_modules'),
-        path.join(__project, `${hiddenPrefix}node_modules`),
-      ),
-      fs.rename(
-        path.join(__project, 'tsconfig.json'),
-        path.join(__project, `${hiddenPrefix}tsconfig.json`),
-      ),
-    ]);
-    await using _ = asyncDefer(() => {
-      console.log('Restoring root node_modules and tsconfig.json');
-      return Promise.all([
-        fs.rename(
-          path.join(__project, `${hiddenPrefix}node_modules`),
-          path.join(__project, 'node_modules'),
-        ),
-        fs.rename(
-          path.join(__project, `${hiddenPrefix}tsconfig.json`),
-          path.join(__project, 'tsconfig.json'),
-        ),
-      ]);
-    });
+    await using _restore = await isolate({ log: true });
 
     {
       console.group('Testing codesandbox setup and starting Hive Gateway...');

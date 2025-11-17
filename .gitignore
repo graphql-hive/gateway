@@ -20,3 +20,6 @@ memtest-*.svg
 *.heapsnapshot
 *.heapprofile
 *.out
+
+# hidden during isolation testing (see internal/testing/src/isolate.ts)
+HIDDEN_node_modules/
