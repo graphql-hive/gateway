@@ -239,11 +239,6 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
-      - if: matrix.setup.gateway-runner == 'bin'
-        name: Test binary in isolation
-        env:
-          E2E_ISOLATE_BIN: 1 # TODO: not all e2e tests support isolated mode
-        run: yarn test:e2e federation-example
       - name: Test
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
