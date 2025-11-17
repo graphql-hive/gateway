@@ -9,14 +9,7 @@ import dedent from 'dedent';
 import { glob } from 'glob';
 import jscodeshift, { Collection } from 'jscodeshift';
 import { parser } from './parser';
-import {
-  asyncDefer,
-  copyMkdir,
-  defer,
-  exists,
-  loc,
-  writeFileMkdir,
-} from './utils';
+import { copyMkdir, defer, exists, loc, writeFileMkdir } from './utils';
 
 const j = jscodeshift.withParser(parser);
 

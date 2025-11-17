@@ -16,12 +16,6 @@ export function defer(cb: () => any) {
   };
 }
 
-export function asyncDefer(cb: () => Promise<any>) {
-  return {
-    [Symbol.asyncDispose]: cb,
-  };
-}
-
 /** Gets the Line Of Code numbers (with optional column number) in format `L0:0`. */
 export function loc(pathOrNode: ASTPath | ASTNode, includeColumn?: true) {
   const node = 'node' in pathOrNode ? pathOrNode.node : pathOrNode;
