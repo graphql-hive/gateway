@@ -18,6 +18,7 @@ import {
   createServicePortOpt,
   getLocalhost,
   isDebug,
+  isolate,
   ResponseError,
 } from '@internal/testing';
 import { cancelledSignal } from '@internal/testing/vitest';
@@ -554,6 +555,10 @@ export function createTenv(cwd: string): Tenv {
           break;
         }
         case 'bin': {
+          if (getEnvBool('E2E_ISOLATE_BIN')) {
+            const restore = await isolate({ log: true });
+            leftoverStack.use(restore);
+          }
           [proc, waitForExit] = await spawn(
             {
               signal: cancelledSignal,
