@@ -228,6 +228,11 @@ function packagejson() {
           // windows paths don't go in the package.json (just in case, even though we use "/" as pathSep)
           .replace(/\\/g, '/');
 
+        if (bundledFile === 'index.mjs') {
+          // there must be a "main" field for packed node modules in the binary to work
+          pkg.main = 'index.mjs';
+        }
+
         let entryPoint = './' + bundledFile;
         entryPoint = entryPoint.replace(/\.mjs$/, ''); // remove the mjs extension
         entryPoint = entryPoint.replace(/\/index$/, ''); // remove the trailing /index because we dont specify it on import (we don't do "import '@graphql-hive/gateway/index'")
