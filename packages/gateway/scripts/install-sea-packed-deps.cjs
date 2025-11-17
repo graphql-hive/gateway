@@ -9,7 +9,7 @@
     String(process.env['SEA_CLEAN_PACKED_DEPS']),
   );
   const isDebug = ['1', 'y', 'yes', 't', 'true'].includes(
-    String(process.env['DEBUG']),
+    String(process.env['DEBUG'] || process.env['SEA_DEBUG']),
   );
   /**
    * Will log only when DEBUG env is set to a truthy value.
