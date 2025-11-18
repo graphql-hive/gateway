@@ -113,8 +113,16 @@ export const resolve: module.ResolveHook = async (
       const resolved = resolveFilename(path.join(packedDepsPath, specifier));
       debug(`Possible packed dependency "${specifier}" to "${resolved}"`);
       return await nextResolve(fixSpecifier(resolved, context), context);
-    } catch {
-      // noop
+    } catch (e) {
+      if (
+        ['1', 't', 'true'].includes(
+          process.env['HIVE_IMPORTER_ONLY_PACKED_DEPS'] || '',
+        )
+      ) {
+        throw e; // the importer enforces using only packed deps, mainly used for testing. see single-binary-isolate.e2e.ts
+      } else {
+        // noop
+      }
     }
   }
 

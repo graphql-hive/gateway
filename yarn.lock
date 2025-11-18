@@ -3364,6 +3364,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/single-binary-isolate@workspace:e2e/single-binary-isolate":
+  version: 0.0.0-use.local
+  resolution: "@e2e/single-binary-isolate@workspace:e2e/single-binary-isolate"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation":
   version: 0.0.0-use.local
   resolution: "@e2e/subscriptions-cancellation@workspace:e2e/subscriptions-cancellation"
