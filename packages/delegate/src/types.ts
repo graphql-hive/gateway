@@ -10,13 +10,11 @@ import {
   GraphQLError,
   GraphQLFieldResolver,
   GraphQLNamedType,
-  GraphQLObjectType,
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLSchema,
   OperationTypeNode,
   SelectionSetNode,
-  VariableDefinitionNode,
 } from 'graphql';
 import { Subschema } from './Subschema.js';
 import {
@@ -96,22 +94,20 @@ export interface IDelegateRequestOptions<
   TArgs = Record<string, any>,
 > extends IDelegateToSchemaOptions<TContext, TArgs> {
   request: ExecutionRequest;
+  transformedSchema: GraphQLSchema;
 }
 
 export interface ICreateRequest {
   subgraphName: string | undefined;
-  sourceSchema?: GraphQLSchema;
-  sourceParentType?: GraphQLObjectType;
-  sourceFieldName?: string;
   fragments?: Record<string, FragmentDefinitionNode>;
-  variableDefinitions?: ReadonlyArray<VariableDefinitionNode>;
-  variableValues?: Record<string, any>;
-  targetOperation: OperationTypeNode;
   targetRootValue?: any;
+  targetOperation: OperationTypeNode;
   targetOperationName?: string;
   targetFieldName: string;
+  transformedSchema: GraphQLSchema;
   selectionSet?: SelectionSetNode;
   fieldNodes?: ReadonlyArray<FieldNode>;
+  args?: Record<string, any>;
   context?: any;
   info?: GraphQLResolveInfo;
 }

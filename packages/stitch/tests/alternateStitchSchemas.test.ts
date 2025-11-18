@@ -427,7 +427,10 @@ describe('optional arguments', () => {
     `,
     resolvers: {
       Query: {
-        test: (_root, args, _context) => args.arg === undefined,
+        test: (_root, args, _context) => {
+          console.log('args:', args);
+          return args.arg === undefined;
+        },
       },
     },
   });

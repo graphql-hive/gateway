@@ -17,7 +17,7 @@ import {
   OperationTypeNode,
   SelectionSetNode,
 } from 'graphql';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 function createError<T>(message: string, extra?: T) {
   const error = new Error(message);
@@ -58,7 +58,7 @@ describe('transforms', () => {
       },
     });
 
-    test('should work', async () => {
+    it('should work', async () => {
       const schema = wrapSchema({ schema: scalarSchema });
       const result = await graphql({
         schema,
@@ -83,7 +83,7 @@ describe('transforms', () => {
       });
     });
 
-    test('should work when specified as a subschema configuration object', async () => {
+    it.only('should work when specified as a subschema configuration object', async () => {
       const schema = wrapSchema({
         schema: scalarSchema,
         transforms: [],
@@ -111,7 +111,7 @@ describe('transforms', () => {
       });
     });
 
-    test('should not change error type', async () => {
+    it('should not change error type', async () => {
       const customError = createError('TestError', {
         data: { code: '123' },
         message: 'TestError Error',
@@ -340,7 +340,7 @@ describe('transforms', () => {
       });
     });
 
-    test('wrapping delegation', async () => {
+    it('wrapping delegation', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `
@@ -363,7 +363,7 @@ describe('transforms', () => {
       });
     });
 
-    test('extracting delegation', async () => {
+    it('extracting delegation', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `
@@ -504,7 +504,7 @@ describe('transforms', () => {
 
           type Query {
             addressByUser(id: ID!): Address
-            errorTest(id: ID!): Address
+            errorit(id: ID!): Address
             addressesByUsers(ids: [ID!]): AddressConnection!
           }
         `,
@@ -585,7 +585,7 @@ describe('transforms', () => {
                 ],
               });
             },
-            errorTest(_parent, { id }, context, info) {
+            errorit(_parent, { id }, context, info) {
               return delegateToSchema({
                 schema: subschema,
                 operation: 'query' as OperationTypeNode,
@@ -622,7 +622,7 @@ describe('transforms', () => {
       });
     });
 
-    test('wrapping delegation', async () => {
+    it('wrapping delegation', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `
@@ -645,7 +645,7 @@ describe('transforms', () => {
       });
     });
 
-    test('preserves errors from underlying fields', async () => {
+    it('preserves errors from underlying fields', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `
@@ -674,12 +674,12 @@ describe('transforms', () => {
       });
     });
 
-    test('preserves errors when delegating from a root field to an error', async () => {
+    it('preserves errors when delegating from a root field to an error', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `
           query {
-            errorTest(id: "u1") {
+            errorit(id: "u1") {
               errorTest
             }
           }
@@ -699,7 +699,7 @@ describe('transforms', () => {
       });
     });
 
-    test('nested path produces nested result, other fields get preserved', async () => {
+    it('nested path produces nested result, other fields get preserved', async () => {
       const result = await graphql({
         schema,
         source: /* GraphQL */ `

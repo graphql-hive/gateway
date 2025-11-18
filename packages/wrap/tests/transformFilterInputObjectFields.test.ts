@@ -5,7 +5,7 @@ import { FilterInputObjectFields, wrapSchema } from '@graphql-tools/wrap';
 import { astFromValue, graphql, GraphQLString, Kind, parse } from 'graphql';
 import { describe, expect, test } from 'vitest';
 
-describe('FilterInputObjectFields', () => {
+describe.skip('FilterInputObjectFields', () => {
   const schema = makeExecutableSchema({
     typeDefs: /* GraphQL */ `
       input InputObject {

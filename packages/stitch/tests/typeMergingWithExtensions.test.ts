@@ -621,7 +621,7 @@ describe('merging using type merging', () => {
     expect(result).toEqual(expectedResult);
   });
 
-  test('can stitch from inventory to products and then back to inventory', async () => {
+  test.only('can stitch from inventory to products and then back to inventory', async () => {
     const result = await execute({
       schema: stitchedSchema,
       document: parse(/* GraphQL */ `

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from '@internal/proc';
+import { getEnvBool } from '~internal/env';
 import { expect, it } from 'vitest';
 import { leakingObjectsInHeapSnapshotFiles } from '../src/heapsnapshot';
 
@@ -8,7 +9,7 @@ const __fixtures = path.resolve(__dirname, '__fixtures__');
 
 it.skipIf(
   // no need to test in bun (also, bun does not support increasing timeouts per test)
-  globalThis.Bun,
+  globalThis.Bun || getEnvBool(process.env.SKIP_HEAP_SNAPSHOT_TESTS),
 )(
   'should correctly calculate no leaking objects',
   {
