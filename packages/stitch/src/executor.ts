@@ -7,6 +7,7 @@ import { getFragmentsFromDocument } from '@graphql-tools/executor';
 import {
   collectFields,
   ExecutionRequest,
+  getArgumentValues,
   getDefinedRootType,
   getOperationASTFromRequest,
 } from '@graphql-tools/utils';
@@ -39,7 +40,15 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
     );
     const data: Record<string, any> = {};
     for (const [fieldName, fieldNodes] of fields) {
-      const responseKey = fieldNodes[0]?.alias?.value ?? fieldName;
+      const fieldNode = fieldNodes[0];
+      if (!fieldNode) {
+        continue;
+      }
+      const fieldInstance = rootType.getFields()[fieldName];
+      if (!fieldInstance) {
+        continue;
+      }
+      const responseKey = fieldNode.alias?.value ?? fieldName;
       const subschemaForField = subschemas.find((subschema) => {
         const subschemaSchema = isSubschemaConfig(subschema)
           ? subschema.schema
@@ -50,9 +59,15 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
         );
         return rootType.getFields()[fieldName] != null;
       });
+      const args = getArgumentValues(
+        fieldInstance,
+        fieldNode!,
+        executorRequest.variables,
+      );
       let result = await delegateToSchema({
         schema: subschemaForField || stitchedSchema,
         rootValue: executorRequest.rootValue,
+        args,
         context: executorRequest.context,
         info: {
           schema: stitchedSchema,
@@ -61,9 +76,11 @@ export function createStitchingExecutor(stitchedSchema: GraphQLSchema) {
           operation,
           fragments,
           parentType: rootType,
-          returnType: rootType.getFields()[fieldName]?.type,
+          returnType: fieldInstance.type,
           variableValues: executorRequest.variables,
-        } as any,
+          rootValue: executorRequest.rootValue,
+          path: { typename: undefined, key: responseKey, prev: undefined },
+        },
       });
       if (Array.isArray(result)) {
         result = await Promise.all(result);

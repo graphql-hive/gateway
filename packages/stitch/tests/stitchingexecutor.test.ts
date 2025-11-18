@@ -7,7 +7,7 @@ import { createStitchingExecutor } from '../src/executor';
 import { stitchSchemas } from '../src/stitchSchemas';
 
 describe('gateway', () => {
-  test.skip('works', async () => {
+  test('works', async () => {
     let chirpSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         type Chirp {
