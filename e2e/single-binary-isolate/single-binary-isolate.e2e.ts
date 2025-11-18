@@ -1,5 +1,4 @@
 import { createExampleSetup, createTenv } from '@internal/e2e';
-import { isolate } from '@internal/testing';
 import { expect, it } from 'vitest';
 
 const { gateway, gatewayRunner } = createTenv(__dirname);
@@ -11,8 +10,13 @@ const {
 
 it.runIf(gatewayRunner === 'bin')('should execute in isolation', async () => {
   const supergraph = await createSupergraph();
-  await using _restore = await isolate({ log: true });
-  const { execute } = await gateway({ supergraph });
+  const { execute } = await gateway({
+    supergraph,
+    env: {
+      // TODO: run other e2es with this env var
+      HIVE_IMPORTER_ONLY_PACKED_DEPS: 1,
+    },
+  });
   await expect(
     execute({
       query,
