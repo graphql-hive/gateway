@@ -37,10 +37,10 @@ export function getDelegatingOperation(
 export function createRequest({
   subgraphName,
   fragments,
-  targetRootValue,
+  rootValue,
   targetOperationName,
   targetOperation,
-  transformedSchema,
+  targetSchema,
   targetFieldName,
   selectionSet,
   fieldNodes,
@@ -84,7 +84,7 @@ export function createRequest({
   const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
-    const rootType = (info?.schema || transformedSchema)?.getRootType(
+    const rootType = (info?.schema || targetSchema)?.getRootType(
       targetOperation,
     );
     const rootField = rootType?.getFields()[rootFieldName];
@@ -93,7 +93,7 @@ export function createRequest({
       const argValue = args[argName];
       const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
       if (argInstance) {
-        const argAst = astFromArg(argInstance, transformedSchema);
+        const argAst = astFromArg(argInstance, targetSchema);
         const varName = `_args_${rootFieldName}_${argName}`;
         variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
@@ -183,7 +183,7 @@ export function createRequest({
     subgraphName,
     document,
     variables: newVariables,
-    rootValue: targetRootValue,
+    rootValue,
     operationName: targetOperationName,
     context,
     info,
