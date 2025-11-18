@@ -2,4 +2,7 @@
 '@graphql-tools/delegate': major
 ---
 
-Now `createRequest` function doesn't accept `sourceSchema`, `sourceParentType`, `sourceFieldName`, `variableDefinitions`, `variableValues` and `targetRootValue` but instead it accepts `transformedSchema` which is required and `args` which are the arguments of the target field
+Breaking changes in `createRequest` function;
+- No more `sourceParentType`, `sourceFieldName`, `variableDefinitions`, `variableValues` and `targetRootValue`
+- `transformedSchema` is a required option now and `args` is also accepted as a map of the arguments of the target field
+- `fragments` is now an array of `FragmentDefinitionNode` instead of a record `{ [fragmentName: string]: FragmentDefinitionNode }`

@@ -99,7 +99,7 @@ export interface IDelegateRequestOptions<
 
 export interface ICreateRequest {
   subgraphName: string | undefined;
-  fragments?: Record<string, FragmentDefinitionNode>;
+  fragments?: FragmentDefinitionNode[];
   targetRootValue?: any;
   targetOperation: OperationTypeNode;
   targetOperationName?: string;

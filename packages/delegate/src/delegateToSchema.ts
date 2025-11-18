@@ -8,6 +8,7 @@ import {
   isAsyncIterable,
   Maybe,
   MaybeAsyncIterable,
+  memoize1,
   mergeDeep,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
@@ -18,7 +19,9 @@ import {
 import {
   DocumentNode,
   FieldDefinitionNode,
+  FragmentDefinitionNode,
   GraphQLOutputType,
+  GraphQLResolveInfo,
   GraphQLSchema,
   isListType,
   isSchema,
@@ -37,6 +40,13 @@ import {
   StitchingInfo,
   SubschemaConfig,
 } from './types.js';
+
+const getFragmentDefinitions = memoize1(
+  (info: GraphQLResolveInfo): FragmentDefinitionNode[] => {
+    const fragmentMap = info.fragments;
+    return Object.values(fragmentMap);
+  },
+);
 
 export function delegateToSchema<
   TContext extends Record<string, any> = Record<string, any>,
@@ -72,9 +82,11 @@ export function delegateToSchema<
     }
   }
 
+  const fragments = info ? getFragmentDefinitions(info) : undefined;
+
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
-    fragments: info.fragments,
+    fragments,
     transformedSchema,
     targetRootValue: rootValue,
     targetOperationName: operationName,
