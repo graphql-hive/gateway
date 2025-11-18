@@ -83,7 +83,7 @@ describe('transforms', () => {
       });
     });
 
-    test.only('should work when specified as a subschema configuration object', async () => {
+    test('should work when specified as a subschema configuration object', async () => {
       const schema = wrapSchema({
         schema: scalarSchema,
         transforms: [],
@@ -504,7 +504,7 @@ describe('transforms', () => {
 
           type Query {
             addressByUser(id: ID!): Address
-            errorit(id: ID!): Address
+            errorTest(id: ID!): Address
             addressesByUsers(ids: [ID!]): AddressConnection!
           }
         `,
@@ -585,7 +585,7 @@ describe('transforms', () => {
                 ],
               });
             },
-            errorit(_parent, { id }, context, info) {
+            errorTest(_parent, { id }, context, info) {
               return delegateToSchema({
                 schema: subschema,
                 operation: 'query' as OperationTypeNode,
@@ -679,7 +679,7 @@ describe('transforms', () => {
         schema,
         source: /* GraphQL */ `
           query {
-            errorit(id: "u1") {
+            errorTest(id: "u1") {
               errorTest
             }
           }
