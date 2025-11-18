@@ -52,7 +52,7 @@ export function delegateToSchema<
   TContext extends Record<string, any> = Record<string, any>,
   TArgs extends Record<string, any> = any,
 >(options: IDelegateToSchemaOptions<TContext, TArgs>): any {
-  let {
+  const {
     info,
     schema,
     rootValue = (schema as SubschemaConfig).rootValue ?? info.rootValue,
@@ -63,22 +63,22 @@ export function delegateToSchema<
     fieldNodes = info.fieldNodes,
     context,
     args,
-    transformedSchema,
   } = options;
 
+  let targetSchema = options.targetSchema;
   if (isSubschema(schema)) {
-    transformedSchema = schema.transformedSchema;
+    targetSchema = schema.transformedSchema;
   } else if (isSchema(schema)) {
-    transformedSchema = schema;
+    targetSchema = schema;
   } else {
     const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
       StitchingInfo<TContext>
     >;
     const subschema = stitchingInfo?.subschemaMap.get(schema);
     if (subschema != null) {
-      transformedSchema = subschema.transformedSchema;
+      targetSchema = subschema.transformedSchema;
     } else {
-      transformedSchema = applySchemaTransforms(schema.schema, schema);
+      targetSchema = applySchemaTransforms(schema.schema, schema);
     }
   }
 
@@ -87,8 +87,8 @@ export function delegateToSchema<
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
     fragments,
-    transformedSchema,
-    targetRootValue: rootValue,
+    targetSchema,
+    rootValue: rootValue,
     targetOperationName: operationName,
     targetOperation: operation,
     targetFieldName: fieldName,
@@ -100,7 +100,7 @@ export function delegateToSchema<
   });
   return delegateRequest({
     ...options,
-    transformedSchema,
+    targetSchema,
     request,
   });
 }
@@ -218,7 +218,7 @@ function getDelegationContext<TContext extends Record<string, any>>({
   info,
   args,
   transforms = [],
-  transformedSchema,
+  targetSchema: transformedSchema,
   skipTypeMerging = false,
   onLocatedError,
 }: IDelegateRequestOptions<TContext>): DelegationContext<TContext> {

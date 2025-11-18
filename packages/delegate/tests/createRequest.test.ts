@@ -77,13 +77,13 @@ describe('bare requests', () => {
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
               args,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               info,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
           },
         },
@@ -168,14 +168,14 @@ describe('bare requests', () => {
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
               args,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               args,
               info,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
           },
         },
@@ -241,13 +241,13 @@ describe('bare requests', () => {
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
               args,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               info,
-              transformedSchema: innerSchema,
+              targetSchema: innerSchema,
             });
           },
         },

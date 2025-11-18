@@ -84,7 +84,7 @@ export interface IDelegateToSchemaOptions<
   info: GraphQLResolveInfo;
   rootValue?: any;
   transforms?: Array<Transform<any, TContext>>;
-  transformedSchema?: GraphQLSchema;
+  targetSchema?: GraphQLSchema;
   validateRequest?: boolean;
   skipTypeMerging?: boolean;
 }
@@ -94,19 +94,19 @@ export interface IDelegateRequestOptions<
   TArgs = Record<string, any>,
 > extends IDelegateToSchemaOptions<TContext, TArgs> {
   request: ExecutionRequest;
-  transformedSchema: GraphQLSchema;
+  targetSchema: GraphQLSchema;
 }
 
 export interface ICreateRequest {
   subgraphName: string | undefined;
   fragments?: FragmentDefinitionNode[];
-  targetRootValue?: any;
   targetOperation: OperationTypeNode;
   targetOperationName?: string;
   targetFieldName: string;
-  transformedSchema: GraphQLSchema;
+  targetSchema: GraphQLSchema;
   selectionSet?: SelectionSetNode;
   fieldNodes?: ReadonlyArray<FieldNode>;
+  rootValue?: any;
   args?: Record<string, any>;
   context?: any;
   info?: GraphQLResolveInfo;

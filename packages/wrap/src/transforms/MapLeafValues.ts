@@ -73,7 +73,7 @@ export default class MapLeafValues<TContext = Record<string, any>>
 
   public transformRequest(
     originalRequest: ExecutionRequest,
-    delegationContext: DelegationContext<TContext>,
+    _delegationContext: DelegationContext<TContext>,
     transformationContext: MapLeafValuesTransformationContext,
   ): ExecutionRequest {
     const document = originalRequest.document;
@@ -125,7 +125,6 @@ export default class MapLeafValues<TContext = Record<string, any>>
   private transformOperations(
     operations: Array<OperationDefinitionNode>,
     variableValues: Record<string, any>,
-    args?: Record<string, any>,
   ): Array<OperationDefinitionNode> {
     if (this.typeInfo == null) {
       throw new Error(
