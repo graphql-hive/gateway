@@ -5,15 +5,12 @@ import {
   ExecutionRequest,
   getDefinedRootType,
   implementsAbstractType,
-  serializeInputValue,
 } from '@graphql-tools/utils';
 import {
-  ArgumentNode,
   ASTNode,
   DocumentNode,
   FragmentDefinitionNode,
   getNamedType,
-  GraphQLField,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLSchema,
@@ -39,10 +36,6 @@ import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
 import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
 import { Subschema } from './Subschema.js';
 import { DelegationContext, StitchingInfo } from './types.js';
-import {
-  createVariableNameGenerator,
-  updateArgument,
-} from './updateArguments.js';
 
 function finalizeGatewayDocument<TContext>(
   targetSchema: GraphQLSchema,
@@ -110,11 +103,24 @@ function finalizeGatewayDocument<TContext>(
     newFragments = collectedNewFragments;
     fragmentSet = collectedFragmentSet;
 
-    const variableDefinitions = (operation.variableDefinitions ?? []).filter(
-      (variable: VariableDefinitionNode) =>
-        operationOrFragmentVariables.indexOf(variable.variable.name.value) !==
-        -1,
-    );
+    const variableDefinitions: VariableDefinitionNode[] = [];
+
+    for (const variableName of operationOrFragmentVariables) {
+      const variableDef = operation.variableDefinitions?.find(
+        (varDef) => varDef.variable.name.value === variableName,
+      );
+      if (variableDef != null) {
+        variableDefinitions.push(variableDef);
+      } else {
+        const variableDef =
+          delegationContext.info?.operation.variableDefinitions?.find(
+            (varDef) => varDef.variable.name.value === variableName,
+          );
+        if (variableDef != null) {
+          variableDefinitions.push(variableDef);
+        }
+      }
+    }
 
     // Prevent unnecessary __typename in Subscription
     if (operation.operation === 'subscription') {
@@ -216,24 +222,8 @@ export function finalizeGatewayRequest<TContext>(
   delegationContext: DelegationContext<TContext>,
   onOverlappingAliases: () => void,
 ): ExecutionRequest {
-  let { document, variables } = originalRequest;
-
-  let { operations, fragments } = getDocumentMetadata(document);
-  const { targetSchema, args } = delegationContext;
-
-  if (args) {
-    const requestWithNewVariables = addVariablesToRootFields(
-      targetSchema,
-      operations,
-      args,
-    );
-    operations = requestWithNewVariables.newOperations;
-    variables = Object.assign(
-      {},
-      variables ?? {},
-      requestWithNewVariables.newVariables,
-    );
-  }
+  let { operations, fragments } = getDocumentMetadata(originalRequest.document);
+  const { targetSchema } = delegationContext;
 
   const { usedVariables, newDocument } = finalizeGatewayDocument(
     targetSchema,
@@ -244,12 +234,18 @@ export function finalizeGatewayRequest<TContext>(
   );
 
   const newVariables: Record<string, any> = {};
-  if (variables != null) {
-    for (const variableName of usedVariables) {
-      const variableValue = variables[variableName];
-      if (variableValue !== undefined) {
-        newVariables[variableName] = variableValue;
-      }
+  const outerVariables = delegationContext.info?.variableValues;
+
+  for (const varName of usedVariables) {
+    const existingVar = originalRequest.variables?.[varName];
+    const outerVar = outerVariables?.[varName];
+    if (existingVar != null) {
+      newVariables[varName] = existingVar;
+    } else if (outerVar != null) {
+      newVariables[varName] = outerVar;
+    }
+    if (existingVar === null || outerVar === null) {
+      newVariables[varName] = null;
     }
   }
 
@@ -284,112 +280,6 @@ function filterTypenameFields(selections: readonly SelectionNode[]): {
     hasTypeNameField,
     selections: filteredSelections,
   };
-}
-
-function addVariablesToRootFields(
-  targetSchema: GraphQLSchema,
-  operations: Array<OperationDefinitionNode>,
-  args: Record<string, any>,
-): {
-  newOperations: Array<OperationDefinitionNode>;
-  newVariables: Record<string, any>;
-} {
-  const newVariables = Object.create(null);
-
-  const newOperations = operations.map((operation: OperationDefinitionNode) => {
-    const variableDefinitionMap: Record<string, VariableDefinitionNode> = (
-      operation.variableDefinitions ?? []
-    ).reduce(
-      (prev, def) => ({
-        ...prev,
-        [def.variable.name.value]: def,
-      }),
-      {},
-    );
-
-    const type = getDefinedRootType(targetSchema, operation.operation);
-
-    const newSelections: Array<SelectionNode> = [];
-
-    for (const selection of operation.selectionSet.selections) {
-      if (selection.kind === Kind.FIELD) {
-        const argumentNodes = selection.arguments ?? [];
-        const argumentNodeMap: Record<string, ArgumentNode> =
-          argumentNodes.reduce(
-            (prev, argument) => ({
-              ...prev,
-              [argument.name.value]: argument,
-            }),
-            {},
-          );
-
-        const targetField = type.getFields()[selection.name.value];
-
-        // excludes __typename
-        if (targetField != null) {
-          updateArguments(
-            targetField,
-            argumentNodeMap,
-            variableDefinitionMap,
-            newVariables,
-            args,
-          );
-        }
-
-        newSelections.push({
-          ...selection,
-          arguments: Object.values(argumentNodeMap),
-        });
-      } else {
-        newSelections.push(selection);
-      }
-    }
-
-    const newSelectionSet: SelectionSetNode = {
-      kind: Kind.SELECTION_SET,
-      selections: newSelections,
-    };
-
-    return {
-      ...operation,
-      variableDefinitions: Object.values(variableDefinitionMap),
-      selectionSet: newSelectionSet,
-    };
-  });
-
-  return {
-    newOperations,
-    newVariables,
-  };
-}
-
-function updateArguments(
-  targetField: GraphQLField<any, any>,
-  argumentNodeMap: Record<string, ArgumentNode>,
-  variableDefinitionMap: Record<string, VariableDefinitionNode>,
-  variableValues: Record<string, any>,
-  newArgs: Record<string, any>,
-): void {
-  const generateVariableName = createVariableNameGenerator(
-    variableDefinitionMap,
-  );
-
-  for (const argument of targetField.args) {
-    const argName = argument.name;
-    const argType = argument.type;
-
-    if (argName in newArgs) {
-      updateArgument(
-        argumentNodeMap,
-        variableDefinitionMap,
-        variableValues,
-        argName,
-        generateVariableName(argName),
-        argType,
-        serializeInputValue(argType, newArgs[argName]),
-      );
-    }
-  }
 }
 
 function collectFragmentVariables(
@@ -459,7 +349,7 @@ function collectFragmentVariables(
 
 const filteredSelectionSetVisitorKeys: ASTVisitorKeyMap = {
   SelectionSet: ['selections'],
-  Field: ['selectionSet'],
+  Field: ['selectionSet', 'directives'],
   InlineFragment: ['selectionSet'],
   FragmentDefinition: ['selectionSet'],
 };
@@ -855,6 +745,14 @@ function filterSelectionSet(
               (directive) => directive.name.value !== 'defer',
             ),
           };
+        },
+      },
+      [Kind.DIRECTIVE]: {
+        leave: (node) => {
+          if (node.name.value === 'include' || node.name.value === 'skip') {
+            return null;
+          }
+          return;
         },
       },
     }),

@@ -21,12 +21,13 @@ import {
   GraphQLOutputType,
   GraphQLSchema,
   isListType,
+  isSchema,
   OperationTypeNode,
   validate,
 } from 'graphql';
 import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
-import { Subschema } from './Subschema.js';
+import { isSubschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
 import { Transformer } from './Transformer.js';
 import {
@@ -41,7 +42,7 @@ export function delegateToSchema<
   TContext extends Record<string, any> = Record<string, any>,
   TArgs extends Record<string, any> = any,
 >(options: IDelegateToSchemaOptions<TContext, TArgs>): any {
-  const {
+  let {
     info,
     schema,
     rootValue = (schema as SubschemaConfig).rootValue ?? info.rootValue,
@@ -51,16 +52,30 @@ export function delegateToSchema<
     selectionSet,
     fieldNodes = info.fieldNodes,
     context,
+    args,
+    transformedSchema,
   } = options;
+
+  if (isSubschema(schema)) {
+    transformedSchema = schema.transformedSchema;
+  } else if (isSchema(schema)) {
+    transformedSchema = schema;
+  } else {
+    const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
+      StitchingInfo<TContext>
+    >;
+    const subschema = stitchingInfo?.subschemaMap.get(schema);
+    if (subschema != null) {
+      transformedSchema = subschema.transformedSchema;
+    } else {
+      transformedSchema = applySchemaTransforms(schema.schema, schema);
+    }
+  }
 
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
-    sourceSchema: info.schema,
-    sourceParentType: info.parentType,
-    sourceFieldName: info.fieldName,
     fragments: info.fragments,
-    variableDefinitions: info.operation.variableDefinitions,
-    variableValues: info.variableValues,
+    transformedSchema,
     targetRootValue: rootValue,
     targetOperationName: operationName,
     targetOperation: operation,
@@ -69,9 +84,11 @@ export function delegateToSchema<
     fieldNodes,
     context,
     info,
+    args,
   });
   return delegateRequest({
     ...options,
+    transformedSchema,
     request,
   });
 }
@@ -186,8 +203,8 @@ function getDelegationContext<TContext extends Record<string, any>>({
   schema,
   fieldName,
   returnType,
-  args,
   info,
+  args,
   transforms = [],
   transformedSchema,
   skipTypeMerging = false,
@@ -224,7 +241,6 @@ function getDelegationContext<TContext extends Record<string, any>>({
       targetSchema,
       operation,
       fieldName: targetFieldName,
-      args,
       context: request.context,
       info,
       returnType:
@@ -235,13 +251,10 @@ function getDelegationContext<TContext extends Record<string, any>>({
         subschemaOrSubschemaConfig.transforms != null
           ? subschemaOrSubschemaConfig.transforms.concat(transforms)
           : transforms,
-      transformedSchema:
-        transformedSchema ??
-        (subschemaOrSubschemaConfig instanceof Subschema
-          ? subschemaOrSubschemaConfig.transformedSchema
-          : applySchemaTransforms(targetSchema, subschemaOrSubschemaConfig)),
+      transformedSchema,
       skipTypeMerging,
       onLocatedError,
+      args,
     };
   }
 
@@ -251,7 +264,6 @@ function getDelegationContext<TContext extends Record<string, any>>({
     targetSchema: subschemaOrSubschemaConfig,
     operation,
     fieldName: targetFieldName,
-    args,
     context: request.context,
     info,
     returnType:

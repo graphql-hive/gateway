@@ -1,27 +1,24 @@
-import { ExecutionRequest, serializeInputValue } from '@graphql-tools/utils';
+import {
+  astFromArg,
+  astFromValueUntyped,
+  ExecutionRequest,
+  serializeInputValue,
+} from '@graphql-tools/utils';
 import {
   ArgumentNode,
   DefinitionNode,
   DocumentNode,
   FieldNode,
-  GraphQLInputType,
   GraphQLObjectType,
   GraphQLSchema,
   Kind,
-  NamedTypeNode,
   NameNode,
   OperationDefinitionNode,
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
-  typeFromAST,
-  VariableDefinitionNode,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
-import {
-  createVariableNameGenerator,
-  updateArgument,
-} from './updateArguments.js';
 
 export function getDelegatingOperation(
   parentType: GraphQLObjectType,
@@ -38,23 +35,19 @@ export function getDelegatingOperation(
 
 export function createRequest({
   subgraphName,
-  sourceSchema,
-  sourceParentType,
-  sourceFieldName,
   fragments,
-  variableDefinitions,
-  variableValues,
   targetRootValue,
   targetOperationName,
   targetOperation,
+  transformedSchema,
   targetFieldName,
   selectionSet,
   fieldNodes,
   context,
   info,
+  args,
 }: ICreateRequest): ExecutionRequest {
   let newSelectionSet: SelectionSetNode | undefined;
-  const argumentNodeMap: Record<string, ArgumentNode> = Object.create(null);
 
   if (selectionSet != null) {
     newSelectionSet = selectionSet;
@@ -74,45 +67,8 @@ export function createRequest({
           selections,
         }
       : undefined;
-
-    const args = fieldNodes?.[0]?.arguments;
-    if (args) {
-      for (const argNode of args) {
-        argumentNodeMap[argNode.name.value] = argNode;
-      }
-    }
   }
 
-  const newVariables = Object.create(null);
-  const variableDefinitionMap = Object.create(null);
-
-  if (sourceSchema != null && variableDefinitions != null) {
-    for (const def of variableDefinitions) {
-      const varName = def.variable.name.value;
-      variableDefinitionMap[varName] = def;
-      const varType = typeFromAST(
-        sourceSchema,
-        def.type as NamedTypeNode,
-      ) as GraphQLInputType;
-      const serializedValue = serializeInputValue(
-        varType,
-        variableValues?.[varName],
-      );
-      if (serializedValue !== undefined) {
-        newVariables[varName] = serializedValue;
-      }
-    }
-  }
-
-  if (sourceParentType != null && sourceFieldName != null) {
-    updateArgumentsWithDefaults(
-      sourceParentType,
-      sourceFieldName,
-      argumentNodeMap,
-      variableDefinitionMap,
-      newVariables,
-    );
-  }
   const fieldNode = fieldNodes?.[0];
   const rootFieldName = targetFieldName ?? fieldNode?.name.value;
 
@@ -120,6 +76,65 @@ export function createRequest({
     throw new Error(
       `Either "targetFieldName" or a non empty "fieldNodes" array must be provided.`,
     );
+  }
+
+  const newVariables = Object.create(null);
+  const variableDefinitionMap = Object.create(null);
+  const argumentNodeMap: Record<string, ArgumentNode> = Object.create(null);
+
+  if (args != null) {
+    const rootType = (info?.schema || transformedSchema)?.getRootType(
+      targetOperation,
+    );
+    const rootField = rootType?.getFields()[rootFieldName];
+    const rootFieldArgs = rootField?.args;
+    for (const argName in args) {
+      const argValue = args[argName];
+      const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
+      if (argInstance) {
+        const argAst = astFromArg(argInstance, transformedSchema);
+        const varName = `${rootFieldName}_${argName}`;
+        variableDefinitionMap[varName] = {
+          kind: Kind.VARIABLE_DEFINITION,
+          variable: {
+            kind: Kind.VARIABLE,
+            name: {
+              kind: Kind.NAME,
+              value: varName,
+            },
+          },
+          type: argAst.type,
+        };
+        const serializedValue = serializeInputValue(argInstance.type, argValue);
+        newVariables[varName] = serializedValue;
+        argumentNodeMap[argName] = {
+          kind: Kind.ARGUMENT,
+          name: {
+            kind: Kind.NAME,
+            value: argName,
+          },
+          value: {
+            kind: Kind.VARIABLE,
+            name: {
+              kind: Kind.NAME,
+              value: varName,
+            },
+          },
+        };
+      } else {
+        const argValueAst = astFromValueUntyped(argValue);
+        if (argValueAst != null) {
+          argumentNodeMap[argName] = {
+            kind: Kind.ARGUMENT,
+            name: {
+              kind: Kind.NAME,
+              value: argName,
+            },
+            value: argValueAst,
+          };
+        }
+      }
+    }
   }
 
   const rootfieldNode: FieldNode = {
@@ -177,43 +192,4 @@ export function createRequest({
     info,
     operationType: targetOperation,
   };
-}
-
-function updateArgumentsWithDefaults(
-  sourceParentType: GraphQLObjectType,
-  sourceFieldName: string,
-  argumentNodeMap: Record<string, ArgumentNode>,
-  variableDefinitionMap: Record<string, VariableDefinitionNode>,
-  variableValues: Record<string, any>,
-): void {
-  const generateVariableName = createVariableNameGenerator(
-    variableDefinitionMap,
-  );
-
-  const sourceField = sourceParentType.getFields()[sourceFieldName];
-  if (!sourceField) {
-    throw new Error(
-      `Field "${sourceFieldName}" was not found in type "${sourceParentType}".`,
-    );
-  }
-  for (const argument of sourceField.args) {
-    const argName = argument.name;
-    const sourceArgType = argument.type;
-
-    if (argumentNodeMap[argName] === undefined) {
-      const defaultValue = argument.defaultValue;
-
-      if (defaultValue !== undefined) {
-        updateArgument(
-          argumentNodeMap,
-          variableDefinitionMap,
-          variableValues,
-          argName,
-          generateVariableName(argName),
-          sourceArgType,
-          serializeInputValue(sourceArgType, defaultValue),
-        );
-      }
-    }
-  }
 }

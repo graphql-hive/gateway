@@ -100,10 +100,12 @@ export function defaultCreateProxyingResolver<
   subschemaConfig,
   operation,
 }: ICreateProxyingResolverOptions<TContext>): GraphQLFieldResolver<any, any> {
-  return function proxyingResolver(_parent, _args, context, info) {
+  return function proxyingResolver(rootValue, args, context, info) {
     return delegateToSchema({
       schema: subschemaConfig,
       operation,
+      rootValue,
+      args,
       context,
       info,
     });
