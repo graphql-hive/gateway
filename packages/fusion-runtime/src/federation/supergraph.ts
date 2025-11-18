@@ -154,7 +154,12 @@ export function handleResolveToDirectives(
   return mergedTypeDefs;
 }
 
-export const handleFederationSupergraph: UnifiedGraphHandler = function ({
+export interface HandleFederationSupergraphResult
+  extends UnifiedGraphHandlerResult {
+  getSubschema(subgraphName: string): SubschemaConfig;
+}
+
+export const handleFederationSupergraph = function ({
   unifiedGraph,
   onSubgraphExecute,
   onDelegationPlanHooks,
@@ -166,7 +171,7 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
   additionalResolvers: additionalResolversFromConfig = [],
   // no logger was provided, use a muted logger for consistency across plugin hooks
   log: rootLog = new Logger({ level: false }),
-}: UnifiedGraphHandlerOpts): UnifiedGraphHandlerResult {
+}: UnifiedGraphHandlerOpts): HandleFederationSupergraphResult {
   const additionalTypeDefs = [...asArray(additionalTypeDefsFromConfig)];
   const additionalResolvers = [...asArray(additionalResolversFromConfig)];
   let subschemas: SubschemaConfig[] = [];
@@ -422,17 +427,22 @@ export const handleFederationSupergraph: UnifiedGraphHandler = function ({
       },
     });
   }
+  function getSubschema(subgraphName: string): SubschemaConfig {
+    const subgraph = subschemas.find(
+      (s) => s.name && compareSubgraphNames(s.name, subgraphName),
+    );
+    if (!subgraph) {
+      throw new Error(`Subgraph ${subgraphName} not found`);
+    }
+    return subgraph;
+  }
   return {
     unifiedGraph: executableUnifiedGraph,
     inContextSDK,
     getSubgraphSchema(subgraphName) {
-      const subgraph = subschemas.find(
-        (s) => s.name && compareSubgraphNames(s.name, subgraphName),
-      );
-      if (!subgraph) {
-        throw new Error(`Subgraph ${subgraphName} not found`);
-      }
-      return subgraph.schema;
+      const subschema = getSubschema(subgraphName);
+      return subschema.schema;
     },
+    getSubschema,
   };
 };
