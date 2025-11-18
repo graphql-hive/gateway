@@ -17,6 +17,7 @@ import {
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
+  VariableDefinitionNode,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
 
@@ -79,8 +80,8 @@ export function createRequest({
   }
 
   const newVariables = Object.create(null);
-  const variableDefinitionMap = Object.create(null);
-  const argumentNodeMap: Record<string, ArgumentNode> = Object.create(null);
+  const variableDefinitions: VariableDefinitionNode[] = [];
+  const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
     const rootType = (info?.schema || transformedSchema)?.getRootType(
@@ -93,8 +94,8 @@ export function createRequest({
       const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
       if (argInstance) {
         const argAst = astFromArg(argInstance, transformedSchema);
-        const varName = `${rootFieldName}_${argName}`;
-        variableDefinitionMap[varName] = {
+        const varName = `_args_${rootFieldName}_${argName}`;
+        variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
           variable: {
             kind: Kind.VARIABLE,
@@ -104,10 +105,10 @@ export function createRequest({
             },
           },
           type: argAst.type,
-        };
+        });
         const serializedValue = serializeInputValue(argInstance.type, argValue);
         newVariables[varName] = serializedValue;
-        argumentNodeMap[argName] = {
+        argNodes.push({
           kind: Kind.ARGUMENT,
           name: {
             kind: Kind.NAME,
@@ -120,18 +121,19 @@ export function createRequest({
               value: varName,
             },
           },
-        };
+        });
       } else {
-        const argValueAst = astFromValueUntyped(argValue);
-        if (argValueAst != null) {
-          argumentNodeMap[argName] = {
+        // For arguments that are not defined in the target schema, we inline them.
+        const valueNode = astFromValueUntyped(argValue);
+        if (valueNode != null) {
+          argNodes.push({
             kind: Kind.ARGUMENT,
             name: {
               kind: Kind.NAME,
               value: argName,
             },
-            value: argValueAst,
-          };
+            value: valueNode,
+          });
         }
       }
     }
@@ -139,7 +141,7 @@ export function createRequest({
 
   const rootfieldNode: FieldNode = {
     kind: Kind.FIELD,
-    arguments: Object.values(argumentNodeMap),
+    arguments: argNodes,
     name: {
       kind: Kind.NAME,
       value: rootFieldName,
@@ -159,7 +161,7 @@ export function createRequest({
     kind: Kind.OPERATION_DEFINITION,
     name: operationName,
     operation: targetOperation,
-    variableDefinitions: Object.values(variableDefinitionMap),
+    variableDefinitions,
     selectionSet: {
       kind: Kind.SELECTION_SET,
       selections: [rootfieldNode],
@@ -169,12 +171,7 @@ export function createRequest({
   const definitions: Array<DefinitionNode> = [operationDefinition];
 
   if (fragments != null) {
-    for (const fragmentName in fragments) {
-      const fragment = fragments[fragmentName];
-      if (fragment) {
-        definitions.push(fragment);
-      }
-    }
+    definitions.push(...fragments);
   }
 
   const document: DocumentNode = {
