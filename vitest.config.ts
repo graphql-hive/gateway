@@ -9,7 +9,7 @@ import { isNotPlatform } from './internal/env/src/node';
 // packages as per the Node resolution spec.
 //
 // Vite will process inlined modules.
-const inline = [/@graphql-mesh\/.*/, /@omnigraph\/.*/];
+const inline = [/@graphql-mesh\/.*/, /@omnigraph\/.*/, /@graphql-hive\/.*/];
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
