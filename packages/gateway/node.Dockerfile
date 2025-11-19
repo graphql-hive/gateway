@@ -84,8 +84,8 @@ ENV NODE_PATH=/gateway/node_modules
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
-# fix tar vulnerability by updating tar to latest version
-RUN npm install tar@latest -g
+# fix tar vulnerability by updating tar to latest v7 version
+RUN npm install tar@^7 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
 # fix glob vulnerability by updating glob to latest version ^11
