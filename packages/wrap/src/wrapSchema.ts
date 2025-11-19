@@ -9,6 +9,7 @@ import {
   GraphQLFieldResolver,
   GraphQLInterfaceType,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLSchema,
   GraphQLUnionType,
 } from 'graphql';
@@ -76,6 +77,14 @@ function createWrappingSchema(
         ...valueConfig,
         value: undefined,
       };
+    },
+    [MapperKind.SCALAR_TYPE]: (type) => {
+      return new GraphQLScalarType({
+        ...type.toConfig(),
+        serialize: undefined,
+        parseValue: undefined,
+        parseLiteral: undefined,
+      });
     },
   });
 }

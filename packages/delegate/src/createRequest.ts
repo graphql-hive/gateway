@@ -1,16 +1,20 @@
 import {
+  asArray,
   astFromArg,
   astFromValueUntyped,
   ExecutionRequest,
-  serializeInputValue,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,
   DefinitionNode,
   DocumentNode,
   FieldNode,
+  GraphQLInputType,
   GraphQLObjectType,
   GraphQLSchema,
+  isInputObjectType,
+  isListType,
+  isNonNullType,
   Kind,
   NameNode,
   OperationDefinitionNode,
@@ -84,9 +88,7 @@ export function createRequest({
   const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
-    const rootType = (info?.schema || targetSchema)?.getRootType(
-      targetOperation,
-    );
+    const rootType = targetSchema?.getRootType(targetOperation);
     const rootField = rootType?.getFields()[rootFieldName];
     const rootFieldArgs = rootField?.args;
     for (const argName in args) {
@@ -106,8 +108,10 @@ export function createRequest({
           },
           type: argAst.type,
         });
-        const serializedValue = serializeInputValue(argInstance.type, argValue);
-        newVariables[varName] = serializedValue;
+        newVariables[varName] = projectArgumentValue(
+          argValue,
+          argInstance.type,
+        );
         argNodes.push({
           kind: Kind.ARGUMENT,
           name: {
@@ -189,4 +193,29 @@ export function createRequest({
     info,
     operationType: targetOperation,
   };
+}
+
+function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
+  if (isNonNullType(argType)) {
+    return projectArgumentValue(argValue, argType.ofType);
+  }
+  if (isListType(argType)) {
+    return asArray(argValue).map((item: any) =>
+      projectArgumentValue(item, argType.ofType),
+    );
+  }
+  if (isInputObjectType(argType)) {
+    const projectedValue: any = {};
+    const fields = argType.getFields();
+    for (const key in argValue) {
+      if (fields[key]) {
+        projectedValue[key] = projectArgumentValue(
+          argValue[key],
+          fields[key].type,
+        );
+      }
+    }
+    return projectedValue;
+  }
+  return argValue;
 }
