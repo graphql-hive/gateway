@@ -491,93 +491,8 @@ it('should consistently explain the query plan', async () => {
             "variables": {},
           },
           {
-            "query": "query TestQuery($_v0_representations: [_Any!]!, $_v1_representations: [_Any!]!) {
-      _v0__entities: _entities(representations: $_v0_representations) {
-        __typename
-        ... on Product {
-          upc
-          inStock
-        }
-      }
-      _v1__entities: _entities(representations: $_v1_representations) {
-        __typename
-        ... on Product {
-          upc
-          shippingEstimate
-        }
-      }
-    }",
-            "subgraphName": "inventory",
-            "variables": {
-              "_v0_representations": [
-                {
-                  "__typename": "Product",
-                  "price": 899,
-                  "upc": "1",
-                  "weight": 100,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 1299,
-                  "upc": "2",
-                  "weight": 1000,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 54,
-                  "upc": "3",
-                  "weight": 50,
-                },
-              ],
-              "_v1_representations": [
-                {
-                  "__typename": "Product",
-                  "price": 899,
-                  "upc": "1",
-                  "weight": 100,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 1299,
-                  "upc": "2",
-                  "weight": 1000,
-                },
-                {
-                  "__typename": "Product",
-                  "price": 54,
-                  "upc": "3",
-                  "weight": 50,
-                },
-              ],
-            },
-          },
-          {
-            "query": "query TestQuery($first: Int) {
-      topProducts(first: $first) {
-        __typename
-        ...Product
-        upc
-      }
-    }
-
-    fragment Product on Product {
-      __typename
-      upc
-      name
-      price
-      price
-      weight
-      upc
-      weight
-    }",
-            "subgraphName": "products",
-            "variables": {
-              "first": 5,
-            },
-          },
-          {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      _entities(representations: $representations) {
+            "query": "query TestQuery($_args__entities_representations: [_Any!]!) {
+      _entities(representations: $_args__entities_representations) {
         __typename
         ... on Product {
           upc
@@ -591,7 +506,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "products",
             "variables": {
-              "representations": [
+              "_args__entities_representations": [
                 {
                   "__typename": "Product",
                   "upc": "1",
@@ -608,8 +523,8 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      _entities(representations: $representations) {
+            "query": "query TestQuery($_args__entities_representations: [_Any!]!) {
+      _entities(representations: $_args__entities_representations) {
         __typename
         ... on Product {
           upc
@@ -657,7 +572,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "reviews",
             "variables": {
-              "representations": [
+              "_args__entities_representations": [
                 {
                   "__typename": "Product",
                   "upc": "1",
@@ -674,8 +589,8 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      _entities(representations: $representations) {
+            "query": "query TestQuery($_args__entities_representations: [_Any!]!) {
+      _entities(representations: $_args__entities_representations) {
         __typename
         ... on User {
           id
@@ -685,7 +600,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "accounts",
             "variables": {
-              "representations": [
+              "_args__entities_representations": [
                 {
                   "__typename": "User",
                   "id": "1",
@@ -698,8 +613,8 @@ it('should consistently explain the query plan', async () => {
             },
           },
           {
-            "query": "query TestQuery($representations: [_Any!]!) {
-      _entities(representations: $representations) {
+            "query": "query TestQuery($_args__entities_representations: [_Any!]!) {
+      _entities(representations: $_args__entities_representations) {
         __typename
         ... on User {
           id
@@ -757,7 +672,7 @@ it('should consistently explain the query plan', async () => {
     }",
             "subgraphName": "reviews",
             "variables": {
-              "representations": [
+              "_args__entities_representations": [
                 {
                   "__typename": "User",
                   "id": "1",
@@ -765,6 +680,91 @@ it('should consistently explain the query plan', async () => {
                 {
                   "__typename": "User",
                   "id": "2",
+                },
+              ],
+            },
+          },
+          {
+            "query": "query TestQuery($_args_topProducts_first: Int) {
+      topProducts(first: $_args_topProducts_first) {
+        __typename
+        ...Product
+        upc
+      }
+    }
+
+    fragment Product on Product {
+      __typename
+      upc
+      name
+      price
+      price
+      weight
+      upc
+      weight
+    }",
+            "subgraphName": "products",
+            "variables": {
+              "_args_topProducts_first": 5,
+            },
+          },
+          {
+            "query": "query TestQuery($_v0__args__entities_representations: [_Any!]!, $_v1__args__entities_representations: [_Any!]!) {
+      _v0__entities: _entities(representations: $_v0__args__entities_representations) {
+        __typename
+        ... on Product {
+          upc
+          inStock
+        }
+      }
+      _v1__entities: _entities(representations: $_v1__args__entities_representations) {
+        __typename
+        ... on Product {
+          upc
+          shippingEstimate
+        }
+      }
+    }",
+            "subgraphName": "inventory",
+            "variables": {
+              "_v0__args__entities_representations": [
+                {
+                  "__typename": "Product",
+                  "price": 899,
+                  "upc": "1",
+                  "weight": 100,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 1299,
+                  "upc": "2",
+                  "weight": 1000,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 54,
+                  "upc": "3",
+                  "weight": 50,
+                },
+              ],
+              "_v1__args__entities_representations": [
+                {
+                  "__typename": "Product",
+                  "price": 899,
+                  "upc": "1",
+                  "weight": 100,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 1299,
+                  "upc": "2",
+                  "weight": 1000,
+                },
+                {
+                  "__typename": "Product",
+                  "price": 54,
+                  "upc": "3",
+                  "weight": 50,
                 },
               ],
             },
