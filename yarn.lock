@@ -4246,7 +4246,7 @@ __metadata:
   resolution: "@graphql-hive/importer@workspace:packages/importer"
   dependencies:
     get-tsconfig: "npm:^4.13.0"
-    glob: "npm:^11.0.3"
+    glob: "npm:^13.0.0"
     pkgroll: "npm:2.20.1"
     sucrase: "npm:^3.35.0"
   languageName: unknown
@@ -6038,7 +6038,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
     dockerode: "npm:^4.0.9"
-    glob: "npm:^11.0.3"
+    glob: "npm:^13.0.0"
     graphql: "npm:^16.12.0"
     terminate: "npm:^2.8.0"
   languageName: unknown
@@ -6060,7 +6060,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     dedent: "npm:^1.7.0"
     esbuild: "npm:^0.27.0"
-    glob: "npm:^11.0.3"
+    glob: "npm:^13.0.0"
     jscodeshift: "npm:^17.1.1"
     tsx: "npm:4.20.6"
     zod: "npm:^4.1.12"
@@ -15217,6 +15217,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glob@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "glob@npm:13.0.0"
+  dependencies:
+    minimatch: "npm:^10.1.1"
+    minipass: "npm:^7.1.2"
+    path-scurry: "npm:^2.0.0"
+  checksum: 10c0/8e2f5821f3f7c312dd102e23a15b80c79e0837a9872784293ba2e15ec73b3f3749a49a42a31bfcb4e52c84820a474e92331c2eebf18819d20308f5c33876630a
+  languageName: node
+  linkType: hard
+
 "glob@npm:^7.1.4":
   version: 7.2.3
   resolution: "glob@npm:7.2.3"
@@ -18078,6 +18089,15 @@ __metadata:
   dependencies:
     "@isaacs/brace-expansion": "npm:^5.0.0"
   checksum: 10c0/e43e4a905c5d70ac4cec8530ceaeccb9c544b1ba8ac45238e2a78121a01c17ff0c373346472d221872563204eabe929ad02669bb575cb1f0cc30facab369f70f
+  languageName: node
+  linkType: hard
+
+"minimatch@npm:^10.1.1":
+  version: 10.1.1
+  resolution: "minimatch@npm:10.1.1"
+  dependencies:
+    "@isaacs/brace-expansion": "npm:^5.0.0"
+  checksum: 10c0/c85d44821c71973d636091fddbfbffe62370f5ee3caf0241c5b60c18cd289e916200acb2361b7e987558cd06896d153e25d505db9fc1e43e6b4b6752e2702902
   languageName: node
   linkType: hard
 
