@@ -171,6 +171,7 @@ export class MoveRootField
         ),
       };
     }
+    return originalRequest;
   }
 
   public transformResult(
@@ -178,15 +179,18 @@ export class MoveRootField
     delegationContext: DelegationContext,
     transformationContext: MoveRootFieldTransformationContext,
   ) {
-    if (result.data?.__typename) {
-      if (
-        transformationContext.newOperationType &&
-        transformationContext.newOperationType !== delegationContext.operation
-      ) {
-        result.data.__typename = getDefinedRootType(
-          this.transformedSchema,
-          transformationContext.newOperationType,
-        )?.name;
+    if (
+      this.transformedSchema &&
+      result.data?.__typename &&
+      transformationContext.newOperationType &&
+      transformationContext.newOperationType !== delegationContext.operation
+    ) {
+      const rootType = getDefinedRootType(
+        this.transformedSchema,
+        transformationContext.newOperationType,
+      );
+      if (rootType) {
+        result.data.__typename = rootType.name;
       }
     }
     return result;

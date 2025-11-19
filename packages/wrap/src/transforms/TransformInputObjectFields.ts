@@ -103,7 +103,7 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
 
   public transformRequest(
     originalRequest: ExecutionRequest,
-    delegationContext: DelegationContext<TContext>,
+    _delegationContext: DelegationContext<TContext>,
     _transformationContext: TransformInputObjectFieldsTransformationContext,
   ): ExecutionRequest {
     const variableValues = originalRequest.variables ?? {};
@@ -125,6 +125,9 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
         for (const variableDef of variableDefs) {
           const varName = variableDef.variable.name.value;
           // Cast to NamedTypeNode required until upcomming graphql releases will have TypeNode paramter
+          if (!this.transformedSchema) {
+            continue;
+          }
           const varType = typeFromAST(
             this.transformedSchema,
             variableDef.type as NamedTypeNode,

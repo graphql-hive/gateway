@@ -35,7 +35,6 @@ import {
   type ObjectTypeDefinitionNode,
 } from 'graphql';
 import type {
-  UnifiedGraphHandler,
   UnifiedGraphHandlerOpts,
   UnifiedGraphHandlerResult,
 } from '../unifiedGraphManager';
