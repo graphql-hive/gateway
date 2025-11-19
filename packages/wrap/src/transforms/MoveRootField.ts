@@ -176,14 +176,13 @@ export class MoveRootField
 
   public transformResult(
     result: ExecutionResult,
-    delegationContext: DelegationContext,
+    _delegationContext: DelegationContext,
     transformationContext: MoveRootFieldTransformationContext,
   ) {
     if (
       this.transformedSchema &&
       result.data?.__typename &&
-      transformationContext.newOperationType &&
-      transformationContext.newOperationType !== delegationContext.operation
+      transformationContext.newOperationType
     ) {
       const rootType = getDefinedRootType(
         this.transformedSchema,
