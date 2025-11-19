@@ -346,7 +346,7 @@ function collectFragmentVariables(
 
 const filteredSelectionSetVisitorKeys: ASTVisitorKeyMap = {
   SelectionSet: ['selections'],
-  Field: ['selectionSet', 'directives'],
+  Field: ['selectionSet'],
   InlineFragment: ['selectionSet'],
   FragmentDefinition: ['selectionSet'],
 };
@@ -742,14 +742,6 @@ function filterSelectionSet(
               (directive) => directive.name.value !== 'defer',
             ),
           };
-        },
-      },
-      [Kind.DIRECTIVE]: {
-        leave: (node) => {
-          if (node.name.value === 'include' || node.name.value === 'skip') {
-            return null;
-          }
-          return;
         },
       },
     }),
