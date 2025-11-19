@@ -84,9 +84,14 @@ ENV NODE_PATH=/gateway/node_modules
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
+# fix tar vulnerability by updating tar to latest version
 RUN npm install tar@latest -g
-
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
+
+# fix glob vulnerability by updating glob to latest version ^10
+# deal with CVE-2025-64756
+RUN npm install glob@^10 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
