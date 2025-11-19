@@ -31,6 +31,7 @@ describe('requests', () => {
         subgraphName: undefined,
         targetOperation: 'query' as OperationTypeNode,
         targetFieldName: 'version',
+        targetSchema: undefined!,
         selectionSet: parseSelectionSet(`{
           major
           minor
