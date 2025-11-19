@@ -1,5 +1,25 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.5.1
+### Patch Changes
+
+
+
+- [#1691](https://github.com/graphql-hive/gateway/pull/1691) [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^1.4.13` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.4.13) (from `^1.4.11`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/merge@^9.1.5` ↗︎](https://www.npmjs.com/package/@graphql-tools/merge/v/9.1.5) (from `^9.1.3`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.3) (from `^10.10.1`, in `dependencies`)
+- Updated dependencies [[`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb)]:
+  - @graphql-hive/logger@1.0.9
+  - @graphql-mesh/transport-common@1.0.12
+  - @graphql-tools/batch-execute@10.0.4
+  - @graphql-tools/delegate@11.1.3
+  - @graphql-tools/federation@4.2.3
+  - @graphql-tools/stitch@10.1.3
+  - @graphql-tools/stitching-directives@4.0.5
+  - @graphql-tools/wrap@11.0.5
+
 ## 1.5.0
 ### Minor Changes
 

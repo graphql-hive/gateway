@@ -1,5 +1,18 @@
 # @graphql-mesh/transport-common
 
+## 1.0.12
+### Patch Changes
+
+
+
+- [#1691](https://github.com/graphql-hive/gateway/pull/1691) [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/executor@^1.4.13` ↗︎](https://www.npmjs.com/package/@graphql-tools/executor/v/1.4.13) (from `^1.4.11`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.3) (from `^10.10.1`, in `dependencies`)
+- Updated dependencies [[`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb)]:
+  - @graphql-hive/logger@1.0.9
+  - @graphql-tools/executor-common@1.0.5
+
 ## 1.0.11
 ### Patch Changes
 

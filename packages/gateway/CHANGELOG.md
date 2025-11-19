@@ -1,5 +1,35 @@
 # @graphql-hive/gateway
 
+## 2.1.17
+### Patch Changes
+
+
+
+- [#1691](https://github.com/graphql-hive/gateway/pull/1691) [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/code-file-loader@^8.1.26` ↗︎](https://www.npmjs.com/package/@graphql-tools/code-file-loader/v/8.1.26) (from `^8.1.24`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/graphql-file-loader@^8.1.6` ↗︎](https://www.npmjs.com/package/@graphql-tools/graphql-file-loader/v/8.1.6) (from `^8.1.4`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/load@^8.1.6` ↗︎](https://www.npmjs.com/package/@graphql-tools/load/v/8.1.6) (from `^8.1.4`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.3) (from `^10.10.1`, in `dependencies`)
+
+
+- [#1689](https://github.com/graphql-hive/gateway/pull/1689) [`eabd0f0`](https://github.com/graphql-hive/gateway/commit/eabd0f0b8e42ddd9137c903f489b1d76ee8ebeb0) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Build binaries on macOS 15 (arm and x86)
+
+
+
+- [#1701](https://github.com/graphql-hive/gateway/pull/1701) [`471364a`](https://github.com/graphql-hive/gateway/commit/471364a61ad8d4e8b52dfd744c583797b6f6c8eb) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Properly bundle node modules to be used by the single binary
+
+- Updated dependencies [[`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`a81b8b2`](https://github.com/graphql-hive/gateway/commit/a81b8b20ecdfda53fb77ae5fae3cbd508ab08936), [`ce83f35`](https://github.com/graphql-hive/gateway/commit/ce83f356cbeb2f8413689204275710e7d7a27822), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`095aaf1`](https://github.com/graphql-hive/gateway/commit/095aaf1af4b675f4eb7687fe1fc11ea48239c34d), [`ca1dc52`](https://github.com/graphql-hive/gateway/commit/ca1dc52dd144f45d8415d9db3326ec9f21dda2c8), [`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`6a64d1d`](https://github.com/graphql-hive/gateway/commit/6a64d1d52e8cb4d845aae9696e1811ded9dbdd03)]:
+  - @graphql-hive/gateway-runtime@2.3.5
+  - @graphql-hive/logger@1.0.9
+  - @graphql-hive/plugin-aws-sigv4@2.0.17
+  - @graphql-hive/plugin-opentelemetry@1.2.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+  - @graphql-mesh/plugin-prometheus@2.1.3
+  - @graphql-mesh/transport-http@1.0.12
+  - @graphql-mesh/transport-http-callback@1.0.12
+  - @graphql-mesh/transport-ws@2.0.12
+
 ## 2.1.16
 ### Patch Changes
 
