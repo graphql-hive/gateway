@@ -238,6 +238,9 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
     if (argType.name === 'Int' || argType.name === 'Float') {
       return Number(argValue);
     }
+    if (argType.name === 'String') {
+      return String(argValue);
+    }
   }
   return argValue;
 }
