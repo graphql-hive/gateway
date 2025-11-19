@@ -88,10 +88,13 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 RUN npm install tar@latest -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
-# fix glob vulnerability by updating glob to latest version ^10
+# fix glob vulnerability by updating glob to latest version ^11
 # deal with CVE-2025-64756
-RUN npm install glob@^10 -g
+RUN npm install glob@^11 -g
+# node-gyp uses glob v10, but v11 is safe because it requires node v20+ and we're running v25
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
+# npm uses glob v11, so we've just bumped it to the latest
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
