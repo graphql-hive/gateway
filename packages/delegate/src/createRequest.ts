@@ -96,7 +96,19 @@ export function createRequest({
       const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
       if (argInstance) {
         const argAst = astFromArg(argInstance, targetSchema);
-        const varName = `_args_${rootFieldName}_${argName}`;
+        const varExists = (varName: string) =>
+          variableDefinitions.some(
+            (varDef) => varDef.variable.name.value === varName,
+          );
+        let varName = argName;
+        // Try `<argName>`, then `<rootFieldName>_<argName>`, then `_0_<rootFieldName>_<argName>`, etc.
+        if (varExists(varName)) {
+          varName = `_${rootFieldName}_${argName}`;
+          let i = 0;
+          while (varExists(varName)) {
+            varName = `_${i++}_${rootFieldName}_${argName}`;
+          }
+        }
         variableDefinitions.push({
           kind: Kind.VARIABLE_DEFINITION,
           variable: {
