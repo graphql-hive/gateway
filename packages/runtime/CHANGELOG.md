@@ -1,5 +1,50 @@
 # @graphql-hive/gateway-runtime
 
+## 2.3.5
+### Patch Changes
+
+
+
+- [#1683](https://github.com/graphql-hive/gateway/pull/1683) [`4801627`](https://github.com/graphql-hive/gateway/commit/4801627ef16e963bed0052d0f071879004614a14) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.13.1` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.1) (from `^0.13.0`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.42.3` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.42.3) (from `^0.42.2`, in `dependencies`)
+
+
+- [#1684](https://github.com/graphql-hive/gateway/pull/1684) [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@whatwg-node/server@^0.10.17` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.17) (from `^0.10.15`, in `dependencies`)
+
+
+- [#1691](https://github.com/graphql-hive/gateway/pull/1691) [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.13.2` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.13.2) (from `^0.13.1`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.42.4` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.42.4) (from `^0.42.3`, in `dependencies`)
+  - Updated dependency [`@graphql-tools/utils@^10.10.3` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/10.10.3) (from `^10.10.1`, in `dependencies`)
+  - Updated dependency [`@types/node@^24.10.1` ↗︎](https://www.npmjs.com/package/@types/node/v/24.10.1) (from `^24.10.0`, in `dependencies`)
+
+
+- [#1692](https://github.com/graphql-hive/gateway/pull/1692) [`a81b8b2`](https://github.com/graphql-hive/gateway/commit/a81b8b20ecdfda53fb77ae5fae3cbd508ab08936) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/generic-auth@^11.0.0` ↗︎](https://www.npmjs.com/package/@envelop/generic-auth/v/11.0.0) (from `^10.0.1`, in `dependencies`)
+
+
+- [#1695](https://github.com/graphql-hive/gateway/pull/1695) [`ce83f35`](https://github.com/graphql-hive/gateway/commit/ce83f356cbeb2f8413689204275710e7d7a27822) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@envelop/disable-introspection@^9.0.0` ↗︎](https://www.npmjs.com/package/@envelop/disable-introspection/v/9.0.0) (from `^8.0.0`, in `dependencies`)
+- Updated dependencies [[`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`478d7e2`](https://github.com/graphql-hive/gateway/commit/478d7e25ef47fb8fb6183010a8bb61ac31688c55), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`7ecaf7e`](https://github.com/graphql-hive/gateway/commit/7ecaf7e8f658c4e4c1a91d1e8db3c1a8ceca51cb), [`2993f24`](https://github.com/graphql-hive/gateway/commit/2993f24f8e46853c0d2667c0cd2bf96190f3a2b2)]:
+  - @graphql-hive/logger@1.0.9
+  - @graphql-mesh/fusion-runtime@1.5.1
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+  - @graphql-mesh/transport-common@1.0.12
+  - @graphql-tools/batch-delegate@10.0.5
+  - @graphql-tools/delegate@11.1.3
+  - @graphql-tools/executor-common@1.0.5
+  - @graphql-tools/executor-http@3.0.7
+  - @graphql-tools/federation@4.2.3
+  - @graphql-tools/stitch@10.1.3
+  - @graphql-tools/wrap@11.0.5
+
 ## 2.3.4
 ### Patch Changes
 
