@@ -6,7 +6,6 @@ import {
 } from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
-  getDefinedRootType,
   MapperKind,
   mapSchema,
   transformInputValue,
@@ -104,7 +103,7 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
 
   public transformRequest(
     originalRequest: ExecutionRequest,
-    delegationContext: DelegationContext<TContext>,
+    _delegationContext: DelegationContext<TContext>,
     _transformationContext: TransformInputObjectFieldsTransformationContext,
   ): ExecutionRequest {
     const variableValues = originalRequest.variables ?? {};
@@ -126,8 +125,11 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
         for (const variableDef of variableDefs) {
           const varName = variableDef.variable.name.value;
           // Cast to NamedTypeNode required until upcomming graphql releases will have TypeNode paramter
+          if (!this.transformedSchema) {
+            continue;
+          }
           const varType = typeFromAST(
-            delegationContext.transformedSchema,
+            this.transformedSchema,
             variableDef.type as NamedTypeNode,
           );
           if (!isInputType(varType)) {
@@ -169,50 +171,7 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
       this.inputFieldNodeTransformer,
       this.inputObjectNodeTransformer,
       originalRequest,
-      delegationContext,
     );
-
-    if (delegationContext.args != null) {
-      const targetRootType = getDefinedRootType(
-        delegationContext.transformedSchema,
-        delegationContext.operation,
-      );
-
-      if (targetRootType) {
-        const targetField =
-          targetRootType.getFields()[delegationContext.fieldName];
-        if (targetField) {
-          const newArgs = Object.create(null);
-          for (const targetArg of targetField.args) {
-            if (targetArg.name in delegationContext.args) {
-              newArgs[targetArg.name] = transformInputValue(
-                targetArg.type,
-                delegationContext.args[targetArg.name],
-                undefined,
-                (type, originalValue) => {
-                  const newValue = Object.create(null);
-                  const fields = type.getFields();
-                  for (const key in originalValue) {
-                    const field = fields[key];
-                    if (field != null) {
-                      const newFieldName =
-                        this.mapping[type.name]?.[field.name];
-                      if (newFieldName != null) {
-                        newValue[newFieldName] = originalValue[field.name];
-                      } else {
-                        newValue[field.name] = originalValue[field.name];
-                      }
-                    }
-                  }
-                  return newValue;
-                },
-              );
-            }
-          }
-          delegationContext.args = newArgs;
-        }
-      }
-    }
 
     return {
       ...originalRequest,
@@ -227,7 +186,6 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
     inputFieldNodeTransformer: InputFieldNodeTransformer | undefined,
     inputObjectNodeTransformer: InputObjectNodeTransformer | undefined,
     request: ExecutionRequest,
-    delegationContext?: DelegationContext<TContext>,
   ): DocumentNode {
     const typeInfo = getTypeInfo(this._getTransformedSchema());
     const newDocument: DocumentNode = visit(
@@ -250,7 +208,6 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
                         newName,
                         inputField,
                         request,
-                        delegationContext,
                       )
                     : inputField;
 
@@ -306,12 +263,7 @@ export default class TransformInputObjectFields<TContext = Record<string, any>>
               };
 
               return inputObjectNodeTransformer != null
-                ? inputObjectNodeTransformer(
-                    parentTypeName,
-                    newNode,
-                    request,
-                    delegationContext,
-                  )
+                ? inputObjectNodeTransformer(parentTypeName, newNode, request)
                 : newNode;
             }
           },

@@ -1,4 +1,5 @@
 import { createTenv } from '@internal/e2e';
+import { usingHiveRouterRuntime } from '~internal/env';
 import { stripIgnoredCharacters } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { hashSHA256 } from '../../packages/executors/http/src/utils';
@@ -13,12 +14,19 @@ describe('APQ to the upstream', () => {
         services: [await service('greetings')],
       },
     });
-    const query = stripIgnoredCharacters(/* GraphQL */ `
-      {
-        __typename
-        hello
-      }
-    `);
+    const query = usingHiveRouterRuntime()
+      ? stripIgnoredCharacters(/* GraphQL */ `
+          query {
+            __typename
+            hello
+          }
+        `)
+      : stripIgnoredCharacters(/* GraphQL */ `
+          {
+            __typename
+            hello
+          }
+        `);
     const sha256Hash = await hashSHA256(query);
     await expect(gw.execute({ query })).resolves.toEqual({
       data: {

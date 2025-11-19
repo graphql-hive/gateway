@@ -1,4 +1,9 @@
-import { ExecutionRequest, serializeInputValue } from '@graphql-tools/utils';
+import {
+  asArray,
+  astFromArg,
+  astFromValueUntyped,
+  ExecutionRequest,
+} from '@graphql-tools/utils';
 import {
   ArgumentNode,
   DefinitionNode,
@@ -7,21 +12,18 @@ import {
   GraphQLInputType,
   GraphQLObjectType,
   GraphQLSchema,
+  isInputObjectType,
+  isListType,
+  isNonNullType,
   Kind,
-  NamedTypeNode,
   NameNode,
   OperationDefinitionNode,
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
-  typeFromAST,
   VariableDefinitionNode,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
-import {
-  createVariableNameGenerator,
-  updateArgument,
-} from './updateArguments.js';
 
 export function getDelegatingOperation(
   parentType: GraphQLObjectType,
@@ -38,23 +40,19 @@ export function getDelegatingOperation(
 
 export function createRequest({
   subgraphName,
-  sourceSchema,
-  sourceParentType,
-  sourceFieldName,
   fragments,
-  variableDefinitions,
-  variableValues,
-  targetRootValue,
+  rootValue,
   targetOperationName,
   targetOperation,
+  targetSchema,
   targetFieldName,
   selectionSet,
   fieldNodes,
   context,
   info,
+  args,
 }: ICreateRequest): ExecutionRequest {
   let newSelectionSet: SelectionSetNode | undefined;
-  const argumentNodeMap: Record<string, ArgumentNode> = Object.create(null);
 
   if (selectionSet != null) {
     newSelectionSet = selectionSet;
@@ -74,45 +72,8 @@ export function createRequest({
           selections,
         }
       : undefined;
-
-    const args = fieldNodes?.[0]?.arguments;
-    if (args) {
-      for (const argNode of args) {
-        argumentNodeMap[argNode.name.value] = argNode;
-      }
-    }
   }
 
-  const newVariables = Object.create(null);
-  const variableDefinitionMap = Object.create(null);
-
-  if (sourceSchema != null && variableDefinitions != null) {
-    for (const def of variableDefinitions) {
-      const varName = def.variable.name.value;
-      variableDefinitionMap[varName] = def;
-      const varType = typeFromAST(
-        sourceSchema,
-        def.type as NamedTypeNode,
-      ) as GraphQLInputType;
-      const serializedValue = serializeInputValue(
-        varType,
-        variableValues?.[varName],
-      );
-      if (serializedValue !== undefined) {
-        newVariables[varName] = serializedValue;
-      }
-    }
-  }
-
-  if (sourceParentType != null && sourceFieldName != null) {
-    updateArgumentsWithDefaults(
-      sourceParentType,
-      sourceFieldName,
-      argumentNodeMap,
-      variableDefinitionMap,
-      newVariables,
-    );
-  }
   const fieldNode = fieldNodes?.[0];
   const rootFieldName = targetFieldName ?? fieldNode?.name.value;
 
@@ -122,9 +83,81 @@ export function createRequest({
     );
   }
 
+  const newVariables = Object.create(null);
+  const variableDefinitions: VariableDefinitionNode[] = [];
+  const argNodes: ArgumentNode[] = [];
+
+  if (args != null) {
+    const rootType = targetSchema?.getRootType(targetOperation);
+    const rootField = rootType?.getFields()[rootFieldName];
+    const rootFieldArgs = rootField?.args;
+    for (const argName in args) {
+      const argValue = args[argName];
+      const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
+      if (argInstance) {
+        const argAst = astFromArg(argInstance, targetSchema);
+        const varExists = (varName: string) =>
+          variableDefinitions.some(
+            (varDef) => varDef.variable.name.value === varName,
+          );
+        let varName = argName;
+        // Try `<argName>`, then `<rootFieldName>_<argName>`, then `_0_<rootFieldName>_<argName>`, etc.
+        if (varExists(varName)) {
+          varName = `_${rootFieldName}_${argName}`;
+          let i = 0;
+          while (varExists(varName)) {
+            varName = `_${i++}_${rootFieldName}_${argName}`;
+          }
+        }
+        variableDefinitions.push({
+          kind: Kind.VARIABLE_DEFINITION,
+          variable: {
+            kind: Kind.VARIABLE,
+            name: {
+              kind: Kind.NAME,
+              value: varName,
+            },
+          },
+          type: argAst.type,
+        });
+        newVariables[varName] = projectArgumentValue(
+          argValue,
+          argInstance.type,
+        );
+        argNodes.push({
+          kind: Kind.ARGUMENT,
+          name: {
+            kind: Kind.NAME,
+            value: argName,
+          },
+          value: {
+            kind: Kind.VARIABLE,
+            name: {
+              kind: Kind.NAME,
+              value: varName,
+            },
+          },
+        });
+      } else {
+        // For arguments that are not defined in the target schema, we inline them.
+        const valueNode = astFromValueUntyped(argValue);
+        if (valueNode != null) {
+          argNodes.push({
+            kind: Kind.ARGUMENT,
+            name: {
+              kind: Kind.NAME,
+              value: argName,
+            },
+            value: valueNode,
+          });
+        }
+      }
+    }
+  }
+
   const rootfieldNode: FieldNode = {
     kind: Kind.FIELD,
-    arguments: Object.values(argumentNodeMap),
+    arguments: argNodes,
     name: {
       kind: Kind.NAME,
       value: rootFieldName,
@@ -144,7 +177,7 @@ export function createRequest({
     kind: Kind.OPERATION_DEFINITION,
     name: operationName,
     operation: targetOperation,
-    variableDefinitions: Object.values(variableDefinitionMap),
+    variableDefinitions,
     selectionSet: {
       kind: Kind.SELECTION_SET,
       selections: [rootfieldNode],
@@ -154,12 +187,7 @@ export function createRequest({
   const definitions: Array<DefinitionNode> = [operationDefinition];
 
   if (fragments != null) {
-    for (const fragmentName in fragments) {
-      const fragment = fragments[fragmentName];
-      if (fragment) {
-        definitions.push(fragment);
-      }
-    }
+    definitions.push(...fragments);
   }
 
   const document: DocumentNode = {
@@ -171,7 +199,7 @@ export function createRequest({
     subgraphName,
     document,
     variables: newVariables,
-    rootValue: targetRootValue,
+    rootValue,
     operationName: targetOperationName,
     context,
     info,
@@ -179,41 +207,40 @@ export function createRequest({
   };
 }
 
-function updateArgumentsWithDefaults(
-  sourceParentType: GraphQLObjectType,
-  sourceFieldName: string,
-  argumentNodeMap: Record<string, ArgumentNode>,
-  variableDefinitionMap: Record<string, VariableDefinitionNode>,
-  variableValues: Record<string, any>,
-): void {
-  const generateVariableName = createVariableNameGenerator(
-    variableDefinitionMap,
-  );
-
-  const sourceField = sourceParentType.getFields()[sourceFieldName];
-  if (!sourceField) {
-    throw new Error(
-      `Field "${sourceFieldName}" was not found in type "${sourceParentType}".`,
+function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
+  if (isNonNullType(argType)) {
+    return projectArgumentValue(argValue, argType.ofType);
+  }
+  if (isListType(argType)) {
+    return asArray(argValue).map((item: any) =>
+      projectArgumentValue(item, argType.ofType),
     );
   }
-  for (const argument of sourceField.args) {
-    const argName = argument.name;
-    const sourceArgType = argument.type;
-
-    if (argumentNodeMap[argName] === undefined) {
-      const defaultValue = argument.defaultValue;
-
-      if (defaultValue !== undefined) {
-        updateArgument(
-          argumentNodeMap,
-          variableDefinitionMap,
-          variableValues,
-          argName,
-          generateVariableName(argName),
-          sourceArgType,
-          serializeInputValue(sourceArgType, defaultValue),
-        );
+  if (
+    isInputObjectType(argType) &&
+    typeof argValue === 'object' &&
+    argValue !== null
+  ) {
+    const projectedValue: any = {};
+    const fields = argType.getFields();
+    for (const key in argValue) {
+      const field = fields[key];
+      if (field) {
+        projectedValue[key] = projectArgumentValue(argValue[key], field.type);
       }
     }
+    return projectedValue;
   }
+  if (argValue != null) {
+    if (argType.name === 'Boolean') {
+      return Boolean(argValue);
+    }
+    if (argType.name === 'Int' || argType.name === 'Float') {
+      return Number(argValue);
+    }
+    if (argType.name === 'String') {
+      return String(argValue);
+    }
+  }
+  return argValue;
 }

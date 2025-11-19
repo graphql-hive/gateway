@@ -1,4 +1,8 @@
-import { DelegationContext, Transform } from '@graphql-tools/delegate';
+import {
+  DelegationContext,
+  getTypeInfo,
+  Transform,
+} from '@graphql-tools/delegate';
 import {
   ExecutionRequest,
   ExecutionResult,
@@ -11,9 +15,11 @@ import {
   GraphQLFieldConfigMap,
   GraphQLObjectType,
   GraphQLSchema,
+  isObjectType,
   Kind,
   OperationTypeNode,
   visit,
+  visitWithTypeInfo,
 } from 'graphql';
 
 const defaultRootTypeNames = {
@@ -22,13 +28,20 @@ const defaultRootTypeNames = {
   subscription: 'Subscription',
 };
 
-export class MoveRootField implements Transform {
+interface MoveRootFieldTransformationContext {
+  newOperationType?: OperationTypeNode;
+}
+
+export class MoveRootField
+  implements Transform<MoveRootFieldTransformationContext>
+{
   private to: Record<OperationTypeNode, Record<string, OperationTypeNode>> = {
     query: {},
     mutation: {},
     subscription: {},
   };
 
+  private transformedSchema: GraphQLSchema | undefined;
   constructor(
     private from: Record<OperationTypeNode, Record<string, OperationTypeNode>>,
   ) {
@@ -83,7 +96,7 @@ export class MoveRootField implements Transform {
         });
       }
     }
-    return mapSchema(new GraphQLSchema(schemaConfig), {
+    this.transformedSchema = mapSchema(new GraphQLSchema(schemaConfig), {
       [MapperKind.QUERY]: (type) => {
         const queryConfig = type.toConfig();
         queryConfig.fields = newRootFieldsMap.query;
@@ -100,25 +113,62 @@ export class MoveRootField implements Transform {
         return new GraphQLObjectType(subscriptionConfig);
       },
     });
+    return this.transformedSchema;
   }
 
   public transformRequest(
     originalRequest: ExecutionRequest,
-    delegationContext: DelegationContext,
+    _delegationContext: DelegationContext,
+    transformationContext: MoveRootFieldTransformationContext,
   ): ExecutionRequest {
-    const newOperation =
-      this.to[delegationContext.operation][delegationContext.fieldName];
-    if (newOperation && newOperation !== delegationContext.operation) {
+    const sourceOperationType =
+      originalRequest.operationType || OperationTypeNode.QUERY;
+    if (this.transformedSchema) {
+      const typeInfo = getTypeInfo(this.transformedSchema);
+      const rootTypes = getRootTypeMap(this.transformedSchema);
+      const reversedRootTypeMap = new Map<
+        GraphQLObjectType,
+        OperationTypeNode
+      >();
+      for (const [opType, type] of rootTypes.entries()) {
+        reversedRootTypeMap.set(type, opType);
+      }
       return {
         ...originalRequest,
-        document: visit(originalRequest.document, {
-          [Kind.OPERATION_DEFINITION]: (node) => {
-            return {
-              ...node,
-              operation: newOperation,
-            };
-          },
-        }),
+        document: visit(
+          originalRequest.document,
+          visitWithTypeInfo(typeInfo, {
+            [Kind.FIELD]: {
+              enter: (node) => {
+                const parentType = typeInfo.getParentType();
+                if (isObjectType(parentType)) {
+                  const parentOperation = reversedRootTypeMap.get(parentType);
+                  if (
+                    parentOperation != null &&
+                    this.to[parentOperation][node.name.value] != null
+                  ) {
+                    transformationContext.newOperationType =
+                      this.to[parentOperation][node.name.value];
+                  }
+                }
+              },
+            },
+            [Kind.OPERATION_DEFINITION]: {
+              leave: (node) => {
+                if (
+                  transformationContext.newOperationType &&
+                  transformationContext.newOperationType !== sourceOperationType
+                ) {
+                  return {
+                    ...node,
+                    operation: transformationContext.newOperationType,
+                  };
+                }
+                return node;
+              },
+            },
+          }),
+        ),
       };
     }
     return originalRequest;
@@ -126,16 +176,20 @@ export class MoveRootField implements Transform {
 
   public transformResult(
     result: ExecutionResult,
-    delegationContext: DelegationContext,
+    _delegationContext: DelegationContext,
+    transformationContext: MoveRootFieldTransformationContext,
   ) {
-    if (result.data?.__typename) {
-      const newOperation =
-        this.to[delegationContext.operation][delegationContext.fieldName];
-      if (newOperation && newOperation !== delegationContext.operation) {
-        result.data.__typename = getDefinedRootType(
-          delegationContext.targetSchema,
-          newOperation,
-        )?.name;
+    if (
+      this.transformedSchema &&
+      result.data?.__typename &&
+      transformationContext.newOperationType
+    ) {
+      const rootType = getDefinedRootType(
+        this.transformedSchema,
+        transformationContext.newOperationType,
+      );
+      if (rootType) {
+        result.data.__typename = rootType.name;
       }
     }
     return result;
