@@ -216,18 +216,28 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
       projectArgumentValue(item, argType.ofType),
     );
   }
-  if (isInputObjectType(argType)) {
+  if (
+    isInputObjectType(argType) &&
+    typeof argValue === 'object' &&
+    argValue !== null
+  ) {
     const projectedValue: any = {};
     const fields = argType.getFields();
     for (const key in argValue) {
-      if (fields[key]) {
-        projectedValue[key] = projectArgumentValue(
-          argValue[key],
-          fields[key].type,
-        );
+      const field = fields[key];
+      if (field) {
+        projectedValue[key] = projectArgumentValue(argValue[key], field.type);
       }
     }
     return projectedValue;
+  }
+  if (argValue != null) {
+    if (argType.name === 'Boolean') {
+      return Boolean(argValue);
+    }
+    if (argType.name === 'Int' || argType.name === 'Float') {
+      return Number(argValue);
+    }
   }
   return argValue;
 }
