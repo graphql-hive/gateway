@@ -21,6 +21,7 @@ import {
   SEMATTRS_HTTP_URL,
   SEMATTRS_NET_HOST_NAME,
 } from '@graphql-hive/plugin-opentelemetry/setup';
+import { assertSingleExecutionValue } from '@internal/testing';
 import {
   ROOT_CONTEXT,
   SpanStatusCode,
@@ -824,7 +825,11 @@ describe('useOpenTelemetry', () => {
                 }),
               ),
           });
-          await gateway.query({ shouldReturnErrors: true });
+          const result = await gateway.query({ shouldReturnErrors: true });
+          assertSingleExecutionValue(result);
+          expect(result.errors?.[0]).toBeDefined();
+          // By default, coordinate should not leak to client
+          expect(Object.keys(result.errors![0]!)).not.toContain('coordinate');
 
           const operationSpan = spanExporter.assertRoot('graphql.operation');
           expect(operationSpan.span.status).toMatchObject({
