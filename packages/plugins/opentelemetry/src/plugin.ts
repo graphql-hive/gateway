@@ -1,14 +1,15 @@
 import {
   GatewayConfigContext,
+  GatewayContext,
   getRetryInfo,
   isRetryExecutionRequest,
   Logger,
   type GatewayPlugin,
 } from '@graphql-hive/gateway-runtime';
 import { getHeadersObj } from '@graphql-mesh/utils';
-import { ExecutionArgs } from '@graphql-tools/executor';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { Plugin, useErrorCoordinate } from 'graphql-yoga';
 import {
   context,
   hive,
@@ -706,6 +707,11 @@ export function useOpenTelemetry(
         },
       },
 
+      onPluginInit({ addPlugin }) {
+        // @ts-expect-error Yoga plugin incompatible types with Gateway plugin.
+        addPlugin(useErrorCoordinate());
+      },
+
       onYogaInit({ yoga }) {
         //TODO remove this when Yoga will also use the new Logger API
         pluginLogger ??= new Logger({
@@ -881,8 +887,6 @@ export function useOpenTelemetry(
         if (state.forOperation.skipExecuteSpan) {
           return;
         }
-
-        (args as ExecutionArgs).schemaCoordinateInErrors = true;
 
         const ctx = getContext(state);
         setGraphQLExecutionAttributes({
