@@ -4767,7 +4767,7 @@ __metadata:
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
     "@graphql-tools/utils": "npm:^10.10.3"
-    "@graphql-yoga/plugin-prometheus": "npm:^6.11.2"
+    "@graphql-yoga/plugin-prometheus": "npm:^6.11.3"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.2"
     pkgroll: "npm:2.20.1"
@@ -5659,16 +5659,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-prometheus@npm:^6.11.2":
-  version: 6.11.2
-  resolution: "@graphql-yoga/plugin-prometheus@npm:6.11.2"
+"@graphql-yoga/plugin-prometheus@npm:^6.11.3":
+  version: 6.11.3
+  resolution: "@graphql-yoga/plugin-prometheus@npm:6.11.3"
   dependencies:
     "@envelop/prometheus": "npm:^14.0.0"
   peerDependencies:
     graphql: ^15.2.0 || ^16.0.0
     graphql-yoga: ^5.16.2
     prom-client: ^15.0.0
-  checksum: 10c0/c099cf804834207c27dc4a06d3961b9b990137e5843bfbe2767935b9af6ddfbcd8405ae67e6b0000a9db31cbb1cfc81005e0b650bc72acb2333a545111f2a56e
+  checksum: 10c0/c7c4d58ce8777e6c31f7eec9b48abafc6ab664d4956b39d81b85758e2e4064284ba6a36df91b4073d17d5987bb823c56b1c1ab47034feb6b8d7aeffa0c738a25
   languageName: node
   linkType: hard
 
