@@ -1,5 +1,22 @@
 # @graphql-mesh/plugin-prometheus
 
+## 2.1.4
+### Patch Changes
+
+
+
+- [#1716](https://github.com/graphql-hive/gateway/pull/1716) [`d1df7ab`](https://github.com/graphql-hive/gateway/commit/d1df7ab73cb99f79ae7123b56d44fb9c3d724fd4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-yoga/plugin-prometheus@^6.11.3` ↗︎](https://www.npmjs.com/package/@graphql-yoga/plugin-prometheus/v/6.11.3) (from `^6.11.2`, in `dependencies`)
+
+
+- [#1716](https://github.com/graphql-hive/gateway/pull/1716) [`d1df7ab`](https://github.com/graphql-hive/gateway/commit/d1df7ab73cb99f79ae7123b56d44fb9c3d724fd4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Plugin stops and handles parsing errors
+  
+  Previously it would throw an unhandled exception becauase Prometheus was expecting a GraphQL
+  document in onParse hook always, but it can also be an error.
+  
+  Actual fix is done in the GraphQL Yoga repository: https://github.com/graphql-hive/graphql-yoga/pull/4296.
+
 ## 2.1.3
 ### Patch Changes
 
