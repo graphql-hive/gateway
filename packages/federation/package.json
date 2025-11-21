@@ -61,7 +61,7 @@
     "@types/lodash": "4.17.20",
     "graphql": "^16.12.0",
     "graphql-federation-gateway-audit": "graphql-hive/federation-gateway-audit#cc224d26da54ad1c2393dfef3346893c315f351d",
-    "pkgroll": "2.20.1"
+    "pkgroll": "2.21.1"
   },
   "sideEffects": false
 }

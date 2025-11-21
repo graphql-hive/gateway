@@ -79,7 +79,7 @@
     "@nats-io/nats-core": "^3.2.0",
     "@nats-io/transport-node": "^3.2.0",
     "ioredis": "^5.8.2",
-    "pkgroll": "2.20.1"
+    "pkgroll": "2.21.1"
   },
   "sideEffects": false
 }
