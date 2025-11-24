@@ -396,17 +396,19 @@ function resolveBatchingConfig(
 }
 
 function createResource(opts: Pick<OpentelemetrySetupOptions, 'resource'>) {
+  const resourceObj =
+    opts.resource && 'serviceName' in opts.resource ? opts.resource : null;
+
   let resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]:
-      opts.resource && 'serviceName' in opts.resource
-        ? opts.resource.serviceName
-        : getEnvStr('OTEL_SERVICE_NAME') || 'hive-gateway',
+      resourceObj?.serviceName ||
+      getEnvStr('OTEL_SERVICE_NAME') ||
+      'hive-gateway',
     [ATTR_SERVICE_VERSION]:
-      opts.resource && 'serviceVersion' in opts.resource
-        ? opts.resource.serviceVersion
-        : getEnvStr('OTEL_SERVICE_VERSION') ||
-          globalThis.__VERSION__ ||
-          'unknown',
+      resourceObj?.serviceVersion ||
+      getEnvStr('OTEL_SERVICE_VERSION') ||
+      globalThis.__VERSION__ ||
+      'unknown',
     ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
   });
   if (opts.resource && 'attributes' in opts.resource) {
