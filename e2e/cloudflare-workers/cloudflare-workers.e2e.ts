@@ -106,7 +106,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       ]);
       let hostname: string;
       try {
-        hostname = await getLocalhost(port);
+        hostname = await getLocalhost(port, undefined, 10_000);
       } catch {
         throw new Error(
           `Wrangler unavailable\n${proc.getStd('both') || 'no output'}`,

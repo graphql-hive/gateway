@@ -6,8 +6,9 @@ export const hostnames = ['0.0.0.0', '127.0.0.1', 'localhost'];
 export async function getLocalhost(
   port: number,
   protocol = 'http',
+  timeout = 5000,
 ): Promise<string> {
-  const timeoutSignal = AbortSignal.timeout(5000);
+  const timeoutSignal = AbortSignal.timeout(timeout);
   while (!timeoutSignal.aborted) {
     for (const hostname of hostnames) {
       const url = `${protocol}://${hostname}:${port}`;
