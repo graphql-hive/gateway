@@ -38,7 +38,9 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       try {
         jaegerHostname = await getLocalhost(jaeger.port);
       } catch {
-        throw new Error(`Jaeger unavailable\n${jaeger.getStd('both')}`);
+        throw new Error(
+          `Jaeger unavailable\n${jaeger.getStd('both') || 'no output'}`,
+        );
       }
     });
 
@@ -105,7 +107,9 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       try {
         hostname = await getLocalhost(port);
       } catch {
-        throw new Error(`Wrangler unavailable\n${proc.getStd('both')}`);
+        throw new Error(
+          `Wrangler unavailable\n${proc.getStd('both') || 'no output'}`,
+        );
       }
       return {
         url: `${hostname}:${port}`,
