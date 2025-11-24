@@ -297,6 +297,7 @@ export type HiveTracingOptions = { target?: string } & (
       accessToken?: string;
       batching?: BufferConfig;
       processor?: never;
+      /** @default 'https://api.graphql-hive.com/otel/v1/traces' */
       endpoint?: string;
     }
   | {
@@ -336,7 +337,9 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
       );
     }
 
-    options.endpoint ??= getEnvStr('HIVE_TRACING_ENDPOINT');
+    options.endpoint ??=
+      getEnvStr('HIVE_TRACING_ENDPOINT') ??
+      'https://api.graphql-hive.com/otel/v1/traces';
     if (!options.endpoint) {
       throw new Error(
         'You must specify the Hive Tracing endpoint. Either provide the "endpoint" option or the "HIVE_TRACING_ENDPOINT" environment variable.',
