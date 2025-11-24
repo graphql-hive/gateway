@@ -1,5 +1,16 @@
 # @graphql-mesh/plugin-prometheus
 
+## 2.1.5
+### Patch Changes
+
+
+
+- [#1719](https://github.com/graphql-hive/gateway/pull/1719) [`b449b05`](https://github.com/graphql-hive/gateway/commit/b449b0523eb1aef32235bdd74f1aacaa750f67c6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Built-in Prometheus plugin inherits the logger from context
+
+
+
+- [#1719](https://github.com/graphql-hive/gateway/pull/1719) [`b449b05`](https://github.com/graphql-hive/gateway/commit/b449b0523eb1aef32235bdd74f1aacaa750f67c6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Metrics configuration accepts `true` which will enable only the defaults
+
 ## 2.1.4
 ### Patch Changes
 

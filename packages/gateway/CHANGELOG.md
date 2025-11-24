@@ -1,5 +1,16 @@
 # @graphql-hive/gateway
 
+## 2.1.19
+### Patch Changes
+
+
+
+- [#1719](https://github.com/graphql-hive/gateway/pull/1719) [`b449b05`](https://github.com/graphql-hive/gateway/commit/b449b0523eb1aef32235bdd74f1aacaa750f67c6) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Built-in Prometheus plugin inherits the logger from context
+
+- Updated dependencies [[`b449b05`](https://github.com/graphql-hive/gateway/commit/b449b0523eb1aef32235bdd74f1aacaa750f67c6), [`b449b05`](https://github.com/graphql-hive/gateway/commit/b449b0523eb1aef32235bdd74f1aacaa750f67c6), [`3706a2c`](https://github.com/graphql-hive/gateway/commit/3706a2c044eadd54f2ab3e28e43d053e25f22fe4), [`3706a2c`](https://github.com/graphql-hive/gateway/commit/3706a2c044eadd54f2ab3e28e43d053e25f22fe4)]:
+  - @graphql-mesh/plugin-prometheus@2.1.5
+  - @graphql-hive/plugin-opentelemetry@1.2.1
+
 ## 2.1.18
 ### Patch Changes
 

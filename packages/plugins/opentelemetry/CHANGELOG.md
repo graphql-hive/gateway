@@ -1,5 +1,16 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.2.1
+### Patch Changes
+
+
+
+- [#1721](https://github.com/graphql-hive/gateway/pull/1721) [`3706a2c`](https://github.com/graphql-hive/gateway/commit/3706a2c044eadd54f2ab3e28e43d053e25f22fe4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Have a default endpoint for Hive Tracing
+
+
+
+- [#1721](https://github.com/graphql-hive/gateway/pull/1721) [`3706a2c`](https://github.com/graphql-hive/gateway/commit/3706a2c044eadd54f2ab3e28e43d053e25f22fe4) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Improved default resource service name and version to use Hive Gateway
+
 ## 1.2.0
 ### Minor Changes
 
