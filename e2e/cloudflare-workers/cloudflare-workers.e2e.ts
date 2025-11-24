@@ -35,7 +35,11 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         additionalContainerPorts: [16686],
         healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
       });
-      jaegerHostname = await getLocalhost(jaeger.port);
+      try {
+        jaegerHostname = await getLocalhost(jaeger.port);
+      } catch {
+        throw new Error(`Jaeger unavailable\n${jaeger.getStd('both')}`);
+      }
     });
 
     type JaegerTracesApiResponse = {
@@ -83,7 +87,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       OTEL_SERVICE_NAME: string;
     }) {
       const port = await getAvailablePort();
-      await spawn([
+      const [proc] = await spawn([
         'yarn',
         'wrangler',
         'dev',
@@ -97,7 +101,12 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         'OTEL_LOG_LEVEL:debug',
         ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
       ]);
-      const hostname = await getLocalhost(port);
+      let hostname: string;
+      try {
+        hostname = await getLocalhost(port);
+      } catch {
+        throw new Error(`Wrangler unavailable\n${proc.getStd('both')}`);
+      }
       return {
         url: `${hostname}:${port}`,
         async execute({
