@@ -68,7 +68,7 @@
     "@graphql-hive/router-runtime": "workspace:^",
     "change-case": "^5.4.4",
     "graphql": "^16.12.0",
-    "pkgroll": "2.20.1"
+    "pkgroll": "2.21.3"
   },
   "sideEffects": false
 }
