@@ -1,6 +1,6 @@
 import os from 'os';
 import { createTenv, getAvailablePort, type Container } from '@internal/e2e';
-import { getLocalhost, isDebug } from '@internal/testing';
+import { getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -101,7 +101,8 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         'OTEL_SERVICE_NAME:' + env.OTEL_SERVICE_NAME,
         '--var',
         'OTEL_LOG_LEVEL:debug',
-        ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
+        '--var',
+        'DEBUG:1',
       ]);
       let hostname: string;
       try {
