@@ -144,7 +144,7 @@ type MeshMetricsConfig = {
    * The logger instance used by the plugin to log messages.
    * This should be the logger instance provided by Mesh in the plugins context.
    */
-  log: Logger;
+  log?: Logger;
 };
 
 export type PrometheusPluginOptions = PrometheusTracingPluginConfig &
@@ -174,7 +174,10 @@ export default function useMeshPrometheus(
     // Remove this after Mesh v1 is released;
     'registry'
   > &
-    YamlConfig, // Remove this after Mesh v1 is released,
+    // Remove this after Mesh v1 is released,
+    YamlConfig &
+    // Logger must be supplied to plugin
+    { log: Logger },
 ): MeshPlugin<any> & YogaPlugin & GatewayPlugin {
   const endpoint = pluginOptions.endpoint || '/metrics';
   let registry: Registry;
