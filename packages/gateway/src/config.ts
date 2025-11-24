@@ -120,7 +120,7 @@ export async function getBuiltinPluginsFromConfig(
     const { default: useMeshPrometheus } = await import(
       '@graphql-mesh/plugin-prometheus'
     );
-    plugins.push(useMeshPrometheus(config.prometheus));
+    plugins.push(useMeshPrometheus({ ...config.prometheus, log: ctx.log }));
   }
   if (config.openTelemetry) {
     const { useOpenTelemetry } = await import(
