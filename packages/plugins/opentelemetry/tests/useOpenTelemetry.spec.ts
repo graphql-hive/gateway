@@ -121,7 +121,7 @@ describe('useOpenTelemetry', () => {
 
       const resource = getResource();
       expect(resource?.attributes).toMatchObject({
-        'service.name': '@graphql-hive/plugin-opentelemetry',
+        'service.name': 'hive-gateway',
       });
     });
 
@@ -398,7 +398,7 @@ describe('useOpenTelemetry', () => {
       expect(exporter).toBeInstanceOf(OTLPTraceExporter);
       // @ts-expect-error Access of private field
       expect(exporter._delegate._transport._transport._parameters.url).toBe(
-        'http://localhost:4318/v1/traces',
+        'https://api.graphql-hive.com/otel/v1/traces',
       );
     });
   });
@@ -562,7 +562,7 @@ describe('useOpenTelemetry', () => {
           let attempts = 0;
           await using gateway = await buildTestGatewayForCtx({
             gatewayOptions: {
-              logging: true,
+              logging: false,
               upstreamRetry: {
                 maxRetries: 2,
                 retryDelay: 1,

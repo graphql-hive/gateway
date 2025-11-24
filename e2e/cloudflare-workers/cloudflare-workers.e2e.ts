@@ -1,6 +1,6 @@
 import os from 'os';
 import { createTenv, getAvailablePort, type Container } from '@internal/e2e';
-import { getLocalhost, isDebug } from '@internal/testing';
+import { getLocalhost } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { ExecutionResult } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -35,7 +35,13 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         additionalContainerPorts: [16686],
         healthcheck: ['CMD-SHELL', 'wget --spider http://0.0.0.0:14269'],
       });
-      jaegerHostname = await getLocalhost(jaeger.port);
+      try {
+        jaegerHostname = await getLocalhost(jaeger.port);
+      } catch {
+        throw new Error(
+          `Jaeger unavailable\n${jaeger.getStd('both') || 'no output'}`,
+        );
+      }
     });
 
     type JaegerTracesApiResponse = {
@@ -83,7 +89,7 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
       OTEL_SERVICE_NAME: string;
     }) {
       const port = await getAvailablePort();
-      await spawn([
+      const [proc] = await spawn([
         'yarn',
         'wrangler',
         'dev',
@@ -95,9 +101,17 @@ describe.skipIf(gatewayRunner !== 'node' || process.version.startsWith('v1'))(
         'OTEL_SERVICE_NAME:' + env.OTEL_SERVICE_NAME,
         '--var',
         'OTEL_LOG_LEVEL:debug',
-        ...(isDebug() ? ['--var', 'DEBUG:1'] : []),
+        '--var',
+        'DEBUG:1',
       ]);
-      const hostname = await getLocalhost(port);
+      let hostname: string;
+      try {
+        hostname = await getLocalhost(port, undefined, 30_000);
+      } catch {
+        throw new Error(
+          `Wrangler unavailable\n${proc.getStd('both') || 'no output'}`,
+        );
+      }
       return {
         url: `${hostname}:${port}`,
         async execute({

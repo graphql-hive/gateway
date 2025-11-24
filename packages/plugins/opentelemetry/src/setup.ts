@@ -125,7 +125,7 @@ type BaseOptions = {
    * The Resource that will be used to create the Trace Provider.
    * Can be either a Resource instance, or an simple object with service name and version
    */
-  resource?: Resource | { serviceName: string; serviceVersion: string };
+  resource?: Resource | { serviceName: string; serviceVersion?: string };
   /**
    * The Context Manager to be used to track OTEL Context.
    * If possible, use `AsyncLocalStorageContextManager` from `@opentelemetry/context-async-hooks`.
@@ -244,21 +244,7 @@ export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
         logAttributes['console'] = true;
       }
 
-      const resource = createResource(
-        resourceFromAttributes({
-          [ATTR_SERVICE_NAME]:
-            getEnvStr('OTEL_SERVICE_NAME') ||
-            '@graphql-hive/plugin-opentelemetry',
-          [ATTR_SERVICE_VERSION]:
-            getEnvStr('OTEL_SERVICE_VERSION') ||
-            globalThis.__OTEL_PLUGIN_VERSION__ ||
-            'unknown',
-          ['hive.gateway.version']: globalThis.__VERSION__,
-          ['hive.otel.version']:
-            globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
-        }),
-        options.resource,
-      );
+      const resource = createResource(options);
 
       logAttributes['resource'] = resource.attributes;
       logAttributes['sampling'] = options.sampler
@@ -311,6 +297,7 @@ export type HiveTracingOptions = { target?: string } & (
       accessToken?: string;
       batching?: BufferConfig;
       processor?: never;
+      /** @default 'https://api.graphql-hive.com/otel/v1/traces' */
       endpoint?: string;
     }
   | {
@@ -338,15 +325,33 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
     target: options.target,
   };
 
-  if (!options.processor) {
+  let processorOptions: HiveTracingSpanProcessorOptions;
+  if (options.processor) {
+    processorOptions = { processor: options.processor };
+  } else {
     options.accessToken ??=
       getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
-
     if (!options.accessToken) {
       throw new Error(
-        'You must specify the Hive Registry `accessToken`. Either provide `accessToken` option or `HIVE_ACCESS_TOKEN`/`HIVE_TRACE_ACCESS_TOKEN` environment variable.',
+        'You must specify the Hive Registry access token. Either provide the "accessToken" option or "HIVE_ACCESS_TOKEN"/"HIVE_TRACE_ACCESS_TOKEN" environment variable.',
       );
     }
+
+    options.endpoint ??=
+      getEnvStr('HIVE_TRACING_ENDPOINT') ??
+      'https://api.graphql-hive.com/otel/v1/traces';
+    if (!options.endpoint) {
+      throw new Error(
+        'You must specify the Hive Tracing endpoint. Either provide the "endpoint" option or the "HIVE_TRACING_ENDPOINT" environment variable.',
+      );
+    }
+
+    processorOptions = {
+      target: options.target,
+      accessToken: options.accessToken,
+      endpoint: options.endpoint,
+      batching: options.batching,
+    };
 
     logAttributes['endpoint'] = options.endpoint;
     logAttributes['batching'] = options.batching;
@@ -355,23 +360,13 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
   openTelemetrySetup({
     ...options,
     log,
-    resource: createResource(
+    resource: createResource(options).merge(
       resourceFromAttributes({
         'hive.target_id': options.target,
-        [ATTR_SERVICE_NAME]: getEnvStr('OTEL_SERVICE_NAME') || 'hive-gateway',
-        [ATTR_SERVICE_VERSION]:
-          getEnvStr('OTEL_SERVICE_VERSION') ||
-          globalThis.__OTEL_PLUGIN_VERSION__ ||
-          'unknown',
       }),
-      options.resource,
     ),
     traces: {
-      processors: [
-        new HiveTracingSpanProcessor(
-          options as HiveTracingSpanProcessorOptions,
-        ),
-      ],
+      processors: [new HiveTracingSpanProcessor(processorOptions)],
       spanLimits: options.spanLimits,
       console: options.console,
     },
@@ -400,24 +395,27 @@ function resolveBatchingConfig(
   }
 }
 
-function createResource(
-  baseResource: Resource,
-  userResource?: OpentelemetrySetupOptions['resource'],
-): Resource {
-  if (!userResource) {
-    return baseResource;
-  }
+function createResource(opts: Pick<OpentelemetrySetupOptions, 'resource'>) {
+  const resourceObj =
+    opts.resource && 'serviceName' in opts.resource ? opts.resource : null;
 
-  if ('serviceName' in userResource) {
-    return baseResource.merge(
-      resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: userResource.serviceName,
-        [ATTR_SERVICE_VERSION]: userResource.serviceVersion,
-      }),
-    );
+  let resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]:
+      resourceObj?.serviceName ||
+      getEnvStr('OTEL_SERVICE_NAME') ||
+      'hive-gateway',
+    [ATTR_SERVICE_VERSION]:
+      resourceObj?.serviceVersion ||
+      getEnvStr('OTEL_SERVICE_VERSION') ||
+      globalThis.__VERSION__ ||
+      'unknown',
+    ['hive.otel.version']: globalThis.__OTEL_PLUGIN_VERSION__ || 'unknown',
+  });
+  if (opts.resource && 'attributes' in opts.resource) {
+    // opts.resource is a Resource
+    resource = resource.merge(opts.resource);
   }
-
-  return baseResource.merge(userResource);
+  return resource;
 }
 
 /**
