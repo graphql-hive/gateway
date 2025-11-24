@@ -46,7 +46,7 @@ export type {
   SummaryAndLabels,
 };
 
-const DEFAULT_METRICS_CONFIG: PrometheusPluginOptions['metrics'] = {
+const DEFAULT_METRICS_CONFIG: MetricsConfig = {
   graphql_envelop_deprecated_field: true,
   graphql_envelop_request: true,
   graphql_envelop_request_duration: true,
@@ -65,63 +65,68 @@ const DEFAULT_METRICS_CONFIG: PrometheusPluginOptions['metrics'] = {
   graphql_gateway_subgraph_execute_errors: true,
 };
 
-type MeshMetricsConfig = {
-  metrics: {
-    /**
-     * Tracks the duration of outgoing HTTP requests.
-     * It reports the time spent on each request made using the `fetch` function provided by Mesh.
-     * It is reported as an histogram.
-     *
-     * You can pass multiple type of values:
-     *  - boolean: Disable or Enable the metric with default configuration
-     *  - string: Enable the metric with custom name
-     *  - number[]: Enable the metric with custom buckets
-     *  - string[]: Enable the metric on a list of phases
-     *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
-     */
-    graphql_gateway_fetch_duration?: HistogramMetricOption<
-      'fetch',
-      string,
-      FetchMetricsLabelParams
-    >;
+type MetricsConfig = NonNullable<PrometheusTracingPluginConfig['metrics']> & {
+  /**
+   * Tracks the duration of outgoing HTTP requests.
+   * It reports the time spent on each request made using the `fetch` function provided by Mesh.
+   * It is reported as an histogram.
+   *
+   * You can pass multiple type of values:
+   *  - boolean: Disable or Enable the metric with default configuration
+   *  - string: Enable the metric with custom name
+   *  - number[]: Enable the metric with custom buckets
+   *  - string[]: Enable the metric on a list of phases
+   *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
+   */
+  graphql_gateway_fetch_duration?: HistogramMetricOption<
+    'fetch',
+    string,
+    FetchMetricsLabelParams
+  >;
 
-    /**
-     * Tracks the duration of subgraph execution.
-     * It reports the time spent on each subgraph queries made to resolve incoming operations as an
-     * histogram.
-     *
-     * You can pass multiple type of values:
-     *  - boolean: Disable or Enable the metric with default configuration
-     *  - string: Enable the metric with custom name
-     *  - number[]: Enable the metric with custom buckets
-     *  - string[]: Enable the metric on a list of phases
-     *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
-     */
-    graphql_gateway_subgraph_execute_duration?: HistogramMetricOption<
-      'subgraphExecute',
-      string,
-      SubgraphMetricsLabelParams
-    >;
+  /**
+   * Tracks the duration of subgraph execution.
+   * It reports the time spent on each subgraph queries made to resolve incoming operations as an
+   * histogram.
+   *
+   * You can pass multiple type of values:
+   *  - boolean: Disable or Enable the metric with default configuration
+   *  - string: Enable the metric with custom name
+   *  - number[]: Enable the metric with custom buckets
+   *  - string[]: Enable the metric on a list of phases
+   *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
+   */
+  graphql_gateway_subgraph_execute_duration?: HistogramMetricOption<
+    'subgraphExecute',
+    string,
+    SubgraphMetricsLabelParams
+  >;
 
-    /**
-     * This metric tracks the number of errors that occurred during the subgraph execution.
-     * It counts all errors found in the response returned by the subgraph execution.
-     * It is exposed as a counter
-     *
-     * You can pass multiple type of values:
-     *  - boolean: Disable or Enable the metric with default configuration
-     *  - string: Enable the metric with custom name
-     *  - number[]: Enable the metric with custom buckets
-     *  - string[]: Enable the metric on a list of phases
-     *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
-     */
-    graphql_gateway_subgraph_execute_errors?: CounterMetricOption<
-      'subgraphExecute',
-      string,
-      SubgraphMetricsLabelParams
-    >;
-  };
+  /**
+   * This metric tracks the number of errors that occurred during the subgraph execution.
+   * It counts all errors found in the response returned by the subgraph execution.
+   * It is exposed as a counter
+   *
+   * You can pass multiple type of values:
+   *  - boolean: Disable or Enable the metric with default configuration
+   *  - string: Enable the metric with custom name
+   *  - number[]: Enable the metric with custom buckets
+   *  - string[]: Enable the metric on a list of phases
+   *  - ReturnType<typeof createHistogram>: Enable the metric with custom configuration
+   */
+  graphql_gateway_subgraph_execute_errors?: CounterMetricOption<
+    'subgraphExecute',
+    string,
+    SubgraphMetricsLabelParams
+  >;
+};
 
+export type PrometheusPluginOptions = PrometheusTracingPluginConfig & {
+  /**
+   * The metrics to provide when reporting to Prometheus.
+   * When `true`, defaults will be used from {@link DEFAULT_METRICS_CONFIG}.
+   */
+  metrics: true | MetricsConfig;
   labels?: {
     /**
      * The name of the targeted subgraph.
@@ -146,9 +151,6 @@ type MeshMetricsConfig = {
    */
   log?: Logger;
 };
-
-export type PrometheusPluginOptions = PrometheusTracingPluginConfig &
-  MeshMetricsConfig;
 
 type YamlConfig = {
   baseDir?: string;
@@ -191,12 +193,14 @@ export default function useMeshPrometheus(
     registry = registryFromYamlConfig(pluginOptions);
   }
 
-  const config: PrometheusPluginOptions = {
+  const config: PrometheusPluginOptions & {
+    metrics: NonNullable<MetricsConfig>;
+  } = {
     ...pluginOptions,
     registry,
     metrics: {
       ...DEFAULT_METRICS_CONFIG,
-      ...pluginOptions.metrics,
+      ...(pluginOptions.metrics === true ? {} : pluginOptions.metrics),
     },
   };
 
@@ -220,7 +224,7 @@ export default function useMeshPrometheus(
 
   const fetchHistogram = getHistogramFromConfig<
     'fetch',
-    NonNullable<PrometheusPluginOptions['metrics']>,
+    NonNullable<MetricsConfig>,
     FetchMetricsLabelParams
   >(
     config,
@@ -257,7 +261,7 @@ export default function useMeshPrometheus(
 
   const subgraphExecuteHistogram = getHistogramFromConfig<
     'subgraphExecute',
-    NonNullable<PrometheusPluginOptions['metrics']>,
+    NonNullable<MetricsConfig>,
     SubgraphMetricsLabelParams
   >(
     config,
@@ -276,7 +280,7 @@ export default function useMeshPrometheus(
 
   const subgraphExecuteErrorCounter = getCounterFromConfig<
     'subgraphExecute',
-    NonNullable<PrometheusPluginOptions['metrics']>,
+    NonNullable<MetricsConfig>,
     SubgraphMetricsLabelParams
   >(
     config,
