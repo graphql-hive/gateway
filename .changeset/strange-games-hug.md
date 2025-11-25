@@ -4,3 +4,10 @@
 ---
 
 Avoid extra `__typename` in the root selection
+
+```diff
+query {
+- __typename
+  hello
+}
+```

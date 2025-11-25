@@ -3,10 +3,7 @@ import {
   createGatewayRuntime,
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
-import {
-  composeLocalSchemasWithApollo,
-  usingHiveRouterRuntime,
-} from '@internal/testing';
+import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { Response } from '@whatwg-node/fetch';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -228,14 +225,7 @@ describe('Error handling', () => {
     });
     const res = await resp.json();
     expect(res).toEqual({
-      data: usingHiveRouterRuntime()
-        ? {
-            subgraph1: null,
-            subgraph2: {
-              subgraph2Field: 'hello from subgraph2',
-            },
-          }
-        : null,
+      data: null,
       errors: [
         {
           extensions: {
