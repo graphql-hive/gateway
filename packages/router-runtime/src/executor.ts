@@ -1249,6 +1249,14 @@ function projectSelectionSet(
             const enumValue = enumType.getValue(value);
             if (enumValue == null) {
               return null;
+            } else if (
+              getDirective(
+                executionContext.supergraphSchema,
+                enumValue,
+                'inaccessible',
+              )?.length
+            ) {
+              return null;
             }
             return value;
           }
