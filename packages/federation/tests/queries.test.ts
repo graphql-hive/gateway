@@ -46,7 +46,6 @@ it('should not do a fragment spread on a union', () => {
   });
 
   expect(queries[0]).toContain(`{
-  __typename
   fooBar {
     __typename
     ... on Foo {
@@ -60,7 +59,6 @@ it('should not do a fragment spread on a union', () => {
   }
 }`);
   expect(queries[1]).toContain(`{
-  __typename
   mustFooBar {
     __typename
     ... on Foo {

@@ -473,7 +473,6 @@ it('should consistently explain the query plan', async () => {
         "plan": [
           {
             "query": "query TestQuery {
-      __typename
       users {
         __typename
         ...User
@@ -493,7 +492,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($_v0_representations: [_Any!]!, $_v1_representations: [_Any!]!) {
-      _v0___typename: __typename
       _v0__entities: _entities(representations: $_v0_representations) {
         __typename
         ... on Product {
@@ -501,7 +499,6 @@ it('should consistently explain the query plan', async () => {
           inStock
         }
       }
-      _v1___typename: __typename
       _v1__entities: _entities(representations: $_v1_representations) {
         __typename
         ... on Product {
@@ -556,7 +553,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($first: Int) {
-      __typename
       topProducts(first: $first) {
         __typename
         ...Product
@@ -581,7 +577,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($representations: [_Any!]!) {
-      __typename
       _entities(representations: $representations) {
         __typename
         ... on Product {
@@ -614,7 +609,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($representations: [_Any!]!) {
-      __typename
       _entities(representations: $representations) {
         __typename
         ... on Product {
@@ -681,7 +675,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($representations: [_Any!]!) {
-      __typename
       _entities(representations: $representations) {
         __typename
         ... on User {
@@ -706,7 +699,6 @@ it('should consistently explain the query plan', async () => {
           },
           {
             "query": "query TestQuery($representations: [_Any!]!) {
-      __typename
       _entities(representations: $representations) {
         __typename
         ... on User {
