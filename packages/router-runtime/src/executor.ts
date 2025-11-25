@@ -13,6 +13,7 @@ import {
 } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
+  getDirective,
   getOperationASTFromDocument,
   getOperationASTFromRequest,
   isAsyncIterable,
@@ -1247,12 +1248,6 @@ function projectSelectionSet(
             }
             const enumValue = enumType.getValue(value);
             if (enumValue == null) {
-              return null;
-            } else if (
-              enumValue.astNode?.directives?.find(
-                (directive) => directive.name.value === 'inaccessible',
-              )
-            ) {
               return null;
             }
             return value;
