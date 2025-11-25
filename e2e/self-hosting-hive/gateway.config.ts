@@ -5,6 +5,7 @@ const hiveUrl = process.env['HIVE_URL']!;
 export const gatewayConfig = defineConfig({
   reporting: {
     type: 'hive',
+    debug: true,
     agent: {
       maxRetries: 1,
       maxSize: 1,
@@ -16,4 +17,5 @@ export const gatewayConfig = defineConfig({
       usageEndpoint: `${hiveUrl}/usage`,
     },
   },
+  logging: 'debug',
 });
