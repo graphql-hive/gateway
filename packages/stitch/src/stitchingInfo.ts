@@ -380,7 +380,7 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
     if (rootType) {
       // Only if it has nested root types
       const rootTypeFields = rootType.getFields();
-      for (const fieldName in rootTypeFields) {
+      fieldloop: for (const fieldName in rootTypeFields) {
         const field = rootTypeFields[fieldName];
         if (field != null) {
           const fieldType = getNamedType(field.type);
@@ -389,6 +389,7 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
               parseSelectionSet('{ __typename }', { noLocation: true })
                 .selections[0] as FieldNode,
             ];
+            break fieldloop;
           }
         }
       }
