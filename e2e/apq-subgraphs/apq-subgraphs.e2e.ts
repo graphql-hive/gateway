@@ -15,14 +15,12 @@ describe('APQ to the upstream', () => {
     });
     const query = stripIgnoredCharacters(/* GraphQL */ `
       {
-        __typename
         hello
       }
     `);
     const sha256Hash = await hashSHA256(query);
     await expect(gw.execute({ query })).resolves.toEqual({
       data: {
-        __typename: 'Query',
         hello: 'world',
       },
     });
@@ -53,7 +51,6 @@ describe('APQ to the upstream', () => {
 
     await expect(gw.execute({ query })).resolves.toEqual({
       data: {
-        __typename: 'Query',
         hello: 'world',
       },
     });
