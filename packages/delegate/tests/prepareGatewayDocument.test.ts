@@ -207,7 +207,6 @@ describe('prepareGatewayDocument', () => {
     );
     expect(print(preparedDocument)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {
-        __typename
         userByIdWithPosts(id: "1") {
           __typename
           id
@@ -239,7 +238,6 @@ describe('prepareGatewayDocument', () => {
     );
     expect(print(preparedDocument)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {
-        __typename
         userByIdWithPosts(id: "1") {
           posts {
             id
@@ -516,7 +514,6 @@ describe('prepareGatewayDocument', () => {
     const document = executorA.mock.calls[0]?.[0].document as DocumentNode;
     expect(print(document)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {
-        __typename
         products {
           __typename
           ... on Oven {

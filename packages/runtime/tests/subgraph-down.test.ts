@@ -118,9 +118,7 @@ describe('Error handling', () => {
           extensions: {
             code: 'RESPONSE_VALIDATION_FAILED',
             request: {
-              body: usingHiveRouterRuntime()
-                ? `{"query":"query{subgraph1{subgraph1Field}}"}`
-                : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {
@@ -243,9 +241,7 @@ describe('Error handling', () => {
           extensions: {
             code: 'RESPONSE_VALIDATION_FAILED',
             request: {
-              body: usingHiveRouterRuntime()
-                ? `{"query":"query{subgraph1{subgraph1Field}}"}`
-                : `{"query":"{__typename subgraph1{subgraph1Field}}"}`,
+              body: `{"query":"{subgraph1{subgraph1Field}}"}`,
               method: 'POST',
             },
             response: {

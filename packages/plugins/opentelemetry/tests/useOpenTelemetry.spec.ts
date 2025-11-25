@@ -1291,12 +1291,11 @@ describe('useOpenTelemetry', () => {
         // Operation Attributes
         ...(usingHiveRouterRuntime()
           ? {
-              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query{hello}',
+              [SEMATTRS_GRAPHQL_DOCUMENT]: '{hello}',
               [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
             }
           : {
-              [SEMATTRS_GRAPHQL_DOCUMENT]:
-                'query testOperation{__typename hello}',
+              [SEMATTRS_GRAPHQL_DOCUMENT]: 'query testOperation{hello}',
               [SEMATTRS_GRAPHQL_OPERATION_TYPE]: 'query',
               [SEMATTRS_GRAPHQL_OPERATION_NAME]: 'testOperation',
             }),

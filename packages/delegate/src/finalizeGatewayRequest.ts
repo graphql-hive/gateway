@@ -69,6 +69,7 @@ function finalizeGatewayDocument<TContext>(
   }
 
   let fragmentSet = Object.create(null);
+  let selectionCnt = 0;
 
   for (const operation of operations) {
     const type = getDefinedRootType(targetSchema, operation.operation);
@@ -134,6 +135,8 @@ function finalizeGatewayDocument<TContext>(
       continue;
     }
 
+    selectionCnt += selectionSet.selections.length;
+
     newOperations.push({
       kind: Kind.OPERATION_DEFINITION,
       operation: operation.operation,
@@ -144,7 +147,7 @@ function finalizeGatewayDocument<TContext>(
     });
   }
 
-  if (!newOperations.length) {
+  if (!newOperations.length || selectionCnt === 0) {
     throw createGraphQLError(
       'Failed to create a gateway request. The request must contain at least one operation.',
       {

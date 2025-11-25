@@ -378,10 +378,20 @@ export function completeStitchingInfo<TContext = Record<string, any>>(
   const rootTypes = [schema.getQueryType(), schema.getMutationType()];
   for (const rootType of rootTypes) {
     if (rootType) {
-      fieldNodesByType[rootType.name] = [
-        parseSelectionSet('{ __typename }', { noLocation: true })
-          .selections[0] as FieldNode,
-      ];
+      // Only if it has nested root types
+      const rootTypeFields = rootType.getFields();
+      for (const fieldName in rootTypeFields) {
+        const field = rootTypeFields[fieldName];
+        if (field != null) {
+          const fieldType = getNamedType(field.type);
+          if (rootType.name === fieldType.name) {
+            fieldNodesByType[rootType.name] ||= [
+              parseSelectionSet('{ __typename }', { noLocation: true })
+                .selections[0] as FieldNode,
+            ];
+          }
+        }
+      }
     }
   }
 
