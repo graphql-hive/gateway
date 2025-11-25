@@ -9,8 +9,10 @@ import {
   GraphQLFieldResolver,
   GraphQLInterfaceType,
   GraphQLObjectType,
+  GraphQLScalarType,
   GraphQLSchema,
   GraphQLUnionType,
+  isSpecifiedScalarType,
 } from 'graphql';
 import { generateProxyingResolvers } from './generateProxyingResolvers.js';
 
@@ -76,6 +78,17 @@ function createWrappingSchema(
         ...valueConfig,
         value: undefined,
       };
+    },
+    [MapperKind.SCALAR_TYPE]: (type) => {
+      if (isSpecifiedScalarType(type)) {
+        return type;
+      }
+      return new GraphQLScalarType({
+        ...type.toConfig(),
+        serialize: undefined,
+        parseValue: undefined,
+        parseLiteral: undefined,
+      });
     },
   });
 }

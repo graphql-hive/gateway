@@ -8,6 +8,7 @@ import {
   isAsyncIterable,
   Maybe,
   MaybeAsyncIterable,
+  memoize1,
   mergeDeep,
 } from '@graphql-tools/utils';
 import { Repeater } from '@repeaterjs/repeater';
@@ -18,15 +19,18 @@ import {
 import {
   DocumentNode,
   FieldDefinitionNode,
+  FragmentDefinitionNode,
   GraphQLOutputType,
+  GraphQLResolveInfo,
   GraphQLSchema,
   isListType,
+  isSchema,
   OperationTypeNode,
   validate,
 } from 'graphql';
 import { applySchemaTransforms } from './applySchemaTransforms.js';
 import { createRequest, getDelegatingOperation } from './createRequest.js';
-import { Subschema } from './Subschema.js';
+import { isSubschema } from './Subschema.js';
 import { isSubschemaConfig } from './subschemaConfig.js';
 import { Transformer } from './Transformer.js';
 import {
@@ -36,6 +40,13 @@ import {
   StitchingInfo,
   SubschemaConfig,
 } from './types.js';
+
+const getFragmentDefinitions = memoize1(
+  (info: GraphQLResolveInfo): FragmentDefinitionNode[] => {
+    const fragmentMap = info.fragments;
+    return Object.values(fragmentMap);
+  },
+);
 
 export function delegateToSchema<
   TContext extends Record<string, any> = Record<string, any>,
@@ -51,17 +62,33 @@ export function delegateToSchema<
     selectionSet,
     fieldNodes = info.fieldNodes,
     context,
+    args,
   } = options;
+
+  let targetSchema = options.targetSchema;
+  if (isSubschema(schema)) {
+    targetSchema = schema.transformedSchema;
+  } else if (isSchema(schema)) {
+    targetSchema = schema;
+  } else {
+    const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
+      StitchingInfo<TContext>
+    >;
+    const subschema = stitchingInfo?.subschemaMap.get(schema);
+    if (subschema != null) {
+      targetSchema = subschema.transformedSchema;
+    } else {
+      targetSchema = applySchemaTransforms(schema.schema, schema);
+    }
+  }
+
+  const fragments = info ? getFragmentDefinitions(info) : undefined;
 
   const request = createRequest({
     subgraphName: (schema as SubschemaConfig).name,
-    sourceSchema: info.schema,
-    sourceParentType: info.parentType,
-    sourceFieldName: info.fieldName,
-    fragments: info.fragments,
-    variableDefinitions: info.operation.variableDefinitions,
-    variableValues: info.variableValues,
-    targetRootValue: rootValue,
+    fragments,
+    targetSchema,
+    rootValue: rootValue,
     targetOperationName: operationName,
     targetOperation: operation,
     targetFieldName: fieldName,
@@ -69,9 +96,11 @@ export function delegateToSchema<
     fieldNodes,
     context,
     info,
+    args,
   });
   return delegateRequest({
     ...options,
+    targetSchema,
     request,
   });
 }
@@ -186,10 +215,10 @@ function getDelegationContext<TContext extends Record<string, any>>({
   schema,
   fieldName,
   returnType,
-  args,
   info,
+  args,
   transforms = [],
-  transformedSchema,
+  targetSchema: transformedSchema,
   skipTypeMerging = false,
   onLocatedError,
 }: IDelegateRequestOptions<TContext>): DelegationContext<TContext> {
@@ -224,7 +253,6 @@ function getDelegationContext<TContext extends Record<string, any>>({
       targetSchema,
       operation,
       fieldName: targetFieldName,
-      args,
       context: request.context,
       info,
       returnType:
@@ -235,13 +263,10 @@ function getDelegationContext<TContext extends Record<string, any>>({
         subschemaOrSubschemaConfig.transforms != null
           ? subschemaOrSubschemaConfig.transforms.concat(transforms)
           : transforms,
-      transformedSchema:
-        transformedSchema ??
-        (subschemaOrSubschemaConfig instanceof Subschema
-          ? subschemaOrSubschemaConfig.transformedSchema
-          : applySchemaTransforms(targetSchema, subschemaOrSubschemaConfig)),
+      transformedSchema,
       skipTypeMerging,
       onLocatedError,
+      args,
     };
   }
 
@@ -251,7 +276,6 @@ function getDelegationContext<TContext extends Record<string, any>>({
     targetSchema: subschemaOrSubschemaConfig,
     operation,
     fieldName: targetFieldName,
-    args,
     context: request.context,
     info,
     returnType:

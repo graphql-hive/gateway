@@ -13,6 +13,7 @@ import {
 } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
+  getDirective,
   getOperationASTFromDocument,
   getOperationASTFromRequest,
   isAsyncIterable,
@@ -1240,18 +1241,18 @@ function projectSelectionSet(
         : data[responseKey];
       if (projectedValue !== undefined) {
         if (isEnumType(fieldType)) {
-          const enumValue = fieldType.getValue(projectedValue);
-          if (!enumValue) {
-            projectedValue = null;
-          } else {
-            // Check if the enum value is marked with @inaccessible
-            const inaccessibleDirective = enumValue.astNode?.directives?.find(
-              (directive) => directive.name.value === 'inaccessible',
-            );
-            if (inaccessibleDirective) {
-              projectedValue = null;
+          const enumType = fieldType;
+          function projectEnumValue(value: any): any {
+            if (Array.isArray(value)) {
+              return value.map((item) => projectEnumValue(item));
             }
+            const enumValue = enumType.getValue(value);
+            if (enumValue == null) {
+              return null;
+            }
+            return value;
           }
+          projectedValue = projectEnumValue(projectedValue);
         }
         if (result[responseKey] == null) {
           result[responseKey] = projectedValue;

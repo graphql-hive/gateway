@@ -76,11 +76,14 @@ describe('bare requests', () => {
               ],
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
+              args,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               info,
+              targetSchema: innerSchema,
             });
           },
         },
@@ -164,12 +167,15 @@ describe('bare requests', () => {
               ],
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
+              args,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               args,
               info,
+              targetSchema: innerSchema,
             });
           },
         },
@@ -220,7 +226,7 @@ describe('bare requests', () => {
       `,
       resolvers: {
         Query: {
-          delegate: (_source, _args, _context, info) => {
+          delegate: (_source, args, _context, info) => {
             const request = createRequest({
               subgraphName: 'inner',
               fieldNodes: [
@@ -234,11 +240,14 @@ describe('bare requests', () => {
               ],
               targetOperation: 'query' as OperationTypeNode,
               targetFieldName: 'test',
+              args,
+              targetSchema: innerSchema,
             });
             return delegateRequest({
               request,
               schema: innerSchema,
               info,
+              targetSchema: innerSchema,
             });
           },
         },

@@ -6,6 +6,7 @@ import {
   createDeferredPromise,
   fakePromise,
 } from '@whatwg-node/promise-helpers';
+import { getEnvBool } from '~internal/env';
 import Redis from 'ioredis';
 import LeakDetector from 'jest-leak-detector';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -18,7 +19,7 @@ const PubSubCtors = [MemPubSub, RedisPubSub, NATSPubSub];
 
 for (const PubSub of PubSubCtors) {
   describe.skipIf(
-    process.env['LEAK_TEST'] &&
+    getEnvBool('LEAK_TEST') &&
       (PubSub === RedisPubSub || PubSub === NATSPubSub),
   )(PubSub.name, () => {
     let redis: Container | null = null;

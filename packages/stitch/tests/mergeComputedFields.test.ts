@@ -325,7 +325,7 @@ describe('test merged composite computed fields', () => {
         }),
       );
 
-      const { data } = await graphql({
+      const result = await graphql({
         schema: gatewaySchema,
         source: /* GraphQL */ `
           query {
@@ -335,10 +335,11 @@ describe('test merged composite computed fields', () => {
           }
         `,
       });
-      assertSome(data);
-      expect(data).toEqual({
-        byId: {
-          value2: 1,
+      expect(result).toEqual({
+        data: {
+          byId: {
+            value2: 1,
+          },
         },
       });
       // check value is not provided
