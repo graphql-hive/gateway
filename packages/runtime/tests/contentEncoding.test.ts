@@ -108,7 +108,7 @@ describe('contentEncoding', () => {
     });
     expect(
       fooResolver.mock.calls[0]?.[2].request.headers.get('content-encoding'),
-    ).toBe(firstSupportedEncoding);
+    ).toBe('gzip');
   });
   skipIfNoEncodingSupport('from subgraph to gateway', async () => {
     const response = await gateway.fetch('http://localhost:4000/graphql', {
@@ -133,7 +133,7 @@ describe('contentEncoding', () => {
       onFetchDoneSpy.mock.calls[0]?.[0].response.headers.get(
         'content-encoding',
       ),
-    ).toBe(firstSupportedEncoding);
+    ).toBe('gzip');
   });
   skipIfNoEncodingSupport('from the client to the gateway', async () => {
     const origBody = JSON.stringify({
