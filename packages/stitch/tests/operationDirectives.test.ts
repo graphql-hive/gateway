@@ -40,7 +40,6 @@ describe('Operation Directives', () => {
       data: {
         hello: /* GraphQL */ `
 query getHello {
-  __typename
   hello @strExpr
 }`.trim(),
       },

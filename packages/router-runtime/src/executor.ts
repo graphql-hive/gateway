@@ -43,6 +43,7 @@ import {
   isAbstractType,
   isEnumType,
   isInterfaceType,
+  isNonNullType,
   isObjectType,
   isOutputType,
   Kind,
@@ -1267,6 +1268,8 @@ function projectSelectionSet(
         }
       } else if (field.name === '__typename') {
         result[responseKey] = type.name;
+      } else if (isNonNullType(field.type)) {
+        return null;
       } else {
         result[responseKey] = null;
       }

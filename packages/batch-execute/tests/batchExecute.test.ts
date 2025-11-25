@@ -165,14 +165,10 @@ describe('batch execution', () => {
   it('renames fragment definitions and spreads', async () => {
     const [first, second] = (await Promise.all([
       batchExec({
-        document: parse(
-          'fragment A on Widget { name } query{ widget { ...A } }',
-        ),
+        document: parse('fragment A on Widget { name } { widget { ...A } }'),
       }),
       batchExec({
-        document: parse(
-          'fragment A on Widget { name } query{ widget { ...A } }',
-        ),
+        document: parse('fragment A on Widget { name } { widget { ...A } }'),
       }),
     ])) as ExecutionResult[];
 
@@ -189,10 +185,10 @@ describe('batch execution', () => {
   it('removes expanded root fragment definitions', async () => {
     const [first, second] = (await Promise.all([
       batchExec({
-        document: parse('fragment A on Query { field1 } query{ ...A }'),
+        document: parse('fragment A on Query { field1 } { ...A }'),
       }),
       batchExec({
-        document: parse('fragment A on Query { field2 } query{ ...A }'),
+        document: parse('fragment A on Query { field2 } { ...A }'),
       }),
     ])) as ExecutionResult[];
 
