@@ -60,7 +60,7 @@
     "typescript-eslint": "8.47.0",
     "vite": "7.2.4",
     "vite-tsconfig-paths": "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch",
-    "vitest": "3.2.4"
+    "vitest": "4.0.14"
   },
   "resolutions": {
     "@graphql-mesh/types": "0.104.13",
