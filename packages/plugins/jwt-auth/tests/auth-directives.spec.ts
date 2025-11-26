@@ -4,6 +4,7 @@ import {
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
+import { composeServices } from '@theguild/federation-composition';
 import { parse, type ExecutionResult } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import jwt from 'jsonwebtoken';
@@ -556,40 +557,41 @@ describe('Auth Directives', () => {
       });
     });
     it('interfaces', async () => {
+      const subgraphTypeDefs = parse(/* GraphQL */ `
+        extend schema
+          @link(
+            url: "https://specs.apollo.dev/federation/v2.5"
+            import: ["@authenticated"]
+          )
+
+        type Query {
+          posts: [Post!]!
+        }
+
+        type User {
+          id: ID!
+          username: String
+          posts: [Post!]!
+        }
+
+        interface Post {
+          id: ID!
+          author: User!
+          title: String!
+          content: String!
+        }
+
+        type PrivateBlog implements Post @authenticated {
+          id: ID!
+          author: User!
+          title: String!
+          content: String!
+          publishAt: String
+          allowedViewers: [User!]!
+        }
+      `);
       const subgraphSchema = buildSubgraphSchema({
-        typeDefs: parse(/* GraphQL */ `
-          extend schema
-            @link(
-              url: "https://specs.apollo.dev/federation/v2.5"
-              import: ["@authenticated"]
-            )
-
-          type Query {
-            posts: [Post!]!
-          }
-
-          type User {
-            id: ID!
-            username: String
-            posts: [Post!]!
-          }
-
-          interface Post {
-            id: ID!
-            author: User!
-            title: String!
-            content: String!
-          }
-
-          type PrivateBlog implements Post @authenticated {
-            id: ID!
-            author: User!
-            title: String!
-            content: String!
-            publishAt: String
-            allowedViewers: [User!]!
-          }
-        `),
+        typeDefs: subgraphTypeDefs,
         resolvers: {
           Post: {
             __resolveType: () => 'PrivateBlog',
@@ -608,13 +610,13 @@ describe('Auth Directives', () => {
       const signingKey = 'secret';
       await using serveRuntime = createGatewayRuntime<JWTAuthContextExtension>({
         supergraph: () =>
-          composeLocalSchemasWithApollo([
+          composeServices([
             {
               name: 'subgraphA',
-              schema: subgraphSchema,
+              typeDefs: subgraphTypeDefs,
               url: 'http://localhost:4001/graphql',
             },
-          ]),
+          ]).supergraphSdl!,
         genericAuth: {
           mode: 'protect-granular',
           resolveUserFn(context) {
