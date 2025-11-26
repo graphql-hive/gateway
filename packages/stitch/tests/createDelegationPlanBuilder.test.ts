@@ -1,6 +1,8 @@
-import { Subschema } from '@graphql-tools/delegate';
+import { createDefaultExecutor, Subschema } from '@graphql-tools/delegate';
+import { getStitchedSchemaFromSupergraphSdl } from '@graphql-tools/federation';
+import { addMocksToSchema, IMocks } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { FragmentDefinitionNode, Kind } from 'graphql';
+import { execute, FragmentDefinitionNode, Kind, parse } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { optimizeDelegationMap } from '../src/createDelegationPlanBuilder';
 
@@ -140,5 +142,141 @@ describe('fragment handling in delegation optimization', () => {
         name: { kind: Kind.NAME, value: 'UserFields' },
       },
     ]);
+  });
+
+  it('should make sure to properly handle nested fragments', async () => {
+    const schema = getStitchedSchemaFromSupergraphSdl({
+      supergraphSdl: /* GraphQL */ `
+        schema
+          @link(url: "https://specs.apollo.dev/link/v1.0")
+          @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) {
+          query: Query
+        }
+
+        directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+        directive @join__field(
+          graph: join__Graph
+          requires: join__FieldSet
+          provides: join__FieldSet
+          type: String
+          external: Boolean
+          override: String
+          usedOverridden: Boolean
+        ) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+        directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+        directive @join__implements(
+          graph: join__Graph!
+          interface: String!
+        ) repeatable on OBJECT | INTERFACE
+
+        directive @join__type(
+          graph: join__Graph!
+          key: join__FieldSet
+          extension: Boolean! = false
+          resolvable: Boolean! = true
+          isInterfaceObject: Boolean! = false
+        ) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+        directive @link(
+          url: String
+          as: String
+          for: link__Purpose
+          import: [link__Import]
+        ) repeatable on SCHEMA
+
+        interface IContact @join__type(graph: UPSTREAM) {
+          properties: Json
+        }
+
+        interface INode @join__type(graph: UPSTREAM) {
+          id: ID!
+        }
+
+        scalar join__FieldSet
+
+        enum join__Graph {
+          UPSTREAM @join__graph(name: "upstream", url: "")
+        }
+
+        scalar Json @join__type(graph: UPSTREAM)
+
+        enum link__Purpose {
+          """
+          \`EXECUTION\` features provide metadata necessary for operation execution.
+          """
+          EXECUTION
+
+          """
+          \`SECURITY\` features provide metadata necessary to securely resolve fields.
+          """
+          SECURITY
+        }
+
+        scalar link__Import
+
+        type MaybePerson implements IContact & INode
+          @join__implements(graph: UPSTREAM, interface: "IContact")
+          @join__implements(graph: UPSTREAM, interface: "INode")
+          @join__type(graph: UPSTREAM, key: "id") {
+          id: ID!
+          properties: Json
+        }
+
+        type Query @join__type(graph: UPSTREAM) {
+          node: INode
+        }
+      `,
+      onSubschemaConfig(subschemaConfig) {
+        const mocks: IMocks = {
+          INode: () => ({ __typename: 'MaybePerson' }),
+          Json: () => ({}),
+        };
+        const mockedSchema = addMocksToSchema({
+          schema: subschemaConfig.schema,
+          mocks,
+          resolvers: {
+            _Entity: {
+              __resolveType: ({ __typename }: { __typename: string }) =>
+                __typename,
+            },
+            Query: {
+              _entities(_, { representations }) {
+                return representations;
+              },
+            },
+          },
+        });
+        subschemaConfig.executor = createDefaultExecutor(mockedSchema);
+      },
+    });
+
+    const result = execute({
+      document: parse(/* GraphQL */ `
+        {
+          node {
+            ... on IContact {
+              ...MaybePerson
+            }
+          }
+        }
+        fragment MaybePerson on IContact {
+          __typename
+          properties
+        }
+      `),
+      schema,
+    });
+
+    expect(result).toEqual({
+      data: {
+        node: {
+          __typename: 'MaybePerson',
+          properties: {},
+        },
+      },
+    });
   });
 });
