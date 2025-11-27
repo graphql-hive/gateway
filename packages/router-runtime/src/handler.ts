@@ -84,51 +84,66 @@ export function unifiedGraphHandler(
             executionRequest.operationName || null,
           ),
         (queryPlan) =>
-          executeQueryPlan({
-            supergraphSchema,
-            executionRequest,
-            onSubgraphExecute(subgraphName, executionRequest) {
-              const subschema = getSubschema(subgraphName);
-              if (subschema.transforms?.length) {
-                const transforms = subschema.transforms;
-                const transformationContext = Object.create(null);
-                for (const transform of transforms) {
-                  if (transform.transformRequest) {
-                    executionRequest = transform.transformRequest(
-                      executionRequest,
-                      undefined as any,
-                      transformationContext,
-                    );
-                  }
-                }
-                return handleMaybePromise(
-                  () => opts.onSubgraphExecute(subgraphName, executionRequest),
-                  (executionResult) => {
-                    function handleResult(executionResult: ExecutionResult) {
-                      for (const transform of transforms.toReversed()) {
-                        if (transform.transformResult) {
-                          executionResult = transform.transformResult(
-                            executionResult,
-                            undefined as any,
-                            transformationContext,
+          handleMaybePromise(
+            () =>
+              executeQueryPlan({
+                supergraphSchema,
+                executionRequest,
+                onSubgraphExecute(subgraphName, executionRequest) {
+                  const subschema = getSubschema(subgraphName);
+                  if (subschema.transforms?.length) {
+                    const transforms = subschema.transforms;
+                    const transformationContext = Object.create(null);
+                    for (const transform of transforms) {
+                      if (transform.transformRequest) {
+                        executionRequest = transform.transformRequest(
+                          executionRequest,
+                          undefined as any,
+                          transformationContext,
+                        );
+                      }
+                    }
+                    return handleMaybePromise(
+                      () =>
+                        opts.onSubgraphExecute(subgraphName, executionRequest),
+                      (executionResult) => {
+                        function handleResult(
+                          executionResult: ExecutionResult,
+                        ) {
+                          for (const transform of transforms.toReversed()) {
+                            if (transform.transformResult) {
+                              executionResult = transform.transformResult(
+                                executionResult,
+                                undefined as any,
+                                transformationContext,
+                              );
+                            }
+                          }
+                          return executionResult;
+                        }
+                        if (isAsyncIterable(executionResult)) {
+                          return mapAsyncIterator(executionResult, (result) =>
+                            handleResult(result),
                           );
                         }
-                      }
-                      return executionResult;
-                    }
-                    if (isAsyncIterable(executionResult)) {
-                      return mapAsyncIterator(executionResult, (result) =>
-                        handleResult(result),
-                      );
-                    }
-                    return handleResult(executionResult);
-                  },
-                );
+                        return handleResult(executionResult);
+                      },
+                    );
+                  }
+                  return opts.onSubgraphExecute(subgraphName, executionRequest);
+                },
+                queryPlan,
+              }),
+            (result) => {
+              if (isAsyncIterable(result)) {
+                return result;
               }
-              return opts.onSubgraphExecute(subgraphName, executionRequest);
+              if (executionRequest.context?.['queryPlanInExtensions']) {
+                result.extensions = { queryPlan };
+              }
+              return result;
             },
-            queryPlan,
-          }),
+          ),
       );
     },
   };
