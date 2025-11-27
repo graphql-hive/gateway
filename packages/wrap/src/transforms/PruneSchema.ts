@@ -4,9 +4,9 @@ import { GraphQLSchema } from 'graphql';
 
 interface PruneTypesTransformationContext extends Record<string, any> {}
 
-export default class PruneTypes<TContext = Record<string, any>>
-  implements Transform<PruneTypesTransformationContext, TContext>
-{
+export default class PruneTypes<
+  TContext = Record<string, any>,
+> implements Transform<PruneTypesTransformationContext, TContext> {
   private readonly options: PruneSchemaOptions;
 
   constructor(options: PruneSchemaOptions = {}) {

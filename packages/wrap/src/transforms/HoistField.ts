@@ -33,8 +33,7 @@ interface HoistFieldTransformationContext extends Record<string, any> {}
 
 export default class HoistField<
   TContext extends Record<string, any> = Record<string, any>,
-> implements Transform<HoistFieldTransformationContext, TContext>
-{
+> implements Transform<HoistFieldTransformationContext, TContext> {
   private readonly typeName: string;
   private readonly newFieldName: string;
   private readonly pathToField: Array<string>;

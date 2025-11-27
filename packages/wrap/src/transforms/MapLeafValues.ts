@@ -33,9 +33,9 @@ export interface MapLeafValuesTransformationContext {
   transformedRequest: ExecutionRequest;
 }
 
-export default class MapLeafValues<TContext = Record<string, any>>
-  implements Transform<MapLeafValuesTransformationContext, TContext>
-{
+export default class MapLeafValues<
+  TContext = Record<string, any>,
+> implements Transform<MapLeafValuesTransformationContext, TContext> {
   private readonly inputValueTransformer: LeafValueTransformer;
   private readonly outputValueTransformer: LeafValueTransformer;
   private readonly resultVisitorMap: ResultVisitorMap;

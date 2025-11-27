@@ -8,12 +8,14 @@ import { GraphQLInputFieldConfig, GraphQLSchema } from 'graphql';
 import { InputObjectNodeTransformer } from '../types.js';
 import TransformInputObjectFields from './TransformInputObjectFields.js';
 
-interface FilterInputObjectFieldsTransformationContext
-  extends Record<string, any> {}
+interface FilterInputObjectFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class FilterInputObjectFields<TContext = Record<string, any>>
-  implements Transform<FilterInputObjectFieldsTransformationContext, TContext>
-{
+export default class FilterInputObjectFields<
+  TContext = Record<string, any>,
+> implements Transform<FilterInputObjectFieldsTransformationContext, TContext> {
   private readonly transformer: TransformInputObjectFields<TContext>;
 
   constructor(

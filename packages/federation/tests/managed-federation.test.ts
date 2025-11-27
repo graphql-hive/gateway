@@ -270,9 +270,8 @@ describe('Managed Federation', () => {
 
     it.skipIf(process.env['LEAK_TEST'])('works with ApolloServer', async () => {
       const { ApolloServer } = await import('@apollo/server');
-      const { startStandaloneServer } = await import(
-        '@apollo/server/standalone'
-      );
+      const { startStandaloneServer } =
+        await import('@apollo/server/standalone');
       using gateway = new SupergraphSchemaManager({
         fetch: mockSDL,
         onStitchedSchema(schema) {

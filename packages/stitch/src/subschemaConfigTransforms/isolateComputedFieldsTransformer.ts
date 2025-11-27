@@ -25,8 +25,11 @@ import {
   isUnionType,
 } from 'graphql';
 
-interface ComputedTypeConfig<K = any, V = any, TContext = Record<string, any>>
-  extends MergedTypeConfig<K, V, TContext> {
+interface ComputedTypeConfig<
+  K = any,
+  V = any,
+  TContext = Record<string, any>,
+> extends MergedTypeConfig<K, V, TContext> {
   keyFieldNames: string[];
 }
 

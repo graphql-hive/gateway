@@ -26,9 +26,9 @@ export interface NATSPubSubOptions {
 }
 
 /** {@link PubSub Hive PubSub} implementation of the [NATS message broker](https://nats.io/). */
-export class NATSPubSub<M extends TopicDataMap = TopicDataMap>
-  implements PubSub<M>
-{
+export class NATSPubSub<
+  M extends TopicDataMap = TopicDataMap,
+> implements PubSub<M> {
   #disposed = false;
   #closeOnDispose: boolean;
   #activeSubscribers = new Map<() => Promise<void>, keyof M>();

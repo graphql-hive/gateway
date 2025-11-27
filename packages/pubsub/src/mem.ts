@@ -4,9 +4,9 @@ import { fakePromise, type MaybePromise } from '@whatwg-node/promise-helpers';
 import { PubSub, PubSubListener, TopicDataMap } from './pubsub';
 
 /** In-memory {@link PubSub} implementation. */
-export class MemPubSub<M extends TopicDataMap = TopicDataMap>
-  implements PubSub<M>
-{
+export class MemPubSub<
+  M extends TopicDataMap = TopicDataMap,
+> implements PubSub<M> {
   #disposed = false;
   #subscribers = new Map<
     keyof M, // topic

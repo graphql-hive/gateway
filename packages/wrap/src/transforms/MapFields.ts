@@ -14,9 +14,10 @@ import TransformCompositeFields from './TransformCompositeFields.js';
 
 interface MapFieldsTransformationContext extends Record<string, any> {}
 
-export default class MapFields<TContext>
-  implements Transform<MapFieldsTransformationContext, TContext>
-{
+export default class MapFields<TContext> implements Transform<
+  MapFieldsTransformationContext,
+  TContext
+> {
   private fieldNodeTransformerMap: FieldNodeMappers;
   private objectValueTransformerMap?: ObjectValueTransformerMap;
   private errorsTransformer?: ErrorsTransformer;

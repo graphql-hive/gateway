@@ -153,8 +153,7 @@ export function handleResolveToDirectives(
   return mergedTypeDefs;
 }
 
-export interface HandleFederationSupergraphResult
-  extends UnifiedGraphHandlerResult {
+export interface HandleFederationSupergraphResult extends UnifiedGraphHandlerResult {
   getSubschema(subgraphName: string): SubschemaConfig;
 }
 

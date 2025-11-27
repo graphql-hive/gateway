@@ -3,13 +3,17 @@ import { getArgumentValues } from '@graphql-tools/utils';
 import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import TransformObjectFields from './TransformObjectFields.js';
 
-interface FilterObjectFieldDirectivesTransformationContext
-  extends Record<string, any> {}
+interface FilterObjectFieldDirectivesTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class FilterObjectFieldDirectives<TContext = Record<string, any>>
-  implements
-    Transform<FilterObjectFieldDirectivesTransformationContext, TContext>
-{
+export default class FilterObjectFieldDirectives<
+  TContext = Record<string, any>,
+> implements Transform<
+  FilterObjectFieldDirectivesTransformationContext,
+  TContext
+> {
   private readonly filter: (dirName: string, dirValue: any) => boolean;
 
   constructor(filter: (dirName: string, dirValue: any) => boolean) {

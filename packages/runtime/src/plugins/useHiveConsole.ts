@@ -5,13 +5,17 @@ import { MeshFetch } from '@graphql-mesh/types';
 import { isDebug } from '~internal/env';
 import { GatewayPlugin } from '../types';
 
-export interface HiveConsolePluginOptions
-  extends Omit<HivePluginOptions, 'usage'> {
+export interface HiveConsolePluginOptions extends Omit<
+  HivePluginOptions,
+  'usage'
+> {
   usage?: HiveConsoleUsagePluginOptions | boolean | undefined;
 }
 
-export interface HiveConsoleUsagePluginOptions
-  extends Omit<HiveUsagePluginOptions, 'clientInfo'> {
+export interface HiveConsoleUsagePluginOptions extends Omit<
+  HiveUsagePluginOptions,
+  'clientInfo'
+> {
   /**
    * Extract client info from the GraphQL Context.
    */

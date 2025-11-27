@@ -24,9 +24,9 @@ import {
 
 interface RenameTypesTransformationContext extends Record<string, any> {}
 
-export default class RenameTypes<TContext = Record<string, any>>
-  implements Transform<RenameTypesTransformationContext, TContext>
-{
+export default class RenameTypes<
+  TContext = Record<string, any>,
+> implements Transform<RenameTypesTransformationContext, TContext> {
   private readonly renamer: (name: string) => string | undefined;
   private map: Record<string, string>;
   private reverseMap: Record<string, string>;

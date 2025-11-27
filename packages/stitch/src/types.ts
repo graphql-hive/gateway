@@ -52,8 +52,9 @@ export type MergeTypeFilter<TContext = Record<string, any>> = (
   typeName: string,
 ) => boolean;
 
-export interface IStitchSchemasOptions<TContext = Record<string, any>>
-  extends Omit<IExecutableSchemaDefinition<TContext>, 'typeDefs'> {
+export interface IStitchSchemasOptions<
+  TContext = Record<string, any>,
+> extends Omit<IExecutableSchemaDefinition<TContext>, 'typeDefs'> {
   subschemas?: Array<GraphQLSchema | SubschemaConfig<any, any, any, TContext>>;
   typeDefs?: TypeSource;
   types?: Array<GraphQLNamedType>;

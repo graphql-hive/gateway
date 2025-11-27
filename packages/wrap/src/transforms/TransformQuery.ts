@@ -37,9 +37,9 @@ export type ErrorPathTransformer = (
 
 interface TransformQueryTransformationContext extends Record<string, any> {}
 
-export default class TransformQuery<TContext = Record<string, any>>
-  implements Transform<TransformQueryTransformationContext, TContext>
-{
+export default class TransformQuery<
+  TContext = Record<string, any>,
+> implements Transform<TransformQueryTransformationContext, TContext> {
   private readonly path: Array<string>;
   private readonly queryTransformer: QueryTransformer;
   private readonly resultTransformer: ResultTransformer;

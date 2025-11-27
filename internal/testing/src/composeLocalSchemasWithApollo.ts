@@ -9,9 +9,8 @@ export interface ComposeLocalSchemaWithApolloSubgraphOpts {
 export async function composeLocalSchemasWithApollo(
   subgraphs: ComposeLocalSchemaWithApolloSubgraphOpts[],
 ) {
-  const { IntrospectAndCompose, LocalGraphQLDataSource } = await import(
-    '@apollo/gateway'
-  );
+  const { IntrospectAndCompose, LocalGraphQLDataSource } =
+    await import('@apollo/gateway');
   let { supergraphSdl, cleanup } = await new IntrospectAndCompose({
     subgraphs: subgraphs.map(({ name, url = `http://localhost/${name}` }) => ({
       name,

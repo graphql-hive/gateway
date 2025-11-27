@@ -3,14 +3,17 @@ import { valueMatchesCriteria } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import FilterObjectFields from './FilterObjectFields.js';
 
-interface RemoveObjectFieldsWithDeprecationTransformationContext
-  extends Record<string, any> {}
+interface RemoveObjectFieldsWithDeprecationTransformationContext extends Record<
+  string,
+  any
+> {}
 
 export default class RemoveObjectFieldsWithDeprecation<
   TContext = Record<string, any>,
-> implements
-    Transform<RemoveObjectFieldsWithDeprecationTransformationContext, TContext>
-{
+> implements Transform<
+  RemoveObjectFieldsWithDeprecationTransformationContext,
+  TContext
+> {
   private readonly transformer: FilterObjectFields<TContext>;
 
   constructor(reason: string | RegExp) {

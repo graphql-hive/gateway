@@ -4,9 +4,9 @@ import { GraphQLNamedType, GraphQLSchema } from 'graphql';
 
 interface FilterTypesTransformationContext extends Record<string, any> {}
 
-export default class FilterTypes<TContext = Record<string, any>>
-  implements Transform<FilterTypesTransformationContext, TContext>
-{
+export default class FilterTypes<
+  TContext = Record<string, any>,
+> implements Transform<FilterTypesTransformationContext, TContext> {
   private readonly filter: (type: GraphQLNamedType) => boolean;
 
   constructor(filter: (type: GraphQLNamedType) => boolean) {

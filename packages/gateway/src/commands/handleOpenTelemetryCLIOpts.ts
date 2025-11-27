@@ -30,9 +30,8 @@ export async function handleOpenTelemetryCLIOpts(
       'Initializing OpenTelemetry SDK',
     );
 
-    const { openTelemetrySetup, HiveTracingSpanProcessor } = await import(
-      '@graphql-hive/plugin-opentelemetry/setup'
-    );
+    const { openTelemetrySetup, HiveTracingSpanProcessor } =
+      await import('@graphql-hive/plugin-opentelemetry/setup');
     const processors: SpanProcessor[] = [];
 
     const logAttributes = {

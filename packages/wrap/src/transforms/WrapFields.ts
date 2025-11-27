@@ -38,9 +38,9 @@ interface WrapFieldsConfig {
   isNullable?: boolean;
 }
 
-export default class WrapFields<TContext extends Record<string, any>>
-  implements Transform<WrapFieldsTransformationContext, TContext>
-{
+export default class WrapFields<
+  TContext extends Record<string, any>,
+> implements Transform<WrapFieldsTransformationContext, TContext> {
   private readonly outerTypeName: string;
   private readonly wrappingFieldNames: Array<string>;
   private readonly wrappingTypeNames: Array<string>;

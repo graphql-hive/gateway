@@ -39,9 +39,9 @@ export interface RedisPubSubOptions {
 }
 
 /** {@link PubSub Hive PubSub} implementation of [Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/). */
-export class RedisPubSub<M extends TopicDataMap = TopicDataMap>
-  implements PubSub<M>
-{
+export class RedisPubSub<
+  M extends TopicDataMap = TopicDataMap,
+> implements PubSub<M> {
   #disposed = false;
   #quitOnDispose: boolean;
   #subscribers = new Map<

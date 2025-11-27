@@ -45,18 +45,17 @@ const flags =
       return flag as (typeof supportedFlags)[number];
     }) || [];
 
-export interface MemtestOptions
-  extends Omit<
-    LoadtestOptions,
-    | 'memorySnapshotWindow'
-    | 'idle'
-    | 'duration'
-    | 'calmdown'
-    | 'runs'
-    | 'server'
-    | 'query'
-    | 'pathname'
-  > {
+export interface MemtestOptions extends Omit<
+  LoadtestOptions,
+  | 'memorySnapshotWindow'
+  | 'idle'
+  | 'duration'
+  | 'calmdown'
+  | 'runs'
+  | 'server'
+  | 'query'
+  | 'pathname'
+> {
   /**
    * The GraphQL query to execute for the loadtest.
    * Either `query` or `pathname` must be provided.

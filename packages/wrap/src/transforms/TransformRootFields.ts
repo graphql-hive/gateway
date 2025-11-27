@@ -8,12 +8,14 @@ import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import { FieldNodeTransformer, RootFieldTransformer } from '../types.js';
 import TransformObjectFields from './TransformObjectFields.js';
 
-interface TransformRootFieldsTransformationContext
-  extends Record<string, any> {}
+interface TransformRootFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class TransformRootFields<TContext = Record<string, any>>
-  implements Transform<TransformRootFieldsTransformationContext, TContext>
-{
+export default class TransformRootFields<
+  TContext = Record<string, any>,
+> implements Transform<TransformRootFieldsTransformationContext, TContext> {
   private readonly rootFieldTransformer: RootFieldTransformer<TContext>;
   private readonly fieldNodeTransformer: FieldNodeTransformer | undefined;
   private transformer: TransformObjectFields<TContext> | undefined;
