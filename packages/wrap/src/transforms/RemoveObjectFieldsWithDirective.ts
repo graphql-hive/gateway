@@ -3,14 +3,17 @@ import { getDirectives, valueMatchesCriteria } from '@graphql-tools/utils';
 import { GraphQLSchema } from 'graphql';
 import FilterObjectFields from './FilterObjectFields.js';
 
-interface RemoveObjectFieldsWithDirectiveTransformationContext
-  extends Record<string, any> {}
+interface RemoveObjectFieldsWithDirectiveTransformationContext extends Record<
+  string,
+  any
+> {}
 
 export default class RemoveObjectFieldsWithDirective<
   TContext = Record<string, any>,
-> implements
-    Transform<RemoveObjectFieldsWithDirectiveTransformationContext, TContext>
-{
+> implements Transform<
+  RemoveObjectFieldsWithDirectiveTransformationContext,
+  TContext
+> {
   private readonly directiveName: string | RegExp;
   private readonly args: Record<string, any>;
 

@@ -15,9 +15,9 @@ import { GraphQLSchema, Kind, NamedTypeNode, visit } from 'graphql';
 
 interface RenameRootTypesTransformationContext extends Record<string, any> {}
 
-export default class RenameRootTypes<TContext = Record<string, any>>
-  implements Transform<RenameRootTypesTransformationContext, TContext>
-{
+export default class RenameRootTypes<
+  TContext = Record<string, any>,
+> implements Transform<RenameRootTypesTransformationContext, TContext> {
   private readonly renamer: (name: string) => string | undefined;
   private map: Record<string, string>;
   private reverseMap: Record<string, string>;

@@ -4,14 +4,17 @@ import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import FilterObjectFieldDirectives from './FilterObjectFieldDirectives.js';
 import TransformObjectFields from './TransformObjectFields.js';
 
-interface RemoveObjectFieldDeprecationsTransformationContext
-  extends Record<string, any> {}
+interface RemoveObjectFieldDeprecationsTransformationContext extends Record<
+  string,
+  any
+> {}
 
 export default class RemoveObjectFieldDeprecations<
   TContext = Record<string, any>,
-> implements
-    Transform<RemoveObjectFieldDeprecationsTransformationContext, TContext>
-{
+> implements Transform<
+  RemoveObjectFieldDeprecationsTransformationContext,
+  TContext
+> {
   private readonly removeDirectives: FilterObjectFieldDirectives<TContext>;
   private readonly removeDeprecations: TransformObjectFields<TContext>;
 

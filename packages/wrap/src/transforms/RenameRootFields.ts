@@ -9,9 +9,9 @@ import TransformRootFields from './TransformRootFields.js';
 
 interface RenameRootFieldsTransformationContext extends Record<string, any> {}
 
-export default class RenameRootFields<TContext = Record<string, any>>
-  implements Transform<RenameRootFieldsTransformationContext, TContext>
-{
+export default class RenameRootFields<
+  TContext = Record<string, any>,
+> implements Transform<RenameRootFieldsTransformationContext, TContext> {
   private readonly transformer: TransformRootFields<TContext>;
 
   constructor(

@@ -32,9 +32,7 @@ interface MoveRootFieldTransformationContext {
   newOperationType?: OperationTypeNode;
 }
 
-export class MoveRootField
-  implements Transform<MoveRootFieldTransformationContext>
-{
+export class MoveRootField implements Transform<MoveRootFieldTransformationContext> {
   private to: Record<OperationTypeNode, Record<string, OperationTypeNode>> = {
     query: {},
     mutation: {},

@@ -4,9 +4,9 @@ import { BREAK, FieldNode, Kind, SelectionSetNode, visit } from 'graphql';
 
 interface ExtractFieldTransformationContext extends Record<string, any> {}
 
-export default class ExtractField<TContext = Record<string, any>>
-  implements Transform<ExtractFieldTransformationContext, TContext>
-{
+export default class ExtractField<
+  TContext = Record<string, any>,
+> implements Transform<ExtractFieldTransformationContext, TContext> {
   private readonly from: Array<string>;
   private readonly to: Array<string>;
 

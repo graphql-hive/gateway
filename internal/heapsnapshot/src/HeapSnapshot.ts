@@ -138,9 +138,7 @@ export interface HeapSnapshotItemIndexProvider {
   itemForIndex(newIndex: number): HeapSnapshotItem;
 }
 
-export class HeapSnapshotNodeIndexProvider
-  implements HeapSnapshotItemIndexProvider
-{
+export class HeapSnapshotNodeIndexProvider implements HeapSnapshotItemIndexProvider {
   #node: HeapSnapshotNode;
   constructor(snapshot: HeapSnapshot) {
     this.#node = snapshot.createNode();
@@ -152,9 +150,7 @@ export class HeapSnapshotNodeIndexProvider
   }
 }
 
-export class HeapSnapshotEdgeIndexProvider
-  implements HeapSnapshotItemIndexProvider
-{
+export class HeapSnapshotEdgeIndexProvider implements HeapSnapshotItemIndexProvider {
   #edge: JSHeapSnapshotEdge;
   constructor(snapshot: HeapSnapshot) {
     this.#edge = snapshot.createEdge(0);
@@ -166,9 +162,7 @@ export class HeapSnapshotEdgeIndexProvider
   }
 }
 
-export class HeapSnapshotRetainerEdgeIndexProvider
-  implements HeapSnapshotItemIndexProvider
-{
+export class HeapSnapshotRetainerEdgeIndexProvider implements HeapSnapshotItemIndexProvider {
   readonly #retainerEdge: JSHeapSnapshotRetainerEdge;
   constructor(snapshot: HeapSnapshot) {
     this.#retainerEdge = snapshot.createRetainingEdge(0);
@@ -331,9 +325,7 @@ export class HeapSnapshotRetainerEdge implements HeapSnapshotItem {
   }
 }
 
-export class HeapSnapshotRetainerEdgeIterator
-  implements HeapSnapshotItemIterator
-{
+export class HeapSnapshotRetainerEdgeIterator implements HeapSnapshotItemIterator {
   readonly #retainersEnd: number;
   retainer: JSHeapSnapshotRetainerEdge;
   constructor(retainedNode: HeapSnapshotNode) {
@@ -631,9 +623,7 @@ export class HeapSnapshotNodeIterator implements HeapSnapshotItemIterator {
   }
 }
 
-export class HeapSnapshotIndexRangeIterator
-  implements HeapSnapshotItemIterator
-{
+export class HeapSnapshotIndexRangeIterator implements HeapSnapshotItemIterator {
   readonly #itemProvider: HeapSnapshotItemIndexProvider;
   readonly #indexes: number[] | Uint32Array;
   #position: number;
@@ -838,9 +828,7 @@ interface Retainers {
 }
 
 interface ArgumentsToComputeDominatorsAndRetainedSizes
-  extends SecondaryInitArgumentsStep1,
-    Retainers,
-    SecondaryInitArgumentsStep2 {
+  extends SecondaryInitArgumentsStep1, Retainers, SecondaryInitArgumentsStep2 {
   // For each edge ordinal, this bit vector contains whether the edge
   // should be used when computing dominators.
   essentialEdges: Platform.TypedArrayUtilities.BitVector;
@@ -858,7 +846,8 @@ interface DominatorsAndRetainedSizes {
 }
 
 interface ArgumentsToBuildDominatedNodes
-  extends ArgumentsToComputeDominatorsAndRetainedSizes,
+  extends
+    ArgumentsToComputeDominatorsAndRetainedSizes,
     DominatorsAndRetainedSizes {}
 
 interface DominatedNodes {
@@ -872,9 +861,7 @@ interface DominatedNodes {
 
 // The data transferred from the secondary worker to the primary.
 interface ResultsFromSecondWorker
-  extends Retainers,
-    DominatorsAndRetainedSizes,
-    DominatedNodes {}
+  extends Retainers, DominatorsAndRetainedSizes, DominatedNodes {}
 
 // Initialization work is split into two threads. This class is the entry point
 // for work done by the second thread.

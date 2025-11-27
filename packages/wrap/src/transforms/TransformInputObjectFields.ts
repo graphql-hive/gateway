@@ -31,13 +31,17 @@ import {
   InputObjectNodeTransformer,
 } from '../types.js';
 
-interface TransformInputObjectFieldsTransformationContext
-  extends Record<string, any> {}
+interface TransformInputObjectFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class TransformInputObjectFields<TContext = Record<string, any>>
-  implements
-    Transform<TransformInputObjectFieldsTransformationContext, TContext>
-{
+export default class TransformInputObjectFields<
+  TContext = Record<string, any>,
+> implements Transform<
+  TransformInputObjectFieldsTransformationContext,
+  TContext
+> {
   private readonly inputFieldTransformer: InputFieldTransformer;
   private readonly inputFieldNodeTransformer:
     | InputFieldNodeTransformer

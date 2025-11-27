@@ -13,13 +13,17 @@ type RenamerFunction = (
   argName: string,
 ) => string;
 
-interface RenameObjectFieldArgumentsTransformationContext
-  extends Record<string, any> {}
+interface RenameObjectFieldArgumentsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class RenameObjectFieldArguments<TContext = Record<string, any>>
-  implements
-    Transform<RenameObjectFieldArgumentsTransformationContext, TContext>
-{
+export default class RenameObjectFieldArguments<
+  TContext = Record<string, any>,
+> implements Transform<
+  RenameObjectFieldArgumentsTransformationContext,
+  TContext
+> {
   private readonly renamer: RenamerFunction;
   private readonly transformer: TransformObjectFields<TContext>;
   private reverseMap: Record<string, Record<string, Record<string, string>>>;

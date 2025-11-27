@@ -117,22 +117,19 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useJWT(config.jwt));
   }
   if (config.prometheus) {
-    const { default: useMeshPrometheus } = await import(
-      '@graphql-mesh/plugin-prometheus'
-    );
+    const { default: useMeshPrometheus } =
+      await import('@graphql-mesh/plugin-prometheus');
     plugins.push(useMeshPrometheus({ ...config.prometheus, log: ctx.log }));
   }
   if (config.openTelemetry) {
-    const { useOpenTelemetry } = await import(
-      '@graphql-hive/plugin-opentelemetry'
-    );
+    const { useOpenTelemetry } =
+      await import('@graphql-hive/plugin-opentelemetry');
     plugins.push(useOpenTelemetry({ ...config.openTelemetry, log: ctx.log }));
   }
 
   if (config.rateLimiting) {
-    const { default: useMeshRateLimit } = await import(
-      '@graphql-mesh/plugin-rate-limit'
-    );
+    const { default: useMeshRateLimit } =
+      await import('@graphql-mesh/plugin-rate-limit');
     plugins.push(
       useMeshRateLimit({
         config: Array.isArray(config.rateLimiting)
@@ -156,9 +153,8 @@ export async function getBuiltinPluginsFromConfig(
   }
 
   if (config.maxTokens) {
-    const { maxTokensPlugin: useMaxTokens } = await import(
-      '@escape.tech/graphql-armor-max-tokens'
-    );
+    const { maxTokensPlugin: useMaxTokens } =
+      await import('@escape.tech/graphql-armor-max-tokens');
     const maxTokensPlugin = useMaxTokens({
       n: typeof config.maxTokens === 'number' ? config.maxTokens : 1000,
     });
@@ -169,9 +165,8 @@ export async function getBuiltinPluginsFromConfig(
   }
 
   if (config.maxDepth) {
-    const { maxDepthPlugin: useMaxDepth } = await import(
-      '@escape.tech/graphql-armor-max-depth'
-    );
+    const { maxDepthPlugin: useMaxDepth } =
+      await import('@escape.tech/graphql-armor-max-depth');
     const maxDepthPlugin = useMaxDepth({
       n: typeof config.maxDepth === 'number' ? config.maxDepth : 6,
     });
@@ -209,9 +204,8 @@ export async function getCacheInstanceFromConfig(
   if (config.cache && 'type' in config.cache) {
     switch (config.cache.type) {
       case 'redis': {
-        const { default: RedisCache } = await import(
-          '@graphql-mesh/cache-redis'
-        );
+        const { default: RedisCache } =
+          await import('@graphql-mesh/cache-redis');
         return new RedisCache({
           ...ctx,
           ...config.cache,
@@ -220,18 +214,16 @@ export async function getCacheInstanceFromConfig(
         }) as KeyValueCache;
       }
       case 'cfw-kv': {
-        const { default: CloudflareKVCacheStorage } = await import(
-          '@graphql-mesh/cache-cfw-kv'
-        );
+        const { default: CloudflareKVCacheStorage } =
+          await import('@graphql-mesh/cache-cfw-kv');
         return new CloudflareKVCacheStorage({
           ...ctx,
           ...config.cache,
         });
       }
       case 'upstash-redis': {
-        const { default: UpstashRedisCache } = await import(
-          '@graphql-mesh/cache-upstash-redis'
-        );
+        const { default: UpstashRedisCache } =
+          await import('@graphql-mesh/cache-upstash-redis');
         return new UpstashRedisCache({
           ...ctx,
           ...config.cache,
@@ -244,9 +236,8 @@ export async function getCacheInstanceFromConfig(
         config.cache,
       );
     }
-    const { default: LocalforageCache } = await import(
-      '@graphql-mesh/cache-localforage'
-    );
+    const { default: LocalforageCache } =
+      await import('@graphql-mesh/cache-localforage');
     return new LocalforageCache({
       ...ctx,
       ...config.cache,
@@ -255,8 +246,7 @@ export async function getCacheInstanceFromConfig(
   if (config.cache) {
     return config.cache as KeyValueCache;
   }
-  const { default: LocalforageCache } = await import(
-    '@graphql-mesh/cache-localforage'
-  );
+  const { default: LocalforageCache } =
+    await import('@graphql-mesh/cache-localforage');
   return new LocalforageCache(ctx);
 }

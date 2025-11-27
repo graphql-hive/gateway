@@ -3,12 +3,14 @@ import { FieldFilter } from '@graphql-tools/utils';
 import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import TransformInterfaceFields from './TransformInterfaceFields.js';
 
-interface FilterInterfaceFieldsTransformationContext
-  extends Record<string, any> {}
+interface FilterInterfaceFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class FilterInterfaceFields<TContext = Record<string, any>>
-  implements Transform<FilterInterfaceFieldsTransformationContext, TContext>
-{
+export default class FilterInterfaceFields<
+  TContext = Record<string, any>,
+> implements Transform<FilterInterfaceFieldsTransformationContext, TContext> {
   private readonly transformer: TransformInterfaceFields<TContext>;
 
   constructor(filter: FieldFilter) {

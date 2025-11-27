@@ -8,12 +8,14 @@ import { GraphQLFieldConfig, GraphQLSchema, isObjectType } from 'graphql';
 import { FieldNodeTransformer, FieldTransformer } from '../types.js';
 import TransformCompositeFields from './TransformCompositeFields.js';
 
-interface TransformObjectFieldsTransformationContext
-  extends Record<string, any> {}
+interface TransformObjectFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class TransformObjectFields<TContext = Record<string, any>>
-  implements Transform<TransformObjectFieldsTransformationContext, TContext>
-{
+export default class TransformObjectFields<
+  TContext = Record<string, any>,
+> implements Transform<TransformObjectFieldsTransformationContext, TContext> {
   private readonly objectFieldTransformer: FieldTransformer<TContext>;
   private readonly fieldNodeTransformer: FieldNodeTransformer | undefined;
   private transformer: TransformCompositeFields<TContext> | undefined;

@@ -7,12 +7,14 @@ import { ExecutionRequest } from '@graphql-tools/utils';
 import { GraphQLFieldConfig, GraphQLSchema } from 'graphql';
 import TransformInterfaceFields from './TransformInterfaceFields.js';
 
-interface RenameInterfaceFieldsTransformationContext
-  extends Record<string, any> {}
+interface RenameInterfaceFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class RenameInterfaceFields<TContext = Record<string, any>>
-  implements Transform<RenameInterfaceFieldsTransformationContext, TContext>
-{
+export default class RenameInterfaceFields<
+  TContext = Record<string, any>,
+> implements Transform<RenameInterfaceFieldsTransformationContext, TContext> {
   private readonly transformer: TransformInterfaceFields<TContext>;
 
   constructor(

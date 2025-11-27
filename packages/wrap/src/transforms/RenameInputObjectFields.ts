@@ -17,12 +17,14 @@ type RenamerFunction = (
   inputFieldConfig: GraphQLInputFieldConfig,
 ) => string | undefined;
 
-interface RenameInputObjectFieldsTransformationContext
-  extends Record<string, any> {}
+interface RenameInputObjectFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class RenameInputObjectFields<TContext = Record<string, any>>
-  implements Transform<RenameInputObjectFieldsTransformationContext, TContext>
-{
+export default class RenameInputObjectFields<
+  TContext = Record<string, any>,
+> implements Transform<RenameInputObjectFieldsTransformationContext, TContext> {
   private readonly renamer: RenamerFunction;
   private readonly transformer: TransformInputObjectFields<TContext>;
   private reverseMap: Record<string, Record<string, string>>;

@@ -56,9 +56,9 @@ export type GatewayCLIConfig<
 export interface GatewayCLISupergraphConfig<
   TContext extends Record<string, any> = Record<string, any>,
 > extends Omit<
-    GatewayConfigSupergraph<TContext>,
-    'supergraph' | 'cache' | 'reporting'
-  > {
+  GatewayConfigSupergraph<TContext>,
+  'supergraph' | 'cache' | 'reporting'
+> {
   /**
    * SDL, path or an URL to the Federation Supergraph.
    *
@@ -73,8 +73,10 @@ export interface GatewayCLISupergraphConfig<
   reporting?: GatewayCLIHiveReportingOptions | GatewayGraphOSReportingOptions;
 }
 
-export interface GatewayCLIHiveReportingOptions
-  extends Omit<GatewayHiveReportingOptions, 'target' | 'token'> {
+export interface GatewayCLIHiveReportingOptions extends Omit<
+  GatewayHiveReportingOptions,
+  'target' | 'token'
+> {
   /**
    * The target to which the usage data should be reported to.
    *

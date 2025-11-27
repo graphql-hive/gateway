@@ -18,9 +18,9 @@ export type QueryWrapper = (
 
 interface WrapQueryTransformationContext extends Record<string, any> {}
 
-export default class WrapQuery<TContext = Record<string, any>>
-  implements Transform<WrapQueryTransformationContext, TContext>
-{
+export default class WrapQuery<
+  TContext = Record<string, any>,
+> implements Transform<WrapQueryTransformationContext, TContext> {
   constructor(
     private readonly path: Array<string>,
     private readonly wrapper: QueryWrapper,

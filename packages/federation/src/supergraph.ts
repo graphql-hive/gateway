@@ -100,8 +100,10 @@ const memoizedTypePrint = memoize1((type: GraphQLOutputType) =>
   type.toString(),
 );
 
-export interface FederationSubschemaConfig
-  extends Omit<SubschemaConfig, 'executor' | 'name'> {
+export interface FederationSubschemaConfig extends Omit<
+  SubschemaConfig,
+  'executor' | 'name'
+> {
   executor: Executor;
   name: string;
   endpoint: string;
@@ -1651,8 +1653,7 @@ export function getStitchingOptionsFromSupergraphSdl(
   };
 }
 
-export interface GetStitchedSchemaFromSupergraphSdlOpts
-  extends GetStitchingOptionsFromSupergraphSdlOpts {
+export interface GetStitchedSchemaFromSupergraphSdlOpts extends GetStitchingOptionsFromSupergraphSdlOpts {
   supergraphSdl: string | DocumentNode;
   onStitchingOptions?(
     opts: ReturnType<typeof getStitchingOptionsFromSupergraphSdl>,

@@ -13,14 +13,21 @@ export function isSubschema(value: any): value is Subschema {
   return Boolean(value.transformedSchema);
 }
 
-interface ISubschema<K = any, V = any, C = K, TContext = Record<string, any>>
-  extends SubschemaConfig<K, V, C, TContext> {
+interface ISubschema<
+  K = any,
+  V = any,
+  C = K,
+  TContext = Record<string, any>,
+> extends SubschemaConfig<K, V, C, TContext> {
   transformedSchema: GraphQLSchema;
 }
 
-export class Subschema<K = any, V = any, C = K, TContext = Record<string, any>>
-  implements ISubschema<K, V, C, TContext>
-{
+export class Subschema<
+  K = any,
+  V = any,
+  C = K,
+  TContext = Record<string, any>,
+> implements ISubschema<K, V, C, TContext> {
   public name?: string;
   public schema: GraphQLSchema;
 

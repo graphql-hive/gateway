@@ -5,9 +5,9 @@ import TransformObjectFields from './TransformObjectFields.js';
 
 interface FilterObjectFieldsTransformationContext extends Record<string, any> {}
 
-export default class FilterObjectFields<TContext = Record<string, any>>
-  implements Transform<FilterObjectFieldsTransformationContext, TContext>
-{
+export default class FilterObjectFields<
+  TContext = Record<string, any>,
+> implements Transform<FilterObjectFieldsTransformationContext, TContext> {
   private readonly transformer: TransformObjectFields<TContext>;
 
   constructor(filter: ObjectFieldFilter) {

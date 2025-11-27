@@ -31,12 +31,17 @@ import {
   FieldTransformer,
 } from '../types.js';
 
-interface TransformCompositeFieldsTransformationContext
-  extends Record<string, any> {}
+interface TransformCompositeFieldsTransformationContext extends Record<
+  string,
+  any
+> {}
 
-export default class TransformCompositeFields<TContext = Record<string, any>>
-  implements Transform<TransformCompositeFieldsTransformationContext, TContext>
-{
+export default class TransformCompositeFields<
+  TContext = Record<string, any>,
+> implements Transform<
+  TransformCompositeFieldsTransformationContext,
+  TContext
+> {
   private readonly fieldTransformer: FieldTransformer<TContext>;
   private readonly fieldNodeTransformer: FieldNodeTransformer | undefined;
   private readonly dataTransformer: DataTransformer | undefined;

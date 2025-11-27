@@ -17,12 +17,11 @@ import MapLeafValues, {
   MapLeafValuesTransformationContext,
 } from './MapLeafValues.js';
 
-interface TransformEnumValuesTransformationContext
-  extends MapLeafValuesTransformationContext {}
+interface TransformEnumValuesTransformationContext extends MapLeafValuesTransformationContext {}
 
-export default class TransformEnumValues<TContext = Record<string, any>>
-  implements Transform<TransformEnumValuesTransformationContext, TContext>
-{
+export default class TransformEnumValues<
+  TContext = Record<string, any>,
+> implements Transform<TransformEnumValuesTransformationContext, TContext> {
   private readonly enumValueTransformer: EnumValueTransformer;
   private readonly transformer: MapLeafValues<TContext>;
   private transformedSchema: GraphQLSchema | undefined;
