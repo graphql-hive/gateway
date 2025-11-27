@@ -323,7 +323,7 @@ function filterBaseSubschema(
         }
       }
       const allTypes = [typeName, ...iFacesForType];
-      const isIsolatedFieldName = allTypes.every((implementingTypeName) =>
+      const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
         isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
       );
       const isKeyFieldName = allTypes.some((implementingTypeName) =>
@@ -357,7 +357,7 @@ function filterBaseSubschema(
         ...iFacesForType,
         ...typesForInterface[typeName],
       ];
-      const isIsolatedFieldName = allTypes.every((implementingTypeName) =>
+      const isIsolatedFieldName = allTypes.some((implementingTypeName) =>
         isIsolatedField(implementingTypeName, fieldName, isolatedSchemaTypes),
       );
       const isKeyFieldName = allTypes.some((implementingTypeName) =>
