@@ -385,7 +385,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.11.3, @apollo/subgraph@npm:^2.11.3":
+"@apollo/subgraph@npm:2.11.3":
   version: 2.11.3
   resolution: "@apollo/subgraph@npm:2.11.3"
   dependencies:
@@ -397,7 +397,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.12.1":
+"@apollo/subgraph@npm:2.12.1, @apollo/subgraph@npm:^2.11.3":
   version: 2.12.1
   resolution: "@apollo/subgraph@npm:2.12.1"
   dependencies:
