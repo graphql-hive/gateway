@@ -50,6 +50,7 @@ import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
+import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
@@ -335,11 +336,12 @@ export interface GatewayHiveCDNOptions {
   /**
    * GraphQL Hive CDN endpoint URL.
    */
-  endpoint: string;
+  endpoint: string | [string, string];
   /**
    * GraphQL Hive CDN access key.
    */
   key: string;
+  circuitBreaker?: CircuitBreakerConfiguration;
 }
 
 export interface GatewayHiveReportingOptions extends Omit<

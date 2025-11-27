@@ -63,6 +63,7 @@
     "vitest": "3.2.4"
   },
   "resolutions": {
+    "@graphql-hive/core": "0.16.0-alpha-20251126142740-d265dc6d6d73bf62ec597dbe41409f466b9d9874",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
