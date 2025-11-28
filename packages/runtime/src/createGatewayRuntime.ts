@@ -232,6 +232,7 @@ export function createGatewayRuntime<
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,
         },
+        circuitBreaker: config.persistedDocuments.circuitBreaker,
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
       },

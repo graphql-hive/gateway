@@ -1,5 +1,6 @@
 import type { Plugin as EnvelopPlugin } from '@envelop/core';
 import type { GenericAuthPluginOptions } from '@envelop/generic-auth';
+import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import type { Logger, LogLevel } from '@graphql-hive/logger';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type {
@@ -50,7 +51,6 @@ import { RequestIdOptions } from './plugins/useRequestId';
 import { SubgraphErrorPluginOptions } from './plugins/useSubgraphErrorPlugin';
 import { UpstreamRetryPluginOptions } from './plugins/useUpstreamRetry';
 import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
-import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
@@ -439,7 +439,11 @@ export interface GatewayHivePersistedDocumentsOptions {
   /**
    * GraphQL Hive persisted documents CDN endpoint URL.
    */
-  endpoint: string;
+  endpoint: string | [string, string];
+  /**
+   * Circuit Breaker configuration to customize CDN failures handling and switch to mirror endpoint.
+   */
+  circuitBreaker?: CircuitBreakerConfiguration;
   /**
    * GraphQL Hive persisted documents CDN access token.
    */
