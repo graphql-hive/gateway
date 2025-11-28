@@ -63,12 +63,9 @@
     "vitest": "3.2.4"
   },
   "resolutions": {
-    "graphql-yoga": "5.17.0-alpha-20251120144328-f407246d4f94919701bf3bdd78b9ae60c7059269",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
-    "@graphql-tools/executor": "1.5.0-alpha-20251120140925-6fcd4c6ff2d2eb40d5890db29418a15cc4cc3956",
-    "@graphql-tools/utils": "10.11.0-alpha-20251120140925-6fcd4c6ff2d2eb40d5890db29418a15cc4cc3956",
     "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@vitest/snapshot": "patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch",
