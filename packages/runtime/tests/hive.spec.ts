@@ -98,10 +98,8 @@ describe('Hive CDN', () => {
   it('uses Hive CDN instead of introspection for Proxy mode', async () => {
     const upstreamSchema = createUpstreamSchema();
     await using cdnServer = await createDisposableServer(
-      createServerAdapter(() =>
-        Response.json({
-          sdl: printSchemaWithDirectives(upstreamSchema),
-        }),
+      createServerAdapter(
+        () => new Response(printSchemaWithDirectives(upstreamSchema)),
       ),
     );
     await using upstreamServer = createYoga({
