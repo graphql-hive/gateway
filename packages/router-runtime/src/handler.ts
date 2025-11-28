@@ -15,7 +15,11 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, getLazyValue } from './utils';
+import {
+  getLazyFactory,
+  getLazyValue,
+  queryPlanForExecutionRequestContext,
+} from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -83,67 +87,57 @@ export function unifiedGraphHandler(
             executionRequest.document,
             executionRequest.operationName || null,
           ),
-        (queryPlan) =>
-          handleMaybePromise(
-            () =>
-              executeQueryPlan({
-                supergraphSchema,
-                executionRequest,
-                onSubgraphExecute(subgraphName, executionRequest) {
-                  const subschema = getSubschema(subgraphName);
-                  if (subschema.transforms?.length) {
-                    const transforms = subschema.transforms;
-                    const transformationContext = Object.create(null);
-                    for (const transform of transforms) {
-                      if (transform.transformRequest) {
-                        executionRequest = transform.transformRequest(
-                          executionRequest,
-                          undefined as any,
-                          transformationContext,
-                        );
-                      }
-                    }
-                    return handleMaybePromise(
-                      () =>
-                        opts.onSubgraphExecute(subgraphName, executionRequest),
-                      (executionResult) => {
-                        function handleResult(
-                          executionResult: ExecutionResult,
-                        ) {
-                          for (const transform of transforms.toReversed()) {
-                            if (transform.transformResult) {
-                              executionResult = transform.transformResult(
-                                executionResult,
-                                undefined as any,
-                                transformationContext,
-                              );
-                            }
-                          }
-                          return executionResult;
-                        }
-                        if (isAsyncIterable(executionResult)) {
-                          return mapAsyncIterator(executionResult, (result) =>
-                            handleResult(result),
-                          );
-                        }
-                        return handleResult(executionResult);
-                      },
+        (queryPlan) => {
+          queryPlanForExecutionRequestContext.set(
+            executionRequest.context,
+            queryPlan,
+          );
+          return executeQueryPlan({
+            supergraphSchema,
+            executionRequest,
+            onSubgraphExecute(subgraphName, executionRequest) {
+              const subschema = getSubschema(subgraphName);
+              if (subschema.transforms?.length) {
+                const transforms = subschema.transforms;
+                const transformationContext = Object.create(null);
+                for (const transform of transforms) {
+                  if (transform.transformRequest) {
+                    executionRequest = transform.transformRequest(
+                      executionRequest,
+                      undefined as any,
+                      transformationContext,
                     );
                   }
-                  return opts.onSubgraphExecute(subgraphName, executionRequest);
-                },
-                queryPlan,
-              }),
-            (result) => {
-              if (isAsyncIterable(result)) {
-                return result;
+                }
+                return handleMaybePromise(
+                  () => opts.onSubgraphExecute(subgraphName, executionRequest),
+                  (executionResult) => {
+                    function handleResult(executionResult: ExecutionResult) {
+                      for (const transform of transforms.toReversed()) {
+                        if (transform.transformResult) {
+                          executionResult = transform.transformResult(
+                            executionResult,
+                            undefined as any,
+                            transformationContext,
+                          );
+                        }
+                      }
+                      return executionResult;
+                    }
+                    if (isAsyncIterable(executionResult)) {
+                      return mapAsyncIterator(executionResult, (result) =>
+                        handleResult(result),
+                      );
+                    }
+                    return handleResult(executionResult);
+                  },
+                );
               }
-              if (executionRequest.context?.['queryPlanInExtensions']) {
-                result.extensions = { queryPlan };
-              }
-              return result;
+              return opts.onSubgraphExecute(subgraphName, executionRequest);
             },
-          ),
+            queryPlan,
+          });
+        },
       );
     },
   };

@@ -1,7 +1,13 @@
+import type { QueryPlan } from '@graphql-hive/router-query-planner';
 import {
   handleMaybePromise,
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
+
+export const queryPlanForExecutionRequestContext = new WeakMap<
+  any,
+  QueryPlan
+>();
 
 export function getLazyPromise<T>(
   factory: () => MaybePromise<T>,
