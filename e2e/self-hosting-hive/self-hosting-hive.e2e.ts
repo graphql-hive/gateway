@@ -60,7 +60,7 @@ describe('Self Hosting Hive', () => {
       /\[hiveSupergraphFetcher\] GET .* succeeded with status 200/,
     );
     expect(gwLogs).toMatch(
-      /\[useHiveConsole\] POST .* succeeded with status 200/,
+      /\[useHiveConsole\] POST .*\/usage .* succeeded with status 200/,
     );
   });
 });
