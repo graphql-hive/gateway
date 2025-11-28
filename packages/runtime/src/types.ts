@@ -54,6 +54,7 @@ import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
+export type { CircuitBreakerConfiguration };
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -87,7 +88,8 @@ export interface GatewayConfigContext {
 }
 
 export interface GatewayContext
-  extends GatewayConfigContext, YogaInitialContext {
+  extends GatewayConfigContext,
+    YogaInitialContext {
   /**
    * Environment agnostic HTTP headers provided with the request.
    */
@@ -282,9 +284,8 @@ export interface GatewayConfigSubgraph<
   subgraph: UnifiedGraphConfig;
 }
 
-export interface GatewayConfigSchemaBase<
-  TContext extends Record<string, any>,
-> extends GatewayConfigBase<TContext> {
+export interface GatewayConfigSchemaBase<TContext extends Record<string, any>>
+  extends GatewayConfigBase<TContext> {
   /**
    * Additional GraphQL schema type definitions.
    */
@@ -344,11 +345,12 @@ export interface GatewayHiveCDNOptions {
   circuitBreaker?: CircuitBreakerConfiguration;
 }
 
-export interface GatewayHiveReportingOptions extends Omit<
-  HiveConsolePluginOptions,
-  // we omit this property because we define persisted documents in GatewayHivePersistedDocumentsOptions
-  'experimental__persistedDocuments'
-> {
+export interface GatewayHiveReportingOptions
+  extends Omit<
+    HiveConsolePluginOptions,
+    // we omit this property because we define persisted documents in GatewayHivePersistedDocumentsOptions
+    'experimental__persistedDocuments'
+  > {
   type: 'hive';
   /** GraphQL Hive registry access token. */
   token: string;
@@ -374,7 +376,8 @@ export interface GatewayGraphOSOptions {
   apiKey: string;
 }
 
-export interface GatewayGraphOSManagedFederationOptions extends GatewayGraphOSOptions {
+export interface GatewayGraphOSManagedFederationOptions
+  extends GatewayGraphOSOptions {
   /**
    * Maximum number of retries to attempt when fetching the schema from the managed federation up link.
    */
