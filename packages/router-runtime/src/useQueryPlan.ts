@@ -13,21 +13,27 @@ export interface QueryPlanOptions {
 export function useQueryPlan(opts: QueryPlanOptions = {}): GatewayPlugin {
   const { expose, onQueryPlan } = opts;
   return {
-    onExecutionResult({ request, context, result, setResult }) {
-      if (!result) return;
-      const queryPlan = queryPlanForExecutionRequestContext.get(context);
-      onQueryPlan?.(queryPlan!);
-      const shouldExpose =
-        typeof expose === 'function' ? expose(request) : expose;
-      if (shouldExpose && !isAsyncIterable(result)) {
-        setResult({
-          ...result,
-          extensions: {
-            ...result.extensions,
-            queryPlan,
-          },
-        });
-      }
+    onExecute({ context, args }) {
+      return {
+        onExecuteDone({ result, setResult }) {
+          const queryPlan = queryPlanForExecutionRequestContext.get(
+            // getter like setter
+            context || args.document,
+          );
+          onQueryPlan?.(queryPlan!);
+          const shouldExpose =
+            typeof expose === 'function' ? expose(context.request) : expose;
+          if (shouldExpose && !isAsyncIterable(result)) {
+            setResult({
+              ...result,
+              extensions: {
+                ...result.extensions,
+                queryPlan,
+              },
+            });
+          }
+        },
+      };
     },
   };
 }

@@ -89,7 +89,8 @@ export function unifiedGraphHandler(
           ),
         (queryPlan) => {
           queryPlanForExecutionRequestContext.set(
-            executionRequest.context,
+            // setter like getter
+            executionRequest.context || executionRequest.document,
             queryPlan,
           );
           return executeQueryPlan({
