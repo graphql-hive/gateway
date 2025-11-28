@@ -69,7 +69,7 @@
     "@graphql-tools/stitch": "workspace:^",
     "@graphql-tools/utils": "^10.10.3",
     "@graphql-tools/wrap": "workspace:^",
-    "@graphql-yoga/plugin-apollo-usage-report": "^0.11.2",
+    "@graphql-yoga/plugin-apollo-usage-report": "^0.12.0",
     "@graphql-yoga/plugin-csrf-prevention": "^3.16.2",
     "@graphql-yoga/plugin-defer-stream": "^3.16.2",
     "@graphql-yoga/plugin-persisted-operations": "^3.16.2",
@@ -95,7 +95,7 @@
     "graphql": "^16.12.0",
     "graphql-sse": "^2.6.0",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.21.3",
+    "pkgroll": "2.21.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tsx": "4.20.6"
