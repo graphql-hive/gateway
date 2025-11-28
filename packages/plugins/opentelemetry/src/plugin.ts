@@ -1,6 +1,5 @@
 import {
   GatewayConfigContext,
-  GatewayContext,
   getRetryInfo,
   isRetryExecutionRequest,
   Logger,
@@ -9,7 +8,7 @@ import {
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
-import { Plugin, useErrorCoordinate } from 'graphql-yoga';
+import { useErrorCoordinate } from 'graphql-yoga';
 import {
   context,
   hive,
