@@ -1,14 +1,17 @@
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
-import { expect, it, vi } from 'vitest';
+import { QueryPlan } from '@graphql-hive/router-query-planner';
+import { expect, it } from 'vitest';
 import { unifiedGraphHandler, useQueryPlan } from '../src/index';
 
 it('should callback when the query plan is available', async () => {
-  const onQueryPlanFn = vi.fn();
+  let queryPlan!: QueryPlan;
   await using gw = createGatewayTester({
     unifiedGraphHandler,
     plugins: () => [
       useQueryPlan({
-        onQueryPlan: onQueryPlanFn,
+        onQueryPlan(_queryPlan) {
+          queryPlan = _queryPlan;
+        },
       }),
     ],
     subgraphs: [
@@ -38,15 +41,17 @@ it('should callback when the query plan is available', async () => {
     `,
   });
 
-  expect(onQueryPlanFn).toBeCalledWith({
-    kind: 'QueryPlan',
-    node: {
-      kind: 'Fetch',
-      operation: '{hello}',
-      operationKind: 'query',
-      serviceName: 'upstream',
-    },
-  });
+  expect(queryPlan).toMatchInlineSnapshot(`
+    {
+      "kind": "QueryPlan",
+      "node": {
+        "kind": "Fetch",
+        "operation": "{hello}",
+        "operationKind": "query",
+        "serviceName": "upstream",
+      },
+    }
+  `);
 });
 
 it('should include the query plan in result extensions when exposed', async () => {
