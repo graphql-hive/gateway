@@ -15,7 +15,11 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import { getLazyFactory, getLazyValue } from './utils';
+import {
+  getLazyFactory,
+  getLazyValue,
+  queryPlanForExecutionRequestContext,
+} from './utils';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -83,8 +87,13 @@ export function unifiedGraphHandler(
             executionRequest.document,
             executionRequest.operationName || null,
           ),
-        (queryPlan) =>
-          executeQueryPlan({
+        (queryPlan) => {
+          queryPlanForExecutionRequestContext.set(
+            // setter like getter
+            executionRequest.context || executionRequest.document,
+            queryPlan,
+          );
+          return executeQueryPlan({
             supergraphSchema,
             executionRequest,
             onSubgraphExecute(subgraphName, executionRequest) {
@@ -128,7 +137,8 @@ export function unifiedGraphHandler(
               return opts.onSubgraphExecute(subgraphName, executionRequest);
             },
             queryPlan,
-          }),
+          });
+        },
       );
     },
   };
