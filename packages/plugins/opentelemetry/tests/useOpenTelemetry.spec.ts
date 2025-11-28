@@ -1477,7 +1477,7 @@ describe('useOpenTelemetry', () => {
       spanExporter.assertNoSpanWithName('POST /graphql');
     });
 
-    it.skip('should have all attributes required by Hive Tracing', async () => {
+    it('should have all attributes required by Hive Tracing', async () => {
       await using gateway = await buildTestGateway({
         fetch: () => () => new Response(null, { status: 500 }),
       });
