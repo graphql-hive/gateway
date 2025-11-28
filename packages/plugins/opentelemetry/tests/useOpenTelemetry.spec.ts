@@ -1082,22 +1082,36 @@ describe('useOpenTelemetry', () => {
               code: SpanStatusCode.ERROR,
               message: 'GraphQL Execution Error',
             });
-            expect(operationSpan.span.attributes).toMatchObject({
+
+            const operationExpectedAttributes: Attributes = {
               'hive.graphql.error.count': 1,
               'hive.graphql.error.codes': ['TEST_ERROR'],
-              'hive.graphql.error.coordinates': ['Query.hello'],
-            });
+            };
+            if (!usingHiveRouterRuntime()) {
+              operationExpectedAttributes['hive.graphql.error.coordinates'] = [
+                'Query.hello',
+              ];
+            }
+            expect(operationSpan.span.attributes).toMatchObject(
+              operationExpectedAttributes,
+            );
 
             const errorEvent = operationSpan.span.events.find(
               (event) => event.name === 'graphql.error',
             );
 
-            expect(errorEvent?.attributes).toMatchObject({
+            const errorExpectedAttributes: Attributes = {
               'hive.graphql.error.path': ['hello'],
               'hive.graphql.error.message': 'Test Error',
               'hive.graphql.error.code': 'TEST_ERROR',
-              'hive.graphql.error.coordinate': 'Query.hello',
-            });
+            };
+            if (!usingHiveRouterRuntime()) {
+              errorExpectedAttributes['hive.graphql.error.coordinate'] =
+                'Query.hello';
+            }
+            expect(errorEvent?.attributes).toMatchObject(
+              errorExpectedAttributes,
+            );
           });
         });
       });
