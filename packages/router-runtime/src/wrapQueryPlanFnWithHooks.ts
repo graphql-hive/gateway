@@ -1,7 +1,10 @@
 import { QueryPlan } from '@graphql-hive/router-query-planner';
 import { ExecutionRequest } from '@graphql-tools/utils';
-import { handleMaybePromise, iterateAsync } from '@whatwg-node/promise-helpers';
-import { MaybePromise } from 'bun';
+import {
+  handleMaybePromise,
+  iterateAsync,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { OnQueryPlanDoneHook, OnQueryPlanHook, QueryPlanFn } from './types';
 
 export function wrapQueryPlanFnWithHooks<TContext>(
