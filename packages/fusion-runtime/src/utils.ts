@@ -42,6 +42,7 @@ import {
   type GraphQLSchema,
 } from 'graphql';
 import type { GraphQLOutputType, GraphQLResolveInfo } from 'graphql/type';
+import { OnQueryPlanHook } from '../../router-runtime/src/types';
 import { restoreExtraDirectives } from './federation/supergraph';
 import {
   Instrumentation,
@@ -428,6 +429,7 @@ export interface UnifiedGraphPlugin<TContext> {
   onSubgraphExecute?: OnSubgraphExecuteHook<TContext>;
   onDelegationPlan?: OnDelegationPlanHook<TContext>;
   onDelegationStageExecute?: OnDelegationStageExecuteHook<TContext>;
+  onQueryPlan?: OnQueryPlanHook<TContext>;
 }
 
 export type OnSubgraphExecuteHook<TContext = any> = (

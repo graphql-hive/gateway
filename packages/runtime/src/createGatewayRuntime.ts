@@ -82,6 +82,7 @@ import {
   type LandingPageRenderer,
   type YogaServerInstance,
 } from 'graphql-yoga';
+import { OnQueryPlanHook } from '../../router-runtime/src/types';
 import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
@@ -104,6 +105,7 @@ import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
+import { useMaybeQueryPlanDebug } from './plugins/useQueryPlanDebug';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
 import { useSubgraphErrorPlugin } from './plugins/useSubgraphErrorPlugin';
@@ -186,6 +188,8 @@ export function createGatewayRuntime<
   const onDelegationPlanHooks: OnDelegationPlanHook<GatewayContext>[] = [];
   const onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<GatewayContext>[] =
     [];
+
+  const onQueryPlanHooks: OnQueryPlanHook<GatewayContext>[] = [];
 
   let unifiedGraph: GraphQLSchema;
   let schemaInvalidator: () => void;
@@ -724,6 +728,7 @@ export function createGatewayRuntime<
       onSubgraphExecuteHooks,
       onDelegationPlanHooks,
       onDelegationStageExecuteHooks,
+      onQueryPlanHooks,
       additionalTypeDefs: config.additionalTypeDefs,
       additionalResolvers: config.additionalResolvers as IResolvers[],
       instrumentation: () => instrumentation,
@@ -816,6 +821,9 @@ export function createGatewayRuntime<
         }
         if (plugin.onCacheDelete) {
           onCacheDeleteHooks.push(plugin.onCacheDelete);
+        }
+        if (plugin.onQueryPlan) {
+          onQueryPlanHooks.push(plugin.onQueryPlan);
         }
       }
     },
@@ -1090,6 +1098,7 @@ export function createGatewayRuntime<
     useFetchDebug(),
     useMaybeDelegationPlanDebug({ log: configContext.log }),
     useCacheDebug({ log: configContext.log }),
+    useMaybeQueryPlanDebug({ log: configContext.log }),
   );
 
   const yoga = createYoga({
