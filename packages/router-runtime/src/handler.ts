@@ -7,7 +7,11 @@ import {
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
 import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import { ExecutionResult, isAsyncIterable } from '@graphql-tools/utils';
+import {
+  ExecutionRequest,
+  ExecutionResult,
+  isAsyncIterable,
+} from '@graphql-tools/utils';
 import {
   handleMaybePromise,
   mapAsyncIterator,
@@ -15,11 +19,8 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import {
-  getLazyFactory,
-  getLazyValue,
-  queryPlanForExecutionRequestContext,
-} from './utils';
+import { getLazyFactory, getLazyValue } from './utils';
+import { wrapQueryPlanFnWithHooks } from './wrapQueryPlanFnWithHooks';
 
 export function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
@@ -47,13 +48,17 @@ export function unifiedGraphHandler(
     DocumentNode,
     Map<string | null, MaybePromise<QueryPlan>>
   >();
-  function planDocument(document: DocumentNode, operationName: string | null) {
+  function defaultQueryPlanFn({
+    document,
+    operationName,
+  }: ExecutionRequest): MaybePromise<QueryPlan> {
     let operationCache = documentOperationPlanCache.get(document);
 
     // we dont need to worry about releasing values. the map values in weakmap
     // will all be released when document node is GCed
+    const operationNameKey = operationName || null;
     if (operationCache) {
-      const plan = operationCache.get(operationName);
+      const plan = operationCache.get(operationNameKey);
       if (plan) {
         return plan;
       }
@@ -64,13 +69,17 @@ export function unifiedGraphHandler(
 
     const plan = handleMaybePromise(getQueryPlanner, (qp) =>
       qp.plan(defaultPrintFn(document), operationName).then((queryPlan) => {
-        operationCache.set(operationName, queryPlan);
+        operationCache.set(operationNameKey, queryPlan);
         return queryPlan;
       }),
     );
-    operationCache.set(operationName, plan);
+    operationCache.set(operationNameKey, plan);
     return plan;
   }
+
+  const wrappedQueryPlanFn = opts.onQueryPlanHooks?.length
+    ? wrapQueryPlanFnWithHooks(defaultQueryPlanFn, opts.onQueryPlanHooks)
+    : defaultQueryPlanFn;
 
   return {
     unifiedGraph: supergraphSchema,
@@ -82,18 +91,9 @@ export function unifiedGraphHandler(
         return defaultExecutor(executionRequest);
       }
       return handleMaybePromise(
-        () =>
-          planDocument(
-            executionRequest.document,
-            executionRequest.operationName || null,
-          ),
-        (queryPlan) => {
-          queryPlanForExecutionRequestContext.set(
-            // setter like getter
-            executionRequest.context || executionRequest.document,
-            queryPlan,
-          );
-          return executeQueryPlan({
+        () => wrappedQueryPlanFn(executionRequest),
+        (queryPlan) =>
+          executeQueryPlan({
             supergraphSchema,
             executionRequest,
             onSubgraphExecute(subgraphName, executionRequest) {
@@ -137,8 +137,7 @@ export function unifiedGraphHandler(
               return opts.onSubgraphExecute(subgraphName, executionRequest);
             },
             queryPlan,
-          });
-        },
+          }),
       );
     },
   };
