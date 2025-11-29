@@ -101,9 +101,9 @@ export function defaultMergedResolver(
       } else {
         // not all fields are present, we need to resolve more leftovers
         // this can occur when there are circular @requires, see requires-circular audit test
-        setImmediate(() => {
+        setTimeout(() => {
           handleLeftOver(parent, context, info, leftOver);
-        });
+        }, 0);
       }
       return deferred.promise;
     }
