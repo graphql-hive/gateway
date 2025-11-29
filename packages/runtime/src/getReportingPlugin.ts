@@ -43,6 +43,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
                 endpoint: config.persistedDocuments.endpoint,
                 accessToken: config.persistedDocuments.token,
               },
+              circuitBreaker: config.persistedDocuments.circuitBreaker,
               // Trick to satisfy the Hive Console plugin types
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
             },
