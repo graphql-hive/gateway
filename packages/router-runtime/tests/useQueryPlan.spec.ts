@@ -114,7 +114,8 @@ it('should include the query plan in result extensions when expose returns true'
     unifiedGraphHandler,
     plugins: () => [
       useQueryPlan({
-        exposeInResultExtensions: (req) => req.headers.get('x-expose-query-plan') === 'true',
+        exposeInResultExtensions: (req) =>
+          req.headers.get('x-expose-query-plan') === 'true',
       }),
     ],
     subgraphs: [

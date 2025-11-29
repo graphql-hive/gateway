@@ -31,7 +31,9 @@ export function useQueryPlan(opts: QueryPlanOptions = {}): GatewayPlugin {
           );
           onQueryPlan?.(queryPlan!);
           const shouldExpose =
-            typeof exposeInResultExtensions === 'function' ? exposeInResultExtensions(context.request) : exposeInResultExtensions;
+            typeof exposeInResultExtensions === 'function'
+              ? exposeInResultExtensions(context.request)
+              : exposeInResultExtensions;
           if (shouldExpose && !isAsyncIterable(result)) {
             setResult({
               ...result,
