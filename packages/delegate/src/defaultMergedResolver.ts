@@ -101,9 +101,7 @@ export function defaultMergedResolver(
       } else {
         // not all fields are present, we need to resolve more leftovers
         // this can occur when there are circular @requires, see requires-circular audit test
-        setTimeout(() => {
-          handleLeftOver(parent, context, info, leftOver);
-        }, 0);
+        handleLeftOver(parent, context, info, leftOver);
       }
       return deferred.promise;
     }
@@ -420,7 +418,9 @@ function handleDeferredResolverResult<TContext extends Record<string, any>>(
             })
           ) {
             // requirements are satisfied, trigger handleLeftOver to fetch this field
-            handleLeftOver(leftOverParent, context, info, leftOver);
+            setTimeout(() => {
+              handleLeftOver(leftOverParent, context, info, leftOver);
+            }, 0);
           }
         }
       }
