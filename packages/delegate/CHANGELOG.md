@@ -1,5 +1,37 @@
 # @graphql-tools/delegate
 
+## 12.0.0
+### Major Changes
+
+
+
+- [#1708](https://github.com/graphql-hive/gateway/pull/1708) [`bc6cddd`](https://github.com/graphql-hive/gateway/commit/bc6cddd1c53a012dd02a1d8a7217a28e65cc6ae9) Thanks [@ardatan](https://github.com/ardatan)! - Breaking changes in `createRequest` function;
+  - No more `sourceParentType`, `sourceFieldName`, `variableDefinitions`, `variableValues` and `targetRootValue`
+  - `targetRootValue` has been renamed to `rootValue`
+  - `targetSchema` is a required option now and `args` is also accepted as a map of the arguments of the target field
+  - `fragments` is now an array of `FragmentDefinitionNode` instead of a record `{ [fragmentName: string]: FragmentDefinitionNode }`
+  
+  Breaking changes in `delegateRequest` and `delegateToSchema` functions;
+  - No more `transformedSchema` option, it has been renamed to `targetSchema`
+  - `targetSchema` is a required option now
+
+### Patch Changes
+
+
+
+- [#1727](https://github.com/graphql-hive/gateway/pull/1727) [`1dbc653`](https://github.com/graphql-hive/gateway/commit/1dbc6536cb992a705cac7894acca6fe5431b72de) Thanks [@ardatan](https://github.com/ardatan)! - Avoid extra `__typename` in the root selection
+  
+  ```diff
+  query {
+  - __typename
+    hello
+  }
+  ```
+
+
+- [#1743](https://github.com/graphql-hive/gateway/pull/1743) [`b520eb2`](https://github.com/graphql-hive/gateway/commit/b520eb2309f627578519826d6b9e0056252c6c46) Thanks [@ardatan](https://github.com/ardatan)! - Handle leftovers recursively but in async
+  Fixes `requires-circular` test suite's second case on federation audit repository
+
 ## 11.1.3
 ### Patch Changes
 

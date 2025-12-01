@@ -1,5 +1,27 @@
 # @graphql-tools/stitch
 
+## 10.1.4
+### Patch Changes
+
+
+
+- [#1735](https://github.com/graphql-hive/gateway/pull/1735) [`55173a5`](https://github.com/graphql-hive/gateway/commit/55173a55344a07fdf9531efcbaa4cb142fff655e) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Ensure key fields propagate correctly for interface/object combinations
+
+
+
+- [#1727](https://github.com/graphql-hive/gateway/pull/1727) [`1dbc653`](https://github.com/graphql-hive/gateway/commit/1dbc6536cb992a705cac7894acca6fe5431b72de) Thanks [@ardatan](https://github.com/ardatan)! - Avoid extra `__typename` in the root selection
+  
+  ```diff
+  query {
+  - __typename
+    hello
+  }
+  ```
+- Updated dependencies [[`bc6cddd`](https://github.com/graphql-hive/gateway/commit/bc6cddd1c53a012dd02a1d8a7217a28e65cc6ae9), [`1dbc653`](https://github.com/graphql-hive/gateway/commit/1dbc6536cb992a705cac7894acca6fe5431b72de), [`bc6cddd`](https://github.com/graphql-hive/gateway/commit/bc6cddd1c53a012dd02a1d8a7217a28e65cc6ae9), [`b520eb2`](https://github.com/graphql-hive/gateway/commit/b520eb2309f627578519826d6b9e0056252c6c46)]:
+  - @graphql-tools/wrap@11.1.0
+  - @graphql-tools/delegate@12.0.0
+  - @graphql-tools/batch-delegate@10.0.6
+
 ## 10.1.3
 ### Patch Changes
 
