@@ -31,6 +31,7 @@ import {
 import { usingHiveRouterRuntime } from '~internal/env';
 import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql';
 import { buildASTSchema, buildSchema, isSchema } from 'graphql';
+import { OnQueryPlanHook } from '../../router-runtime/src/types';
 import { handleFederationSupergraph as stitchingUnifiedGraphHandler } from './federation/supergraph';
 import {
   compareSchemas,
@@ -84,6 +85,7 @@ export interface UnifiedGraphHandlerOpts {
   onDelegationPlanHooks?: OnDelegationPlanHook<any>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<any>[];
   onDelegateHooks?: OnDelegateHook<unknown>[];
+  onQueryPlanHooks?: OnQueryPlanHook<any>[];
   /**
    * Configure the batch delegation options for all merged types in all subschemas.
    */
@@ -119,6 +121,7 @@ export interface UnifiedGraphManagerOptions<TContext> {
   onDelegateHooks?: OnDelegateHook<unknown>[];
   onDelegationPlanHooks?: OnDelegationPlanHook<TContext>[];
   onDelegationStageExecuteHooks?: OnDelegationStageExecuteHook<TContext>[];
+  onQueryPlanHooks?: OnQueryPlanHook<TContext>[];
   /**
    * Whether to batch the subgraph executions.
    * @default true
@@ -167,6 +170,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private onSubgraphExecuteHooks: OnSubgraphExecuteHook<TContext>[];
   private onDelegationPlanHooks: OnDelegationPlanHook<TContext>[];
   private onDelegationStageExecuteHooks: OnDelegationStageExecuteHook<TContext>[];
+  private onQueryPlanHooks: OnQueryPlanHook<TContext>[];
   private inContextSDK: any;
   private initialUnifiedGraph$?: MaybePromise<GraphQLSchema>;
   private polling$?: MaybePromise<void>;
@@ -189,6 +193,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
     this.onDelegationPlanHooks = opts?.onDelegationPlanHooks || [];
     this.onDelegationStageExecuteHooks =
       opts?.onDelegationStageExecuteHooks || [];
+    this.onQueryPlanHooks = opts?.onQueryPlanHooks || [];
     if (opts.pollingInterval != null) {
       opts.transportContext?.log.debug(
         `Starting polling to Supergraph with interval ${millisecondsToStr(opts.pollingInterval)}`,
@@ -355,6 +360,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
         onDelegationPlanHooks: this.onDelegationPlanHooks,
         onDelegationStageExecuteHooks: this.onDelegationStageExecuteHooks,
         onDelegateHooks: this.opts.onDelegateHooks,
+        onQueryPlanHooks: this.onQueryPlanHooks,
         batchDelegateOptions: this.opts.batchDelegateOptions,
         log: this.opts.transportContext?.log,
         handleProgressiveOverride: this.opts.handleProgressiveOverride
