@@ -98,7 +98,7 @@
     "pkgroll": "2.21.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tsx": "4.20.6"
+    "tsx": "4.21.0"
   },
   "sideEffects": false
 }
