@@ -1,5 +1,12 @@
 # @graphql-tools/delegate
 
+## 12.0.1
+### Patch Changes
+
+
+
+- [`0d14faf`](https://github.com/graphql-hive/gateway/commit/0d14fafdbaf3fb27eef123016ef2ca977d6688d8) Thanks [@ardatan](https://github.com/ardatan)! - Fix leftover handling 2nd take
+
 ## 12.0.0
 ### Major Changes
 
