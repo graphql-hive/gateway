@@ -49,7 +49,7 @@ var __callDispose = (stack, error, hasError) => {
   };
   return next();
 };
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const __dirname$1 = fileURLToPath(new URL(".", import.meta.url));
 async function parseHeapSnapshot(data, opts = {}) {
   var _stack = [];
   try {
@@ -79,7 +79,7 @@ async function parseHeapSnapshot(data, opts = {}) {
     loader.close();
     await loader.parsingComplete;
     const secondWorker = new Worker(
-      path.join(__dirname, "heap_snapshot_worker-entrypoint.js")
+      path.join(__dirname$1, "heap_snapshot_worker-entrypoint.js")
       // exists after building
     );
     const _ = __using(_stack, {

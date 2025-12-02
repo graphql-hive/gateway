@@ -292,9 +292,7 @@ export function createGatewayRuntime<
       const fetcher = createSchemaFetcher({
         endpoint,
         key,
-        logger: LegacyLogger.from(
-          configContext.log.child('[hiveSchemaFetcher] '),
-        ),
+        logger: configContext.log.child('[hiveSchemaFetcher] '),
       });
       schemaFetcher = function fetchSchemaFromCDN() {
         pausePolling();

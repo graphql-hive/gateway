@@ -77,6 +77,7 @@ export default function useHiveConsole<
   // @ts-expect-error TODO: useHive plugin should inhert the TContext
   return useHive({
     debug: isDebug(),
+    logger: options.log,
     ...options,
     enabled: !!enabled,
     token: token!,
