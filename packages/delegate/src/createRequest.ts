@@ -3,6 +3,7 @@ import {
   astFromArg,
   astFromValueUntyped,
   ExecutionRequest,
+  getDefinedRootType,
 } from '@graphql-tools/utils';
 import {
   ArgumentNode,
@@ -88,7 +89,7 @@ export function createRequest({
   const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
-    const rootType = targetSchema?.getRootType(targetOperation);
+    const rootType = targetSchema != null ? getDefinedRootType(targetSchema, targetOperation) : undefined;
     const rootField = rootType?.getFields()[rootFieldName];
     const rootFieldArgs = rootField?.args;
     for (const argName in args) {
