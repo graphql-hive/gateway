@@ -154,7 +154,7 @@
     "rimraf": "^6.1.0",
     "rollup": "4.53.3",
     "rollup-plugin-tsconfig-paths": "^1.5.2",
-    "tsx": "4.20.6"
+    "tsx": "4.21.0"
   },
   "sideEffects": false
 }
