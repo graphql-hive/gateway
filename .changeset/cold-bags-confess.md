@@ -2,7 +2,7 @@
 '@graphql-hive/gateway-runtime': minor
 ---
 
-## New Hive CDN mirror and circuit breaker
+New Hive CDN mirror and circuit breaker
 
 Hive CDN introduced a new CDN mirror and circuit breaker to mitigate the risk related to Cloudflare
 services failures.
