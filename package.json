@@ -75,6 +75,7 @@
     "cookie": "^1.0.0",
     "cross-spawn": "7.0.6",
     "esbuild": "0.25.5",
+    "express": "^5.2.0",
     "graphql": "16.12.0",
     "ioredis-mock": "patch:ioredis-mock@8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
     "jest-environment-node@npm:30.2.0": "patch:jest-environment-node@npm%3A30.2.0#~/.yarn/patches/jest-environment-node-npm-30.2.0-b72db4433a.patch",
