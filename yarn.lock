@@ -4138,25 +4138,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.15.1":
-  version: 0.15.1
-  resolution: "@graphql-hive/core@npm:0.15.1"
-  dependencies:
-    "@graphql-hive/signal": "npm:^2.0.0"
-    "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:^0.10.13"
-    async-retry: "npm:^1.3.3"
-    events: "npm:^3.3.0"
-    js-md5: "npm:0.8.3"
-    lodash.sortby: "npm:^4.7.0"
-    tiny-lru: "npm:^8.0.2"
-  peerDependencies:
-    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/53db4014cc7517c55050f71b7aafa32c157f8c11036ba96f9a03f736dd0a7ea859af7ca2ae2f53471e188856d227d92c362766eaa9347e485134036f63a88912
-  languageName: node
-  linkType: hard
-
-"@graphql-hive/core@npm:^0.18.0":
+"@graphql-hive/core@npm:0.18.0, @graphql-hive/core@npm:^0.18.0":
   version: 0.18.0
   resolution: "@graphql-hive/core@npm:0.18.0"
   dependencies:
