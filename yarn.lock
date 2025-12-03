@@ -312,18 +312,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:0.36.2":
-  version: 0.36.2
-  resolution: "@apollo/rover@npm:0.36.2"
+"@apollo/rover@npm:0.37.0":
+  version: 0.37.0
+  resolution: "@apollo/rover@npm:0.37.0"
   dependencies:
-    axios: "npm:^1.6.5"
+    axios: "npm:^1.13.1"
     axios-proxy-builder: "npm:^0.1.1"
     console.table: "npm:^0.10.0"
     detect-libc: "npm:^2.0.0"
     tar: "npm:^7.0.0"
   bin:
     rover: run.js
-  checksum: 10c0/a11f2c85ca353205fb9460c13638985101addcf10b4e33f133e99f422f4367eff79f1320dd0c2c609c243d7b3f2512aab28f5151d647076a2ae59779e10b2b05
+  checksum: 10c0/64193a1f855c045fbbbd3d56ff83d101346874df783056aa0199cf422a81c49a150b97bc149138a254f78168500ba278af56ef13a2be9bf8538fda816d87d6e4
   languageName: node
   linkType: hard
 
@@ -6004,7 +6004,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/examples@workspace:internal/examples"
   dependencies:
-    "@apollo/rover": "npm:0.36.2"
+    "@apollo/rover": "npm:0.37.0"
     "@babel/parser": "npm:^7.28.5"
     "@types/jscodeshift": "npm:^17.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -11614,7 +11614,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.12.2, axios@npm:^1.6.5":
+"axios@npm:^1.12.2":
   version: 1.12.2
   resolution: "axios@npm:1.12.2"
   dependencies:
@@ -11622,6 +11622,17 @@ __metadata:
     form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
   checksum: 10c0/80b063e318cf05cd33a4d991cea0162f3573481946f9129efb7766f38fde4c061c34f41a93a9f9521f02b7c9565ccbc197c099b0186543ac84a24580017adfed
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.13.1":
+  version: 1.13.2
+  resolution: "axios@npm:1.13.2"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.4"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10c0/e8a42e37e5568ae9c7a28c348db0e8cf3e43d06fcbef73f0048669edfe4f71219664da7b6cc991b0c0f01c28a48f037c515263cb79be1f1ae8ff034cd813867b
   languageName: node
   linkType: hard
 
