@@ -448,4 +448,52 @@ describe('Hive CDN', () => {
       }
     `);
   });
+
+  it('should handle persisted documents cdn circuit breaker when first endpoint is unavailable', async () => {
+    const upstreamSchema = createUpstreamSchema();
+
+    await using upstreamServer = await createDisposableServer(
+      createYoga({
+        schema: upstreamSchema,
+      }),
+    );
+
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter(() => new Response(null, { status: 504 })),
+    );
+
+    await using cdnMirrorServer = await createDisposableServer(
+      createServerAdapter(() => {
+        return new Response(/* GraphQL */ `
+          query MyTest {
+            foo
+          }
+        `);
+      }),
+    );
+
+    await using gateway = createGatewayRuntime({
+      proxy: {
+        endpoint: `${upstreamServer.url}/graphql`,
+      },
+      persistedDocuments: {
+        type: 'hive',
+        endpoint: [cdnServer.url, cdnMirrorServer.url],
+        token: 'token',
+      },
+    });
+
+    await expect(
+      executeFetch(gateway, {
+        documentId:
+          'graphql-app~1.0.0~Eaca86e9999dce9b4f14c4ed969aca3258d22ed00',
+      }),
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "foo": "bar",
+        },
+      }
+    `);
+  });
 });
