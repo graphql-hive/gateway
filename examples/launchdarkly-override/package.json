@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "tsx": "^4.20.3",
-    "@apollo/rover": "^0.36.2"
+    "@apollo/rover": "^0.37.0"
   },
   "scripts": {
     "service:inventory": "tsx services/inventory.ts",
