@@ -424,10 +424,12 @@ export function createGatewayRuntime<
           setResult([]);
         }
       },
-      async onDispose() {
+      onDispose() {
         pausePolling();
-        await transportExecutorStack.disposeAsync();
-        return schemaFetcher.dispose?.();
+        return handleMaybePromise(
+          () => transportExecutorStack.disposeAsync(),
+          () => schemaFetcher.dispose?.(),
+        );
       },
     };
     readinessChecker = () =>
