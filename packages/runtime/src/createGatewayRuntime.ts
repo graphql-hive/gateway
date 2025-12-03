@@ -57,12 +57,7 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
 import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
-import {
-  fakePromise,
-  handleMaybePromise,
-  MaybePromise,
-  unfakePromise,
-} from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import {
@@ -687,12 +682,18 @@ export function createGatewayRuntime<
       if (config.supergraph.type === 'hive') {
         // hive cdn
         const { endpoint, key, circuitBreaker } = config.supergraph;
-        const endpoints = (Array.isArray(endpoint) ? endpoint : [endpoint]).map(
-          (url) => (url.endsWith('/supergraph') ? url : `${url}/supergraph`),
-        );
-
+        function ensureSupergraph(endpoint: string): string {
+          if (!/\/supergraph(\.graphql)*$/.test(endpoint)) {
+            // ensure ends with /supergraph
+            endpoint = joinUrl(endpoint, 'supergraph');
+          }
+          return endpoint;
+        }
         const fetcher = createCDNArtifactFetcher({
-          endpoint: endpoints as [string, string],
+          endpoint: Array.isArray(endpoint)
+            ? // no endpoint.map just to make ts happy without casting
+              [ensureSupergraph(endpoint[0]), ensureSupergraph(endpoint[1])]
+            : ensureSupergraph(endpoint),
           accessKey: key,
           logger: configContext.log.child('[hiveSupergraphFetcher] '),
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
@@ -807,10 +808,9 @@ export function createGatewayRuntime<
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
       onDispose() {
-        return unfakePromise(
-          fakePromise(undefined)
-            .then(() => dispose(unifiedGraphManager))
-            .then(() => unifiedGraphFetcher.dispose?.()),
+        return handleMaybePromise(
+          () => dispose(unifiedGraphManager),
+          () => unifiedGraphFetcher.dispose?.(),
         );
       },
     };
