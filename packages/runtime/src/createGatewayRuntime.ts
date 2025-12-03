@@ -295,19 +295,21 @@ export function createGatewayRuntime<
     ) {
       // hive cdn
       const { endpoint, key, circuitBreaker } = config.schema;
-      const endpoints = (Array.isArray(endpoint) ? endpoint : [endpoint]).map(
-        (url) =>
-          url.endsWith('/sdl')
-            ? url
-            : joinUrl(
-                url.endsWith('/services')
-                  ? url.substring(0, url.length - 8)
-                  : url,
-                'sdl',
-              ),
-      );
+      function ensureSdl(endpoint: string): string {
+        // the services path returns the sdl and the service name,
+        // we only care about the sdl so always use the sdl
+        endpoint = endpoint.replace(/\/services$/, '/sdl');
+        if (!/\/sdl(\.graphql)*$/.test(endpoint)) {
+          // ensure ends with /sdl
+          endpoint = joinUrl(endpoint, 'sdl');
+        }
+        return endpoint;
+      }
       const fetcher = createCDNArtifactFetcher({
-        endpoint: endpoints as [string, string],
+        endpoint: Array.isArray(endpoint)
+          ? // no endpoint.map just to make ts happy without casting
+            [ensureSdl(endpoint[0]), ensureSdl(endpoint[1])]
+          : ensureSdl(endpoint),
         circuitBreaker,
         accessKey: key,
         logger: configContext.log.child('[hiveSchemaFetcher] '),
