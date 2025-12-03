@@ -5,10 +5,7 @@ import {
 } from '@envelop/core';
 import { useDisableIntrospection } from '@envelop/disable-introspection';
 import { useGenericAuth } from '@envelop/generic-auth';
-import {
-  createSchemaFetcher,
-  createSupergraphSDLFetcher,
-} from '@graphql-hive/core';
+import { createCDNArtifactFetcher, joinUrl } from '@graphql-hive/core';
 import { LegacyLogger } from '@graphql-hive/logger';
 import type {
   OnDelegationPlanHook,
@@ -230,6 +227,7 @@ export function createGatewayRuntime<
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,
         },
+        circuitBreaker: config.persistedDocuments.circuitBreaker,
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
       },
@@ -270,7 +268,7 @@ export function createGatewayRuntime<
         clearTimeout(currentTimeout);
       }
       if (pollingInterval) {
-        currentTimeout = setTimeout(schemaFetcher, pollingInterval);
+        currentTimeout = setTimeout(schemaFetcher.fetch, pollingInterval);
       }
     }
     function pausePolling() {
@@ -280,7 +278,10 @@ export function createGatewayRuntime<
     }
     let lastFetchedSdl: string | undefined;
     let initialFetch$: MaybePromise<true>;
-    let schemaFetcher: () => MaybePromise<true>;
+    let schemaFetcher: {
+      fetch: () => MaybePromise<true>;
+      dispose?: () => void | PromiseLike<void>;
+    };
 
     if (
       config.schema &&
@@ -288,25 +289,45 @@ export function createGatewayRuntime<
       'type' in config.schema
     ) {
       // hive cdn
-      const { endpoint, key } = config.schema;
-      const fetcher = createSchemaFetcher({
-        endpoint,
-        key,
+      const { endpoint, key, circuitBreaker } = config.schema;
+      function ensureSdl(endpoint: string): string {
+        // the services path returns the sdl and the service name,
+        // we only care about the sdl so always use the sdl
+        endpoint = endpoint.replace(/\/services$/, '/sdl');
+        if (!/\/sdl(\.graphql)*$/.test(endpoint)) {
+          // ensure ends with /sdl
+          endpoint = joinUrl(endpoint, 'sdl');
+        }
+        return endpoint;
+      }
+      const fetcher = createCDNArtifactFetcher({
+        endpoint: Array.isArray(endpoint)
+          ? // no endpoint.map just to make ts happy without casting
+            [ensureSdl(endpoint[0]), ensureSdl(endpoint[1])]
+          : ensureSdl(endpoint),
+        circuitBreaker,
+        accessKey: key,
         logger: configContext.log.child('[hiveSchemaFetcher] '),
       });
-      schemaFetcher = function fetchSchemaFromCDN() {
-        pausePolling();
-        initialFetch$ = handleMaybePromise(fetcher, ({ sdl }) => {
-          if (lastFetchedSdl == null || lastFetchedSdl !== sdl) {
-            unifiedGraph = buildSchema(sdl, {
-              assumeValid: true,
-              assumeValidSDL: true,
-            });
-          }
-          continuePolling();
-          return true;
-        });
-        return initialFetch$;
+      schemaFetcher = {
+        fetch: function fetchSchemaFromCDN() {
+          pausePolling();
+          initialFetch$ = handleMaybePromise(
+            fetcher.fetch,
+            ({ contents }): true => {
+              if (lastFetchedSdl == null || lastFetchedSdl !== contents) {
+                unifiedGraph = buildSchema(contents, {
+                  assumeValid: true,
+                  assumeValidSDL: true,
+                });
+              }
+              continuePolling();
+              return true;
+            },
+          );
+          return initialFetch$;
+        },
+        dispose: () => fetcher.dispose(),
       };
     } else if (config.schema) {
       // local or remote
@@ -316,60 +337,67 @@ export function createGatewayRuntime<
         delete config.pollingInterval;
       }
 
-      schemaFetcher = function fetchSchema() {
-        pausePolling();
-        initialFetch$ = handleMaybePromise(
-          () =>
-            handleUnifiedGraphConfig(
-              // @ts-expect-error TODO: what's up with type narrowing
-              config.schema,
-              configContext,
-            ),
-          (schema) => {
-            if (isSchema(schema)) {
-              unifiedGraph = schema;
-            } else if (isDocumentNode(schema)) {
-              unifiedGraph = buildASTSchema(schema, {
-                assumeValid: true,
-                assumeValidSDL: true,
-              });
-            } else {
-              unifiedGraph = buildSchema(schema, {
-                noLocation: true,
-                assumeValid: true,
-                assumeValidSDL: true,
-              });
-            }
-            continuePolling();
-            return true;
-          },
-        );
-        return initialFetch$;
+      schemaFetcher = {
+        fetch: function fetchSchema() {
+          pausePolling();
+          initialFetch$ = handleMaybePromise(
+            () =>
+              handleUnifiedGraphConfig(
+                // @ts-expect-error TODO: what's up with type narrowing
+                config.schema,
+                configContext,
+              ),
+            (schema) => {
+              if (isSchema(schema)) {
+                unifiedGraph = schema;
+              } else if (isDocumentNode(schema)) {
+                unifiedGraph = buildASTSchema(schema, {
+                  assumeValid: true,
+                  assumeValidSDL: true,
+                });
+              } else {
+                unifiedGraph = buildSchema(schema, {
+                  noLocation: true,
+                  assumeValid: true,
+                  assumeValidSDL: true,
+                });
+              }
+              continuePolling();
+              return true;
+            },
+          );
+          return initialFetch$;
+        },
       };
     } else {
       // introspect endpoint
-      schemaFetcher = function fetchSchemaWithExecutor() {
-        pausePolling();
-        return handleMaybePromise(
-          () =>
-            schemaFromExecutor(proxyExecutor, configContext, {
-              assumeValid: true,
-            }),
-          (schema) => {
-            unifiedGraph = schema;
-            continuePolling();
-            return true;
-          },
-        );
+      schemaFetcher = {
+        fetch: function fetchSchemaWithExecutor() {
+          pausePolling();
+          return handleMaybePromise(
+            () =>
+              schemaFromExecutor(proxyExecutor, configContext, {
+                assumeValid: true,
+              }),
+            (schema) => {
+              unifiedGraph = schema;
+              continuePolling();
+              return true;
+            },
+          );
+        },
       };
     }
 
-    const instrumentedFetcher = schemaFetcher;
-    schemaFetcher = (...args) =>
-      getInstrumented(null).asyncFn(
-        instrumentation?.schema,
-        instrumentedFetcher,
-      )(...args);
+    const instrumentedFetcher = schemaFetcher.fetch;
+    schemaFetcher = {
+      ...schemaFetcher,
+      fetch: (...args) =>
+        getInstrumented(null).asyncFn(
+          instrumentation?.schema,
+          instrumentedFetcher,
+        )(...args),
+    };
 
     getSchema = () => {
       if (unifiedGraph != null) {
@@ -381,11 +409,11 @@ export function createGatewayRuntime<
           () => unifiedGraph,
         );
       }
-      return handleMaybePromise(schemaFetcher, () => unifiedGraph);
+      return handleMaybePromise(schemaFetcher.fetch, () => unifiedGraph);
     };
     const shouldSkipValidation =
       'skipValidation' in config ? config.skipValidation : false;
-    const executorPlugin: GatewayPlugin = {
+    unifiedGraphPlugin = {
       onValidate({ params, setResult }) {
         if (shouldSkipValidation || !params.schema) {
           setResult([]);
@@ -393,10 +421,12 @@ export function createGatewayRuntime<
       },
       onDispose() {
         pausePolling();
-        return transportExecutorStack.disposeAsync();
+        return handleMaybePromise(
+          () => transportExecutorStack.disposeAsync(),
+          () => schemaFetcher.dispose?.(),
+        );
       },
     };
-    unifiedGraphPlugin = executorPlugin;
     readinessChecker = () =>
       handleMaybePromise(
         () =>
@@ -410,7 +440,7 @@ export function createGatewayRuntime<
     schemaInvalidator = () => {
       // @ts-expect-error TODO: this is illegal but somehow we want it
       unifiedGraph = undefined;
-      initialFetch$ = schemaFetcher();
+      initialFetch$ = schemaFetcher.fetch();
     };
   } else if ('subgraph' in config) {
     const subgraphInConfig = config.subgraph;
@@ -641,40 +671,57 @@ export function createGatewayRuntime<
       },
     };
   } /** 'supergraph' in config */ else {
-    let unifiedGraphFetcher: (
-      transportCtx: TransportContext,
-    ) => MaybePromise<UnifiedGraphSchema>;
+    let unifiedGraphFetcher: {
+      fetch: (
+        transportCtx: TransportContext,
+      ) => MaybePromise<UnifiedGraphSchema>;
+      dispose?: () => void | PromiseLike<void>;
+    };
+
     if (typeof config.supergraph === 'object' && 'type' in config.supergraph) {
       if (config.supergraph.type === 'hive') {
         // hive cdn
-        const { endpoint, key } = config.supergraph;
-        const fetcher = createSupergraphSDLFetcher({
-          endpoint,
-          key,
-          logger: LegacyLogger.from(
-            configContext.log.child('[hiveSupergraphFetcher] '),
-          ),
-
+        const { endpoint, key, circuitBreaker } = config.supergraph;
+        function ensureSupergraph(endpoint: string): string {
+          if (!/\/supergraph(\.graphql)*$/.test(endpoint)) {
+            // ensure ends with /supergraph
+            endpoint = joinUrl(endpoint, 'supergraph');
+          }
+          return endpoint;
+        }
+        const fetcher = createCDNArtifactFetcher({
+          endpoint: Array.isArray(endpoint)
+            ? // no endpoint.map just to make ts happy without casting
+              [ensureSupergraph(endpoint[0]), ensureSupergraph(endpoint[1])]
+            : ensureSupergraph(endpoint),
+          accessKey: key,
+          logger: configContext.log.child('[hiveSupergraphFetcher] '),
           // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
-          fetchImplementation: configContext.fetch,
-
+          fetch: configContext.fetch,
+          circuitBreaker,
           name: 'hive-gateway',
           version: globalThis.__VERSION__,
         });
-        unifiedGraphFetcher = () =>
-          fetcher().then(({ supergraphSdl }) => supergraphSdl);
+        unifiedGraphFetcher = {
+          fetch: () => fetcher.fetch().then(({ contents }) => contents),
+          dispose: () => fetcher.dispose(),
+        };
       } else if (config.supergraph.type === 'graphos') {
         const graphosFetcherContainer = createGraphOSFetcher({
           graphosOpts: config.supergraph,
           configContext,
           pollingInterval: config.pollingInterval,
         });
-        unifiedGraphFetcher = graphosFetcherContainer.unifiedGraphFetcher;
+        unifiedGraphFetcher = {
+          fetch: graphosFetcherContainer.unifiedGraphFetcher,
+        };
       } else {
-        unifiedGraphFetcher = () => {
-          throw new Error(
-            `Unknown supergraph configuration: ${config.supergraph}`,
-          );
+        unifiedGraphFetcher = {
+          fetch: () => {
+            throw new Error(
+              `Unknown supergraph configuration: ${config.supergraph}`,
+            );
+          },
         };
       }
     } else {
@@ -689,24 +736,29 @@ export function createGatewayRuntime<
         );
       }
 
-      unifiedGraphFetcher = () =>
-        handleUnifiedGraphConfig(
-          // @ts-expect-error TODO: what's up with type narrowing
-          config.supergraph,
-          configContext,
-        );
+      unifiedGraphFetcher = {
+        fetch: () =>
+          handleUnifiedGraphConfig(
+            // @ts-expect-error TODO: what's up with type narrowing
+            config.supergraph,
+            configContext,
+          ),
+      };
     }
 
-    const instrumentedGraphFetcher = unifiedGraphFetcher;
-    unifiedGraphFetcher = (...args) =>
-      getInstrumented(null).asyncFn(
-        instrumentation?.schema,
-        instrumentedGraphFetcher,
-      )(...args);
+    const instrumentedGraphFetcher = unifiedGraphFetcher.fetch;
+    unifiedGraphFetcher = {
+      ...unifiedGraphFetcher,
+      fetch: (...args) =>
+        getInstrumented(null).asyncFn(
+          instrumentation?.schema,
+          instrumentedGraphFetcher,
+        )(...args),
+    };
 
     const unifiedGraphManager = new UnifiedGraphManager<GatewayContext>({
       handleUnifiedGraph: config.unifiedGraphHandler,
-      getUnifiedGraph: unifiedGraphFetcher,
+      getUnifiedGraph: unifiedGraphFetcher.fetch,
       onUnifiedGraphChange(newUnifiedGraph: GraphQLSchema) {
         unifiedGraph = newUnifiedGraph;
         replaceSchema(newUnifiedGraph);
@@ -756,7 +808,10 @@ export function createGatewayRuntime<
     getExecutor = () => unifiedGraphManager.getExecutor();
     unifiedGraphPlugin = {
       onDispose() {
-        return dispose(unifiedGraphManager);
+        return handleMaybePromise(
+          () => dispose(unifiedGraphManager),
+          () => unifiedGraphFetcher.dispose?.(),
+        );
       },
     };
   }
