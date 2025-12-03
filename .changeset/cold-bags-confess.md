@@ -21,18 +21,18 @@ import { defineConfig } from '@graphql-hive/gateway'
 export const gatewayConfig = defineConfig({
   supergraph: {
     type: 'hive',
--   endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/...../supergraph',
+-   endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/<target-id>/supergraph',
 +   endpoint: [
-+     'https://cdn.graphql-hive.com/artifacts/v1/...../supergraph',
-+     'https://cdn-mirror.graphql-hive.com/artifacts/v1/...../supergraph'
++     'https://cdn.graphql-hive.com/artifacts/v1/<target-id>/supergraph',
++     'https://cdn-mirror.graphql-hive.com/artifacts/v1/<target-id>/supergraph'
 +   ]
   },
 
   persistedDocuments: {
--   endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/...',
+-   endpoint: 'https://cdn.graphql-hive.com/<target-id>',
 +   endpoint: [
-+     'https://cdn.graphql-hive.com/artifacts/v1/...',
-+     'https://cdn-mirror.graphql-hive.com/artifacts/v1/...'
++     'https://cdn.graphql-hive.com/<target-id>',
++     'https://cdn-mirror.graphql-hive.com/<target-id>'
 +   ]
   }
 })
