@@ -1,5 +1,12 @@
 # @graphql-tools/delegate
 
+## 12.0.2
+### Patch Changes
+
+
+
+- [`da8b8e3`](https://github.com/graphql-hive/gateway/commit/da8b8e3f3545487249b11c6577e3889f68527249) Thanks [@ardatan](https://github.com/ardatan)! - Use `getDefinedRootType` instead of `schema.getRootType` for GraphQL v15 compatibility
+
 ## 12.0.1
 ### Patch Changes
 
