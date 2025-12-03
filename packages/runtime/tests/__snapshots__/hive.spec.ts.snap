@@ -5,3 +5,57 @@ exports[`Hive CDN respects env vars: hive-cdn 1`] = `
   foo: String
 }"
 `;
+
+exports[`Hive CDN should request using "/supergraph" pathname from cdn even if the user provides "" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph" pathname from cdn even if the user provides "/artifacts/v1" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph" pathname from cdn even if the user provides "/supergraph" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph" pathname from cdn even if the user provides "/supergraph.graphql" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph" pathname from cdn even if the user provides "/v1/artifacts" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph(.graphql)" pathname from cdn even if the user provides "" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph(.graphql)" pathname from cdn even if the user provides "/artifacts/v1" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph(.graphql)" pathname from cdn even if the user provides "/supergraph" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
+
+exports[`Hive CDN should request using "/supergraph(.graphql)" pathname from cdn even if the user provides "/supergraph.graphql" as the pathname: hive-cdn 1`] = `
+"type Query {
+  foo: String
+}"
+`;
