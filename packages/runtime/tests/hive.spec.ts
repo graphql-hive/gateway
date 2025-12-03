@@ -381,4 +381,71 @@ describe('Hive CDN', () => {
     await setTimeout(10); // allow hive client to flush before disposing
     // TODO: gateway.dispose() should be enough but it isnt, leaktests report a leak
   });
+
+  it('should handle supergraph cdn circuit breaker when first endpoint is unavailable', async () => {
+    const upstreamSchema = createUpstreamSchema();
+
+    await using upstreamServer = createYoga({
+      schema: upstreamSchema,
+      // Make sure introspection is not fetched from the service itself
+      plugins: [useDisableIntrospection()],
+    });
+
+    await using cdnServer = await createDisposableServer(
+      createServerAdapter(() => new Response(null, { status: 504 })),
+    );
+
+    await using cdnMirrorServer = await createDisposableServer(
+      createServerAdapter(
+        () =>
+          new Response(
+            getUnifiedGraphGracefully([
+              {
+                name: 'upstream',
+                schema: upstreamSchema,
+                url: 'http://upstream/graphql',
+              },
+            ]),
+          ),
+      ),
+    );
+
+    await using gateway = createGatewayRuntime({
+      supergraph: {
+        type: 'hive',
+        endpoint: [cdnServer.url, cdnMirrorServer.url],
+        key: 'key',
+      },
+      plugins: () => [
+        {
+          onFetch({ url, setFetchFn }) {
+            if (url === 'http://upstream/graphql') {
+              // @ts-expect-error - Fetch signature is not compatible
+              setFetchFn(upstreamServer.fetch);
+            }
+          },
+        },
+      ],
+    });
+
+    const res = await gateway.fetch(
+      'http://localhost/graphql',
+      initForExecuteFetchArgs({
+        query: /* GraphQL */ `
+          {
+            foo
+          }
+        `,
+      }),
+    );
+
+    expect(res.ok).toBeTruthy();
+    await expect(res.json()).resolves.toMatchInlineSnapshot(`
+      {
+        "data": {
+          "foo": "bar",
+        },
+      }
+    `);
+  });
 });
