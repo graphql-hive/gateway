@@ -1,5 +1,91 @@
 # @graphql-hive/gateway-runtime
 
+## 2.4.0
+### Minor Changes
+
+
+
+- [#1738](https://github.com/graphql-hive/gateway/pull/1738) [`2cab632`](https://github.com/graphql-hive/gateway/commit/2cab632d9094ed76badccf01c1ab8c37bc24112b) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - New Hive CDN mirror and circuit breaker
+  
+  Hive CDN introduced a new CDN mirror and circuit breaker to mitigate the risk related to Cloudflare
+  services failures.
+  
+  You can now provide multiple endpoint in Hive Console related features, and configure the circuit
+  breaker handling CDN failure and how it switches to the CDN mirror.
+  
+  ### Usage
+  
+  To enable this feature, please provide the mirror endpoint in `supergraph` and `persistedDocument`
+  options:
+  
+  ```diff
+  import { defineConfig } from '@graphql-hive/gateway'
+  
+  export const gatewayConfig = defineConfig({
+    supergraph: {
+      type: 'hive',
+  -   endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/<target-id>/supergraph',
+  +   endpoint: [
+  +     'https://cdn.graphql-hive.com/artifacts/v1/<target-id>/supergraph',
+  +     'https://cdn-mirror.graphql-hive.com/artifacts/v1/<target-id>/supergraph'
+  +   ]
+    },
+  
+    persistedDocuments: {
+  -   endpoint: 'https://cdn.graphql-hive.com/<target-id>',
+  +   endpoint: [
+  +     'https://cdn.graphql-hive.com/<target-id>',
+  +     'https://cdn-mirror.graphql-hive.com/<target-id>'
+  +   ]
+    }
+  })
+  ```
+  
+  ### Configuration
+  
+  The circuit breaker has production ready default configuration, but you customize its behavior:
+  
+  ```ts
+  import { defineConfig, CircuitBreakerConfiguration } from '@graphql-hive/gateway';
+  
+  const circuitBreaker: CircuitBreakerConfiguration = {
+      resetTimeout: 30_000; // 30s
+      errorThresholdPercentage: 50;
+      volumeThreshold: 5;
+  }
+  
+  export const gatewayConfig = defineConfig({
+    supergraph: {
+      type: 'hive',
+      endpoint: [...],
+      circuitBreaker,
+    },
+  
+    persistedDocuments: {
+      type: 'hive',
+      endpoint: [...],
+      circuitBreaker,
+    },
+  });
+  ```
+
+### Patch Changes
+
+
+
+- [#1747](https://github.com/graphql-hive/gateway/pull/1747) [`8fdaef5`](https://github.com/graphql-hive/gateway/commit/8fdaef56d70998dacaed829c278fa7079062ad67) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.18.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.18.0) (from `^0.15.1`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.46.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.46.0) (from `^0.43.1`, in `dependencies`)
+- Updated dependencies [[`da8b8e3`](https://github.com/graphql-hive/gateway/commit/da8b8e3f3545487249b11c6577e3889f68527249)]:
+  - @graphql-tools/delegate@12.0.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+  - @graphql-tools/batch-delegate@10.0.8
+  - @graphql-tools/federation@4.2.6
+  - @graphql-mesh/fusion-runtime@1.6.2
+  - @graphql-tools/stitch@10.1.6
+  - @graphql-tools/wrap@11.1.2
+
 ## 2.3.7
 ### Patch Changes
 
