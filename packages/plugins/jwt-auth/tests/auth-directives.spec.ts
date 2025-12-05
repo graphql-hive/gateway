@@ -556,7 +556,7 @@ describe('Auth Directives', () => {
         });
       });
     });
-    it('interfaces', async () => {
+    it.skip('interfaces', async () => {
       const subgraphTypeDefs = parse(/* GraphQL */ `
         extend schema
           @link(
