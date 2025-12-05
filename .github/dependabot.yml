@@ -54,6 +54,7 @@ updates:
       graphql-mesh:
         patterns:
           - '@graphql-mesh/*'
+          - '@omnigraph/*'
         update-types:
           - 'major'
           - 'minor'
