@@ -1,5 +1,6 @@
 // adapted from https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
 
+import { abortSignalAll } from '@graphql-hive/signal';
 import {
   ExecutionRequest,
   getOperationASTFromRequest,
@@ -18,7 +19,6 @@ import {
   VariableNode,
   visit,
 } from 'graphql';
-import { abortSignalAll } from '../../signal/src/abortSignalAll.js';
 import { createPrefix } from './prefix.js';
 
 /**
