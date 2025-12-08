@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises';
 import {
   type GatewayConfigContext,
   type GatewayGraphOSManagedFederationOptions,
@@ -8,12 +7,12 @@ import { TransportContext } from '@graphql-mesh/transport-common';
 import { Response } from '@whatwg-node/fetch';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useFakeTimers } from '../../../internal/testing/src/fake-timers';
 import { createGraphOSFetcher } from '../src/fetchers/graphos';
 
 describe('GraphOS', () => {
   describe('supergraph fetching', () => {
-    vi.useFakeTimers?.();
-    const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
+    const advanceTimersByTimeAsync = useFakeTimers();
 
     beforeEach(() => {
       vi.clearAllMocks();

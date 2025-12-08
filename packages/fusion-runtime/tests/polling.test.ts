@@ -25,12 +25,12 @@ import {
 import { ExecutionResult, GraphQLSchema, parse } from 'graphql';
 import { createSchema } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
+import { useFakeTimers } from '../../../internal/testing/src/fake-timers';
 import { UnifiedGraphManager } from '../src/unifiedGraphManager';
 
 describe('Polling', () => {
-  const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
   it('polls the schema in a certain interval', async () => {
-    vi.useFakeTimers?.();
+    const advanceTimersByTimeAsync = useFakeTimers();
 
     const pollingInterval = 300;
     let schema: GraphQLSchema;
@@ -191,7 +191,7 @@ describe('Polling', () => {
     expect(disposeFn).toHaveBeenCalledTimes(3);
   });
   it('continues polling after failing initial fetch', async () => {
-    vi.useFakeTimers?.();
+    const advanceTimersByTimeAsync = useFakeTimers();
     const pollingInterval = 300;
     let schema: GraphQLSchema;
     let shouldFail = true;
@@ -303,7 +303,7 @@ describe('Polling', () => {
     expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
   });
   it('does not stop request if the polled schema is not changed', async () => {
-    vi.useFakeTimers?.();
+    const advanceTimersByTimeAsync = useFakeTimers();
     const schema = createSchema({
       typeDefs: /* GraphQL */ `
         type Query {
@@ -378,11 +378,12 @@ describe('Polling', () => {
     expect(callTimes[1]?.toString()?.length).toBe(5);
   }, 20_000);
   it('does not block incoming requests while polling', async () => {
+    let advanceTimersByTimeAsync: ReturnType<typeof useFakeTimers> = setTimeout;
     // Jest's timer is acting weird
     if (process.env['LEAK_TEST']) {
       vi.useRealTimers?.();
     } else {
-      vi.useFakeTimers?.();
+      advanceTimersByTimeAsync = useFakeTimers();
     }
     let schema: GraphQLSchema;
     let unifiedGraph: string;

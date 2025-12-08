@@ -10,8 +10,11 @@ import {
 import { getSupergraph } from './fixtures/gateway/supergraph';
 
 describe('Managed Federation', () => {
-  vi.useFakeTimers?.();
-  const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
+  let advanceTimersByTimeAsync: (time: number) => any = setTimeout;
+  if (vi.advanceTimersByTimeAsync) {
+    vi.useFakeTimers();
+    advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
+  }
   let supergraphSdl: string;
   const mockSDL = vi.fn(async () =>
     Response.json({
