@@ -1,4 +1,3 @@
-import { setTimeout } from 'timers/promises';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSubgraphSchema } from '@apollo/subgraph';
@@ -8,13 +7,13 @@ import useHttpCache from '@graphql-mesh/plugin-http-cache';
 import { composeLocalSchemasWithApollo } from '@internal/testing';
 import { parse } from 'graphql';
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import { useFakeTimers } from '../../../internal/testing/src/fake-timers';
 
 // ApolloServer is not playing nice with Leak Tests
 describe.skipIf(process.env['LEAK_TEST'])(
   'Cache Control directives w/ Apollo Server subgraph',
   () => {
-    vi.useFakeTimers?.();
-    const advanceTimersByTimeAsync = vi.advanceTimersByTimeAsync || setTimeout;
+    const advanceTimersByTimeAsync = useFakeTimers();
     const products = [
       { id: '1', name: 'Product 1', price: 100 },
       { id: '2', name: 'Product 2', price: 200 },
