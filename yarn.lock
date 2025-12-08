@@ -3202,7 +3202,7 @@ __metadata:
   resolution: "@e2e/launchdarkly-override-example@workspace:e2e/launchdarkly-override"
   dependencies:
     "@apollo/subgraph": "npm:2.12.1"
-    "@launchdarkly/node-server-sdk": "npm:9.10.3"
+    "@launchdarkly/node-server-sdk": "npm:9.10.4"
     graphql: "npm:16.12.0"
     graphql-yoga: "npm:5.17.1"
     tslib: "npm:^2.8.1"
@@ -6491,31 +6491,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@launchdarkly/js-sdk-common@npm:2.19.0":
-  version: 2.19.0
-  resolution: "@launchdarkly/js-sdk-common@npm:2.19.0"
-  checksum: 10c0/951a2206ccb61386f7659f6ac77e85ffaed8da86b1aa3ea2dcf210bf74638e94bd87e879e4083933967ea5eb60131ad03419b9bd918ea61f1ded01654c6a303b
+"@launchdarkly/js-sdk-common@npm:2.20.0":
+  version: 2.20.0
+  resolution: "@launchdarkly/js-sdk-common@npm:2.20.0"
+  checksum: 10c0/7a986de9b09891afaca7436c47a4590769e1b8704008dc83aa496efd08187b74c76fbf900d8d315432f5470c8ae7a49a9191ddcd8f3ca24b897f976e800fb165
   languageName: node
   linkType: hard
 
-"@launchdarkly/js-server-sdk-common@npm:2.16.2":
-  version: 2.16.2
-  resolution: "@launchdarkly/js-server-sdk-common@npm:2.16.2"
+"@launchdarkly/js-server-sdk-common@npm:2.17.0":
+  version: 2.17.0
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.17.0"
   dependencies:
-    "@launchdarkly/js-sdk-common": "npm:2.19.0"
+    "@launchdarkly/js-sdk-common": "npm:2.20.0"
     semver: "npm:7.5.4"
-  checksum: 10c0/ca6114b2833beae297bdee9e9992a8cdd85d98b9d6fe491c43e226b3d05323c88c33af0a13228856a54e841cbb914721457dc5bca050af7e0fd7f94420cb21e9
+  checksum: 10c0/2a09d301e09949e97eccb636115b48cb8c76b5780e70c2cf58c80012594cec8538070c6a7f87cf11f9514e175fa7e7b6aef599f3502d3b724ae53a386988e231
   languageName: node
   linkType: hard
 
-"@launchdarkly/node-server-sdk@npm:9.10.3":
-  version: 9.10.3
-  resolution: "@launchdarkly/node-server-sdk@npm:9.10.3"
+"@launchdarkly/node-server-sdk@npm:9.10.4":
+  version: 9.10.4
+  resolution: "@launchdarkly/node-server-sdk@npm:9.10.4"
   dependencies:
-    "@launchdarkly/js-server-sdk-common": "npm:2.16.2"
+    "@launchdarkly/js-server-sdk-common": "npm:2.17.0"
     https-proxy-agent: "npm:^7.0.6"
     launchdarkly-eventsource: "npm:2.2.0"
-  checksum: 10c0/5dee650cc7a529d9c81c4d4b3254ee3abca5863c0e167fc13ff039cd9102712ad332dd30181ce8836e4376e6eb4238c63b51d334fda1e72a0d2a8f764643ac6b
+  checksum: 10c0/7cfc04bb88c6fe74d3c964db0f0a0f6dc3e4838df49f7dccd392b4f96b8ad337ac5ae977ba1864fed6bfed3abda34f226f0380baaadb9186b0a3e5a37d577f54
   languageName: node
   linkType: hard
 
@@ -14788,7 +14788,7 @@ __metadata:
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.48.1"
-    vite: "npm:7.2.6"
+    vite: "npm:7.2.7"
     vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:3.2.4"
   languageName: unknown
@@ -22154,9 +22154,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:7.2.6":
-  version: 7.2.6
-  resolution: "vite@npm:7.2.6"
+"vite@npm:7.2.7":
+  version: 7.2.7
+  resolution: "vite@npm:7.2.7"
   dependencies:
     esbuild: "npm:^0.25.0"
     fdir: "npm:^6.5.0"
@@ -22205,7 +22205,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/d444a159ab8f0f854d596d1938f201b449d59ed4d336e587be9dc89005467214d85848c212c2495f76a8421372ffe4d061d023d659600f1aaa3ba5ac13e804f7
+  checksum: 10c0/0c502d9eb898d9c05061dbd8fd199f280b524bbb4c12ab5f88c7b12779947386684a269e4dd0aa424aa35bcd857f1aa44aadb9ea764702a5043af433052455b5
   languageName: node
   linkType: hard
 
@@ -22438,8 +22438,8 @@ __metadata:
   linkType: hard
 
 "winston@npm:^3.18.3":
-  version: 3.18.3
-  resolution: "winston@npm:3.18.3"
+  version: 3.19.0
+  resolution: "winston@npm:3.19.0"
   dependencies:
     "@colors/colors": "npm:^1.6.0"
     "@dabh/diagnostics": "npm:^2.0.8"
@@ -22452,7 +22452,7 @@ __metadata:
     stack-trace: "npm:0.0.x"
     triple-beam: "npm:^1.3.0"
     winston-transport: "npm:^4.9.0"
-  checksum: 10c0/0bd666590d7f1f2e1fa1273b699463e14b2fcf2bab503e16bc62f275c4b52f14c3dda7bb255d5cc4cef046dd3e112c45518ec8f3c3536ab666421b7265d8c45b
+  checksum: 10c0/341a8ccfb726120209d34e2466040e2ca72cadb1a3402c4fc90425facad002b81275675b4ab9b4432a624311bc47ef7c9fb7652c86fca454d2be2f2ee1882226
   languageName: node
   linkType: hard
 
