@@ -1,5 +1,24 @@
 # @graphql-hive/gateway-runtime
 
+## 2.4.1
+### Patch Changes
+
+
+
+- [#1777](https://github.com/graphql-hive/gateway/pull/1777) [`7e33249`](https://github.com/graphql-hive/gateway/commit/7e332496179d213cf10f055b282ce30ab68279d1) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Hive console client agent inherits the plugin's root logger
+
+
+
+- [#1781](https://github.com/graphql-hive/gateway/pull/1781) [`db20a29`](https://github.com/graphql-hive/gateway/commit/db20a298c57c717495cbdbcaa6a8aa5b369da909) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Debug is determined by Hive Logger and does not need to be set for Hive Console's plugin
+
+
+
+- [#1781](https://github.com/graphql-hive/gateway/pull/1781) [`db20a29`](https://github.com/graphql-hive/gateway/commit/db20a298c57c717495cbdbcaa6a8aa5b369da909) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Do not print token info by default when using Hive Console
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.6.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+
 ## 2.4.0
 ### Minor Changes
 
