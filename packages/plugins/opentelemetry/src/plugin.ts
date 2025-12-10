@@ -8,6 +8,7 @@ import {
 import { getHeadersObj } from '@graphql-mesh/utils';
 import { ExecutionRequest, fakePromise } from '@graphql-tools/utils';
 import { unfakePromise } from '@whatwg-node/promise-helpers';
+import { useErrorCoordinate } from 'graphql-yoga';
 import {
   context,
   hive,
@@ -36,6 +37,7 @@ import {
   createSchemaLoadingSpan,
   createSubgraphExecuteSpan,
   createUpstreamHttpFetchSpan,
+  isGraphQLError,
   OperationHashingFn,
   recordCacheError,
   recordCacheEvent,
@@ -501,7 +503,9 @@ export function useOpenTelemetry(
           try {
             wrapped();
           } catch (err) {
-            registerException(forOperation.otel!.current, err);
+            if (err instanceof Error && !isGraphQLError(err)) {
+              registerException(forOperation.otel!.current, err);
+            }
             throw err;
           } finally {
             trace.getSpan(forOperation.otel!.current)?.end();
@@ -702,6 +706,11 @@ export function useOpenTelemetry(
         },
       },
 
+      onPluginInit({ addPlugin }) {
+        // @ts-expect-error Yoga plugin incompatible types with Gateway plugin.
+        addPlugin(useErrorCoordinate());
+      },
+
       onYogaInit({ yoga }) {
         //TODO remove this when Yoga will also use the new Logger API
         pluginLogger ??= new Logger({
@@ -837,6 +846,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLParseAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             operationName: gqlCtx.params.operationName,
             query: gqlCtx.params.query?.trim(),
             result,
@@ -863,6 +873,7 @@ export function useOpenTelemetry(
         return ({ result }) => {
           setGraphQLValidateAttributes({
             ctx: getContext(state),
+            operationCtx: state.forOperation.otel!.root,
             result,
             document: params.documentAST,
             operationName: gqlCtx.params.operationName,
@@ -891,6 +902,7 @@ export function useOpenTelemetry(
             setGraphQLExecutionResultAttributes({
               ctx,
               result,
+              operationCtx: state.forOperation.otel!.root,
               subgraphNames: state.forOperation.subgraphNames,
             });
           },
