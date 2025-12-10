@@ -1,5 +1,5 @@
 import type { HivePluginOptions } from '@graphql-hive/core';
-import { LegacyLogger, type Logger } from '@graphql-hive/logger';
+import type { Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
 import { MeshFetch } from '@graphql-mesh/types';
 import { isDebug } from '~internal/env';
@@ -46,7 +46,6 @@ export default function useHiveConsole<
     name: 'hive-gateway',
     version: globalThis.__VERSION__,
     fetch,
-    logger: LegacyLogger.from(options.log),
     ...options.agent,
   } as HiveConsolePluginOptions['agent'];
 
