@@ -77,6 +77,7 @@ export default function useHiveConsole<
   return useHive({
     debug: isDebug(),
     logger: options.log,
+    printTokenInfo: false,
     ...options,
     enabled: !!enabled,
     token: token!,
