@@ -1,5 +1,11 @@
 # @graphql-hive/gateway-testing
 
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [[`7e33249`](https://github.com/graphql-hive/gateway/commit/7e332496179d213cf10f055b282ce30ab68279d1), [`db20a29`](https://github.com/graphql-hive/gateway/commit/db20a298c57c717495cbdbcaa6a8aa5b369da909), [`db20a29`](https://github.com/graphql-hive/gateway/commit/db20a298c57c717495cbdbcaa6a8aa5b369da909)]:
+  - @graphql-hive/gateway-runtime@2.4.1
+
 ## 3.0.0
 ### Patch Changes
 
