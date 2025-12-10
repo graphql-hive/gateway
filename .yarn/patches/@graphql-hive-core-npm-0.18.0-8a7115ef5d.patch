@@ -1,0 +1,42 @@
+diff --git a/cjs/client/client.js b/cjs/client/client.js
+index 8b1fff8caf52e6bebb34381fe0003c1c43d4acb3..2cc455bb3d72ac4b09e24342ad83f42c99bf510c 100644
+--- a/cjs/client/client.js
++++ b/cjs/client/client.js
+@@ -120,6 +120,7 @@ function createHive(options) {
+                     if (((_f = result.data) === null || _f === void 0 ? void 0 : _f.tokenInfo.__typename) === 'TokenInfo') {
+                         const { tokenInfo } = result.data;
+                         const { organization, project, target, canReportSchema, canCollectUsage, canReadOperations, } = tokenInfo;
++                        logger.info({ tokenInfo, organization, project, target }, 'Creating printer for token details');
+                         const print = createPrinter([
+                             tokenInfo.token.name,
+                             organization.name,
+@@ -158,7 +159,7 @@ function createHive(options) {
+                 }
+             }
+             catch (error) {
+-                logger.error(`Error ${(_m = error === null || error === void 0 ? void 0 : error.message) !== null && _m !== void 0 ? _m : error}`);
++                logger.error({ error }, 'Error while fetching token details');
+             }
+         }
+         : () => { };
+diff --git a/esm/client/client.js b/esm/client/client.js
+index 531e8c04413ec9c48bdec0e18b1a4b86475dc9e8..3be9ae5c4abacc9699c2603d60b61404a2240114 100644
+--- a/esm/client/client.js
++++ b/esm/client/client.js
+@@ -116,6 +116,7 @@ export function createHive(options) {
+                     if (((_f = result.data) === null || _f === void 0 ? void 0 : _f.tokenInfo.__typename) === 'TokenInfo') {
+                         const { tokenInfo } = result.data;
+                         const { organization, project, target, canReportSchema, canCollectUsage, canReadOperations, } = tokenInfo;
++                        logger.info({ tokenInfo, organization, project, target }, 'Creating printer for token details');
+                         const print = createPrinter([
+                             tokenInfo.token.name,
+                             organization.name,
+@@ -154,7 +155,7 @@ export function createHive(options) {
+                 }
+             }
+             catch (error) {
+-                logger.error(`Error ${(_m = error === null || error === void 0 ? void 0 : error.message) !== null && _m !== void 0 ? _m : error}`);
++                logger.error({ error }, 'Error while fetching token details');
+             }
+         }
+         : () => { };

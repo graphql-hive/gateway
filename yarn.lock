@@ -4147,7 +4147,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.18.0, @graphql-hive/core@npm:^0.18.0":
+"@graphql-hive/core@npm:0.18.0":
   version: 0.18.0
   resolution: "@graphql-hive/core@npm:0.18.0"
   dependencies:
@@ -4163,6 +4163,25 @@ __metadata:
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10c0/e693a59e2dbdf10a1e90bd3ab4468b09648ac9ea5de17d0549b42267a96b159c166694c0ac83951fc6967574212a4903bf4e802ebe1f7d51b43d3045893db583
+  languageName: node
+  linkType: hard
+
+"@graphql-hive/core@patch:@graphql-hive/core@npm%3A0.18.0#~/.yarn/patches/@graphql-hive-core-npm-0.18.0-8a7115ef5d.patch":
+  version: 0.18.0
+  resolution: "@graphql-hive/core@patch:@graphql-hive/core@npm%3A0.18.0#~/.yarn/patches/@graphql-hive-core-npm-0.18.0-8a7115ef5d.patch::version=0.18.0&hash=24aae6"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.0.9"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/2efa699ec11d64eed8da0465eab9f3a4c19189fc2b71425a5428a0c6a6975222748b1809575d0d13144a87446532311cd00f5364fcbf20887359afd348acce84
   languageName: node
   linkType: hard
 

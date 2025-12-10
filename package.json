@@ -63,6 +63,7 @@
     "vitest": "3.2.4"
   },
   "resolutions": {
+    "@graphql-hive/core": "patch:@graphql-hive/core@npm%3A0.18.0#~/.yarn/patches/@graphql-hive-core-npm-0.18.0-8a7115ef5d.patch",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
