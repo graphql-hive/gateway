@@ -4177,7 +4177,7 @@ __metadata:
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.16.2"
     "@omnigraph/openapi": "npm:^0.109.23"
     "@types/html-minifier-terser": "npm:^7.0.2"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.0.0"
     "@types/react": "npm:^19"
     "@types/react-dom": "npm:^19"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
@@ -5967,7 +5967,7 @@ __metadata:
   dependencies:
     "@apollo/gateway": "npm:^2.11.3"
     "@types/dockerode": "npm:^3.3.45"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
     dockerode: "npm:^4.0.9"
@@ -6006,7 +6006,7 @@ __metadata:
   dependencies:
     "@tsconfig/node18": "npm:^18.2.5"
     "@tsconfig/recommended": "npm:^1.0.13"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.0.0"
     pkgroll: "npm:2.21.4"
     typescript: "npm:5.9.3"
   languageName: unknown
@@ -6041,7 +6041,7 @@ __metadata:
     "@graphql-hive/pubsub": "workspace:*"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-tools/utils": "npm:^10.10.3"
-    "@types/node": "npm:^24.10.1"
+    "@types/node": "npm:^25.0.0"
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
@@ -9688,12 +9688,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:24.10.2, @types/node@npm:>=13.7.0, @types/node@npm:^24.10.1":
+"@types/node@npm:*, @types/node@npm:>=13.7.0":
   version: 24.10.2
   resolution: "@types/node@npm:24.10.2"
   dependencies:
     undici-types: "npm:~7.16.0"
   checksum: 10c0/560c894e1a9bf7468718ceca8cd520361fd0d3fcc0b020c2f028fc722b28b5b56aecd16736a9b753d52a14837c066cf23480a8582ead59adc63a7e4333bc976c
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:25.0.0, @types/node@npm:^25.0.0":
+  version: 25.0.0
+  resolution: "@types/node@npm:25.0.0"
+  dependencies:
+    undici-types: "npm:~7.16.0"
+  checksum: 10c0/5a10d6f873ad326e46fac923ea4305b7fea3de0cf7e11c835d1fdc99d4b4d0f3f108035432ec1732f505c97d367b9abf618ecbdfb02a75a5306665ecce2a81a6
   languageName: node
   linkType: hard
 
@@ -14637,7 +14646,7 @@ __metadata:
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.7.0"
     "@tsconfig/strictest": "npm:2.0.8"
-    "@types/node": "npm:24.10.2"
+    "@types/node": "npm:25.0.0"
     "@yarnpkg/cli": "npm:4.12.0"
     "@yarnpkg/core": "npm:4.5.0"
     "@yarnpkg/plugin-pack": "npm:4.0.3"
