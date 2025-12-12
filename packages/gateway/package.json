@@ -75,7 +75,9 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "pkgroll --clean-dist && tsx scripts/inject-version",
     "bundle": "rimraf bundle && rollup -c && rollup -c rollup.config.binary.js",
