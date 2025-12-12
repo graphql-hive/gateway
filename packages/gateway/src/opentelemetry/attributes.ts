@@ -1,1 +1,1 @@
-export * from '@graphql-hive/plugin-opentelemetry/attributes'
+export * from '@graphql-hive/plugin-opentelemetry/attributes';
