@@ -20,7 +20,9 @@ export interface HiveConsoleUsagePluginOptions extends Omit<
    */
   clientInfo?:
     | HiveConsoleUsageClientInfo
-    | ((context: any) => null | undefined | HiveConsoleUsageClientInfo);
+    | ((
+        context: GatewayContext,
+      ) => null | undefined | HiveConsoleUsageClientInfo);
 }
 
 export interface HiveConsoleUsageClientInfo {
