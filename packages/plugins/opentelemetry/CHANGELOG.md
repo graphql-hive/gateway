@@ -1,5 +1,18 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.3.0
+### Minor Changes
+
+
+
+- [#1786](https://github.com/graphql-hive/gateway/pull/1786) [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc) Thanks [@ardatan](https://github.com/ardatan)! - Respect both \`graphql-client-name\` and \`x-graphql-client-name\` for client name header, and both \`graphql-client-version\` and \`x-graphql-client-version\` for client version header by default if not configured otherwise.
+
+
+### Patch Changes
+
+- Updated dependencies [[`15b9e50`](https://github.com/graphql-hive/gateway/commit/15b9e5037fa74f8c1a8e662e196268a88642c27d), [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc), [`a50d93a`](https://github.com/graphql-hive/gateway/commit/a50d93a0bc8f3c67de7449ad9102d3f3b60ea96a)]:
+  - @graphql-hive/gateway-runtime@2.5.0
+
 ## 1.2.5
 ### Patch Changes
 
