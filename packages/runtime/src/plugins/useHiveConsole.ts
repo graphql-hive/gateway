@@ -42,6 +42,9 @@ function lookupHeader(
   headers: GatewayContext['headers'],
   possibleNames: string[],
 ) {
+  if (headers == null) {
+    return null;
+  }
   for (const name of possibleNames) {
     const value = headers[name];
     if (value) {
