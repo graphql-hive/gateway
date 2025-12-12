@@ -2,7 +2,7 @@ import type { HivePluginOptions } from '@graphql-hive/core';
 import type { Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
 import { MeshFetch } from '@graphql-mesh/types';
-import { GatewayPlugin } from '../types';
+import { GatewayContext, GatewayPlugin } from '../types';
 
 export interface HiveConsolePluginOptions extends Omit<
   HivePluginOptions,
@@ -20,7 +20,9 @@ export interface HiveConsoleUsagePluginOptions extends Omit<
    */
   clientInfo?:
     | HiveConsoleUsageClientInfo
-    | ((context: any) => null | undefined | HiveConsoleUsageClientInfo);
+    | ((
+        context: GatewayContext,
+      ) => null | undefined | HiveConsoleUsageClientInfo);
 }
 
 export interface HiveConsoleUsageClientInfo {
