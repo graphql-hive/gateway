@@ -64,6 +64,9 @@
       "@graphql-hive/plugin-opentelemetry/api": [
         "./packages/plugins/opentelemetry/src/api.ts"
       ],
+      "@graphql-hive/plugin-opentelemetry/attributes": [
+        "./packages/plugins/opentelemetry/src/attributes.ts"
+      ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"
       ],
