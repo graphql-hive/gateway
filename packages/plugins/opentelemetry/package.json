@@ -49,6 +49,16 @@
         "default": "./dist/api.js"
       }
     },
+    "./attributes": {
+      "require": {
+        "types": "./dist/attributes.d.cts",
+        "default": "./dist/attributes.cjs"
+      },
+      "import": {
+        "types": "./dist/attributes.d.ts",
+        "default": "./dist/attributes.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
