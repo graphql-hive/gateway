@@ -46,6 +46,8 @@ const deps = {
     'src/opentelemetry/api.ts',
   'node_modules/@graphql-hive/gateway/opentelemetry/setup':
     'src/opentelemetry/setup.ts',
+  'node_modules/@graphql-hive/gateway/opentelemetry/attributes':
+    'src/opentelemetry/attributes.ts',
   'node_modules/@graphql-hive/gateway-runtime/index': '../runtime/src/index.ts',
   'node_modules/@graphql-hive/pubsub/index': '../pubsub/src/index.ts',
   'node_modules/@graphql-hive/pubsub/redis': '../pubsub/src/redis.ts',
@@ -89,6 +91,8 @@ const deps = {
     '../plugins/opentelemetry/src/setup.ts',
   'node_modules/@graphql-hive/plugin-opentelemetry/api':
     '../plugins/opentelemetry/src/api.ts',
+  'node_modules/@graphql-hive/plugin-opentelemetry/attributes':
+    '../plugins/opentelemetry/src/attributes.ts',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.
     // Those are most used features.
