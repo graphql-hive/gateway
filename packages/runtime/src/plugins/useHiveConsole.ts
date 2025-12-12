@@ -31,12 +31,12 @@ export interface HiveConsoleUsageClientInfo {
 type HiveUsagePluginOptions = Extract<HivePluginOptions['usage'], object>;
 
 const defaultClientNameHeaders = [
-  'x-graphql-client-name',
   'graphql-client-name',
+  'x-graphql-client-name',
 ];
 const defaultClientVersionHeaders = [
-  'x-graphql-client-version',
   'graphql-client-version',
+  'x-graphql-client-version',
 ];
 function lookupHeader(
   headers: GatewayContext['headers'],
