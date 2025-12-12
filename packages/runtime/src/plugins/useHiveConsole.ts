@@ -2,7 +2,7 @@ import type { HivePluginOptions } from '@graphql-hive/core';
 import type { Logger } from '@graphql-hive/logger';
 import { useHive } from '@graphql-hive/yoga';
 import { MeshFetch } from '@graphql-mesh/types';
-import { GatewayPlugin } from '../types';
+import { GatewayContext, GatewayPlugin } from '../types';
 
 export interface HiveConsolePluginOptions extends Omit<
   HivePluginOptions,
@@ -30,6 +30,40 @@ export interface HiveConsoleUsageClientInfo {
 
 type HiveUsagePluginOptions = Extract<HivePluginOptions['usage'], object>;
 
+const defaultClientNameHeaders = [
+  'x-graphql-client-name',
+  'graphql-client-name',
+];
+const defaultClientVersionHeaders = [
+  'x-graphql-client-version',
+  'graphql-client-version',
+];
+function lookupHeader(
+  headers: GatewayContext['headers'],
+  possibleNames: string[],
+) {
+  for (const name of possibleNames) {
+    const value = headers[name];
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+function defaultClientInfoFactory(
+  context: GatewayContext,
+): HiveConsoleUsageClientInfo | null {
+  const name = lookupHeader(context.headers, defaultClientNameHeaders);
+  const version = lookupHeader(context.headers, defaultClientVersionHeaders);
+  if (name) {
+    return {
+      name,
+      version: version ?? 'unknown',
+    };
+  }
+  return null;
+}
+
 export default function useHiveConsole<
   TPluginContext extends Record<string, any> = Record<string, any>,
   TContext extends Record<string, any> = Record<string, any>,
@@ -56,11 +90,13 @@ export default function useHiveConsole<
     usage = {
       ...options.usage,
       clientInfo:
-        typeof options.usage.clientInfo === 'object'
-          ? () =>
-              // @ts-expect-error clientInfo will be an object
-              options.usage!.clientInfo
-          : options.usage.clientInfo,
+        options.usage.clientInfo == null
+          ? defaultClientInfoFactory
+          : typeof options.usage.clientInfo === 'object'
+            ? () =>
+                // @ts-expect-error clientInfo will be an object
+                options.usage!.clientInfo
+            : options.usage.clientInfo,
     };
   } else {
     usage = options.usage;

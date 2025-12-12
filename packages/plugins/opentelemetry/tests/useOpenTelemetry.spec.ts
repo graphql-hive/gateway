@@ -1230,8 +1230,8 @@ describe('useOpenTelemetry', () => {
         shouldReturnErrors: true,
         body: { query: 'query testOperation { hello }' },
         headers: {
-          'x-graphql-client-name': 'test-client-name',
-          'x-graphql-client-version': 'test-client-version',
+          'graphql-client-name': 'test-client-name',
+          'graphql-client-version': 'test-client-version',
         },
       });
 

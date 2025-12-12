@@ -83,9 +83,13 @@ export function createHttpSpan(input: {
         [SEMATTRS_HTTP_USER_AGENT]:
           request.headers.get('user-agent') || undefined,
         'hive.client.name':
-          request.headers.get('x-graphql-client-name') || undefined,
+          request.headers.get('graphql-client-name') ||
+          request.headers.get('x-graphql-client-name') ||
+          undefined,
         'hive.client.version':
-          request.headers.get('x-graphql-client-version') || undefined,
+          request.headers.get('graphql-client-version') ||
+          request.headers.get('x-graphql-client-version') ||
+          undefined,
       },
       kind: SpanKind.SERVER,
     },

@@ -214,6 +214,10 @@ describe('Hive CDN', () => {
             foo
           }
         `,
+        headers: {
+          'graphql-client-name': 'my-client',
+          'graphql-client-version': '1.2.3',
+        },
       }),
     ).resolves.toMatchInlineSnapshot(`
       {
@@ -231,7 +235,16 @@ describe('Hive CDN', () => {
     expect(body).toEqual(
       expect.objectContaining({
         map: expect.any(Object),
-        operations: expect.any(Array),
+        operations: expect.arrayContaining([
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              client: {
+                name: 'my-client',
+                version: '1.2.3',
+              },
+            }),
+          }),
+        ]),
         size: 1,
       }),
     );
