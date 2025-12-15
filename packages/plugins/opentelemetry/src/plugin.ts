@@ -1035,7 +1035,7 @@ function resolveTracesConfig(
   traces.spans ??= {};
 
   // Only override http filter if it's not disabled or already a function
-  if (traces.spans.http ?? true === true) {
+  if ((traces.spans.http ?? true) === true) {
     traces.spans = { ...traces.spans, http: defaultHttpFilter };
   }
 
