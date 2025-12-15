@@ -7,7 +7,7 @@ export function useSubgraphExecuteDebug<
 >(): GatewayPlugin<TContext> {
   return {
     onSubgraphExecute({ executionRequest }) {
-      let log = executionRequest.context?.log.child(
+      let log = executionRequest.context?.log?.child(
         '[useSubgraphExecuteDebug] ',
       );
       let shouldLog = false;
