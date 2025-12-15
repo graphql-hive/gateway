@@ -3,13 +3,16 @@ import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
+  getSchemaCoordinate,
   isAsyncIterable,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
 import {
+  Attributes,
   context,
   ROOT_CONTEXT,
+  Span,
   SpanKind,
   SpanStatusCode,
   trace,
@@ -17,12 +20,14 @@ import {
   type Tracer,
 } from '@opentelemetry/api';
 import {
+  ATTR_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_MESSAGE,
   SEMATTRS_EXCEPTION_STACKTRACE,
   SEMATTRS_EXCEPTION_TYPE,
 } from '@opentelemetry/semantic-conventions';
 import {
   DocumentNode,
+  GraphQLError,
   GraphQLSchema,
   OperationDefinitionNode,
   printSchema,
@@ -40,8 +45,14 @@ import {
   SEMATTRS_GRAPHQL_OPERATION_TYPE,
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_CODE,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_PATH,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE,
+  SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
   SEMATTRS_HIVE_GRAPHQL_OPERATION_HASH,
   SEMATTRS_HTTP_CLIENT_IP,
   SEMATTRS_HTTP_HOST,
@@ -221,6 +232,7 @@ export function createGraphQLParseSpan(input: {
 
 export function setGraphQLParseAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   query?: string;
   operationName?: string;
   result: unknown;
@@ -235,7 +247,28 @@ export function setGraphQLParseAttributes(input: {
   }
 
   if (input.result instanceof Error) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
+    if (isGraphQLError(input.result)) {
+      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, 1);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: 'GraphQL Parse Error',
+      });
+      const operationSpan = trace.getSpan(input.operationCtx);
+      if (operationSpan) {
+        recordGraphqlErrors(
+          operationSpan,
+          [input.result as GraphQLError],
+          'GraphQL Parse Error',
+        );
+      }
+    } else {
+      // It is a JS Exception
+      span.recordException(input.result);
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: input.result.message,
+      });
+    }
   } else {
     // result should be a document
     const document = input.result as DocumentNode;
@@ -266,6 +299,7 @@ export function createGraphQLValidateSpan(input: {
 
 export function setGraphQLValidateAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   document: DocumentNode;
   operationName: string | undefined | null;
   result: any[] | readonly Error[];
@@ -285,28 +319,45 @@ export function setGraphQLValidateAttributes(input: {
     }
   }
 
-  const errors = Array.isArray(result) ? result : [];
+  const errors: (Error | GraphQLError)[] = Array.isArray(result) ? result : [];
 
   if (result instanceof Error) {
     errors.push(result);
   }
 
-  if (errors.length > 0) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: result.map((e) => e.message).join(', '),
-    });
-
-    const codes = [];
-    for (const error of result) {
-      if (error.extensions?.code) {
-        codes.push(`${error.extensions.code}`);
-      }
-      span.recordException(error);
-    }
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+  if (errors.length === 0) {
+    return;
   }
+
+  const graphqlErrors: GraphQLError[] = [];
+  const exceptions: Error[] = [];
+  for (const error of errors) {
+    (isGraphQLError(error) ? graphqlErrors : exceptions).push(error);
+  }
+
+  if (graphqlErrors.length > 0) {
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.length);
+
+    const operationSpan = trace.getSpan(input.operationCtx);
+    if (operationSpan) {
+      recordGraphqlErrors(
+        operationSpan,
+        graphqlErrors,
+        'GraphQL Validation Error',
+      );
+    }
+  }
+
+  if (exceptions.length > 0) {
+    for (const exception of exceptions) {
+      span.recordException(exception);
+    }
+  }
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: 'GraphQL Validation Error',
+  });
 }
 
 export function createGraphQLExecuteSpan(input: {
@@ -362,43 +413,41 @@ export function setGraphQLExecutionAttributes(input: {
 
 export function setGraphQLExecutionResultAttributes(input: {
   ctx: Context;
+  operationCtx: Context;
   result: ExecutionResult | AsyncIterableIterator<ExecutionResult>;
   subgraphNames?: string[];
 }) {
-  const { ctx, result } = input;
+  const { ctx, operationCtx, result } = input;
+
   const span = trace.getSpan(ctx);
-  if (!span) {
-    return;
+  if (span) {
+    if (input.subgraphNames?.length) {
+      span.setAttribute(
+        SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
+        input.subgraphNames,
+      );
+    }
   }
 
-  if (input.subgraphNames?.length) {
-    span.setAttribute(
-      SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
-      input.subgraphNames,
-    );
-  }
+  const operationSpan = trace.getSpan(operationCtx);
 
   if (
     !isAsyncIterable(result) && // FIXME: Handle async iterable too
     result.errors &&
     result.errors.length > 0
   ) {
-    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
-    span.setStatus({
+    span?.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, result.errors.length);
+    span?.setStatus({
       code: SpanStatusCode.ERROR,
-      message: result.errors.map((e) => e.message).join(', '),
+      message: 'GraphQL Execution Error',
     });
 
-    const codes: string[] = [];
-    for (const error of result.errors) {
-      span.recordException(error);
-      if (error.extensions?.['code']) {
-        codes.push(`${error.extensions['code']}`); // Ensure string using string interpolation
-      }
-    }
-
-    if (codes.length > 0) {
-      span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+    if (operationSpan) {
+      recordGraphqlErrors(
+        operationSpan,
+        result.errors,
+        'GraphQL Execution Error',
+      );
     }
   }
 }
@@ -608,3 +657,90 @@ export const getOperationFromDocument = (
   operationNameMap.set(operationName ?? null, operation);
   return operation;
 };
+
+function recordGraphqlErrors(
+  span: Span,
+  errors: readonly GraphQLError[],
+  message?: string,
+): void {
+  const codes: string[] = [];
+  const schemaCoordinates: string[] = [];
+
+  span.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: message ?? 'GraphQL Error',
+  });
+  span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT, errors.length);
+
+  for (const error of errors) {
+    const attributes = attributesFromGraphqlError(error);
+    if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE]) {
+      codes.push(attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] as string);
+    }
+    if (attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE]) {
+      schemaCoordinates.push(
+        attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] as string,
+      );
+    }
+
+    span.addEvent('graphql.error', attributes);
+  }
+
+  if (codes.length > 0) {
+    span.setAttribute(SEMATTRS_HIVE_GRAPHQL_ERROR_CODES, codes);
+  }
+
+  if (schemaCoordinates.length > 0) {
+    span.setAttribute(
+      SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATES,
+      schemaCoordinates,
+    );
+  }
+}
+
+function attributesFromGraphqlError(error: GraphQLError): Attributes {
+  const attributes: Attributes = {
+    [SEMATTRS_HIVE_GRAPHQL_ERROR_MESSAGE]: error.message,
+  };
+
+  if (error.path) {
+    attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_PATH] = error.path.map((p) =>
+      p.toString(),
+    );
+  }
+
+  if (error.locations) {
+    attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_LOCATIONS] = error.locations.map(
+      ({ line, column }) => `${line}:${column}`,
+    );
+  }
+
+  if (error.extensions) {
+    const code = error.extensions?.['code'];
+    if (code) {
+      const codeStr = `${code}`; // Ensure string using string interpolation
+      attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_CODE] = codeStr;
+    }
+
+    const schemaCoordinate = getSchemaCoordinate(error);
+    if (schemaCoordinate) {
+      attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_SCHEMA_COORDINATE] =
+        schemaCoordinate;
+    }
+
+    const originalError: Error | undefined = error.extensions[
+      'originalError'
+    ] as Error;
+    if (originalError?.stack) {
+      attributes[ATTR_EXCEPTION_STACKTRACE] = originalError.stack;
+    }
+  }
+
+  return attributes;
+}
+
+export function isGraphQLError(error: Error): error is GraphQLError {
+  // It is probably a GraphQLError if there is no name.
+  // We can't use instanceof in case of multiple `graphql` deps.
+  return !error.name || error.name === 'GraphQLError';
+}

@@ -1,4 +1,4 @@
-import { Attributes, Logger } from '@graphql-hive/logger';
+import { Attributes, Logger, LogLevel } from '@graphql-hive/logger';
 import {
   context,
   ContextManager,
@@ -143,7 +143,7 @@ type BaseOptions = {
    * The Logger to be used by this utility.
    * A child of this logger will be used for OTEL diag API, unless `configureDiagLogger` is false
    */
-  log?: Logger;
+  log?: Logger | false | LogLevel;
   /**
    * Configure Opentelemetry `diag` API to use Gateway's logger.
    *
@@ -162,7 +162,10 @@ type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
 
 let initialized: false | { name: string; source: string } = false;
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  const log = options.log || new Logger();
+  const log =
+    !options.log || typeof options.log === 'string'
+      ? new Logger({ level: options.log })
+      : options.log;
 
   if (initialized) {
     log.error(
@@ -311,7 +314,10 @@ export type HiveTracingSetupOptions = BaseOptions &
   TracerOptions;
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
-  const log = options.log || new Logger();
+  const log =
+    !options.log || typeof options.log === 'string'
+      ? new Logger({ level: options.log })
+      : options.log;
   options.target ??= getEnvStr('HIVE_TARGET');
 
   if (!options.target) {
