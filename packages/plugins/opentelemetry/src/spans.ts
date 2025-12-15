@@ -53,6 +53,7 @@ import {
   SEMATTRS_HTTP_USER_AGENT,
   SEMATTRS_IS_HIVE_GRAPHQL_OPERATION,
   SEMATTRS_IS_HIVE_REQUEST,
+  SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
@@ -430,6 +431,7 @@ export function createSubgraphExecuteSpan(input: {
         ),
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
+        [SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION]: true,
       },
       kind: SpanKind.CLIENT,
     },

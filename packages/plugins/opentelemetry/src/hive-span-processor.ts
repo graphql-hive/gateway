@@ -14,6 +14,7 @@ import {
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
   SEMATTRS_IS_HIVE_GRAPHQL_OPERATION,
   SEMATTRS_IS_HIVE_REQUEST,
+  SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
 } from './attributes';
 
 export type HiveTracingSpanProcessorOptions =
@@ -90,7 +91,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       traceState.operationRoots.set(spanId, operationRoot);
     }
 
-    if (span.name.startsWith('subgraph.execute')) {
+    if (span.attributes[SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION]) {
       traceState.subgraphExecutions.set(spanId, span as SpanImpl);
       return;
     }
