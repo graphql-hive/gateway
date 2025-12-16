@@ -49,8 +49,8 @@ export interface GraphQLWSExecutorOptions {
   lazy?: boolean;
   /**
    * How long should the client wait before closing the socket after the last operation has
-   * completed. This is meant to be used in combination with `lazy`. You might want to have
-   * a calmdown time before actually closing the connection. Kinda' like a lazy close "debounce".
+   * completed. This is meant to be used in combination with `lazy`. You might want to have a
+   * calmdown time before actually closing the connection. Kinda' like a lazy close "debounce".
    *
    * @default 0
    */
@@ -165,6 +165,7 @@ export function buildGraphQLWSExecutor(
         extensions['connectionParams'],
       );
     }
+    
     const iterableIterator = graphqlWSClient.iterate<TData, TExtensions>(
       serializeExecutionRequest({ executionRequest, printFn }),
     );

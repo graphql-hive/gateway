@@ -41,10 +41,16 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
 
       const { schema, execute, subscribe, contextFactory, parse, validate } =
         gwRuntime.getEnveloped({
-          connectionParams: ctx.connectionParams,
+          connectionParams: {
+            ...ctx.connectionParams,
+            // Pass WebSocket extensions as connection params for the plugin
+            // This allows the plugin to access persisted operation info
+            ...payload.extensions,
+          },
           waitUntil: gwRuntime.waitUntil,
           ...(await onContext(ctx)),
         });
+      
       const args: EnvelopedExecutionArgs = {
         schema: schema || (await gwRuntime.getSchema()),
         operationName: payload.operationName,
@@ -56,6 +62,7 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
           subscribe,
         },
       };
+      
       if (args.schema) {
         const errors = validate(args.schema, args.document);
         if (errors.length) return errors;

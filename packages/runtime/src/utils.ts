@@ -350,7 +350,7 @@ const specs: ExtractPersistedOperationId[] = [
   function extractPersistedOperationIdByHiveSpec(
     params: GraphQLParams,
     request: Request,
-    _context: Record<string, any>,
+    context: Record<string, any>,
   ) {
     if ('documentId' in params && typeof params.documentId === 'string') {
       return params.documentId;
@@ -358,6 +358,10 @@ const specs: ExtractPersistedOperationId[] = [
     const documentId = new URL(request.url).searchParams.get('documentId');
     if (documentId) {
       return documentId;
+    }
+    // Check connection params for WebSocket scenarios
+    if (context?.['connectionParams']?.['documentId']) {
+      return context['connectionParams']['documentId'];
     }
     return null;
   },
