@@ -12,6 +12,7 @@ import { createClient as createWSClient } from 'graphql-ws';
 import { useServer } from 'graphql-ws/use/ws';
 import { createServer } from 'http';
 import { AddressInfo } from 'net';
+import { WebSocketServer } from 'ws';
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 
 describe('Persisted Documents', () => {
@@ -73,7 +74,6 @@ describe('Persisted Documents', () => {
     wsUrl = `ws://localhost:${port}${graphqlEndpoint}`;
 
     // Create WebSocket server AFTER the HTTP server is listening
-    const { WebSocketServer } = require('ws');
     wsServer = new WebSocketServer({
       path: graphqlEndpoint,
       server: gatewayServer,
@@ -89,7 +89,7 @@ describe('Persisted Documents', () => {
         
         if (wsServer) {
           await new Promise<void>((resolve) => {
-            wsServer.close((err: any) => {
+            wsServer.close((err?: Error) => {
               if (err) {
                 console.warn('WebSocket server close error:', err);
               }
@@ -108,7 +108,7 @@ describe('Persisted Documents', () => {
         
         if (gatewayServer) {
           await new Promise<void>((resolve) => {
-            gatewayServer.close((err: any) => {
+            gatewayServer.close((err?: Error) => {
               if (err) {
                 console.warn('HTTP server close error:', err);
               }
@@ -534,27 +534,7 @@ describe('Persisted Documents', () => {
 
     describe('Configuration Issues', () => {
       it('should handle both query and documentId when allowArbitraryDocuments is false', async () => {
-        // Create a gateway without allowArbitraryDocuments
-        const strictGateway = createGatewayRuntime({
-          supergraph: getUnifiedGraphGracefully([
-            {
-              name: 'foo',
-              schema: subgraphSchema,
-              url: 'http://localhost:4001/graphql',
-            },
-          ]),
-          plugins: () => [
-            // @ts-expect-error
-            useCustomFetch(subgraphServer.fetch),
-          ],
-          persistedDocuments: {
-            getPersistedOperation(id) {
-              return store[id] || null;
-            },
-            // Note: allowArbitraryDocuments is false by default
-          },
-        });
-
+        // The main gateway instance has allowArbitraryDocuments set to false by default
         const wsClient = createWSClient({
           url: wsUrl,
         });
