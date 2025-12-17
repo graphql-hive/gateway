@@ -51,6 +51,9 @@ import {
   SEMATTRS_HTTP_STATUS_CODE,
   SEMATTRS_HTTP_URL,
   SEMATTRS_HTTP_USER_AGENT,
+  SEMATTRS_IS_HIVE_GRAPHQL_OPERATION,
+  SEMATTRS_IS_HIVE_REQUEST,
+  SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
   SEMATTRS_NET_HOST_NAME,
 } from './attributes';
 
@@ -90,6 +93,7 @@ export function createHttpSpan(input: {
           request.headers.get('graphql-client-version') ||
           request.headers.get('x-graphql-client-version') ||
           undefined,
+        [SEMATTRS_IS_HIVE_REQUEST]: true,
       },
       kind: SpanKind.SERVER,
     },
@@ -122,7 +126,10 @@ export function createGraphQLSpan(input: {
 }): Context {
   const span = input.tracer.startSpan(
     `graphql.operation`,
-    { kind: SpanKind.INTERNAL },
+    {
+      kind: SpanKind.INTERNAL,
+      attributes: { [SEMATTRS_IS_HIVE_GRAPHQL_OPERATION]: true },
+    },
     input.ctx,
   );
 
@@ -424,6 +431,7 @@ export function createSubgraphExecuteSpan(input: {
         ),
         [SEMATTRS_GRAPHQL_OPERATION_TYPE]: operation.operation,
         [SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME]: input.subgraphName,
+        [SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION]: true,
       },
       kind: SpanKind.CLIENT,
     },

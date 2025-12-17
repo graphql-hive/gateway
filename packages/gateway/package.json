@@ -63,6 +63,16 @@
         "default": "./dist/opentelemetry/setup.js"
       }
     },
+    "./opentelemetry/attributes": {
+      "require": {
+        "types": "./dist/opentelemetry/attributes.d.cts",
+        "default": "./dist/opentelemetry/attributes.cjs"
+      },
+      "import": {
+        "types": "./dist/opentelemetry/attributes.d.ts",
+        "default": "./dist/opentelemetry/attributes.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [

@@ -8,11 +8,13 @@ import {
   SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 import type { SpanImpl } from '@opentelemetry/sdk-trace-base/build/src/Span';
-import { SEMATTRS_HTTP_METHOD } from '@opentelemetry/semantic-conventions';
 import {
   SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_CODES,
   SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT,
+  SEMATTRS_IS_HIVE_GRAPHQL_OPERATION,
+  SEMATTRS_IS_HIVE_REQUEST,
+  SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
 } from './attributes';
 
 export type HiveTracingSpanProcessorOptions =
@@ -79,7 +81,6 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
     }
 
     if (isOperationSpan(span)) {
-      span.setAttribute('hive.graphql', true);
       traceState?.operationRoots.set(spanId, span as SpanImpl);
       return;
     }
@@ -90,7 +91,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       traceState.operationRoots.set(spanId, operationRoot);
     }
 
-    if (span.name.startsWith('subgraph.execute')) {
+    if (span.attributes[SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION]) {
       traceState.subgraphExecutions.set(spanId, span as SpanImpl);
       return;
     }
@@ -189,7 +190,11 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
 }
 
 function isHttpSpan(span: Span): boolean {
-  return !!span.attributes[SEMATTRS_HTTP_METHOD];
+  return !!span.attributes[SEMATTRS_IS_HIVE_REQUEST];
+}
+
+function isOperationSpan(span: Span): boolean {
+  return !!span.attributes[SEMATTRS_IS_HIVE_GRAPHQL_OPERATION];
 }
 
 function copyAttribute(
@@ -199,14 +204,6 @@ function copyAttribute(
   targetAttrName: string = sourceAttrName,
 ) {
   target.attributes[targetAttrName] = source.attributes[sourceAttrName];
-}
-
-function isOperationSpan(span: Span): boolean {
-  if (!span.name.startsWith('graphql.operation')) {
-    return false;
-  }
-  const followingChar = span.name.at(17);
-  return !followingChar || followingChar === ' ';
 }
 
 const SPANS_WITH_ERRORS = [

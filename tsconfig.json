@@ -37,6 +37,9 @@
       "@graphql-hive/gateway/opentelemetry/setup": [
         "./packages/gateway/src/opentelemetry/setup.ts"
       ],
+      "@graphql-hive/gateway/opentelemetry/attributes": [
+        "./packages/gateway/src/opentelemetry/attributes.ts"
+      ],
       "@graphql-hive/gateway-runtime": ["./packages/runtime/src/index.ts"],
       "@graphql-hive/gateway-testing": ["./packages/testing/src/index.ts"],
       "@graphql-mesh/fusion-runtime": [
@@ -63,6 +66,9 @@
       ],
       "@graphql-hive/plugin-opentelemetry/api": [
         "./packages/plugins/opentelemetry/src/api.ts"
+      ],
+      "@graphql-hive/plugin-opentelemetry/attributes": [
+        "./packages/plugins/opentelemetry/src/attributes.ts"
       ],
       "@graphql-mesh/plugin-prometheus": [
         "./packages/plugins/prometheus/src/index.ts"

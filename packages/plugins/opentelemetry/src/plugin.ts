@@ -18,6 +18,7 @@ import {
   type TextMapGetter,
   type Tracer,
 } from './api';
+import { SEMATTRS_HIVE_REQUEST_ID } from './attributes';
 import { OtelContextStack } from './context';
 import {
   getMostSpecificState,
@@ -731,7 +732,11 @@ export function useOpenTelemetry(
               // @ts-expect-error even if the attrs is an array this will work
               'requestId'
             ];
+
           if (typeof requestId === 'string') {
+            const httpCtx = state.forRequest.otel?.root;
+            const httpSpan = httpCtx && trace.getSpan(httpCtx);
+            httpSpan?.setAttribute(SEMATTRS_HIVE_REQUEST_ID, requestId);
             otelCtxForRequestId.set(requestId, getContext(state));
           }
         }
@@ -1035,7 +1040,7 @@ function resolveTracesConfig(
   traces.spans ??= {};
 
   // Only override http filter if it's not disabled or already a function
-  if (traces.spans.http ?? true === true) {
+  if ((traces.spans.http ?? true) === true) {
     traces.spans = { ...traces.spans, http: defaultHttpFilter };
   }
 

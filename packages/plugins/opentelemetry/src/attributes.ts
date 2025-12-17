@@ -31,3 +31,8 @@ export const SEMATTRS_HIVE_GATEWAY_UPSTREAM_SUBGRAPH_NAME =
   'hive.gateway.upstream.subgraph.name';
 export const SEMATTRS_HIVE_GATEWAY_OPERATION_SUBGRAPH_NAMES =
   'hive.gateway.operation.subgraph.names';
+
+export const SEMATTRS_HIVE_REQUEST_ID = 'hive.request.id';
+export const SEMATTRS_IS_HIVE_REQUEST = 'hive.request';
+export const SEMATTRS_IS_HIVE_GRAPHQL_OPERATION = 'hive.graphql';
+export const SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION = 'hive.upstream';
