@@ -1,7 +1,13 @@
 // yoga's envelop may augment the `execute` and `subscribe` operations
 
 import { MaybePromise } from '@graphql-tools/utils';
-import { type ExecutionArgs } from 'graphql';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  DocumentNode,
+  Kind,
+  OperationTypeNode,
+  type ExecutionArgs,
+} from 'graphql';
 import type {
   ConnectionInitMessage,
   Context,
@@ -12,17 +18,31 @@ import type {
 import { YogaInitialContext } from 'graphql-yoga';
 import type { GatewayRuntime } from './createGatewayRuntime';
 
+const FAKE_DOCUMENT: DocumentNode = {
+  kind: Kind.DOCUMENT,
+  definitions: [
+    {
+      kind: Kind.OPERATION_DEFINITION,
+      operation: OperationTypeNode.SUBSCRIPTION,
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections: [],
+      },
+    },
+  ],
+};
+
 export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
   gwRuntime: GatewayRuntime<TContext>,
   onContext: (
     ctx: Context<ConnectionInitMessage['payload'], E>,
   ) => MaybePromise<Record<string, unknown>>,
 ): ServerOptions<ConnectionInitMessage['payload'], E> {
-  async function onSubscribe(
+  function onSubscribe(
     ctx: Context<Record<string, unknown> | undefined, E>,
     idOrMessage: string | SubscribeMessage,
     paramsOrUndefined: SubscribePayload | undefined,
-  ): Promise<any | readonly import('graphql').GraphQLError[]> {
+  ): MaybePromise<ExecutionArgs> {
     let params: SubscribePayload;
     if (typeof idOrMessage === 'string') {
       // >=v6
@@ -35,31 +55,25 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
       params = idOrMessage.payload;
     }
 
-    // Fake execution args
-    return {
-      schema: await gwRuntime.getSchema(),
-      document: {
-        kind: 'Document',
-        definitions: [
-          {
-            kind: 'OperationDefinition',
-            operation: 'subscription',
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [],
-            },
+    return handleMaybePromise(
+      () => onContext(ctx),
+      (additionalContext) =>
+        ({
+          // Relax this check https://github.com/enisdenjo/graphql-ws/blob/master/src/server.ts#L805
+          // We don't need `schema` here as it is handled by the gateway runtime
+          document: FAKE_DOCUMENT,
+          contextValue: {
+            connectionParams: ctx.connectionParams,
+            waitUntil: gwRuntime.waitUntil,
+            params,
+            ...additionalContext,
           },
-        ],
-      },
-      contextValue: {
-        connectionParams: ctx.connectionParams,
-        waitUntil: gwRuntime.waitUntil,
-        params,
-        ...(await onContext(ctx)),
-      },
-    };
+          // So we cast it to ExecutionArgs to satisfy the return type without `schema`
+        }) as ExecutionArgs,
+    );
   }
   function handleRegularArgs(args: ExecutionArgs) {
+    // We know that contextValue is YogaInitialContext
     const context = args.contextValue as YogaInitialContext;
     return gwRuntime.getResultForParams(
       {
