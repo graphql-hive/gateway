@@ -3532,6 +3532,7 @@ __metadata:
   dependencies:
     "@repeaterjs/repeater": "npm:^3.0.6"
     "@whatwg-node/server": "npm:^0.10.17"
+    graphql-ws: "npm:^6.0.6"
   languageName: unknown
   linkType: soft
 
