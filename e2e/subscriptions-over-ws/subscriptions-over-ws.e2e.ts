@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 const { gateway, service } = createTenv(__dirname);
 
 it('should subscribe over WS and propagate interpolated context', async () => {
+  expect.assertions(1);
   const srv = await service('stream');
   const gw = await gateway({
     supergraph: {

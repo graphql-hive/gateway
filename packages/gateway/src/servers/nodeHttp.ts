@@ -4,6 +4,7 @@ import { createServer as createHTTPSServer } from 'node:https';
 import type { SecureContextOptions } from 'node:tls';
 import type { GatewayRuntime } from '@graphql-hive/gateway-runtime';
 import { getGraphQLWSOptions } from '@graphql-hive/gateway-runtime';
+import { normalizeNodeRequest } from '@whatwg-node/server';
 import type { Extra } from 'graphql-ws/use/ws';
 import { defaultOptions } from '../cli';
 import type { ServerForRuntimeOptions } from './types';
@@ -91,6 +92,9 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
       getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
         req: ctx.extra?.request,
         socket: ctx.extra?.socket,
+        request: ctx.extra?.request
+          ? normalizeNodeRequest(ctx.extra.request, gwRuntime.fetchAPI)
+          : undefined,
       })),
       wsServer,
     );

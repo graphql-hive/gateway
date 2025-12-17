@@ -3,6 +3,7 @@
   "private": true,
   "dependencies": {
     "@repeaterjs/repeater": "^3.0.6",
-    "@whatwg-node/server": "^0.10.17"
+    "@whatwg-node/server": "^0.10.17",
+    "graphql-ws": "^6.0.6"
   }
 }

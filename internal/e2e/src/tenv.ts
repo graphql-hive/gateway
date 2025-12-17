@@ -129,7 +129,7 @@ export interface GatewayOptions extends ProcOptions {
 
 export interface Gateway extends Server {
   execute(args: {
-    query: string;
+    query?: string;
     variables?: Record<string, unknown>;
     operationName?: string;
     headers?: Record<string, string>;

@@ -2,7 +2,7 @@ import { defineConfig } from '@graphql-hive/gateway';
 import { getEnvStr } from '@internal/testing';
 
 const store: { [sha256Hash: string]: string } = {
-  typename: '{__typename}',
+  '5d112fb0e85c9e113301e9354c39f36b2ee41d82': '{__typename}',
 };
 
 export const gatewayConfig = defineConfig({

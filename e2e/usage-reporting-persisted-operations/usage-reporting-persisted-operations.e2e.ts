@@ -5,33 +5,37 @@ import {
 } from '@internal/e2e';
 import { createDisposableServer } from '@internal/testing';
 import { Push, Repeater, Stop } from '@repeaterjs/repeater';
-import { createServerAdapter } from '@whatwg-node/server';
-import { expect, it } from 'vitest';
+import { createServerAdapter, DisposableSymbols } from '@whatwg-node/server';
+import { createClient } from 'graphql-ws';
+import { describe, expect, it } from 'vitest';
+import WebSocket from 'ws';
 
 const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
-it('should execute persisted query and report usage', async () => {
-  const hive = await createHiveConsole();
+describe('Usage Reporting with Persisted Operations', () => {
+  it('should execute persisted query and report usage', async () => {
+    expect.assertions(4);
 
-  const { execute } = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      HIVE_URL: hive.url,
-    },
-  });
+    await using hive = await createHiveConsole();
 
-  await expect(
-    execute({
-      query: '',
+    await using gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_URL: hive.url,
+      },
+    });
+
+    const result = await gw.execute({
       extensions: {
         persistedQuery: {
           version: 1,
-          sha256Hash: 'typename',
+          sha256Hash: '5d112fb0e85c9e113301e9354c39f36b2ee41d82',
         },
       },
-    }),
-  ).resolves.toMatchInlineSnapshot(`
+    });
+
+    expect(result).toMatchInlineSnapshot(`
     {
       "data": {
         "__typename": "Query",
@@ -39,13 +43,13 @@ it('should execute persisted query and report usage', async () => {
     }
   `);
 
-  for await (const req of hive.reqs) {
-    expect(req.headers['authorization']).toMatchInlineSnapshot(
-      `"Bearer great-token"`,
-    );
-    expect(req.headers['user-agent']).toContain('hive-gateway/');
+    for await (const req of hive.reqs) {
+      expect(req.headers['authorization']).toMatchInlineSnapshot(
+        `"Bearer great-token"`,
+      );
+      expect(req.headers['user-agent']).toContain('hive-gateway/');
 
-    expect(req.body.map).toMatchInlineSnapshot(`
+      expect(req.body.map).toMatchInlineSnapshot(`
       {
         "5d112fb0e85c9e113301e9354c39f36b2ee41d82": {
           "fields": [
@@ -57,8 +61,76 @@ it('should execute persisted query and report usage', async () => {
       }
     `);
 
-    break; // we only make one request
-  }
+      break; // we only make one request
+    }
+  });
+
+  it('executes persisted query via WS and reports usage', async () => {
+    expect.assertions(4);
+
+    await using hive = await createHiveConsole();
+
+    await using gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_URL: hive.url,
+      },
+    });
+
+    const client = createClient({
+      url: `ws://0.0.0.0:${gw.port}/graphql`,
+      webSocketImpl: WebSocket,
+      retryAttempts: 0,
+    });
+
+    await using _ = {
+      async [DisposableSymbols.asyncDispose]() {
+        return client.dispose();
+      },
+    };
+
+    const iterable = client.iterate({
+      query: '',
+      extensions: {
+        persistedQuery: {
+          version: 1,
+          sha256Hash: '5d112fb0e85c9e113301e9354c39f36b2ee41d82',
+        },
+      },
+    });
+
+    for await (const msg of iterable) {
+      expect(msg).toMatchInlineSnapshot(`
+      {
+        "data": {
+          "__typename": "Query",
+        },
+      }
+    `);
+      break; // we only want the first message
+    }
+
+    for await (const req of hive.reqs) {
+      expect(req.headers['authorization']).toMatchInlineSnapshot(
+        `"Bearer great-token"`,
+      );
+      expect(req.headers['user-agent']).toContain('hive-gateway/');
+
+      expect(req.body.map).toMatchInlineSnapshot(`
+      {
+        "5d112fb0e85c9e113301e9354c39f36b2ee41d82": {
+          "fields": [
+            "Query.__typename",
+          ],
+          "operation": "{__typename}",
+          "operationName": "anonymous",
+        },
+      }
+    `);
+
+      break; // we only make one request
+    }
+  });
 });
 
 async function createHiveConsole() {
