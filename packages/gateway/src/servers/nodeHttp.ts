@@ -90,11 +90,9 @@ export async function startNodeHttpServer<TContext extends Record<string, any>>(
 
     useServer(
       getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
-        req: ctx.extra?.request,
-        socket: ctx.extra?.socket,
-        request: ctx.extra?.request
-          ? normalizeNodeRequest(ctx.extra.request, gwRuntime.fetchAPI)
-          : undefined,
+        req: ctx.extra.request,
+        socket: ctx.extra.socket,
+        request: normalizeNodeRequest(ctx.extra.request, gwRuntime.fetchAPI),
       })),
       wsServer,
     );

@@ -15,8 +15,7 @@ import type {
   SubscribeMessage,
   SubscribePayload,
 } from 'graphql-ws';
-import { YogaInitialContext } from 'graphql-yoga';
-import type { GatewayRuntime } from './createGatewayRuntime';
+import { YogaInitialContext, YogaServerInstance } from 'graphql-yoga';
 
 const FAKE_DOCUMENT: DocumentNode = {
   kind: Kind.DOCUMENT,
@@ -32,8 +31,10 @@ const FAKE_DOCUMENT: DocumentNode = {
   ],
 };
 
+// This is not Gateway specific, but we keep it here for now
+// Then this can be moved to graphql-yoga
 export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
-  gwRuntime: GatewayRuntime<TContext>,
+  yoga: YogaServerInstance<Record<string, any>, TContext>,
   onContext: (
     ctx: Context<ConnectionInitMessage['payload'], E>,
   ) => MaybePromise<Record<string, unknown>>,
@@ -64,7 +65,7 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
           document: FAKE_DOCUMENT,
           contextValue: {
             connectionParams: ctx.connectionParams,
-            waitUntil: gwRuntime.waitUntil,
+            waitUntil: yoga.waitUntil,
             params,
             ...additionalContext,
           },
@@ -74,8 +75,8 @@ export function getGraphQLWSOptions<TContext extends Record<string, any>, E>(
   }
   function handleRegularArgs(args: ExecutionArgs) {
     // We know that contextValue is YogaInitialContext
-    const context = args.contextValue as YogaInitialContext;
-    return gwRuntime.getResultForParams(
+    const context = args.contextValue as YogaInitialContext & TContext;
+    return yoga.getResultForParams(
       {
         params: context.params,
         request: context.request,
