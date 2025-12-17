@@ -2,10 +2,17 @@ import {
   DisposableSymbols,
   getGraphQLWSOptions,
 } from '@graphql-hive/gateway-runtime';
-import type { Server, WebSocketOptions } from 'bun';
-import type { Extra } from 'graphql-ws/use/bun';
+import type { Server, ServerWebSocket, WebSocketOptions } from 'bun';
 import { defaultOptions, GatewayRuntime } from '..';
 import type { ServerForRuntimeOptions } from './types';
+
+type WebSocketData = {
+  request: Request;
+};
+
+type BunExtra = {
+  socket: ServerWebSocket<WebSocketData>;
+};
 
 export async function startBunServer<TContext extends Record<string, any>>(
   gwRuntime: GatewayRuntime<TContext>,
@@ -47,12 +54,15 @@ export async function startBunServer<TContext extends Record<string, any>>(
   if (!opts.disableWebsockets) {
     const { makeHandler } = await import('graphql-ws/use/bun');
     serverOptions.websocket = makeHandler(
-      getGraphQLWSOptions<TContext, Extra>(gwRuntime, (ctx) => ({
+      getGraphQLWSOptions<TContext, BunExtra>(gwRuntime, (ctx) => ({
         socket: ctx.extra.socket,
-        ...(ctx.extra.socket.data || {}),
+        ...ctx.extra.socket.data,
       })),
     );
-    serverOptions.fetch = function (request: Request, server: Server<{}>) {
+    serverOptions.fetch = function (
+      request: Request,
+      server: Server<WebSocketData>,
+    ) {
       // header to check if websocket
       if (
         request.headers.has('Sec-WebSocket-Key') &&
