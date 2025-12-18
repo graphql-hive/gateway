@@ -8,7 +8,7 @@ const { gateway, service } = createTenv(__dirname);
 it('should subscribe over WS and propagate interpolated context', async () => {
   expect.assertions(1);
   const srv = await service('stream');
-  const gw = await gateway({
+  const { port } = await gateway({
     supergraph: {
       with: 'mesh',
       services: [srv],
@@ -16,7 +16,7 @@ it('should subscribe over WS and propagate interpolated context', async () => {
   });
 
   const client = createClient({
-    url: `ws://0.0.0.0:${gw.port}/graphql`,
+    url: `ws://0.0.0.0:${port}/graphql`,
     webSocketImpl: WebSocket,
     retryAttempts: 0,
   });

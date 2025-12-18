@@ -19,14 +19,14 @@ describe('Usage Reporting with Persisted Operations', () => {
 
     await using hive = await createHiveConsole();
 
-    await using gw = await gateway({
+    const { execute } = await gateway({
       supergraph: await supergraph(),
       env: {
         HIVE_URL: hive.url,
       },
     });
 
-    const result = await gw.execute({
+    const result = await execute({
       extensions: {
         persistedQuery: {
           version: 1,
@@ -70,7 +70,7 @@ describe('Usage Reporting with Persisted Operations', () => {
 
     await using hive = await createHiveConsole();
 
-    await using gw = await gateway({
+    const { port } = await gateway({
       supergraph: await supergraph(),
       env: {
         HIVE_URL: hive.url,
@@ -78,7 +78,7 @@ describe('Usage Reporting with Persisted Operations', () => {
     });
 
     const client = createClient({
-      url: `ws://0.0.0.0:${gw.port}/graphql`,
+      url: `ws://0.0.0.0:${port}/graphql`,
       webSocketImpl: WebSocket,
       retryAttempts: 0,
     });
