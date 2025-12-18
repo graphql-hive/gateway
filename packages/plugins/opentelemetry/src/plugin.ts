@@ -1,4 +1,11 @@
 import {
+  getMostSpecificState,
+  withState,
+  type GatewayState,
+  type GraphQLState,
+  type HttpState,
+} from '@envelop/core';
+import {
   GatewayConfigContext,
   getRetryInfo,
   isRetryExecutionRequest,
@@ -20,13 +27,6 @@ import {
 } from './api';
 import { SEMATTRS_HIVE_REQUEST_ID } from './attributes';
 import { OtelContextStack } from './context';
-import {
-  getMostSpecificState,
-  withState,
-  type GatewayState,
-  type GraphQLState,
-  type HttpState,
-} from './plugin-utils';
 import {
   createGraphqlContextBuildingSpan,
   createGraphQLExecuteSpan,
