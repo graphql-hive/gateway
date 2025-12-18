@@ -1,5 +1,43 @@
 # @graphql-hive/gateway
 
+## 2.2.0
+### Minor Changes
+
+
+
+- [#1791](https://github.com/graphql-hive/gateway/pull/1791) [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - New attributes on http, graphql operation and subgraph execution to make it easier to find those "root" spans.
+  
+  - HTTP span: `hive.request: true` and `hive.request.id: <request-id>` if `requestId` exists
+  - GraphQL operation : `hive.graphql: true`
+  - Subgraph Execution : `hive.upstream: true`
+
+
+- [#1791](https://github.com/graphql-hive/gateway/pull/1791) [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Added `@graphql-hive/gateway/opentelemetry/attributes` module entrypoint exposing graphql and hive
+  specific attributes. This was already exposed by the default entrypoint, but it now also has its own one.
+  
+  This fixes an issue with some bundler (like vite) that doesn't support importing non existent `.js`
+  when only a `.d.ts` file exists.
+
+### Patch Changes
+
+
+
+- [#1804](https://github.com/graphql-hive/gateway/pull/1804) [`c913e6c`](https://github.com/graphql-hive/gateway/commit/c913e6cfec407d4d2da5b264d38047a9df8e09f0) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Added dependency [`@whatwg-node/server@^0.10.17` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.17) (to `dependencies`)
+
+
+- [#1804](https://github.com/graphql-hive/gateway/pull/1804) [`c913e6c`](https://github.com/graphql-hive/gateway/commit/c913e6cfec407d4d2da5b264d38047a9df8e09f0) Thanks [@ardatan](https://github.com/ardatan)! - Fixes for better support of the plugin system in WebSockets;
+  
+  - Ensure  `params: GraphQLParams` and `request: Request` exist in the context
+  - Invoke `onParams` and `onExecutionResult` hooks from plugins properly
+- Updated dependencies [[`15b9e50`](https://github.com/graphql-hive/gateway/commit/15b9e5037fa74f8c1a8e662e196268a88642c27d), [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc), [`c913e6c`](https://github.com/graphql-hive/gateway/commit/c913e6cfec407d4d2da5b264d38047a9df8e09f0), [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7), [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7), [`a50d93a`](https://github.com/graphql-hive/gateway/commit/a50d93a0bc8f3c67de7449ad9102d3f3b60ea96a), [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7)]:
+  - @graphql-hive/gateway-runtime@2.5.0
+  - @graphql-hive/plugin-opentelemetry@1.3.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.20
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+  - @graphql-mesh/plugin-prometheus@2.1.10
+
 ## 2.1.23
 ### Patch Changes
 

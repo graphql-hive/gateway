@@ -1,5 +1,36 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.3.0
+### Minor Changes
+
+
+
+- [#1786](https://github.com/graphql-hive/gateway/pull/1786) [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc) Thanks [@ardatan](https://github.com/ardatan)! - Respect both \`graphql-client-name\` and \`x-graphql-client-name\` for client name header, and both \`graphql-client-version\` and \`x-graphql-client-version\` for client version header by default if not configured otherwise.
+
+
+
+- [#1791](https://github.com/graphql-hive/gateway/pull/1791) [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - New attributes on http, graphql operation and subgraph execution to make it easier to find those "root" spans.
+  
+  - HTTP span: `hive.request: true` and `hive.request.id: <request-id>` if `requestId` exists
+  - GraphQL operation : `hive.graphql: true`
+  - Subgraph Execution : `hive.upstream: true`
+
+
+- [#1791](https://github.com/graphql-hive/gateway/pull/1791) [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Added `@graphql-hive/plugin-opentelemetry/attributes` module entrypoint exposing graphql and hive
+  specific attributes. This was already exposed by the default entrypoint, but it now also has its own one.
+  
+  This fixes an issue with some bundler (like vite) that doesn't support importing non existent `.js`
+  when only a `.d.ts` file exists.
+
+### Patch Changes
+
+
+
+- [#1791](https://github.com/graphql-hive/gateway/pull/1791) [`071b1e0`](https://github.com/graphql-hive/gateway/commit/071b1e0e5a8cc04bc2815fd8e77c5549727f7bb7) Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fix http span filter function that was not taken in account
+
+- Updated dependencies [[`15b9e50`](https://github.com/graphql-hive/gateway/commit/15b9e5037fa74f8c1a8e662e196268a88642c27d), [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc), [`c913e6c`](https://github.com/graphql-hive/gateway/commit/c913e6cfec407d4d2da5b264d38047a9df8e09f0), [`a50d93a`](https://github.com/graphql-hive/gateway/commit/a50d93a0bc8f3c67de7449ad9102d3f3b60ea96a)]:
+  - @graphql-hive/gateway-runtime@2.5.0
+
 ## 1.2.5
 ### Patch Changes
 
