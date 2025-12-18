@@ -1,5 +1,34 @@
 # @graphql-hive/gateway-runtime
 
+## 2.5.0
+### Minor Changes
+
+
+
+- [#1786](https://github.com/graphql-hive/gateway/pull/1786) [`abd350b`](https://github.com/graphql-hive/gateway/commit/abd350b913c8938cf173a4a5e25b3ba6c04016fc) Thanks [@ardatan](https://github.com/ardatan)! - Respect both \`graphql-client-name\` and \`x-graphql-client-name\` for client name header, and both \`graphql-client-version\` and \`x-graphql-client-version\` for client version header by default if not configured otherwise.
+
+
+### Patch Changes
+
+
+
+- [#1784](https://github.com/graphql-hive/gateway/pull/1784) [`15b9e50`](https://github.com/graphql-hive/gateway/commit/15b9e5037fa74f8c1a8e662e196268a88642c27d) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@types/node@^25.0.0` ↗︎](https://www.npmjs.com/package/@types/node/v/25.0.0) (from `^24.10.1`, in `dependencies`)
+
+
+- [#1804](https://github.com/graphql-hive/gateway/pull/1804) [`c913e6c`](https://github.com/graphql-hive/gateway/commit/c913e6cfec407d4d2da5b264d38047a9df8e09f0) Thanks [@ardatan](https://github.com/ardatan)! - Fixes for better support of the plugin system in WebSockets;
+  
+  - Ensure  `params: GraphQLParams` and `request: Request` exist in the context
+  - Invoke `onParams` and `onExecutionResult` hooks from plugins properly
+
+
+- [#1787](https://github.com/graphql-hive/gateway/pull/1787) [`a50d93a`](https://github.com/graphql-hive/gateway/commit/a50d93a0bc8f3c67de7449ad9102d3f3b60ea96a) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Usage reporting clientInfo context inherits Hive Gateway context
+
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.8
+  - @graphql-mesh/fusion-runtime@1.6.2
+
 ## 2.4.1
 ### Patch Changes
 
