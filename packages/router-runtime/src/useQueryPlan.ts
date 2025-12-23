@@ -1,18 +1,27 @@
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { QueryPlan } from '@graphql-hive/router-query-planner';
 import { isAsyncIterable } from '@graphql-tools/utils';
-import { queryPlanForExecutionRequestContext } from './utils';
 
 export interface QueryPlanOptions {
   /** Callback when the query plan has been successfuly generated. */
   onQueryPlan?(queryPlan: QueryPlan): void;
   /** Exposing the query plan inside the GraphQL result extensions. */
-  expose?: boolean | ((request: Request) => boolean);
+  exposeInResultExtensions?: boolean | ((request: Request) => boolean);
 }
 
 export function useQueryPlan(opts: QueryPlanOptions = {}): GatewayPlugin {
-  const { expose, onQueryPlan } = opts;
+  const queryPlanForExecutionRequestContext = new WeakMap<any, QueryPlan>();
+  const { exposeInResultExtensions, onQueryPlan } = opts;
   return {
+    onQueryPlan({ executionRequest }) {
+      return function onQueryPlanDone({ queryPlan }) {
+        queryPlanForExecutionRequestContext.set(
+          // getter like setter
+          executionRequest.context || executionRequest.document,
+          queryPlan,
+        );
+      };
+    },
     onExecute({ context, args }) {
       return {
         onExecuteDone({ result, setResult }) {
@@ -22,7 +31,9 @@ export function useQueryPlan(opts: QueryPlanOptions = {}): GatewayPlugin {
           );
           onQueryPlan?.(queryPlan!);
           const shouldExpose =
-            typeof expose === 'function' ? expose(context.request) : expose;
+            typeof exposeInResultExtensions === 'function'
+              ? exposeInResultExtensions(context.request)
+              : exposeInResultExtensions;
           if (shouldExpose && !isAsyncIterable(result)) {
             setResult({
               ...result,
