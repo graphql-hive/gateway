@@ -4414,6 +4414,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
+    "@envelop/core": "npm:^5.4.0"
     "@graphql-hive/core": "npm:^0.18.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
