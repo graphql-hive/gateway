@@ -125,7 +125,7 @@ export function createRequest({
           type: argAst.type,
         });
         const varValue = projectArgumentValue(argValue, argInstance.type);
-        if (varValue != null) {
+        if (varValue !== undefined) {
           newVariables[varName] = varValue;
         }
         argNodes.push({
@@ -234,7 +234,7 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
       const field = fields[key];
       if (field) {
         const varValue = projectArgumentValue(argValue[key], field.type);
-        if (varValue != null) {
+        if (varValue !== undefined) {
           projectedValue[key] = varValue;
         }
       }
