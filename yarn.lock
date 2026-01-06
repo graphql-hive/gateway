@@ -4141,25 +4141,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.18.0, @graphql-hive/core@npm:^0.18.0":
-  version: 0.18.0
-  resolution: "@graphql-hive/core@npm:0.18.0"
-  dependencies:
-    "@graphql-hive/logger": "npm:^1.0.9"
-    "@graphql-hive/signal": "npm:^2.0.0"
-    "@graphql-tools/utils": "npm:^10.0.0"
-    "@whatwg-node/fetch": "npm:^0.10.13"
-    async-retry: "npm:^1.3.3"
-    events: "npm:^3.3.0"
-    js-md5: "npm:0.8.3"
-    lodash.sortby: "npm:^4.7.0"
-    tiny-lru: "npm:^8.0.2"
-  peerDependencies:
-    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/e693a59e2dbdf10a1e90bd3ab4468b09648ac9ea5de17d0549b42267a96b159c166694c0ac83951fc6967574212a4903bf4e802ebe1f7d51b43d3045893db583
-  languageName: node
-  linkType: hard
-
 "@graphql-hive/core@npm:0.19.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4":
   version: 0.19.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4
   resolution: "@graphql-hive/core@npm:0.19.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4"
@@ -4179,6 +4160,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/core@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "@graphql-hive/core@npm:0.18.0"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.0.9"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/e693a59e2dbdf10a1e90bd3ab4468b09648ac9ea5de17d0549b42267a96b159c166694c0ac83951fc6967574212a4903bf4e802ebe1f7d51b43d3045893db583
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/gateway-runtime@workspace:*, @graphql-hive/gateway-runtime@workspace:^, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
@@ -4192,7 +4192,7 @@ __metadata:
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
-    "@graphql-hive/yoga": "npm:^0.46.0"
+    "@graphql-hive/yoga": "npm:0.47.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.8.20"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -4563,17 +4563,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:^0.46.0":
-  version: 0.46.0
-  resolution: "@graphql-hive/yoga@npm:0.46.0"
+"@graphql-hive/yoga@npm:0.47.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4":
+  version: 0.47.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4
+  resolution: "@graphql-hive/yoga@npm:0.47.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4"
   dependencies:
-    "@graphql-hive/core": "npm:0.18.0"
+    "@graphql-hive/core": "npm:0.19.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4"
     "@graphql-hive/logger": "npm:^1.0.9"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/63befd5195c305c104007ffb70c9ecc532774ff083dfe0d5bbb202da770b67f482a6d569b9448f97d012806633e062687dcb561605aa69e32c80d645a2b28587
+  checksum: 10c0/8de5665674d56f4aad48c401414ca399bec009867740a9ca8d20a1acb79f0edee062473f85f8e5df81158330e21a230bfcdd781093133a47dfe98ad0aacb0efa
   languageName: node
   linkType: hard
 
