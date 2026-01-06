@@ -30,14 +30,36 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       };
     }
 
-    // Create layer2 cache if configured
-    const layer2Cache =
+    // Create layer2 cache if configured (requires gateway cache to be available)
+    const persistedDocs =
       config.persistedDocuments &&
       'type' in config.persistedDocuments &&
-      config.persistedDocuments?.type === 'hive' &&
-      config.persistedDocuments.cache
+      config.persistedDocuments?.type === 'hive'
+        ? config.persistedDocuments
+        : undefined;
+    const specifiedCacheOptions = [
+      persistedDocs?.cacheTtlSeconds !== undefined && 'cacheTtlSeconds',
+      persistedDocs?.cacheNotFoundTtlSeconds !== undefined &&
+        'cacheNotFoundTtlSeconds',
+      persistedDocs?.cacheKeyPrefix !== undefined && 'cacheKeyPrefix',
+    ].filter(Boolean);
+    const hasCacheConfig = specifiedCacheOptions.length > 0;
+    if (hasCacheConfig && !configContext.cache) {
+      configContext.log.warn(
+        'Persisted documents cache options (%s) were specified but no gateway cache is configured. ' +
+          'Cache will be disabled. Configure a cache using the "cache" option to enable caching.',
+        specifiedCacheOptions.join(', '),
+      );
+    }
+    const layer2Cache =
+      persistedDocs && hasCacheConfig && configContext.cache
         ? createPersistedDocumentsCache(
-            config.persistedDocuments.cache,
+            {
+              ttlSeconds: persistedDocs.cacheTtlSeconds,
+              notFoundTtlSeconds: persistedDocs.cacheNotFoundTtlSeconds,
+              keyPrefix: persistedDocs.cacheKeyPrefix,
+            },
+            configContext.cache,
             configContext.log.child('[persistedDocumentsCache] '),
           )
         : undefined;

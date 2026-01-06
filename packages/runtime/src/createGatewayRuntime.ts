@@ -219,13 +219,34 @@ export function createGatewayRuntime<
     'type' in config.persistedDocuments &&
     config.persistedDocuments?.type === 'hive'
   ) {
-    // Create layer2 cache if configured
-    const layer2Cache = config.persistedDocuments.cache
-      ? createPersistedDocumentsCache(
-          config.persistedDocuments.cache,
-          configContext.log.child('[persistedDocumentsCache] '),
-        )
-      : undefined;
+    // Create layer2 cache if configured (requires gateway cache to be available)
+    const specifiedCacheOptions = [
+      config.persistedDocuments.cacheTtlSeconds !== undefined &&
+        'cacheTtlSeconds',
+      config.persistedDocuments.cacheNotFoundTtlSeconds !== undefined &&
+        'cacheNotFoundTtlSeconds',
+      config.persistedDocuments.cacheKeyPrefix !== undefined && 'cacheKeyPrefix',
+    ].filter(Boolean);
+    const hasCacheConfig = specifiedCacheOptions.length > 0;
+    if (hasCacheConfig && !configContext.cache) {
+      configContext.log.warn(
+        'Persisted documents cache options (%s) were specified but no gateway cache is configured. ' +
+          'Cache will be disabled. Configure a cache using the "cache" option to enable caching.',
+        specifiedCacheOptions.join(', '),
+      );
+    }
+    const layer2Cache =
+      hasCacheConfig && configContext.cache
+        ? createPersistedDocumentsCache(
+            {
+              ttlSeconds: config.persistedDocuments.cacheTtlSeconds,
+              notFoundTtlSeconds: config.persistedDocuments.cacheNotFoundTtlSeconds,
+              keyPrefix: config.persistedDocuments.cacheKeyPrefix,
+            },
+            configContext.cache,
+            configContext.log.child('[persistedDocumentsCache] '),
+          )
+        : undefined;
 
     const hiveConsolePlugin = useHiveConsole({
       ...configContext,
