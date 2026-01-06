@@ -83,6 +83,7 @@ import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
+import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
@@ -218,6 +219,14 @@ export function createGatewayRuntime<
     'type' in config.persistedDocuments &&
     config.persistedDocuments?.type === 'hive'
   ) {
+    // Create layer2 cache if configured
+    const layer2Cache = config.persistedDocuments.cache
+      ? createPersistedDocumentsCache(
+          config.persistedDocuments.cache,
+          configContext.log.child('[persistedDocumentsCache] '),
+        )
+      : undefined;
+
     persistedDocumentsPlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
@@ -230,6 +239,7 @@ export function createGatewayRuntime<
         circuitBreaker: config.persistedDocuments.circuitBreaker,
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
+        layer2Cache,
       },
     });
   } else if (

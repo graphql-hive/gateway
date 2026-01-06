@@ -83,6 +83,10 @@ export const addCommand: AddCommand = (ctx, cli) =>
         apolloKey,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
+        hivePersistedDocumentsCacheRedisUrl,
+        hivePersistedDocumentsCacheRedisKeyPrefix,
+        hivePersistedDocumentsCacheTtl,
+        hivePersistedDocumentsCacheNotFoundTtl,
         ...opts
       } = this.optsWithGlobals();
 
@@ -284,11 +288,34 @@ export const addCommand: AddCommand = (ctx, cli) =>
           );
           process.exit(1);
         }
+
+        // Build cache config from CLI options if Redis URL is provided
+        const cacheConfig = hivePersistedDocumentsCacheRedisUrl
+          ? {
+              redis: {
+                url: hivePersistedDocumentsCacheRedisUrl,
+                ...(hivePersistedDocumentsCacheRedisKeyPrefix
+                  ? { keyPrefix: hivePersistedDocumentsCacheRedisKeyPrefix }
+                  : {}),
+              },
+              ...(hivePersistedDocumentsCacheTtl != null
+                ? { ttlSeconds: hivePersistedDocumentsCacheTtl }
+                : {}),
+              ...(hivePersistedDocumentsCacheNotFoundTtl != null
+                ? { notFoundTtlSeconds: hivePersistedDocumentsCacheNotFoundTtl }
+                : {}),
+            }
+          : loadedConfig.persistedDocuments &&
+              'cache' in loadedConfig.persistedDocuments
+            ? loadedConfig.persistedDocuments.cache
+            : undefined;
+
         config.persistedDocuments = {
           ...loadedConfig.persistedDocuments,
           type: 'hive',
           endpoint: hivePersistedDocumentsEndpoint,
           token,
+          ...(cacheConfig ? { cache: cacheConfig } : {}),
         };
       }
       if (maskedErrors != null) {
