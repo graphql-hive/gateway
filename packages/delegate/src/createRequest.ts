@@ -124,10 +124,10 @@ export function createRequest({
           },
           type: argAst.type,
         });
-        newVariables[varName] = projectArgumentValue(
-          argValue,
-          argInstance.type,
-        );
+        const varValue = projectArgumentValue(argValue, argInstance.type);
+        if (varValue != null) {
+          newVariables[varName] = varValue;
+        }
         argNodes.push({
           kind: Kind.ARGUMENT,
           name: {
@@ -233,7 +233,10 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
     for (const key in argValue) {
       const field = fields[key];
       if (field) {
-        projectedValue[key] = projectArgumentValue(argValue[key], field.type);
+        const varValue = projectArgumentValue(argValue[key], field.type);
+        if (varValue != null) {
+          projectedValue[key] = varValue;
+        }
       }
     }
     return projectedValue;

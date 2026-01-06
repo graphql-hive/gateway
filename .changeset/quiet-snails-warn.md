@@ -20,8 +20,8 @@ makeExecutableSchema({
     `,
     resolvers: {
         Query: {
-            test: (_parent, args, _ctx, info) => {
-                console.log(print(info.operation), info.variableValues)
+            test: (_, args) => {
+                // Returns the incoming variable value
                 return args.input.value;
             },
         },
