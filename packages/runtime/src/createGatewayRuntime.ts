@@ -227,7 +227,7 @@ export function createGatewayRuntime<
         )
       : undefined;
 
-    persistedDocumentsPlugin = useHiveConsole({
+    const hiveConsolePlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
       log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
@@ -242,6 +242,16 @@ export function createGatewayRuntime<
         layer2Cache,
       },
     });
+
+    // Add disposal hook for layer2Cache if it exists
+    persistedDocumentsPlugin = layer2Cache
+      ? {
+          ...hiveConsolePlugin,
+          onDispose() {
+            return layer2Cache.dispose();
+          },
+        }
+      : hiveConsolePlugin;
   } else if (
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments
