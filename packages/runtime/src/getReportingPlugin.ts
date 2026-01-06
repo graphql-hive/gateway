@@ -87,15 +87,6 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
         : {}),
     });
 
-    // Add disposal hook for layer2Cache if it exists
-    if (layer2Cache) {
-      return {
-        ...hiveConsolePlugin,
-        onDispose() {
-          return layer2Cache.dispose();
-        },
-      } as GatewayPlugin<TContext>;
-    }
     return hiveConsolePlugin as GatewayPlugin<TContext>;
   } else if (
     config.reporting?.type === 'graphos' ||

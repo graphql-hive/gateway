@@ -5,10 +5,6 @@ import type {
 import type { Logger } from '@graphql-hive/logger';
 import type { KeyValueCache } from '@graphql-mesh/types';
 
-export interface DisposableLayer2CacheConfiguration extends Layer2CacheConfiguration {
-  dispose(): Promise<void>;
-}
-
 export interface PersistedDocumentsCacheOptions {
   ttlSeconds?: number;
   notFoundTtlSeconds?: number;
@@ -59,7 +55,7 @@ export function createPersistedDocumentsCache(
   options: PersistedDocumentsCacheOptions,
   kvCache: KeyValueCache<string>,
   logger: Logger,
-): DisposableLayer2CacheConfiguration {
+): Layer2CacheConfiguration {
   const normalizedOptions = validateCacheOptions(options, logger);
 
   const keyPrefix = normalizedOptions.keyPrefix ?? 'hive:pd:';
@@ -126,9 +122,5 @@ export function createPersistedDocumentsCache(
     cache,
     ttlSeconds: normalizedOptions.ttlSeconds,
     notFoundTtlSeconds: normalizedOptions.notFoundTtlSeconds,
-    async dispose() {
-      // The gateway handles disposing its cache separately
-      logger.debug('Persisted documents cache adapter disposed');
-    },
   };
 }

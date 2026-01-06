@@ -266,15 +266,7 @@ export function createGatewayRuntime<
       },
     });
 
-    // Add disposal hook for layer2Cache if it exists
-    persistedDocumentsPlugin = layer2Cache
-      ? {
-          ...hiveConsolePlugin,
-          onDispose() {
-            return layer2Cache.dispose();
-          },
-        }
-      : hiveConsolePlugin;
+    persistedDocumentsPlugin = hiveConsolePlugin;
   } else if (
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments
