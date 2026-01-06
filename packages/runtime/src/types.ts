@@ -431,22 +431,9 @@ export interface GatewayGraphOSReportingOptions extends GatewayGraphOSOptions {
 }
 
 /**
- * Layer 2 cache configuration for persisted documents.
- * When configured, documents are cached in an external cache (e.g., Redis) to reduce CDN requests.
+ * Base configuration for Layer 2 cache TTL settings.
  */
-export interface GatewayPersistedDocumentsCacheOptions {
-  /**
-   * Redis connection URL.
-   * @example "redis://localhost:6379"
-   */
-  redis?: {
-    url: string;
-    /**
-     * Key prefix for cached documents.
-     * @default "hive:pd:"
-     */
-    keyPrefix?: string;
-  };
+export interface GatewayPersistedDocumentsCacheTTLOptions {
   /**
    * TTL in seconds for successfully found documents.
    * @default undefined (no expiration)
@@ -459,6 +446,68 @@ export interface GatewayPersistedDocumentsCacheOptions {
    */
   notFoundTtlSeconds?: number;
 }
+
+/**
+ * Layer 2 cache configuration using direct Redis connection.
+ */
+export interface GatewayPersistedDocumentsCacheRedisOptions
+  extends GatewayPersistedDocumentsCacheTTLOptions {
+  type: 'redis';
+  /**
+   * Redis connection URL.
+   * @example "redis://localhost:6379"
+   */
+  url: string;
+  /**
+   * Key prefix for cached documents.
+   * @default "hive:pd:"
+   */
+  keyPrefix?: string;
+}
+
+/**
+ * Layer 2 cache configuration using a custom KeyValueCache instance.
+ * This allows using any cache backend supported by the gateway (Redis, Cloudflare KV, Upstash, etc.).
+ */
+export interface GatewayPersistedDocumentsCacheKeyValueOptions
+  extends GatewayPersistedDocumentsCacheTTLOptions {
+  type: 'keyvalue';
+  /**
+   * A KeyValueCache instance to use for caching persisted documents.
+   */
+  cache: KeyValueCache<string>;
+  /**
+   * Key prefix for cached documents.
+   * @default "hive:pd:"
+   */
+  keyPrefix?: string;
+}
+
+/**
+ * Layer 2 cache configuration for persisted documents.
+ * When configured, documents are cached in an external cache to reduce CDN requests.
+ *
+ * @example Redis configuration:
+ * ```typescript
+ * cache: {
+ *   type: 'redis',
+ *   url: 'redis://localhost:6379',
+ *   ttlSeconds: 3600,
+ * }
+ * ```
+ *
+ * @example KeyValueCache configuration:
+ * ```typescript
+ * cache: {
+ *   type: 'keyvalue',
+ *   cache: myKeyValueCacheInstance,
+ *   ttlSeconds: 3600,
+ * }
+ * ```
+ */
+export type GatewayPersistedDocumentsCacheOptions =
+  | GatewayPersistedDocumentsCacheRedisOptions
+  | GatewayPersistedDocumentsCacheKeyValueOptions;
 
 /**
  * Use Hive's CDN for persisted documents.
@@ -516,7 +565,8 @@ export interface GatewayHivePersistedDocumentsOptions {
    *   endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/<target_id>',
    *   token: '<cdn_access_token>',
    *   cache: {
-   *     redis: { url: 'redis://localhost:6379' },
+   *     type: 'redis',
+   *     url: 'redis://localhost:6379',
    *     ttlSeconds: 3600,
    *     notFoundTtlSeconds: 60,
    *   },
