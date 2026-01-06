@@ -80,6 +80,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
               },
               circuitBreaker: config.persistedDocuments.circuitBreaker,
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
+              // Trick to satisfy the Hive Console plugin types
               layer2Cache,
             },
           }
