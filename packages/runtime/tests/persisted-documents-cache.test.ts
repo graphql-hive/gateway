@@ -47,7 +47,9 @@ function createInMemoryCache(): KeyValueCache<string> & {
       return entry.value;
     },
     async set(key: string, value: string, options?: { ttl?: number | null }) {
-      const expiresAt = options?.ttl ? Date.now() + options.ttl * 1000 : undefined;
+      const expiresAt = options?.ttl
+        ? Date.now() + options.ttl * 1000
+        : undefined;
       store.set(key, { value, expiresAt });
     },
     async delete(key: string) {

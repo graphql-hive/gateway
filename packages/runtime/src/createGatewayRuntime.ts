@@ -83,7 +83,6 @@ import { createLoggerFromLogging } from './createLoggerFromLogging';
 import { createGraphOSFetcher } from './fetchers/graphos';
 import { getProxyExecutor } from './getProxyExecutor';
 import { getReportingPlugin } from './getReportingPlugin';
-import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import {
   handleUnifiedGraphConfig,
   UnifiedGraphSchema,
@@ -93,6 +92,7 @@ import {
   html as landingPageHtml,
   logoSvg,
 } from './landing-page.generated';
+import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
@@ -225,7 +225,8 @@ export function createGatewayRuntime<
         'cacheTtlSeconds',
       config.persistedDocuments.cacheNotFoundTtlSeconds !== undefined &&
         'cacheNotFoundTtlSeconds',
-      config.persistedDocuments.cacheKeyPrefix !== undefined && 'cacheKeyPrefix',
+      config.persistedDocuments.cacheKeyPrefix !== undefined &&
+        'cacheKeyPrefix',
     ].filter(Boolean);
     const hasCacheConfig = specifiedCacheOptions.length > 0;
     if (hasCacheConfig && !configContext.cache) {
@@ -240,7 +241,8 @@ export function createGatewayRuntime<
         ? createPersistedDocumentsCache(
             {
               ttlSeconds: config.persistedDocuments.cacheTtlSeconds,
-              notFoundTtlSeconds: config.persistedDocuments.cacheNotFoundTtlSeconds,
+              notFoundTtlSeconds:
+                config.persistedDocuments.cacheNotFoundTtlSeconds,
               keyPrefix: config.persistedDocuments.cacheKeyPrefix,
             },
             configContext.cache,

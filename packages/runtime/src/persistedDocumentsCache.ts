@@ -5,8 +5,7 @@ import type {
 import type { Logger } from '@graphql-hive/logger';
 import type { KeyValueCache } from '@graphql-mesh/types';
 
-export interface DisposableLayer2CacheConfiguration
-  extends Layer2CacheConfiguration {
+export interface DisposableLayer2CacheConfiguration extends Layer2CacheConfiguration {
   dispose(): Promise<void>;
 }
 
@@ -33,7 +32,10 @@ function validateCacheOptions(
     );
     normalized.ttlSeconds = undefined;
   }
-  if (options.notFoundTtlSeconds !== undefined && options.notFoundTtlSeconds < 0) {
+  if (
+    options.notFoundTtlSeconds !== undefined &&
+    options.notFoundTtlSeconds < 0
+  ) {
     logger.warn(
       'Negative notFoundTtlSeconds (%d) provided for persisted documents cache; treating as no expiration',
       options.notFoundTtlSeconds,
@@ -94,7 +96,11 @@ export function createPersistedDocumentsCache(
     },
     async set(key, value, opts) {
       try {
-        await kvCache.set(keyPrefix + key, value, opts ? { ttl: opts.ttl } : {});
+        await kvCache.set(
+          keyPrefix + key,
+          value,
+          opts ? { ttl: opts.ttl } : {},
+        );
       } catch (error) {
         setErrorCount++;
         const shouldLogWarn = setErrorCount === 1 || setErrorCount % 100 === 0;
