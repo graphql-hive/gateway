@@ -212,6 +212,9 @@ export function createRequest({
 }
 
 function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
+  if (argValue == null) {
+    return argValue;
+  }
   if (isNonNullType(argType)) {
     return projectArgumentValue(argValue, argType.ofType);
   }
