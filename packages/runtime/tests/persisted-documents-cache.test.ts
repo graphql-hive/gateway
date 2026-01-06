@@ -91,7 +91,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
     });
   }
 
-  describe('with KeyValueCache backend', () => {
+  describe('with gateway cache', () => {
     it('populates L2 cache and shares across gateway instances', async () => {
       const cdnRequestCount = vi.fn();
       const sharedCache = createInMemoryCache();
@@ -119,15 +119,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -144,15 +141,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -189,15 +183,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            notFoundTtlSeconds: 60,
-          },
+          cacheNotFoundTtlSeconds: 60,
         },
         logging: isDebug(),
       });
@@ -219,15 +210,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            notFoundTtlSeconds: 60,
-          },
+          cacheNotFoundTtlSeconds: 60,
         },
         logging: isDebug(),
       });
@@ -243,6 +231,144 @@ describe('Persisted Documents Layer 2 Cache', () => {
 
       // Negative cache working: CDN called once. Not working: CDN called twice.
       expect(cdnRequestCount).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables negative caching when cacheNotFoundTtlSeconds is 0', async () => {
+      const cdnRequestCount = vi.fn();
+      const sharedCache = createInMemoryCache();
+      const notFoundDocumentId = 'nonexistent~1.0.0~xyz789';
+
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          if (req.url.includes('/apps/nonexistent/')) {
+            cdnRequestCount();
+            return new Response('Not Found', { status: 404 });
+          }
+          return new Response('OK');
+        }),
+      );
+
+      await using upstreamServer = await createDisposableServer(
+        createUpstreamServer(),
+      );
+
+      // First gateway with negative caching disabled
+      await using gateway1 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        cache: sharedCache,
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheNotFoundTtlSeconds: 0, // Explicitly disable negative caching
+        },
+        logging: isDebug(),
+      });
+
+      await gateway1.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: notFoundDocumentId }),
+      });
+      expect(cdnRequestCount).toHaveBeenCalledTimes(1);
+
+      // Second gateway instance should hit CDN again since negative caching is disabled
+      await using gateway2 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        cache: sharedCache,
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheNotFoundTtlSeconds: 0,
+        },
+        logging: isDebug(),
+      });
+
+      await gateway2.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: notFoundDocumentId }),
+      });
+
+      // Negative caching disabled: CDN called twice. Enabled: CDN called once.
+      expect(cdnRequestCount).toHaveBeenCalledTimes(2);
+    });
+
+    it('respects not-found TTL and re-fetches after expiration', async () => {
+      const cdnRequestCount = vi.fn();
+      const sharedCache = createInMemoryCache();
+      const notFoundDocumentId = 'nonexistent~1.0.0~xyz789';
+      const shortNotFoundTtl = 1; // 1 second TTL for faster test
+
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          if (req.url.includes('/apps/nonexistent/')) {
+            cdnRequestCount();
+            return new Response('Not Found', { status: 404 });
+          }
+          return new Response('OK');
+        }),
+      );
+
+      await using upstreamServer = await createDisposableServer(
+        createUpstreamServer(),
+      );
+
+      // First gateway caches the not-found result
+      await using gateway1 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        cache: sharedCache,
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheNotFoundTtlSeconds: shortNotFoundTtl,
+        },
+        logging: isDebug(),
+      });
+
+      await gateway1.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: notFoundDocumentId }),
+      });
+      expect(cdnRequestCount).toHaveBeenCalledTimes(1);
+
+      await waitForCachePopulated(sharedCache);
+
+      // Wait for not-found TTL to expire
+      await setTimeout((shortNotFoundTtl + 0.5) * 1000);
+
+      // Second gateway after TTL expiration should re-fetch from CDN
+      await using gateway2 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        cache: sharedCache,
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheNotFoundTtlSeconds: shortNotFoundTtl,
+        },
+        logging: isDebug(),
+      });
+
+      await gateway2.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: notFoundDocumentId }),
+      });
+
+      // TTL expired: CDN called twice. TTL not working: CDN called once.
+      expect(cdnRequestCount).toHaveBeenCalledTimes(2);
     });
 
     it('uses default key prefix (hive:pd:) when not specified', async () => {
@@ -266,15 +392,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -311,16 +434,13 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache,
-            keyPrefix: customPrefix,
-            ttlSeconds: 3600,
-          },
+          cacheKeyPrefix: customPrefix,
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -359,15 +479,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer1.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -394,15 +511,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer2.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -449,15 +563,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: failingCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: failingCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -492,15 +603,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: shortTtlSeconds,
-          },
+          cacheTtlSeconds: shortTtlSeconds,
         },
         logging: isDebug(),
       });
@@ -520,15 +628,12 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         persistedDocuments: {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: shortTtlSeconds,
-          },
+          cacheTtlSeconds: shortTtlSeconds,
         },
         logging: isDebug(),
       });
@@ -538,6 +643,72 @@ describe('Persisted Documents Layer 2 Cache', () => {
       });
 
       // TTL expired: CDN called twice. TTL not working: CDN called once.
+      expect(cdnRequestCount).toHaveBeenCalledTimes(2);
+    });
+
+    it('gracefully falls back to CDN when cache options are provided but no gateway cache exists', async () => {
+      const cdnRequestCount = vi.fn();
+
+      await using cdnServer = await createDisposableServer(
+        createServerAdapter((req) => {
+          if (req.url.endsWith('/apps/graphql-app/1.0.0/abc123')) {
+            cdnRequestCount();
+            const hiveCdnKey = req.headers.get('x-hive-cdn-key');
+            if (hiveCdnKey !== token) {
+              return new Response('Unauthorized', { status: 401 });
+            }
+            return new Response(documentContent);
+          }
+          return new Response('Not Found', { status: 404 });
+        }),
+      );
+
+      await using upstreamServer = await createDisposableServer(
+        createUpstreamServer(),
+      );
+
+      // First gateway instance WITHOUT gateway-level cache but WITH cache options
+      // This should log a warning and fall back to CDN-only mode (no L2 cache)
+      await using gateway1 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        // No cache configured cache options will be ignored with a warning
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheTtlSeconds: 3600, // Cache option provided but no gateway cache
+        },
+        logging: isDebug(),
+      });
+
+      // Request from first gateway should hit CDN
+      await expect(executeFetch(gateway1, { documentId })).resolves.toEqual({
+        data: { foo: 'bar' },
+      });
+      expect(cdnRequestCount).toHaveBeenCalledTimes(1);
+
+      // Second gateway instance (fresh L1 cache) should also hit CDN
+      // since there's no L2 cache to share between instances
+      await using gateway2 = createGatewayRuntime({
+        proxy: {
+          endpoint: `${upstreamServer.url}/graphql`,
+        },
+        // No cache configured
+        persistedDocuments: {
+          type: 'hive',
+          endpoint: cdnServer.url,
+          token,
+          cacheTtlSeconds: 3600,
+        },
+        logging: isDebug(),
+      });
+
+      await expect(executeFetch(gateway2, { documentId })).resolves.toEqual({
+        data: { foo: 'bar' },
+      });
+      // No L2 cache: CDN called twice. With L2 cache: CDN called once.
       expect(cdnRequestCount).toHaveBeenCalledTimes(2);
     });
   });
@@ -567,6 +738,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         reporting: {
           type: 'hive',
           token,
@@ -584,11 +756,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
@@ -603,6 +771,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
         proxy: {
           endpoint: `${upstreamServer.url}/graphql`,
         },
+        cache: sharedCache,
         reporting: {
           type: 'hive',
           token,
@@ -620,11 +789,7 @@ describe('Persisted Documents Layer 2 Cache', () => {
           type: 'hive',
           endpoint: cdnServer.url,
           token,
-          cache: {
-            type: 'keyvalue',
-            cache: sharedCache,
-            ttlSeconds: 3600,
-          },
+          cacheTtlSeconds: 3600,
         },
         logging: isDebug(),
       });
