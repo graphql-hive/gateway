@@ -60,7 +60,6 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
               keyPrefix: persistedDocs.cacheKeyPrefix,
             },
             configContext.cache,
-            configContext.log.child('[persistedDocumentsCache] '),
           )
         : undefined;
 

@@ -246,7 +246,6 @@ export function createGatewayRuntime<
               keyPrefix: config.persistedDocuments.cacheKeyPrefix,
             },
             configContext.cache,
-            configContext.log.child('[persistedDocumentsCache] '),
           )
         : undefined;
 
