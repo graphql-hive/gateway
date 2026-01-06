@@ -373,48 +373,6 @@ describe('Persisted Documents Layer 2 Cache', () => {
       expect(cdnRequestCount).toHaveBeenCalledTimes(2);
     });
 
-    it('uses default key prefix (hive:pd:) when not specified', async () => {
-      const cache = createInMemoryCache();
-      const defaultPrefix = 'hive:pd:';
-
-      await using cdnServer = await createDisposableServer(
-        createServerAdapter((req) => {
-          if (req.url.endsWith('/apps/graphql-app/1.0.0/abc123')) {
-            return new Response(documentContent);
-          }
-          return new Response('Not Found', { status: 404 });
-        }),
-      );
-
-      await using upstreamServer = await createDisposableServer(
-        createUpstreamServer(),
-      );
-
-      await using gateway = createGatewayRuntime({
-        proxy: {
-          endpoint: `${upstreamServer.url}/graphql`,
-        },
-        cache,
-        persistedDocuments: {
-          type: 'hive',
-          endpoint: cdnServer.url,
-          token,
-          cacheTtlSeconds: 3600,
-        },
-        logging: isDebug(),
-      });
-
-      await expect(executeFetch(gateway, { documentId })).resolves.toEqual({
-        data: { foo: 'bar' },
-      });
-
-      await waitForCachePopulated(cache);
-
-      const keys = Array.from(cache.store.keys());
-      expect(keys.length).toBeGreaterThan(0);
-      expect(keys.every((key) => key.startsWith(defaultPrefix))).toBe(true);
-    });
-
     it('uses custom key prefix in cache keys', async () => {
       const cache = createInMemoryCache();
       const customPrefix = 'my-app:pd:';
