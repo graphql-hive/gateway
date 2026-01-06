@@ -422,16 +422,6 @@ let cli = new Command()
     '--hive-persisted-documents-token <token>',
     '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. Requires the "--hive-persisted-documents-endpoint <endpoint>" option',
   )
-  .addOption(
-    new Option(
-      '--hive-persisted-documents-cache-redis-url <url>',
-      '[EXPERIMENTAL] Redis URL for caching persisted documents. Enables shared caching across gateway instances.',
-    ).env('HIVE_PERSISTED_DOCUMENTS_CACHE_REDIS_URL'),
-  )
-  .option(
-    '--hive-persisted-documents-cache-redis-key-prefix <prefix>',
-    '[EXPERIMENTAL] Key prefix for Redis cached persisted documents (default: "hive:pd:")',
-  )
   .option(
     '--hive-persisted-documents-cache-ttl <seconds>',
     '[EXPERIMENTAL] TTL in seconds for cached persisted documents',

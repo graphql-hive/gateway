@@ -42,13 +42,7 @@
     "serve-landing-page": "tsx watch --include scripts/LandingPage.css scripts/serve-landing-page.tsx"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0",
-    "ioredis": "^5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "ioredis": {
-      "optional": true
-    }
+    "graphql": "^15.9.0 || ^16.9.0"
   },
   "dependencies": {
     "@envelop/core": "^5.4.0",
