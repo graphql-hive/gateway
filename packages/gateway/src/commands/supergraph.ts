@@ -292,12 +292,11 @@ export const addCommand: AddCommand = (ctx, cli) =>
         // Build cache config from CLI options if Redis URL is provided
         const cacheConfig = hivePersistedDocumentsCacheRedisUrl
           ? {
-              redis: {
-                url: hivePersistedDocumentsCacheRedisUrl,
-                ...(hivePersistedDocumentsCacheRedisKeyPrefix
-                  ? { keyPrefix: hivePersistedDocumentsCacheRedisKeyPrefix }
-                  : {}),
-              },
+              type: 'redis' as const,
+              url: hivePersistedDocumentsCacheRedisUrl,
+              ...(hivePersistedDocumentsCacheRedisKeyPrefix
+                ? { keyPrefix: hivePersistedDocumentsCacheRedisKeyPrefix }
+                : {}),
               ...(hivePersistedDocumentsCacheTtl != null
                 ? { ttlSeconds: hivePersistedDocumentsCacheTtl }
                 : {}),
