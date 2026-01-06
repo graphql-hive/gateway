@@ -297,7 +297,9 @@ export const addCommand: AddCommand = (ctx, cli) =>
             ? { cacheTtlSeconds: hivePersistedDocumentsCacheTtl }
             : {}),
           ...(hivePersistedDocumentsCacheNotFoundTtl != null
-            ? { cacheNotFoundTtlSeconds: hivePersistedDocumentsCacheNotFoundTtl }
+            ? {
+                cacheNotFoundTtlSeconds: hivePersistedDocumentsCacheNotFoundTtl,
+              }
             : {}),
         };
       }
