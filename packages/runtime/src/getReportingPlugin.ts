@@ -1,5 +1,6 @@
 import { MaybePromise } from '@graphql-tools/utils';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
+import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import useHiveConsole, {
   HiveConsolePluginOptions,
 } from './plugins/useHiveConsole';
@@ -28,6 +29,19 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
         ...(typeof usage === 'object' ? { ...usage } : {}),
       };
     }
+
+    // Create layer2 cache if configured
+    const layer2Cache =
+      config.persistedDocuments &&
+      'type' in config.persistedDocuments &&
+      config.persistedDocuments?.type === 'hive' &&
+      config.persistedDocuments.cache
+        ? createPersistedDocumentsCache(
+            config.persistedDocuments.cache,
+            configContext.log.child('[persistedDocumentsCache] '),
+          )
+        : undefined;
+
     return useHiveConsole({
       log: configContext.log.child('[useHiveConsole] '),
       fetch: configContext.fetch,
@@ -44,8 +58,8 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
                 accessToken: config.persistedDocuments.token,
               },
               circuitBreaker: config.persistedDocuments.circuitBreaker,
-              // Trick to satisfy the Hive Console plugin types
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
+              layer2Cache,
             },
           }
         : {}),

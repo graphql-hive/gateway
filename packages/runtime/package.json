@@ -49,7 +49,7 @@
     "@envelop/disable-introspection": "^9.0.0",
     "@envelop/generic-auth": "^11.0.0",
     "@envelop/instrumentation": "^1.0.0",
-    "@graphql-hive/core": "^0.18.0",
+    "@graphql-hive/core": "0.19.0-alpha-20260106114651-8f050d94d14d32b1ae8f471544cdc5cd38694cb4",
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
