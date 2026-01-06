@@ -424,6 +424,26 @@ let cli = new Command()
   )
   .addOption(
     new Option(
+      '--hive-persisted-documents-cache-redis-url <url>',
+      '[EXPERIMENTAL] Redis URL for caching persisted documents. Enables shared caching across gateway instances.',
+    ).env('HIVE_PERSISTED_DOCUMENTS_CACHE_REDIS_URL'),
+  )
+  .option(
+    '--hive-persisted-documents-cache-redis-key-prefix <prefix>',
+    '[EXPERIMENTAL] Key prefix for Redis cached persisted documents (default: "hive:pd:")',
+  )
+  .option(
+    '--hive-persisted-documents-cache-ttl <seconds>',
+    '[EXPERIMENTAL] TTL in seconds for cached persisted documents',
+    parseInt,
+  )
+  .option(
+    '--hive-persisted-documents-cache-not-found-ttl <seconds>',
+    '[EXPERIMENTAL] TTL in seconds for negative cache entries (default: 60)',
+    parseInt,
+  )
+  .addOption(
+    new Option(
       '--hive-cdn-endpoint <endpoint>',
       'Hive CDN endpoint for fetching the schema',
     ).env('HIVE_CDN_ENDPOINT'),
