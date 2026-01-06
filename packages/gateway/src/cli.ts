@@ -435,12 +435,28 @@ let cli = new Command()
   .option(
     '--hive-persisted-documents-cache-ttl <seconds>',
     '[EXPERIMENTAL] TTL in seconds for cached persisted documents',
-    parseInt,
+    (v) => {
+      const ttl = parseInt(v);
+      if (isNaN(ttl) || ttl < 0) {
+        throw new InvalidArgumentError(
+          'TTL must be a non-negative number of seconds.',
+        );
+      }
+      return ttl;
+    },
   )
   .option(
     '--hive-persisted-documents-cache-not-found-ttl <seconds>',
     '[EXPERIMENTAL] TTL in seconds for negative cache entries (default: 60)',
-    parseInt,
+    (v) => {
+      const ttl = parseInt(v);
+      if (isNaN(ttl) || ttl < 0) {
+        throw new InvalidArgumentError(
+          'TTL must be a non-negative number of seconds.',
+        );
+      }
+      return ttl;
+    },
   )
   .addOption(
     new Option(
