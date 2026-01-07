@@ -4141,7 +4141,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.18.0, @graphql-hive/core@npm:^0.18.0":
+"@graphql-hive/core@npm:0.19.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf":
+  version: 0.19.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf
+  resolution: "@graphql-hive/core@npm:0.19.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.0.9"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^8.0.2"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/542523c6b39be4319c20698bd8bf4ebfa0f98ac5d9cf2b1fb25638596ff100e09dbb868f7da468c9e33d63222d79257bcef5da57415b90d098b312a5f66c701e
+  languageName: node
+  linkType: hard
+
+"@graphql-hive/core@npm:^0.18.0":
   version: 0.18.0
   resolution: "@graphql-hive/core@npm:0.18.0"
   dependencies:
@@ -4169,11 +4188,11 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.18.0"
+    "@graphql-hive/core": "npm:0.19.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
-    "@graphql-hive/yoga": "npm:^0.46.0"
+    "@graphql-hive/yoga": "npm:0.47.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
     "@graphql-mesh/fusion-composition": "npm:^0.8.20"
     "@graphql-mesh/fusion-runtime": "workspace:^"
@@ -4540,17 +4559,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/yoga@npm:^0.46.0":
-  version: 0.46.0
-  resolution: "@graphql-hive/yoga@npm:0.46.0"
+"@graphql-hive/yoga@npm:0.47.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf":
+  version: 0.47.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf
+  resolution: "@graphql-hive/yoga@npm:0.47.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf"
   dependencies:
-    "@graphql-hive/core": "npm:0.18.0"
+    "@graphql-hive/core": "npm:0.19.0-alpha-20260106170908-40f0016ba208f2349192822a7255792fd1c61aaf"
     "@graphql-hive/logger": "npm:^1.0.9"
     "@graphql-yoga/plugin-persisted-operations": "npm:^3.9.0"
   peerDependencies:
     graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     graphql-yoga: ^5.10.8
-  checksum: 10c0/63befd5195c305c104007ffb70c9ecc532774ff083dfe0d5bbb202da770b67f482a6d569b9448f97d012806633e062687dcb561605aa69e32c80d645a2b28587
+  checksum: 10c0/0d935c936c9613ceba7f2c74524154bbbe5155764af52e024501c0feb33dc73443e372de9cee8e58d7ed10f3d5d20d350ea89d790851c9b1df342dd3a9bc41c8
   languageName: node
   linkType: hard
 

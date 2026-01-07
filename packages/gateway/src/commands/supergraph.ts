@@ -83,6 +83,8 @@ export const addCommand: AddCommand = (ctx, cli) =>
         apolloKey,
         hivePersistedDocumentsEndpoint,
         hivePersistedDocumentsToken,
+        hivePersistedDocumentsCacheTtl,
+        hivePersistedDocumentsCacheNotFoundTtl,
         ...opts
       } = this.optsWithGlobals();
 
@@ -284,11 +286,21 @@ export const addCommand: AddCommand = (ctx, cli) =>
           );
           process.exit(1);
         }
+
         config.persistedDocuments = {
           ...loadedConfig.persistedDocuments,
           type: 'hive',
           endpoint: hivePersistedDocumentsEndpoint,
           token,
+          // Apply cache options from CLI (CLI takes precedence over config)
+          ...(hivePersistedDocumentsCacheTtl != null
+            ? { cacheTtlSeconds: hivePersistedDocumentsCacheTtl }
+            : {}),
+          ...(hivePersistedDocumentsCacheNotFoundTtl != null
+            ? {
+                cacheNotFoundTtlSeconds: hivePersistedDocumentsCacheNotFoundTtl,
+              }
+            : {}),
         };
       }
       if (maskedErrors != null) {

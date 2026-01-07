@@ -422,6 +422,32 @@ let cli = new Command()
     '--hive-persisted-documents-token <token>',
     '[EXPERIMENTAL] Hive persisted documents CDN endpoint token. Requires the "--hive-persisted-documents-endpoint <endpoint>" option',
   )
+  .option(
+    '--hive-persisted-documents-cache-ttl <seconds>',
+    '[EXPERIMENTAL] TTL in seconds for cached persisted documents',
+    (v) => {
+      const ttl = parseInt(v);
+      if (isNaN(ttl) || ttl < 0) {
+        throw new InvalidArgumentError(
+          'TTL must be a non-negative number of seconds.',
+        );
+      }
+      return ttl;
+    },
+  )
+  .option(
+    '--hive-persisted-documents-cache-not-found-ttl <seconds>',
+    '[EXPERIMENTAL] TTL in seconds for negative cache entries (default: 60)',
+    (v) => {
+      const ttl = parseInt(v);
+      if (isNaN(ttl) || ttl < 0) {
+        throw new InvalidArgumentError(
+          'TTL must be a non-negative number of seconds.',
+        );
+      }
+      return ttl;
+    },
+  )
   .addOption(
     new Option(
       '--hive-cdn-endpoint <endpoint>',
