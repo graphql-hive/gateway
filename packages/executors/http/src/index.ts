@@ -93,7 +93,7 @@ export interface HTTPExecutorOptions {
   /**
    * Timeout in milliseconds
    */
-  timeout?: number;
+  timeout?: number | { query?: number, mutation?: number, subscription?: number }
   /**
    * Request Credentials
    * @default 'same-origin'
@@ -277,10 +277,18 @@ export function buildHTTPExecutor(
         return createResultForAbort(signalFromRequest.reason);
       }
       signals.push(signalFromRequest);
-    }
+
     if (options?.timeout) {
-      signals.push(AbortSignal.timeout(options.timeout));
+      if (typeof options?.timeout === 'number') {
+        signals.push(AbortSignal.timeout(options.timeout));
+      } else {
+        const timeout = options.timeout[operationType];
+        if (timeout){
+          signals.push(AbortSignal.timeout(timeout));
+        }
+      }
     }
+
     if (subscriptionCtrl) {
       signals.push(subscriptionCtrl.signal);
     }
