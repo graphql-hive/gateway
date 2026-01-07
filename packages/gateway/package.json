@@ -120,7 +120,7 @@
     "@graphql-tools/code-file-loader": "^8.1.26",
     "@graphql-tools/graphql-file-loader": "^8.1.6",
     "@graphql-tools/load": "^8.1.6",
-    "@graphql-tools/utils": "^10.10.3",
+    "@graphql-tools/utils": "^11.0.0",
     "@graphql-yoga/render-graphiql": "^5.16.2",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.208.0",
