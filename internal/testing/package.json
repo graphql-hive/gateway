@@ -13,7 +13,7 @@
   "devDependencies": {
     "@graphql-hive/pubsub": "workspace:*",
     "@graphql-mesh/types": "^0.104.16",
-    "@graphql-tools/utils": "^10.10.3",
+    "@graphql-tools/utils": "^11.0.0",
     "@types/node": "^25.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.13",
