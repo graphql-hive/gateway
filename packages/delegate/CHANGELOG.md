@@ -1,5 +1,64 @@
 # @graphql-tools/delegate
 
+## 12.0.3
+### Patch Changes
+
+
+
+- [#1835](https://github.com/graphql-hive/gateway/pull/1835) [`dcd8f0e`](https://github.com/graphql-hive/gateway/commit/dcd8f0e93fd220cb99f79cadea759ea49bc15308) Thanks [@ardatan](https://github.com/ardatan)! - Delegate variable values correctly;
+  
+  When delegating requests with variables that include nested arrays, ensure that null values are preserved and passed correctly to the subschema. This fix addresses issues where null values in nested arrays were not handled properly during delegation.
+  
+  Let's say we have the following schema;
+  
+  ```ts
+  makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+          type Query {
+              test(input: InputType!): [String!]
+          }
+          input InputType {
+              value: [String!]
+          }
+      `,
+      resolvers: {
+          Query: {
+              test: (_, args) => {
+                  // Returns the incoming variable value
+                  return args.input.value;
+              },
+          },
+      }
+  });
+  ```
+  
+  When delegating a query with a variable like:
+  
+  ```json
+  {
+      "query": "query Test($value: [String!]) { test(input: { value: $value } ) }",
+      "variables": { "value": null }
+  }
+  ```
+  
+  And the result was
+  ```json
+  {
+      "data": {
+          "test": []
+      }
+  }
+  ```
+  
+  But with this fix, the result will correctly be:
+  ```json
+  {
+      "data": {
+          "test": null
+      }
+  }
+  ```
+
 ## 12.0.2
 ### Patch Changes
 
