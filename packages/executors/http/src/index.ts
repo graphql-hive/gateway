@@ -279,7 +279,7 @@ export function buildHTTPExecutor(
       signals.push(signalFromRequest);
 
     if (options?.timeout) {
-      const timeout = typeof options?.timeout === 'number' ? options.timeout : options?.timeout(request);
+      const timeout = typeof options.timeout === 'number' ? options.timeout : options.timeout(request);
       if (timeout) {
         signals.push(AbortSignal.timeout(timeout));
       }
