@@ -13,7 +13,7 @@ import {
 } from '@whatwg-node/server';
 import { GraphQLError, parse } from 'graphql';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { buildHTTPExecutor } from '../src/index.js';
 
 describe('buildHTTPExecutor', () => {
