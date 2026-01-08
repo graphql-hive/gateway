@@ -1,5 +1,23 @@
 # @graphql-hive/gateway
 
+## 2.2.2
+### Patch Changes
+
+
+
+- [#1842](https://github.com/graphql-hive/gateway/pull/1842) [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^11.0.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/11.0.0) (from `^10.10.3`, in `dependencies`)
+- Updated dependencies [[`b1a4f60`](https://github.com/graphql-hive/gateway/commit/b1a4f60f1e31d3dc8c7afd816bd117eafb0c217f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`b1a4f60`](https://github.com/graphql-hive/gateway/commit/b1a4f60f1e31d3dc8c7afd816bd117eafb0c217f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f)]:
+  - @graphql-hive/gateway-runtime@2.5.2
+  - @graphql-hive/plugin-opentelemetry@1.3.2
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/plugin-prometheus@2.1.12
+  - @graphql-mesh/transport-http@1.0.13
+  - @graphql-mesh/transport-http-callback@1.0.13
+  - @graphql-mesh/transport-ws@2.0.13
+  - @graphql-hive/plugin-aws-sigv4@2.0.22
+
 ## 2.2.1
 ### Patch Changes
 
