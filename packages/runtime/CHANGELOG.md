@@ -1,5 +1,30 @@
 # @graphql-hive/gateway-runtime
 
+## 2.5.2
+### Patch Changes
+
+
+
+- [#1837](https://github.com/graphql-hive/gateway/pull/1837) [`b1a4f60`](https://github.com/graphql-hive/gateway/commit/b1a4f60f1e31d3dc8c7afd816bd117eafb0c217f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.19.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.19.0) (from `^0.18.0`, in `dependencies`)
+
+
+- [#1842](https://github.com/graphql-hive/gateway/pull/1842) [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-tools/utils@^11.0.0` ↗︎](https://www.npmjs.com/package/@graphql-tools/utils/v/11.0.0) (from `^10.10.3`, in `dependencies`)
+- Updated dependencies [[`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`93aa767`](https://github.com/graphql-hive/gateway/commit/93aa76755afc93085280646fb7cb14e6d02b4a7f), [`9f29d58`](https://github.com/graphql-hive/gateway/commit/9f29d587946383482ad55924fe49b9e7804f48a3)]:
+  - @graphql-mesh/fusion-runtime@1.6.4
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/transport-common@1.0.13
+  - @graphql-tools/batch-delegate@10.0.10
+  - @graphql-tools/delegate@12.0.4
+  - @graphql-tools/executor-common@1.0.6
+  - @graphql-tools/executor-http@3.1.0
+  - @graphql-tools/federation@4.2.8
+  - @graphql-tools/stitch@10.1.8
+  - @graphql-tools/wrap@11.1.4
+
 ## 2.5.1
 ### Patch Changes
 
