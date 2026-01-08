@@ -402,4 +402,28 @@ describe('buildHTTPExecutor', () => {
     }
     expect(requestCount).toBe(1);
   });
+
+  it('should allow for custom timeout factory function', async () => {
+    let hasAborted = false;
+    await using executor = buildHTTPExecutor({
+      timeout: () => 1,
+      async fetch(_url, init) {
+        await setTimeout(3);
+        hasAborted = init?.signal?.aborted || false;
+        return Response.json({});
+      },
+    });
+
+    const query = parse(/* GraphQL */ `
+      query {
+        doSomething
+      }
+    `);
+
+    await executor({
+      document: query,
+    });
+
+    expect(hasAborted).toBe(true);
+  });
 });

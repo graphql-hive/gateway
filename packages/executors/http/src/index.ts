@@ -93,7 +93,7 @@ export interface HTTPExecutorOptions {
   /**
    * Timeout in milliseconds
    */
-  timeout?: number;
+  timeout?: number | ((request: ExecutionRequest) => number | undefined);
   /**
    * Request Credentials
    * @default 'same-origin'
@@ -278,9 +278,17 @@ export function buildHTTPExecutor(
       }
       signals.push(signalFromRequest);
     }
+
     if (options?.timeout) {
-      signals.push(AbortSignal.timeout(options.timeout));
+      const timeout =
+        typeof options.timeout === 'number'
+          ? options.timeout
+          : options.timeout(request);
+      if (timeout) {
+        signals.push(AbortSignal.timeout(timeout));
+      }
     }
+
     if (subscriptionCtrl) {
       signals.push(subscriptionCtrl.signal);
     }
