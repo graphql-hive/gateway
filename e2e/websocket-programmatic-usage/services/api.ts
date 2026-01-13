@@ -28,7 +28,7 @@ const schema = createSchema({
         subscribe: async function* (_, { from }) {
           for (let i = from; i >= 0; i--) {
             yield { countdown: i };
-            await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for test
+            await new Promise((resolve) => setTimeout(resolve, 10)); // Small delay for test
           }
         },
       },
