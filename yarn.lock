@@ -3537,6 +3537,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/websocket-programmatic-usage@workspace:e2e/websocket-programmatic-usage":
+  version: 0.0.0-use.local
+  resolution: "@e2e/websocket-programmatic-usage@workspace:e2e/websocket-programmatic-usage"
+  dependencies:
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    graphql-ws: "npm:^6.0.6"
+    graphql-yoga: "npm:^5.16.2"
+    ws: "npm:^8.18.3"
+  languageName: unknown
+  linkType: soft
+
 "@emnapi/core@npm:^1.4.3":
   version: 1.4.4
   resolution: "@emnapi/core@npm:1.4.4"

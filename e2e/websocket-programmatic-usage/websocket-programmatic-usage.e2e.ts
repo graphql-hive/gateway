@@ -58,8 +58,9 @@ it('should support WebSocket subscriptions when using gateway programmatically',
 
   let countdownValues: number[] = [];
   for await (const msg of countdownSubscription) {
-    countdownValues.push(msg.data?.countdown as number);
-    if (countdownValues.length >= 4) break; // Should get 3, 2, 1, 0
+    if (msg.data && typeof msg.data['countdown'] === 'number') {
+      countdownValues.push(msg.data['countdown']);
+    }
   }
 
   expect(countdownValues).toEqual([3, 2, 1, 0]);
