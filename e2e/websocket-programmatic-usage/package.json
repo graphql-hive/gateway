@@ -1,0 +1,11 @@
+{
+  "name": "@e2e/websocket-programmatic-usage",
+  "private": true,
+  "dependencies": {
+    "@graphql-mesh/compose-cli": "^1.5.3",
+    "graphql": "^16.12.0",
+    "graphql-ws": "^6.0.6",
+    "graphql-yoga": "^5.16.2",
+    "ws": "^8.18.3"
+  }
+}
