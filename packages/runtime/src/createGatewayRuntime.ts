@@ -305,9 +305,13 @@ export function createGatewayRuntime<
           ? // no endpoint.map just to make ts happy without casting
             [ensureSdl(endpoint[0]), ensureSdl(endpoint[1])]
           : ensureSdl(endpoint),
-        circuitBreaker,
         accessKey: key,
         logger: configContext.log.child('[hiveSchemaFetcher] '),
+        // @ts-expect-error - MeshFetch is not compatible with `typeof fetch`
+        fetch: configContext.fetch,
+        circuitBreaker,
+        name: 'hive-gateway',
+        version: globalThis.__VERSION__,
       });
       schemaFetcher = {
         fetch: function fetchSchemaFromCDN() {

@@ -83,7 +83,7 @@ export default function useHiveConsole<
   const agent = {
     name: 'hive-gateway',
     version: globalThis.__VERSION__,
-    fetch,
+    fetch: options.fetch,
     ...options.agent,
   } as HiveConsolePluginOptions['agent'];
 

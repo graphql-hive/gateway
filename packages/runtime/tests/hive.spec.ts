@@ -14,7 +14,7 @@ import {
   initForExecuteFetchArgs,
   isDebug,
 } from '@internal/testing';
-import { Response } from '@whatwg-node/fetch';
+import { fetch, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import {
   buildClientSchema,
@@ -137,7 +137,7 @@ describe('Hive CDN', () => {
               // @ts-expect-error - Fetch signature is not compatible
               return upstreamServer.fetch(url, opts);
             }
-            return gateway.fetchAPI.Response.error();
+            return fetch(url, opts);
           }),
           {
             onSchemaChange({ schema }) {
