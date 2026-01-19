@@ -14609,7 +14609,6 @@ __metadata:
     ts-node: "npm:10.9.2"
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.53.0"
-    undici: "npm:7.18.2"
     vite: "npm:7.3.1"
     vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:3.2.4"
@@ -21560,13 +21559,6 @@ __metadata:
   version: 7.16.0
   resolution: "undici-types@npm:7.16.0"
   checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
-  languageName: node
-  linkType: hard
-
-"undici@npm:7.14.0":
-  version: 7.14.0
-  resolution: "undici@npm:7.14.0"
-  checksum: 10c0/4beab6a5bfb89add9e90195aee6bc993708afbabad33bff7da791b5334a6e26a591c29938822d2fb8f69ae0ad8d580d64e03247b11157af9f820d5bd9f8f16e7
   languageName: node
   linkType: hard
 
