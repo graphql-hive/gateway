@@ -1,5 +1,28 @@
 # @graphql-hive/gateway-runtime
 
+## 2.5.3
+### Patch Changes
+
+
+
+- [#1856](https://github.com/graphql-hive/gateway/pull/1856) [`c4802be`](https://github.com/graphql-hive/gateway/commit/c4802be46fac65f945a07bf3e9d127b10fc6f119) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.20.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.20.0) (from `^0.19.0`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.47.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.47.0) (from `^0.46.0`, in `dependencies`)
+
+
+- [#1855](https://github.com/graphql-hive/gateway/pull/1855) [`d031026`](https://github.com/graphql-hive/gateway/commit/d031026ec2a0c273801bab3d81d2845f5838f15f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Hive Console usage reporting uses the Hive Gateway fetch
+
+
+
+- [#1855](https://github.com/graphql-hive/gateway/pull/1855) [`d031026`](https://github.com/graphql-hive/gateway/commit/d031026ec2a0c273801bab3d81d2845f5838f15f) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Proxy schema fetcher for Hive Console uses the Hive Gateway fetch and identifies itself when fetching
+
+- Updated dependencies [[`f321cbd`](https://github.com/graphql-hive/gateway/commit/f321cbdf87bc68bbf6770bec963c86e2a35b50bf)]:
+  - @graphql-hive/logger@1.0.10
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/fusion-runtime@1.6.5
+  - @graphql-mesh/transport-common@1.0.14
+
 ## 2.5.2
 ### Patch Changes
 

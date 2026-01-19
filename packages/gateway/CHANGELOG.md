@@ -1,5 +1,33 @@
 # @graphql-hive/gateway
 
+## 2.2.3
+### Patch Changes
+
+
+
+- [#1847](https://github.com/graphql-hive/gateway/pull/1847) [`29b86e4`](https://github.com/graphql-hive/gateway/commit/29b86e4dfe38a217a19d25012f0f2125bc1634bb) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.209.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.209.0) (from `^0.208.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.209.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.209.0) (from `^0.208.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.209.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.209.0) (from `^0.208.0`, in `dependencies`)
+
+
+- [#1858](https://github.com/graphql-hive/gateway/pull/1858) [`34b913d`](https://github.com/graphql-hive/gateway/commit/34b913d99d3719f7063e6570bd1ad180dc3ad9e9) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.210.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.210.0) (from `^0.209.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.210.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.210.0) (from `^0.209.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.210.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.210.0) (from `^0.209.0`, in `dependencies`)
+- Updated dependencies [[`c4802be`](https://github.com/graphql-hive/gateway/commit/c4802be46fac65f945a07bf3e9d127b10fc6f119), [`f321cbd`](https://github.com/graphql-hive/gateway/commit/f321cbdf87bc68bbf6770bec963c86e2a35b50bf), [`29b86e4`](https://github.com/graphql-hive/gateway/commit/29b86e4dfe38a217a19d25012f0f2125bc1634bb), [`c4802be`](https://github.com/graphql-hive/gateway/commit/c4802be46fac65f945a07bf3e9d127b10fc6f119), [`34b913d`](https://github.com/graphql-hive/gateway/commit/34b913d99d3719f7063e6570bd1ad180dc3ad9e9), [`d031026`](https://github.com/graphql-hive/gateway/commit/d031026ec2a0c273801bab3d81d2845f5838f15f), [`d031026`](https://github.com/graphql-hive/gateway/commit/d031026ec2a0c273801bab3d81d2845f5838f15f)]:
+  - @graphql-hive/gateway-runtime@2.5.3
+  - @graphql-hive/logger@1.0.10
+  - @graphql-hive/plugin-opentelemetry@1.3.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.23
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/plugin-prometheus@2.1.13
+  - @graphql-mesh/transport-http@1.0.14
+  - @graphql-mesh/transport-http-callback@1.0.14
+  - @graphql-mesh/transport-ws@2.0.14
+
 ## 2.2.2
 ### Patch Changes
 
