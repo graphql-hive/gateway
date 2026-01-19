@@ -4319,7 +4319,7 @@ __metadata:
     quick-format-unescaped: "npm:^4.0.4"
     winston: "npm:^3.18.3"
   peerDependencies:
-    "@logtape/logtape": ^2.0.0
+    "@logtape/logtape": ^1.2.0 || ^2.0.0
     pino: ^9.13.0 || ^10.0.0
   peerDependenciesMeta:
     "@logtape/logtape":
