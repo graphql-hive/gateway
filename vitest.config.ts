@@ -61,7 +61,6 @@ export default defineConfig({
                   '!**/e2e/event-driven-federated-subscriptions', // has additional typedefs (using @resolveTo)
                   '!**/e2e/federation-batching-plan', // uses stitching plan
                   '!**/e2e/extra-fields', // has additional typedefs
-                  '!**/e2e/federation-rate-limiting', // rate-limits using the executable schema
                   '!**/e2e/federation-mixed', // has transforms
                   '!**/e2e/hoist-and-prefix-transform', // has transforms
                   '!**/e2e/interface-additional-resolvers', // has additional resolvers

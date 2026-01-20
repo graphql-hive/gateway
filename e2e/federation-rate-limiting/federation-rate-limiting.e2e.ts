@@ -34,9 +34,6 @@ it('should rate limit with calmdown', async () => {
 
     // then 6th request should be rate limited
     await expect(execute({ query })).resolves.toEqual({
-      data: {
-        users: null,
-      },
       errors: expect.arrayContaining([
         expect.objectContaining({
           message: 'Rate limit of "Query.users" exceeded for "anonymous"',
@@ -71,9 +68,6 @@ it('should rate limit under pressure', async () => {
     if (i > 0) {
       // then 1st request should still be rate limited because we were spamming
       await expect(execute({ query })).resolves.toEqual({
-        data: {
-          users: null,
-        },
         errors: expect.arrayContaining([
           expect.objectContaining({
             message: 'Rate limit of "Query.users" exceeded for "anonymous"',
@@ -95,9 +89,6 @@ it('should rate limit under pressure', async () => {
 
     // then 6th request should be rate limited
     await expect(execute({ query })).resolves.toEqual({
-      data: {
-        users: null,
-      },
       errors: expect.arrayContaining([
         expect.objectContaining({
           message: 'Rate limit of "Query.users" exceeded for "anonymous"',
