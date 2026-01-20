@@ -1,5 +1,21 @@
 # @graphql-hive/gateway
 
+## 2.3.0
+### Minor Changes
+
+
+
+- [#1871](https://github.com/graphql-hive/gateway/pull/1871) [`d1f04c1`](https://github.com/graphql-hive/gateway/commit/d1f04c1df610e54592f02fdf7212f92fb3357d32) Thanks [@ardatan](https://github.com/ardatan)! - Rate Limit feature is now supported by the Rust Query Planner
+
+
+### Patch Changes
+
+
+
+- [#1871](https://github.com/graphql-hive/gateway/pull/1871) [`d1f04c1`](https://github.com/graphql-hive/gateway/commit/d1f04c1df610e54592f02fdf7212f92fb3357d32) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-rate-limit@^0.106.0` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-rate-limit/v/0.106.0) (from `^0.105.5`, in `dependencies`)
+
 ## 2.2.3
 ### Patch Changes
 
