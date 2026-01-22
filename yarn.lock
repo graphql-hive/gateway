@@ -4150,7 +4150,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.20.2, @graphql-hive/core@npm:^0.20.0":
+"@graphql-hive/core@npm:0.20.2":
   version: 0.20.2
   resolution: "@graphql-hive/core@npm:0.20.2"
   dependencies:
@@ -4169,6 +4169,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-hive/core@npm:0.20.2-alpha-20260122233516-2c10d90bd06afaa36a2676c8d6bc260ff1cf0d7a":
+  version: 0.20.2-alpha-20260122233516-2c10d90bd06afaa36a2676c8d6bc260ff1cf0d7a
+  resolution: "@graphql-hive/core@npm:0.20.2-alpha-20260122233516-2c10d90bd06afaa36a2676c8d6bc260ff1cf0d7a"
+  dependencies:
+    "@graphql-hive/logger": "npm:^1.0.9"
+    "@graphql-hive/signal": "npm:^2.0.0"
+    "@graphql-tools/utils": "npm:^10.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    async-retry: "npm:^1.3.3"
+    events: "npm:^3.3.0"
+    js-md5: "npm:0.8.3"
+    lodash.sortby: "npm:^4.7.0"
+    tiny-lru: "npm:^11.4.7"
+  peerDependencies:
+    graphql: ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 10c0/860823c56b7562310d8c81e339c1c7328f36b6c28744d41ece5c9fb790ed5b35f012015ba6066e0097c364c2929108e050d22b835412fd2efedaaf6510cc4c39
+  languageName: node
+  linkType: hard
+
 "@graphql-hive/gateway-runtime@workspace:*, @graphql-hive/gateway-runtime@workspace:^, @graphql-hive/gateway-runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway-runtime@workspace:packages/runtime"
@@ -4178,7 +4197,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.20.0"
+    "@graphql-hive/core": "npm:0.20.2-alpha-20260122233516-2c10d90bd06afaa36a2676c8d6bc260ff1cf0d7a"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"
@@ -4441,7 +4460,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
-    "@graphql-hive/core": "npm:^0.20.0"
+    "@graphql-hive/core": "npm:0.20.2-alpha-20260122233516-2c10d90bd06afaa36a2676c8d6bc260ff1cf0d7a"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
