@@ -1,5 +1,5 @@
 ---
-'@graphql-hive/gateway-runtime': patch
+'@graphql-hive/plugin-opentelemetry': patch
 ---
 
 dependencies updates: 
