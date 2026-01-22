@@ -474,6 +474,23 @@ export interface GatewayHivePersistedDocumentsOptions {
   allowArbitraryOperations?:
     | boolean
     | ((request: Request) => MaybePromise<boolean>);
+  /**
+   * TTL in seconds for cached persisted documents.
+   * When set (and the gateway cache is configured), enables Layer 2 caching.
+   * Requires a cache backend to be configured via the `cache` option.
+   */
+  cacheTtlSeconds?: number;
+  /**
+   * TTL in seconds for negative cache entries (document not found).
+   * If not set, defaults to 60 seconds (applied by the underlying library).
+   * Set to 0 to disable negative caching.
+   */
+  cacheNotFoundTtlSeconds?: number;
+  /**
+   * Key prefix for cached persisted documents.
+   * @default "hive:pd:"
+   */
+  cacheKeyPrefix?: string;
 }
 
 export interface GatewayConfigBase<TContext extends Record<string, any>> {
