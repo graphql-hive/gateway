@@ -203,20 +203,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/federation-internals@npm:2.12.2":
-  version: 2.12.2
-  resolution: "@apollo/federation-internals@npm:2.12.2"
-  dependencies:
-    "@types/uuid": "npm:^9.0.0"
-    chalk: "npm:^4.1.0"
-    js-levenshtein: "npm:^1.1.6"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/7f1ca6b759c068415707bfcfa54a9eb1d8693bb36e24fa18b0cc5860dcf6de39f5f901945200b4baa5c7141b0113cd2dbcef1eae598d60971c7c480c79d45120
-  languageName: node
-  linkType: hard
-
 "@apollo/federation-internals@npm:2.13.0":
   version: 2.13.0
   resolution: "@apollo/federation-internals@npm:2.13.0"
@@ -411,7 +397,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.13.0":
+"@apollo/subgraph@npm:2.13.0, @apollo/subgraph@npm:^2.11.3":
   version: 2.13.0
   resolution: "@apollo/subgraph@npm:2.13.0"
   dependencies:
@@ -420,18 +406,6 @@ __metadata:
   peerDependencies:
     graphql: ^16.5.0
   checksum: 10c0/3a99fe60acbf403715595cb2ac147908b19f92397e6cd7b8fd2e244f7ae56718c690828944e0fbbe2b671cb4ccde5ce01d8a85d716062bfde6106039fde90062
-  languageName: node
-  linkType: hard
-
-"@apollo/subgraph@npm:^2.11.3":
-  version: 2.12.2
-  resolution: "@apollo/subgraph@npm:2.12.2"
-  dependencies:
-    "@apollo/cache-control-types": "npm:^1.0.2"
-    "@apollo/federation-internals": "npm:2.12.2"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/8865ea8655c8e5db2f5329dc41293a068945a9d2508bf2deedefb37582ec281e17a8210c520bbc13b74b9694b8af12f1b91c77b29d285b58b2576b7c9daead35
   languageName: node
   linkType: hard
 
