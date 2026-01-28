@@ -44,7 +44,7 @@ RUN set -eux; \
     echo "Error: Could not determine architecture." >&2; \
     exit 1; \
   fi; \
-  openssl_version="3.5.4-1+deb13u2"; \
+  openssl_version="3.5.4-1~deb13u2"; \
   for pkg in openssl libssl3t64 openssl-provider-legacy; do \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
