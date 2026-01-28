@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 2.3.1
+### Patch Changes
+
+
+
+- [#1880](https://github.com/graphql-hive/gateway/pull/1880) [`0697fc4`](https://github.com/graphql-hive/gateway/commit/0697fc4f0ea7a72130e9f8918480b015cad506ff) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.211.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.211.0) (from `^0.210.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.211.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.211.0) (from `^0.210.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.211.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.211.0) (from `^0.210.0`, in `dependencies`)
+
+
+- [#1891](https://github.com/graphql-hive/gateway/pull/1891) [`86ba497`](https://github.com/graphql-hive/gateway/commit/86ba497484e228bc11b6072da264cdb953374f10) Thanks [@ardatan](https://github.com/ardatan)! - Bump OpenSSL version from 3.5.1-1+deb13u1 to 3.5.4-1~deb13u2 in the Docker image
+
+- Updated dependencies [[`0697fc4`](https://github.com/graphql-hive/gateway/commit/0697fc4f0ea7a72130e9f8918480b015cad506ff)]:
+  - @graphql-hive/plugin-opentelemetry@1.3.4
+
 ## 2.3.0
 ### Minor Changes
 
