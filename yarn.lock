@@ -8104,9 +8104,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-darwin-aarch64@npm:1.3.7"
+"@oven/bun-darwin-aarch64@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-darwin-aarch64@npm:1.3.8"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
@@ -8118,9 +8118,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64-baseline@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.3.7"
+"@oven/bun-darwin-x64-baseline@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-darwin-x64-baseline@npm:1.3.8"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -8132,9 +8132,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-darwin-x64@npm:1.3.7"
+"@oven/bun-darwin-x64@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-darwin-x64@npm:1.3.8"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -8146,9 +8146,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64-musl@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-aarch64-musl@npm:1.3.7"
+"@oven/bun-linux-aarch64-musl@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-aarch64-musl@npm:1.3.8"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
@@ -8160,9 +8160,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-aarch64@npm:1.3.7"
+"@oven/bun-linux-aarch64@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-aarch64@npm:1.3.8"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
@@ -8174,9 +8174,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-baseline@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.3.7"
+"@oven/bun-linux-x64-baseline@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-x64-baseline@npm:1.3.8"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8188,9 +8188,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl-baseline@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.3.7"
+"@oven/bun-linux-x64-musl-baseline@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.3.8"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8202,9 +8202,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-x64-musl@npm:1.3.7"
+"@oven/bun-linux-x64-musl@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-x64-musl@npm:1.3.8"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8216,9 +8216,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-linux-x64@npm:1.3.7"
+"@oven/bun-linux-x64@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-linux-x64@npm:1.3.8"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8230,9 +8230,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64-baseline@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.3.7"
+"@oven/bun-windows-x64-baseline@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-windows-x64-baseline@npm:1.3.8"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -8244,9 +8244,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64@npm:1.3.7":
-  version: 1.3.7
-  resolution: "@oven/bun-windows-x64@npm:1.3.7"
+"@oven/bun-windows-x64@npm:1.3.8":
+  version: 1.3.8
+  resolution: "@oven/bun-windows-x64@npm:1.3.8"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -12242,21 +12242,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun@npm:1.3.7":
-  version: 1.3.7
-  resolution: "bun@npm:1.3.7"
+"bun@npm:1.3.8":
+  version: 1.3.8
+  resolution: "bun@npm:1.3.8"
   dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.3.7"
-    "@oven/bun-darwin-x64": "npm:1.3.7"
-    "@oven/bun-darwin-x64-baseline": "npm:1.3.7"
-    "@oven/bun-linux-aarch64": "npm:1.3.7"
-    "@oven/bun-linux-aarch64-musl": "npm:1.3.7"
-    "@oven/bun-linux-x64": "npm:1.3.7"
-    "@oven/bun-linux-x64-baseline": "npm:1.3.7"
-    "@oven/bun-linux-x64-musl": "npm:1.3.7"
-    "@oven/bun-linux-x64-musl-baseline": "npm:1.3.7"
-    "@oven/bun-windows-x64": "npm:1.3.7"
-    "@oven/bun-windows-x64-baseline": "npm:1.3.7"
+    "@oven/bun-darwin-aarch64": "npm:1.3.8"
+    "@oven/bun-darwin-x64": "npm:1.3.8"
+    "@oven/bun-darwin-x64-baseline": "npm:1.3.8"
+    "@oven/bun-linux-aarch64": "npm:1.3.8"
+    "@oven/bun-linux-aarch64-musl": "npm:1.3.8"
+    "@oven/bun-linux-x64": "npm:1.3.8"
+    "@oven/bun-linux-x64-baseline": "npm:1.3.8"
+    "@oven/bun-linux-x64-musl": "npm:1.3.8"
+    "@oven/bun-linux-x64-musl-baseline": "npm:1.3.8"
+    "@oven/bun-windows-x64": "npm:1.3.8"
+    "@oven/bun-windows-x64-baseline": "npm:1.3.8"
   dependenciesMeta:
     "@oven/bun-darwin-aarch64":
       optional: true
@@ -12283,7 +12283,7 @@ __metadata:
   bin:
     bun: bin/bun.exe
     bunx: bin/bunx.exe
-  checksum: 10c0/ee46dc3130b0af22eb37d4520489cb87a3a3f650fe212b878b7f10b33f8ebd1185706ff3bba5e6f50c426b837a3a576b1b24c820cfb0313eddda29b45e23860e
+  checksum: 10c0/687c13f58322e54121e839447f2f8732a0046b83cfd90cfbc8230d1265144f5f878a2241410677e8b0baa3f0f3ccd58ed3329faf2d0b52bde223236eec3a96fc
   conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
   languageName: node
   linkType: hard
@@ -14910,7 +14910,7 @@ __metadata:
     "@yarnpkg/cli": "npm:4.12.0"
     "@yarnpkg/core": "npm:4.5.0"
     "@yarnpkg/plugin-pack": "npm:4.0.3"
-    bun: "npm:1.3.7"
+    bun: "npm:1.3.8"
     cross-env: "npm:10.1.0"
     eslint: "npm:9.39.2"
     eslint-plugin-import: "npm:2.32.0"
