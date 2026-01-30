@@ -27,7 +27,6 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
-import { SelectionSetBuilder } from './selectionSetBuilder.js';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(
@@ -169,7 +168,7 @@ function visitSelectionSet(
   infoSchema: GraphQLSchema,
   visitedSelections: WeakSet<SelectionNode>,
 ): SelectionSetNode {
-  const newSelections = new SelectionSetBuilder();
+  const newSelections = new Set<SelectionNode>();
   const maybeType = typeInfo.getParentType();
   if (maybeType != null) {
     const parentType: GraphQLNamedType = getNamedType(maybeType);
@@ -178,7 +177,7 @@ function visitSelectionSet(
     const fieldNodes = fieldNodesByType[parentTypeName];
     if (fieldNodes) {
       for (const fieldNode of fieldNodes) {
-        newSelections.add(fieldNode);
+        addSelectionNodeToSelections(newSelections,fieldNode);
       }
     }
 
@@ -198,7 +197,7 @@ function visitSelectionSet(
             );
             const extraPossibleTypes = getExtraPossibleTypes(typeName);
             for (const extraPossibleTypeName of extraPossibleTypes) {
-              newSelections.add({
+              addSelectionNodeToSelections(newSelections, {
                 ...selection,
                 typeCondition: {
                   kind: Kind.NAMED_TYPE,
@@ -220,13 +219,13 @@ function visitSelectionSet(
                   const fieldName = subSelection.name.value;
                   const field = fieldMap[fieldName];
                   if (!field) {
-                    newSelections.add(subSelection);
+                    addSelectionNodeToSelections(newSelections,subSelection);
                   }
                 }
               }
             } else if (!typeInSubschema) {
               for (const subSelection of selection.selectionSet.selections) {
-                newSelections.add(subSelection);
+                addSelectionNodeToSelections(newSelections,subSelection);
               }
             }
           }
@@ -239,10 +238,10 @@ function visitSelectionSet(
               fieldNodesByField[parentTypeName]?.['__typename'];
             if (fieldNodesForTypeName) {
               for (const fieldNode of fieldNodesForTypeName) {
-                newSelections.add(fieldNode);
+                addSelectionNodeToSelections(newSelections,fieldNode);
               }
             }
-            newSelections.add(selection);
+            addSelectionNodeToSelections(newSelections,selection);
             continue;
           }
 
@@ -257,7 +256,7 @@ function visitSelectionSet(
                 maybePossibleType,
               )
             ) {
-              newSelections.add(
+              addSelectionNodeToSelections(newSelections,
                 generateInlineFragment(
                   possibleTypeName,
                   selection.selectionSet,
@@ -267,16 +266,16 @@ function visitSelectionSet(
           }
 
           if (possibleTypes.length === 0) {
-            newSelections.add(selection);
+            addSelectionNodeToSelections(newSelections,selection);
           }
         } else {
-          newSelections.add(selection);
+          addSelectionNodeToSelections(newSelections,selection);
         }
       } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
         const fragmentName = selection.name.value;
 
         if (!fragmentReplacements[fragmentName]) {
-          newSelections.add(selection);
+          addSelectionNodeToSelections(newSelections,selection);
           continue;
         }
 
@@ -288,7 +287,7 @@ function visitSelectionSet(
             maybeReplacementType != null &&
             implementsAbstractType(transformedSchema, parentType, maybeType)
           ) {
-            newSelections.add({
+            addSelectionNodeToSelections(newSelections,{
               kind: Kind.FRAGMENT_SPREAD,
               name: {
                 kind: Kind.NAME,
@@ -300,13 +299,19 @@ function visitSelectionSet(
       } else {
         const fieldName = selection.name.value;
 
+        if (interfaceExtensions?.[fieldName]) {
+          interfaceExtensionFields.push(selection);
+        } else {
+          addSelectionNodeToSelections(newSelections,selection);
+        }
+
         // TODO: Optimization to prevent extra fields to the subgraph
         if (isAbstractType(parentType)) {
           const fieldNodesForTypeName =
             fieldNodesByField[parentTypeName]?.['__typename'];
           if (fieldNodesForTypeName) {
             for (const fieldNode of fieldNodesForTypeName) {
-              newSelections.add(fieldNode);
+              addSelectionNodeToSelections(newSelections,fieldNode);
             }
           }
         }
@@ -327,22 +332,16 @@ function visitSelectionSet(
             const selectionSet = selectionSetFn(selection);
             if (selectionSet != null) {
               for (const selection of selectionSet.selections) {
-                newSelections.add(selection);
+                addSelectionNodeToSelections(newSelections,selection);
               }
             }
           }
-        }
-
-        if (interfaceExtensions?.[fieldName]) {
-          interfaceExtensionFields.push(selection);
-        } else {
-          newSelections.add(selection);
         }
       }
     }
 
     if (reversePossibleTypesMap[parentType.name]) {
-      newSelections.add({
+      addSelectionNodeToSelections(newSelections,{
         kind: Kind.FIELD,
         name: {
           kind: Kind.NAME,
@@ -355,7 +354,7 @@ function visitSelectionSet(
       const possibleTypes = possibleTypesMap[parentType.name];
       if (possibleTypes != null) {
         for (const possibleType of possibleTypes) {
-          newSelections.add(
+          addSelectionNodeToSelections(newSelections,
             generateInlineFragment(possibleType, {
               kind: Kind.SELECTION_SET,
               selections: interfaceExtensionFields,
@@ -367,18 +366,92 @@ function visitSelectionSet(
 
     return {
       ...node,
-      ...newSelections.build(),
+      selections: Array.from(newSelections),
     };
   }
 
   return node;
 }
 
+function isFieldNodeSatisfiedBySelections(
+  fieldNode: FieldNode,
+  existing: Readonly<Set<SelectionNode>>,
+) {
+  for (const existingSelection of existing) {
+    if (
+      existingSelection.kind === Kind.FIELD &&
+      existingSelection.name.value === fieldNode.name.value &&
+      existingSelection.alias?.value === fieldNode.alias?.value
+    ) {
+      if (fieldNode.selectionSet && !existingSelection.selectionSet) {
+        return false;
+      }
+      if (fieldNode.selectionSet && existingSelection.selectionSet) {
+        const satisfied = isSelectionSetSatisfied({
+          incoming: fieldNode.selectionSet,
+          existing: existingSelection.selectionSet.selections,
+        });
+        if (!satisfied) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+function isSelectionSetSatisfied({
+  incoming,
+  existing
+}: {
+  incoming: SelectionSetNode,
+  existing: readonly SelectionNode[],
+}) {
+  for (const incomingSelection of incoming.selections) {
+    if (incomingSelection.kind === Kind.FIELD) {
+      const existingField = existing.find((selection) => {
+        return (
+          selection.kind === Kind.FIELD &&
+          selection.name.value === incomingSelection.name.value &&
+          selection.alias?.value === incomingSelection.alias?.value
+        );
+      }) as FieldNode | undefined;
+      if (!existingField) {
+        return false;
+      }
+      if (incomingSelection.selectionSet && !existingField.selectionSet) {
+        return false;
+      }
+      if (incomingSelection.selectionSet && existingField.selectionSet) {
+        const satisfied = isSelectionSetSatisfied({
+          incoming: incomingSelection.selectionSet,
+          existing: existingField.selectionSet.selections,
+        });
+        if (!satisfied) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+function addSelectionNodeToSelections(
+  selections: Set<SelectionNode>,
+  selectionNode: SelectionNode,
+) {
+  if (selectionNode.kind === Kind.FIELD && isFieldNodeSatisfiedBySelections(selectionNode, selections)) {
+    return;
+  }
+  selections.add(selectionNode);
+}
+
 function addDependenciesNestedly(
   fieldNode: FieldNode,
   seenFieldNames: Set<string>,
   fieldNodesByField: Record<string, Array<FieldNode>>,
-  newSelections: SelectionSetBuilder,
+  newSelections: Set<SelectionNode>,
 ) {
   if (seenFieldNames.has(fieldNode.name.value)) {
     return;
@@ -387,7 +460,10 @@ function addDependenciesNestedly(
   const fieldNodes = fieldNodesByField[fieldNode.name.value];
   if (fieldNodes != null) {
     for (const nestedFieldNode of fieldNodes) {
-      newSelections.add(nestedFieldNode);
+      addSelectionNodeToSelections(
+        newSelections,
+        nestedFieldNode,
+      );
       addDependenciesNestedly(
         nestedFieldNode,
         seenFieldNames,
