@@ -27,6 +27,7 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
+import { SelectionSetBuilder } from './selectionSetBuilder.js';
 import { StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(
@@ -168,7 +169,7 @@ function visitSelectionSet(
   infoSchema: GraphQLSchema,
   visitedSelections: WeakSet<SelectionNode>,
 ): SelectionSetNode {
-  const newSelections = new Set<SelectionNode>();
+  const newSelections = new SelectionSetBuilder();
   const maybeType = typeInfo.getParentType();
   if (maybeType != null) {
     const parentType: GraphQLNamedType = getNamedType(maybeType);
@@ -366,7 +367,7 @@ function visitSelectionSet(
 
     return {
       ...node,
-      selections: Array.from(newSelections),
+      ...newSelections.build(),
     };
   }
 
@@ -377,7 +378,7 @@ function addDependenciesNestedly(
   fieldNode: FieldNode,
   seenFieldNames: Set<string>,
   fieldNodesByField: Record<string, Array<FieldNode>>,
-  newSelections: Set<SelectionNode>,
+  newSelections: SelectionSetBuilder,
 ) {
   if (seenFieldNames.has(fieldNode.name.value)) {
     return;
