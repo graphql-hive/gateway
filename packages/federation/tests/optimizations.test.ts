@@ -688,3 +688,208 @@ it('nested recursive requirements', async () => {
     spatial: 1,
   });
 });
+
+it('deduplicates the required fields from @key if they exists in the original query', async () => {
+  const SUBGRAPHA = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Query {
+        _: Boolean
+      }
+      type Book @key(fields: "upc otherUpc shop { id }") {
+        upc: ID!
+        otherUpc: ID!
+        shop: Shop!
+      }
+
+      type Shop @key(fields: "id") {
+        id: ID!
+        name: String!
+        location: Location!
+      }
+
+      type Location {
+        address1: String
+        city: String
+        state: String
+      }
+    `),
+    resolvers: {
+      Book: {
+        __resolveReference(reference: {
+          upc: string;
+          otherUpc: string;
+          shop: { id: string };
+        }) {
+          return {
+            upc: reference.upc,
+            otherUpc: reference.otherUpc,
+            shop: {
+              id: reference.shop.id,
+              name: 'The Great Shop',
+              location: {
+                address1: 'Address 1',
+                city: 'City',
+                state: 'State',
+              },
+            },
+          };
+        },
+      },
+      Shop: {
+        __resolveReference(reference: { id: string }) {
+          return {
+            id: reference.id,
+            name: 'The Great Shop',
+            location: {
+              address1: 'Address 1',
+              city: 'City',
+              state: 'State',
+            },
+          };
+        },
+      },
+    },
+  });
+
+  const SUBGRAPHB = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type Mutation {
+        buyBook(input: BuyBookInput!): BuyBookPayload
+      }
+
+      input BuyBookInput {
+        bookUpc: ID!
+      }
+
+      type BuyBookPayload {
+        book: Book!
+      }
+
+      type Book @key(fields: "upc otherUpc shop { id }") {
+        upc: ID!
+        otherUpc: ID!
+        shop: Shop!
+      }
+
+      type Shop @key(fields: "id") {
+        id: ID!
+      }
+    `),
+    resolvers: {
+      Mutation: {
+        buyBook(_, __) {
+          return {
+            book: {
+              upc: 'order-upc',
+              otherUpc: 'check-upc',
+              shop: {
+                id: 'shop-id',
+              },
+            },
+          };
+        },
+      },
+    },
+  });
+
+  const document = parse(/* GraphQL */ `
+    mutation {
+      buyBook(input: { bookUpc: "test" }) {
+        book {
+          upc
+          otherUpc
+          shop {
+            id
+            name
+            location {
+              address1
+              city
+              state
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const subgraphCalls: {
+    subgraphName: string;
+    query: string;
+  }[] = [];
+
+  const schema = await getStitchedSchemaFromLocalSchemas({
+    localSchemas: {
+      SUBGRAPHA,
+      SUBGRAPHB,
+    },
+    onSubgraphExecute(subgraphName, executionRequest) {
+      subgraphCalls.push({
+        subgraphName,
+        query: print(executionRequest.document),
+      });
+    },
+  });
+
+  const result = await normalizedExecutor({
+    schema,
+    document,
+  });
+
+  expect(result).toEqual({
+    data: {
+      buyBook: {
+        book: {
+          upc: 'order-upc',
+          otherUpc: 'check-upc',
+          shop: {
+            id: 'shop-id',
+            name: 'The Great Shop',
+            location: {
+              address1: 'Address 1',
+              city: 'City',
+              state: 'State',
+            },
+          },
+        },
+      },
+    },
+  });
+
+  expect(subgraphCalls).toMatchInlineSnapshot(`
+    [
+      {
+        "query": "mutation ($input: BuyBookInput!) {
+      buyBook(input: $input) {
+        book {
+          __typename
+          upc
+          otherUpc
+          shop {
+            __typename
+            id
+          }
+        }
+      }
+    }",
+        "subgraphName": "SUBGRAPHB",
+      },
+      {
+        "query": "query ($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        __typename
+        ... on Shop {
+          id
+          name
+          location {
+            address1
+            city
+            state
+          }
+        }
+      }
+    }",
+        "subgraphName": "SUBGRAPHA",
+      },
+    ]
+  `);
+});
