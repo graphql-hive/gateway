@@ -878,8 +878,8 @@ it('deduplicates the required fields from @key if they exists in the original qu
       _entities(representations: $representations) {
         __typename
         ... on Shop {
-          id
           name
+          id
           location {
             address1
             city
