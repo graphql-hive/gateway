@@ -177,7 +177,7 @@ function visitSelectionSet(
     const fieldNodes = fieldNodesByType[parentTypeName];
     if (fieldNodes) {
       for (const fieldNode of fieldNodes) {
-        addSelectionNodeToSelections(newSelections,fieldNode);
+        addSelectionNodeToSelections(newSelections, fieldNode);
       }
     }
 
@@ -219,13 +219,13 @@ function visitSelectionSet(
                   const fieldName = subSelection.name.value;
                   const field = fieldMap[fieldName];
                   if (!field) {
-                    addSelectionNodeToSelections(newSelections,subSelection);
+                    addSelectionNodeToSelections(newSelections, subSelection);
                   }
                 }
               }
             } else if (!typeInSubschema) {
               for (const subSelection of selection.selectionSet.selections) {
-                addSelectionNodeToSelections(newSelections,subSelection);
+                addSelectionNodeToSelections(newSelections, subSelection);
               }
             }
           }
@@ -238,10 +238,10 @@ function visitSelectionSet(
               fieldNodesByField[parentTypeName]?.['__typename'];
             if (fieldNodesForTypeName) {
               for (const fieldNode of fieldNodesForTypeName) {
-                addSelectionNodeToSelections(newSelections,fieldNode);
+                addSelectionNodeToSelections(newSelections, fieldNode);
               }
             }
-            addSelectionNodeToSelections(newSelections,selection);
+            addSelectionNodeToSelections(newSelections, selection);
             continue;
           }
 
@@ -256,7 +256,8 @@ function visitSelectionSet(
                 maybePossibleType,
               )
             ) {
-              addSelectionNodeToSelections(newSelections,
+              addSelectionNodeToSelections(
+                newSelections,
                 generateInlineFragment(
                   possibleTypeName,
                   selection.selectionSet,
@@ -266,16 +267,16 @@ function visitSelectionSet(
           }
 
           if (possibleTypes.length === 0) {
-            addSelectionNodeToSelections(newSelections,selection);
+            addSelectionNodeToSelections(newSelections, selection);
           }
         } else {
-          addSelectionNodeToSelections(newSelections,selection);
+          addSelectionNodeToSelections(newSelections, selection);
         }
       } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
         const fragmentName = selection.name.value;
 
         if (!fragmentReplacements[fragmentName]) {
-          addSelectionNodeToSelections(newSelections,selection);
+          addSelectionNodeToSelections(newSelections, selection);
           continue;
         }
 
@@ -287,7 +288,7 @@ function visitSelectionSet(
             maybeReplacementType != null &&
             implementsAbstractType(transformedSchema, parentType, maybeType)
           ) {
-            addSelectionNodeToSelections(newSelections,{
+            addSelectionNodeToSelections(newSelections, {
               kind: Kind.FRAGMENT_SPREAD,
               name: {
                 kind: Kind.NAME,
@@ -302,7 +303,7 @@ function visitSelectionSet(
         if (interfaceExtensions?.[fieldName]) {
           interfaceExtensionFields.push(selection);
         } else {
-          addSelectionNodeToSelections(newSelections,selection);
+          addSelectionNodeToSelections(newSelections, selection);
         }
 
         // TODO: Optimization to prevent extra fields to the subgraph
@@ -311,7 +312,7 @@ function visitSelectionSet(
             fieldNodesByField[parentTypeName]?.['__typename'];
           if (fieldNodesForTypeName) {
             for (const fieldNode of fieldNodesForTypeName) {
-              addSelectionNodeToSelections(newSelections,fieldNode);
+              addSelectionNodeToSelections(newSelections, fieldNode);
             }
           }
         }
@@ -332,7 +333,7 @@ function visitSelectionSet(
             const selectionSet = selectionSetFn(selection);
             if (selectionSet != null) {
               for (const selection of selectionSet.selections) {
-                addSelectionNodeToSelections(newSelections,selection);
+                addSelectionNodeToSelections(newSelections, selection);
               }
             }
           }
@@ -341,7 +342,7 @@ function visitSelectionSet(
     }
 
     if (reversePossibleTypesMap[parentType.name]) {
-      addSelectionNodeToSelections(newSelections,{
+      addSelectionNodeToSelections(newSelections, {
         kind: Kind.FIELD,
         name: {
           kind: Kind.NAME,
@@ -354,7 +355,8 @@ function visitSelectionSet(
       const possibleTypes = possibleTypesMap[parentType.name];
       if (possibleTypes != null) {
         for (const possibleType of possibleTypes) {
-          addSelectionNodeToSelections(newSelections,
+          addSelectionNodeToSelections(
+            newSelections,
             generateInlineFragment(possibleType, {
               kind: Kind.SELECTION_SET,
               selections: interfaceExtensionFields,
@@ -403,10 +405,10 @@ function isFieldNodeSatisfiedBySelections(
 
 function isSelectionSetSatisfied({
   incoming,
-  existing
+  existing,
 }: {
-  incoming: SelectionSetNode,
-  existing: readonly SelectionNode[],
+  incoming: SelectionSetNode;
+  existing: readonly SelectionNode[];
 }) {
   for (const incomingSelection of incoming.selections) {
     if (incomingSelection.kind === Kind.FIELD) {
@@ -441,7 +443,10 @@ function addSelectionNodeToSelections(
   selections: Set<SelectionNode>,
   selectionNode: SelectionNode,
 ) {
-  if (selectionNode.kind === Kind.FIELD && isFieldNodeSatisfiedBySelections(selectionNode, selections)) {
+  if (
+    selectionNode.kind === Kind.FIELD &&
+    isFieldNodeSatisfiedBySelections(selectionNode, selections)
+  ) {
     return;
   }
   selections.add(selectionNode);
@@ -460,10 +465,7 @@ function addDependenciesNestedly(
   const fieldNodes = fieldNodesByField[fieldNode.name.value];
   if (fieldNodes != null) {
     for (const nestedFieldNode of fieldNodes) {
-      addSelectionNodeToSelections(
-        newSelections,
-        nestedFieldNode,
-      );
+      addSelectionNodeToSelections(newSelections, nestedFieldNode);
       addDependenciesNestedly(
         nestedFieldNode,
         seenFieldNames,
