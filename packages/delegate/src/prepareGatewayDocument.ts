@@ -434,6 +434,8 @@ function isSelectionSetSatisfied({
           return false;
         }
       }
+    } else {
+      return false;
     }
   }
   return true;
