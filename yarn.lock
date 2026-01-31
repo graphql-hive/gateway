@@ -2914,9 +2914,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20251113.0":
-  version: 4.20260129.0
-  resolution: "@cloudflare/workers-types@npm:4.20260129.0"
-  checksum: 10c0/7701bb19f0b705fddf1cca51cc6538a3a6c2d49beaa39a489e4acff8976e97739207d059ca0b0a34810e6671ce8e474fd849ef6d2543bcfa958e0dc6bf54634b
+  version: 4.20260130.0
+  resolution: "@cloudflare/workers-types@npm:4.20260130.0"
+  checksum: 10c0/468e1b4423ea5948fad4cc8cb95b205e64b34f98a52805514228249880352c2d608c70ed6f9b9f5c3bf545a3631f0bdd005b71108d917863c5c3f1cd45f35468
   languageName: node
   linkType: hard
 
@@ -10178,16 +10178,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.0.10
-  resolution: "@types/node@npm:25.0.10"
-  dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10c0/9edc3c812b487c32c76eebac7c87acae1f69515a0bc3f6b545806d513eb9e918c3217bf751dc93da39f60e06bf1b0caa92258ef3a6dd6457124b2e761e54f61f
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.1.0":
+"@types/node@npm:*, @types/node@npm:25.1.0, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.1.0
   resolution: "@types/node@npm:25.1.0"
   dependencies:
