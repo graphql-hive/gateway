@@ -1,5 +1,77 @@
 # @graphql-tools/delegate
 
+## 12.0.5
+### Patch Changes
+
+
+
+- [#1901](https://github.com/graphql-hive/gateway/pull/1901) [`e92c5a9`](https://github.com/graphql-hive/gateway/commit/e92c5a9702a2aea395a4a4e3a482b92f528655e8) Thanks [@ardatan](https://github.com/ardatan)! - Do not add required fields if they are already present in the original selection set.
+  
+  For example in Federation;
+  
+  If you have a subgraph schema like below;
+  
+  ```graphql
+  type Book @key(fields: "upc otherUpc shop { id }") {
+      upc: ID!
+      otherUpc: ID!
+      shop: Shop!
+  }
+  
+  type Shop @key(fields: "id") {
+      id: ID!
+      name: String!
+      location: Location!
+  }
+  ```
+  
+  And when you send a mutation like below;
+  
+  ```graphql
+  mutation {
+      buyBook(input: { bookUpc: "test" }) {
+          book {
+              upc
+              otherUpc
+              shop {
+                  id
+                  name
+                  location {
+                      address1
+                      city
+                      state
+                  }
+              }
+          }
+      }
+  }
+  ```
+  
+  Previously, the gateway would add the required key fields again to the selection set when resolving the type like below;
+  
+  ```diff
+  mutation {
+      buyBook(input: { bookUpc: "test" }) {
+          book {
+              upc
+              otherUpc
+  -           upc
+  -           otherUpc
+  -           shop { id } # from the key fields
+              shop {
+                  id
+                  name
+                  location {
+                      address1
+                      city
+                      state
+                  }
+              }
+          }
+      }
+  }
+  ```
+
 ## 12.0.4
 ### Patch Changes
 
