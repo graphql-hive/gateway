@@ -80,7 +80,7 @@ jobs:
         run: git checkout HEAD~1 -- .
       - name: ${{ needs.snapshot-npm-tag.outputs.value }} release
         id: changesets
-        uses: the-guild-org/changesets-snapshot-action@ofcourse # prerelease
+        uses: the-guild-org/changesets-snapshot-action@12ae5b6781ea75c36ece2f2e3446cee6dc093e99 # v0.0.3
         with:
           tag: ${{ needs.snapshot-npm-tag.outputs.value }}
         env:
