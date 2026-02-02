@@ -45,30 +45,34 @@ it('should not do a fragment spread on a union', () => {
     `),
   });
 
-  expect(queries[0]).toContain(`{
-  fooBar {
-    __typename
-    ... on Foo {
-      id
-      name
-    }
-    ... on Bar {
-      id
-      name
-    }
-  }
-}`);
-  expect(queries[1]).toContain(`{
-  mustFooBar {
-    __typename
-    ... on Foo {
-      id
-      name
-    }
-    ... on Bar {
-      id
-      name
-    }
-  }
-}`);
+  expect(queries[0]).toMatchInlineSnapshot(`
+    "{
+      fooBar {
+        __typename
+        ... on Foo {
+          name
+          id
+        }
+        ... on Bar {
+          name
+          id
+        }
+      }
+    }"
+  `);
+  expect(queries[1]).toMatchInlineSnapshot(`
+    "{
+      mustFooBar {
+        __typename
+        ... on Foo {
+          name
+          id
+        }
+        ... on Bar {
+          name
+          id
+        }
+      }
+    }"
+  `);
 });

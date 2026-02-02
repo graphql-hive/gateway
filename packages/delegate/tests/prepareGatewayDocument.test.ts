@@ -208,9 +208,9 @@ describe('prepareGatewayDocument', () => {
     expect(print(preparedDocument)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {
         userByIdWithPosts(id: "1") {
+          name
           __typename
           id
-          name
           posts {
             id
             title
