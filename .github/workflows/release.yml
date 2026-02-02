@@ -285,7 +285,7 @@ jobs:
   examples:
     name: Examples
     needs: [stable, snapshot]
-    if: !cancelled() && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
+    if: always() && (github.event.pull_request.title != 'Upcoming Release Changes') && (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'graphql-hive/gateway' || github.ref == 'refs/heads/main')
     uses: graphql-hive/gateway/.github/workflows/examples.yml@main
     # NOTE: it's possible to use snapshot releases in examples on PRs but we dont because
     #       want the main branch to always use examples of stable releases. yeah sure, the examples
