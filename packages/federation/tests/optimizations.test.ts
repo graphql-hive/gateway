@@ -855,10 +855,13 @@ it('deduplicates the required fields from @key if they exists in the original qu
     },
   });
 
-  expect(subgraphCalls).toMatchInlineSnapshot(`
-    [
-      {
-        "query": "mutation ($input: BuyBookInput!) {
+  // NOTE: we spread out snapshot testing because bun test vs vitest are fighting over formatting
+
+  expect(subgraphCalls.length).toBe(2);
+
+  expect(subgraphCalls[0]?.subgraphName).toBe('SUBGRAPHB');
+  expect(subgraphCalls[0]?.query).toMatchInlineSnapshot(`
+    "mutation ($input: BuyBookInput!) {
       buyBook(input: $input) {
         book {
           __typename
@@ -870,11 +873,12 @@ it('deduplicates the required fields from @key if they exists in the original qu
           }
         }
       }
-    }",
-        "subgraphName": "SUBGRAPHB",
-      },
-      {
-        "query": "query ($representations: [_Any!]!) {
+    }"
+  `);
+
+  expect(subgraphCalls[1]?.subgraphName).toBe('SUBGRAPHA');
+  expect(subgraphCalls[1]?.query).toMatchInlineSnapshot(`
+    "query ($representations: [_Any!]!) {
       _entities(representations: $representations) {
         __typename
         ... on Shop {
@@ -887,9 +891,6 @@ it('deduplicates the required fields from @key if they exists in the original qu
           }
         }
       }
-    }",
-        "subgraphName": "SUBGRAPHA",
-      },
-    ]
+    }"
   `);
 });
