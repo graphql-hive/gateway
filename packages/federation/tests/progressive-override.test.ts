@@ -10,7 +10,7 @@ import {
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { usingHiveRouterRuntime } from '~internal/env';
 import { parse, print } from 'graphql';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
   describe('Label processing', () => {
@@ -330,10 +330,6 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
     });
   });
   describe('simple-progressive-overrides', () => {
-    const originalMathRand = Math.random;
-    afterEach(() => {
-      Math.random = originalMathRand;
-    });
     it('progressive_override_percentage_test', async () => {
       const plan: {
         subgraph: string;
