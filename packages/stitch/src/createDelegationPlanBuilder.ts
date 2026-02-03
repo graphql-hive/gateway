@@ -209,10 +209,7 @@ function calculateDelegationStage(
                 fieldNode.name.value
               ]?.override;
             if (overrideHandler != null) {
-              const overridden = overrideHandler(
-                context,
-                info,
-              );
+              const overridden = overrideHandler(context, info);
               if (overridden) {
                 bestUniqueSubschema = nonUniqueSubschema;
                 break;

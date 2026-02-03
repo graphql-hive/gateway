@@ -246,7 +246,10 @@ export type ProgressiveOverrideHandler = (
   info: GraphQLResolveInfo,
 ) => boolean;
 
-export const progressiveOverridePossibilityHandler = (possibility: number, getRng: (() => number) | undefined) => {
+export const progressiveOverridePossibilityHandler = (
+  possibility: number,
+  getRng: (() => number) | undefined,
+) => {
   const rng = getRng ? getRng() : Math.random();
   return rng < possibility;
 };

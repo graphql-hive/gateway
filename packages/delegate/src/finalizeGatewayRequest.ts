@@ -444,7 +444,10 @@ function filterSelectionSet(
               delegationContext.subschemaConfig?.merge?.[parentTypeName]
                 ?.fields?.[field.name]?.override;
             if (overrideHandler != null) {
-              const overridden = overrideHandler(delegationContext.context, delegationContext.info);
+              const overridden = overrideHandler(
+                delegationContext.context,
+                delegationContext.info,
+              );
               if (!overridden) {
                 return null;
               }

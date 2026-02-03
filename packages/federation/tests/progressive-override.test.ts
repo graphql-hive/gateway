@@ -522,7 +522,7 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
         batch: true,
       });
       const document = parse(/* GraphQL */ `
-      query {
+        query {
           feed {
             id
           }
@@ -557,11 +557,13 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
       // Set label to 'different_flag'
       label = 'different_flag';
 
-      console.log(await normalizedExecutor({
-        schema,
-        document,
-        contextValue: {},
-      }));
+      console.log(
+        await normalizedExecutor({
+          schema,
+          document,
+          contextValue: {},
+        }),
+      );
 
       expect(plan).toMatchInlineSnapshot(`
         [
