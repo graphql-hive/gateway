@@ -36,6 +36,7 @@ import {
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
+import { constantCase } from 'change-case';
 import {
   buildASTSchema,
   DefinitionNode,
@@ -147,6 +148,12 @@ export interface ProgressiveOverrideInfo {
   label: string;
 }
 
+export interface ProgressiveOverrideInfoOpposite {
+  field: string;
+  to: string;
+  label: string;
+}
+
 export function getStitchingOptionsFromSupergraphSdl(
   opts: GetStitchingOptionsFromSupergraphSdlOpts,
 ) {
@@ -175,6 +182,10 @@ export function getStitchingOptionsFromSupergraphSdl(
   const progressiveOverrideInfos = new Map<
     string,
     Map<string, ProgressiveOverrideInfo[]>
+  >();
+  const progressiveOverrideInfosOpposite = new Map<
+    string,
+    Map<string, ProgressiveOverrideInfoOpposite[]>
   >();
   const overrideLabels = new Set<string>();
 
@@ -405,7 +416,34 @@ export function getStitchingOptionsFromSupergraphSdl(
                     from: overrideFromSubgraph,
                     label: overrideLabel,
                   });
-                  overrideLabels.add(overrideLabel);
+                  if (!overrideLabel.startsWith('percent(')) {
+                    overrideLabels.add(overrideLabel);
+                  }
+                  const oppositeKey = constantCase(overrideFromSubgraph);
+                  let oppositeInfos =
+                    progressiveOverrideInfosOpposite.get(oppositeKey);
+                  if (!oppositeInfos) {
+                    oppositeInfos = new Map();
+                    progressiveOverrideInfosOpposite.set(
+                      oppositeKey,
+                      oppositeInfos,
+                    );
+                  }
+                  let existingOppositeInfos = oppositeInfos.get(
+                    typeNode.name.value,
+                  );
+                  if (!existingOppositeInfos) {
+                    existingOppositeInfos = [];
+                    oppositeInfos.set(
+                      typeNode.name.value,
+                      existingOppositeInfos,
+                    );
+                  }
+                  existingOppositeInfos.push({
+                    field: fieldNode.name.value,
+                    to: graphName,
+                    label: overrideLabel,
+                  });
                 }
 
                 const providedExtraField =
@@ -1312,6 +1350,41 @@ export function getStitchingOptionsFromSupergraphSdl(
             const progressiveOverrideHandler = opts.handleProgressiveOverride;
             fieldConfig.override = (context, info) =>
               progressiveOverrideHandler(label, context, info);
+          }
+        }
+      }
+    }
+    const progressiveOverrideOppositeInfosForSubgraph =
+      progressiveOverrideInfosOpposite.get(constantCase(subgraphName));
+    if (progressiveOverrideOppositeInfosForSubgraph != null) {
+      for (const [
+        typeName,
+        fieldInfos,
+      ] of progressiveOverrideOppositeInfosForSubgraph) {
+        let mergedConfig = mergeConfig[typeName];
+        if (!mergedConfig) {
+          mergedConfig = mergeConfig[typeName] = {};
+        }
+        for (const fieldInfo of fieldInfos) {
+          let fieldsConfig = mergedConfig.fields;
+          if (!fieldsConfig) {
+            fieldsConfig = mergedConfig.fields = {};
+          }
+          let fieldConfig = fieldsConfig[fieldInfo.field];
+          if (!fieldConfig) {
+            fieldConfig = fieldsConfig[fieldInfo.field] = {};
+          }
+
+          const label = fieldInfo.label;
+          const percent = extractPercentageFromLabel(label);
+          if (percent != null) {
+            const possibility = percent / 100;
+            fieldConfig.override = () =>
+              !progressiveOverridePossibilityHandler(possibility);
+          } else if (opts.handleProgressiveOverride) {
+            const progressiveOverrideHandler = opts.handleProgressiveOverride;
+            fieldConfig.override = (context, info) =>
+              !progressiveOverrideHandler(label, context, info);
           }
         }
       }

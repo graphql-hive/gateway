@@ -327,7 +327,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server-gateway-interface@npm:^1.1.0":
+"@apollo/server-gateway-interface@npm:^1.1.0, @apollo/server-gateway-interface@npm:^1.1.1":
   version: 1.1.1
   resolution: "@apollo/server-gateway-interface@npm:1.1.1"
   dependencies:
@@ -352,6 +352,40 @@ __metadata:
   peerDependencies:
     graphql: 14.x || 15.x || 16.x
   checksum: 10c0/75a00aa16a32d9d7f84f303b0aa74a990c236ec484f4fe3a0cf26177d8fa00dbc8b09f3a8143bb3bfc00d87287ae6c74684ac403c20ec350724e88a23325e5bd
+  languageName: node
+  linkType: hard
+
+"@apollo/server@npm:^4.11.0":
+  version: 4.12.2
+  resolution: "@apollo/server@npm:4.12.2"
+  dependencies:
+    "@apollo/cache-control-types": "npm:^1.0.3"
+    "@apollo/server-gateway-interface": "npm:^1.1.1"
+    "@apollo/usage-reporting-protobuf": "npm:^4.1.1"
+    "@apollo/utils.createhash": "npm:^2.0.2"
+    "@apollo/utils.fetcher": "npm:^2.0.0"
+    "@apollo/utils.isnodelike": "npm:^2.0.0"
+    "@apollo/utils.keyvaluecache": "npm:^2.1.0"
+    "@apollo/utils.logger": "npm:^2.0.0"
+    "@apollo/utils.usagereporting": "npm:^2.1.0"
+    "@apollo/utils.withrequired": "npm:^2.0.0"
+    "@graphql-tools/schema": "npm:^9.0.0"
+    "@types/express": "npm:^4.17.13"
+    "@types/express-serve-static-core": "npm:^4.17.30"
+    "@types/node-fetch": "npm:^2.6.1"
+    async-retry: "npm:^1.2.1"
+    cors: "npm:^2.8.5"
+    express: "npm:^4.21.1"
+    loglevel: "npm:^1.6.8"
+    lru-cache: "npm:^7.10.1"
+    negotiator: "npm:^0.6.3"
+    node-abort-controller: "npm:^3.1.1"
+    node-fetch: "npm:^2.6.7"
+    uuid: "npm:^9.0.0"
+    whatwg-mimetype: "npm:^3.0.0"
+  peerDependencies:
+    graphql: ^16.6.0
+  checksum: 10c0/c5ac01490adcc1f36787f6be2e0c698a3d7ffe9846bd6f70c18d788c5c60b528fc0f2d037ed5ac4a2ddf4d24e72335371e3e1bfc16c094cbb3e034b883ebffd4
   languageName: node
   linkType: hard
 
@@ -419,7 +453,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/utils.createhash@npm:^2.0.0":
+"@apollo/utils.createhash@npm:^2.0.0, @apollo/utils.createhash@npm:^2.0.2":
   version: 2.0.2
   resolution: "@apollo/utils.createhash@npm:2.0.2"
   dependencies:
@@ -561,6 +595,13 @@ __metadata:
   peerDependencies:
     graphql: 14.x || 15.x || 16.x
   checksum: 10c0/5c2b06a14c5094d0ee8eab7ff78449da1efff3bb4c82ef311b2bb90190437c6c59f2783702a428775f394f12455a53a9723e625e53e18e47b423df8cb9eb26d8
+  languageName: node
+  linkType: hard
+
+"@apollo/utils.withrequired@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "@apollo/utils.withrequired@npm:2.0.1"
+  checksum: 10c0/04d871f5934e3b9cacc28bc36ae44f640bfbfd147ad83088e26013f7444377449f1dde8d4bee665e86342a49cd4698e8d0c9aba46a532a5fab41b98e39fb1f9a
   languageName: node
   linkType: hard
 
@@ -3398,6 +3439,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/progressive-override-percent@workspace:e2e/progressive-override-percent":
+  version: 0.0.0-use.local
+  resolution: "@e2e/progressive-override-percent@workspace:e2e/progressive-override-percent"
+  dependencies:
+    "@apollo/server": "npm:^4.11.0"
+    "@apollo/subgraph": "npm:2.13.0"
+    express: "npm:^4.18.2"
+    graphql: "npm:16.12.0"
+    graphql-tag: "npm:2.12.6"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/regular-subgraph@workspace:e2e/regular-subgraph":
   version: 0.0.0-use.local
   resolution: "@e2e/regular-subgraph@workspace:e2e/regular-subgraph"
@@ -5258,6 +5312,7 @@ __metadata:
     "@whatwg-node/events": "npm:^0.1.2"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    change-case: "npm:^5.4.4"
     graphql: "npm:^16.12.0"
     graphql-federation-gateway-audit: "graphql-hive/federation-gateway-audit#cc224d26da54ad1c2393dfef3346893c315f351d"
     pkgroll: "npm:2.23.0"
@@ -5339,6 +5394,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/merge@npm:^8.4.1":
+  version: 8.4.2
+  resolution: "@graphql-tools/merge@npm:8.4.2"
+  dependencies:
+    "@graphql-tools/utils": "npm:^9.2.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/2df55222b48e010e683572f456cf265aabae5748c59f7c1260c66dec9794b7a076d3706f04da969b77f0a32c7ccb4551fee30125931d3fe9c98a8806aae9a3f4
+  languageName: node
+  linkType: hard
+
 "@graphql-tools/mock@npm:^9.1.3":
   version: 9.1.5
   resolution: "@graphql-tools/mock@npm:9.1.5"
@@ -5363,6 +5430,20 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/d95b969d8f118e642a963b4a947314e475affba0acc0470132e52164d7fd483eccf13c8dbf70b33be535309af17b480fd7061c947ce6d76092d7d2a3527a499f
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/schema@npm:^9.0.0":
+  version: 9.0.19
+  resolution: "@graphql-tools/schema@npm:9.0.19"
+  dependencies:
+    "@graphql-tools/merge": "npm:^8.4.1"
+    "@graphql-tools/utils": "npm:^9.2.1"
+    tslib: "npm:^2.4.0"
+    value-or-promise: "npm:^1.0.12"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/42fd8ca8d3c8d60b583077c201980518482ff0cd5ed0c1f14bd9b835a2689ad41d02cbd3478f7d7dea7aec1227f7639fd5deb5e6360852a2e542b96b44bfb7a4
   languageName: node
   linkType: hard
 
@@ -5439,6 +5520,18 @@ __metadata:
   peerDependencies:
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   checksum: 10c0/f9bab1370aa91e706abec4c8ea980e15293cb78bd4effba53ad2365dc39d81148db7667b3ef89b35f0a0b0ad58081ffdac4264b7125c69fa8393590ae5025745
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/utils@npm:^9.2.1":
+  version: 9.2.1
+  resolution: "@graphql-tools/utils@npm:9.2.1"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.1.1"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/37a7bd7e14d28ff1bacc007dca84bc6cef2d7d7af9a547b5dbe52fcd134afddd6d4a7b2148cfbaff5ddba91a868453d597da77bd0457fb0be15928f916901606
   languageName: node
   linkType: hard
 
@@ -6090,7 +6183,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@isaacs/brace-expansion@npm:^5.0.0, @isaacs/brace-expansion@npm:^5.0.1":
+"@isaacs/brace-expansion@npm:^5.0.1":
   version: 5.0.1
   resolution: "@isaacs/brace-expansion@npm:5.0.1"
   dependencies:
@@ -9516,15 +9609,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express-serve-static-core@npm:^4.17.33":
-  version: 4.19.6
-  resolution: "@types/express-serve-static-core@npm:4.19.6"
+"@types/express-serve-static-core@npm:^4.17.30, @types/express-serve-static-core@npm:^4.17.33":
+  version: 4.19.8
+  resolution: "@types/express-serve-static-core@npm:4.19.8"
   dependencies:
     "@types/node": "npm:*"
     "@types/qs": "npm:*"
     "@types/range-parser": "npm:*"
     "@types/send": "npm:*"
-  checksum: 10c0/4281f4ead71723f376b3ddf64868ae26244d434d9906c101cf8d436d4b5c779d01bd046e4ea0ed1a394d3e402216fabfa22b1fa4dba501061cd7c81c54045983
+  checksum: 10c0/6fb58a85b209e0e421b29c52e0a51dbf7c039b711c604cf45d46470937a5c7c16b30aa5ce9bf7da0bd8a2e9361c95b5055599c0500a96bf4414d26c81f02d7fe
   languageName: node
   linkType: hard
 
@@ -9540,7 +9633,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:^4.17.20":
+"@types/express@npm:^4.17.13, @types/express@npm:^4.17.20":
   version: 4.17.25
   resolution: "@types/express@npm:4.17.25"
   dependencies:
@@ -9719,13 +9812,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-fetch@npm:^2.6.2":
-  version: 2.6.12
-  resolution: "@types/node-fetch@npm:2.6.12"
+"@types/node-fetch@npm:^2.6.1, @types/node-fetch@npm:^2.6.2":
+  version: 2.6.13
+  resolution: "@types/node-fetch@npm:2.6.13"
   dependencies:
     "@types/node": "npm:*"
-    form-data: "npm:^4.0.0"
-  checksum: 10c0/7693acad5499b7df2d1727d46cff092a63896dc04645f36b973dd6dd754a59a7faba76fcb777bdaa35d80625c6a9dd7257cca9c401a4bab03b04480cda7fd1af
+    form-data: "npm:^4.0.4"
+  checksum: 10c0/6313c89f62c50bd0513a6839cdff0a06727ac5495ccbb2eeda51bb2bbbc4f3c0a76c0393a491b7610af703d3d2deb6cf60e37e59c81ceeca803ffde745dbf309
   languageName: node
   linkType: hard
 
@@ -17295,7 +17388,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.14.1, lru-cache@npm:^7.7.1":
+"lru-cache@npm:^7.10.1, lru-cache@npm:^7.14.1, lru-cache@npm:^7.7.1":
   version: 7.18.3
   resolution: "lru-cache@npm:7.18.3"
   checksum: 10c0/b3a452b491433db885beed95041eb104c157ef7794b9c9b4d647be503be91769d11206bb573849a16b4cc0d03cbd15ffd22df7960997788b74c1d399ac7a4fed
@@ -17554,16 +17647,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.0.3":
-  version: 10.1.1
-  resolution: "minimatch@npm:10.1.1"
-  dependencies:
-    "@isaacs/brace-expansion": "npm:^5.0.0"
-  checksum: 10c0/c85d44821c71973d636091fddbfbffe62370f5ee3caf0241c5b60c18cd289e916200acb2361b7e987558cd06896d153e25d505db9fc1e43e6b4b6752e2702902
-  languageName: node
-  linkType: hard
-
-"minimatch@npm:^10.1.2":
+"minimatch@npm:^10.0.3, minimatch@npm:^10.1.2":
   version: 10.1.2
   resolution: "minimatch@npm:10.1.2"
   dependencies:
@@ -17867,7 +17951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-abort-controller@npm:^3.0.1":
+"node-abort-controller@npm:^3.0.1, node-abort-controller@npm:^3.1.1":
   version: 3.1.1
   resolution: "node-abort-controller@npm:3.1.1"
   checksum: 10c0/f7ad0e7a8e33809d4f3a0d1d65036a711c39e9d23e0319d80ebe076b9a3b4432b4d6b86a7fab65521de3f6872ffed36fc35d1327487c48eb88c517803403eda3
@@ -21764,6 +21848,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"value-or-promise@npm:^1.0.12":
+  version: 1.0.12
+  resolution: "value-or-promise@npm:1.0.12"
+  checksum: 10c0/b75657b74e4d17552bd88e0c2857020fbab34a4d091dc058db18c470e7da0336067e72c130b3358e3321ac0a6ff11c0b92b67a382318a3705ad5d57de7ff3262
+  languageName: node
+  linkType: hard
+
 "vary@npm:^1, vary@npm:^1.1.2":
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
@@ -21954,6 +22045,13 @@ __metadata:
   version: 3.0.1
   resolution: "webidl-conversions@npm:3.0.1"
   checksum: 10c0/5612d5f3e54760a797052eb4927f0ddc01383550f542ccd33d5238cfd65aeed392a45ad38364970d0a0f4fea32e1f4d231b3d8dac4a3bdd385e5cf802ae097db
+  languageName: node
+  linkType: hard
+
+"whatwg-mimetype@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "whatwg-mimetype@npm:3.0.0"
+  checksum: 10c0/323895a1cda29a5fb0b9ca82831d2c316309fede0365047c4c323073e3239067a304a09a1f4b123b9532641ab604203f33a1403b5ca6a62ef405bcd7a204080f
   languageName: node
   linkType: hard
 
