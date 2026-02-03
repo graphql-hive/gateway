@@ -395,41 +395,8 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
         contextValue: {},
       });
 
-      expect(plan).toMatchInlineSnapshot(`
-        [
-          {
-            "query": "{
-          aFeed {
-            __typename
-            id
-          }
-        }",
-            "subgraph": "A",
-          },
-          {
-            "query": "{
-          bFeed {
-            __typename
-            createdAt
-            id
-          }
-        }",
-            "subgraph": "B",
-          },
-          {
-            "query": "query ($representations: [_Any!]!) {
-          _entities(representations: $representations) {
-            __typename
-            ... on Post {
-              createdAt
-              id
-            }
-          }
-        }",
-            "subgraph": "B",
-          },
-        ]
-      `);
+      // Bun needs the stringify
+      expect(JSON.stringify(plan)).toMatchSnapshot();
 
       plan.splice(0, plan.length); // clear the plan
 
@@ -442,41 +409,8 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
         contextValue: {},
       });
 
-      expect(plan).toMatchInlineSnapshot(`
-       [
-         {
-           "query": "{
-         aFeed {
-           __typename
-           createdAt
-           id
-         }
-       }",
-           "subgraph": "A",
-         },
-         {
-           "query": "{
-         bFeed {
-           __typename
-           id
-         }
-       }",
-           "subgraph": "B",
-         },
-         {
-           "query": "query ($representations: [_Any!]!) {
-         _entities(representations: $representations) {
-           __typename
-           ... on Post {
-             createdAt
-             id
-           }
-         }
-       }",
-           "subgraph": "A",
-         },
-       ]
-      `);
+      // Bun needs the stringify
+      expect(JSON.stringify(plan)).toMatchSnapshot();
     });
     it('progressive_override_label_test', async () => {
       const plan: {
@@ -500,7 +434,7 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
           subschemaConfig.executor = function executionRequest(
             executionRequest,
           ) {
-            const query = print(executionRequest.document);
+            const query = print(executionRequest.document).trim();
             if (
               !plan.some(
                 (item) =>
@@ -539,44 +473,22 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
         contextValue: {},
       });
 
-      expect(plan).toMatchInlineSnapshot(`
-        [
-          {
-            "query": "{
-          feed {
-            id
-          }
-        }",
-            "subgraph": "B",
-          },
-        ]
-      `);
+      // Bun needs the stringify
+      expect(JSON.stringify(plan)).toMatchSnapshot();
 
       plan.splice(0, plan.length); // clear the plan
 
       // Set label to 'different_flag'
       label = 'different_flag';
 
-      console.log(
-        await normalizedExecutor({
-          schema,
-          document,
-          contextValue: {},
-        }),
-      );
+      await normalizedExecutor({
+        schema,
+        document,
+        contextValue: {},
+      });
 
-      expect(plan).toMatchInlineSnapshot(`
-        [
-          {
-            "query": "{
-          feed {
-            id
-          }
-        }",
-            "subgraph": "A",
-          },
-        ]
-      `);
+      // Bun needs the stringify
+      expect(JSON.stringify(plan)).toMatchSnapshot();
     });
   });
 });
