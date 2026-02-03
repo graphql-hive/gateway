@@ -48,13 +48,13 @@ describe('Progressive Override', () => {
       line.includes('progressiveOverride called with label'),
     );
     expect(logLinesForProgressiveOverride.length).toBe(1);
-    expect(logLines).not.toContain(
+    expect(logs).not.toContain(
       '[gateway] progressiveOverride called with label: "percent(0)", returning "true"',
     );
-    expect(logLines).not.toContain(
+    expect(logs).not.toContain(
       '[gateway] progressiveOverride called with label: "percent(100)", returning "true"',
     );
-    expect(logLines).toContain(
+    expect(logs).toContain(
       '[gateway] progressiveOverride called with label: "test-custom", returning "true"',
     );
   });
