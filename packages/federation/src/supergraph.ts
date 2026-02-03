@@ -140,6 +140,8 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
 
   handleProgressiveOverride?: ProgressiveOverrideHandler;
+
+  getRng?: () => number;
 }
 
 export interface ProgressiveOverrideInfo {
@@ -1345,7 +1347,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           if (percent != null) {
             const possibility = percent / 100;
             fieldConfig.override = () =>
-              progressiveOverridePossibilityHandler(possibility);
+              progressiveOverridePossibilityHandler(possibility, opts.getRng);
           } else if (opts.handleProgressiveOverride) {
             const progressiveOverrideHandler = opts.handleProgressiveOverride;
             fieldConfig.override = (context, info) =>
@@ -1380,7 +1382,7 @@ export function getStitchingOptionsFromSupergraphSdl(
           if (percent != null) {
             const possibility = percent / 100;
             fieldConfig.override = () =>
-              !progressiveOverridePossibilityHandler(possibility);
+              !progressiveOverridePossibilityHandler(possibility, opts.getRng);
           } else if (opts.handleProgressiveOverride) {
             const progressiveOverrideHandler = opts.handleProgressiveOverride;
             fieldConfig.override = (context, info) =>
@@ -1425,13 +1427,26 @@ export function getStitchingOptionsFromSupergraphSdl(
       const defaultMergedField = defaultMerger(candidates);
       const mergedResolver: GraphQLFieldResolver<{}, {}> =
         function mergedResolver(_root, args, context, info) {
+          const filteredCandidates = candidates.filter((candidate) => {
+            const subschemaConfig = candidate.subschema as
+              | SubschemaConfig
+              | undefined;
+            const overrideHandler =
+              subschemaConfig?.merge?.[candidate.type.name]?.fields?.[
+                candidate.fieldName
+              ]?.override;
+            if (overrideHandler) {
+              return overrideHandler(context, info);
+            }
+            return true;
+          });
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
           };
-          const candidatesReversed = candidates.toReversed
-            ? candidates.toReversed()
-            : [...candidates].reverse();
+          const candidatesReversed = filteredCandidates.toReversed
+            ? filteredCandidates.toReversed()
+            : [...filteredCandidates].reverse();
           let currentSubschema: SubschemaConfig | undefined;
           let currentScore = Infinity;
           let currentUnavailableSelectionSet: SelectionSetNode | undefined;
@@ -1469,7 +1484,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 // Make parallel requests if there are other subschemas
                 // that can resolve the remaining fields for this selection directly from the root field
                 // instead of applying a type merging in advance
-                for (const friendCandidate of candidates) {
+                for (const friendCandidate of filteredCandidates) {
                   if (
                     friendCandidate === candidate ||
                     !friendCandidate.transformedSubschema ||

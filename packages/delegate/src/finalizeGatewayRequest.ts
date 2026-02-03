@@ -33,7 +33,6 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo, getTypeInfoWithType } from './getTypeInfo.js';
-import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
 import { Subschema } from './Subschema.js';
 import { DelegationContext, StitchingInfo } from './types.js';
 
@@ -445,11 +444,7 @@ function filterSelectionSet(
               delegationContext.subschemaConfig?.merge?.[parentTypeName]
                 ?.fields?.[field.name]?.override;
             if (overrideHandler != null) {
-              const overridden = handleOverrideByDelegation(
-                delegationContext.info,
-                delegationContext.context,
-                overrideHandler,
-              );
+              const overridden = overrideHandler(delegationContext.context, delegationContext.info);
               if (!overridden) {
                 return null;
               }

@@ -21,7 +21,6 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';
-import { handleOverrideByDelegation } from '../../delegate/src/handleOverrideByDelegation.js';
 import { getFieldsNotInSubschema } from './getFieldsNotInSubschema.js';
 import { memoize5of7 } from './memoize5of7.js';
 
@@ -166,11 +165,7 @@ function calculateDelegationStage(
             fieldNode.name.value
           ]?.override;
         if (overrideHandler != null) {
-          const overriddenBySubschema = handleOverrideByDelegation(
-            info,
-            context,
-            overrideHandler,
-          );
+          const overriddenBySubschema = overrideHandler(context, info);
           if (overriddenBySubschema) {
             let subschemaSelections = delegationMap.get(nonUniqueSubschema);
             if (subschemaSelections == null) {
@@ -214,10 +209,9 @@ function calculateDelegationStage(
                 fieldNode.name.value
               ]?.override;
             if (overrideHandler != null) {
-              const overridden = handleOverrideByDelegation(
-                info,
+              const overridden = overrideHandler(
                 context,
-                overrideHandler,
+                info,
               );
               if (overridden) {
                 bestUniqueSubschema = nonUniqueSubschema;

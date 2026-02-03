@@ -1,7 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createGatewayTester } from '@graphql-hive/gateway-testing';
-import { extractPercentageFromLabel } from '@graphql-tools/federation';
+import { createDefaultExecutor } from '@graphql-tools/delegate';
+import { normalizedExecutor } from '@graphql-tools/executor';
+import {
+  extractPercentageFromLabel,
+  getStitchedSchemaFromSupergraphSdl,
+} from '@graphql-tools/federation';
+import { addMocksToSchema } from '@graphql-tools/mock';
 import { usingHiveRouterRuntime } from '~internal/env';
-import { describe, expect, it } from 'vitest';
+import { parse, print } from 'graphql';
+import { afterEach, describe, expect, it } from 'vitest';
 
 describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
   describe('Label processing', () => {
@@ -318,6 +327,254 @@ describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
       expect(() => extractPercentageFromLabel('percent(foo)')).toThrow(
         'Expected a number in percent(x), got: percent(foo)',
       );
+    });
+  });
+  describe('simple-progressive-overrides', () => {
+    const originalMathRand = Math.random;
+    afterEach(() => {
+      Math.random = originalMathRand;
+    });
+    it('progressive_override_percentage_test', async () => {
+      const plan: {
+        subgraph: string;
+        query: string;
+      }[] = [];
+      let rng: number = 0;
+      const schema = getStitchedSchemaFromSupergraphSdl({
+        supergraphSdl: readFileSync(
+          join(
+            __dirname,
+            './fixtures/simple-progressive-overrides.supergraph.graphql',
+          ),
+          'utf-8',
+        ),
+        onSubschemaConfig(subschemaConfig) {
+          const mockedSchema = addMocksToSchema({
+            schema: subschemaConfig.schema,
+          });
+          const executor = createDefaultExecutor(mockedSchema);
+          subschemaConfig.executor = function executionRequest(
+            executionRequest,
+          ) {
+            const query = print(executionRequest.document);
+            if (
+              !plan.some(
+                (item) =>
+                  item.query === query &&
+                  item.subgraph === subschemaConfig.name,
+              )
+            ) {
+              plan.push({
+                subgraph: subschemaConfig.name,
+                query,
+              });
+            }
+            return executor(executionRequest);
+          };
+        },
+        batch: true,
+        getRng: () => rng,
+      });
+      const document = parse(/* GraphQL */ `
+        query {
+          aFeed {
+            createdAt
+          }
+          bFeed {
+            createdAt
+          }
+        }
+      `);
+      // Set rng to 0.5
+      // @override(label: "percentage(75)")
+      rng = 0.5;
+
+      await normalizedExecutor({
+        schema,
+        document,
+        contextValue: {},
+      });
+
+      expect(plan).toMatchInlineSnapshot(`
+        [
+          {
+            "query": "{
+          aFeed {
+            __typename
+            id
+          }
+        }",
+            "subgraph": "A",
+          },
+          {
+            "query": "{
+          bFeed {
+            __typename
+            createdAt
+            id
+          }
+        }",
+            "subgraph": "B",
+          },
+          {
+            "query": "query ($representations: [_Any!]!) {
+          _entities(representations: $representations) {
+            __typename
+            ... on Post {
+              createdAt
+              id
+            }
+          }
+        }",
+            "subgraph": "B",
+          },
+        ]
+      `);
+
+      plan.splice(0, plan.length); // clear the plan
+
+      // Set rng to 0.9
+      rng = 0.9;
+
+      await normalizedExecutor({
+        schema,
+        document,
+        contextValue: {},
+      });
+
+      expect(plan).toMatchInlineSnapshot(`
+       [
+         {
+           "query": "{
+         aFeed {
+           __typename
+           createdAt
+           id
+         }
+       }",
+           "subgraph": "A",
+         },
+         {
+           "query": "{
+         bFeed {
+           __typename
+           id
+         }
+       }",
+           "subgraph": "B",
+         },
+         {
+           "query": "query ($representations: [_Any!]!) {
+         _entities(representations: $representations) {
+           __typename
+           ... on Post {
+             createdAt
+             id
+           }
+         }
+       }",
+           "subgraph": "A",
+         },
+       ]
+      `);
+    });
+    it('progressive_override_label_test', async () => {
+      const plan: {
+        subgraph: string;
+        query: string;
+      }[] = [];
+      let label = '';
+      const schema = getStitchedSchemaFromSupergraphSdl({
+        supergraphSdl: readFileSync(
+          join(
+            __dirname,
+            './fixtures/simple-progressive-overrides.supergraph.graphql',
+          ),
+          'utf-8',
+        ),
+        onSubschemaConfig(subschemaConfig) {
+          const mockedSchema = addMocksToSchema({
+            schema: subschemaConfig.schema,
+          });
+          const executor = createDefaultExecutor(mockedSchema);
+          subschemaConfig.executor = function executionRequest(
+            executionRequest,
+          ) {
+            const query = print(executionRequest.document);
+            if (
+              !plan.some(
+                (item) =>
+                  item.query === query &&
+                  item.subgraph === subschemaConfig.name,
+              )
+            ) {
+              plan.push({
+                subgraph: subschemaConfig.name,
+                query,
+              });
+            }
+            return executor(executionRequest);
+          };
+        },
+        handleProgressiveOverride(labelArg: string) {
+          return labelArg === label;
+        },
+        batch: true,
+      });
+      const document = parse(/* GraphQL */ `
+      query {
+          feed {
+            id
+          }
+        }
+      `);
+
+      // @override(label: "feed_in_b")
+      // Set label to 'feed_in_b'
+      label = 'feed_in_b';
+
+      await normalizedExecutor({
+        schema,
+        document,
+        contextValue: {},
+      });
+
+      expect(plan).toMatchInlineSnapshot(`
+        [
+          {
+            "query": "{
+          feed {
+            id
+          }
+        }",
+            "subgraph": "B",
+          },
+        ]
+      `);
+
+      plan.splice(0, plan.length); // clear the plan
+
+      // Set label to 'different_flag'
+      label = 'different_flag';
+
+      console.log(await normalizedExecutor({
+        schema,
+        document,
+        contextValue: {},
+      }));
+
+      expect(plan).toMatchInlineSnapshot(`
+        [
+          {
+            "query": "{
+          feed {
+            id
+          }
+        }",
+            "subgraph": "A",
+          },
+        ]
+      `);
     });
   });
 });

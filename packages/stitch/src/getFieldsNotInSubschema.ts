@@ -1,6 +1,5 @@
 import {
   extractUnavailableFields,
-  handleOverrideByDelegation,
   StitchingInfo,
   Subschema,
   subtractSelectionSets,
@@ -129,11 +128,7 @@ export function getFieldsNotInSubschema(
       const overrideHandler =
         subschema?.merge?.[gatewayType.name]?.fields?.[fieldName]?.override;
       if (overrideHandler != null) {
-        const overridden = handleOverrideByDelegation(
-          info,
-          context,
-          overrideHandler,
-        );
+        const overridden = overrideHandler(context, info);
         if (!overridden) {
           field = undefined;
         }

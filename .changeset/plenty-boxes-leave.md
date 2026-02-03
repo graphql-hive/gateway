@@ -1,4 +1,6 @@
 ---
+'@graphql-tools/delegate': patch
+'@graphql-tools/stitch': patch
 '@graphql-tools/federation': patch
 ---
 
