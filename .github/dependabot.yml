@@ -48,6 +48,7 @@ updates:
           - 'rollup'
           - '@commanderjs/*'
           - 'commander'
+          - 'aws4-express'
         update-types:
           - 'minor'
           - 'patch'
