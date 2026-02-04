@@ -1,4 +1,4 @@
-import { isNode, signalRegistry } from './utils';
+import { controllerInSignalSy, isNode, signalRegistry } from './utils';
 
 /**
  * Memory safe ponyfill of `AbortSignal.any`. In Node environments, the native

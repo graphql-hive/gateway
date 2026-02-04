@@ -27,17 +27,15 @@ export function abortSignalAll(
 
   const eventListenerPairs: [WeakRef<AbortSignal>, () => void][] = [];
   let retainedSignalsCount = signals.length;
+  let remainingSignalsToAbort = signals.length;
 
   for (const signal of signals) {
     const signalRef = new WeakRef(signal);
     function onAbort() {
-      for (const [sRef] of eventListenerPairs) {
-        const s = sRef.deref();
-        if (s && !s.aborted) {
-          return;
-        }
+      remainingSignalsToAbort--;
+      if (remainingSignalsToAbort === 0) {
+        ctrlRef.deref()?.abort(signalRef.deref()?.reason);
       }
-      ctrlRef.deref()?.abort(signalRef.deref()?.reason);
     }
     signal.addEventListener('abort', onAbort);
     eventListenerPairs.push([signalRef, onAbort]);
