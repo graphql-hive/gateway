@@ -696,21 +696,14 @@ export function createTenv(cwd: string): Tenv {
         result = proc.getStd('out');
       }
 
-      if (trimHostPaths || maskServicePorts) {
-        if (trimHostPaths) {
-          result = result.replaceAll(__project, '');
-        }
-        for (const subgraph of services) {
-          if (maskServicePorts) {
-            result = result.replaceAll(
-              subgraph.port.toString(),
-              `<${subgraph.name}_port>`,
-            );
-          }
-        }
-        if (output) {
-          await fs.writeFile(output, result, 'utf8');
-        }
+      applyMaskServicePorts(result, {
+        services,
+        trimHostPaths,
+        maskServicePorts,
+      });
+
+      if (output) {
+        await fs.writeFile(output, result, 'utf8');
       }
 
       return { ...proc, output, result };
@@ -1020,6 +1013,8 @@ export function createTenv(cwd: string): Tenv {
     async composeWithApollo({
       services = [],
       pipeLogs = isDebug() || getEnvBool('E2E_PIPE_LOGS') ? 'rover.out' : false,
+      maskServicePorts,
+      trimHostPaths,
     }) {
       const subgraphs: ServiceEndpointDefinition[] = [];
       for (const service of services) {
@@ -1076,6 +1071,11 @@ export function createTenv(cwd: string): Tenv {
       });
       const supergraphFile = await tenv.fs.tempfile('supergraph.graphql');
       function onSupergraphSdl() {
+        supergraphSdl = applyMaskServicePorts(supergraphSdl, {
+          maskServicePorts,
+          trimHostPaths,
+          services,
+        });
         return tenv.fs.write(supergraphFile, supergraphSdl);
       }
       const initialized = await introspectAndCompose.initialize({
@@ -1176,4 +1176,34 @@ function pipeLog(
   } else if (typeof pipeLogs === 'string') {
     fs.appendFile(path.join(cwd, pipeLogs), log);
   }
+}
+
+function applyMaskServicePorts(
+  result: string,
+  {
+    services,
+    trimHostPaths,
+    maskServicePorts,
+  }: {
+    services?: Service[];
+    trimHostPaths?: boolean;
+    maskServicePorts?: boolean;
+  },
+) {
+  if (trimHostPaths || maskServicePorts) {
+    if (trimHostPaths) {
+      result = result.replaceAll(__project, '');
+    }
+    if (services) {
+      for (const subgraph of services) {
+        if (maskServicePorts) {
+          result = result.replaceAll(
+            subgraph.port.toString(),
+            `<${subgraph.name}_port>`,
+          );
+        }
+      }
+    }
+  }
+  return result;
 }

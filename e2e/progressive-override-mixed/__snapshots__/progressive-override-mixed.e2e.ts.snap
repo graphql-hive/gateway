@@ -29,8 +29,8 @@ scalar join__DirectiveArguments
 scalar join__FieldSet
 
 enum join__Graph {
-  A @join__graph(name: "a", url: "http://0.0.0.0:41788/graphql")
-  B @join__graph(name: "b", url: "http://0.0.0.0:41136/graphql")
+  A @join__graph(name: "a", url: "http://0.0.0.0:<a_port>/graphql")
+  B @join__graph(name: "b", url: "http://0.0.0.0:<b_port>/graphql")
 }
 
 scalar link__Import

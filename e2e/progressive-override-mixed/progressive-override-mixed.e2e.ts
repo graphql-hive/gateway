@@ -8,6 +8,7 @@ describe('Progressive Override', () => {
     await using serviceB = await service('b');
     const supergraph = await composeWithApollo({
       services: [serviceA, serviceB],
+      maskServicePorts: true,
     });
     expect(supergraph.result).toMatchSnapshot();
   });
