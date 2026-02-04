@@ -130,7 +130,10 @@ export function spawn(
         return fakePromise();
       }
       if (child.pid) {
-        await terminate(child.pid);
+        await terminate(child.pid).catch((e) => {
+          // ignore errors when terminating the process
+          console.error(`Failed to terminate process ${child.pid}:`, e);
+        });
       }
       child.kill();
       await waitForExit.catch(() => {

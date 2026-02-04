@@ -2,6 +2,7 @@ import {
   DelegationPlanBuilder,
   extractUnavailableFields,
   extractUnavailableFieldsFromSelectionSet,
+  handleOverrideByDelegation,
   leftOverByDelegationPlan,
   MergedTypeInfo,
   StitchingInfo,
@@ -21,7 +22,6 @@ import {
   SelectionNode,
   SelectionSetNode,
 } from 'graphql';
-import { handleOverrideByDelegation } from '../../delegate/src/handleOverrideByDelegation.js';
 import { getFieldsNotInSubschema } from './getFieldsNotInSubschema.js';
 import { memoize5of7 } from './memoize5of7.js';
 

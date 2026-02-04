@@ -4,6 +4,7 @@ import {
   extractUnavailableFieldsFromSelectionSet,
   FIELD_SUBSCHEMA_MAP_SYMBOL,
   getTypeInfo,
+  handleOverrideByDelegation,
   isExternalObject,
   MergedFieldConfig,
   MergedTypeConfig,
@@ -36,6 +37,7 @@ import {
   type Executor,
 } from '@graphql-tools/utils';
 import { handleMaybePromise, isPromise } from '@whatwg-node/promise-helpers';
+import { constantCase } from 'change-case';
 import {
   buildASTSchema,
   DefinitionNode,
@@ -139,11 +141,19 @@ export interface GetStitchingOptionsFromSupergraphSdlOpts {
   batchDelegateOptions?: MergedTypeConfig['dataLoaderOptions'];
 
   handleProgressiveOverride?: ProgressiveOverrideHandler;
+
+  getRng?: () => number;
 }
 
 export interface ProgressiveOverrideInfo {
   field: string;
   from: string;
+  label: string;
+}
+
+export interface ProgressiveOverrideInfoOpposite {
+  field: string;
+  to: string;
   label: string;
 }
 
@@ -175,6 +185,10 @@ export function getStitchingOptionsFromSupergraphSdl(
   const progressiveOverrideInfos = new Map<
     string,
     Map<string, ProgressiveOverrideInfo[]>
+  >();
+  const progressiveOverrideInfosOpposite = new Map<
+    string,
+    Map<string, ProgressiveOverrideInfoOpposite[]>
   >();
   const overrideLabels = new Set<string>();
 
@@ -405,7 +419,34 @@ export function getStitchingOptionsFromSupergraphSdl(
                     from: overrideFromSubgraph,
                     label: overrideLabel,
                   });
-                  overrideLabels.add(overrideLabel);
+                  if (!overrideLabel.startsWith('percent(')) {
+                    overrideLabels.add(overrideLabel);
+                  }
+                  const oppositeKey = constantCase(overrideFromSubgraph);
+                  let oppositeInfos =
+                    progressiveOverrideInfosOpposite.get(oppositeKey);
+                  if (!oppositeInfos) {
+                    oppositeInfos = new Map();
+                    progressiveOverrideInfosOpposite.set(
+                      oppositeKey,
+                      oppositeInfos,
+                    );
+                  }
+                  let existingOppositeInfos = oppositeInfos.get(
+                    typeNode.name.value,
+                  );
+                  if (!existingOppositeInfos) {
+                    existingOppositeInfos = [];
+                    oppositeInfos.set(
+                      typeNode.name.value,
+                      existingOppositeInfos,
+                    );
+                  }
+                  existingOppositeInfos.push({
+                    field: fieldNode.name.value,
+                    to: graphName,
+                    label: overrideLabel,
+                  });
                 }
 
                 const providedExtraField =
@@ -1307,11 +1348,46 @@ export function getStitchingOptionsFromSupergraphSdl(
           if (percent != null) {
             const possibility = percent / 100;
             fieldConfig.override = () =>
-              progressiveOverridePossibilityHandler(possibility);
+              progressiveOverridePossibilityHandler(possibility, opts.getRng);
           } else if (opts.handleProgressiveOverride) {
             const progressiveOverrideHandler = opts.handleProgressiveOverride;
             fieldConfig.override = (context, info) =>
               progressiveOverrideHandler(label, context, info);
+          }
+        }
+      }
+    }
+    const progressiveOverrideOppositeInfosForSubgraph =
+      progressiveOverrideInfosOpposite.get(constantCase(subgraphName));
+    if (progressiveOverrideOppositeInfosForSubgraph != null) {
+      for (const [
+        typeName,
+        fieldInfos,
+      ] of progressiveOverrideOppositeInfosForSubgraph) {
+        let mergedConfig = mergeConfig[typeName];
+        if (!mergedConfig) {
+          mergedConfig = mergeConfig[typeName] = {};
+        }
+        for (const fieldInfo of fieldInfos) {
+          let fieldsConfig = mergedConfig.fields;
+          if (!fieldsConfig) {
+            fieldsConfig = mergedConfig.fields = {};
+          }
+          let fieldConfig = fieldsConfig[fieldInfo.field];
+          if (!fieldConfig) {
+            fieldConfig = fieldsConfig[fieldInfo.field] = {};
+          }
+
+          const label = fieldInfo.label;
+          const percent = extractPercentageFromLabel(label);
+          if (percent != null) {
+            const possibility = percent / 100;
+            fieldConfig.override = () =>
+              !progressiveOverridePossibilityHandler(possibility, opts.getRng);
+          } else if (opts.handleProgressiveOverride) {
+            const progressiveOverrideHandler = opts.handleProgressiveOverride;
+            fieldConfig.override = (context, info) =>
+              !progressiveOverrideHandler(label, context, info);
           }
         }
       }
@@ -1352,13 +1428,26 @@ export function getStitchingOptionsFromSupergraphSdl(
       const defaultMergedField = defaultMerger(candidates);
       const mergedResolver: GraphQLFieldResolver<{}, {}> =
         function mergedResolver(_root, args, context, info) {
+          const filteredCandidates = candidates.filter((candidate) => {
+            const subschemaConfig = candidate.subschema as
+              | SubschemaConfig
+              | undefined;
+            const overrideHandler =
+              subschemaConfig?.merge?.[candidate.type.name]?.fields?.[
+                candidate.fieldName
+              ]?.override;
+            if (overrideHandler) {
+              return handleOverrideByDelegation(info, context, overrideHandler);
+            }
+            return true;
+          });
           const originalSelectionSet: SelectionSetNode = {
             kind: Kind.SELECTION_SET,
             selections: info.fieldNodes,
           };
-          const candidatesReversed = candidates.toReversed
-            ? candidates.toReversed()
-            : [...candidates].reverse();
+          const candidatesReversed = filteredCandidates.toReversed
+            ? filteredCandidates.toReversed()
+            : [...filteredCandidates].reverse();
           let currentSubschema: SubschemaConfig | undefined;
           let currentScore = Infinity;
           let currentUnavailableSelectionSet: SelectionSetNode | undefined;
@@ -1396,7 +1485,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 // Make parallel requests if there are other subschemas
                 // that can resolve the remaining fields for this selection directly from the root field
                 // instead of applying a type merging in advance
-                for (const friendCandidate of candidates) {
+                for (const friendCandidate of filteredCandidates) {
                   if (
                     friendCandidate === candidate ||
                     !friendCandidate.transformedSubschema ||
