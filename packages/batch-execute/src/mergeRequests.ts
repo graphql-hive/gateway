@@ -1,5 +1,6 @@
 // adapted from https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
 
+import { abortSignalAll } from '@graphql-hive/signal';
 import {
   ExecutionRequest,
   getOperationASTFromRequest,
@@ -69,6 +70,7 @@ export function mergeRequests(
   const mergedVariableDefinitions: Array<VariableDefinitionNode> = [];
   const mergedSelections: Array<SelectionNode> = [];
   const mergedFragmentDefinitions: Array<FragmentDefinitionNode> = [];
+  const signals: AbortSignal[] = [];
   let mergedExtensions: Record<string, any> = Object.create(null);
 
   for (let index = 0; index < requests.length; index++) {
@@ -89,6 +91,9 @@ export function mergeRequests(
       }
       Object.assign(mergedVariables, prefixedRequests.variables);
       mergedExtensions = extensionsReducer(mergedExtensions, request);
+      if (request.signal) {
+        signals.push(request.signal);
+      }
     }
   }
 
@@ -129,6 +134,7 @@ export function mergeRequests(
     info: firstRequest.info,
     operationType,
     rootValue: firstRequest.rootValue,
+    signal: abortSignalAll(signals),
   };
 }
 
