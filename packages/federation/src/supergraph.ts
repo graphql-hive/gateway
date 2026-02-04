@@ -4,6 +4,7 @@ import {
   extractUnavailableFieldsFromSelectionSet,
   FIELD_SUBSCHEMA_MAP_SYMBOL,
   getTypeInfo,
+  handleOverrideByDelegation,
   isExternalObject,
   MergedFieldConfig,
   MergedTypeConfig,
@@ -1436,7 +1437,7 @@ export function getStitchingOptionsFromSupergraphSdl(
                 candidate.fieldName
               ]?.override;
             if (overrideHandler) {
-              return overrideHandler(context, info);
+              return handleOverrideByDelegation(info, context, overrideHandler);
             }
             return true;
           });

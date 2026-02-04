@@ -2,6 +2,7 @@ import {
   DelegationPlanBuilder,
   extractUnavailableFields,
   extractUnavailableFieldsFromSelectionSet,
+  handleOverrideByDelegation,
   leftOverByDelegationPlan,
   MergedTypeInfo,
   StitchingInfo,
@@ -165,7 +166,11 @@ function calculateDelegationStage(
             fieldNode.name.value
           ]?.override;
         if (overrideHandler != null) {
-          const overriddenBySubschema = overrideHandler(context, info);
+          const overriddenBySubschema = handleOverrideByDelegation(
+            info,
+            context,
+            overrideHandler,
+          );
           if (overriddenBySubschema) {
             let subschemaSelections = delegationMap.get(nonUniqueSubschema);
             if (subschemaSelections == null) {
@@ -209,7 +214,11 @@ function calculateDelegationStage(
                 fieldNode.name.value
               ]?.override;
             if (overrideHandler != null) {
-              const overridden = overrideHandler(context, info);
+              const overridden = handleOverrideByDelegation(
+                info,
+                context,
+                overrideHandler,
+              );
               if (overridden) {
                 bestUniqueSubschema = nonUniqueSubschema;
                 break;
