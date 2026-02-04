@@ -246,11 +246,22 @@ export type ProgressiveOverrideHandler = (
   info: GraphQLResolveInfo,
 ) => boolean;
 
+function getRngFromEnv() {
+  const rngEnv = globalThis.process?.env?.['PROGRESSIVE_OVERRIDE_RNG'];
+  if (rngEnv) {
+    const rngSeed = parseFloat(rngEnv);
+    if (!isNaN(rngSeed) && rngSeed >= 0 && rngSeed < 1) {
+      return rngSeed;
+    }
+  }
+  return undefined;
+}
+
 export const progressiveOverridePossibilityHandler = (
   possibility: number,
   getRng: (() => number) | undefined,
 ) => {
-  const rng = getRng ? getRng() : Math.random();
+  const rng = getRngFromEnv() || (getRng ? getRng() : Math.random());
   return rng < possibility;
 };
 
