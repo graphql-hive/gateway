@@ -696,7 +696,7 @@ export function createTenv(cwd: string): Tenv {
         result = proc.getStd('out');
       }
 
-      applyMaskServicePorts(result, {
+      result = applyMaskServicePorts(result, {
         services,
         trimHostPaths,
         maskServicePorts,
