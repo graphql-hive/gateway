@@ -1,5 +1,14 @@
 # @graphql-tools/delegate
 
+## 12.0.6
+### Patch Changes
+
+
+
+- [#1916](https://github.com/graphql-hive/gateway/pull/1916) [`2200fc3`](https://github.com/graphql-hive/gateway/commit/2200fc3e9b94db77a642835bbf2d646c65b3e8d0) Thanks [@ardatan](https://github.com/ardatan)! - - Handle the type merging order correctly with custom labels and percentage labels for progressive override
+  - Do not pass `percent(x)` labels to the progressive override handler
+  - Apply progressive override to the shared root fields
+
 ## 12.0.5
 ### Patch Changes
 

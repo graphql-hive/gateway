@@ -1,5 +1,11 @@
 # @graphql-tools/batch-delegate
 
+## 10.0.12
+### Patch Changes
+
+- Updated dependencies [[`2200fc3`](https://github.com/graphql-hive/gateway/commit/2200fc3e9b94db77a642835bbf2d646c65b3e8d0)]:
+  - @graphql-tools/delegate@12.0.6
+
 ## 10.0.11
 ### Patch Changes
 
