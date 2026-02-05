@@ -147,6 +147,11 @@ export async function getBuiltinPluginsFromConfig(
     plugins.push(useJIT());
   }
 
+  if (config.mcp) {
+    const { useMCP } = await import('@graphql-hive/gateway-runtime');
+    plugins.push(useMCP(config.mcp));
+  }
+
   if (config.awsSigv4) {
     const { useAWSSigv4 } = await import('@graphql-hive/plugin-aws-sigv4');
     plugins.push(useAWSSigv4(config.awsSigv4));
