@@ -21,3 +21,5 @@ export {
 export { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 export { getGraphQLWSOptions } from './getGraphQLWSOptions';
 export { withState } from '@envelop/core';
+export { useMCP } from './plugins/useMCP';
+export type { MCPConfig, MCPToolConfig } from './plugins/useMCP';
