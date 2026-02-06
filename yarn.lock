@@ -6207,7 +6207,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@isaacs/brace-expansion@npm:^5.0.1":
+"@isaacs/brace-expansion@npm:5.0.1":
   version: 5.0.1
   resolution: "@isaacs/brace-expansion@npm:5.0.1"
   dependencies:
@@ -9846,16 +9846,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.2.0
-  resolution: "@types/node@npm:25.2.0"
-  dependencies:
-    undici-types: "npm:~7.16.0"
-  checksum: 10c0/89559ea0de5c8c2da051b384f2cd3161012446816e05d18841838f814e57eb1865f000622e903f08d14f5242736063ed4003a4a359730fdd367e35e2122a8fce
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.2.1":
+"@types/node@npm:*, @types/node@npm:25.2.1, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.2.1
   resolution: "@types/node@npm:25.2.1"
   dependencies:

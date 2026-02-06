@@ -63,6 +63,7 @@
     "vitest": "4.0.18"
   },
   "resolutions": {
+    "@isaacs/brace-expansion": "5.0.1",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
