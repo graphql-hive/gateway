@@ -63,10 +63,10 @@
     "vitest": "4.0.18"
   },
   "resolutions": {
-    "@isaacs/brace-expansion": "5.0.1",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
+    "@isaacs/brace-expansion": "5.0.1",
     "@opentelemetry/otlp-exporter-base@npm:0.203.0": "patch:@opentelemetry/otlp-exporter-base@npm%3A0.203.0#~/.yarn/patches/@opentelemetry-otlp-exporter-base-npm-0.203.0-183dcac0e6.patch",
     "@rollup/plugin-node-resolve@npm:^15.2.3": "patch:@rollup/plugin-node-resolve@npm%3A16.0.1#~/.yarn/patches/@rollup-plugin-node-resolve-npm-16.0.1-2936474bab.patch",
     "@vitest/snapshot": "patch:@vitest/snapshot@npm:3.1.2#~/.yarn/patches/@vitest-snapshot-npm-3.1.1-4d18cf86dc.patch",
