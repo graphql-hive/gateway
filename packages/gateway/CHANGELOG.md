@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 2.3.4
+### Patch Changes
+
+
+
+- [`18898ba`](https://github.com/graphql-hive/gateway/commit/18898ba551750257d9a0bdfdcc3b0576960b8658) Thanks [@ardatan](https://github.com/ardatan)! - Updated `npm` and `@isaacs/brace-expansion` in the Dockerfile to fix the security vulnerability alerts within the docker image
+
 ## 2.3.3
 ### Patch Changes
 
