@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@apollo/gateway": "^2.11.3",
-    "@apollo/server": "^5.1.0",
+    "@apollo/server": "^5.4.0",
     "@apollo/server-gateway-interface": "^2.0.0",
     "@apollo/subgraph": "^2.11.3",
     "@types/lodash": "4.17.23",

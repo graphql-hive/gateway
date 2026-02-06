@@ -2918,7 +2918,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/apq-subgraphs@workspace:e2e/apq-subgraphs"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
     graphql: "npm:^16.12.0"
     tslib: "npm:^2.8.1"
@@ -3030,7 +3030,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-batching-plan@workspace:e2e/federation-batching-plan"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     graphql: "npm:^16.12.0"
   languageName: unknown
@@ -3040,7 +3040,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-example@workspace:e2e/federation-example"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     graphql: "npm:^16.12.0"
   languageName: unknown
@@ -3050,7 +3050,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-mixed@workspace:e2e/federation-mixed"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
     "@omnigraph/openapi": "npm:^0.109.23"
@@ -3070,7 +3070,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/federation-subscriptions-passthrough@workspace:e2e/federation-subscriptions-passthrough"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@as-integrations/express5": "npm:^1.1.2"
     "@graphql-mesh/transport-ws": "workspace:^"
@@ -3125,7 +3125,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/header-propagation@workspace:e2e/header-propagation"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@as-integrations/express5": "npm:^1.1.2"
     "@types/cors": "npm:^2.8.19"
@@ -3141,7 +3141,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/hmac-auth-https@workspace:e2e/hmac-auth-https"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@graphql-hive/gateway": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
@@ -3357,7 +3357,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/opentelemetry@workspace:e2e/opentelemetry"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
     graphql: "npm:^16.12.0"
@@ -5238,7 +5238,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-tools/executor-http@workspace:packages/executors/http"
   dependencies:
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@graphql-hive/signal": "workspace:^"
     "@graphql-tools/executor-common": "workspace:^"
     "@graphql-tools/utils": "npm:^11.0.0"
@@ -5279,7 +5279,7 @@ __metadata:
   resolution: "@graphql-tools/federation@workspace:packages/federation"
   dependencies:
     "@apollo/gateway": "npm:^2.11.3"
-    "@apollo/server": "npm:^5.1.0"
+    "@apollo/server": "npm:^5.4.0"
     "@apollo/server-gateway-interface": "npm:^2.0.0"
     "@apollo/subgraph": "npm:^2.11.3"
     "@graphql-tools/delegate": "workspace:^"
