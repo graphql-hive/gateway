@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@as-integrations/express5';
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { expressMiddleware } from '@as-integrations/express5';
 import { Opts } from '@internal/testing';
 import express from 'express';
 import { gql } from 'graphql-tag';
