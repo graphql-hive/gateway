@@ -88,6 +88,9 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 RUN npm install tar@^7 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
 
+# fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
+RUN npm install @isaacs/brace-expansion@5.0.1 -g
+
 # fix glob vulnerability by updating glob to latest version ^11
 # deal with CVE-2025-64756
 RUN npm install glob@^11 -g
