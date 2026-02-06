@@ -355,7 +355,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:^5.1.0, @apollo/server@npm:^5.4.0":
+"@apollo/server@npm:5.4.0":
   version: 5.4.0
   resolution: "@apollo/server@npm:5.4.0"
   dependencies:
