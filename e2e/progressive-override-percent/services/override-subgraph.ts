@@ -1,5 +1,5 @@
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { Opts } from '@internal/testing';
 import express from 'express';

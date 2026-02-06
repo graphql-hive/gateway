@@ -3428,6 +3428,7 @@ __metadata:
   dependencies:
     "@apollo/server": "npm:^5.4.0"
     "@apollo/subgraph": "npm:2.13.0"
+    "@as-integrations/express5": "npm:^1.1.2"
     express: "npm:^4.18.2"
     graphql: "npm:16.12.0"
     graphql-tag: "npm:2.12.6"
