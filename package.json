@@ -63,6 +63,7 @@
     "vitest": "4.0.18"
   },
   "resolutions": {
+    "@apollo/server": "5.4.0",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",

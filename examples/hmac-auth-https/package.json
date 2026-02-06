@@ -10,7 +10,7 @@
     "gateway": "hive-gateway supergraph"
   },
   "dependencies": {
-    "@apollo/server": "^5.1.0",
+    "@apollo/server": "^5.4.0",
     "@apollo/subgraph": "^2.11.3",
     "@graphql-hive/gateway": "^2.3.3",
     "@graphql-hive/logger": "^1.0.10",
