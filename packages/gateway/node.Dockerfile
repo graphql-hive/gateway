@@ -84,12 +84,12 @@ ENV NODE_PATH=/gateway/node_modules
 # ensure that node uses the system CA certificates too because of https://nodejs.org/en/blog/release/v24.7.0
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
+# fix npm vulnerability by updating npm to latest version
+RUN npm install npm@latest -g
+
 # fix tar vulnerability by updating tar to latest v7 version
 RUN npm install tar@^7 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/tar
-
-# fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
-RUN npm install @isaacs/brace-expansion@5.0.1 -g
 
 # fix glob vulnerability by updating glob to latest version ^11
 # deal with CVE-2025-64756
@@ -98,6 +98,10 @@ RUN npm install glob@^11 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob
 # npm uses glob v11, so we've just bumped it to the latest
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
+
+# fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
+RUN npm install @isaacs/brace-expansion@5.0.1 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]
