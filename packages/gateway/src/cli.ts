@@ -14,8 +14,8 @@ import {
   type GatewayConfigSupergraph,
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
-  type MCPConfig,
 } from '@graphql-hive/gateway-runtime';
+import type { MCPConfig } from '@graphql-hive/plugin-mcp';
 import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
