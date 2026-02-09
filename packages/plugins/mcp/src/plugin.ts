@@ -31,12 +31,13 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       registry = new ToolRegistry(config.tools, newSchema)
     },
 
-    onRequest({ request, url, endResponse }) {
+    onRequest({ request, url, endResponse, requestHandler, serverContext }) {
       if (url.pathname !== mcpPath) {
         return
       }
 
       const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`
+      const dispatch = (url: string, init: RequestInit) => requestHandler(new Request(url, init), serverContext)
 
       // Trigger schema introspection if not loaded
       const ensureSchema = async (): Promise<boolean> => {
@@ -48,12 +49,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         if (!schemaLoadingPromise) {
           schemaLoadingPromise = (async () => {
             try {
-              await fetch(graphqlEndpoint, {
+              await dispatch(graphqlEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: '{ __typename }' })
               })
-              await new Promise(resolve => setTimeout(resolve, 100)) // Get rid of this
             } finally {
               schemaLoadingPromise = null
             }
@@ -80,7 +80,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           return
         }
 
-        const execute = createGraphQLExecutor(registry, graphqlEndpoint)
+        const execute = createGraphQLExecutor(registry, graphqlEndpoint, dispatch)
 
         const handler = createMCPHandler({
           serverName: config.name,
