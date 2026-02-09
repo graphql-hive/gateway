@@ -50,7 +50,8 @@
     "@graphql-hive/gateway-runtime": "workspace:*",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.16.2",
-    "pkgroll": "2.23.0"
+    "pkgroll": "2.23.0",
+    "sofa-api": "0.18.9-alpha-20260209105916-0e8bbdbf1143e58f25a464acfb9132491bff932a"
   },
   "sideEffects": false
 }
