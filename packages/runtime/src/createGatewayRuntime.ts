@@ -1189,6 +1189,7 @@ export function createGatewayRuntime<
   });
 
   fetchAPI ||= yoga.fetchAPI;
+  Object.assign(configContext, { dispatchRequest: yoga.fetch.bind(yoga) });
 
   Object.defineProperties(yoga, {
     version: {
