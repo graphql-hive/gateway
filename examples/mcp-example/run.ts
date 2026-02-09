@@ -1,6 +1,7 @@
 import { createServer } from 'node:http'
 import { createYoga, createSchema } from 'graphql-yoga'
-import { createGatewayRuntime, useMCP } from '@graphql-hive/gateway-runtime'
+import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
+import { useMCP } from '@graphql-hive/plugin-mcp'
 
 const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },

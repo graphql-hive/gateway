@@ -1,10 +1,8 @@
 import type { GraphQLSchema } from 'graphql'
-import type { GatewayPlugin } from '../types.js'
-import {
-  ToolRegistry,
-  createMCPHandler,
-  createGraphQLExecutor
-} from '../mcp/index.js'
+import type { GatewayPlugin } from '@graphql-hive/gateway-runtime'
+import { ToolRegistry } from './registry.js'
+import { createMCPHandler } from './protocol.js'
+import { createGraphQLExecutor } from './executor.js'
 
 export interface MCPToolConfig {
   name: string
