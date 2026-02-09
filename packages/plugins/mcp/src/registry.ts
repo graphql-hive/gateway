@@ -1,5 +1,5 @@
 import type { GraphQLSchema } from 'graphql'
-import type { MCPToolConfig } from '../plugins/useMCP.js'
+import type { MCPToolConfig } from './plugin.js'
 import { operationToInputSchema, type JsonSchema } from './schema-converter.js'
 
 export interface MCPTool {
