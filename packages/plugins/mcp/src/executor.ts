@@ -4,14 +4,14 @@ export interface ExecutorContext {
   headers?: Record<string, string>
 }
 
-export function createGraphQLExecutor(registry: ToolRegistry, graphqlEndpoint: string) {
+export function createGraphQLExecutor(registry: ToolRegistry, graphqlEndpoint: string, dispatch: (url: string, init: RequestInit) => Response | Promise<Response>) {
   return async function executeToolCall(toolName: string, args: Record<string, unknown>, context?: ExecutorContext): Promise<unknown> {
     const tool = registry.getTool(toolName)
     if (!tool) {
       throw new Error(`Unknown tool: ${toolName}`)
     }
 
-    const response = await fetch(graphqlEndpoint, {
+    const response = await dispatch(graphqlEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +23,6 @@ export function createGraphQLExecutor(registry: ToolRegistry, graphqlEndpoint: s
       }),
     })
 
-    const result = await response.json()
-    return result
+    return response.json()
   }
 }
