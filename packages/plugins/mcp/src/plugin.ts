@@ -4,6 +4,12 @@ import { ToolRegistry } from './registry.js'
 import { createMCPHandler } from './protocol.js'
 import { createGraphQLExecutor } from './executor.js'
 
+declare module '@graphql-hive/gateway-runtime' {
+  interface GatewayConfigContext {
+    dispatchRequest?: (req: Request) => Response | Promise<Response>
+  }
+}
+
 export interface MCPToolConfig {
   name: string
   description?: string
@@ -31,13 +37,13 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       registry = new ToolRegistry(config.tools, newSchema)
     },
 
-    onRequest({ request, url, endResponse, requestHandler, serverContext }) {
+    onRequest({ request, url, endResponse, serverContext }) {
       if (url.pathname !== mcpPath) {
         return
       }
 
       const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`
-      const dispatch = (url: string, init: RequestInit) => requestHandler(new Request(url, init), serverContext)
+      const dispatch = (url: string, init: RequestInit) => serverContext.dispatchRequest!(new Request(url, init))
 
       // Trigger schema introspection if not loaded
       const ensureSchema = async (): Promise<boolean> => {
