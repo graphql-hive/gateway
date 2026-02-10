@@ -4150,7 +4150,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.20.2, @graphql-hive/core@npm:^0.20.2":
+"@graphql-hive/core@npm:0.20.2, @graphql-hive/core@npm:^0.20.0, @graphql-hive/core@npm:^0.20.2":
   version: 0.20.2
   resolution: "@graphql-hive/core@npm:0.20.2"
   dependencies:
@@ -4441,7 +4441,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphql-hive/plugin-opentelemetry@workspace:packages/plugins/opentelemetry"
   dependencies:
-    "@graphql-hive/core": "npm:^0.20.2"
+    "@graphql-hive/core": "npm:^0.20.0"
     "@graphql-hive/gateway-runtime": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
