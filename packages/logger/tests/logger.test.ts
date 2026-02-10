@@ -930,3 +930,309 @@ it('should log using nodejs.util.inspect.custom symbol', () => {
     ]
   `);
 });
+
+it('should redact paths provided as an array', () => {
+  const [log, writer] = createTLogger({
+    redact: ['key', 'path.to.key'],
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": "[Redacted]",
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": "[Redacted]",
+            },
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with wildcard paths', () => {
+  const [log, writer] = createTLogger({
+    redact: ['stuff.thats[*].secret'],
+  });
+
+  log.info({
+    stuff: {
+      thats: [
+        { secret: 'will be redacted', logme: 'will be logged' },
+        { secret: 'as will this', logme: 'as will this' },
+      ],
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "stuff": {
+            "thats": [
+              {
+                "logme": "will be logged",
+                "secret": "[Redacted]",
+              },
+              {
+                "logme": "as will this",
+                "secret": "[Redacted]",
+              },
+            ],
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with a custom censor string', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['key', 'path.to.key'],
+      censor: '**GDPR COMPLIANT**',
+    },
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": "**GDPR COMPLIANT**",
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": "**GDPR COMPLIANT**",
+            },
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with a censor function', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['password', 'nested.secret'],
+      censor: (value, path) =>
+        `[${path.join('.')}=${String(value).length} chars]`,
+    },
+  });
+
+  log.info({
+    password: 'super-secret',
+    nested: { secret: 'hidden', visible: 'shown' },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "nested": {
+            "secret": "[nested.secret=6 chars]",
+            "visible": "shown",
+          },
+          "password": "[password=12 chars]",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with remove option', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['key', 'path.to.key', 'stuff.thats[*].secret'],
+      remove: true,
+    },
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+    stuff: {
+      thats: [
+        { secret: 'will be redacted', logme: 'will be logged' },
+        { secret: 'as will this', logme: 'as will this' },
+      ],
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": undefined,
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": undefined,
+            },
+          },
+          "stuff": {
+            "thats": [
+              {
+                "logme": "will be logged",
+                "secret": undefined,
+              },
+              {
+                "logme": "as will this",
+                "secret": undefined,
+              },
+            ],
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not mutate the original object when redacting', () => {
+  const [log] = createTLogger({
+    redact: ['secret'],
+  });
+
+  const obj = { secret: 'value', visible: 'shown' };
+  log.info(obj);
+
+  expect(obj.secret).toBe('value');
+});
+
+it('should redact in child loggers', () => {
+  const [log, writer] = createTLogger({
+    redact: ['secret'],
+  });
+
+  const child = log.child({ component: 'auth' });
+
+  child.info({ secret: 'password', user: 'admin' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "component": "auth",
+          "secret": "[Redacted]",
+          "user": "admin",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with bracket notation paths', () => {
+  const [log, writer] = createTLogger({
+    redact: ['headers["X-Auth-Token"]'],
+  });
+
+  log.info({
+    headers: {
+      'X-Auth-Token': 'bearer abc123',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Auth-Token": "[Redacted]",
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not fail when redact path does not exist in object', () => {
+  const [log, writer] = createTLogger({
+    redact: ['nonexistent.path'],
+  });
+
+  log.info({ hello: 'world' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "hello": "world",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact across multiple log calls', () => {
+  const [log, writer] = createTLogger({
+    redact: ['token'],
+  });
+
+  log.info({ token: 'first', data: 'a' });
+  log.info({ token: 'second', data: 'b' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "data": "a",
+          "token": "[Redacted]",
+        },
+        "level": "info",
+      },
+      {
+        "attrs": {
+          "data": "b",
+          "token": "[Redacted]",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not redact when no attrs are provided', () => {
+  const [log, writer] = createTLogger({
+    redact: ['secret'],
+  });
+
+  log.info('just a message');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "just a message",
+      },
+    ]
+  `);
+});
