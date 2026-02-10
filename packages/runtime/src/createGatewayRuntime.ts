@@ -92,6 +92,7 @@ import {
   html as landingPageHtml,
   logoSvg,
 } from './landing-page.generated';
+import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import { useCacheDebug } from './plugins/useCacheDebug';
 import { useConfigInServerContext } from './plugins/useConfigInServerContext';
 import { useContentEncoding } from './plugins/useContentEncoding';
@@ -218,7 +219,37 @@ export function createGatewayRuntime<
     'type' in config.persistedDocuments &&
     config.persistedDocuments?.type === 'hive'
   ) {
-    persistedDocumentsPlugin = useHiveConsole({
+    // Create layer2 cache if configured (requires gateway cache to be available)
+    const specifiedCacheOptions = [
+      config.persistedDocuments.cacheTtlSeconds !== undefined &&
+        'cacheTtlSeconds',
+      config.persistedDocuments.cacheNotFoundTtlSeconds !== undefined &&
+        'cacheNotFoundTtlSeconds',
+      config.persistedDocuments.cacheKeyPrefix !== undefined &&
+        'cacheKeyPrefix',
+    ].filter(Boolean);
+    const hasCacheConfig = specifiedCacheOptions.length > 0;
+    if (hasCacheConfig && !configContext.cache) {
+      configContext.log.warn(
+        'Persisted documents cache options (%s) were specified but no gateway cache is configured. ' +
+          'Cache will be disabled. Configure a cache using the "cache" option to enable caching.',
+        specifiedCacheOptions.join(', '),
+      );
+    }
+    const layer2Cache =
+      hasCacheConfig && configContext.cache
+        ? createPersistedDocumentsCache(
+            {
+              ttlSeconds: config.persistedDocuments.cacheTtlSeconds,
+              notFoundTtlSeconds:
+                config.persistedDocuments.cacheNotFoundTtlSeconds,
+              keyPrefix: config.persistedDocuments.cacheKeyPrefix,
+            },
+            configContext.cache,
+          )
+        : undefined;
+
+    const hiveConsolePlugin = useHiveConsole({
       ...configContext,
       enabled: false, // disables only usage reporting
       log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
@@ -230,8 +261,11 @@ export function createGatewayRuntime<
         circuitBreaker: config.persistedDocuments.circuitBreaker,
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
+        layer2Cache,
       },
     });
+
+    persistedDocumentsPlugin = hiveConsolePlugin;
   } else if (
     config.persistedDocuments &&
     'getPersistedOperation' in config.persistedDocuments

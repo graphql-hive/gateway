@@ -4150,7 +4150,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-hive/core@npm:0.20.2, @graphql-hive/core@npm:^0.20.0":
+"@graphql-hive/core@npm:0.20.2, @graphql-hive/core@npm:^0.20.0, @graphql-hive/core@npm:^0.20.2":
   version: 0.20.2
   resolution: "@graphql-hive/core@npm:0.20.2"
   dependencies:
@@ -4178,7 +4178,7 @@ __metadata:
     "@envelop/disable-introspection": "npm:^9.0.0"
     "@envelop/generic-auth": "npm:^11.0.0"
     "@envelop/instrumentation": "npm:^1.0.0"
-    "@graphql-hive/core": "npm:^0.20.0"
+    "@graphql-hive/core": "npm:^0.20.2"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-hive/signal": "workspace:^"

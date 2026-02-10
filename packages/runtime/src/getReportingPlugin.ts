@@ -1,5 +1,6 @@
 import { MaybePromise } from '@graphql-tools/utils';
 import { useApolloUsageReport } from '@graphql-yoga/plugin-apollo-usage-report';
+import { createPersistedDocumentsCache } from './persistedDocumentsCache';
 import useHiveConsole, {
   HiveConsolePluginOptions,
 } from './plugins/useHiveConsole';
@@ -28,7 +29,41 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
         ...(typeof usage === 'object' ? { ...usage } : {}),
       };
     }
-    return useHiveConsole({
+
+    // Create layer2 cache if configured (requires gateway cache to be available)
+    const persistedDocs =
+      config.persistedDocuments &&
+      'type' in config.persistedDocuments &&
+      config.persistedDocuments?.type === 'hive'
+        ? config.persistedDocuments
+        : undefined;
+    const specifiedCacheOptions = [
+      persistedDocs?.cacheTtlSeconds !== undefined && 'cacheTtlSeconds',
+      persistedDocs?.cacheNotFoundTtlSeconds !== undefined &&
+        'cacheNotFoundTtlSeconds',
+      persistedDocs?.cacheKeyPrefix !== undefined && 'cacheKeyPrefix',
+    ].filter(Boolean);
+    const hasCacheConfig = specifiedCacheOptions.length > 0;
+    if (hasCacheConfig && !configContext.cache) {
+      configContext.log.warn(
+        'Persisted documents cache options (%s) were specified but no gateway cache is configured. ' +
+          'Cache will be disabled. Configure a cache using the "cache" option to enable caching.',
+        specifiedCacheOptions.join(', '),
+      );
+    }
+    const layer2Cache =
+      persistedDocs && hasCacheConfig && configContext.cache
+        ? createPersistedDocumentsCache(
+            {
+              ttlSeconds: persistedDocs.cacheTtlSeconds,
+              notFoundTtlSeconds: persistedDocs.cacheNotFoundTtlSeconds,
+              keyPrefix: persistedDocs.cacheKeyPrefix,
+            },
+            configContext.cache,
+          )
+        : undefined;
+
+    const hiveConsolePlugin = useHiveConsole({
       log: configContext.log.child('[useHiveConsole] '),
       fetch: configContext.fetch,
       enabled: true,
@@ -44,12 +79,15 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
                 accessToken: config.persistedDocuments.token,
               },
               circuitBreaker: config.persistedDocuments.circuitBreaker,
-              // Trick to satisfy the Hive Console plugin types
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
+              // Trick to satisfy the Hive Console plugin types
+              layer2Cache,
             },
           }
         : {}),
     });
+
+    return hiveConsolePlugin as GatewayPlugin<TContext>;
   } else if (
     config.reporting?.type === 'graphos' ||
     (!config.reporting &&
