@@ -2935,7 +2935,7 @@ __metadata:
   resolution: "@e2e/aws-sigv4@workspace:e2e/aws-sigv4"
   dependencies:
     "@apollo/subgraph": "npm:^2.11.3"
-    aws4-express: "npm:^0.12.0"
+    aws4-express: "npm:^0.13.1"
     express: "npm:^5.0.0"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.2"
@@ -11523,12 +11523,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aws4-express@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "aws4-express@npm:0.12.0"
+"aws4-express@npm:^0.13.1":
+  version: 0.13.1
+  resolution: "aws4-express@npm:0.13.1"
   dependencies:
-    express: "npm:^4.21.2"
-  checksum: 10c0/f12712485162c9ae02f0233cf0d3b405ca9e5252b7b123915ce18c9c514f37e43d3c37fdeb8ba0d435fb525ec561f48eceacc50dbc6bb6bbfabfa72568a1c792
+    express: "npm:^5.2.1"
+    node: "npm:^24.13.0"
+  checksum: 10c0/f3067ec301f08ee2480c6ab78eb0b3b0c62fe3a3166638cbef7d5c362a70a9aea587f85b1fb8289fb386fd773590e5fc927d1e538d48841cf495364b81de3a03
   languageName: node
   linkType: hard
 
@@ -17878,6 +17879,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-bin-setup@npm:^1.0.0":
+  version: 1.1.4
+  resolution: "node-bin-setup@npm:1.1.4"
+  checksum: 10c0/2cd8f92cafb28c8b4bd65ff91d1b96f65a345d2ee1eee689c47255356568366103436188229f1337f881ac6315a2b6622b6df7ceb7b9631ff45344d68f2d43b4
+  languageName: node
+  linkType: hard
+
 "node-fetch@npm:^2.5.0, node-fetch@npm:^2.6.7, node-fetch@npm:^2.6.9":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
@@ -17930,6 +17938,17 @@ __metadata:
   version: 0.7.3
   resolution: "node-watch@npm:0.7.3"
   checksum: 10c0/dea5c2ab482280b6b2b39c9b8fcf67943f8e3dc033d103d4521c7106a39a1d214756663fa2c9bd1012dc840d69f763d865cd47f1e9374231ee3c0f42e95d14df
+  languageName: node
+  linkType: hard
+
+"node@npm:^24.13.0":
+  version: 24.13.0
+  resolution: "node@npm:24.13.0"
+  dependencies:
+    node-bin-setup: "npm:^1.0.0"
+  bin:
+    node: bin/node
+  checksum: 10c0/4801294a0924587d89178c0abfa8fcb83ce70d5e3390c61d70bae79280b614f5529240646496360fccc2f8e9cec390606c2ce022e4a05ac96a069b2f44a9ba66
   languageName: node
   linkType: hard
 
