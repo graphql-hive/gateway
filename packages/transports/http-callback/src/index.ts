@@ -103,9 +103,10 @@ export default {
     }
     const heartbeats = new Map<string, ReturnType<typeof setTimeout>>();
     const stopFnSet = new Set<VoidFunction>();
-    const publicUrl =
-      transportEntry.options?.public_url || 'http://localhost:4000/callback';
     const callbackPath = transportEntry.options?.path || '/callback';
+    const publicUrl =
+      transportEntry.options?.public_url ||
+      'http://localhost:4000' + callbackPath;
     const heartbeatIntervalMs =
       transportEntry.options?.heartbeat_interval || 50000;
     const httpCallbackExecutor = function httpCallbackExecutor(
