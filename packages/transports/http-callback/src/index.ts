@@ -104,7 +104,7 @@ export default {
     const heartbeats = new Map<string, ReturnType<typeof setTimeout>>();
     const stopFnSet = new Set<VoidFunction>();
     const publicUrl =
-      transportEntry.options?.public_url || 'http://localhost:4000';
+      transportEntry.options?.public_url || 'http://localhost:4000/callback';
     const callbackPath = transportEntry.options?.path || '/callback';
     const heartbeatIntervalMs =
       transportEntry.options?.heartbeat_interval || 50000;
@@ -116,7 +116,8 @@ export default {
         executor: 'http-callback',
         subscription: subscriptionId,
       });
-      const callbackUrl = `${publicUrl}${callbackPath}/${subscriptionId}`;
+      // no callbackUrl is without callbackPath because the publicUrl contains it
+      const callbackUrl = `${publicUrl}/${subscriptionId}`;
       const subscriptionCallbackPath = `${callbackPath}/${subscriptionId}`;
       const serializedParams = serializeExecutionRequest({
         executionRequest,
