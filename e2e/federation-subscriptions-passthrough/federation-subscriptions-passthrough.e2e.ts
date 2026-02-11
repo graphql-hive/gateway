@@ -181,7 +181,7 @@ subscriptionsClientFactories.forEach(([protocol, createClient]) => {
         },
         port: availablePort,
         env: {
-          PUBLIC_URL: publicUrl,
+          PUBLIC_URL: publicUrl + '/callback',
         },
       });
 
