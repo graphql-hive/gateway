@@ -63,7 +63,7 @@ describe('upstream subscriptions via http callbacks', () => {
         },
         port: availablePort,
         env: {
-          PUBLIC_URL: publicUrl,
+          PUBLIC_URL: publicUrl + '/callback',
         },
       });
     },
