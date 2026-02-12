@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { useMCP } from '../src/plugin.js'
+import { describe, expect, it } from 'vitest';
+import { useMCP } from '../src/plugin.js';
 
 describe('MCP Integration', () => {
   const mcpPlugin = useMCP({
@@ -10,7 +10,7 @@ describe('MCP Integration', () => {
       {
         name: 'greet',
         description: 'Greet someone by name',
-        query: `query Greet($name: String!) { hello(name: $name) }`
+        query: `query Greet($name: String!) { hello(name: $name) }`,
       },
       {
         name: 'get_weather',
@@ -22,14 +22,14 @@ describe('MCP Integration', () => {
               conditions
             }
           }
-        `
-      }
-    ]
-  })
+        `,
+      },
+    ],
+  });
 
   it('plugin exports correctly', () => {
-    expect(mcpPlugin).toBeDefined()
-    expect(mcpPlugin.onSchemaChange).toBeDefined()
-    expect(mcpPlugin.onRequest).toBeDefined()
-  })
-})
+    expect(mcpPlugin).toBeDefined();
+    expect(mcpPlugin.onSchemaChange).toBeDefined();
+    expect(mcpPlugin.onRequest).toBeDefined();
+  });
+});
