@@ -95,9 +95,7 @@
       "@graphql-hive/plugin-aws-sigv4": [
         "./packages/plugins/aws-sigv4/src/index.ts"
       ],
-      "@graphql-hive/plugin-mcp": [
-        "./packages/plugins/mcp/src/index.ts"
-      ],
+      "@graphql-hive/plugin-mcp": ["./packages/plugins/mcp/src/index.ts"],
       "@graphql-mesh/plugin-jwt-auth": [
         "./packages/plugins/jwt-auth/src/index.ts"
       ],
