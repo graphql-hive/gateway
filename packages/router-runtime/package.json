@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "graphql": "^16.9.0",
-    "pkgroll": "2.23.1"
+    "pkgroll": "2.24.1"
   },
   "sideEffects": false
 }

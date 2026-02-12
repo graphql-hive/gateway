@@ -56,7 +56,7 @@
   "devDependencies": {
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.16.2",
-    "pkgroll": "2.23.1",
+    "pkgroll": "2.24.1",
     "prom-client": "15.1.3"
   },
   "sideEffects": false
