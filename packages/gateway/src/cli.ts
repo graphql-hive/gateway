@@ -15,9 +15,9 @@ import {
   type GatewayGraphOSReportingOptions,
   type GatewayHiveReportingOptions,
 } from '@graphql-hive/gateway-runtime';
-import type { MCPConfig } from '@graphql-hive/plugin-mcp';
 import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
+import type { MCPConfig } from '@graphql-hive/plugin-mcp';
 import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
 import type { PubSub } from '@graphql-hive/pubsub';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
