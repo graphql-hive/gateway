@@ -4223,6 +4223,7 @@ __metadata:
     "@graphql-hive/importer": "workspace:^"
     "@graphql-hive/logger": "workspace:^"
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
+    "@graphql-hive/plugin-mcp": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.16"
@@ -4397,6 +4398,23 @@ __metadata:
     pkgroll: "npm:2.24.1"
   peerDependencies:
     graphql: ^16.12.0
+  languageName: unknown
+  linkType: soft
+
+"@graphql-hive/plugin-mcp@workspace:^, @graphql-hive/plugin-mcp@workspace:packages/plugins/mcp":
+  version: 0.0.0-use.local
+  resolution: "@graphql-hive/plugin-mcp@workspace:packages/plugins/mcp"
+  dependencies:
+    "@graphql-hive/gateway-runtime": "workspace:*"
+    "@graphql-hive/logger": "workspace:^"
+    "@graphql-mesh/fusion-runtime": "workspace:^"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.16.2"
+    pkgroll: "npm:2.23.0"
+    sofa-api: "npm:0.18.9-alpha-20260209105916-0e8bbdbf1143e58f25a464acfb9132491bff932a"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^15.9.0 || ^16.9.0
   languageName: unknown
   linkType: soft
 
@@ -14220,7 +14238,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fets@npm:0.8.5, fets@npm:^0.8.4":
+"fets@npm:0.8.5, fets@npm:^0.8.0, fets@npm:^0.8.4":
   version: 0.8.5
   resolution: "fets@npm:0.8.5"
   dependencies:
@@ -18992,7 +19010,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.13.1, qs@npm:^6.14.0, qs@npm:^6.14.1":
+"qs@npm:^6.11.2, qs@npm:^6.13.1, qs@npm:^6.14.0, qs@npm:^6.14.1":
   version: 6.14.1
   resolution: "qs@npm:6.14.1"
   dependencies:
@@ -20128,6 +20146,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sofa-api@npm:0.18.9-alpha-20260209105916-0e8bbdbf1143e58f25a464acfb9132491bff932a":
+  version: 0.18.9-alpha-20260209105916-0e8bbdbf1143e58f25a464acfb9132491bff932a
+  resolution: "sofa-api@npm:0.18.9-alpha-20260209105916-0e8bbdbf1143e58f25a464acfb9132491bff932a"
+  dependencies:
+    "@graphql-tools/utils": "npm:^11.0.0"
+    "@whatwg-node/fetch": "npm:^0.10.0"
+    ansi-colors: "npm:^4.1.3"
+    fets: "npm:^0.8.0"
+    openapi-types: "npm:^12.1.0"
+    param-case: "npm:^3.0.4"
+    qs: "npm:^6.11.2"
+    title-case: "npm:^3.0.3"
+    tslib: "npm:^2.5.0"
+  peerDependencies:
+    graphql: ^15.0.0 || ^16.0.0
+  checksum: 10c0/8f8faf2b7d3283a9888246391ab4ed6b298763aa55bedb005a97c8b572384b73d4e1d5ab54a3e0df7a196ca2df7e4085884269249b7eec207c9dc3af229b2c35
+  languageName: node
+  linkType: hard
+
 "sonic-boom@npm:^4.0.1":
   version: 4.2.0
   resolution: "sonic-boom@npm:4.2.0"
@@ -20897,6 +20934,15 @@ __metadata:
   version: 3.0.3
   resolution: "tinyrainbow@npm:3.0.3"
   checksum: 10c0/1e799d35cd23cabe02e22550985a3051dc88814a979be02dc632a159c393a998628eacfc558e4c746b3006606d54b00bcdea0c39301133956d10a27aa27e988c
+  languageName: node
+  linkType: hard
+
+"title-case@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "title-case@npm:3.0.3"
+  dependencies:
+    tslib: "npm:^2.0.3"
+  checksum: 10c0/face56f686060f777b43a180d371407124d201eb4238c19d9e97030fd54859696ca4e2ca499cc232f8700f24f2414cc08aab9fdf6d39acff055dd825a4d86d6a
   languageName: node
   linkType: hard
 
