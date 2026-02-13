@@ -52,7 +52,7 @@
     "@graphql-tools/mock": "^9.1.3",
     "dataloader": "^2.2.3",
     "graphql": "^16.12.0",
-    "pkgroll": "2.24.1"
+    "pkgroll": "2.25.1"
   },
   "sideEffects": false
 }
