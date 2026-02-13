@@ -56,7 +56,7 @@
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/utils": "^0.104.16",
     "graphql": "^16.12.0",
-    "pkgroll": "2.24.1"
+    "pkgroll": "2.25.1"
   },
   "sideEffects": false
 }
