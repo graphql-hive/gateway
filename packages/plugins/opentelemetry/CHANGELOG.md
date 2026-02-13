@@ -1,5 +1,19 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.3.9
+### Patch Changes
+
+
+
+- [#1957](https://github.com/graphql-hive/gateway/pull/1957) [`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-node@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+
 ## 1.3.8
 ### Patch Changes
 
