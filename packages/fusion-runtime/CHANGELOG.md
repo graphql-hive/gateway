@@ -1,5 +1,15 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.6.8
+### Patch Changes
+
+- Updated dependencies [[`584a293`](https://github.com/graphql-hive/gateway/commit/584a293e3dafa7cd2d0210f80299c81b6707bcd4)]:
+  - @graphql-tools/delegate@12.0.7
+  - @graphql-tools/federation@4.2.11
+  - @graphql-tools/stitch@10.1.11
+  - @graphql-tools/stitching-directives@4.0.13
+  - @graphql-tools/wrap@11.1.7
+
 ## 1.6.7
 ### Patch Changes
 

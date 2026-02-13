@@ -1,5 +1,22 @@
 # @graphql-hive/gateway-runtime
 
+## 2.6.1
+### Patch Changes
+
+
+
+- [#1951](https://github.com/graphql-hive/gateway/pull/1951) [`8028028`](https://github.com/graphql-hive/gateway/commit/8028028109a6e14d7bb332eb37e817082e1a8de2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/yoga@^0.47.3` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.47.3) (from `^0.47.0`, in `dependencies`)
+- Updated dependencies [[`584a293`](https://github.com/graphql-hive/gateway/commit/584a293e3dafa7cd2d0210f80299c81b6707bcd4)]:
+  - @graphql-tools/delegate@12.0.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-tools/batch-delegate@10.0.13
+  - @graphql-tools/federation@4.2.11
+  - @graphql-mesh/fusion-runtime@1.6.8
+  - @graphql-tools/stitch@10.1.11
+  - @graphql-tools/wrap@11.1.7
+
 ## 2.6.0
 ### Minor Changes
 
