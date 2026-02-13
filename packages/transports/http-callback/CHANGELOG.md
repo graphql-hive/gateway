@@ -1,5 +1,12 @@
 # @graphql-mesh/transport-http-callback
 
+## 1.0.15
+### Patch Changes
+
+
+
+- [#1944](https://github.com/graphql-hive/gateway/pull/1944) [`beb12fa`](https://github.com/graphql-hive/gateway/commit/beb12fade8824720ac9a74465099c8090cb36d10) Thanks [@enisdenjo](https://github.com/enisdenjo)! - The public url contains the callback path
+
 ## 1.0.14
 ### Patch Changes
 
