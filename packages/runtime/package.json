@@ -53,7 +53,7 @@
     "@graphql-hive/logger": "workspace:^",
     "@graphql-hive/pubsub": "workspace:^",
     "@graphql-hive/signal": "workspace:^",
-    "@graphql-hive/yoga": "^0.47.0",
+    "@graphql-hive/yoga": "^0.47.3",
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
