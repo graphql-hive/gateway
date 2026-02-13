@@ -305,80 +305,89 @@ describe('delegateToSchema', () => {
       return outerSchema;
     }
 
-    test.fails('should preserve variable default values in @include when delegating with validation', async () => {
-      const outerSchema = makeValidatingDelegationSchema();
+    test.fails(
+      'should preserve variable default values in @include when delegating with validation',
+      async () => {
+        const outerSchema = makeValidatingDelegationSchema();
 
-      // $flag: Boolean = false is valid in @include(if: Boolean!) because
-      // the default value guarantees non-null per the GraphQL spec.
-      // The delegate must preserve the default value when building the
-      // subgraph query, otherwise the subgraph sees $flag: Boolean in a
-      // Boolean! position and rejects the VariablesInAllowedPosition rule.
-      const result = await graphql({
-        schema: outerSchema,
-        source: /* GraphQL */ `
-          query ($flag: Boolean = false) {
-            getData(flag: $flag) {
-              main
-              extra @include(if: $flag)
+        // $flag: Boolean = false is valid in @include(if: Boolean!) because
+        // the default value guarantees non-null per the GraphQL spec.
+        // The delegate must preserve the default value when building the
+        // subgraph query, otherwise the subgraph sees $flag: Boolean in a
+        // Boolean! position and rejects the VariablesInAllowedPosition rule.
+        const result = await graphql({
+          schema: outerSchema,
+          source: /* GraphQL */ `
+            query ($flag: Boolean = false) {
+              getData(flag: $flag) {
+                main
+                extra @include(if: $flag)
+              }
             }
-          }
-        `,
-      });
+          `,
+        });
 
-      expect(result.errors).toBeUndefined();
-      assertSome(result.data);
-      expect(result.data['getData']).toEqual({
-        main: 'mainValue',
-      });
-    });
+        expect(result.errors).toBeUndefined();
+        assertSome(result.data);
+        expect(result.data['getData']).toEqual({
+          main: 'mainValue',
+        });
+      },
+    );
 
-    test.fails('should preserve variable default values in @skip when delegating with validation', async () => {
-      const outerSchema = makeValidatingDelegationSchema();
+    test.fails(
+      'should preserve variable default values in @skip when delegating with validation',
+      async () => {
+        const outerSchema = makeValidatingDelegationSchema();
 
-      const result = await graphql({
-        schema: outerSchema,
-        source: /* GraphQL */ `
-          query ($flag: Boolean = true) {
-            getData(flag: $flag) {
-              main
-              extra @skip(if: $flag)
+        const result = await graphql({
+          schema: outerSchema,
+          source: /* GraphQL */ `
+            query ($flag: Boolean = true) {
+              getData(flag: $flag) {
+                main
+                extra @skip(if: $flag)
+              }
             }
-          }
-        `,
-      });
+          `,
+        });
 
-      expect(result.errors).toBeUndefined();
-      assertSome(result.data);
-      expect(result.data['getData']).toEqual({
-        main: 'mainValue',
-      });
-    });
+        expect(result.errors).toBeUndefined();
+        assertSome(result.data);
+        expect(result.data['getData']).toEqual({
+          main: 'mainValue',
+        });
+      },
+    );
 
-    test.fails('should preserve variable default when caller provides explicit value', async () => {
-      const outerSchema = makeValidatingDelegationSchema();
+    test.fails(
+      'should preserve variable default when caller provides explicit value',
+      async () => {
+        const outerSchema = makeValidatingDelegationSchema();
 
-      // When the caller explicitly provides a value, the query should still
-      // pass validation because the default in the definition guarantees non-null.
-      const result = await graphql({
-        schema: outerSchema,
-        source: /* GraphQL */ `
-          query ($flag: Boolean = false) {
-            getData(flag: $flag) {
-              main
-              extra @include(if: $flag)
+        // When the caller explicitly provides a value, the query should still
+        // pass validation because the default in the definition guarantees non-null.
+        const result = await graphql({
+          schema: outerSchema,
+          source: /* GraphQL */ `
+            query ($flag: Boolean = false) {
+              getData(flag: $flag) {
+                main
+                extra @include(if: $flag)
+              }
             }
-          }
-        `,
-        variableValues: { flag: true },
-      });
+          `,
+          variableValues: { flag: true },
+        });
 
-      expect(result.errors).toBeUndefined();
-      assertSome(result.data);
-      expect(result.data['getData']).toEqual({
-        main: 'mainValue',
-        extra: 'extraValue',
-      });
-    });
+        expect(result.errors).toBeUndefined();
+        assertSome(result.data);
+        expect(result.data['getData']).toEqual({
+          main: 'mainValue',
+          extra: 'extraValue',
+        });
+      },
+    );
 
     test('should reject nullable Boolean without default in @include position', async () => {
       const sourceSchema = makeExecutableSchema({
@@ -403,7 +412,7 @@ describe('delegateToSchema', () => {
 
       expect(result.errors).toBeDefined();
       expect(result.errors!.length).toBeGreaterThan(0);
-      expect(result.errors![0].message).toMatch(
+      expect(result.errors![0]!.message).toMatch(
         /Variable "\$flag" of type "Boolean" used in position expecting type "Boolean!"/,
       );
     });
