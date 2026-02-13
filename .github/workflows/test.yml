@@ -175,6 +175,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
       - if: runner.os == 'Windows'
+        name: Set up Dev Drive
+        uses: samypr100/setup-dev-drive@v3
+        with:
+          workspace-copy: true
+      - if: runner.os == 'Windows'
         name: Cache WMIC
         id: cache-wmic
         uses: actions/cache@v5
@@ -201,9 +206,11 @@ jobs:
       - if: runner.os == 'Windows'
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
+        working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
+          working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
           node-version-file: .node-version # if matrix.setup.node-version is not provided, the version from the file will be used
           node-version: ${{matrix.setup.node-version}}
       - if: runner.os == 'Linux'
@@ -220,11 +227,13 @@ jobs:
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Build # TODO: necessary only because rollup does not use tsconfig paths within node_modules and we have packages scattered between Mesh and Hive GW repos
         run: yarn build
+        working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker' || matrix.setup.gateway-runner == 'bin'
         name: Bundle
         env:
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
         run: yarn workspace @graphql-hive/gateway bundle
+        working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
@@ -239,12 +248,14 @@ jobs:
       - if: matrix.setup.gateway-runner == 'bin'
         name: Package binary
         run: yarn workspace @graphql-hive/gateway tsx scripts/package-binary
+        working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
       - name: Test
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: yarn test:e2e
+          working-directory: ${{ env.DEV_DRIVE_WORKSPACE }}
         env:
           HIVE_ROUTER_RUNTIME: ${{matrix.setup.hive-router-runtime}}
           E2E_GATEWAY_RUNNER: ${{matrix.setup.gateway-runner}}
