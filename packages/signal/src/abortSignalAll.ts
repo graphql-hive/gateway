@@ -14,19 +14,17 @@ export function abortSignalAll(
     return signals[0];
   }
   if (signals.every((signal) => signal.aborted)) {
-    const errors =
-      signals
-        .map((signal) => signal.reason)
-        .filter((reason) => reason != null && !reason?.toString?.()?.includes('AbortError'));
-    if (
-      errors.length < 2
-    ) {
+    const errors = signals
+      .map((signal) => signal.reason)
+      .filter(
+        (reason) =>
+          reason != null && !reason?.toString?.()?.includes('AbortError'),
+      );
+    if (errors.length < 2) {
       // if all signals are already aborted, return one of them immediately
       return signals[0];
     } else {
-      return AbortSignal.abort(
-        new AggregateError(errors),
-      );
+      return AbortSignal.abort(new AggregateError(errors));
     }
   }
 
