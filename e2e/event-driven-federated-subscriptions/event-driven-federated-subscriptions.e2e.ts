@@ -33,6 +33,7 @@ it('should receive subscription published event on all distributed gateways', as
           with: 'apollo',
           services: [products],
         },
+        env: natsEnv,
       }),
     ),
   );
