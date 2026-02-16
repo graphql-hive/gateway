@@ -49,7 +49,8 @@ export default defineConfig({
                   '!**/e2e/opentelemetry',
                   '!**/e2e/graphos-polling',
                   '!**/e2e/distributed-subscriptions-webhooks',
-                  '!**/e2e/event-driven-federated-subscriptions',
+                  '!**/e2e/edfs-gateway-defs',
+                  '!**/e2e/edfs-subgraph-defs',
                 ]
               : []),
             ...(usingHiveRouterRuntime()
@@ -58,7 +59,8 @@ export default defineConfig({
                   '!**/e2e/js-config', // has additional resolvers
                   '!**/e2e/auto-type-merging', // has custom type merging (using @merge and @resolveTo)
                   '!**/e2e/distributed-subscriptions-webhooks', // has additional typedefs (using @resolveTo)
-                  '!**/e2e/event-driven-federated-subscriptions', // has additional typedefs (using @resolveTo)
+                  '!**/e2e/edfs-gateway-defs', // has additional typedefs (using @resolveTo)
+                  '!**/e2e/edfs-subgraph-defs', // has additional typedefs
                   '!**/e2e/federation-batching-plan', // uses stitching plan
                   '!**/e2e/extra-fields', // has additional typedefs
                   '!**/e2e/federation-mixed', // has transforms

@@ -2992,9 +2992,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions":
+"@e2e/edfs-gateway-defs@workspace:e2e/edfs-gateway-defs":
   version: 0.0.0-use.local
-  resolution: "@e2e/event-driven-federated-subscriptions@workspace:e2e/event-driven-federated-subscriptions"
+  resolution: "@e2e/edfs-gateway-defs@workspace:e2e/edfs-gateway-defs"
+  dependencies:
+    "@nats-io/transport-node": "npm:^3.2.0"
+    graphql: "npm:^16.12.0"
+    graphql-sse: "npm:^2.6.0"
+  languageName: unknown
+  linkType: soft
+
+"@e2e/edfs-subgraph-defs@workspace:e2e/edfs-subgraph-defs":
+  version: 0.0.0-use.local
+  resolution: "@e2e/edfs-subgraph-defs@workspace:e2e/edfs-subgraph-defs"
   dependencies:
     "@nats-io/transport-node": "npm:^3.2.0"
     graphql: "npm:^16.12.0"
