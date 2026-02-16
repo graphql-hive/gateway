@@ -354,12 +354,12 @@ describe('batch execution', () => {
     const promise1 = batchExec({
       document: parse('{ field1 field2 }'),
       signal: abortController1.signal,
-    }).catch(e => e);
+    }).catch((e) => e);
 
     const promise2 = batchExec({
       document: parse('{ field2 field3(input: "3") }'),
       signal: abortController2.signal,
-    }).catch(e => e);
+    }).catch((e) => e);
 
     // Abort both requests
     abortController1.abort();
