@@ -1,16 +1,11 @@
 import { setTimeout } from 'node:timers/promises';
-import {
-  createTenv,
-  dockerHostName,
-  handleDockerHostNameInURLOrAtPath,
-} from '@internal/e2e';
+import { createTenv, dockerHostName } from '@internal/e2e';
 import { connect as natsConnect } from '@nats-io/transport-node';
 import { fetch } from '@whatwg-node/fetch';
 import { createClient } from 'graphql-sse';
 import { beforeAll, expect, it } from 'vitest';
 
-const { container, gateway, service, composeWithMesh, gatewayRunner } =
-  createTenv(__dirname);
+const { container, gateway, service, gatewayRunner } = createTenv(__dirname);
 
 const natsEnv = {
   NATS_HOST: '',
@@ -30,23 +25,16 @@ beforeAll(async () => {
 });
 
 it('should receive subscription published event on all distributed gateways', async () => {
-  const { output: supergraph } = await composeWithMesh({
-    output: 'graphql',
-    services: [await service('products')],
-  });
-
-  if (gatewayRunner.includes('docker')) {
-    await handleDockerHostNameInURLOrAtPath(supergraph, []);
-  }
-
-  const gws = await Array.fromAsync({ length: 3 }, async () =>
-    gateway({
-      supergraph: {
-        with: 'apollo',
-        services: [await service('products')],
-      },
-      env: natsEnv,
-    }),
+  const products = await service('products');
+  const gws = await Promise.all(
+    Array.from({ length: 3 }, () =>
+      gateway({
+        supergraph: {
+          with: 'apollo',
+          services: [products],
+        },
+      }),
+    ),
   );
 
   const clients = gws.map((gw) =>
@@ -103,46 +91,35 @@ it('should receive subscription published event on all distributed gateways', as
     ),
   ]);
 
-  expect(msgs).toMatchObject([
-    {
+  expect(msgs).toHaveLength(3);
+  for (const msg of msgs) {
+    expect(msg).toMatchObject({
       data: {
         newProduct: {
           name: 'Roomba X60',
           price: 100,
         },
       },
-    },
-    {
-      data: {
-        newProduct: {
-          name: 'Roomba X60',
-          price: 100,
-        },
-      },
-    },
-    {
-      data: {
-        newProduct: {
-          name: 'Roomba X60',
-          price: 100,
-        },
-      },
-    },
-  ]);
+    });
+  }
 });
 
 it('should send a payload from a mutation to another gateway using NATS', async () => {
-  const { output: supergraph } = await composeWithMesh({
-    output: 'graphql',
-    services: [await service('products')],
+  const products = await service('products');
+  const consumer = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [products],
+    },
+    env: natsEnv,
   });
-
-  if (gatewayRunner.includes('docker')) {
-    await handleDockerHostNameInURLOrAtPath(supergraph, []);
-  }
-
-  const consumer = await gateway({ supergraph, env: natsEnv });
-  const producer = await gateway({ supergraph, env: natsEnv });
+  const producer = await gateway({
+    supergraph: {
+      with: 'apollo',
+      services: [products],
+    },
+    env: natsEnv,
+  });
 
   const client = createClient({
     url: `http://0.0.0.0:${consumer.port}/graphql`,
