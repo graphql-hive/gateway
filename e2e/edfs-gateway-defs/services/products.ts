@@ -1,14 +1,26 @@
 import { createServer } from 'node:http';
 import { buildSubgraphSchema } from '@apollo/subgraph';
+import { NATSPubSub } from '@graphql-hive/pubsub/nats';
 import { Opts } from '@internal/testing';
+import { connect } from '@nats-io/transport-node';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { createPubSub } from '../pubsub';
 
 const port = Opts(process.argv).getServicePort('products');
 
 async function main() {
-  const pubsub = await createPubSub();
+  const pubsub = new NATSPubSub(
+    await connect({
+      servers: [
+        `nats://${process.env['NATS_HOST']}:${process.env['NATS_PORT']}`,
+      ],
+    }),
+    {
+      // we make sure to use the same prefix for all gateways to share the same channels and pubsub.
+      // meaning, all gateways using this channel prefix will receive and publish to the same topics
+      subjectPrefix: 'my-shared-gateways',
+    },
+  );
 
   createServer(
     createYoga({
