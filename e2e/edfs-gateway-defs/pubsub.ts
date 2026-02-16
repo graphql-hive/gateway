@@ -1,4 +1,4 @@
-import { NATSPubSub } from '@graphql-hive/gateway';
+import { NATSPubSub } from '@graphql-hive/pubsub/nats';
 import { connect } from '@nats-io/transport-node';
 
 export async function createPubSub() {
