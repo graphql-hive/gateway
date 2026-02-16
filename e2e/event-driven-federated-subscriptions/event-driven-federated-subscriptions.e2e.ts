@@ -29,108 +29,103 @@ beforeAll(async () => {
   natsEnv.NATS_PORT = nats.port;
 });
 
-const fields = [`newProductSubgraph`, `newProductExtension`];
+it('should receive subscription published event on all distributed gateways', async () => {
+  const { output: supergraph } = await composeWithMesh({
+    output: 'graphql',
+    services: [await service('products')],
+  });
 
-it.each(fields)(
-  'should receive subscription published event on all distributed gateways w/ "%s" field',
-  async (field) => {
-    const { output: supergraph } = await composeWithMesh({
-      output: 'graphql',
-      services: [await service('products')],
-    });
+  if (gatewayRunner.includes('docker')) {
+    await handleDockerHostNameInURLOrAtPath(supergraph, []);
+  }
 
-    if (gatewayRunner.includes('docker')) {
-      await handleDockerHostNameInURLOrAtPath(supergraph, []);
-    }
+  const gws = [
+    await gateway({ supergraph, env: natsEnv }),
+    await gateway({ supergraph, env: natsEnv }),
+    await gateway({ supergraph, env: natsEnv }),
+  ];
 
-    const gws = [
-      await gateway({ supergraph, env: natsEnv }),
-      await gateway({ supergraph, env: natsEnv }),
-      await gateway({ supergraph, env: natsEnv }),
-    ];
+  const clients = gws.map((gw) =>
+    createClient({
+      url: `http://0.0.0.0:${gw.port}/graphql`,
+      fetchFn: fetch,
+      retryAttempts: 0,
+    }),
+  );
 
-    const clients = gws.map((gw) =>
-      createClient({
-        url: `http://0.0.0.0:${gw.port}/graphql`,
-        fetchFn: fetch,
-        retryAttempts: 0,
-      }),
-    );
-
-    const subs = clients.map((client) =>
-      client.iterate({
-        query: /* GraphQL */ `
-          subscription {
-            ${field} {
-              name
-              price
-            }
+  const subs = clients.map((client) =>
+    client.iterate({
+      query: /* GraphQL */ `
+        subscription {
+          newProduct {
+            name
+            price
           }
-        `,
-      }),
-    );
+        }
+      `,
+    }),
+  );
 
-    const msgs: any[] = [];
+  const msgs: any[] = [];
 
-    await Promise.all([
-      // either the publishing fails
+  await Promise.all([
+    // either the publishing fails
+    (async () => {
+      await setTimeout(1_000);
+      const nats = await natsConnect({
+        servers: [`0.0.0.0:${natsEnv.NATS_PORT}`],
+      });
+      await using _ = {
+        async [Symbol.asyncDispose]() {
+          await nats.flush();
+          await nats.close();
+        },
+      };
+      nats.publish(
+        'my-shared-gateways:new_product',
+        JSON.stringify({
+          id: '60',
+        }),
+      );
+    })(),
+    // or the subscription events go through
+    ...subs.map((sub) =>
       (async () => {
-        await setTimeout(1_000);
-        const nats = await natsConnect({
-          servers: [`0.0.0.0:${natsEnv.NATS_PORT}`],
-        });
-        await using _ = {
-          async [Symbol.asyncDispose]() {
-            await nats.flush();
-            await nats.close();
-          },
-        };
-        nats.publish(
-          'my-shared-gateways:new_product',
-          JSON.stringify({
-            id: '60',
-          }),
-        );
+        for await (const msg of sub) {
+          msgs.push(msg);
+          break; // we're intererested in only one message
+        }
       })(),
-      // or the subscription events go through
-      ...subs.map((sub) =>
-        (async () => {
-          for await (const msg of sub) {
-            msgs.push(msg);
-            break; // we're intererested in only one message
-          }
-        })(),
-      ),
-    ]);
+    ),
+  ]);
 
-    expect(msgs).toMatchObject([
-      {
-        data: {
-          [field]: {
-            name: 'Roomba X60',
-            price: 100,
-          },
+  expect(msgs).toMatchObject([
+    {
+      data: {
+        newProduct: {
+          name: 'Roomba X60',
+          price: 100,
         },
       },
-      {
-        data: {
-          [field]: {
-            name: 'Roomba X60',
-            price: 100,
-          },
+    },
+    {
+      data: {
+        newProduct: {
+          name: 'Roomba X60',
+          price: 100,
         },
       },
-      {
-        data: {
-          [field]: {
-            name: 'Roomba X60',
-            price: 100,
-          },
+    },
+    {
+      data: {
+        newProduct: {
+          name: 'Roomba X60',
+          price: 100,
         },
       },
-    ]);
-  },
-);
+    },
+  ]);
+});
 
 it('should send a payload from a mutation to another gateway using NATS', async () => {
   const { output: supergraph } = await composeWithMesh({
@@ -157,7 +152,7 @@ it('should send a payload from a mutation to another gateway using NATS', async 
       const sub = client.iterate({
         query: /* GraphQL */ `
           subscription {
-            newProductSubgraph {
+            newProduct {
               name
               price
             }
@@ -187,7 +182,7 @@ it('should send a payload from a mutation to another gateway using NATS', async 
 
   expect(msg).toMatchObject({
     data: {
-      newProductSubgraph: {
+      newProduct: {
         name: 'Roomba X60',
         price: 100,
       },

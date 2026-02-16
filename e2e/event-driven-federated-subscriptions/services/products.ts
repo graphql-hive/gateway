@@ -45,8 +45,7 @@ createServer(
         }
 
         type Subscription {
-          newProductSubgraph: Product!
-            @pubsubOperation(pubsubTopic: "new_product")
+          newProduct: Product! @pubsubOperation(pubsubTopic: "new_product")
         }
       `),
       resolvers: {
