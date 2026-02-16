@@ -1,5 +1,5 @@
-import { defineConfig } from '@graphql-hive/gateway';
-import { createPubSub } from './pubsub';
+import { defineConfig, NATSPubSub } from '@graphql-hive/gateway';
+import { connect } from '@nats-io/transport-node';
 
 export const gatewayConfig = defineConfig({
   maskedErrors: false,
