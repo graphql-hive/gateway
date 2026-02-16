@@ -61,7 +61,11 @@ describe('batch execution', () => {
     });
   };
 
-  const batchExec = createBatchingExecutor(exec);
+  const batchExecutor = createBatchingExecutor(exec);
+
+  async function batchExec(request: Parameters<Executor>[0]) {
+    return batchExecutor(request);
+  }
 
   beforeEach(() => {
     executorCalls = 0;
@@ -350,12 +354,12 @@ describe('batch execution', () => {
     const promise1 = batchExec({
       document: parse('{ field1 field2 }'),
       signal: abortController1.signal,
-    });
+    }).catch(e => e);
 
     const promise2 = batchExec({
       document: parse('{ field2 field3(input: "3") }'),
       signal: abortController2.signal,
-    });
+    }).catch(e => e);
 
     // Abort both requests
     abortController1.abort();
@@ -363,16 +367,12 @@ describe('batch execution', () => {
 
     expect.assertions(2);
 
-    try {
-      await promise2;
-    } catch (e: any) {
-      expect(e.message).toMatch(/operation was aborted/);
-    }
+    const result = (await promise2) as Error;
 
-    try {
-      await promise1;
-    } catch (e: any) {
-      expect(e.message).toMatch(/operation was aborted/);
-    }
+    expect(result.message).toMatch(/operation was aborted/);
+
+    const result2 = (await promise1) as Error;
+
+    expect(result2.message).toMatch(/operation was aborted/);
   });
 });

@@ -14,8 +14,20 @@ export function abortSignalAll(
     return signals[0];
   }
   if (signals.every((signal) => signal.aborted)) {
-    // if all signals are already aborted, return one of them immediately
-    return signals[0];
+    const errors =
+      signals
+        .map((signal) => signal.reason)
+        .filter((reason) => reason != null && !reason?.toString?.()?.includes('AbortError'));
+    if (
+      errors.length < 2
+    ) {
+      // if all signals are already aborted, return one of them immediately
+      return signals[0];
+    } else {
+      return AbortSignal.abort(
+        new AggregateError(errors),
+      );
+    }
   }
 
   // we use weak refs for both the root controller and the passed signals
@@ -28,13 +40,24 @@ export function abortSignalAll(
   const eventListenerPairs: [WeakRef<AbortSignal>, () => void][] = [];
   let retainedSignalsCount = signals.length;
   let remainingSignalsToAbort = signals.length;
+  const errors = new Set<unknown>();
 
   for (const signal of signals) {
     const signalRef = new WeakRef(signal);
     function onAbort() {
       remainingSignalsToAbort--;
+      const reason = signal.reason;
+      if (reason != null && !reason?.toString().includes('AbortError')) {
+        errors.add(reason);
+      }
       if (remainingSignalsToAbort === 0) {
-        ctrlRef.deref()?.abort(signalRef.deref()?.reason);
+        let error;
+        if (errors.size < 2) {
+          error = errors.values().next().value;
+        } else {
+          error = new AggregateError(errors);
+        }
+        ctrlRef.deref()?.abort(error);
       }
     }
     signal.addEventListener('abort', onAbort);
