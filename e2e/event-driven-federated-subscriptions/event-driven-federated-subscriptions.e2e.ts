@@ -39,10 +39,20 @@ it('should receive subscription published event on all distributed gateways', as
     await handleDockerHostNameInURLOrAtPath(supergraph, []);
   }
 
+  async function createGateway() {
+    return gateway({
+      supergraph: {
+        with: 'apollo',
+        services: [await service('products')],
+      },
+      env: natsEnv,
+    });
+  }
+
   const gws = [
-    await gateway({ supergraph, env: natsEnv }),
-    await gateway({ supergraph, env: natsEnv }),
-    await gateway({ supergraph, env: natsEnv }),
+    await createGateway(),
+    await createGateway(),
+    await createGateway(),
   ];
 
   const clients = gws.map((gw) =>
