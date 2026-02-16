@@ -1,6 +1,6 @@
 name = "hive-gateway"
 main = "src/index.ts"
-compatibility_date = "2025-05-05"
+compatibility_date = "2026-01-22"
 
 [alias]
 "@graphql-tools/wrap" = "../../packages/wrap/src/index.ts"
