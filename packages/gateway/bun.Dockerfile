@@ -49,14 +49,15 @@ RUN set -eux; \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
     rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
-  done \
-  sudo apt update \
-  sudo apt install --only-upgrade libgnutls30t64
+  done
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
  apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy && \
  apt-get install -f -y
+
+# Update libgnutls30t64
+RUN apt-get install --only-upgrade libgnutls30t64 -y
 
 # cleanup
 RUN apt-get autoremove -y && \
