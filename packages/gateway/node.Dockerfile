@@ -51,9 +51,14 @@ RUN set -eux; \
     rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
   done
 
+# Install security update for libgnutls30t64
+RUN wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
+RUN dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
+RUN rm -f "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
+
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
- apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy && \
+ apt-get install --only-upgrade -y openssl libssl3t64 openssl-provider-legacy libgnutls30t64 && \
  apt-get install -f -y
 
 # cleanup
@@ -102,6 +107,10 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
 # fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
 RUN npm install @isaacs/brace-expansion@5.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
+
+# fix minimatch vulnerability by updating it to the latest version 10.2.1
+RUN npm install minimatch@10.2.1 -g
+RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 USER node
 ENTRYPOINT ["dumb-init", "node", "bin.mjs"]

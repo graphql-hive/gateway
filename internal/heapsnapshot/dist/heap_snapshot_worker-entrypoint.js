@@ -1,5 +1,5 @@
 import { parentPort } from 'node:worker_threads';
-import { P as HeapSnapshotWorkerDispatcher } from './HeapSnapshotLoader-BRkJkvg1.js';
+import { P as HeapSnapshotWorkerDispatcher } from './HeapSnapshotLoader-zOkd3EJM.js';
 
 const dispatcher = new HeapSnapshotWorkerDispatcher(
   parentPort.postMessage.bind(parentPort)
