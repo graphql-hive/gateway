@@ -1,5 +1,18 @@
 # @graphql-hive/gateway
 
+## 2.4.2
+### Patch Changes
+
+
+
+- [#1957](https://github.com/graphql-hive/gateway/pull/1957) [`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+- Updated dependencies [[`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89), [`054d627`](https://github.com/graphql-hive/gateway/commit/054d62774eb2e9d2f3eeaecb9c34ccfc85827680)]:
+  - @graphql-hive/plugin-opentelemetry@1.3.9
+
 ## 2.4.1
 ### Patch Changes
 
