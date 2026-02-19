@@ -87,7 +87,7 @@ export function createRequest({
   const variableDefinitions = info?.operation.variableDefinitions
     ? [...info.operation.variableDefinitions]
     : [];
-  const argNodes: ArgumentNode[] = [];
+  const argNodes: ArgumentNode[] = fieldNode?.arguments ? [...fieldNode.arguments] : [];
 
   if (args != null) {
     const rootType =
@@ -109,7 +109,6 @@ export function createRequest({
         // If the variable value is the same as the argument value,
         // we can re-use the variable and its definition
         if (varValue === argValue) {
-          argNodes.push(existingArgNode);
           continue;
         }
       }
