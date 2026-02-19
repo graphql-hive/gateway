@@ -49,7 +49,9 @@ RUN set -eux; \
     wget "http://security.debian.org/debian-security/pool/updates/main/o/openssl/${pkg}_${openssl_version}_${arch}.deb"; \
     dpkg -i "${pkg}_${openssl_version}_${arch}.deb"; \
     rm -f "${pkg}_${openssl_version}_${arch}.deb"; \
-  done
+  done \
+  sudo apt update \
+  sudo apt install --only-upgrade libgnutls30t64
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
