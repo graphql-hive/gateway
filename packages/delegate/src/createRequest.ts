@@ -110,7 +110,6 @@ export function createRequest({
         // we can re-use the variable and its definition
         if (varValue === argValue) {
           argNodes.push(existingArgNode);
-          newVariables[varName] = varValue;
           continue;
         }
       }
