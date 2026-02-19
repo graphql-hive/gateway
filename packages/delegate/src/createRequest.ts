@@ -84,7 +84,7 @@ export function createRequest({
   }
 
   const newVariables = info?.variableValues ? { ...info.variableValues } : {};
-  const variableDefinitions = [...(info?.operation.variableDefinitions || [])];
+  const variableDefinitions = info?.operation.variableDefinitions ? [...info.operation.variableDefinitions] : [];
   const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
