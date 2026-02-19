@@ -111,14 +111,6 @@ function finalizeGatewayDocument<TContext>(
       );
       if (variableDef != null) {
         variableDefinitions.push(variableDef);
-      } else {
-        const variableDef =
-          delegationContext.info?.operation.variableDefinitions?.find(
-            (varDef) => varDef.variable.name.value === variableName,
-          );
-        if (variableDef != null) {
-          variableDefinitions.push(variableDef);
-        }
       }
     }
 

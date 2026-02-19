@@ -1,4 +1,3 @@
-import { it } from 'node:test';
 import { execute } from '@graphql-tools/executor';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
@@ -134,7 +133,7 @@ describe('RenameTypes', () => {
     });
   });
 
-  it('reproduction #1962', async () => {
+  test('rename variables correctly', async () => {
     const downstreamSchema = makeExecutableSchema({
       typeDefs: /* GraphQL */ `
         scalar DateTime
