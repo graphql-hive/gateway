@@ -1,12 +1,18 @@
 import {
   isInputObjectType,
+  isListType,
   isNonNullType,
+  isObjectType,
   Kind,
   parse,
   typeFromAST,
+  type DocumentNode,
   type GraphQLInputObjectType,
+  type GraphQLObjectType,
+  type GraphQLOutputType,
   type GraphQLSchema,
   type GraphQLType,
+  type SelectionSetNode,
 } from 'graphql';
 import { buildSchemaObjectFromType, resolveFieldType } from 'sofa-api';
 
@@ -64,7 +70,6 @@ export function operationToInputSchema(
       throw new Error(`Unknown type for variable $${varName}`);
     }
 
-    // Check if required (NonNull in AST)
     if (variable.type.kind === Kind.NON_NULL_TYPE) {
       required.push(varName);
     }
@@ -72,6 +77,28 @@ export function operationToInputSchema(
     properties[varName] = graphqlTypeToJsonSchema(varType, {
       customScalars: {},
     });
+  }
+
+  // Look up field arguments for descriptions
+  if (operationDef.selectionSet) {
+    const rootSelection = operationDef.selectionSet.selections[0];
+    if (rootSelection && rootSelection.kind === Kind.FIELD) {
+      const rootType =
+        operationDef.operation === 'query'
+          ? schema.getQueryType()
+          : schema.getMutationType();
+      if (rootType) {
+        const field = rootType.getFields()[rootSelection.name.value];
+        if (field) {
+          for (const arg of field.args) {
+            const prop = properties[arg.name];
+            if (prop && arg.description) {
+              prop.description = arg.description;
+            }
+          }
+        }
+      }
+    }
   }
 
   const result: JsonSchema = {
@@ -82,4 +109,114 @@ export function operationToInputSchema(
     result.required = required;
   }
   return result;
+}
+
+// extract the tool-level description from the root field's schema description
+export function getToolDescriptionFromSchema(
+  operationSource: string,
+  schema: GraphQLSchema,
+): string | undefined {
+  const document = parse(operationSource);
+  const operationDef = document.definitions.find(
+    (def) => def.kind === Kind.OPERATION_DEFINITION,
+  );
+
+  if (!operationDef || operationDef.kind !== Kind.OPERATION_DEFINITION) return undefined;
+
+  const rootSelection = operationDef.selectionSet.selections[0];
+  if (!rootSelection || rootSelection.kind !== Kind.FIELD) return undefined;
+
+  const rootType =
+    operationDef.operation === 'query'
+      ? schema.getQueryType()
+      : schema.getMutationType();
+  if (!rootType) return undefined;
+
+  const field = rootType.getFields()[rootSelection.name.value];
+  return field?.description || undefined;
+}
+
+// Generate a JSON Schema describing the output shape of a GraphQL operation,
+// walks the selection set against the schema to determine types
+export function selectionSetToOutputSchema(
+  document: DocumentNode,
+  schema: GraphQLSchema,
+): JsonSchema {
+  const operationDef = document.definitions.find(
+    (def) => def.kind === Kind.OPERATION_DEFINITION,
+  );
+
+  if (!operationDef || operationDef.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error('No operation definition found in document');
+  }
+
+  const rootType =
+    operationDef.operation === 'query'
+      ? schema.getQueryType()
+      : schema.getMutationType();
+
+  if (!rootType) {
+    throw new Error(`Schema has no ${operationDef.operation} type`);
+  }
+
+  // An operation's selection set is on the root type (Query/Mutation) 
+  // but we want the output schema of the first (root) field's selection
+  const rootSelection = operationDef.selectionSet.selections[0];
+  if (!rootSelection || rootSelection.kind !== Kind.FIELD) {
+    throw new Error('Expected field selection at operation root');
+  }
+
+  const rootField = rootType.getFields()[rootSelection.name.value];
+  if (!rootField) {
+    throw new Error(
+      `Field ${rootSelection.name.value} not found on ${rootType.name}`,
+    );
+  }
+
+  return outputTypeToSchema(rootField.type, rootSelection.selectionSet, schema);
+}
+
+function outputTypeToSchema(
+  type: GraphQLOutputType,
+  selectionSet: SelectionSetNode | undefined,
+  schema: GraphQLSchema,
+): JsonSchema {
+  if (isNonNullType(type)) {
+    return outputTypeToSchema(type.ofType, selectionSet, schema);
+  }
+
+  if (isListType(type)) {
+    return {
+      type: 'array',
+      items: outputTypeToSchema(type.ofType, selectionSet, schema),
+    };
+  }
+
+  if (isObjectType(type) && selectionSet) {
+    const properties: Record<string, JsonSchema> = {};
+
+    for (const selection of selectionSet.selections) {
+      if (selection.kind !== Kind.FIELD) continue;
+
+      const fieldName = selection.name.value;
+      if (fieldName === '__typename') continue;
+
+      const field = (type as GraphQLObjectType).getFields()[fieldName];
+      if (!field) continue;
+
+      const fieldSchema = outputTypeToSchema(
+        field.type,
+        selection.selectionSet,
+        schema,
+      );
+      if (field.description) {
+        fieldSchema.description = field.description;
+      }
+      properties[fieldName] = fieldSchema;
+    }
+
+    return { type: 'object', properties };
+  }
+
+  return resolveFieldType(type, { customScalars: {} });
 }
