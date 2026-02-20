@@ -10,10 +10,31 @@ declare module '@graphql-hive/gateway-runtime' {
   }
 }
 
+export interface MCPToolSource {
+  type: 'graphql';
+  operationName: string;
+  operationType: 'query' | 'mutation';
+  file?: string; // per-tool file override
+}
+
+export interface MCPToolOverrides {
+  title?: string;
+  description?: string;
+}
+
+export interface MCPInputOverrides {
+  schema?: {
+    properties?: Record<string, { description?: string; examples?: unknown[]; default?: unknown }>;
+  };
+}
+
 export interface MCPToolConfig {
   name: string;
   description?: string;
-  query: string;
+  query?: string;            // inline query
+  source?: MCPToolSource;    // file-based operation lookup
+  tool?: MCPToolOverrides;   // metadata overrides
+  input?: MCPInputOverrides; // field-level overrides
 }
 
 export interface MCPConfig {
@@ -21,6 +42,7 @@ export interface MCPConfig {
   version?: string;
   path?: string;
   graphqlPath?: string;
+  operations?: string; // glob or file path for .graphql files
   tools: MCPToolConfig[];
 }
 
