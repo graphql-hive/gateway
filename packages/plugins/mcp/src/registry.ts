@@ -20,13 +20,13 @@ export class ToolRegistry {
 
   constructor(configs: MCPToolConfig[], schema: GraphQLSchema) {
     for (const config of configs) {
-      const inputSchema = operationToInputSchema(config.query, schema);
+      const inputSchema = operationToInputSchema(config.query!, schema);
       const description = config.description || `Execute ${config.name}`;
 
       this.tools.set(config.name, {
         name: config.name,
         description,
-        query: config.query,
+        query: config.query!,
         inputSchema,
       });
     }
