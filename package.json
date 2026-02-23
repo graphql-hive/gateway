@@ -85,7 +85,7 @@
     "jest-environment-node@npm:30.2.0": "patch:jest-environment-node@npm%3A30.2.0#~/.yarn/patches/jest-environment-node-npm-30.2.0-b72db4433a.patch",
     "jest-leak-detector": "patch:jest-leak-detector@npm:29.7.0#~/.yarn/patches/jest-leak-detector+29.7.0.patch",
     "lodash": "4.17.23",
-    "minimatch": "10.2.1",
+    "minimatch": "10.2.2",
     "pkgroll": "patch:pkgroll@npm:2.5.1#~/.yarn/patches/pkgroll-npm-2.5.1-9b062c22ca.patch",
     "tar": "7.5.3",
     "tar-fs": "3.1.1",
