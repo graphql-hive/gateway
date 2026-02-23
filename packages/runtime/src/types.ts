@@ -281,6 +281,10 @@ export interface GatewayConfigSubgraph<
    * SDL, path or an URL to the Federation Subgraph schema.
    */
   subgraph: UnifiedGraphConfig;
+  /**
+   * GraphQL schema polling interval in milliseconds.
+   */
+  pollingInterval?: number;
 }
 
 export interface GatewayConfigSchemaBase<
