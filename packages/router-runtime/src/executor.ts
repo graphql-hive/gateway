@@ -1196,8 +1196,6 @@ function projectSelectionSet(
                 continue selectionLoop;
               }
             }
-          } else {
-            continue selectionLoop;
           }
         }
         if (directiveNode.name.value === 'include') {
