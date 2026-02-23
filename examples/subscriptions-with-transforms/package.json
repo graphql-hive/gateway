@@ -14,7 +14,7 @@
   },
   "overrides": {
     "esbuild": "^0.25.5",
-    "minimatch": "^10.2.1"
+    "minimatch": "^10.2.2"
   },
   "scripts": {
     "service:my-subgraph": "tsx services/my-subgraph/index.ts",
