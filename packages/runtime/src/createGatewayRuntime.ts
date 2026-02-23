@@ -830,12 +830,12 @@ export function createGatewayRuntime<
   }
 
   if (isDisposable(pubsub)) {
-    const cacheDisposePlugin = {
+    const pubsubDisposePlugin = {
       onDispose() {
         return dispose(pubsub);
       },
     };
-    basePlugins.push(cacheDisposePlugin);
+    basePlugins.push(pubsubDisposePlugin);
   }
 
   const extraPlugins: (
