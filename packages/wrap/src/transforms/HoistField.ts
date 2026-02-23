@@ -297,13 +297,9 @@ export function unwrapValue(originalValue: any, alias: string): any {
 }
 
 function unwrapErrors(
-  errors: ReadonlyArray<GraphQLError> | undefined,
+  errors: ReadonlyArray<GraphQLError>,
   alias: string,
-): Array<GraphQLError> | undefined {
-  if (errors === undefined) {
-    return undefined;
-  }
-
+): Array<GraphQLError> {
   return errors.map((error) => {
     const originalPath = error.path;
     if (originalPath == null) {
