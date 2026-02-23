@@ -12,7 +12,8 @@
     "@graphql-hive/gateway": "^2.4.2"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "minimatch": "^10.2.1"
   },
   "scripts": {
     "service:greetings": "tsx services/greetings.ts",

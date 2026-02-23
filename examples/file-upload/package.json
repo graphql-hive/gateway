@@ -11,7 +11,8 @@
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "minimatch": "^10.2.1"
   },
   "scripts": {
     "service:bucket": "tsx services/bucket.ts",
