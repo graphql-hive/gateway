@@ -1,5 +1,28 @@
 # @graphql-tools/delegate
 
+## 12.0.8
+### Patch Changes
+
+
+
+- [#1971](https://github.com/graphql-hive/gateway/pull/1971) [`4065b7f`](https://github.com/graphql-hive/gateway/commit/4065b7fbb08d9e75c5f0d3b2b4d42d665aa9dbd9) Thanks [@ardatan](https://github.com/ardatan)! - Reuse the existing variables from the gateway request correctly
+  
+  When you have an argument in a nested field that uses the variable from the gateway request like below;
+  
+  ```graphql
+      query GetArticles($date: Datetime!) {
+          view {
+            articlesByDate(date: $date) {
+              id
+              title
+              publishedAt
+            }
+          }
+        }
+  ```
+  
+  And if `Datetime` is renamed from `DateTime` in the original schema, the transform wasn't applied correctly to the variable definitions, and the delegation failed with an error in the subgraph like `Datetime` is not known.
+
 ## 12.0.7
 ### Patch Changes
 
