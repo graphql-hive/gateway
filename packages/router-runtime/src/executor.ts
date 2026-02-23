@@ -338,7 +338,7 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (typeof current === 'object' && !Array.isArray(current)) {
+      if (typeof current === 'object') {
         path.push(segment.name);
         const next = (current as Record<string, any>)[segment.name];
         traverseFlattenPath(next, rest, supergraphSchema, path, callback);
