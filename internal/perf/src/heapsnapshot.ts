@@ -47,9 +47,11 @@ export async function leakingObjectsInHeapSnapshotFiles(
     baseSnap = snap;
 
     const growingDiff: HeapSnapshotDiff = {};
-    for (const { addedIndexes, deletedIndexes, ...diff } of Object.values(
-      snapshotDiff,
-    )) {
+    for (const {
+      addedIndexes: _ignoreAddedIndexes,
+      deletedIndexes: _ignoreDeletedIndexes,
+      ...diff
+    } of Object.values(snapshotDiff)) {
       if (
         // size just kept growing
         diff.sizeDelta > 0
