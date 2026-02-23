@@ -1213,8 +1213,6 @@ function projectSelectionSet(
                 continue selectionLoop;
               }
             }
-          } else {
-            continue selectionLoop;
           }
         }
       }
