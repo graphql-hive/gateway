@@ -830,12 +830,12 @@ export function createGatewayRuntime<
   }
 
   if (isDisposable(pubsub)) {
-    const cacheDisposePlugin = {
+    const pubsubDisposePlugin = {
       onDispose() {
         return dispose(pubsub);
       },
     };
-    basePlugins.push(cacheDisposePlugin);
+    basePlugins.push(pubsubDisposePlugin);
   }
 
   const extraPlugins: (
@@ -963,8 +963,6 @@ export function createGatewayRuntime<
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
       if (!ctx.headers) {
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
         ctx['headers'] = getHeadersObj(
