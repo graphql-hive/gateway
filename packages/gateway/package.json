@@ -122,6 +122,7 @@
     "@graphql-tools/load": "^8.1.6",
     "@graphql-tools/utils": "^11.0.0",
     "@graphql-yoga/render-graphiql": "^5.16.2",
+    "@graphql-yoga/render-laboratory": "6.0.0-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.212.0",
     "@opentelemetry/context-async-hooks": "^2.2.0",

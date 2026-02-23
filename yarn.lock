@@ -4260,6 +4260,7 @@ __metadata:
     "@graphql-tools/load": "npm:^8.1.6"
     "@graphql-tools/utils": "npm:^11.0.0"
     "@graphql-yoga/render-graphiql": "npm:^5.16.2"
+    "@graphql-yoga/render-laboratory": "npm:6.0.0-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/api-logs": "npm:^0.212.0"
     "@opentelemetry/context-async-hooks": "npm:^2.2.0"
@@ -5603,6 +5604,15 @@ __metadata:
   peerDependencies:
     graphql-yoga: ^5.18.0
   checksum: 10c0/eefa126cef266744e02fa7a65671a8bf2bd8007292eeb2516e51907f8efbd8dacb592b84bb8cc83c8eb864fd803b33cd989a492a89d208d32f19679639d74ef9
+  languageName: node
+  linkType: hard
+
+"@graphql-yoga/render-laboratory@npm:6.0.0-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e":
+  version: 6.0.0-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e
+  resolution: "@graphql-yoga/render-laboratory@npm:6.0.0-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e"
+  peerDependencies:
+    graphql-yoga: ^5.18.1-alpha-20260224195440-606378213714717778cf1abdc84dc9c07033300e
+  checksum: 10c0/8310a12ab9cd1c46819428c620c42ea93e974c9c5e4b2942f4212f10b50a467b74271e635babc13becd58e37ab7ac60b02553330e5888bd1bd5877ad922528a8
   languageName: node
   linkType: hard
 
