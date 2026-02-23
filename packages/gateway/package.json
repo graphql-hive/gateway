@@ -145,7 +145,7 @@
   },
   "devDependencies": {
     "@graphql-mesh/transport-common": "workspace:^",
-    "@graphql-mesh/transport-soap": "^0.10.17",
+    "@graphql-mesh/transport-soap": "^0.10.26",
     "@graphql-tools/executor": "^1.4.13",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
