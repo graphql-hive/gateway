@@ -1,12 +1,14 @@
-import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import sucrase from '@rollup/plugin-sucrase';
+import fsExtra from 'fs-extra';
 import { defineConfig } from 'rollup';
-import nativePlugin from 'rollup-plugin-natives';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
+
+const { copyFileSync, existsSync, lstatSync, readdirSync } = fsExtra;
 
 console.log('Bundling...');
 
@@ -175,11 +177,32 @@ export default defineConfig({
     sucrase({ transforms: ['typescript'] }), // transpile typescript
     packagejson(), // add package jsons
     avoidminjs(),
-    nativePlugin({
-      copyTo: 'bundle/node_modules/@graphql-hive/router-query-planner',
-    }),
   ],
 });
+
+const currentDirectory = fileURLToPath(new URL('.', import.meta.url));
+
+// Copy *.node files to the bundle
+const routerQueryPlannerPath = path.join(
+  currentDirectory,
+  '../../node_modules/@graphql-hive/router-query-planner',
+);
+const destDir = path.join(
+  currentDirectory,
+  'bundle',
+  'node_modules',
+  '@graphql-hive',
+  'router-query-planner',
+);
+fsExtra.ensureDirSync(destDir);
+for (const file of readdirSync(routerQueryPlannerPath)) {
+  if (file.endsWith('.node')) {
+    copyFileSync(
+      path.join(routerQueryPlannerPath, file),
+      path.join(destDir, file),
+    );
+  }
+}
 
 function avoidminjs() {
   return {
@@ -187,7 +210,7 @@ function avoidminjs() {
     resolveId(source) {
       if (source.endsWith('.min.js')) {
         const withoutMin = source.replace(/\.min\.js$/, '.js');
-        if (fs.existsSync(withoutMin)) {
+        if (existsSync(withoutMin)) {
           return withoutMin;
         }
       }
@@ -348,7 +371,7 @@ function graphql() {
         'graphql',
       );
       try {
-        fs.lstatSync(graphqlModulePath);
+        lstatSync(graphqlModulePath);
       } catch (e) {
         console.error(
           `"graphql" module not found in ${graphqlModulePath}. Have you run "yarn"?`,
@@ -357,7 +380,7 @@ function graphql() {
       }
 
       try {
-        if (fs.lstatSync(path.join(graphqlModulePath, relPath)).isDirectory()) {
+        if (lstatSync(path.join(graphqlModulePath, relPath)).isDirectory()) {
           // isdir
           return {
             id: source + '/index.js',
