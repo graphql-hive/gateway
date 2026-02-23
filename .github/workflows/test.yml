@@ -135,6 +135,10 @@ jobs:
             os: ubuntu-latest
             gateway-runner: docker
             hive-router-runtime: 0
+          - workflow-name: Node Docker on Ubuntu with Router Runtime
+            os: ubuntu-latest
+            gateway-runner: docker
+            hive-router-runtime: 1
 
           # Node Binary
           - workflow-name: Node Binary on Ubuntu

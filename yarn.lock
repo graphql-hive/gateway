@@ -4305,6 +4305,7 @@ __metadata:
     postject: "npm:^1.0.0-alpha.6"
     rimraf: "npm:^6.1.0"
     rollup: "npm:4.59.0"
+    rollup-plugin-natives: "npm:^0.7.8"
     rollup-plugin-tsconfig-paths: "npm:^1.5.2"
     tslib: "npm:^2.8.1"
     tsx: "npm:4.21.0"
@@ -14466,6 +14467,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fs-extra@npm:^11.1.1":
+  version: 11.3.3
+  resolution: "fs-extra@npm:11.3.3"
+  dependencies:
+    graceful-fs: "npm:^4.2.0"
+    jsonfile: "npm:^6.0.1"
+    universalify: "npm:^2.0.0"
+  checksum: 10c0/984924ff4104e3e9f351b658a864bf3b354b2c90429f57aec0acd12d92c4e6b762cbacacdffb4e745b280adce882e1f980c485d9f02c453f769ab4e7fc646ce3
+  languageName: node
+  linkType: hard
+
 "fs-extra@npm:^7.0.1":
   version: 7.0.1
   resolution: "fs-extra@npm:7.0.1"
@@ -16798,6 +16810,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonfile@npm:^6.0.1":
+  version: 6.2.0
+  resolution: "jsonfile@npm:6.2.0"
+  dependencies:
+    graceful-fs: "npm:^4.1.6"
+    universalify: "npm:^2.0.0"
+  dependenciesMeta:
+    graceful-fs:
+      optional: true
+  checksum: 10c0/7f4f43b08d1869ded8a6822213d13ae3b99d651151d77efd1557ced0889c466296a7d9684e397bd126acf5eb2cfcb605808c3e681d0fdccd2fe5a04b47e76c0d
+  languageName: node
+  linkType: hard
+
 "jsonify@npm:^0.0.1":
   version: 0.0.1
   resolution: "jsonify@npm:0.0.1"
@@ -17295,7 +17320,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:^0.30.10, magic-string@npm:^0.30.17, magic-string@npm:^0.30.21, magic-string@npm:^0.30.3":
+"magic-string@npm:^0.30.10, magic-string@npm:^0.30.17, magic-string@npm:^0.30.2, magic-string@npm:^0.30.21, magic-string@npm:^0.30.3":
   version: 0.30.21
   resolution: "magic-string@npm:0.30.21"
   dependencies:
@@ -19416,6 +19441,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rollup-plugin-natives@npm:^0.7.8":
+  version: 0.7.8
+  resolution: "rollup-plugin-natives@npm:0.7.8"
+  dependencies:
+    fs-extra: "npm:^11.1.1"
+    magic-string: "npm:^0.30.2"
+  peerDependencies:
+    rollup: ">=0.56.0"
+  checksum: 10c0/948b9d80ebb49258fc2eaeb31c7af2f3057a9d33f27e61bb9db58eeeda5986fe4fb53c659fbdc048aeebf53c87dfada180dd157d5aff6cf90b9264e7ab12f790
+  languageName: node
+  linkType: hard
+
 "rollup-plugin-tsconfig-paths@npm:^1.5.2":
   version: 1.5.2
   resolution: "rollup-plugin-tsconfig-paths@npm:1.5.2"
@@ -21483,6 +21520,13 @@ __metadata:
   version: 0.1.2
   resolution: "universalify@npm:0.1.2"
   checksum: 10c0/e70e0339f6b36f34c9816f6bf9662372bd241714dc77508d231d08386d94f2c4aa1ba1318614f92015f40d45aae1b9075cd30bd490efbe39387b60a76ca3f045
+  languageName: node
+  linkType: hard
+
+"universalify@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "universalify@npm:2.0.1"
+  checksum: 10c0/73e8ee3809041ca8b818efb141801a1004e3fc0002727f1531f4de613ea281b494a40909596dae4a042a4fb6cd385af5d4db2e137b1362e0e91384b828effd3a
   languageName: node
   linkType: hard
 
