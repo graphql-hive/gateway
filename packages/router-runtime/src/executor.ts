@@ -1475,10 +1475,8 @@ function projectRequires(
         break;
     }
   }
-  if (
-    (Object.keys(result).length === 1 && result.__typename) ||
-    Object.keys(result).length === 0
-  ) {
+  const length = Object.keys(result).length;
+  if ((length === 1 && result.__typename) || length === 0) {
     return null;
   }
   return result;
