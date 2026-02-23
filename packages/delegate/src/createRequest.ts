@@ -244,8 +244,7 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
   }
   if (
     isInputObjectType(argType) &&
-    typeof argValue === 'object' &&
-    argValue !== null
+    typeof argValue === 'object'
   ) {
     const projectedValue: any = {};
     const fields = argType.getFields();
