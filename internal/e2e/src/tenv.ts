@@ -489,6 +489,11 @@ export function createTenv(cwd: string): Tenv {
             .then(() => true)
             .catch(() => false);
 
+          env ||= {};
+          if (process.env['HIVE_ROUTER_RUNTIME']) {
+            env['HIVE_ROUTER_RUNTIME'] ||= process.env['HIVE_ROUTER_RUNTIME'];
+          }
+
           const cont = await tenv.container({
             env,
             name:
