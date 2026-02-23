@@ -375,7 +375,7 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (current != null && typeof current === 'object') {
+      if (typeof current === 'object') {
         const value = current as EntityRepresentation;
         const typename =
           typeof value.__typename === 'string'
