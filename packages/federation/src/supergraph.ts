@@ -1857,8 +1857,8 @@ function makeExternalObject(
         fieldNamesToPop.length || !errorsToPop.length
           ? error
           : new AggregateError(
-              errorsToPop,
-              errorsToPop.map((error) => error.message).join(', \n'),
+              [error, ...errorsToPop],
+              [error, ...errorsToPop].map((e) => e.message).join(', \n'),
             );
       data ||= {};
       data[fieldName] = errorToSet;
