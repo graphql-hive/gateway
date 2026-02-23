@@ -1271,7 +1271,7 @@ function projectSelectionSet(
         ) {
           result[responseKey] = Object.assign(
             result[responseKey],
-            mergeDeep(result[responseKey], projectedValue),
+            mergeDeep([result[responseKey], projectedValue]),
           );
         } else {
           result[responseKey] = projectedValue;
