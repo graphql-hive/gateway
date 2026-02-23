@@ -16,10 +16,10 @@ describe('Subgraph Regular', async () => {
         },
         output: 'graphql',
       });
-      if (tenv.gatewayRunner.includes('docker')) {
-        result = await handleDockerHostNameInURLOrAtPath(result, []);
-      }
       await tenv.fs.write(subgraphPath, result);
+      if (tenv.gatewayRunner.includes('docker')) {
+        await handleDockerHostNameInURLOrAtPath(subgraphPath, []);
+      }
     }
     await compose('prefix1_');
     const gateway = await tenv.gateway({
