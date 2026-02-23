@@ -65,7 +65,7 @@ export function delegateToSchema<
     args,
   } = options;
 
-  let targetSchema = options.targetSchema;
+  let targetSchema;
   if (isSubschema(schema)) {
     targetSchema = schema.transformedSchema;
   } else if (isSchema(schema)) {
