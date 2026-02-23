@@ -14,19 +14,37 @@ const weatherData: Record<string, { temperature: number; conditions: string; hum
 const schema = createSchema({
   typeDefs: /* GraphQL */ `
     type Query {
-      weather(location: String!): Weather!
-      forecast(location: String!, days: Int = 5): [ForecastDay!]!
+      "Get current weather data for a location"
+      weather(
+        "City name or postal code"
+        location: String!
+      ): Weather!
+      "Get weather forecast for upcoming days"
+      forecast(
+        "City name or postal code"
+        location: String!
+        "Number of days to forecast (default 5)"
+        days: Int = 5
+      ): [ForecastDay!]!
     }
     type Weather {
+      "Temperature in Fahrenheit"
       temperature: Float!
+      "Current weather conditions"
       conditions: String!
+      "Humidity percentage"
       humidity: Int!
+      "Location name"
       location: String!
     }
     type ForecastDay {
+      "Date in YYYY-MM-DD format"
       date: String!
+      "High temperature in Fahrenheit"
       high: Float!
+      "Low temperature in Fahrenheit"
       low: Float!
+      "Expected weather conditions"
       conditions: String!
     }
   `,
@@ -67,16 +85,26 @@ const mcpPlugin = useMCP({
   name: 'weather-api',
   version: '1.0.0',
   path: '/mcp',
+  operations: './operations/weather.graphql',
   tools: [
     {
       name: 'get_weather',
-      description: 'Get the current weather for a location',
-      query: `query GetWeather($location: String!) { weather(location: $location) { temperature conditions humidity location } }`,
+      source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' },
+      tool: {
+        title: 'Current Weather',
+        description: 'Get the current weather for a city',
+      },
+      input: {
+        schema: {
+          properties: {
+            location: { description: 'City name, e.g. "New York", "London", "Tokyo"' },
+          },
+        },
+      },
     },
     {
       name: 'get_forecast',
-      description: 'Get the weather forecast for a location',
-      query: `query GetForecast($location: String!, $days: Int) { forecast(location: $location, days: $days) { date high low conditions } }`,
+      source: { type: 'graphql', operationName: 'GetForecast', operationType: 'query' },
     },
   ],
 })
