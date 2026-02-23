@@ -40,7 +40,7 @@ export const gatewayConfig = defineConfig({
           return null;
         }
 
-        if (result != null && 'items' in result) {
+        if ('items' in result) {
           return result?.items?.[0]?.views || 0;
         }
       },
