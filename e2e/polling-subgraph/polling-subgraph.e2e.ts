@@ -1,5 +1,5 @@
 import { setTimeout } from 'node:timers/promises';
-import { createTenv } from '@internal/e2e';
+import { createTenv, handleDockerHostNameInURLOrAtPath } from '@internal/e2e';
 import { describe, expect, it } from 'vitest';
 
 describe('Subgraph Regular', async () => {
@@ -7,14 +7,19 @@ describe('Subgraph Regular', async () => {
   it('refreshes on poll', async () => {
     const greetingsService = await tenv.service('greetings');
     const subgraphPath = await tenv.fs.tempfile('subgraph.graphql');
-    function compose(prefix: string) {
-      return tenv.composeWithMesh({
+    async function compose(prefix: string) {
+      let { result } = await tenv.composeWithMesh({
         services: [greetingsService],
-        args: ['--subgraph', 'greetings', '-o', subgraphPath],
+        args: ['--subgraph', 'greetings'],
         env: {
           TRANSFORM_PREFIX: prefix,
         },
+        output: 'graphql',
       });
+      if (tenv.gatewayRunner.includes('docker')) {
+        result = await handleDockerHostNameInURLOrAtPath(result, []);
+      }
+      await tenv.fs.write(subgraphPath, result);
     }
     await compose('prefix1_');
     const gateway = await tenv.gateway({
