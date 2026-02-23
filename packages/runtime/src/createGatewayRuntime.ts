@@ -965,8 +965,6 @@ export function createGatewayRuntime<
       if (!ctx.headers) {
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
         ctx['headers'] = getHeadersObj(
           ctx['req']?.headers || ctx?.request?.headers,
         );
