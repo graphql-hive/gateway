@@ -182,7 +182,7 @@ interface CreateExecutionContextOpts {
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 }
 
-const globalEmpty = {};
+const EMPTY_VARIABLES_OBJECT = {};
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
@@ -197,7 +197,7 @@ function createQueryPlanExecutionContext({
     const variableValuesResult = getVariableValues(
       supergraphSchema,
       operation.variableDefinitions,
-      variableValues || globalEmpty,
+      variableValues || EMPTY_VARIABLES_OBJECT,
     );
     if (variableValuesResult.errors?.length) {
       if (variableValuesResult.errors.length === 1) {
