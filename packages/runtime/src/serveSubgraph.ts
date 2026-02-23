@@ -64,7 +64,6 @@ export function serveSubgraph<TContext extends Record<string, any>>(
   schemaInvalidator: () => void;
   unifiedGraphPlugin: GatewayPlugin;
 } {
-  let contextBuilder: <T>(base: T) => T = (base) => base;
   const subgraphInConfig = config.subgraph;
   let getSubschemaConfig$: MaybePromise<boolean> | undefined;
   let subschemaConfig: SubschemaConfig;
@@ -286,18 +285,6 @@ export function serveSubgraph<TContext extends Record<string, any>>(
                   defaultFieldResolver: defaultMergedResolver,
                 }),
               );
-              contextBuilder = <T>(base: T) =>
-                Object.assign(
-                  // @ts-expect-error - Typings are wrong in legacy Mesh
-                  base,
-                  getInContextSDK(
-                    getUnifiedGraph(),
-                    // @ts-expect-error - Typings are wrong in legacy Mesh
-                    [subschemaConfig],
-                    LegacyLogger.from(configContext.log),
-                    onDelegateHooks,
-                  ),
-                ) as T;
               continuePolling();
               return true;
             },
@@ -332,7 +319,18 @@ export function serveSubgraph<TContext extends Record<string, any>>(
     }
   }
   return {
-    contextBuilder,
+    contextBuilder: <T>(base: T) =>
+      Object.assign(
+        // @ts-expect-error - Typings are wrong in legacy Mesh
+        base,
+        getInContextSDK(
+          getUnifiedGraph(),
+          // @ts-expect-error - Typings are wrong in legacy Mesh
+          [subschemaConfig],
+          LegacyLogger.from(configContext.log),
+          onDelegateHooks,
+        ),
+      ) as T,
     getSchema: () => handleMaybePromise(getSubschemaConfig, getUnifiedGraph),
     schemaInvalidator: () => {
       getSubschemaConfig$ = undefined;
