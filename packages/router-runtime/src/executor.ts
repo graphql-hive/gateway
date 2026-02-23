@@ -856,7 +856,7 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
     return [];
   }
   const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
-  return responseKey ? [responseKey] : [];
+  return [responseKey];
 });
 
 function stableStringify(value: unknown): string {
