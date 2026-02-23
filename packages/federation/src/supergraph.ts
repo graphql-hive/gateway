@@ -1853,19 +1853,15 @@ function makeExternalObject(
       if (!error) {
         break;
       }
-      let errorToSet: Error | undefined;
-      if (fieldNamesToPop.length || !errorsToPop.length) {
-        errorToSet = error;
-      } else {
-        errorToSet = new AggregateError(
-          errorsToPop,
-          errorsToPop.map((error) => error.message).join(', \n'),
-        );
-      }
-      if (errorToSet) {
-        data ||= {};
-        data[fieldName] = errorToSet;
-      }
+      const errorToSet =
+        fieldNamesToPop.length || !errorsToPop.length
+          ? error
+          : new AggregateError(
+              errorsToPop,
+              errorsToPop.map((error) => error.message).join(', \n'),
+            );
+      data ||= {};
+      data[fieldName] = errorToSet;
     }
   }
   return data;
