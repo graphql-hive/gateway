@@ -24,7 +24,7 @@
   },
   "overrides": {
     "esbuild": "^0.25.5",
-    "minimatch": "^10.2.1"
+    "minimatch": "^10.2.2"
   },
   "scripts": {
     "service:products": "tsx services/products/index.ts",
