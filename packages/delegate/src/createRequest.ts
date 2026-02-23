@@ -242,10 +242,7 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
       projectArgumentValue(item, argType.ofType),
     );
   }
-  if (
-    isInputObjectType(argType) &&
-    typeof argValue === 'object'
-  ) {
+  if (isInputObjectType(argType) && typeof argValue === 'object') {
     const projectedValue: any = {};
     const fields = argType.getFields();
     for (const key in argValue) {
