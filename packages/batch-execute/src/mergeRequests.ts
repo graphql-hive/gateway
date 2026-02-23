@@ -70,7 +70,7 @@ export function mergeRequests(
   const mergedVariableDefinitions: Array<VariableDefinitionNode> = [];
   const mergedSelections: Array<SelectionNode> = [];
   const mergedFragmentDefinitions: Array<FragmentDefinitionNode> = [];
-  const signals: AbortSignal[] = [];
+  const signals = new Set<AbortSignal>();
   let mergedExtensions: Record<string, any> = Object.create(null);
 
   for (let index = 0; index < requests.length; index++) {
@@ -92,7 +92,7 @@ export function mergeRequests(
       Object.assign(mergedVariables, prefixedRequests.variables);
       mergedExtensions = extensionsReducer(mergedExtensions, request);
       if (request.signal) {
-        signals.push(request.signal);
+        signals.add(request.signal);
       }
     }
   }
@@ -134,7 +134,7 @@ export function mergeRequests(
     info: firstRequest.info,
     operationType,
     rootValue: firstRequest.rootValue,
-    signal: abortSignalAll(signals),
+    signal: abortSignalAll(Array.from(signals)),
   };
 }
 
