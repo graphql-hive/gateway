@@ -290,7 +290,7 @@ export async function handleDockerHostNameInURLOrAtPath(
     container: string;
   }[],
 ) {
-  if (/^http(s?):\/\//.test(supergraph)) {
+  if (supergraph.includes('http://') || supergraph.includes('https://')) {
     // supergraph is a url
     supergraph = replaceLocalhostWithDockerHost(supergraph);
   } else {
