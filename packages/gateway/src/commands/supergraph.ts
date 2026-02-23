@@ -395,7 +395,7 @@ export async function runSupergraph(
         .then(() => {
           log.info(
             { path: absSchemaPath },
-            'Supergraph watcher successfuly closed',
+            'Supergraph watcher successfully closed',
           );
         });
     }
