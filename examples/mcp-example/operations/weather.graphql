@@ -1,0 +1,17 @@
+query GetWeather($location: String!) {
+  weather(location: $location) {
+    temperature
+    conditions
+    humidity
+    location
+  }
+}
+
+query GetForecast($location: String!, $days: Int) {
+  forecast(location: $location, days: $days) {
+    date
+    high
+    low
+    conditions
+  }
+}
