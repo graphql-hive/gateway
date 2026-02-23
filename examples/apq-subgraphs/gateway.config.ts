@@ -9,7 +9,6 @@ export const gatewayConfig = defineConfig({
       },
     },
   },
-  maskedErrors: false,
   plugins: () => [
     {
       onFetch({ options }) {
