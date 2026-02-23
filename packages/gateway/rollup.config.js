@@ -178,7 +178,7 @@ function avoidminjs() {
       if (source.endsWith('.min.js')) {
         const withoutMin = source.replace(/\.min\.js$/, '.js');
         if (fs.existsSync(withoutMin)) {
-          return source.replace(/\.min\.js$/, '.js');
+          return withoutMin;
         }
       }
     },
