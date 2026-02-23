@@ -303,6 +303,13 @@ export function serveSubgraph<TContext extends Record<string, any>>(
             },
           );
         },
+        (err: Error) => {
+          configContext.log.error(
+            `Failed to load subgraph schema: ${err.message}`,
+          );
+          continuePolling();
+          return false;
+        },
       );
     }
     return getSubschemaConfig$;
