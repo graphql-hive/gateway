@@ -9,9 +9,10 @@ export const _: MeshLogger = new LegacyLogger(null as any);
 
 function createTLogger(opts?: Partial<LoggerOptions>) {
   const writer = new MemoryLogWriter();
+  const writers = opts?.writers ?? [writer];
   return [
     LegacyLogger.from(
-      new Logger({ ...opts, writers: opts?.writers ? opts.writers : [writer] }),
+      new Logger({ ...opts, writers }),
     ),
     writer,
   ] as const;
