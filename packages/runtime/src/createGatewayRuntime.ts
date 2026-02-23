@@ -916,8 +916,8 @@ export function createGatewayRuntime<
   if (config.demandControl) {
     if ('proxy' in config && config.schema == null) {
       log.warn(
-        '`demandControl` is enabled in proxy mode without a defined schema' +
-          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.' +
+        '`demandControl` is enabled in proxy mode without a defined schema ' +
+          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation. ' +
           'You have to define "schema" in the gateway config to make them available.',
       );
     }
