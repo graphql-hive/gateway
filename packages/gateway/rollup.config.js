@@ -167,8 +167,23 @@ export default defineConfig({
     json(), // support importing json files to esm (needed for commonjs() plugin)
     sucrase({ transforms: ['typescript'] }), // transpile typescript
     packagejson(), // add package jsons
+    avoidminjs(),
   ],
 });
+
+function avoidminjs() {
+  return {
+    name: 'avoidminjs',
+    resolveId(source) {
+      if (source.endsWith('.min.js')) {
+        const withoutMin = source.replace(/\.min\.js$/, '.js');
+        if (fs.existsSync(withoutMin)) {
+          return source.replace(/\.min\.js$/, '.js');
+        }
+      }
+    },
+  };
+}
 
 /**
  * Adds package.json files to the bundle and its dependencies.
