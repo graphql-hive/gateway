@@ -1105,7 +1105,7 @@ function applyValueSetter(
   }
   const nextData = data[keyProp];
   if (nextData == null) {
-    return nextData;
+    return data;
   }
   return {
     ...data,
