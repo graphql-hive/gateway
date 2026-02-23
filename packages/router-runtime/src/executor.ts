@@ -338,7 +338,7 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (typeof current === 'object' && current !== null) {
+      if (current != null && typeof current === 'object') {
         path.push(segment.name);
         const next = (current as Record<string, any>)[segment.name];
         traverseFlattenPath(next, rest, supergraphSchema, path, callback);
@@ -375,8 +375,8 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (current !== null && typeof current === 'object') {
-        const value: any = current;
+      if (current != null && typeof current === 'object') {
+        const value = current as EntityRepresentation;
         const typename =
           typeof value.__typename === 'string'
             ? value.__typename
