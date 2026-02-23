@@ -375,13 +375,14 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (typeof current === 'object' && current !== null) {
-        const candidate = current as EntityRepresentation;
+      if (current != null && typeof current === 'object') {
+        const value = current as EntityRepresentation;
         const typename =
-          typeof candidate.__typename === 'string'
-            ? candidate.__typename
+          typeof value.__typename === 'string'
+            ? value.__typename
             : segment.typeCondition;
         if (
+          typename &&
           entitySatisfiesTypeCondition(
             supergraphSchema,
             typename,
