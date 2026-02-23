@@ -65,20 +65,22 @@ export function delegateToSchema<
     args,
   } = options;
 
-  let targetSchema;
-  if (isSubschema(schema)) {
-    targetSchema = schema.transformedSchema;
-  } else if (isSchema(schema)) {
-    targetSchema = schema;
-  } else {
-    const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
-      StitchingInfo<TContext>
-    >;
-    const subschema = stitchingInfo?.subschemaMap.get(schema);
-    if (subschema != null) {
-      targetSchema = subschema.transformedSchema;
+  let targetSchema = options.targetSchema;
+  if (targetSchema == null) {
+    if (isSubschema(schema)) {
+      targetSchema = schema.transformedSchema;
+    } else if (isSchema(schema)) {
+      targetSchema = schema;
     } else {
-      targetSchema = applySchemaTransforms(schema.schema, schema);
+      const stitchingInfo = info.schema.extensions?.['stitchingInfo'] as Maybe<
+        StitchingInfo<TContext>
+      >;
+      const subschema = stitchingInfo?.subschemaMap.get(schema);
+      if (subschema != null) {
+        targetSchema = subschema.transformedSchema;
+      } else {
+        targetSchema = applySchemaTransforms(schema.schema, schema);
+      }
     }
   }
 
