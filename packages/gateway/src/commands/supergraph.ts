@@ -184,7 +184,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           type: 'graphos',
           apiKey: apolloKey,
           graphRef: apolloGraphRef,
-          upLink: apolloUplink,
+          ...(apolloUplink ? { upLink: apolloUplink } : {}),
         };
       } else if ('supergraph' in loadedConfig) {
         supergraph = loadedConfig.supergraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
