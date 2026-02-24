@@ -55,6 +55,7 @@ import {
 import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
+import { CircuitBreakerExporter } from '../src/circuit-breaker-exporter';
 import type {
   ContextMatcher,
   OpenTelemetryContextExtension,
@@ -394,10 +395,12 @@ describe('useOpenTelemetry', () => {
       const subProcessor = processor.processor as BatchSpanProcessor;
       expect(subProcessor).toBeInstanceOf(BatchSpanProcessor);
       // @ts-expect-error Access of private field
-      const exporter = subProcessor._exporter as OTLPTraceExporter;
-      expect(exporter).toBeInstanceOf(OTLPTraceExporter);
+      const exporter = subProcessor._exporter as CircuitBreakerExporter;
+      expect(exporter).toBeInstanceOf(CircuitBreakerExporter);
       // @ts-expect-error Access of private field
-      expect(exporter._delegate._transport._transport._parameters.url).toBe(
+      const subExporter = exporter._exporter as OTLPTraceExporter;
+      // @ts-expect-error Access of private field
+      expect(subExporter._delegate._transport._transport._parameters.url).toBe(
         'https://api.graphql-hive.com/otel/v1/traces',
       );
     });

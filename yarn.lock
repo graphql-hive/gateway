@@ -4410,10 +4410,12 @@ __metadata:
     "@opentelemetry/sdk-node": "npm:^0.212.0"
     "@opentelemetry/sdk-trace-base": "npm:^2.2.0"
     "@opentelemetry/semantic-conventions": "npm:^1.38.0"
+    "@types/opossum": "npm:^8.1.9"
     "@whatwg-node/promise-helpers": "npm:1.3.2"
     "@whatwg-node/server": "npm:^0.10.17"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.2"
+    opossum: "npm:^9.0.0"
     pkgroll: "npm:2.26.3"
     rimraf: "npm:^6.1.0"
     rollup: "npm:^4.53.2"
@@ -9785,6 +9787,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10c0/22ba2bc9f8863101a7e90a56aaeba1eb3ebdc51e847cef4a6d188967ab1acbce9b4f92251372fd0329ecb924bbf610509e122c3dfe346c04dbad04013d4ad7d0
+  languageName: node
+  linkType: hard
+
+"@types/opossum@npm:^8.1.9":
+  version: 8.1.9
+  resolution: "@types/opossum@npm:8.1.9"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/dd79ea42e76b19ec8682e991ee47bf423f7ceadf7c2063b5bd63a6ddbfaa974fb3161f3c994b1e7c152448aca4d4b7cb97771a2de3951415a9eb230aa512bc47
   languageName: node
   linkType: hard
 
@@ -18126,6 +18137,13 @@ __metadata:
   version: 0.14.7
   resolution: "opentracing@npm:0.14.7"
   checksum: 10c0/a7be8d697b1997548233423f5f4c196e285af8e864a24d7704fc6029beb73cd1f987651ca814e207629c6bc624cb03297a86601c0dc51cdca9a07a20f97b71ea
+  languageName: node
+  linkType: hard
+
+"opossum@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "opossum@npm:9.0.0"
+  checksum: 10c0/14d267a1d5a9490c46215b4341582e45e947078e21c9de4c2e43f61503809da0e42b267aac2820412e7cb5cdd5f998bda2dbab84d27cf1e8f23c55e43569abf2
   languageName: node
   linkType: hard
 

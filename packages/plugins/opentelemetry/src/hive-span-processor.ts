@@ -1,3 +1,4 @@
+import { CircuitBreakerConfiguration } from '@graphql-hive/core';
 import { Context } from '@opentelemetry/api';
 import { hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -16,6 +17,7 @@ import {
   SEMATTRS_IS_HIVE_REQUEST,
   SEMATTRS_IS_HIVE_SUBGRAPH_EXECUTION,
 } from './attributes';
+import { CircuitBreakerExporter } from './circuit-breaker-exporter';
 
 export type HiveTracingSpanProcessorOptions =
   | {
@@ -24,6 +26,7 @@ export type HiveTracingSpanProcessorOptions =
       endpoint: string;
       batching?: BufferConfig;
       processor?: never;
+      circuitBreaker: CircuitBreakerConfiguration;
     }
   | {
       processor: SpanProcessor;
@@ -46,13 +49,16 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       this.processor = config.processor;
     } else {
       this.processor = new BatchSpanProcessor(
-        new OTLPTraceExporter({
-          url: config.endpoint,
-          headers: {
-            Authorization: `Bearer ${config.accessToken}`,
-            'X-Hive-Target-Ref': config.target,
-          },
-        }),
+        new CircuitBreakerExporter(
+          new OTLPTraceExporter({
+            url: config.endpoint,
+            headers: {
+              Authorization: `Bearer ${config.accessToken}`,
+              'X-Hive-Target-Ref': config.target,
+            },
+          }),
+          config.circuitBreaker,
+        ),
         config.batching,
       );
     }
