@@ -26,7 +26,7 @@ export type HiveTracingSpanProcessorOptions =
       endpoint: string;
       batching?: BufferConfig;
       processor?: never;
-      circuitBreaker: CircuitBreakerConfiguration;
+      circuitBreaker?: CircuitBreakerConfiguration;
     }
   | {
       processor: SpanProcessor;
