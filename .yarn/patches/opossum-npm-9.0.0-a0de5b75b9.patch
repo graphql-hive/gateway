@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index a6d58fb7892cafe1f374ac93c508a0adc03f43cd..49070a6c74eedca4e062e95fda21a08049fe506a 100644
+--- a/package.json
++++ b/package.json
+@@ -35,6 +35,7 @@
+     "url": "https://github.com/nodeshift/opossum/issues"
+   },
+   "homepage": "https://nodeshift.dev/opossum",
++  "main": "dist/opossum.js",
+   "devDependencies": {
+     "@babel/core": "^7.22.9",
+     "@babel/preset-env": "^7.22.9",
