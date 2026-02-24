@@ -1,24 +1,62 @@
 diff --git a/index.cjs b/index.cjs
-index 9b0fcd06ae90665a41c3ed0615a6df603d949793..4cc790b00b6ef8f8a444741d4fed9cb6b250b33a 100644
+index 9b0fcd06ae90665a41c3ed0615a6df603d949793..968d97db5bd033040a232962084f20a78e9575e7 100644
 --- a/index.cjs
 +++ b/index.cjs
-@@ -316,6 +316,7 @@ if (!nativeBinding) {
-         "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
-       {
-         cause: loadErrors.reduce((err, cur) => {
-+          console.error(err);
-           cur.cause = err;
-           return cur;
-         }),
+@@ -310,17 +310,16 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
+ 
+ if (!nativeBinding) {
+   if (loadErrors.length > 0) {
+-    throw new Error(
++    let message =
+       `Cannot find native binding. ` +
+-        `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
+-        "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
+-      {
+-        cause: loadErrors.reduce((err, cur) => {
+-          cur.cause = err;
+-          return cur;
+-        }),
+-      }
+-    );
++      `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
++      "Please try `npm i` again after removing both package-lock.json and node_modules directory;";
++
++    for (const error of loadErrors) {
++      message += `\n- ${error.message}`;
++    }
++
++    throw new AggregateError(message, loadErrors);
+   }
+   throw new Error(`Failed to load native binding`);
+ }
 diff --git a/index.js b/index.js
-index 52196ff75b80cc58a83edbf76e226f271284c72b..ccc418f4a6e04b28c76468ece8786c94b7173d8c 100644
+index 52196ff75b80cc58a83edbf76e226f271284c72b..fba0df336eecf74372990fa1a9a708e3fa66954c 100644
 --- a/index.js
 +++ b/index.js
-@@ -317,6 +317,7 @@ if (!nativeBinding) {
-         "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
-       {
-         cause: loadErrors.reduce((err, cur) => {
-+          console.error(err);
-           cur.cause = err;
-           return cur;
-         }),
+@@ -311,17 +311,16 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
+ 
+ if (!nativeBinding) {
+   if (loadErrors.length > 0) {
+-    throw new Error(
++    let message =
+       `Cannot find native binding. ` +
+-        `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
+-        "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
+-      {
+-        cause: loadErrors.reduce((err, cur) => {
+-          cur.cause = err;
+-          return cur;
+-        }),
+-      }
+-    );
++      `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
++      "Please try `npm i` again after removing both package-lock.json and node_modules directory;";
++
++    for (const error of loadErrors) {
++      message += `\n- ${error.message}`;
++    }
++
++    throw new AggregateError(message, loadErrors);
+   }
+   throw new Error(`Failed to load native binding`);
+ }

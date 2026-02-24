@@ -4507,8 +4507,8 @@ __metadata:
 
 "@graphql-hive/router-query-planner@patch:@graphql-hive/router-query-planner@npm%3A0.0.9#~/.yarn/patches/@graphql-hive-router-query-planner-npm-0.0.9-3531ed6777.patch":
   version: 0.0.9
-  resolution: "@graphql-hive/router-query-planner@patch:@graphql-hive/router-query-planner@npm%3A0.0.9#~/.yarn/patches/@graphql-hive-router-query-planner-npm-0.0.9-3531ed6777.patch::version=0.0.9&hash=253a4d"
-  checksum: 10c0/e7b7ccf75f3716bf937ee64c02bd09b112b3507bed27a80147e72fe236a423c652d9aa1d6423e34a2b7113d1eda2940528dc6ff3dd757603f608aa3896c84302
+  resolution: "@graphql-hive/router-query-planner@patch:@graphql-hive/router-query-planner@npm%3A0.0.9#~/.yarn/patches/@graphql-hive-router-query-planner-npm-0.0.9-3531ed6777.patch::version=0.0.9&hash=bf9f37"
+  checksum: 10c0/e49850e938117b6275c7b525946dbf2eebde9e0fad540c5c243664f5ea0542a049de6e5b215d462b820d8925bcf937b8402bfcc2004e932639a9961e8e0e7f36
   languageName: node
   linkType: hard
 
