@@ -3314,6 +3314,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@e2e/opentelemetry-circuit-breaker@workspace:e2e/opentelemetry-circuit-breaker":
+  version: 0.0.0-use.local
+  resolution: "@e2e/opentelemetry-circuit-breaker@workspace:e2e/opentelemetry-circuit-breaker"
+  dependencies:
+    "@whatwg-node/server": "npm:^0.10.17"
+  languageName: unknown
+  linkType: soft
+
 "@e2e/opentelemetry@workspace:e2e/opentelemetry":
   version: 0.0.0-use.local
   resolution: "@e2e/opentelemetry@workspace:e2e/opentelemetry"

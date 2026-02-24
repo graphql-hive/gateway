@@ -1,0 +1,7 @@
+{
+  "name": "@e2e/opentelemetry-circuit-breaker",
+  "private": true,
+  "devDependencies": {
+    "@whatwg-node/server": "^0.10.17"
+  }
+}
