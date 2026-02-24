@@ -399,6 +399,7 @@ describe('useOpenTelemetry', () => {
       expect(exporter).toBeInstanceOf(CircuitBreakerExporter);
       // @ts-expect-error Access of private field
       const subExporter = exporter._exporter as OTLPTraceExporter;
+      expect(subExporter).toBeInstanceOf(OTLPTraceExporter);
       // @ts-expect-error Access of private field
       expect(subExporter._delegate._transport._transport._parameters.url).toBe(
         'https://api.graphql-hive.com/otel/v1/traces',
