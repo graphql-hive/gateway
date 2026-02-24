@@ -1,6 +1,6 @@
 import { buildSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import type { MCPToolConfig } from '../src/plugin.js';
+import type { ResolvedToolConfig } from '../src/plugin.js';
 import { ToolRegistry } from '../src/registry.js';
 
 describe('ToolRegistry', () => {
@@ -13,10 +13,10 @@ describe('ToolRegistry', () => {
     }
   `);
 
-  const toolConfigs: MCPToolConfig[] = [
+  const toolConfigs: ResolvedToolConfig[] = [
     {
       name: 'get_weather',
-      description: 'Get weather for a location',
+      tool: { description: 'Get weather for a location' },
       query: `
         query GetWeather($location: String!) {
           getWeather(location: $location) {

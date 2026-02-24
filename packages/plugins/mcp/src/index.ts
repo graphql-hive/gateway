@@ -5,4 +5,5 @@ export type {
   MCPToolSource,
   MCPToolOverrides,
   MCPInputOverrides,
+  ResolvedToolConfig,
 } from './plugin.js';

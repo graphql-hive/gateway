@@ -17,12 +17,9 @@ declare module '@graphql-hive/gateway-runtime' {
   }
 }
 
-export interface MCPToolSource {
-  type: 'graphql';
-  operationName: string;
-  operationType: 'query' | 'mutation';
-  file?: string; // per-tool file override
-}
+export type MCPToolSource =
+  | { type: 'inline'; query: string }
+  | { type: 'graphql'; operationName: string; operationType: 'query' | 'mutation'; file?: string };
 
 export interface MCPToolOverrides {
   title?: string;
@@ -37,9 +34,7 @@ export interface MCPInputOverrides {
 
 export interface MCPToolConfig {
   name: string;
-  description?: string;
-  query?: string;            // inline query
-  source?: MCPToolSource;    // file-based operation lookup
+  source: MCPToolSource;
   tool?: MCPToolOverrides;   // metadata overrides
   input?: MCPInputOverrides; // field-level overrides
 }
@@ -53,12 +48,19 @@ export interface MCPConfig {
   tools: MCPToolConfig[];
 }
 
+export interface ResolvedToolConfig {
+  name: string;
+  query: string;
+  tool?: MCPToolOverrides;
+  input?: MCPInputOverrides;
+}
+
 interface ResolveToolConfigsInput {
   tools: MCPToolConfig[];
   operationsSource?: string;
 }
 
-export function resolveToolConfigs(input: ResolveToolConfigsInput): MCPToolConfig[] {
+export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedToolConfig[] {
   const { tools, operationsSource } = input;
   let parsedOps: ParsedOperation[] | undefined;
 
@@ -67,24 +69,20 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): MCPToolConfi
   }
 
   return tools.map((tool) => {
-    if (tool.source) {
-      const allOps = parsedOps || [];
-      const op = resolveOperation(allOps, tool.source.operationName, tool.source.operationType);
-      if (!op) {
-        throw new Error(
-          `Operation "${tool.source.operationName}" (${tool.source.operationType}) not found in loaded operations for tool "${tool.name}"`,
-        );
-      }
-      return { ...tool, query: op.document };
+    const { source } = tool;
+
+    if (source.type === 'inline') {
+      return { name: tool.name, query: source.query, tool: tool.tool, input: tool.input };
     }
 
-    if (tool.query) {
-      return tool;
+    const allOps = parsedOps || [];
+    const op = resolveOperation(allOps, source.operationName, source.operationType);
+    if (!op) {
+      throw new Error(
+        `Operation "${source.operationName}" (${source.operationType}) not found in loaded operations for tool "${tool.name}"`,
+      );
     }
-
-    throw new Error(
-      `Tool "${tool.name}" must have either "query" or "source" defined`,
-    );
+    return { name: tool.name, query: op.document, tool: tool.tool, input: tool.input };
   });
 }
 
@@ -113,7 +111,7 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
 
   // Load per-tool source files
   for (const tool of config.tools) {
-    if (tool.source?.file) {
+    if (tool.source.type === 'graphql' && tool.source.file) {
       const fileContent = readFileSync(resolve(tool.source.file), 'utf-8');
       operationsSource = (operationsSource || '') + '\n' + fileContent;
     }

@@ -9,20 +9,23 @@ describe('MCP Integration', () => {
     tools: [
       {
         name: 'greet',
-        description: 'Greet someone by name',
-        query: `query Greet($name: String!) { hello(name: $name) }`,
+        source: { type: 'inline', query: 'query Greet($name: String!) { hello(name: $name) }' },
+        tool: { description: 'Greet someone by name' },
       },
       {
         name: 'get_weather',
-        description: 'Get weather for a location',
-        query: `
-          query GetWeather($location: String!) {
-            weather(location: $location) {
-              temperature
-              conditions
+        source: {
+          type: 'inline',
+          query: `
+            query GetWeather($location: String!) {
+              weather(location: $location) {
+                temperature
+                conditions
+              }
             }
-          }
-        `,
+          `,
+        },
+        tool: { description: 'Get weather for a location' },
       },
     ],
   });

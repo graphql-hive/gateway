@@ -1,5 +1,5 @@
 import { parse, type GraphQLSchema } from 'graphql';
-import type { MCPToolConfig } from './plugin.js';
+import type { ResolvedToolConfig } from './plugin.js';
 import {
   getToolDescriptionFromSchema,
   operationToInputSchema,
@@ -27,9 +27,9 @@ export interface RegisteredTool {
 export class ToolRegistry {
   private tools: Map<string, RegisteredTool> = new Map();
 
-  constructor(configs: MCPToolConfig[], schema: GraphQLSchema) {
+  constructor(configs: ResolvedToolConfig[], schema: GraphQLSchema) {
     for (const config of configs) {
-      const query = config.query!;
+      const query = config.query;
       let inputSchema = operationToInputSchema(query, schema);
 
       if (config.input?.schema?.properties) {
@@ -43,7 +43,6 @@ export class ToolRegistry {
 
       const description =
         config.tool?.description ||
-        config.description ||
         getToolDescriptionFromSchema(query, schema) ||
         `Execute ${config.name}`;
 
