@@ -15,3 +15,10 @@ query GetForecast($location: String!, $days: Int) {
     conditions
   }
 }
+
+query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check returns just temperature and conditions") {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
