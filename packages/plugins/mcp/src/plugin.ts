@@ -44,7 +44,8 @@ export interface MCPConfig {
   version?: string;
   path?: string;
   graphqlPath?: string;
-  operations?: string; // glob or file path for .graphql files
+  operationsPath?: string;
+  operationsStr?: string;
   tools: MCPToolConfig[];
 }
 
@@ -68,30 +69,72 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
     parsedOps = loadOperationsFromString(operationsSource);
   }
 
-  return tools.map((tool) => {
+  // build base configs from @mcpTool directives
+  const directiveTools = new Map();
+  if (parsedOps) {
+    for (const op of parsedOps) {
+      if (!op.mcpDirective) continue;
+      const toolOverrides: MCPToolOverrides = {};
+      if (op.mcpDirective.description) toolOverrides.description = op.mcpDirective.description;
+      if (op.mcpDirective.title) toolOverrides.title = op.mcpDirective.title;
+      directiveTools.set(op.mcpDirective.name, {
+        name: op.mcpDirective.name,
+        query: op.document,
+        tool: Object.keys(toolOverrides).length > 0 ? toolOverrides : undefined,
+      });
+    }
+  }
+
+  // process explicit tools[] entries
+  const configTools = new Map();
+  for (const tool of tools) {
     const { source } = tool;
+    let query: string;
 
     if (source.type === 'inline') {
-      return { name: tool.name, query: source.query, tool: tool.tool, input: tool.input };
+      query = source.query;
+    } else {
+      const allOps = parsedOps || [];
+      const op = resolveOperation(allOps, source.operationName, source.operationType);
+      if (!op) {
+        throw new Error(
+          `Operation "${source.operationName}" (${source.operationType}) not found in loaded operations for tool "${tool.name}"`,
+        );
+      }
+      query = op.document;
     }
 
-    const allOps = parsedOps || [];
-    const op = resolveOperation(allOps, source.operationName, source.operationType);
-    if (!op) {
-      throw new Error(
-        `Operation "${source.operationName}" (${source.operationType}) not found in loaded operations for tool "${tool.name}"`,
-      );
+    configTools.set(tool.name, { name: tool.name, query, tool: tool.tool, input: tool.input });
+  }
+
+  // merge: directive tools as base, config tools overlay (config wins)
+  const merged = new Map<string, ResolvedToolConfig>(directiveTools);
+  for (const [name, configTool] of configTools) {
+    const base = merged.get(name);
+    if (base) {
+      merged.set(name, {
+        name,
+        query: configTool.query,
+        tool: {
+          ...base.tool,
+          ...configTool.tool,
+        },
+        input: configTool.input || base.input,
+      });
+    } else {
+      merged.set(name, configTool);
     }
-    return { name: tool.name, query: op.document, tool: tool.tool, input: tool.input };
-  });
+  }
+
+  return Array.from(merged.values());
 }
 
 function loadOperationsSource(config: MCPConfig): string | undefined {
   let operationsSource;
 
   // Load from top-level operations path
-  if (config.operations) {
-    const opsPath = resolve(config.operations);
+  if (config.operationsPath) {
+    const opsPath = resolve(config.operationsPath);
     try {
       const stat = readFileSync(opsPath);
       // If it's a file, read it directly
@@ -104,7 +147,7 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
           .map((f) => readFileSync(join(opsPath, f), 'utf-8'));
         operationsSource = files.join('\n');
       } catch {
-        throw new Error(`Cannot read operations from "${config.operations}"`);
+        throw new Error(`Cannot read operations from "${config.operationsPath}"`);
       }
     }
   }
@@ -128,7 +171,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   let schemaLoadingPromise: Promise<void> | null = null;
 
   // Resolve operations from files at startup
-  const operationsSource = loadOperationsSource(config);
+  const operationsSource = config.operationsStr || loadOperationsSource(config);
   const resolvedTools = resolveToolConfigs({ tools: config.tools, operationsSource });
 
   return {
