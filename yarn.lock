@@ -18149,8 +18149,8 @@ __metadata:
 
 "opossum@patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch":
   version: 9.0.0
-  resolution: "opossum@patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch::version=9.0.0&hash=c214e9"
-  checksum: 10c0/e72134a20d3810f5f715a83e94af1d5d8387c16adebe539109ee28ffb1ba226d693d1cf943f7b5ffefc6d3773cf0f61b3b834fc032725c80ff35c597a0677694
+  resolution: "opossum@patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch::version=9.0.0&hash=93f792"
+  checksum: 10c0/968b0dd5f3607bb35df2c00f6fc984ae2510c07975791263a300ad669f83105066f336cd8c00e6bad17d2f8f00bd115f5c41def4d4ff754b8ea42d2c4a66530c
   languageName: node
   linkType: hard
 

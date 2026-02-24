@@ -1,3 +1,16 @@
+diff --git a/dist/opossum.js b/dist/opossum.js
+index 543332076ba20ac56a2f082cb86d58afe454834c..e20b5e8db071e9a26bd6dfe810e8ffdf58afb697 100644
+--- a/dist/opossum.js
++++ b/dist/opossum.js
+@@ -7,7 +7,7 @@
+ 		exports["circuitBreaker"] = factory();
+ 	else
+ 		root["circuitBreaker"] = factory();
+-})(self, () => {
++})(module.exports, () => {
+ return /******/ (() => { // webpackBootstrap
+ /******/ 	var __webpack_modules__ = ({
+ 
 diff --git a/package.json b/package.json
 index a6d58fb7892cafe1f374ac93c508a0adc03f43cd..49070a6c74eedca4e062e95fda21a08049fe506a 100644
 --- a/package.json
