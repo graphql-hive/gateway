@@ -39,9 +39,15 @@ export class CircuitBreakerExporter implements SpanExporter {
     this.circuitBreaker
       .fire(spans)
       .then(resultCallback)
-      .catch((error) =>
-        resultCallback({ code: ExportResultCode.FAILED, error }),
-      );
+      .catch((error) => {
+        // When the circuit is open, we should not report a failure to the SDK.
+        // The SDK would retry, which is what we want to avoid.
+        if (error?.code === 'EOPENBREAKER') {
+          // We successfully dropped the spans, so we can report success.
+          return resultCallback({ code: ExportResultCode.SUCCESS });
+        }
+        return resultCallback({ code: ExportResultCode.FAILED, error });
+      });
   }
   shutdown(): Promise<void> {
     return this._exporter
