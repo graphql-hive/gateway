@@ -19305,13 +19305,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"require-in-the-middle@npm:^8.0.0":
+"require-in-the-middle@npm:8.0.0":
   version: 8.0.0
   resolution: "require-in-the-middle@npm:8.0.0"
   dependencies:
     debug: "npm:^4.3.5"
     module-details-from-path: "npm:^1.0.3"
   checksum: 10c0/9aafc8c6a444a13f6fad402fd226a238627c271e7498d570d79e27baf9f703a5ca2c98e82959818a26c7c54b59982f60cbcf457d3470acce1915af76090a7ee0
+  languageName: node
+  linkType: hard
+
+"require-in-the-middle@patch:require-in-the-middle@npm%3A8.0.0#~/.yarn/patches/require-in-the-middle-npm-8.0.0-0176d6df4b.patch":
+  version: 8.0.0
+  resolution: "require-in-the-middle@patch:require-in-the-middle@npm%3A8.0.0#~/.yarn/patches/require-in-the-middle-npm-8.0.0-0176d6df4b.patch::version=8.0.0&hash=e2a89f"
+  dependencies:
+    debug: "npm:^4.3.5"
+    module-details-from-path: "npm:^1.0.3"
+  checksum: 10c0/6b93df5d2914cfccb7b5c786092a09d488f51bb03f79ff7da5e67d28c1377ac5570c82fab0e4a375ab3a09d7d701fd701a354b9585459edc5f3c2cd8a7f411ce
   languageName: node
   linkType: hard
 

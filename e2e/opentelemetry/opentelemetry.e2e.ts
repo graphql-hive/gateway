@@ -1,7 +1,7 @@
 import os from 'os';
 import { setTimeout } from 'timers/promises';
 import { createExampleSetup, createTenv, type Container } from '@internal/e2e';
-import { getLocalhost, isCI, usingHiveRouterRuntime } from '@internal/testing';
+import { isCI, usingHiveRouterRuntime } from '@internal/testing';
 import { crypto, fetch } from '@whatwg-node/fetch';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -82,10 +82,7 @@ describe('OpenTelemetry', () => {
           abort: AbortController,
         ) => void | PromiseLike<void>,
       ): Promise<void> {
-        const port = jaeger.additionalPorts[16686]!;
-        const host = await getLocalhost(port, jaeger.protocol);
-
-        const url = `${host}:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
+        const url = `http://0.0.0.0:${jaeger.additionalPorts[16686]}/api/traces?service=${service}`;
 
         let res!: JaegerTracesApiResponse;
         let err: any;
@@ -520,7 +517,7 @@ describe('OpenTelemetry', () => {
 
       it('should report http failures', async () => {
         const serviceName = crypto.randomUUID();
-        const { port, protocol } = await gateway({
+        const { port } = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -530,8 +527,7 @@ describe('OpenTelemetry', () => {
           },
         });
         const path = '/non-existing';
-        const host = await getLocalhost(port, protocol);
-        await fetch(`${host}:${port}${path}`).catch(() => {});
+        await fetch(`http://0.0.0.0:${port}${path}`).catch(() => {});
         await expectJaegerTraces(serviceName, (traces) => {
           const relevantTrace = traces.data.find((trace) =>
             trace.spans.some((span) => span.operationName === 'GET ' + path),
@@ -564,7 +560,7 @@ describe('OpenTelemetry', () => {
       it('context propagation should work correctly', async () => {
         const traceId = '0af7651916cd43dd8448eb211c80319c';
         const serviceName = crypto.randomUUID();
-        const { execute, port, protocol } = await gateway({
+        const { execute, port } = await gateway({
           supergraph,
           env: {
             OTLP_EXPORTER_TYPE,
@@ -583,9 +579,8 @@ describe('OpenTelemetry', () => {
           }),
         ).resolves.toEqual(exampleSetup.result);
 
-        const host = await getLocalhost(port, protocol);
         const upstreamHttpCalls = await fetch(
-          `${host}:${port}/upstream-fetch`,
+          `http://0.0.0.0:${port}/upstream-fetch`,
         ).then(
           (r) =>
             r.json() as unknown as Array<{

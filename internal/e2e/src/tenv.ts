@@ -583,9 +583,8 @@ export function createTenv(cwd: string): Tenv {
         port,
         protocol,
         async execute({ headers, ...args }) {
-          const host = await getLocalhost(port, protocol);
           try {
-            const res = await fetch(`${host}:${port}/graphql`, {
+            const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
               method: 'POST',
               headers: {
                 'content-type': 'application/json',
