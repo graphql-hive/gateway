@@ -31,6 +31,10 @@ export class CircuitBreakerExporter implements SpanExporter {
         ...config,
       },
     );
+
+    if (this._exporter.forceFlush) {
+      this.forceFlush = () => this._exporter.forceFlush!();
+    }
   }
   export(
     spans: ReadableSpan[],
@@ -49,9 +53,9 @@ export class CircuitBreakerExporter implements SpanExporter {
         return resultCallback({ code: ExportResultCode.FAILED, error });
       });
   }
+  forceFlush?: () => Promise<void>;
   shutdown(): Promise<void> {
-    return this._exporter
-      .shutdown()
-      .finally(() => this.circuitBreaker.shutdown());
+    this.circuitBreaker.shutdown();
+    return this._exporter.shutdown();
   }
 }

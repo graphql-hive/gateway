@@ -404,6 +404,7 @@ describe('useOpenTelemetry', () => {
       expect(subExporter._delegate._transport._transport._parameters.url).toBe(
         'https://api.graphql-hive.com/otel/v1/traces',
       );
+      return processor.shutdown();
     });
   });
 
