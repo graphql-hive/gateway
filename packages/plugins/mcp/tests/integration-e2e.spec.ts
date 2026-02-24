@@ -287,4 +287,66 @@ describe('MCP E2E', () => {
       await freshGateway[Symbol.asyncDispose]?.();
     }
   });
+
+  it('auto-registers tools from @mcpTool directive in operations', async () => {
+    const directiveGateway = createGatewayRuntime({
+      logging: false,
+      proxy: {
+        endpoint: 'http://upstream:4000/graphql',
+      },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'directive-gateway',
+          operationsStr: `
+            query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather data", title: "Weather") {
+              weather(location: $location) { temperature conditions humidity }
+            }
+          `,
+          tools: [],
+        }),
+      ],
+    });
+
+    try {
+      await directiveGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const listRes = await directiveGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+      const listBody = await listRes.json();
+
+      expect(listBody.result.tools).toHaveLength(1);
+      const tool = listBody.result.tools[0];
+      expect(tool.name).toBe('get_weather');
+      expect(tool.title).toBe('Weather');
+      expect(tool.description).toBe('Get weather data');
+      expect(tool.inputSchema.properties.location).toBeDefined();
+
+      const callRes = await directiveGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+      const callBody = await callRes.json();
+      const data = JSON.parse(callBody.result.content[0].text);
+      expect(data.data.weather.temperature).toBe(12.5);
+    } finally {
+      await directiveGateway[Symbol.asyncDispose]?.();
+    }
+  });
 });

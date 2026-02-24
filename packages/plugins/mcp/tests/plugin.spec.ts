@@ -57,4 +57,71 @@ describe('resolveToolConfigs', () => {
     expect(tools[0]!.tool?.title).toBe('Hello');
     expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe('Who to greet');
   });
+
+  it('auto-registers tools from @mcpTool directives', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather", title: "Weather") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({ tools: [], operationsSource });
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.name).toBe('get_weather');
+    expect(tools[0]!.query).toContain('GetWeather');
+    expect(tools[0]!.query).not.toContain('mcpTool');
+    expect(tools[0]!.tool).toEqual({ description: 'Get weather', title: 'Weather' });
+  });
+
+  it('config wins over directive on conflict', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Directive desc", title: "Directive Title") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'get_weather',
+          source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' as const },
+          tool: { description: 'Config desc' },
+        },
+      ],
+      operationsSource,
+    });
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.name).toBe('get_weather');
+    expect(tools[0]!.tool?.description).toBe('Config desc');
+    expect(tools[0]!.tool?.title).toBe('Directive Title');
+  });
+
+  it('config input overrides apply on top of directive tool', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", description: "Get weather") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'get_weather',
+          source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' as const },
+          input: { schema: { properties: { location: { description: 'City name' } } } },
+        },
+      ],
+      operationsSource,
+    });
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.tool?.description).toBe('Get weather');
+    expect(tools[0]!.input?.schema?.properties?.['location']?.description).toBe('City name');
+  });
+
+  it('does not auto-register operations without @mcpTool', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({ tools: [], operationsSource });
+    expect(tools).toHaveLength(0);
+  });
 });
