@@ -25,7 +25,7 @@ index 9b0fcd06ae90665a41c3ed0615a6df603d949793..968d97db5bd033040a232962084f20a7
 +      message += `\n- ${error.message}`;
 +    }
 +
-+    throw new AggregateError(message, loadErrors);
++    throw new AggregateError(loadErrors, message);
    }
    throw new Error(`Failed to load native binding`);
  }
@@ -56,7 +56,7 @@ index 52196ff75b80cc58a83edbf76e226f271284c72b..fba0df336eecf74372990fa1a9a708e3
 +      message += `\n- ${error.message}`;
 +    }
 +
-+    throw new AggregateError(message, loadErrors);
++    throw new AggregateError(loadErrors, message);
    }
    throw new Error(`Failed to load native binding`);
  }
