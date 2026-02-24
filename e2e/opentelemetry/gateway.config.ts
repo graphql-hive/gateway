@@ -76,6 +76,7 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
 }
 
 export const gatewayConfig = defineConfig({
+  maskedErrors: false,
   openTelemetry: {
     traces: true,
   },
