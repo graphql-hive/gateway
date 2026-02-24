@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { resolveToolConfigs } from '../src/plugin.js';
 
 describe('resolveToolConfigs', () => {
-  it('returns inline query tools unchanged', () => {
+  it('returns inline source tools with query extracted', () => {
     const tools = resolveToolConfigs({
       tools: [
-        { name: 'test', query: 'query { hello }' },
+        { name: 'test', source: { type: 'inline', query: 'query { hello }' } },
       ],
     });
     expect(tools[0]!.query).toBe('query { hello }');
@@ -43,28 +43,18 @@ describe('resolveToolConfigs', () => {
     ).toThrow('NotHere');
   });
 
-  it('throws when tool has neither query nor source', () => {
-    expect(() =>
-      resolveToolConfigs({
-        tools: [{ name: 'broken' }],
-      }),
-    ).toThrow('must have either');
-  });
-
-  it('prefers source over query when both provided', () => {
-    const operationsSource = `
-      query FromFile($id: ID!) { getUser(id: $id) { name } }
-    `;
+  it('preserves tool and input overrides', () => {
     const tools = resolveToolConfigs({
       tools: [
         {
-          name: 'user',
-          query: 'query Inline { old }',
-          source: { type: 'graphql', operationName: 'FromFile', operationType: 'query' },
+          name: 'test',
+          source: { type: 'inline', query: 'query { hello }' },
+          tool: { title: 'Hello', description: 'Say hello' },
+          input: { schema: { properties: { name: { description: 'Who to greet' } } } },
         },
       ],
-      operationsSource,
     });
-    expect(tools[0]!.query).toContain('FromFile');
+    expect(tools[0]!.tool?.title).toBe('Hello');
+    expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe('Who to greet');
   });
 });
