@@ -64,7 +64,6 @@
   },
   "resolutions": {
     "@apollo/server": "5.4.0",
-    "@graphql-hive/router-query-planner": "patch:@graphql-hive/router-query-planner@npm%3A0.0.9#~/.yarn/patches/@graphql-hive-router-query-planner-npm-0.0.9-3531ed6777.patch",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
     "@graphql-tools/delegate": "workspace:^",
