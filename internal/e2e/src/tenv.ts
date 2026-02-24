@@ -409,6 +409,10 @@ export function createTenv(cwd: string): Tenv {
         subgraph = output;
       }
 
+      if (gatewayRunner.includes('docker')) {
+        args.unshift('--host=0.0.0.0');
+      }
+
       function getFullArgs() {
         return [
           createPortOpt(port),
@@ -579,8 +583,9 @@ export function createTenv(cwd: string): Tenv {
         port,
         protocol,
         async execute({ headers, ...args }) {
+          const host = await getLocalhost(port, protocol);
           try {
-            const res = await fetch(`${protocol}://0.0.0.0:${port}/graphql`, {
+            const res = await fetch(`${host}:${port}/graphql`, {
               method: 'POST',
               headers: {
                 'content-type': 'application/json',

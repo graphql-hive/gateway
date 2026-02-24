@@ -1,0 +1,24 @@
+diff --git a/index.cjs b/index.cjs
+index 9b0fcd06ae90665a41c3ed0615a6df603d949793..4cc790b00b6ef8f8a444741d4fed9cb6b250b33a 100644
+--- a/index.cjs
++++ b/index.cjs
+@@ -316,6 +316,7 @@ if (!nativeBinding) {
+         "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
+       {
+         cause: loadErrors.reduce((err, cur) => {
++          console.error(err);
+           cur.cause = err;
+           return cur;
+         }),
+diff --git a/index.js b/index.js
+index 52196ff75b80cc58a83edbf76e226f271284c72b..ccc418f4a6e04b28c76468ece8786c94b7173d8c 100644
+--- a/index.js
++++ b/index.js
+@@ -317,6 +317,7 @@ if (!nativeBinding) {
+         "Please try `npm i` again after removing both package-lock.json and node_modules directory.",
+       {
+         cause: loadErrors.reduce((err, cur) => {
++          console.error(err);
+           cur.cause = err;
+           return cur;
+         }),
