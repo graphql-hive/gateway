@@ -1,14 +1,12 @@
+import fs from 'fs';
 import path from 'node:path';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import sucrase from '@rollup/plugin-sucrase';
-import fsExtra from 'fs-extra';
 import { defineConfig } from 'rollup';
 import copy from 'rollup-plugin-copy';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
-
-const { copyFileSync, existsSync, lstatSync, readdirSync } = fsExtra;
 
 console.log('Bundling...');
 
@@ -194,7 +192,7 @@ function avoidminjs() {
     resolveId(source) {
       if (source.endsWith('.min.js')) {
         const withoutMin = source.replace(/\.min\.js$/, '.js');
-        if (existsSync(withoutMin)) {
+        if (fs.existsSync(withoutMin)) {
           return withoutMin;
         }
       }
@@ -355,7 +353,7 @@ function graphql() {
         'graphql',
       );
       try {
-        lstatSync(graphqlModulePath);
+        fs.lstatSync(graphqlModulePath);
       } catch (e) {
         console.error(
           `"graphql" module not found in ${graphqlModulePath}. Have you run "yarn"?`,
@@ -364,7 +362,7 @@ function graphql() {
       }
 
       try {
-        if (lstatSync(path.join(graphqlModulePath, relPath)).isDirectory()) {
+        if (fs.lstatSync(path.join(graphqlModulePath, relPath)).isDirectory()) {
           // isdir
           return {
             id: source + '/index.js',
