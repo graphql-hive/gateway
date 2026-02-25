@@ -2,9 +2,7 @@
   "name": "@e2e/opentelemetry-circuit-breaker",
   "private": true,
   "devDependencies": {
-    "@repeaterjs/repeater": "^3.0.6",
     "@sinonjs/fake-timers": "^15.1.0",
-    "@types/sinonjs__fake-timers": "^15.0.1",
-    "@whatwg-node/server": "^0.10.17"
+    "@types/sinonjs__fake-timers": "^15.0.1"
   }
 }

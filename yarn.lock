@@ -3318,10 +3318,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@e2e/opentelemetry-circuit-breaker@workspace:e2e/opentelemetry-circuit-breaker"
   dependencies:
-    "@repeaterjs/repeater": "npm:^3.0.6"
     "@sinonjs/fake-timers": "npm:^15.1.0"
     "@types/sinonjs__fake-timers": "npm:^15.0.1"
-    "@whatwg-node/server": "npm:^0.10.17"
   languageName: unknown
   linkType: soft
 
@@ -6077,6 +6075,7 @@ __metadata:
     "@whatwg-node/disposablestack": "npm:^0.0.6"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    "@whatwg-node/server": "npm:^0.10.17"
     graphql: "npm:^16.12.0"
     jest-leak-detector: "npm:30.2.0"
     ws: "npm:^8.18.3"
