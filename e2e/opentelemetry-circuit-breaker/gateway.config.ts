@@ -26,9 +26,10 @@ const clock = FakeTimers.install({
 });
 function useFakeTimers(): GatewayPlugin {
   return {
-    async onRequest({ request, endResponse }) {
+    async onRequest({ request, endResponse, serverContext }) {
       if (request.url.endsWith('/_tick')) {
         const time = await request.json();
+        serverContext.log.warn(`Advancing timers clock by ${time}ms`);
         clock.tick(time);
         endResponse(new Response());
       }
