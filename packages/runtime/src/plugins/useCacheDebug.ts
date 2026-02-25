@@ -27,7 +27,7 @@ export function useCacheDebug<TContext extends Record<string, any>>({
           log.error({ key, error }, 'Error');
         },
         onCacheHit() {
-          log.debug({ key, }, 'Hit');
+          log.debug({ key }, 'Hit');
         },
         onCacheMiss() {
           log.debug({ key }, 'Miss');
