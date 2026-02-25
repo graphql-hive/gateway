@@ -32,6 +32,7 @@ interface QueueEntry {
  * Use `await using` or manually dispose to shut down the server when done.
  */
 export async function createDisposableQueueServer(): Promise<QueueServer> {
+  // TODO: the queue should empty on dispose and reject all pending handlers
   const queuedEntries: QueueEntry[] = [];
   let entryAvailable = createDeferredPromise<void>();
 

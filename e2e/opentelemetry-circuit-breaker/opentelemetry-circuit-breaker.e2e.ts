@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
 import { createDisposableQueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
@@ -16,33 +17,54 @@ it('should huh?', async () => {
     },
   });
 
-  await queryTypename(gw);
-  await advanceGatewayTimersToProcessSpanBatch(gw);
+  await queryTypenameAndAdvaceTimersToProcessSpans(gw);
 
   // collector available
   await otel.queue(() => new Response());
 
-  await queryTypename(gw);
-  await advanceGatewayTimersToProcessSpanBatch(gw);
-
-  // collector down
-
-  // will retry a few times
-  // TODO: simulate retry mechanism
+  // attempt to report query spans 3 times, the circuit breaker would kick in
   for (let i = 0; i < 5; i++) {
+    await queryTypenameAndAdvaceTimersToProcessSpans(gw);
+
+    // collector down
+    // attempt 1
+    await otel.queue(() => new Response(null, { status: 503 }));
+
+    // attempt 2: immediate
+    await otel.queue(() => new Response(null, { status: 503 }));
+
+    // attempt 3: ~1,000ms backoff
+    await advanceGatewayTimersByTime(gw, 1_000);
+    await otel.queue(() => new Response(null, { status: 503 }));
+
+    // attempt 4: ~1,500ms backoff
+    await advanceGatewayTimersByTime(gw, 1_500);
+    await otel.queue(() => new Response(null, { status: 503 }));
+
+    // attempt 5: ~2,250ms backoff
+    await advanceGatewayTimersByTime(gw, 2_250);
     await otel.queue(() => new Response(null, { status: 503 }));
   }
+
+  await queryTypenameAndAdvaceTimersToProcessSpans(gw);
+
+  await Promise.race([
+    setTimeout(100), // expires
+    otel.queue(() =>
+      expect.fail('should not attempt to send spans when circuit is open'),
+    ),
+  ]);
 });
 
-async function queryTypename(gateway: Gateway) {
-  return expect(gateway.execute({ query: '{ __typename }' })).resolves.toEqual(
+// utilities
+
+async function queryTypenameAndAdvaceTimersToProcessSpans(gateway: Gateway) {
+  await expect(gateway.execute({ query: '{ __typename }' })).resolves.toEqual(
     expect.objectContaining({ data: expect.any(Object) }),
   );
-}
 
-function advanceGatewayTimersToProcessSpanBatch(gateway: Gateway) {
   // batch exporter scheduledDelayMillis defaults to 5s
-  return advanceGatewayTimersByTime(gateway, 5_000);
+  await advanceGatewayTimersByTime(gateway, 5_000);
 }
 
 async function advanceGatewayTimersByTime(gateway: Gateway, timeInMs: number) {
