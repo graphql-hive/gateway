@@ -1,5 +1,5 @@
 {
-  "name": "@e2e/opentelemetry-circuit-breaker",
+  "name": "@e2e/hive-tracing-circuit-breaker",
   "private": true,
   "devDependencies": {
     "@sinonjs/fake-timers": "^15.1.0",
