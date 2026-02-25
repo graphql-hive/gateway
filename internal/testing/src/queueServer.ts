@@ -1,4 +1,4 @@
-import { createDisposableServer } from '@internal/testing';
+import { createDisposableServer, DisposableServer } from '@internal/testing';
 import {
   createDeferredPromise,
   DeferredPromise,
@@ -7,8 +7,17 @@ import { createServerAdapter } from '@whatwg-node/server';
 
 export type QueuedHandler = (req: Request) => Response | Promise<Response>;
 
-export interface QueueServer {
+/**
+ * A test server that processes incoming requests one at a time using pre-queued handlers.
+ * Dispose to stop the underlying HTTP server.
+ */
+export interface QueueServer extends DisposableServer {
+  /** The URL of the server. */
   url: string;
+  /**
+   * Registers a handler for the next incoming request and waits for it to be called.
+   * Resolves with the response once the handler completes, or rejects if the handler throws.
+   */
   queue(handler: QueuedHandler): Promise<Response>;
 }
 
@@ -17,7 +26,12 @@ interface QueueEntry {
   responseDeferred: DeferredPromise<Response>;
 }
 
-export async function createQueueServer(): Promise<QueueServer> {
+/**
+ * Creates a {@link QueueServer} that listens on a random port.
+ * Requests are handled in the order they arrive, each by the next queued handler.
+ * Use `await using` or manually dispose to shut down the server when done.
+ */
+export async function createDisposableQueueServer(): Promise<QueueServer> {
   const queuedEntries: QueueEntry[] = [];
   let entryAvailable = createDeferredPromise<void>();
 
@@ -40,13 +54,12 @@ export async function createQueueServer(): Promise<QueueServer> {
     }),
   );
 
-  return {
-    url: serv.url,
+  return Object.assign(serv, {
     queue(handler: QueuedHandler) {
       const responseDeferred = createDeferredPromise<Response>();
       queuedEntries.push({ handler, responseDeferred });
       entryAvailable.resolve();
       return responseDeferred.promise;
     },
-  };
+  });
 }

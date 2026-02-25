@@ -1,13 +1,13 @@
 import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
+import { createDisposableQueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
-import { createQueueServer } from '../../internal/testing/src/queueServer';
 
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
 it('should huh?', async () => {
-  const otel = await createQueueServer();
+  const otel = await createDisposableQueueServer();
 
   const gw = await gateway({
     supergraph: await supergraph(),
