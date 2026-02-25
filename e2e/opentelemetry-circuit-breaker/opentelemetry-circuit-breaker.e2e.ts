@@ -23,7 +23,7 @@ it('should huh?', async () => {
   await otel.queue(() => new Response());
 
   // attempt to report query spans 3 times, the circuit breaker would kick in
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     await queryTypenameAndAdvaceTimersToProcessSpans(gw);
 
     // collector down
