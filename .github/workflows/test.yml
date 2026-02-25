@@ -145,6 +145,7 @@ jobs:
             os: ubuntu-latest
             gateway-runner: bin
             hive-router-runtime: 0
+            node-version: 25.2.0
           - workflow-name: Node Binary on Windows
             os: windows-latest
             gateway-runner: bin
