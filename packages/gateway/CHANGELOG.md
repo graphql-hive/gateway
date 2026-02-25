@@ -1,5 +1,22 @@
 # @graphql-hive/gateway
 
+## 2.5.0
+### Minor Changes
+
+
+
+- [#2005](https://github.com/graphql-hive/gateway/pull/2005) [`3866e36`](https://github.com/graphql-hive/gateway/commit/3866e3632d93a517a67b1ed6f0deab0a20bac374) Thanks [@ardatan](https://github.com/ardatan)! - Support Rust QP as builtin in Docker image
+  
+  While running the Docker image of the gateway, you can now use Rust QP as the builtin query planner.
+  
+  ```sh
+  docker run \
+    -e HIVE_ROUTER_RUNTIME=true \
+    -p 8080:8080 \
+    -v "$(pwd)/supergraph.graphql:/gateway/supergraph.graphql" \
+    ghcr.io/graphql-hive/gateway supergraph --port=8080
+  ```
+
 ## 2.4.3
 ### Patch Changes
 
