@@ -7,7 +7,10 @@ import { expect, it } from 'vitest';
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
-it('should trip circuit breaker on error threashold reached', async () => {
+it.skipIf(
+  // bun has issues with the fake timer in the gateway config
+  globalThis.Bun,
+)('should trip circuit breaker on error threashold reached', async () => {
   const otel = await createDisposableQueueServer();
 
   const gw = await gateway({
