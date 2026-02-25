@@ -1,6 +1,6 @@
 import { setTimeout } from 'node:timers/promises';
 import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
-import { createDisposableQueueServer } from '@internal/testing';
+import { createDisposableQueueServer, QueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { expect, it } from 'vitest';
 
@@ -20,7 +20,7 @@ it.skipIf(
     },
   });
 
-  await queryTypenameAndAdvaceTimersToProcessSpans(gw);
+  await queryTypenameAndProcessSpans(gw);
 
   // collector available
   await otel.queue(() => new Response());
@@ -30,29 +30,10 @@ it.skipIf(
   // attempts out of 3 (one success), the circuit will open and prevent further attempts
   // until the reset timeout has passed
   for (let i = 0; i < 2; i++) {
-    await queryTypenameAndAdvaceTimersToProcessSpans(gw);
-
-    // collector down
-    // attempt 1
-    await otel.queue(() => new Response(null, { status: 503 }));
-
-    // attempt 2: immediate
-    await otel.queue(() => new Response(null, { status: 503 }));
-
-    // attempt 3: ~1,000ms backoff
-    await advanceGatewayTimersByTime(gw, 1_000);
-    await otel.queue(() => new Response(null, { status: 503 }));
-
-    // attempt 4: ~1,500ms backoff
-    await advanceGatewayTimersByTime(gw, 1_500);
-    await otel.queue(() => new Response(null, { status: 503 }));
-
-    // attempt 5: ~2,250ms backoff
-    await advanceGatewayTimersByTime(gw, 2_250);
-    await otel.queue(() => new Response(null, { status: 503 }));
+    await queryTypenameAndExhaustDownCollectorRetries(gw, otel);
   }
 
-  await queryTypenameAndAdvaceTimersToProcessSpans(gw);
+  await queryTypenameAndProcessSpans(gw);
 
   await Promise.race([
     setTimeout(100), // expires
@@ -64,13 +45,43 @@ it.skipIf(
 
 // utilities
 
-async function queryTypenameAndAdvaceTimersToProcessSpans(gateway: Gateway) {
+async function queryTypenameAndProcessSpans(gateway: Gateway) {
   await expect(gateway.execute({ query: '{ __typename }' })).resolves.toEqual(
     expect.objectContaining({ data: expect.any(Object) }),
   );
 
   // batch exporter scheduledDelayMillis defaults to 5s
   await advanceGatewayTimersByTime(gateway, 5_000);
+}
+
+async function queryTypenameAndExhaustDownCollectorRetries(
+  gateway: Gateway,
+  collector: QueueServer,
+) {
+  await queryTypenameAndProcessSpans(gateway);
+
+  // collector down
+
+  // these are attempts from otel's span exporter - this is how their retry mechanism works
+  // https://github.com/open-telemetry/opentelemetry-js/blob/1bffafaf6cdcac297fea7363312be75a19b8f527/experimental/packages/otlp-exporter-base/src/retrying-transport.ts
+
+  // attempt 1
+  await collector.queue(() => new Response(null, { status: 503 }));
+
+  // attempt 2: immediate
+  await collector.queue(() => new Response(null, { status: 503 }));
+
+  // attempt 3: ~1,000ms backoff
+  await advanceGatewayTimersByTime(gateway, 1_000);
+  await collector.queue(() => new Response(null, { status: 503 }));
+
+  // attempt 4: ~1,500ms backoff
+  await advanceGatewayTimersByTime(gateway, 1_500);
+  await collector.queue(() => new Response(null, { status: 503 }));
+
+  // attempt 5: ~2,250ms backoff
+  await advanceGatewayTimersByTime(gateway, 2_250);
+  await collector.queue(() => new Response(null, { status: 503 }));
 }
 
 async function advanceGatewayTimersByTime(gateway: Gateway, timeInMs: number) {
