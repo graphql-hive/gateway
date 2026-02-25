@@ -26,19 +26,19 @@ export function useCacheDebug<TContext extends Record<string, any>>({
         onCacheGetError({ error }) {
           log.error({ key, error }, 'Error');
         },
-        onCacheHit({ value }) {
-          log.debug({ key, value }, 'Hit');
+        onCacheHit() {
+          log.debug({ key, }, 'Hit');
         },
         onCacheMiss() {
           log.debug({ key }, 'Miss');
         },
       };
     },
-    onCacheSet({ key, value, ttl }) {
+    onCacheSet({ key, ttl }) {
       if (!shouldLog(rootLog)) {
         return; // debug level is not enabled
       }
-      const log = rootLog.child({ key, value, ttl }, '[useCacheDebug] ');
+      const log = rootLog.child({ key, ttl }, '[useCacheDebug] ');
       log.debug('Set');
       return {
         onCacheSetError({ error }) {
