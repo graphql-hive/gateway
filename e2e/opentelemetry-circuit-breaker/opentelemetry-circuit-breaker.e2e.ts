@@ -16,15 +16,34 @@ it('should huh?', async () => {
     },
   });
 
-  await expect(gw.execute({ query: '{ __typename }' })).resolves.toEqual(
+  await queryTypename(gw);
+  await advanceGatewayTimersToProcessSpanBatch(gw);
+
+  // collector available
+  await otel.queue(() => new Response());
+
+  await queryTypename(gw);
+  await advanceGatewayTimersToProcessSpanBatch(gw);
+
+  // collector down
+
+  // will retry a few times
+  // TODO: simulate retry mechanism
+  for (let i = 0; i < 5; i++) {
+    await otel.queue(() => new Response(null, { status: 503 }));
+  }
+});
+
+async function queryTypename(gateway: Gateway) {
+  return expect(gateway.execute({ query: '{ __typename }' })).resolves.toEqual(
     expect.objectContaining({ data: expect.any(Object) }),
   );
+}
 
+function advanceGatewayTimersToProcessSpanBatch(gateway: Gateway) {
   // batch exporter scheduledDelayMillis defaults to 5s
-  await advanceGatewayTimersByTime(gw, 5_000);
-
-  await otel.queue(() => new Response());
-});
+  return advanceGatewayTimersByTime(gateway, 5_000);
+}
 
 async function advanceGatewayTimersByTime(gateway: Gateway, timeInMs: number) {
   const res = await fetch(`http://localhost:${gateway.port}/_tick`, {
