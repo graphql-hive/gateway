@@ -64,6 +64,8 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+    outputs:
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
     steps:
       - name: checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
@@ -227,7 +229,7 @@ jobs:
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          node-version-file: .node-version
+          node-version: 25.2.0
           # we skip-build on ubuntu arm because the "canvas" package wont build and there are no prebuilts
           install-command: ${{ matrix.os == 'ubuntu-24.04-arm' && 'yarn install --immutable --mode=skip-build' || '' }}
       - name: Build

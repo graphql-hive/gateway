@@ -164,6 +164,7 @@
     "postject": "^1.0.0-alpha.6",
     "rimraf": "^6.1.0",
     "rollup": "4.59.0",
+    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-tsconfig-paths": "^1.5.2",
     "tsx": "4.21.0"
   },

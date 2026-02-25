@@ -409,6 +409,10 @@ export function createTenv(cwd: string): Tenv {
         subgraph = output;
       }
 
+      if (gatewayRunner.includes('docker')) {
+        args.unshift('--host=0.0.0.0');
+      }
+
       function getFullArgs() {
         return [
           createPortOpt(port),
