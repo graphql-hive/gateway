@@ -35,10 +35,8 @@ export class CircuitBreakerExporter implements SpanExporter {
         new Promise((resolve, reject) => {
           this._exporter.export(spans, (result) => {
             if (result.error) {
-              console.log('err', result.error);
               reject(result.error);
             } else {
-              console.log('succs');
               resolve(result);
             }
           });
