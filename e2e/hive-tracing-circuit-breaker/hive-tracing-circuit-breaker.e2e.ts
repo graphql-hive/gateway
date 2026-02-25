@@ -2,45 +2,47 @@ import { setTimeout } from 'node:timers/promises';
 import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
 import { createDisposableQueueServer, QueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
-it.skipIf(
+describe.skipIf(
   // bun has issues with the fake timer in the gateway config
   globalThis.Bun,
-)('should trip circuit breaker on error threashold reached', async () => {
-  const otel = await createDisposableQueueServer();
+)('Hive Tracing Circuit Breaker', () => {
+  it('should trip circuit breaker on error threashold reached', async () => {
+    const otel = await createDisposableQueueServer();
 
-  const gw = await gateway({
-    supergraph: await supergraph(),
-    env: {
-      HIVE_TRACING_ENDPOINT: otel.url,
-    },
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_TRACING_ENDPOINT: otel.url,
+      },
+    });
+
+    await queryTypenameAndProcessSpans(gw);
+
+    // collector available
+    await otel.queue(() => new Response());
+
+    // attempt to report query spans 2 times, the circuit breaker would kick in
+    // this is because the errorThresholdPercentage is set to 50%, so after 2 failed
+    // attempts out of 3 (one success), the circuit will open and prevent further attempts
+    // until the reset timeout has passed
+    for (let i = 0; i < 2; i++) {
+      await queryTypenameAndExhaustDownCollectorRetries(gw, otel);
+    }
+
+    await queryTypenameAndProcessSpans(gw);
+
+    await Promise.race([
+      setTimeout(100), // expires
+      otel.queue(() =>
+        expect.fail('should not attempt to send spans when circuit is open'),
+      ),
+    ]);
   });
-
-  await queryTypenameAndProcessSpans(gw);
-
-  // collector available
-  await otel.queue(() => new Response());
-
-  // attempt to report query spans 2 times, the circuit breaker would kick in
-  // this is because the errorThresholdPercentage is set to 50%, so after 2 failed
-  // attempts out of 3 (one success), the circuit will open and prevent further attempts
-  // until the reset timeout has passed
-  for (let i = 0; i < 2; i++) {
-    await queryTypenameAndExhaustDownCollectorRetries(gw, otel);
-  }
-
-  await queryTypenameAndProcessSpans(gw);
-
-  await Promise.race([
-    setTimeout(100), // expires
-    otel.queue(() =>
-      expect.fail('should not attempt to send spans when circuit is open'),
-    ),
-  ]);
 });
 
 // utilities
