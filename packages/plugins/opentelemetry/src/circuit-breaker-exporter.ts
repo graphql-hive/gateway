@@ -46,6 +46,10 @@ export class CircuitBreakerExporter implements SpanExporter {
         // backoff setTimeouts to keep running in the background and hitting the collector even
         // after opossum has given up on the fire() — defeating the circuit breaker entirely.
         timeout: false,
+        // one full failed export cycle takes ~13s: 5s (scheduledDelayMillis) + ~8s (retry backoffs).
+        // to have all 3 failures (volumeThreshold) visible in the rolling window simultaneously, it
+        // needs to cover at least 3 cycles: 3 × 13s = ~39s. 60s gives comfortable headroom.
+        rollingCountTimeout: 60_000,
         ...defaultCircuitBreakerConfiguration,
         ...config,
       },

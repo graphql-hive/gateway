@@ -43,6 +43,41 @@ describe.skipIf(
       ),
     ]);
   });
+
+  it('should close circuit breaker after reset timeout', async () => {
+    const otel = await createDisposableQueueServer();
+
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_TRACING_ENDPOINT: otel.url,
+      },
+    });
+
+    // circuit breaker needs 3 attempts to trip because the volumeThreshold is 3
+    for (let i = 0; i < 3; i++) {
+      await queryTypenameAndExhaustDownCollectorRetries(gw, otel);
+    }
+
+    // circuit is now open, attempts should be blocked immediately without trying to send spans to the collector
+    for (let i = 0; i < 3; i++) {
+      await queryTypenameAndProcessSpans(gw);
+      await Promise.race([
+        setTimeout(100), // expires
+        otel.queue(() =>
+          expect.fail('should not attempt to send spans when circuit is open'),
+        ),
+      ]);
+      await otel.fetch('http://otel').catch(() => {}); // empty queue
+    }
+
+    // advance time by 60s to allow the circuit breaker to reset
+    await advanceGatewayTimersByTime(gw, 60_000);
+
+    // now attempts should go through and we should see the collector receive the spans
+    await queryTypenameAndProcessSpans(gw);
+    await otel.queue(() => new Response());
+  });
 });
 
 // utilities

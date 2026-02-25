@@ -20,6 +20,11 @@ export interface QueueServer extends DisposableServer {
    * Resolves with the response once the handler completes, or rejects if the handler throws.
    */
   queue(handler: QueuedHandler): Promise<Response>;
+  /**
+   * A convenience method to perform a fetch against the server, using the queued handlers
+   * to process requests.
+   */
+  fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
 }
 
 interface QueueEntry {
@@ -36,24 +41,23 @@ export async function createDisposableQueueServer(): Promise<QueueServer> {
   const queuedEntries: QueueEntry[] = [];
   let entryAvailable = createDeferredPromise<void>();
 
-  const serv = await createDisposableServer(
-    createServerAdapter(async (req) => {
-      if (!queuedEntries.length) {
-        await entryAvailable.promise; // wait for available entry
-        entryAvailable = createDeferredPromise<void>(); // prepare next waiter
-      }
+  const adapter = createServerAdapter(async (req) => {
+    if (!queuedEntries.length) {
+      await entryAvailable.promise; // wait for available entry
+      entryAvailable = createDeferredPromise<void>(); // prepare next waiter
+    }
 
-      const entry = queuedEntries.shift()!;
-      try {
-        const response = await entry.handler(req);
-        entry.responseDeferred.resolve(response);
-        return response;
-      } catch (err) {
-        entry.responseDeferred.reject(err);
-        throw err;
-      }
-    }),
-  );
+    const entry = queuedEntries.shift()!;
+    try {
+      const response = await entry.handler(req);
+      entry.responseDeferred.resolve(response);
+      return response;
+    } catch (err) {
+      entry.responseDeferred.reject(err);
+      throw err;
+    }
+  });
+  const serv = await createDisposableServer(adapter);
 
   const origDispose = serv[DisposableSymbols.asyncDispose].bind(serv);
   return Object.assign(serv, {
@@ -68,6 +72,12 @@ export async function createDisposableQueueServer(): Promise<QueueServer> {
       queuedEntries.push({ handler, responseDeferred });
       entryAvailable.resolve();
       return responseDeferred.promise;
+    },
+    async fetch(input: RequestInfo, init?: RequestInit) {
+      return adapter.fetch(
+        // yeah I know fetch accepts input and init args, but types dont align
+        new Request(input, init),
+      );
     },
   });
 }
