@@ -22,8 +22,11 @@ it('should huh?', async () => {
   // collector available
   await otel.queue(() => new Response());
 
-  // attempt to report query spans 3 times, the circuit breaker would kick in
-  for (let i = 0; i < 3; i++) {
+  // attempt to report query spans 2 times, the circuit breaker would kick in
+  // this is because the errorThresholdPercentage is set to 50%, so after 2 failed
+  // attempts out of 3 (one success), the circuit will open and prevent further attempts
+  // until the reset timeout has passed
+  for (let i = 0; i < 2; i++) {
     await queryTypenameAndAdvaceTimersToProcessSpans(gw);
 
     // collector down

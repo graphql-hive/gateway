@@ -10,13 +10,12 @@ const defaultCircuitBreakerConfiguration: CircuitBreakerConfiguration = {
   volumeThreshold: 3,
 
   // tolerates 1 transient failure in 3 before tripping; avoids opening on a single issue
-  // any failure rate at or above 80% should open the circuit.
+  // any failure rate at or above 50% should open the circuit.
   // a single transient failure out of 3 = 33%, won't trip.
-  // 2 out of 3 = 66%, won't trip.
-  // 3 out of 3 = 100%, will trip.
-  errorThresholdPercentage: 80,
+  // 2 out of 3 = 66%, will trip.
+  errorThresholdPercentage: 50,
 
-  // after opening, wait 60s before trying again. 30s (current default) is too short - if the
+  // after opening, wait 60s before trying again. 30s (default) is too short - if the
   // endpoint is down, it's likely down for at least a minute. no point hammering it sooner.
   // btw, 30s is the BatchSpanProcessor export timeout exactly, which means the circuit could
   // immediately time out again in HALF_OPEN before getting a real result if it were below or at
@@ -42,6 +41,11 @@ export class CircuitBreakerExporter implements SpanExporter {
           });
         }),
       {
+        // the retrying transport in OTEL already respects the BatchSpanProcessor's exportTimeoutMillis
+        // deadline (30s), so opossum's own timeout would fire unnecessarely (or mid-retry), causing the retry
+        // backoff setTimeouts to keep running in the background and hitting the collector even
+        // after opossum has given up on the fire() — defeating the circuit breaker entirely.
+        timeout: false,
         ...defaultCircuitBreakerConfiguration,
         ...config,
       },
