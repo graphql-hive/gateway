@@ -1,4 +1,5 @@
 import { createDisposableServer, DisposableServer } from '@internal/testing';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
   createDeferredPromise,
   DeferredPromise,
@@ -32,7 +33,6 @@ interface QueueEntry {
  * Use `await using` or manually dispose to shut down the server when done.
  */
 export async function createDisposableQueueServer(): Promise<QueueServer> {
-  // TODO: the queue should empty on dispose and reject all pending handlers
   const queuedEntries: QueueEntry[] = [];
   let entryAvailable = createDeferredPromise<void>();
 
@@ -55,7 +55,14 @@ export async function createDisposableQueueServer(): Promise<QueueServer> {
     }),
   );
 
+  const origDispose = serv[DisposableSymbols.asyncDispose].bind(serv);
   return Object.assign(serv, {
+    [DisposableSymbols.asyncDispose]() {
+      for (const entry of queuedEntries.splice(0)) {
+        entry.responseDeferred.reject(new Error('Queue server disposed'));
+      }
+      return origDispose();
+    },
     queue(handler: QueuedHandler) {
       const responseDeferred = createDeferredPromise<Response>();
       queuedEntries.push({ handler, responseDeferred });
