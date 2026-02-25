@@ -4,12 +4,12 @@ import { createDisposableQueueServer, QueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { describe, expect, it } from 'vitest';
 
-const { gateway } = createTenv(__dirname);
+const { gateway, gatewayRunner } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
 describe.skipIf(
   // bun has issues with the fake timer in the gateway config
-  globalThis.Bun,
+  ['bun', 'bun-docker'].includes(gatewayRunner),
 )('Hive Tracing Circuit Breaker', () => {
   it('should trip circuit breaker on error threashold reached', async () => {
     const otel = await createDisposableQueueServer();

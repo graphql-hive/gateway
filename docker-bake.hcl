@@ -172,3 +172,12 @@ target "gateway_e2e_edfs-gateway-defs_bun" {
     "gateway_e2e-bun": "target:gateway_e2e-bun"
   }
 }
+
+target "gateway_e2e_hive-tracing-circuit-breaker" {
+  context = "e2e/hive-tracing-circuit-breaker"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.hive-tracing-circuit-breaker"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
