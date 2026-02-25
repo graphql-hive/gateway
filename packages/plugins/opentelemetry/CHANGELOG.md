@@ -1,5 +1,42 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.3.10
+### Patch Changes
+
+- Updated dependencies [[`107dcf2`](https://github.com/graphql-hive/gateway/commit/107dcf2e5f58aaf5feb6e69d7d6917cfb4f709dd)]:
+  - @graphql-hive/gateway-runtime@2.7.0
+
+## 1.3.9
+### Patch Changes
+
+
+
+- [#1957](https://github.com/graphql-hive/gateway/pull/1957) [`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-node@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+
+
+- [#1964](https://github.com/graphql-hive/gateway/pull/1964) [`054d627`](https://github.com/graphql-hive/gateway/commit/054d62774eb2e9d2f3eeaecb9c34ccfc85827680) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/auto-instrumentations-node@^0.70.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.70.0) (from `^0.69.0`, in `dependencies`)
+
+## 1.3.8
+### Patch Changes
+
+- Updated dependencies [[`8028028`](https://github.com/graphql-hive/gateway/commit/8028028109a6e14d7bb332eb37e817082e1a8de2)]:
+  - @graphql-hive/gateway-runtime@2.6.1
+
+## 1.3.7
+### Patch Changes
+
+- Updated dependencies [[`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881), [`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881)]:
+  - @graphql-hive/gateway-runtime@2.6.0
+
 ## 1.3.6
 ### Patch Changes
 

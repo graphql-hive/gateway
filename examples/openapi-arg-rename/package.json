@@ -4,16 +4,17 @@
   "dependencies": {
     "@graphql-mesh/compose-cli": "^1.5.3",
     "@omnigraph/openapi": "^0.109.23",
-    "graphql": "16.12.0",
+    "graphql": "16.13.0",
     "moment": "2.30.1",
     "tslib": "^2.8.1",
-    "@graphql-hive/gateway": "^2.3.3"
+    "@graphql-hive/gateway": "^2.5.0"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "minimatch": "^10.2.2"
   },
   "scripts": {
     "service:Wiki": "tsx services/Wiki.ts",

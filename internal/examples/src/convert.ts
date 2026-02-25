@@ -303,6 +303,10 @@ export async function convertE2EToExample(config: ConvertE2EToExampleConfig) {
       packageJson.devDependencies['@apollo/rover'] = `^${version}`;
     }
 
+    const { version } = await import('minimatch/package.json');
+    packageJson.overrides ||= {};
+    packageJson.overrides['minimatch'] = `^${version}`;
+
     {
       console.group('Adding scripts and setup...');
       using _1 = defer(() => console.groupEnd());

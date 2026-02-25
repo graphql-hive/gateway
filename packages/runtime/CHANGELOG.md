@@ -1,5 +1,77 @@
 # @graphql-hive/gateway-runtime
 
+## 2.7.0
+### Minor Changes
+
+
+
+- [#1977](https://github.com/graphql-hive/gateway/pull/1977) [`107dcf2`](https://github.com/graphql-hive/gateway/commit/107dcf2e5f58aaf5feb6e69d7d6917cfb4f709dd) Thanks [@ardatan](https://github.com/ardatan)! - Support Polling in Subgraph mode
+
+
+### Patch Changes
+
+- Updated dependencies [[`4065b7f`](https://github.com/graphql-hive/gateway/commit/4065b7fbb08d9e75c5f0d3b2b4d42d665aa9dbd9)]:
+  - @graphql-tools/delegate@12.0.8
+  - @graphql-tools/batch-delegate@10.0.14
+  - @graphql-tools/federation@4.2.12
+  - @graphql-mesh/fusion-runtime@1.6.9
+  - @graphql-tools/stitch@10.1.12
+  - @graphql-tools/wrap@11.1.8
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
+## 2.6.1
+### Patch Changes
+
+
+
+- [#1951](https://github.com/graphql-hive/gateway/pull/1951) [`8028028`](https://github.com/graphql-hive/gateway/commit/8028028109a6e14d7bb332eb37e817082e1a8de2) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/yoga@^0.47.3` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.47.3) (from `^0.47.0`, in `dependencies`)
+- Updated dependencies [[`584a293`](https://github.com/graphql-hive/gateway/commit/584a293e3dafa7cd2d0210f80299c81b6707bcd4)]:
+  - @graphql-tools/delegate@12.0.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-tools/batch-delegate@10.0.13
+  - @graphql-tools/federation@4.2.11
+  - @graphql-mesh/fusion-runtime@1.6.8
+  - @graphql-tools/stitch@10.1.11
+  - @graphql-tools/wrap@11.1.7
+
+## 2.6.0
+### Minor Changes
+
+
+
+- [#1834](https://github.com/graphql-hive/gateway/pull/1834) [`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881) Thanks [@adambenhassen](https://github.com/adambenhassen)! - Add Layer 2 cache support for persisted documents.
+  
+  When using Hive CDN for persisted documents, you can now configure caching using the gateway's cache to reduce CDN requests and improve response times across gateway instances.
+  
+  **Configuration:**
+  ```typescript
+  persistedDocuments: {
+    type: 'hive',
+    endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/<target_id>',
+    token: '<cdn_access_token>',
+    cacheTtlSeconds: 3600,
+    cacheNotFoundTtlSeconds: 60,
+  }
+  ```
+  
+  **CLI options:**
+  - `--hive-persisted-documents-cache-ttl <seconds>` - TTL in seconds for found documents (enables caching)
+  - `--hive-persisted-documents-cache-not-found-ttl <seconds>` - TTL for negative cache entries (default: 60)
+  
+  **Note:** A gateway cache backend must be configured for caching to work. If cache options are provided without a gateway cache, a warning will be logged and caching will be disabled.
+
+### Patch Changes
+
+
+
+- [#1834](https://github.com/graphql-hive/gateway/pull/1834) [`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881) Thanks [@adambenhassen](https://github.com/adambenhassen)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.20.2` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.20.2) (from `^0.20.0`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
 ## 2.5.5
 ### Patch Changes
 

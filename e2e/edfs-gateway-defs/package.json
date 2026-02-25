@@ -1,5 +1,5 @@
 {
-  "name": "@e2e/event-driven-federated-subscriptions",
+  "name": "@e2e/edfs-gateway-defs",
   "private": true,
   "dependencies": {
     "@nats-io/transport-node": "^3.2.0",

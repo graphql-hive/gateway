@@ -1,0 +1,9 @@
+{
+  "name": "@e2e/polling-subgraph",
+  "private": true,
+  "dependencies": {
+    "@graphql-hive/gateway": "workspace:*",
+    "@graphql-mesh/compose-cli": "^1.5.3",
+    "graphql": "16.13.0"
+  }
+}

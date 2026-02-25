@@ -1,10 +1,11 @@
-import fs from 'node:fs';
+import fs from 'fs';
 import path from 'node:path';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import sucrase from '@rollup/plugin-sucrase';
 import { defineConfig } from 'rollup';
+import copy from 'rollup-plugin-copy';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
 console.log('Bundling...');
@@ -93,6 +94,12 @@ const deps = {
     '../plugins/opentelemetry/src/api.ts',
   'node_modules/@graphql-hive/plugin-opentelemetry/attributes':
     '../plugins/opentelemetry/src/attributes.ts',
+  // Enable the Rust Query Planner in the Docker image without installing an extra package by bundling it in the node_modules.
+  // The module is dynamically imported, so it needs to be in the node_modules to be found.
+  'node_modules/@graphql-hive/router-runtime/index':
+    '../router-runtime/src/index.ts',
+  'node_modules/@graphql-hive/router-query-planner/index':
+    '../../node_modules/@graphql-hive/router-query-planner/index.js',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.
     // Those are most used features.
@@ -154,7 +161,7 @@ export default defineConfig({
     // system (`/node_modules`)
     chunkFileNames: 'node_modules/.chunk/[name]-[hash].mjs',
   },
-  external: ['tuql', '@graphql-hive/router-query-planner'],
+  external: ['tuql'],
   plugins: [
     tsConfigPaths(), // use tsconfig paths to resolve modules
     nodeResolve({
@@ -167,8 +174,31 @@ export default defineConfig({
     json(), // support importing json files to esm (needed for commonjs() plugin)
     sucrase({ transforms: ['typescript'] }), // transpile typescript
     packagejson(), // add package jsons
+    avoidminjs(),
+    copy({
+      targets: [
+        {
+          src: '../../node_modules/@graphql-hive/router-query-planner/*.node',
+          dest: 'bundle/node_modules/@graphql-hive/router-query-planner',
+        },
+      ],
+    }),
   ],
 });
+
+function avoidminjs() {
+  return {
+    name: 'avoidminjs',
+    resolveId(source) {
+      if (source.endsWith('.min.js')) {
+        const withoutMin = source.replace(/\.min\.js$/, '.js');
+        if (fs.existsSync(withoutMin)) {
+          return withoutMin;
+        }
+      }
+    },
+  };
+}
 
 /**
  * Adds package.json files to the bundle and its dependencies.

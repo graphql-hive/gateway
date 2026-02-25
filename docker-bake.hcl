@@ -44,7 +44,8 @@ group "e2e" {
     "gateway_e2e_openapi-javascript-wiki",
     "gateway_e2e_operation-field-permissions",
     "gateway_e2e_distributed-subscriptions-webhooks",
-    "gateway_e2e_event-driven-federated-subscriptions"
+    "gateway_e2e_edfs-subgraph-defs",
+    "gateway_e2e_edfs-gateway-defs"
   ]
 }
 
@@ -54,7 +55,8 @@ group "e2e_bun" {
     "gateway_e2e_openapi-javascript-wiki_bun",
     "gateway_e2e_operation-field-permissions_bun",
     "gateway_e2e_distributed-subscriptions-webhooks_bun",
-    "gateway_e2e_event-driven-federated-subscriptions_bun"
+    "gateway_e2e_edfs-subgraph-defs_bun",
+    "gateway_e2e_edfs-gateway-defs_bun"
   ]
 }
 
@@ -136,18 +138,36 @@ target "gateway_e2e_distributed-subscriptions-webhooks_bun" {
   }
 }
 
-target "gateway_e2e_event-driven-federated-subscriptions" {
-  context = "e2e/event-driven-federated-subscriptions"
+target "gateway_e2e_edfs-subgraph-defs" {
+  context = "e2e/edfs-subgraph-defs"
   dockerfile = "gateway.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e.event-driven-federated-subscriptions"]
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-subgraph-defs"]
   contexts = {
     "gateway_e2e": "target:gateway_e2e"
   }
 }
-target "gateway_e2e_event-driven-federated-subscriptions_bun" {
-  context = "e2e/event-driven-federated-subscriptions"
+target "gateway_e2e_edfs-subgraph-defs_bun" {
+  context = "e2e/edfs-subgraph-defs"
   dockerfile = "gateway_bun.Dockerfile"
-  tags = ["ghcr.io/graphql-hive/gateway:e2e.event-driven-federated-subscriptions-bun"]
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-subgraph-defs-bun"]
+  contexts = {
+    "gateway_e2e-bun": "target:gateway_e2e-bun"
+  }
+}
+
+
+target "gateway_e2e_edfs-gateway-defs" {
+  context = "e2e/edfs-gateway-defs"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-gateway-defs"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
+  }
+}
+target "gateway_e2e_edfs-gateway-defs_bun" {
+  context = "e2e/edfs-gateway-defs"
+  dockerfile = "gateway_bun.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-gateway-defs-bun"]
   contexts = {
     "gateway_e2e-bun": "target:gateway_e2e-bun"
   }

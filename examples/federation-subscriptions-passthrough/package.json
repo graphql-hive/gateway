@@ -16,14 +16,15 @@
     "graphql-sse": "^2.6.0",
     "graphql-ws": "^6.0.6",
     "ws": "^8.18.3",
-    "@graphql-hive/gateway": "^2.3.3"
+    "@graphql-hive/gateway": "^2.5.0"
   },
   "devDependencies": {
     "tsx": "^4.20.3",
     "@apollo/rover": "^0.37.0"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "minimatch": "^10.2.2"
   },
   "scripts": {
     "service:products": "tsx services/products/index.ts",

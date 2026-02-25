@@ -102,7 +102,7 @@
     "fast-redact": "^3.5.0",
     "fast-safe-stringify": "^2.1.1",
     "pino": "^10.1.0",
-    "pkgroll": "2.23.1",
+    "pkgroll": "2.26.3",
     "quick-format-unescaped": "^4.0.4",
     "winston": "^3.18.3"
   },

@@ -1,5 +1,95 @@
 # @graphql-hive/gateway
 
+## 2.5.0
+### Minor Changes
+
+
+
+- [#2005](https://github.com/graphql-hive/gateway/pull/2005) [`3866e36`](https://github.com/graphql-hive/gateway/commit/3866e3632d93a517a67b1ed6f0deab0a20bac374) Thanks [@ardatan](https://github.com/ardatan)! - Support Rust QP as builtin in Docker image
+  
+  While running the Docker image of the gateway, you can now use Rust QP as the builtin query planner.
+  
+  ```sh
+  docker run \
+    -e HIVE_ROUTER_RUNTIME=true \
+    -p 8080:8080 \
+    -v "$(pwd)/supergraph.graphql:/gateway/supergraph.graphql" \
+    ghcr.io/graphql-hive/gateway supergraph --port=8080
+  ```
+
+## 2.4.3
+### Patch Changes
+
+- Updated dependencies [[`107dcf2`](https://github.com/graphql-hive/gateway/commit/107dcf2e5f58aaf5feb6e69d7d6917cfb4f709dd)]:
+  - @graphql-hive/gateway-runtime@2.7.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.27
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.3.10
+  - @graphql-mesh/plugin-prometheus@2.1.18
+
+## 2.4.2
+### Patch Changes
+
+
+
+- [#1957](https://github.com/graphql-hive/gateway/pull/1957) [`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.212.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.212.0) (from `^0.211.0`, in `dependencies`)
+- Updated dependencies [[`f5a5c41`](https://github.com/graphql-hive/gateway/commit/f5a5c41ddfc9044c27bc4568df5588b98d617b89), [`054d627`](https://github.com/graphql-hive/gateway/commit/054d62774eb2e9d2f3eeaecb9c34ccfc85827680)]:
+  - @graphql-hive/plugin-opentelemetry@1.3.9
+
+## 2.4.1
+### Patch Changes
+
+- Updated dependencies [[`8028028`](https://github.com/graphql-hive/gateway/commit/8028028109a6e14d7bb332eb37e817082e1a8de2), [`beb12fa`](https://github.com/graphql-hive/gateway/commit/beb12fade8824720ac9a74465099c8090cb36d10)]:
+  - @graphql-hive/gateway-runtime@2.6.1
+  - @graphql-mesh/transport-http-callback@1.0.15
+  - @graphql-hive/plugin-aws-sigv4@2.0.26
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.3.8
+  - @graphql-mesh/plugin-prometheus@2.1.17
+
+## 2.4.0
+### Minor Changes
+
+
+
+- [#1834](https://github.com/graphql-hive/gateway/pull/1834) [`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881) Thanks [@adambenhassen](https://github.com/adambenhassen)! - Add Layer 2 cache support for persisted documents.
+  
+  When using Hive CDN for persisted documents, you can now configure caching using the gateway's cache to reduce CDN requests and improve response times across gateway instances.
+  
+  **Configuration:**
+  ```typescript
+  persistedDocuments: {
+    type: 'hive',
+    endpoint: 'https://cdn.graphql-hive.com/artifacts/v1/<target_id>',
+    token: '<cdn_access_token>',
+    cacheTtlSeconds: 3600,
+    cacheNotFoundTtlSeconds: 60,
+  }
+  ```
+  
+  **CLI options:**
+  - `--hive-persisted-documents-cache-ttl <seconds>` - TTL in seconds for found documents (enables caching)
+  - `--hive-persisted-documents-cache-not-found-ttl <seconds>` - TTL for negative cache entries (default: 60)
+  
+  **Note:** A gateway cache backend must be configured for caching to work. If cache options are provided without a gateway cache, a warning will be logged and caching will be disabled.
+
+### Patch Changes
+
+
+
+- [`18898ba`](https://github.com/graphql-hive/gateway/commit/18898ba551750257d9a0bdfdcc3b0576960b8658) Thanks [@ardatan](https://github.com/ardatan)! - Updated `npm` and `@isaacs/brace-expansion` in the Dockerfile to fix the security vulnerability alerts within the docker image
+
+- Updated dependencies [[`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881), [`88ca1bf`](https://github.com/graphql-hive/gateway/commit/88ca1bfbaf58bd83eab6ec86b6cdc4375608e881)]:
+  - @graphql-hive/gateway-runtime@2.6.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.25
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.3.7
+  - @graphql-mesh/plugin-prometheus@2.1.16
+
 ## 2.3.3
 ### Patch Changes
 

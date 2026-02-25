@@ -290,7 +290,7 @@ export async function handleDockerHostNameInURLOrAtPath(
     container: string;
   }[],
 ) {
-  if (/^http(s?):\/\//.test(supergraph)) {
+  if (supergraph.includes('http://') || supergraph.includes('https://')) {
     // supergraph is a url
     supergraph = replaceLocalhostWithDockerHost(supergraph);
   } else {
@@ -407,6 +407,10 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs: subgraphOpt?.pipeLogs,
         });
         subgraph = output;
+      }
+
+      if (gatewayRunner.includes('docker')) {
+        args.unshift('--host=0.0.0.0');
       }
 
       function getFullArgs() {

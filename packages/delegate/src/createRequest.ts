@@ -22,7 +22,6 @@ import {
   OperationTypeNode,
   SelectionNode,
   SelectionSetNode,
-  VariableDefinitionNode,
 } from 'graphql';
 import { ICreateRequest } from './types.js';
 
@@ -84,8 +83,10 @@ export function createRequest({
     );
   }
 
-  const newVariables = Object.create(null);
-  const variableDefinitions: VariableDefinitionNode[] = [];
+  const newVariables = info?.variableValues ? { ...info.variableValues } : {};
+  const variableDefinitions = info?.operation.variableDefinitions
+    ? [...info.operation.variableDefinitions]
+    : [];
   const argNodes: ArgumentNode[] = [];
 
   if (args != null) {
@@ -98,12 +99,30 @@ export function createRequest({
     for (const argName in args) {
       const argValue = args[argName];
       const argInstance = rootFieldArgs?.find((arg) => arg.name === argName);
+      const existingArgNode = fieldNode?.arguments?.find(
+        (argNode) => argNode.name.value === argName,
+      );
+      // Check if we can re-use the variable from the original request for this argument
+      if (existingArgNode?.value.kind === Kind.VARIABLE) {
+        const varName = existingArgNode.value.name.value;
+        const varValue = newVariables[varName];
+        // If the variable value is the same as the argument value,
+        // we can re-use the variable and its definition
+        if (varValue === argValue) {
+          argNodes.push(existingArgNode);
+          continue;
+        }
+      }
       if (argInstance) {
         const argAst = astFromArg(argInstance, targetSchema);
         const varExists = (varName: string) =>
           variableDefinitions.some(
             (varDef) => varDef.variable.name.value === varName,
-          );
+          ) ||
+          // It should not conflict with the variable on the gateway request
+          // Because the gateway request can have a variable that has nothing to do with
+          // this argument
+          info?.variableValues?.[varName] != null;
         let varName = argName;
         // Try `<argName>`, then `<rootFieldName>_<argName>`, then `_0_<rootFieldName>_<argName>`, etc.
         if (varExists(varName)) {
@@ -223,11 +242,7 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
       projectArgumentValue(item, argType.ofType),
     );
   }
-  if (
-    isInputObjectType(argType) &&
-    typeof argValue === 'object' &&
-    argValue !== null
-  ) {
+  if (isInputObjectType(argType) && typeof argValue === 'object') {
     const projectedValue: any = {};
     const fields = argType.getFields();
     for (const key in argValue) {
@@ -241,16 +256,14 @@ function projectArgumentValue(argValue: any, argType: GraphQLInputType): any {
     }
     return projectedValue;
   }
-  if (argValue != null) {
-    if (argType.name === 'Boolean') {
-      return Boolean(argValue);
-    }
-    if (argType.name === 'Int' || argType.name === 'Float') {
-      return Number(argValue);
-    }
-    if (argType.name === 'String') {
-      return String(argValue);
-    }
+  if (argType.name === 'Boolean') {
+    return Boolean(argValue);
+  }
+  if (argType.name === 'Int' || argType.name === 'Float') {
+    return Number(argValue);
+  }
+  if (argType.name === 'String') {
+    return String(argValue);
   }
   return argValue;
 }

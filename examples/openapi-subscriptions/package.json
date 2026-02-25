@@ -9,13 +9,14 @@
     "graphql-sse": "^2.6.0",
     "tslib": "^2.8.1",
     "url-join": "^5.0.0",
-    "@graphql-hive/gateway": "^2.3.3"
+    "@graphql-hive/gateway": "^2.5.0"
   },
   "devDependencies": {
     "tsx": "^4.20.3"
   },
   "overrides": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.5",
+    "minimatch": "^10.2.2"
   },
   "scripts": {
     "service:api": "tsx services/api/index.ts",
