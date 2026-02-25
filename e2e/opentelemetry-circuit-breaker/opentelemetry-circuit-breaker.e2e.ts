@@ -7,7 +7,7 @@ import { expect, it } from 'vitest';
 const { gateway } = createTenv(__dirname);
 const { supergraph } = createExampleSetup(__dirname);
 
-it('should huh?', async () => {
+it('should trip circuit breaker on error threashold reached', async () => {
   const otel = await createDisposableQueueServer();
 
   const gw = await gateway({
