@@ -6,6 +6,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import sucrase from '@rollup/plugin-sucrase';
 import fsExtra from 'fs-extra';
 import { defineConfig } from 'rollup';
+import copy from 'rollup-plugin-copy';
 import tsConfigPaths from 'rollup-plugin-tsconfig-paths';
 
 const { copyFileSync, existsSync, lstatSync, readdirSync } = fsExtra;
@@ -177,32 +178,16 @@ export default defineConfig({
     sucrase({ transforms: ['typescript'] }), // transpile typescript
     packagejson(), // add package jsons
     avoidminjs(),
+    copy({
+      targets: [
+        {
+          src: '../../node_modules/@graphql-hive/router-query-planner/*.node',
+          dest: 'bundle/node_modules/@graphql-hive/router-query-planner',
+        },
+      ],
+    }),
   ],
 });
-
-const currentDirectory = fileURLToPath(new URL('.', import.meta.url));
-
-// Copy *.node files to the bundle
-const routerQueryPlannerPath = path.join(
-  currentDirectory,
-  '../../node_modules/@graphql-hive/router-query-planner',
-);
-const destDir = path.join(
-  currentDirectory,
-  'bundle',
-  'node_modules',
-  '@graphql-hive',
-  'router-query-planner',
-);
-fsExtra.ensureDirSync(destDir);
-for (const file of readdirSync(routerQueryPlannerPath)) {
-  if (file.endsWith('.node')) {
-    copyFileSync(
-      path.join(routerQueryPlannerPath, file),
-      path.join(destDir, file),
-    );
-  }
-}
 
 function avoidminjs() {
   return {
