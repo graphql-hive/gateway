@@ -85,7 +85,7 @@ const mcpPlugin = useMCP({
   name: 'weather-api',
   version: '1.0.0',
   path: '/mcp',
-  operations: './operations/weather.graphql',
+  operationsPath: './operations/weather.graphql',
   tools: [
     {
       name: 'get_weather',
