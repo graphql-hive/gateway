@@ -121,13 +121,11 @@ export function extractUnavailableFieldsFromSelectionSet(
       } else if (isObjectType(subFieldType) || isInterfaceType(subFieldType)) {
         const subFieldTypeFields = subFieldType.getFields();
         for (const subSelection of selection.selectionSet.selections) {
-          if (
-            subSelection.kind === Kind.FIELD &&
-            subSelection.name.value === '__typename'
-          ) {
-            continue;
-          }
           if (subSelection.kind === Kind.FIELD) {
+            const subSelectionFieldName = subSelection.name.value;
+            if (subSelectionFieldName === '__typename') {
+              continue;
+            }
             const subSelectionField =
               subFieldTypeFields[subSelection.name.value];
             if (!subSelectionField) {
