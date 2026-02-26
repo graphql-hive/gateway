@@ -8,4 +8,6 @@ export {
 
 export { DiagLogLevel as OpenTelemetryDiagLogLevel } from '@opentelemetry/api';
 
+export * from './circuit-breaker-exporter';
+
 export * from './attributes';

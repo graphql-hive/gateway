@@ -97,9 +97,11 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
+    "@types/opossum": "^8.1.9",
     "@whatwg-node/server": "^0.10.17",
     "graphql": "^16.12.0",
     "graphql-yoga": "^5.16.2",
+    "opossum": "patch:opossum@npm%3A9.0.0#~/.yarn/patches/opossum-npm-9.0.0-a0de5b75b9.patch",
     "pkgroll": "2.26.3",
     "rimraf": "^6.1.0",
     "rollup": "^4.53.2",

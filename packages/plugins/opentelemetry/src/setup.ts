@@ -1,4 +1,4 @@
-import { Attributes, Logger } from '@graphql-hive/logger';
+import { Attributes, AttributeValue, Logger } from '@graphql-hive/logger';
 import {
   context,
   ContextManager,
@@ -312,23 +312,21 @@ export type HiveTracingSetupOptions = BaseOptions &
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
   const log = options.log || new Logger();
-  options.target ??= getEnvStr('HIVE_TARGET');
-
-  if (!options.target) {
-    throw new Error(
-      'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
-    );
-  }
-
-  const logAttributes: Attributes = {
+  const logAttributes: { [key: string | number]: AttributeValue } = {
     ...options._initialization?.logAttributes,
-    target: options.target,
   };
 
   let processorOptions: HiveTracingSpanProcessorOptions;
   if (options.processor) {
     processorOptions = { processor: options.processor };
   } else {
+    options.target ??= getEnvStr('HIVE_TARGET');
+    if (!options.target) {
+      throw new Error(
+        'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
+      );
+    }
+
     options.accessToken ??=
       getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
     if (!options.accessToken) {
@@ -355,6 +353,7 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
 
     logAttributes['endpoint'] = options.endpoint;
     logAttributes['batching'] = options.batching;
+    logAttributes['target'] = options.target;
   }
 
   openTelemetrySetup({

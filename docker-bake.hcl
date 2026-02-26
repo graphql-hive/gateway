@@ -45,7 +45,8 @@ group "e2e" {
     "gateway_e2e_operation-field-permissions",
     "gateway_e2e_distributed-subscriptions-webhooks",
     "gateway_e2e_edfs-subgraph-defs",
-    "gateway_e2e_edfs-gateway-defs"
+    "gateway_e2e_edfs-gateway-defs",
+    "gateway_e2e_hive-tracing-circuit-breaker"
   ]
 }
 
@@ -170,5 +171,14 @@ target "gateway_e2e_edfs-gateway-defs_bun" {
   tags = ["ghcr.io/graphql-hive/gateway:e2e.edfs-gateway-defs-bun"]
   contexts = {
     "gateway_e2e-bun": "target:gateway_e2e-bun"
+  }
+}
+
+target "gateway_e2e_hive-tracing-circuit-breaker" {
+  context = "e2e/hive-tracing-circuit-breaker"
+  dockerfile = "gateway.Dockerfile"
+  tags = ["ghcr.io/graphql-hive/gateway:e2e.hive-tracing-circuit-breaker"]
+  contexts = {
+    "gateway_e2e": "target:gateway_e2e"
   }
 }
