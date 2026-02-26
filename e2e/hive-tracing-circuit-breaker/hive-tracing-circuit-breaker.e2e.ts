@@ -68,7 +68,7 @@ describe.skipIf(
           expect.fail('should not attempt to send spans when circuit is open'),
         ),
       ]);
-      await otel.fetch('http://otel').catch(() => {}); // empty queue
+      otel.clear();
     }
 
     // advance time by 60s to allow the circuit breaker to reset

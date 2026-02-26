@@ -25,6 +25,10 @@ export interface QueueServer extends DisposableServer {
    * to process requests.
    */
   fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
+  /**
+   * Clears all pending handlers in the queue, rejecting their promises with an error.
+   */
+  clear(): void;
 }
 
 interface QueueEntry {
@@ -59,13 +63,20 @@ export async function createDisposableQueueServer(): Promise<QueueServer> {
   });
   const serv = await createDisposableServer(adapter);
 
+  function clear(errMsg: string) {
+    for (const entry of queuedEntries.splice(0)) {
+      entry.responseDeferred.reject(new Error(errMsg));
+    }
+  }
+
   const origDispose = serv[DisposableSymbols.asyncDispose].bind(serv);
   return Object.assign(serv, {
     [DisposableSymbols.asyncDispose]() {
-      for (const entry of queuedEntries.splice(0)) {
-        entry.responseDeferred.reject(new Error('Queue server disposed'));
-      }
+      clear('Queue server disposed');
       return origDispose();
+    },
+    clear() {
+      clear('Queue cleared');
     },
     queue(handler: QueuedHandler) {
       const responseDeferred = createDeferredPromise<Response>();
