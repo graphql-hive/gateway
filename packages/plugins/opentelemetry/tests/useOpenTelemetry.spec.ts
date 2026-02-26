@@ -74,6 +74,9 @@ import {
 } from './utils';
 
 describe('useOpenTelemetry', () => {
+  const silentLog = new Logger({
+    level: false,
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     spanExporter.reset();
@@ -91,6 +94,7 @@ describe('useOpenTelemetry', () => {
         traces: {
           exporter: new OTLPTraceExporter(),
         },
+        log: silentLog,
       });
 
       // Check context manager
@@ -136,6 +140,7 @@ describe('useOpenTelemetry', () => {
         traces: {
           tracerProvider,
         },
+        log: silentLog,
       });
 
       expect(tracerProvider.register).toHaveBeenCalled();
@@ -146,6 +151,7 @@ describe('useOpenTelemetry', () => {
 
       openTelemetrySetup({
         contextManager: null,
+        log: silentLog,
       });
 
       expect(getContextManager()).toBe(before);
@@ -157,6 +163,7 @@ describe('useOpenTelemetry', () => {
         traces: {
           console: true,
         },
+        log: silentLog,
       });
 
       const processors = getSpanProcessors();
@@ -173,6 +180,7 @@ describe('useOpenTelemetry', () => {
           exporter: new OTLPTraceExporter(),
           console: true,
         },
+        log: silentLog,
       });
 
       const processors = getSpanProcessors();
@@ -189,6 +197,7 @@ describe('useOpenTelemetry', () => {
           processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
           console: true,
         },
+        log: silentLog,
       });
 
       const processors = getSpanProcessors();
@@ -209,6 +218,7 @@ describe('useOpenTelemetry', () => {
           console: true,
         },
         contextManager: null,
+        log: silentLog,
       });
 
       expect(getResource()?.attributes).toMatchObject({
@@ -227,6 +237,7 @@ describe('useOpenTelemetry', () => {
         openTelemetrySetup({
           traces: { console: true },
           contextManager: null,
+          log: silentLog,
         });
 
         expect(getResource()?.attributes).toMatchObject({
@@ -245,6 +256,7 @@ describe('useOpenTelemetry', () => {
         },
         contextManager: null,
         sampler: new AlwaysOffSampler(),
+        log: silentLog,
       });
 
       expect(getSampler()).toBeInstanceOf(AlwaysOffSampler);
@@ -255,6 +267,7 @@ describe('useOpenTelemetry', () => {
         contextManager: null,
         traces: { console: true },
         samplingRate: 0.1,
+        log: silentLog,
       });
 
       const sampler = getSampler();
@@ -276,6 +289,7 @@ describe('useOpenTelemetry', () => {
           exporter: new OTLPTraceExporter(),
           batching: false,
         },
+        log: silentLog,
       });
 
       const [processor] = getSpanProcessors()!;
@@ -294,6 +308,7 @@ describe('useOpenTelemetry', () => {
             exportTimeoutMillis: 4,
           },
         },
+        log: silentLog,
       });
 
       const [processor] = getSpanProcessors()!;
@@ -313,6 +328,7 @@ describe('useOpenTelemetry', () => {
         traces: {
           processors: [processor],
         },
+        log: silentLog,
       });
 
       const processors = getSpanProcessors();
@@ -325,6 +341,7 @@ describe('useOpenTelemetry', () => {
       openTelemetrySetup({
         contextManager: null,
         propagators: [propagator],
+        log: silentLog,
       });
 
       expect(getPropagator()).toBe(propagator);
@@ -336,6 +353,7 @@ describe('useOpenTelemetry', () => {
       openTelemetrySetup({
         contextManager: null,
         propagators: [],
+        log: silentLog,
       });
 
       expect(getPropagator()).toBe(before);
@@ -359,6 +377,7 @@ describe('useOpenTelemetry', () => {
           attributeCountLimit: 7,
           attributeValueLengthLimit: 8,
         },
+        log: silentLog,
       });
 
       // @ts-ignore access private field
@@ -384,6 +403,7 @@ describe('useOpenTelemetry', () => {
         contextManager: new AsyncLocalStorageContextManager(),
         target: 'target',
         accessToken: 'access-token',
+        log: silentLog,
       });
 
       const processors = getSpanProcessors();
@@ -932,6 +952,7 @@ describe('useOpenTelemetry', () => {
           responseCaching: {
             session: () => '1',
           },
+          logging: silentLog,
         },
       });
       await gateway.query();
@@ -1236,6 +1257,7 @@ describe('useOpenTelemetry', () => {
         target: 'test-target',
         contextManager: new AsyncLocalStorageContextManager(),
         processor: new SimpleSpanProcessor(spanExporter),
+        log: silentLog,
       });
     });
 
