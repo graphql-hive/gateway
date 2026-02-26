@@ -52,6 +52,37 @@ describe.skipIf(
     ]);
   });
 
+  it('should trip circuit breaker when collector is slow and returns 503 Service Unavailable', async () => {
+    const otel = await createDisposableQueueServer();
+
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_TRACING_ENDPOINT:
+          gatewayRunner === 'docker'
+            ? replaceLocalhostWithDockerHost(otel.url)
+            : otel.url,
+      },
+    });
+
+    // circuit breaker needs 3 failed attempts to trip because the volumeThreshold is 3.
+    // each slow export cycle results in a single timed-out request (consuming the entire
+    // OTLP exporter deadline of 10s), leaving no room for retries
+    for (let i = 0; i < 3; i++) {
+      await queryTypenameAndExhaustSlowDownCollectorRetries(gw, otel, 503);
+    }
+
+    // circuit is now open, no spans should be sent to the collector
+    await queryTypenameAndProcessSpans(gw);
+
+    await Promise.race([
+      setTimeout(100), // expires
+      otel.queue(() =>
+        expect.fail('should not attempt to send spans when circuit is open'),
+      ),
+    ]);
+  });
+
   it('should close circuit breaker after reset timeout', async () => {
     const otel = await createDisposableQueueServer();
 
@@ -130,6 +161,29 @@ async function queryTypenameAndExhaustDownCollectorRetries(
   // attempt 5: ~2,250ms backoff
   await advanceGatewayTimersByTime(gateway, 2_250);
   await collector.queue(() => new Response(null, { status: 503 }));
+}
+
+async function queryTypenameAndExhaustSlowDownCollectorRetries(
+  gateway: Gateway,
+  collector: QueueServer,
+  status: number,
+) {
+  await queryTypenameAndProcessSpans(gateway);
+
+  // advance past the OTLP exporter timeout (10s default)
+  // the 10s timeout is from `getSharedConfigurationDefaults` in the otel
+  // https://github.com/open-telemetry/opentelemetry-js/blob/661cd84a25b2cef68169e7ffa4b811cea7406a10/experimental/packages/otlp-exporter-base/src/configuration/shared-configuration.ts#L68
+  await advanceGatewayTimersByTime(gateway, 10_000);
+
+  // collector is slow - the request hangs until the gateway's OTLP exporter HTTP timeout
+  // fires (default 10s). with the entire deadline consumed by a single timeout, the retrying
+  // transport has no remaining time for retries, resulting in just 1 attempt per export cycle.
+  // the handler holds the connection open in real time (500ms) to ensure the gateway's timeout
+  // fires before the response arrives.
+  await collector.queue(async () => {
+    await setTimeout(500);
+    return new Response(null, { status });
+  });
 }
 
 async function advanceGatewayTimersByTime(gateway: Gateway, timeInMs: number) {
