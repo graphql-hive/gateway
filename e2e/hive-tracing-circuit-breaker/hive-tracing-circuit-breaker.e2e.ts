@@ -52,7 +52,7 @@ describe.skipIf(
     ]);
   });
 
-  it('should trip circuit breaker when collector is slow and returns 503 Service Unavailable', async () => {
+  it('should trip circuit breaker when collector times out but returns 503', async () => {
     const otel = await createDisposableQueueServer();
 
     const gw = await gateway({
@@ -62,6 +62,8 @@ describe.skipIf(
           gatewayRunner === 'docker'
             ? replaceLocalhostWithDockerHost(otel.url)
             : otel.url,
+        // OTEL_EXPORTER_OTLP_{signalIdentifier}_TIMEOUT
+        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: 100, // matches queryTypenameAndExhaustTimeoutCollectorRetries
       },
     });
 
@@ -69,7 +71,44 @@ describe.skipIf(
     // each slow export cycle results in a single timed-out request (consuming the entire
     // OTLP exporter deadline of 10s), leaving no room for retries
     for (let i = 0; i < 3; i++) {
-      await queryTypenameAndExhaustSlowDownCollectorRetries(gw, otel, 503);
+      await queryTypenameAndExhaustTimeoutCollectorRetries(gw, otel, {
+        status: 503,
+      });
+    }
+
+    // circuit is now open, no spans should be sent to the collector
+    await queryTypenameAndProcessSpans(gw);
+
+    await Promise.race([
+      setTimeout(100), // expires
+      otel.queue(() =>
+        expect.fail('should not attempt to send spans when circuit is open'),
+      ),
+    ]);
+  });
+
+  it('should trip circuit breaker when collector times out but returns 200', async () => {
+    const otel = await createDisposableQueueServer();
+
+    const gw = await gateway({
+      supergraph: await supergraph(),
+      env: {
+        HIVE_TRACING_ENDPOINT:
+          gatewayRunner === 'docker'
+            ? replaceLocalhostWithDockerHost(otel.url)
+            : otel.url,
+        // OTEL_EXPORTER_OTLP_{signalIdentifier}_TIMEOUT
+        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: 100, // matches queryTypenameAndExhaustTimeoutCollectorRetries
+      },
+    });
+
+    // circuit breaker needs 3 failed attempts to trip because the volumeThreshold is 3.
+    // each slow export cycle results in a single timed-out request (consuming the entire
+    // OTLP exporter deadline of 10s), leaving no room for retries
+    for (let i = 0; i < 3; i++) {
+      await queryTypenameAndExhaustTimeoutCollectorRetries(gw, otel, {
+        status: 200,
+      });
     }
 
     // circuit is now open, no spans should be sent to the collector
@@ -163,25 +202,29 @@ async function queryTypenameAndExhaustDownCollectorRetries(
   await collector.queue(() => new Response(null, { status: 503 }));
 }
 
-async function queryTypenameAndExhaustSlowDownCollectorRetries(
+async function queryTypenameAndExhaustTimeoutCollectorRetries(
   gateway: Gateway,
   collector: QueueServer,
-  status: number,
+  {
+    status,
+  }: {
+    status: number;
+  },
 ) {
   await queryTypenameAndProcessSpans(gateway);
 
+  // ⚠️ WE CANNOT USE FAKE TIMERS BECAUSE THE HTTP TIMEOUT IN NODE USES `http.request.setTimeout`
+  // THAT ACTUALLY USES A NATIVE SOCKET TIMEOUT
+  //
   // advance past the OTLP exporter timeout (10s default)
   // the 10s timeout is from `getSharedConfigurationDefaults` in the otel
   // https://github.com/open-telemetry/opentelemetry-js/blob/661cd84a25b2cef68169e7ffa4b811cea7406a10/experimental/packages/otlp-exporter-base/src/configuration/shared-configuration.ts#L68
-  await advanceGatewayTimersByTime(gateway, 10_000);
+  // await advanceGatewayTimersByTime(gateway, 10_000);
 
-  // collector is slow - the request hangs until the gateway's OTLP exporter HTTP timeout
-  // fires (default 10s). with the entire deadline consumed by a single timeout, the retrying
-  // transport has no remaining time for retries, resulting in just 1 attempt per export cycle.
-  // the handler holds the connection open in real time (500ms) to ensure the gateway's timeout
-  // fires before the response arrives.
+  // request retry time is 1s which exceeds the request timeout of 100ms, meaning
+  // no further attampts will be made and the export will fail immediately after the first timeout
   await collector.queue(async () => {
-    await setTimeout(500);
+    await setTimeout(100); // matches OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
     return new Response(null, { status });
   });
 }
