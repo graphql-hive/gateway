@@ -1,5 +1,10 @@
 import { setTimeout } from 'node:timers/promises';
-import { createExampleSetup, createTenv, Gateway } from '@internal/e2e';
+import {
+  createExampleSetup,
+  createTenv,
+  Gateway,
+  replaceLocalhostWithDockerHost,
+} from '@internal/e2e';
 import { createDisposableQueueServer, QueueServer } from '@internal/testing';
 import { fetch } from '@whatwg-node/fetch';
 import { describe, expect, it } from 'vitest';
@@ -17,7 +22,10 @@ describe.skipIf(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        HIVE_TRACING_ENDPOINT: otel.url,
+        HIVE_TRACING_ENDPOINT:
+          gatewayRunner === 'docker'
+            ? replaceLocalhostWithDockerHost(otel.url)
+            : otel.url,
       },
     });
 
@@ -50,7 +58,10 @@ describe.skipIf(
     const gw = await gateway({
       supergraph: await supergraph(),
       env: {
-        HIVE_TRACING_ENDPOINT: otel.url,
+        HIVE_TRACING_ENDPOINT:
+          gatewayRunner === 'docker'
+            ? replaceLocalhostWithDockerHost(otel.url)
+            : otel.url,
       },
     });
 

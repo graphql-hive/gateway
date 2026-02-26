@@ -45,7 +45,8 @@ group "e2e" {
     "gateway_e2e_operation-field-permissions",
     "gateway_e2e_distributed-subscriptions-webhooks",
     "gateway_e2e_edfs-subgraph-defs",
-    "gateway_e2e_edfs-gateway-defs"
+    "gateway_e2e_edfs-gateway-defs",
+    "gateway_e2e_hive-tracing-circuit-breaker"
   ]
 }
 
