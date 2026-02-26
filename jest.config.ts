@@ -19,6 +19,7 @@ const ESM_PACKAGES = [
   'change-case',
   'extract-files',
   'is-plain-obj',
+  'array-shuffle',
 ];
 
 export default {
