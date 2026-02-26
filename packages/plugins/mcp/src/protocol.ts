@@ -8,6 +8,7 @@ export interface MCPHandlerOptions {
     toolName: string,
     args: Record<string, unknown>,
   ) => Promise<unknown>;
+  resolveToolDescriptions?: () => Promise<Map<string, string>>;
 }
 
 interface JsonRpcRequest {
@@ -51,15 +52,32 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         };
         break;
 
-      case 'tools/list':
+      case 'tools/list': {
+        const tools = registry.getMCPTools();
+
+        if (options.resolveToolDescriptions) {
+          try {
+            const descriptions = await options.resolveToolDescriptions();
+            for (const tool of tools) {
+              if (descriptions.has(tool.name)) {
+                tool.description = descriptions.get(tool.name)!;
+              }
+            }
+          } catch (err) {
+            // Provider failure should not prevent tool discovery
+            console.warn(
+              `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          }
+        }
+
         response = {
           jsonrpc: '2.0',
           id,
-          result: {
-            tools: registry.getMCPTools(),
-          },
+          result: { tools },
         };
         break;
+      }
 
       case 'notifications/initialized':
         // Client notification, no response needed but we return empty for simplicity
