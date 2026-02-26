@@ -3,7 +3,8 @@ import {
   useCustomFetch,
 } from '@graphql-hive/gateway-runtime';
 import { createSchema, createYoga } from 'graphql-yoga';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
+import type { DescriptionProvider } from '../src/description-provider.js';
 import { useMCP } from '../src/plugin.js';
 
 describe('MCP E2E', () => {
@@ -159,7 +160,7 @@ describe('MCP E2E', () => {
 
     const cities = tools.find((t: any) => t.name === 'search_cities');
     expect(cities).toBeDefined();
-    expect(cities.description).toBe('Search cities by name');
+    expect(cities.description).toBe('Search for cities by name');
     expect(cities.inputSchema).toMatchObject({
       type: 'object',
       properties: {
@@ -285,6 +286,83 @@ describe('MCP E2E', () => {
       expect(body.result.tools[0].name).toBe('get_weather');
     } finally {
       await freshGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('description provider sets tool description via providers config', async () => {
+    const mockProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_toolName, config) => {
+        return `Fetched: ${config['prompt']}`;
+      }),
+    };
+
+    const providerGateway = createGatewayRuntime({
+      logging: false,
+      proxy: {
+        endpoint: 'http://upstream:4000/graphql',
+      },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'provider-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query GetWeather($location: String!) {
+                  weather(location: $location) { temperature conditions }
+                }`,
+              },
+              tool: {
+                descriptionProvider: { type: 'mock', prompt: 'weather_description' },
+              },
+            },
+            {
+              name: 'search_cities',
+              source: {
+                type: 'inline',
+                query: `query SearchCities($query: String!) {
+                  cities(query: $query) { name country }
+                }`,
+              },
+              tool: {
+                description: 'Config wins over provider',
+                descriptionProvider: { type: 'mock', prompt: 'cities_description' },
+              },
+            },
+          ],
+          providers: { mock: mockProvider },
+        }),
+      ],
+    });
+
+    try {
+      await providerGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await providerGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+      const body = await res.json();
+      const tools = body.result.tools;
+
+      const weather = tools.find((t: any) => t.name === 'get_weather');
+      expect(weather.description).toBe('Fetched: weather_description');
+
+      const cities = tools.find((t: any) => t.name === 'search_cities');
+      expect(cities.description).toBe('Fetched: cities_description');
+      expect(mockProvider.fetchDescription).toHaveBeenCalledTimes(2);
+    } finally {
+      await providerGateway[Symbol.asyncDispose]?.();
     }
   });
 

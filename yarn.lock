@@ -14662,6 +14662,7 @@ __metadata:
     eslint-plugin-n: "npm:17.23.2"
     graphql: "npm:16.12.0"
     jest: "npm:30.2.0"
+    langfuse: "npm:^3.38.6"
     prettier: "npm:3.8.1"
     prettier-plugin-pkg: "npm:0.21.2"
     prettier-plugin-sh: "npm:0.18.0"
@@ -17039,6 +17040,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"langfuse-core@npm:^3.38.6":
+  version: 3.38.6
+  resolution: "langfuse-core@npm:3.38.6"
+  dependencies:
+    mustache: "npm:^4.2.0"
+  checksum: 10c0/d101c6f05a98b7dcdc865b32e67803b538b60ff95a1e96e947b584c88f53a4e019450ba5609dcf30a9a5d80e9afd3eec28cae093157e5003bca9c3c595e63073
+  languageName: node
+  linkType: hard
+
+"langfuse@npm:^3.38.6":
+  version: 3.38.6
+  resolution: "langfuse@npm:3.38.6"
+  dependencies:
+    langfuse-core: "npm:^3.38.6"
+  checksum: 10c0/3605e30e3de486fd268cd09e6bd9ca879d483aa78837786762760093ecc43c7f4d93491064f86716e939479e67609cf212baf64c6101188db0947a71edbbdea4
+  languageName: node
+  linkType: hard
+
 "launchdarkly-eventsource@npm:2.2.0":
   version: 2.2.0
   resolution: "launchdarkly-eventsource@npm:2.2.0"
@@ -17885,6 +17904,15 @@ __metadata:
     type-is: "npm:^1.6.18"
     xtend: "npm:^4.0.2"
   checksum: 10c0/d3b99dd0512169bbabf15440e1bbb3ecdc000b761e5a3e4aaca40b5e5e213c6cdcc9b7dffebaa601b7691a84f6876aa87e0173ffcc47139253793cf5657819eb
+  languageName: node
+  linkType: hard
+
+"mustache@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "mustache@npm:4.2.0"
+  bin:
+    mustache: bin/mustache
+  checksum: 10c0/1f8197e8a19e63645a786581d58c41df7853da26702dbc005193e2437c98ca49b255345c173d50c08fe4b4dbb363e53cb655ecc570791f8deb09887248dd34a2
   languageName: node
   linkType: hard
 

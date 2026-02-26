@@ -2,6 +2,12 @@ import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GraphQLSchema } from 'graphql';
+import {
+  resolveDescriptions,
+  createProviderRegistry,
+  type DescriptionProvider,
+  type DescriptionProviderConfig,
+} from './description-provider.js';
 import { createGraphQLExecutor } from './executor.js';
 import {
   loadOperationsFromString,
@@ -24,6 +30,7 @@ export type MCPToolSource =
 export interface MCPToolOverrides {
   title?: string;
   description?: string;
+  descriptionProvider?: DescriptionProviderConfig;
 }
 
 export interface MCPInputOverrides {
@@ -47,6 +54,7 @@ export interface MCPConfig {
   operationsPath?: string;
   operationsStr?: string;
   tools: MCPToolConfig[];
+  providers?: Record<string, DescriptionProvider>;
 }
 
 export interface ResolvedToolConfig {
@@ -54,6 +62,8 @@ export interface ResolvedToolConfig {
   query: string;
   tool?: MCPToolOverrides;
   input?: MCPInputOverrides;
+  directiveDescription?: string;
+  providerDescription?: string;
 }
 
 interface ResolveToolConfigsInput {
@@ -75,11 +85,11 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
     for (const op of parsedOps) {
       if (!op.mcpDirective) continue;
       const toolOverrides: MCPToolOverrides = {};
-      if (op.mcpDirective.description) toolOverrides.description = op.mcpDirective.description;
       if (op.mcpDirective.title) toolOverrides.title = op.mcpDirective.title;
       directiveTools.set(op.mcpDirective.name, {
         name: op.mcpDirective.name,
         query: op.document,
+        directiveDescription: op.mcpDirective.description,
         tool: Object.keys(toolOverrides).length > 0 ? toolOverrides : undefined,
       });
     }
@@ -107,7 +117,7 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
     configTools.set(tool.name, { name: tool.name, query, tool: tool.tool, input: tool.input });
   }
 
-  // merge: directive tools as base, config tools overlay (config wins)
+  // merge: directive tools as base, config tools overlay (config wins for non-description fields)
   const merged = new Map<string, ResolvedToolConfig>(directiveTools);
   for (const [name, configTool] of configTools) {
     const base = merged.get(name);
@@ -115,6 +125,7 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
       merged.set(name, {
         name,
         query: configTool.query,
+        directiveDescription: base.directiveDescription,
         tool: {
           ...base.tool,
           ...configTool.tool,
@@ -173,6 +184,20 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
   const resolvedTools = resolveToolConfigs({ tools: config.tools, operationsSource });
+  const providerRegistry = config.providers ? createProviderRegistry(config.providers) : {};
+
+  // Validate provider config synchronously at startup fail fast on misconfig
+  for (const tool of resolvedTools) {
+    const providerType = tool.tool?.descriptionProvider?.type;
+    if (providerType && !providerRegistry[providerType]) {
+      throw new Error(`Unknown description provider type: "${providerType}" for tool "${tool.name}"`);
+    }
+  }
+
+  // Tools that use provider descriptions provider always wins over static config
+  const providerToolConfigs = resolvedTools.filter(
+    (t) => t.tool?.descriptionProvider,
+  );
 
   return {
     onSchemaChange({ schema: newSchema }) {
@@ -245,6 +270,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           registry,
+          resolveToolDescriptions: providerToolConfigs.length > 0
+            ? async () => {
+                const resolved = await resolveDescriptions(providerToolConfigs, providerRegistry, { isStartup: false });
+                const map = new Map();
+                for (const tool of resolved) {
+                  if (tool.providerDescription) {
+                    map.set(tool.name, tool.providerDescription);
+                  }
+                }
+                return map;
+              }
+            : undefined,
           execute: async (toolName, args) => {
             const headers: Record<string, string> = {};
             const auth = request.headers.get('authorization');

@@ -129,7 +129,7 @@ describe('ToolRegistry with overrides', () => {
     expect(tools[0]!.inputSchema.properties!['category']!.description).toBeUndefined();
   });
 
-  it('uses tool.description over schema description', () => {
+  it('schema description wins over config description', () => {
     const registry = new ToolRegistry(
       [{
         name: 'search',
@@ -139,7 +139,38 @@ describe('ToolRegistry with overrides', () => {
       schema,
     );
     const tools = registry.getMCPTools();
+    expect(tools[0]!.description).toBe('Search products by keyword');
+  });
+
+  it('config description used when no schema description', () => {
+    const noDescSchema = buildSchema(`
+      type Query {
+        searchProducts(query: String!): String
+      }
+    `);
+    const registry = new ToolRegistry(
+      [{
+        name: 'search',
+        query: 'query($query: String!) { searchProducts(query: $query) }',
+        tool: { description: 'Custom description' },
+      }],
+      noDescSchema,
+    );
+    const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('Custom description');
+  });
+
+  it('directive description wins over schema description', () => {
+    const registry = new ToolRegistry(
+      [{
+        name: 'search',
+        query: 'query($query: String!) { searchProducts(query: $query) }',
+        directiveDescription: 'From directive',
+      }],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.description).toBe('From directive');
   });
 
   it('falls back to schema description when no config description', () => {

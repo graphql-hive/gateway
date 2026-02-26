@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import {
+  resolveDescriptions,
+  createProviderRegistry,
+  type DescriptionProvider,
+} from '../src/description-provider.js';
 import { resolveToolConfigs } from '../src/plugin.js';
 
 describe('resolveToolConfigs', () => {
@@ -69,7 +74,8 @@ describe('resolveToolConfigs', () => {
     expect(tools[0]!.name).toBe('get_weather');
     expect(tools[0]!.query).toContain('GetWeather');
     expect(tools[0]!.query).not.toContain('mcpTool');
-    expect(tools[0]!.tool).toEqual({ description: 'Get weather', title: 'Weather' });
+    expect(tools[0]!.directiveDescription).toBe('Get weather');
+    expect(tools[0]!.tool).toEqual({ title: 'Weather' });
   });
 
   it('config wins over directive on conflict', () => {
@@ -111,7 +117,7 @@ describe('resolveToolConfigs', () => {
       operationsSource,
     });
     expect(tools).toHaveLength(1);
-    expect(tools[0]!.tool?.description).toBe('Get weather');
+    expect(tools[0]!.directiveDescription).toBe('Get weather');
     expect(tools[0]!.input?.schema?.properties?.['location']?.description).toBe('City name');
   });
 
@@ -123,5 +129,42 @@ describe('resolveToolConfigs', () => {
     `;
     const tools = resolveToolConfigs({ tools: [], operationsSource });
     expect(tools).toHaveLength(0);
+  });
+});
+
+describe('resolveDescriptions integration', () => {
+  const mockProvider: DescriptionProvider = {
+    fetchDescription: async (_toolName, config) => `Desc for ${config['prompt']}`,
+  };
+  const providerRegistry = createProviderRegistry({ mock: mockProvider });
+
+  it('resolves provider descriptions into tool configs', async () => {
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'test',
+          source: { type: 'inline', query: 'query { hello }' },
+          tool: { descriptionProvider: { type: 'mock', prompt: 'hello_desc' } },
+        },
+      ],
+    });
+
+    const resolved = await resolveDescriptions(tools, providerRegistry);
+    expect(resolved[0]!.providerDescription).toBe('Desc for hello_desc');
+  });
+
+  it('does not set providerDescription when tool has no descriptionProvider', async () => {
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'test',
+          source: { type: 'inline', query: 'query { hello }' },
+          tool: { description: 'Static' },
+        },
+      ],
+    });
+
+    const resolved = await resolveDescriptions(tools, providerRegistry);
+    expect(resolved[0]!.providerDescription).toBeUndefined();
   });
 });
