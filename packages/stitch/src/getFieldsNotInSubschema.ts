@@ -174,25 +174,13 @@ export function getFieldsNotInSubschema(
           sourceSchema,
           field,
           subFieldNode,
-          (fieldType, selection) => {
+          (fieldType) => {
             if (
               stitchingInfo.mergedTypes[fieldType.name]?.resolvers.get(
                 subschema,
               )
             ) {
               return false;
-            }
-            // If the original subschema was already able to resolve it, do not consider it as unavailable.
-            const subschemaFieldType = sourceSchema.getType(fieldType.name);
-            if (
-              subschemaFieldType != null &&
-              'getFields' in subschemaFieldType
-            ) {
-              const subschemaField =
-                subschemaFieldType.getFields()[selection.name.value];
-              if (subschemaField) {
-                return false;
-              }
             }
             return true;
           },

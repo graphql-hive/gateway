@@ -119,6 +119,7 @@ export function extractUnavailableFieldsFromSelectionSet(
           });
         }
       } else if (isObjectType(subFieldType) || isInterfaceType(subFieldType)) {
+        const subFieldTypeFields = subFieldType.getFields();
         for (const subSelection of selection.selectionSet.selections) {
           if (
             subSelection.kind === Kind.FIELD &&
@@ -126,8 +127,14 @@ export function extractUnavailableFieldsFromSelectionSet(
           ) {
             continue;
           }
-          if (shouldAdd(subFieldType, subSelection as FieldNode)) {
-            unavailableSelections.push(subSelection);
+          if (subSelection.kind === Kind.FIELD) {
+            const subSelectionField =
+              subFieldTypeFields[subSelection.name.value];
+            if (!subSelectionField) {
+              if (shouldAdd(subFieldType, subSelection)) {
+                unavailableSelections.push(subSelection);
+              }
+            }
           }
         }
       }
