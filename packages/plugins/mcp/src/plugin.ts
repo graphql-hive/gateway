@@ -203,6 +203,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     (t) => t.tool?.descriptionProvider,
   );
 
+  const internalRequests = new WeakSet<Request>();
+
   return {
     onSchemaChange({ schema: newSchema }) {
       schema = newSchema;
@@ -212,7 +214,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     onRequest({ request, url, endResponse, serverContext }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
       if (config.disableGraphQLEndpoint && url.pathname === graphqlPath
-        && !request.headers.get('x-mcp-internal')) {
+        && !internalRequests.has(request)) {
         endResponse(new Response(null, { status: 404 }));
         return;
       }
@@ -223,9 +225,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
       const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`;
       const dispatch = (url: string, init: RequestInit) => {
-        const headers = new Headers(init.headers);
-        headers.set('x-mcp-internal', '1');
-        return serverContext.dispatchRequest!(new Request(url, { ...init, headers }));
+        const req = new Request(url, init);
+        if (config.disableGraphQLEndpoint) internalRequests.add(req);
+        return serverContext.dispatchRequest!(req);
       };
 
       // Trigger schema introspection if not loaded
