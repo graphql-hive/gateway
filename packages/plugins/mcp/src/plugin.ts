@@ -56,6 +56,7 @@ export interface MCPConfig {
   operationsStr?: string;
   tools: MCPToolConfig[];
   providers?: Record<string, DescriptionProvider | Record<string, unknown>>;
+  disableGraphQLEndpoint?: boolean;
 }
 
 export interface ResolvedToolConfig {
@@ -209,13 +210,23 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
     },
 
     onRequest({ request, url, endResponse, serverContext }) {
+      // Block external GraphQL access when disableGraphQLEndpoint is set
+      if (config.disableGraphQLEndpoint && url.pathname === graphqlPath
+        && !request.headers.get('x-mcp-internal')) {
+        endResponse(new Response(null, { status: 404 }));
+        return;
+      }
+
       if (url.pathname !== mcpPath) {
         return;
       }
 
       const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`;
-      const dispatch = (url: string, init: RequestInit) =>
-        serverContext.dispatchRequest!(new Request(url, init));
+      const dispatch = (url: string, init: RequestInit) => {
+        const headers = new Headers(init.headers);
+        headers.set('x-mcp-internal', '1');
+        return serverContext.dispatchRequest!(new Request(url, { ...init, headers }));
+      };
 
       // Trigger schema introspection if not loaded
       const ensureSchema = async (): Promise<boolean> => {

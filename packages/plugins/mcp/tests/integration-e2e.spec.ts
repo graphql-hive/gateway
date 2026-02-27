@@ -366,6 +366,83 @@ describe('MCP E2E', () => {
     }
   });
 
+  describe('disableGraphQL', () => {
+    const standaloneGateway = createGatewayRuntime({
+      logging: false,
+      proxy: {
+        endpoint: 'http://upstream:4000/graphql',
+      },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'standalone-gateway',
+          disableGraphQLEndpoint: true,
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query GetWeather($location: String!) {
+                  weather(location: $location) { temperature conditions humidity }
+                }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    afterAll(() => standaloneGateway[Symbol.asyncDispose]?.());
+
+    it('returns 404 for /graphql', async () => {
+      const res = await standaloneGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it('MCP tools/list still works', async () => {
+      const res = await standaloneGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.result.tools).toHaveLength(1);
+      expect(body.result.tools[0].name).toBe('get_weather');
+    });
+
+    it('MCP tools/call executes GraphQL internally', async () => {
+      const res = await standaloneGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+      const body = await res.json();
+
+      expect(body.result.isError).toBeUndefined();
+      const data = JSON.parse(body.result.content[0].text);
+      expect(data.data.weather).toMatchObject({
+        temperature: 12.5,
+        conditions: 'Cloudy',
+        humidity: 65,
+      });
+    });
+  });
+
   it('auto-registers tools from @mcpTool directive in operations', async () => {
     const directiveGateway = createGatewayRuntime({
       logging: false,
