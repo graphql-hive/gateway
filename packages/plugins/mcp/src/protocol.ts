@@ -29,7 +29,19 @@ export function createMCPHandler(options: MCPHandlerOptions) {
   const { serverName, serverVersion, registry } = options;
 
   return async function handleMCPRequest(request: Request): Promise<Response> {
-    const body = (await request.json()) as JsonRpcRequest;
+    let body: JsonRpcRequest;
+    try {
+      body = (await request.json()) as JsonRpcRequest;
+    } catch {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          id: null,
+          error: { code: -32700, message: 'Parse error: Invalid JSON' },
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
     const { id, method, params } = body;
 
     let response: JsonRpcResponse;
