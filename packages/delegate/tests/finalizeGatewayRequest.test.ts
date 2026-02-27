@@ -145,6 +145,48 @@ describe('finalizeGatewayRequest', () => {
     expect(print(filteredQuery.document)).toBe(print(expected));
   });
 
+  test('should expect __typename on non abstract types', () => {
+    const query = parse(/* GraphQL */ `
+      query bookingQuery($id: ID!) {
+        bookingById(id: $id) {
+          id
+          customer {
+            ... on Customer {
+              name
+            }
+          }
+        }
+      }
+    `);
+    const filteredQuery = finalizeGatewayRequest(
+      {
+        document: query,
+        variables: {
+          id: 'b1',
+        },
+      },
+      {
+        targetSchema: bookingSchema,
+      } as DelegationContext,
+      () => {},
+    );
+
+    const expected = parse(/* GraphQL */ `
+      query bookingQuery($id: ID!) {
+        bookingById(id: $id) {
+          id
+          customer {
+            __typename
+            ... on Customer {
+              name
+            }
+          }
+        }
+      }
+    `);
+    expect(print(filteredQuery.document)).toBe(print(expected));
+  });
+
   describe('Spreading on unions', () => {
     const targetSchema = buildSchema(/* GraphQL */ `
       type Query {
