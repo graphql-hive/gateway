@@ -9,7 +9,10 @@ describe('MCP Integration', () => {
     tools: [
       {
         name: 'greet',
-        source: { type: 'inline', query: 'query Greet($name: String!) { hello(name: $name) }' },
+        source: {
+          type: 'inline',
+          query: 'query Greet($name: String!) { hello(name: $name) }',
+        },
         tool: { description: 'Greet someone by name' },
       },
       {
