@@ -39,7 +39,13 @@
     "prepack": "yarn build"
   },
   "peerDependencies": {
-    "graphql": "^15.9.0 || ^16.9.0"
+    "graphql": "^15.9.0 || ^16.9.0",
+    "langfuse": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "langfuse": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@graphql-hive/logger": "workspace:^",
