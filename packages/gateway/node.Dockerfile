@@ -104,12 +104,12 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/gl
 # npm uses glob v11, so we've just bumped it to the latest
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
 
-# fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
-RUN npm install @isaacs/brace-expansion@5.0.1 -g
+# fix @isaacs/brace-expansion vulnerability by updating it to the latest version ^5.0.1
+RUN npm install @isaacs/brace-expansion@^5.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 
-# fix minimatch vulnerability by updating it to the latest version 10.2.1
-RUN npm install minimatch@10.2.3 -g
+# fix minimatch vulnerability by updating it to the latest version ^10.2.4
+RUN npm install minimatch@^10.2.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 USER node
