@@ -6,20 +6,31 @@ export interface DescriptionProviderConfig {
 }
 
 export interface DescriptionProvider {
-  fetchDescription(toolName: string, config: DescriptionProviderConfig): Promise<string>;
+  fetchDescription(
+    toolName: string,
+    config: DescriptionProviderConfig,
+  ): Promise<string>;
 }
 
 export type ProviderRegistry = Record<string, DescriptionProvider>;
 
-export function createProviderRegistry(providers: Record<string, DescriptionProvider>): ProviderRegistry {
+export function createProviderRegistry(
+  providers: Record<string, DescriptionProvider>,
+): ProviderRegistry {
   return { ...providers };
 }
 
 function isDescriptionProvider(value: unknown): value is DescriptionProvider {
-  return typeof value === 'object' && value !== null && typeof (value as any).fetchDescription === 'function';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as any).fetchDescription === 'function'
+  );
 }
 
-async function resolveBuiltinProvider(name: string): Promise<DescriptionProvider> {
+async function resolveBuiltinProvider(
+  name: string,
+): Promise<DescriptionProvider> {
   if (name === 'langfuse') {
     let Langfuse: any;
     try {
@@ -27,7 +38,10 @@ async function resolveBuiltinProvider(name: string): Promise<DescriptionProvider
       Langfuse = mod.default || mod.Langfuse;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('Cannot find') || message.includes('ERR_MODULE_NOT_FOUND')) {
+      if (
+        message.includes('Cannot find') ||
+        message.includes('ERR_MODULE_NOT_FOUND')
+      ) {
         throw new Error(
           `The "langfuse" provider requires the "langfuse" package. Install it with: npm install langfuse`,
         );
@@ -86,11 +100,16 @@ export async function resolveDescriptions(
 
       const provider = providers[providerConfig.type];
       if (!provider) {
-        throw new Error(`Unknown description provider type: "${providerConfig.type}" for tool "${tool.name}"`);
+        throw new Error(
+          `Unknown description provider type: "${providerConfig.type}" for tool "${tool.name}"`,
+        );
       }
 
       try {
-        const description = await provider.fetchDescription(tool.name, providerConfig);
+        const description = await provider.fetchDescription(
+          tool.name,
+          providerConfig,
+        );
         return { ...tool, providerDescription: description };
       } catch (err) {
         if (options.isStartup) {

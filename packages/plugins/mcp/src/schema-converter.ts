@@ -121,7 +121,8 @@ export function getToolDescriptionFromSchema(
     (def) => def.kind === Kind.OPERATION_DEFINITION,
   );
 
-  if (!operationDef || operationDef.kind !== Kind.OPERATION_DEFINITION) return undefined;
+  if (!operationDef || operationDef.kind !== Kind.OPERATION_DEFINITION)
+    return undefined;
 
   const rootSelection = operationDef.selectionSet.selections[0];
   if (!rootSelection || rootSelection.kind !== Kind.FIELD) return undefined;
@@ -159,7 +160,7 @@ export function selectionSetToOutputSchema(
     throw new Error(`Schema has no ${operationDef.operation} type`);
   }
 
-  // An operation's selection set is on the root type (Query/Mutation) 
+  // An operation's selection set is on the root type (Query/Mutation)
   // but we want the output schema of the first (root) field's selection
   const rootSelection = operationDef.selectionSet.selections[0];
   if (!rootSelection || rootSelection.kind !== Kind.FIELD) {

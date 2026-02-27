@@ -105,7 +105,11 @@ describe('MCP E2E', () => {
 
   afterAll(() => gateway[Symbol.asyncDispose]?.());
 
-  function mcpRequest(method: string, params: unknown = {}, id: number | string = 1) {
+  function mcpRequest(
+    method: string,
+    params: unknown = {},
+    id: number | string = 1,
+  ) {
     return gateway.fetch('http://localhost/mcp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -318,7 +322,10 @@ describe('MCP E2E', () => {
                 }`,
               },
               tool: {
-                descriptionProvider: { type: 'mock', prompt: 'weather_description' },
+                descriptionProvider: {
+                  type: 'mock',
+                  prompt: 'weather_description',
+                },
               },
             },
             {
@@ -331,7 +338,10 @@ describe('MCP E2E', () => {
               },
               tool: {
                 description: 'Config fallback if provider fails',
-                descriptionProvider: { type: 'mock', prompt: 'cities_description' },
+                descriptionProvider: {
+                  type: 'mock',
+                  prompt: 'cities_description',
+                },
               },
             },
           ],
@@ -350,7 +360,12 @@ describe('MCP E2E', () => {
       const res = await providerGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
       });
       const body = await res.json();
       const tools = body.result.tools;
@@ -411,7 +426,12 @@ describe('MCP E2E', () => {
       const res = await standaloneGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
       });
       const body = await res.json();
 
@@ -476,7 +496,12 @@ describe('MCP E2E', () => {
       const listRes = await directiveGateway.fetch('http://localhost/mcp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
       });
       const listBody = await listRes.json();
 
