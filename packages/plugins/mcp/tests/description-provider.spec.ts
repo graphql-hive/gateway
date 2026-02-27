@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  resolveDescriptions,
   createProviderRegistry,
+  resolveDescriptions,
   resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
@@ -27,7 +27,8 @@ describe('resolveProviders', () => {
 
     vi.doMock('langfuse', () => ({ default: MockLangfuse }));
 
-    const { resolveProviders: resolve } = await import('../src/description-provider.js');
+    const { resolveProviders: resolve } =
+      await import('../src/description-provider.js');
     const registry = await resolve({ langfuse: {} });
 
     const langfuseProvider = registry['langfuse'];
@@ -48,10 +49,9 @@ describe('resolveProviders', () => {
       throw new Error('Cannot find module "langfuse"');
     });
 
-    const { resolveProviders: resolve } = await import('../src/description-provider.js');
-    await expect(resolve({ langfuse: {} })).rejects.toThrow(
-      /langfuse/,
-    );
+    const { resolveProviders: resolve } =
+      await import('../src/description-provider.js');
+    await expect(resolve({ langfuse: {} })).rejects.toThrow(/langfuse/);
 
     vi.doUnmock('langfuse');
   });
@@ -65,9 +65,11 @@ describe('resolveProviders', () => {
 
 describe('resolveDescriptions', () => {
   const mockProvider: DescriptionProvider = {
-    fetchDescription: vi.fn(async (_toolName: string, config: DescriptionProviderConfig) => {
-      return `Description for ${config['prompt']}`;
-    }),
+    fetchDescription: vi.fn(
+      async (_toolName: string, config: DescriptionProviderConfig) => {
+        return `Description for ${config['prompt']}`;
+      },
+    ),
   };
 
   const providerRegistry = createProviderRegistry({ mock: mockProvider });
@@ -84,7 +86,9 @@ describe('resolveDescriptions', () => {
     ];
 
     const resolved = await resolveDescriptions(tools, providerRegistry);
-    expect(resolved[0]!.providerDescription).toBe('Description for weather_desc');
+    expect(resolved[0]!.providerDescription).toBe(
+      'Description for weather_desc',
+    );
   });
 
   it('leaves providerDescription undefined when no descriptionProvider configured', async () => {
@@ -118,9 +122,9 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await expect(resolveDescriptions(tools, registry, { isStartup: true })).rejects.toThrow(
-      'Langfuse unreachable',
-    );
+    await expect(
+      resolveDescriptions(tools, registry, { isStartup: true }),
+    ).rejects.toThrow('Langfuse unreachable');
   });
 
   it('warns and returns undefined providerDescription on refresh failure', async () => {
@@ -142,7 +146,9 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    const resolved = await resolveDescriptions(tools, registry, { isStartup: false });
+    const resolved = await resolveDescriptions(tools, registry, {
+      isStartup: false,
+    });
     expect(resolved[0]!.providerDescription).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('get_weather'),
@@ -161,8 +167,8 @@ describe('resolveDescriptions', () => {
       },
     ];
 
-    await expect(resolveDescriptions(tools, providerRegistry, { isStartup: true })).rejects.toThrow(
-      'Unknown description provider type: "unknown"',
-    );
+    await expect(
+      resolveDescriptions(tools, providerRegistry, { isStartup: true }),
+    ).rejects.toThrow('Unknown description provider type: "unknown"');
   });
 });

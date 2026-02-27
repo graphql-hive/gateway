@@ -1,4 +1,10 @@
-import { Kind, parse, print, type DocumentNode, type OperationDefinitionNode } from 'graphql';
+import {
+  Kind,
+  parse,
+  print,
+  type DocumentNode,
+  type OperationDefinitionNode,
+} from 'graphql';
 
 export interface MCPDirectiveArgs {
   name: string;
@@ -14,8 +20,10 @@ export interface ParsedOperation {
   mcpDirective?: MCPDirectiveArgs;
 }
 
-function extractMcpToolDirective(node: OperationDefinitionNode): MCPDirectiveArgs | undefined {
-  const directive = node.directives?.find(d => d.name.value === 'mcpTool');
+function extractMcpToolDirective(
+  node: OperationDefinitionNode,
+): MCPDirectiveArgs | undefined {
+  const directive = node.directives?.find((d) => d.name.value === 'mcpTool');
   if (!directive) return undefined;
 
   const args: Record<string, string> = {};
@@ -42,17 +50,25 @@ export function loadOperationsFromString(source: string): ParsedOperation[] {
     if (def.kind !== Kind.OPERATION_DEFINITION) continue;
 
     if (!def.name) {
-      throw new Error('anonymous operations are not supported. All MCP operations must be named');
+      throw new Error(
+        'anonymous operations are not supported. All MCP operations must be named',
+      );
     }
 
     const mcpDirective = extractMcpToolDirective(def);
 
     // Strip @mcpTool directive before printing
-    const strippedDef = def.directives?.some(d => d.name.value === 'mcpTool')
-      ? { ...def, directives: def.directives.filter(d => d.name.value !== 'mcpTool') }
+    const strippedDef = def.directives?.some((d) => d.name.value === 'mcpTool')
+      ? {
+          ...def,
+          directives: def.directives.filter((d) => d.name.value !== 'mcpTool'),
+        }
       : def;
 
-    const singleDoc: DocumentNode = { kind: Kind.DOCUMENT, definitions: [strippedDef] };
+    const singleDoc: DocumentNode = {
+      kind: Kind.DOCUMENT,
+      definitions: [strippedDef],
+    };
 
     operations.push({
       name: def.name.value,

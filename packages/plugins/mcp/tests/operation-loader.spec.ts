@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { loadOperationsFromString, resolveOperation } from '../src/operation-loader.js';
+import {
+  loadOperationsFromString,
+  resolveOperation,
+} from '../src/operation-loader.js';
 
 describe('loadOperationsFromString', () => {
   it('parses a single operation from a string', () => {
@@ -37,7 +40,9 @@ describe('loadOperationsFromString', () => {
 
   it('throws for anonymous operations', () => {
     const source = `query { getWeatherData { temperature } }`;
-    expect(() => loadOperationsFromString(source)).toThrow('anonymous operations are not supported');
+    expect(() => loadOperationsFromString(source)).toThrow(
+      'anonymous operations are not supported',
+    );
   });
 
   it('extracts @mcpTool directive args from operation', () => {

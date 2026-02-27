@@ -319,8 +319,12 @@ describe('operationToInputSchema with descriptions', () => {
       }
     `;
     const result = operationToInputSchema(operation, schema);
-    expect(result.properties!.location.description).toBe('City name or postal code');
-    expect(result.properties!.units.description).toBe('Temperature unit preference');
+    expect(result.properties!.location.description).toBe(
+      'City name or postal code',
+    );
+    expect(result.properties!.units.description).toBe(
+      'Temperature unit preference',
+    );
   });
 
   it('omits description when argument has none', () => {

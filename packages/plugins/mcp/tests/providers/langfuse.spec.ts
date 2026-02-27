@@ -16,7 +16,11 @@ describe('Langfuse provider', () => {
     });
 
     expect(description).toBe('Get weather data for a city');
-    expect(mockClient.getPrompt).toHaveBeenCalledWith('weather_tool_description', undefined, undefined);
+    expect(mockClient.getPrompt).toHaveBeenCalledWith(
+      'weather_tool_description',
+      undefined,
+      undefined,
+    );
   });
 
   it('passes version as positional arg', async () => {
@@ -33,7 +37,11 @@ describe('Langfuse provider', () => {
       version: 2,
     });
 
-    expect(mockClient.getPrompt).toHaveBeenCalledWith('my_prompt', 2, undefined);
+    expect(mockClient.getPrompt).toHaveBeenCalledWith(
+      'my_prompt',
+      2,
+      undefined,
+    );
   });
 
   it('passes label in options', async () => {
@@ -50,7 +58,9 @@ describe('Langfuse provider', () => {
       label: 'production',
     });
 
-    expect(mockClient.getPrompt).toHaveBeenCalledWith('my_prompt', undefined, { label: 'production' });
+    expect(mockClient.getPrompt).toHaveBeenCalledWith('my_prompt', undefined, {
+      label: 'production',
+    });
   });
 
   it('throws when prompt field is missing', async () => {
@@ -84,7 +94,10 @@ describe('Langfuse provider', () => {
 
     const provider = createLangfuseProvider(mockClient as any);
     await expect(
-      provider.fetchDescription('tool', { type: 'langfuse', prompt: 'missing' }),
+      provider.fetchDescription('tool', {
+        type: 'langfuse',
+        prompt: 'missing',
+      }),
     ).rejects.toThrow('Langfuse API error');
   });
 });
