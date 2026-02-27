@@ -53,8 +53,10 @@ export class ToolRegistry {
       let outputSchema: JsonSchema | undefined;
       try {
         outputSchema = selectionSetToOutputSchema(parse(query), schema);
-      } catch {
-        // If output schema generation fails, omit it
+      } catch (err) {
+        console.warn(
+          `[MCP] Failed to generate output schema for tool "${config.name}": ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
 
       this.tools.set(config.name, {
