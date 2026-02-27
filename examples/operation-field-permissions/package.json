@@ -13,7 +13,7 @@
   },
   "overrides": {
     "esbuild": "^0.25.5",
-    "minimatch": "^10.2.2"
+    "minimatch": "^10.2.3"
   },
   "scripts": {
     "service:users": "tsx services/users.ts",
