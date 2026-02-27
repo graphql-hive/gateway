@@ -41,12 +41,16 @@ export class ToolRegistry {
         }
       }
 
-      // Precedence: @mcpTool directive > schema > config > fallback
-      // (descriptionProvider overlays at request time in protocol handler)
+      // Description precedence:
+      //   1. descriptionProvider (resolved at request time in protocol handler)
+      //   2. config.tool.description (explicit config override)
+      //   3. @mcpTool directive description
+      //   4. GraphQL schema field description
+      //   5. fallback: "Execute <toolName>"
       const description =
+        config.tool?.description ||
         config.directiveDescription ||
         getToolDescriptionFromSchema(query, schema) ||
-        config.tool?.description ||
         `Execute ${config.name}`;
 
       // Generate output schema
