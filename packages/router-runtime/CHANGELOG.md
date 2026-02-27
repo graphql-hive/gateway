@@ -1,5 +1,12 @@
 # @graphql-hive/router-runtime
 
+## 1.1.13
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.6.10
+  - @graphql-mesh/transport-common@1.0.15
+
 ## 1.1.12
 ### Patch Changes
 
