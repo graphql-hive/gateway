@@ -223,6 +223,23 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         return;
       }
 
+      if (!serverContext.dispatchRequest) {
+        endResponse(
+          new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              id: null,
+              error: {
+                code: -32000,
+                message: 'MCP plugin requires dispatchRequest in server context. Ensure it is used within createGatewayRuntime.',
+              },
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } },
+          ),
+        );
+        return;
+      }
+
       const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`;
       const dispatch = (url: string, init: RequestInit) => {
         const req = new Request(url, init);
