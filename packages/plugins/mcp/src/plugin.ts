@@ -4,9 +4,10 @@ import { join, resolve } from 'node:path';
 import type { GraphQLSchema } from 'graphql';
 import {
   resolveDescriptions,
-  createProviderRegistry,
+  resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
+  type ProviderRegistry,
 } from './description-provider.js';
 import { createGraphQLExecutor } from './executor.js';
 import {
@@ -54,7 +55,7 @@ export interface MCPConfig {
   operationsPath?: string;
   operationsStr?: string;
   tools: MCPToolConfig[];
-  providers?: Record<string, DescriptionProvider>;
+  providers?: Record<string, DescriptionProvider | Record<string, unknown>>;
 }
 
 export interface ResolvedToolConfig {
@@ -184,15 +185,17 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
   const resolvedTools = resolveToolConfigs({ tools: config.tools, operationsSource });
-  const providerRegistry = config.providers ? createProviderRegistry(config.providers) : {};
 
-  // Validate provider config synchronously at startup fail fast on misconfig
+  // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
     const providerType = tool.tool?.descriptionProvider?.type;
-    if (providerType && !providerRegistry[providerType]) {
+    if (providerType && !config.providers?.[providerType]) {
       throw new Error(`Unknown description provider type: "${providerType}" for tool "${tool.name}"`);
     }
   }
+
+  // Resolved lazily on first use, then cached
+  let resolvedProviders: ProviderRegistry | undefined;
 
   // Tools that use provider descriptions provider always wins over static config
   const providerToolConfigs = resolvedTools.filter(
@@ -272,7 +275,10 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           registry,
           resolveToolDescriptions: providerToolConfigs.length > 0
             ? async () => {
-                const resolved = await resolveDescriptions(providerToolConfigs, providerRegistry, { isStartup: false });
+                if (!resolvedProviders) {
+                  resolvedProviders = await resolveProviders(config.providers || {});
+                }
+                const resolved = await resolveDescriptions(providerToolConfigs, resolvedProviders, { isStartup: false });
                 const map = new Map();
                 for (const tool of resolved) {
                   if (tool.providerDescription) {
