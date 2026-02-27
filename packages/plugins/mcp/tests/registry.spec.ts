@@ -129,7 +129,7 @@ describe('ToolRegistry with overrides', () => {
     expect(tools[0]!.inputSchema.properties!['category']!.description).toBeUndefined();
   });
 
-  it('schema description wins over config description', () => {
+  it('config description wins over schema description', () => {
     const registry = new ToolRegistry(
       [{
         name: 'search',
@@ -139,7 +139,7 @@ describe('ToolRegistry with overrides', () => {
       schema,
     );
     const tools = registry.getMCPTools();
-    expect(tools[0]!.description).toBe('Search products by keyword');
+    expect(tools[0]!.description).toBe('Custom description');
   });
 
   it('config description used when no schema description', () => {

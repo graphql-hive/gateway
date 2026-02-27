@@ -198,7 +198,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   // Resolved lazily on first use, then cached
   let resolvedProviders: ProviderRegistry | undefined;
 
-  // Tools that use provider descriptions provider always wins over static config
+  // Tools that use provider descriptions (provider wins over config)
   const providerToolConfigs = resolvedTools.filter(
     (t) => t.tool?.descriptionProvider,
   );
