@@ -1,6 +1,6 @@
-import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { GraphQLSchema } from 'graphql';
 import {
   resolveDescriptions,
@@ -26,7 +26,12 @@ declare module '@graphql-hive/gateway-runtime' {
 
 export type MCPToolSource =
   | { type: 'inline'; query: string }
-  | { type: 'graphql'; operationName: string; operationType: 'query' | 'mutation'; file?: string };
+  | {
+      type: 'graphql';
+      operationName: string;
+      operationType: 'query' | 'mutation';
+      file?: string;
+    };
 
 export interface MCPToolOverrides {
   title?: string;
@@ -36,14 +41,17 @@ export interface MCPToolOverrides {
 
 export interface MCPInputOverrides {
   schema?: {
-    properties?: Record<string, { description?: string; examples?: unknown[]; default?: unknown }>;
+    properties?: Record<
+      string,
+      { description?: string; examples?: unknown[]; default?: unknown }
+    >;
   };
 }
 
 export interface MCPToolConfig {
   name: string;
   source: MCPToolSource;
-  tool?: MCPToolOverrides;   // metadata overrides
+  tool?: MCPToolOverrides; // metadata overrides
   input?: MCPInputOverrides; // field-level overrides
 }
 
@@ -73,7 +81,9 @@ interface ResolveToolConfigsInput {
   operationsSource?: string;
 }
 
-export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedToolConfig[] {
+export function resolveToolConfigs(
+  input: ResolveToolConfigsInput,
+): ResolvedToolConfig[] {
   const { tools, operationsSource } = input;
   let parsedOps: ParsedOperation[] | undefined;
 
@@ -107,7 +117,11 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
       query = source.query;
     } else {
       const allOps = parsedOps || [];
-      const op = resolveOperation(allOps, source.operationName, source.operationType);
+      const op = resolveOperation(
+        allOps,
+        source.operationName,
+        source.operationType,
+      );
       if (!op) {
         throw new Error(
           `Operation "${source.operationName}" (${source.operationType}) not found in loaded operations for tool "${tool.name}"`,
@@ -116,7 +130,12 @@ export function resolveToolConfigs(input: ResolveToolConfigsInput): ResolvedTool
       query = op.document;
     }
 
-    configTools.set(tool.name, { name: tool.name, query, tool: tool.tool, input: tool.input });
+    configTools.set(tool.name, {
+      name: tool.name,
+      query,
+      tool: tool.tool,
+      input: tool.input,
+    });
   }
 
   // merge: directive tools as base, config tools overlay (config wins for non-description fields)
@@ -160,7 +179,9 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
           .map((f) => readFileSync(join(opsPath, f), 'utf-8'));
         operationsSource = files.join('\n');
       } catch {
-        throw new Error(`Cannot read operations from "${config.operationsPath}"`);
+        throw new Error(
+          `Cannot read operations from "${config.operationsPath}"`,
+        );
       }
     }
   }
@@ -185,13 +206,18 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
-  const resolvedTools = resolveToolConfigs({ tools: config.tools, operationsSource });
+  const resolvedTools = resolveToolConfigs({
+    tools: config.tools,
+    operationsSource,
+  });
 
   // Validate that tools referencing providers have matching entries in config
   for (const tool of resolvedTools) {
     const providerType = tool.tool?.descriptionProvider?.type;
     if (providerType && !config.providers?.[providerType]) {
-      throw new Error(`Unknown description provider type: "${providerType}" for tool "${tool.name}"`);
+      throw new Error(
+        `Unknown description provider type: "${providerType}" for tool "${tool.name}"`,
+      );
     }
   }
 
@@ -213,8 +239,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
     onRequest({ request, url, endResponse, serverContext }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
-      if (config.disableGraphQLEndpoint && url.pathname === graphqlPath
-        && !internalRequests.has(request)) {
+      if (
+        config.disableGraphQLEndpoint &&
+        url.pathname === graphqlPath &&
+        !internalRequests.has(request)
+      ) {
         endResponse(new Response(null, { status: 404 }));
         return;
       }
@@ -231,7 +260,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               id: null,
               error: {
                 code: -32000,
-                message: 'MCP plugin requires dispatchRequest in server context. Ensure it is used within createGatewayRuntime.',
+                message:
+                  'MCP plugin requires dispatchRequest in server context. Ensure it is used within createGatewayRuntime.',
               },
             }),
             { status: 500, headers: { 'Content-Type': 'application/json' } },
@@ -303,21 +333,28 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           registry,
-          resolveToolDescriptions: providerToolConfigs.length > 0
-            ? async () => {
-                if (!resolvedProviders) {
-                  resolvedProviders = await resolveProviders(config.providers || {});
-                }
-                const resolved = await resolveDescriptions(providerToolConfigs, resolvedProviders, { isStartup: false });
-                const map = new Map();
-                for (const tool of resolved) {
-                  if (tool.providerDescription) {
-                    map.set(tool.name, tool.providerDescription);
+          resolveToolDescriptions:
+            providerToolConfigs.length > 0
+              ? async () => {
+                  if (!resolvedProviders) {
+                    resolvedProviders = await resolveProviders(
+                      config.providers || {},
+                    );
                   }
+                  const resolved = await resolveDescriptions(
+                    providerToolConfigs,
+                    resolvedProviders,
+                    { isStartup: false },
+                  );
+                  const map = new Map();
+                  for (const tool of resolved) {
+                    if (tool.providerDescription) {
+                      map.set(tool.name, tool.providerDescription);
+                    }
+                  }
+                  return map;
                 }
-                return map;
-              }
-            : undefined,
+              : undefined,
           execute: async (toolName, args) => {
             const headers: Record<string, string> = {};
             const auth = request.headers.get('authorization');

@@ -84,11 +84,14 @@ describe('ToolRegistry with overrides', () => {
 
   it('includes title in MCP tool definition when provided', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
-        tool: { title: 'Product Search' },
-      }],
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          tool: { title: 'Product Search' },
+        },
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
@@ -97,10 +100,12 @@ describe('ToolRegistry with overrides', () => {
 
   it('omits title when not provided', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+        },
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
@@ -109,33 +114,42 @@ describe('ToolRegistry with overrides', () => {
 
   it('applies field-level input schema overrides', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
-        input: {
-          schema: {
-            properties: {
-              query: { description: 'Keyword like blue shoes' },
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          input: {
+            schema: {
+              properties: {
+                query: { description: 'Keyword like blue shoes' },
+              },
             },
           },
         },
-      }],
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
     // Override should win over schema description
-    expect(tools[0]!.inputSchema.properties!['query']!.description).toBe('Keyword like blue shoes');
+    expect(tools[0]!.inputSchema.properties!['query']!.description).toBe(
+      'Keyword like blue shoes',
+    );
     // Non-overridden field keeps schema description (none in this case for category)
-    expect(tools[0]!.inputSchema.properties!['category']!.description).toBeUndefined();
+    expect(
+      tools[0]!.inputSchema.properties!['category']!.description,
+    ).toBeUndefined();
   });
 
   it('config description wins over schema description', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-        tool: { description: 'Custom description' },
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          tool: { description: 'Custom description' },
+        },
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
@@ -149,11 +163,13 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-        tool: { description: 'Custom description' },
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          tool: { description: 'Custom description' },
+        },
+      ],
       noDescSchema,
     );
     const tools = registry.getMCPTools();
@@ -162,11 +178,13 @@ describe('ToolRegistry with overrides', () => {
 
   it('directive description wins over schema description', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-        directiveDescription: 'From directive',
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          directiveDescription: 'From directive',
+        },
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
@@ -175,10 +193,12 @@ describe('ToolRegistry with overrides', () => {
 
   it('falls back to schema description when no config description', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+        },
+      ],
       schema,
     );
     const tools = registry.getMCPTools();
@@ -195,10 +215,13 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
-      [{
-        name: 'weather',
-        query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
-      }],
+      [
+        {
+          name: 'weather',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
       schemaWithOutput,
     );
     const tools = registry.getMCPTools();

@@ -9,4 +9,7 @@ export type {
 } from './plugin.js';
 export { createLangfuseProvider } from './providers/langfuse.js';
 export type { LangfuseClient } from './providers/langfuse.js';
-export type { DescriptionProvider, DescriptionProviderConfig } from './description-provider.js';
+export type {
+  DescriptionProvider,
+  DescriptionProviderConfig,
+} from './description-provider.js';

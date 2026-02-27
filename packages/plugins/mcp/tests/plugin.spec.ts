@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  resolveDescriptions,
   createProviderRegistry,
+  resolveDescriptions,
   type DescriptionProvider,
 } from '../src/description-provider.js';
 import { resolveToolConfigs } from '../src/plugin.js';
@@ -26,7 +26,11 @@ describe('resolveToolConfigs', () => {
       tools: [
         {
           name: 'weather',
-          source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' },
+          source: {
+            type: 'graphql',
+            operationName: 'GetWeather',
+            operationType: 'query',
+          },
         },
       ],
       operationsSource,
@@ -40,7 +44,11 @@ describe('resolveToolConfigs', () => {
         tools: [
           {
             name: 'missing',
-            source: { type: 'graphql', operationName: 'NotHere', operationType: 'query' },
+            source: {
+              type: 'graphql',
+              operationName: 'NotHere',
+              operationType: 'query',
+            },
           },
         ],
         operationsSource: 'query Other { hello }',
@@ -55,12 +63,16 @@ describe('resolveToolConfigs', () => {
           name: 'test',
           source: { type: 'inline', query: 'query { hello }' },
           tool: { title: 'Hello', description: 'Say hello' },
-          input: { schema: { properties: { name: { description: 'Who to greet' } } } },
+          input: {
+            schema: { properties: { name: { description: 'Who to greet' } } },
+          },
         },
       ],
     });
     expect(tools[0]!.tool?.title).toBe('Hello');
-    expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe('Who to greet');
+    expect(tools[0]!.input?.schema?.properties?.['name']?.description).toBe(
+      'Who to greet',
+    );
   });
 
   it('auto-registers tools from @mcpTool directives', () => {
@@ -88,7 +100,11 @@ describe('resolveToolConfigs', () => {
       tools: [
         {
           name: 'get_weather',
-          source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' as const },
+          source: {
+            type: 'graphql',
+            operationName: 'GetWeather',
+            operationType: 'query' as const,
+          },
           tool: { description: 'Config desc' },
         },
       ],
@@ -110,15 +126,23 @@ describe('resolveToolConfigs', () => {
       tools: [
         {
           name: 'get_weather',
-          source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' as const },
-          input: { schema: { properties: { location: { description: 'City name' } } } },
+          source: {
+            type: 'graphql',
+            operationName: 'GetWeather',
+            operationType: 'query' as const,
+          },
+          input: {
+            schema: { properties: { location: { description: 'City name' } } },
+          },
         },
       ],
       operationsSource,
     });
     expect(tools).toHaveLength(1);
     expect(tools[0]!.directiveDescription).toBe('Get weather');
-    expect(tools[0]!.input?.schema?.properties?.['location']?.description).toBe('City name');
+    expect(tools[0]!.input?.schema?.properties?.['location']?.description).toBe(
+      'City name',
+    );
   });
 
   it('does not auto-register operations without @mcpTool', () => {
@@ -134,7 +158,8 @@ describe('resolveToolConfigs', () => {
 
 describe('resolveDescriptions integration', () => {
   const mockProvider: DescriptionProvider = {
-    fetchDescription: async (_toolName, config) => `Desc for ${config['prompt']}`,
+    fetchDescription: async (_toolName, config) =>
+      `Desc for ${config['prompt']}`,
   };
   const providerRegistry = createProviderRegistry({ mock: mockProvider });
 
