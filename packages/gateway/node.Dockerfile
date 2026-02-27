@@ -109,7 +109,7 @@ RUN npm install @isaacs/brace-expansion@5.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 
 # fix minimatch vulnerability by updating it to the latest version 10.2.1
-RUN npm install minimatch@10.2.1 -g
+RUN npm install minimatch@10.2.3 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 USER node
