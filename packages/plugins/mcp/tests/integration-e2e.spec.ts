@@ -160,7 +160,7 @@ describe('MCP E2E', () => {
 
     const cities = tools.find((t: any) => t.name === 'search_cities');
     expect(cities).toBeDefined();
-    expect(cities.description).toBe('Search for cities by name');
+    expect(cities.description).toBe('Search cities by name');
     expect(cities.inputSchema).toMatchObject({
       type: 'object',
       properties: {
@@ -330,7 +330,7 @@ describe('MCP E2E', () => {
                 }`,
               },
               tool: {
-                description: 'Config wins over provider',
+                description: 'Config fallback if provider fails',
                 descriptionProvider: { type: 'mock', prompt: 'cities_description' },
               },
             },
