@@ -1,6 +1,6 @@
 {
   "name": "@graphql-mesh/transport-http-callback",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "type": "module",
   "repository": {
     "type": "git",
