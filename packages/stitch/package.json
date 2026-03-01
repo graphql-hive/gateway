@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@graphql-tools/mock": "^9.1.3",
+    "array-shuffle": "4.1.0",
     "dataloader": "^2.2.3",
     "graphql": "^16.12.0",
     "pkgroll": "2.27.0"

@@ -5377,6 +5377,7 @@ __metadata:
     "@graphql-tools/utils": "npm:^11.0.0"
     "@graphql-tools/wrap": "workspace:^"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
+    array-shuffle: "npm:4.1.0"
     dataloader: "npm:^2.2.3"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.0"
@@ -11414,6 +11415,13 @@ __metadata:
     is-string: "npm:^1.1.1"
     math-intrinsics: "npm:^1.1.0"
   checksum: 10c0/0235fa69078abeac05ac4250699c44996bc6f774a9cbe45db48674ce6bd142f09b327d31482ff75cf03344db4ea03eae23edb862d59378b484b47ed842574856
+  languageName: node
+  linkType: hard
+
+"array-shuffle@npm:4.1.0":
+  version: 4.1.0
+  resolution: "array-shuffle@npm:4.1.0"
+  checksum: 10c0/76536f7fc05bb06c7793a3b113908e345368142b51f5b3d9c321f347c742c4fa6051a48fe1fbd1c06c1bc458dda7218c38a45660797af38caefe5225ee6ca4d4
   languageName: node
   linkType: hard
 
