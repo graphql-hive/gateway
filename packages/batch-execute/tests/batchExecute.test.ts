@@ -45,7 +45,7 @@ describe('batch execution', () => {
     },
   });
 
-  const exec: Executor = async ({ document, variables }) => {
+  const exec: Executor = async ({ document, variables, signal }) => {
     executorCalls += 1;
     executorDocument = print(document);
     executorVariables = variables;
@@ -57,10 +57,15 @@ describe('batch execution', () => {
       schema,
       document,
       variableValues: executorVariables,
+      signal,
     });
   };
 
-  const batchExec = createBatchingExecutor(exec);
+  const batchExecutor = createBatchingExecutor(exec);
+
+  async function batchExec(request: Parameters<Executor>[0]) {
+    return batchExecutor(request);
+  }
 
   beforeEach(() => {
     executorCalls = 0;
@@ -308,5 +313,66 @@ describe('batch execution', () => {
         .catch((e) => e);
       expect(error).toBeUndefined();
     });
+  });
+  it('does not abort batched requests when one request signal is aborted', async () => {
+    const abortController1 = new AbortController();
+    const abortController2 = new AbortController();
+
+    const promise1 = batchExec({
+      document: parse('{ field1 field2 }'),
+      signal: abortController1.signal,
+    });
+
+    const promise2 = batchExec({
+      document: parse('{ field2 field3(input: "3") }'),
+      signal: abortController2.signal,
+    });
+
+    // Abort the first request
+    abortController1.abort();
+
+    const result1 = (await promise1) as ExecutionResult;
+
+    expect(result1?.data).toEqual({ field1: '1', field2: '2' });
+
+    const result2 = (await promise2) as ExecutionResult;
+
+    expect(result2?.data).toEqual({ field2: '2', field3: '3' });
+    expect(executorCalls).toEqual(1);
+    expect(getRequestFields()).toEqual([
+      'field1',
+      'field2',
+      'field2',
+      'field3',
+    ]);
+  });
+
+  it('aborts the batched request when all request signals are aborted', async () => {
+    const abortController1 = new AbortController();
+    const abortController2 = new AbortController();
+
+    const promise1 = batchExec({
+      document: parse('{ field1 field2 }'),
+      signal: abortController1.signal,
+    }).catch((e) => e);
+
+    const promise2 = batchExec({
+      document: parse('{ field2 field3(input: "3") }'),
+      signal: abortController2.signal,
+    }).catch((e) => e);
+
+    // Abort both requests
+    abortController1.abort();
+    abortController2.abort();
+
+    expect.assertions(2);
+
+    const result = (await promise2) as Error;
+
+    expect(result.message).toMatch(/operation was aborted/);
+
+    const result2 = (await promise1) as Error;
+
+    expect(result2.message).toMatch(/operation was aborted/);
   });
 });
