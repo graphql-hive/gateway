@@ -55,6 +55,7 @@ jobs:
           - type-merging-batching
           - operation-field-permissions
           - launchdarkly-override
+          - websocket-programmatic-usage
           # TODO: support containers before enabling (we use nats image in e2e)
           # - event-driven-federated-subscriptions
     name: Convert ${{matrix.e2e}}
