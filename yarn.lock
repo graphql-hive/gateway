@@ -637,8 +637,8 @@ __metadata:
   linkType: hard
 
 "@aws-sdk/client-sts@npm:^3.995.0":
-  version: 3.999.0
-  resolution: "@aws-sdk/client-sts@npm:3.999.0"
+  version: 3.1000.0
+  resolution: "@aws-sdk/client-sts@npm:3.1000.0"
   dependencies:
     "@aws-crypto/sha256-browser": "npm:5.2.0"
     "@aws-crypto/sha256-js": "npm:5.2.0"
@@ -679,7 +679,7 @@ __metadata:
     "@smithy/util-retry": "npm:^4.2.10"
     "@smithy/util-utf8": "npm:^4.2.1"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/fa04f49a00b609399f84dba3a4ed29b1137423b4667ce1d0cfafd8dd123570dfbdc6f625ac6901f2b606188ee74ece020ea190529509b4d719579743b608291d
+  checksum: 10c0/f82d81da3680979a749b1493656705cea0aa209f2ed29e61f304567cdc3141f872a7f45146fad0ca92e47f464ee247cb25274417be0d87cdc3c08f1e2bdd3f5b
   languageName: node
   linkType: hard
 
@@ -6098,7 +6098,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ioredis/commands@npm:1.5.0, @ioredis/commands@npm:^1.2.0":
+"@ioredis/commands@npm:1.5.1":
+  version: 1.5.1
+  resolution: "@ioredis/commands@npm:1.5.1"
+  checksum: 10c0/cb8f6d13cff0753e3e7ef001fb895491985d9a623248192538f13bc2fd9bfdfde3c18cf2ba6f20ec8ceaa681b0771070d3a09b82eed044c798bcfef5e3ae54b3
+  languageName: node
+  linkType: hard
+
+"@ioredis/commands@npm:^1.2.0":
   version: 1.5.0
   resolution: "@ioredis/commands@npm:1.5.0"
   checksum: 10c0/2d192d967a21f0192e17310d27ead02b0bdd504e834c782714abe641190ebfb548ad307fd89fd2d80db97c462afdc69ab4a4383831ab64ce61fe92f130d8b466
@@ -9807,12 +9814,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:25.3.2":
-  version: 25.3.2
-  resolution: "@types/node@npm:25.3.2"
+"@types/node@npm:25.3.3":
+  version: 25.3.3
+  resolution: "@types/node@npm:25.3.3"
   dependencies:
     undici-types: "npm:~7.18.0"
-  checksum: 10c0/946c8758668762d3c3b475281b420e580d0ce828c6847534a822b92be791e23e5879b53001ea928e5352dec8908082d854b8076b7bcfc69549e23ad54b1f98ab
+  checksum: 10c0/63e1d3816a9f4a706ab5d588d18cb98aa824b97748ff585537d327528e9438f58f69f45c7762e7cd3a1ab32c1619f551aabe8075d13172f9273cf10f6d83ab91
   languageName: node
   linkType: hard
 
@@ -12293,9 +12300,9 @@ __metadata:
   linkType: hard
 
 "chartjs-plugin-trendline@npm:^3.1.1":
-  version: 3.2.3
-  resolution: "chartjs-plugin-trendline@npm:3.2.3"
-  checksum: 10c0/cf515b0ba2c99dca218071f4f002317e6a941e10ecd846a8d73fdc33b3b9c6094f64972f8ef72c0d7c76c05af9ea5aed573a1665439ee0411449bd62ab5393a6
+  version: 3.2.4
+  resolution: "chartjs-plugin-trendline@npm:3.2.4"
+  checksum: 10c0/76d3c6ba247956a8d58f2ec3f942a658e8b31c6d7816c3fd74bb52b547bb4a92d85b87ae93e10257e6ab0f6811dcd2672aebfa2672bb6fd8c91a3c7de33f3a7b
   languageName: node
   linkType: hard
 
@@ -12871,14 +12878,14 @@ __metadata:
   linkType: hard
 
 "dedent@npm:^1.6.0, dedent@npm:^1.7.0":
-  version: 1.7.1
-  resolution: "dedent@npm:1.7.1"
+  version: 1.7.2
+  resolution: "dedent@npm:1.7.2"
   peerDependencies:
     babel-plugin-macros: ^3.1.0
   peerDependenciesMeta:
     babel-plugin-macros:
       optional: true
-  checksum: 10c0/ae29ec1c5bd5216c698c9f23acaa5b720260fd4cef3c8b5af887eb5f8c9e6fdd5fed8668767437b4efea35e2991bd798987717633411a1734807c28255769b78
+  checksum: 10c0/acaff07cac355b93f17b1b17ebbb84d3cc55af6ab4b7814c3f505e061903e168bc6bf9ddce331552d64dee1525f0b4c549c9ade46aebfac6f69caaed74e90751
   languageName: node
   linkType: hard
 
@@ -14628,7 +14635,7 @@ __metadata:
     "@changesets/cli": "patch:@changesets/cli@npm:2.27.9#~/.yarn/patches/@changesets-cli-npm-2.27.9-5df61a909e.patch"
     "@ianvs/prettier-plugin-sort-imports": "npm:4.7.1"
     "@tsconfig/strictest": "npm:2.0.8"
-    "@types/node": "npm:25.3.2"
+    "@types/node": "npm:25.3.3"
     "@yarnpkg/cli": "npm:4.12.0"
     "@yarnpkg/core": "npm:4.5.0"
     "@yarnpkg/plugin-pack": "npm:4.0.3"
@@ -15586,10 +15593,10 @@ __metadata:
   linkType: hard
 
 "ioredis@npm:^5.8.2, ioredis@npm:^5.9.3":
-  version: 5.9.3
-  resolution: "ioredis@npm:5.9.3"
+  version: 5.10.0
+  resolution: "ioredis@npm:5.10.0"
   dependencies:
-    "@ioredis/commands": "npm:1.5.0"
+    "@ioredis/commands": "npm:1.5.1"
     cluster-key-slot: "npm:^1.1.0"
     debug: "npm:^4.3.4"
     denque: "npm:^2.1.0"
@@ -15598,7 +15605,7 @@ __metadata:
     redis-errors: "npm:^1.2.0"
     redis-parser: "npm:^3.0.0"
     standard-as-callback: "npm:^2.1.0"
-  checksum: 10c0/f3d5c811bc1f320236f488ee6bd8a4857c7c0e8e5de1154b064afc03eb35aafbf24156e430025061b6939c58a5a6b424d86814d726439f5811b2e9c56c710dd4
+  checksum: 10c0/294e8cdef963f922b04ad023d4165f1d399b27279b9890f3e1311da57fb2a082c8dca52d18bd14a54acd6fb82853783641a0c47ff18661a8756221049f807e88
   languageName: node
   linkType: hard
 
