@@ -23,7 +23,7 @@ import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
-import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
+import { renderLaboratory } from '@graphql-yoga/render-laboratory';
 import { getEnvBool, isDebug } from '~internal/env';
 import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
@@ -277,7 +277,7 @@ export const defaultOptions = {
       : '0.0.0.0',
   port: 4000,
   pollingInterval: 10_000,
-  renderGraphiQL,
+  renderGraphiQL: renderLaboratory,
 };
 
 /** Root cli for the gateway. */
