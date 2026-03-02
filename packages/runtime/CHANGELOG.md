@@ -1,5 +1,33 @@
 # @graphql-hive/gateway-runtime
 
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [[`c75fd0a`](https://github.com/graphql-hive/gateway/commit/c75fd0a64730ab07a3a7115748841025e312f335)]:
+  - @graphql-hive/logger@1.1.0
+  - @graphql-mesh/fusion-runtime@1.6.10
+  - @graphql-mesh/transport-common@1.0.15
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
+## 2.7.0
+### Minor Changes
+
+
+
+- [#1977](https://github.com/graphql-hive/gateway/pull/1977) [`107dcf2`](https://github.com/graphql-hive/gateway/commit/107dcf2e5f58aaf5feb6e69d7d6917cfb4f709dd) Thanks [@ardatan](https://github.com/ardatan)! - Support Polling in Subgraph mode
+
+
+### Patch Changes
+
+- Updated dependencies [[`4065b7f`](https://github.com/graphql-hive/gateway/commit/4065b7fbb08d9e75c5f0d3b2b4d42d665aa9dbd9)]:
+  - @graphql-tools/delegate@12.0.8
+  - @graphql-tools/batch-delegate@10.0.14
+  - @graphql-tools/federation@4.2.12
+  - @graphql-mesh/fusion-runtime@1.6.9
+  - @graphql-tools/stitch@10.1.12
+  - @graphql-tools/wrap@11.1.8
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
 ## 2.6.1
 ### Patch Changes
 

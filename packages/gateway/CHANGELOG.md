@@ -1,5 +1,46 @@
 # @graphql-hive/gateway
 
+## 2.5.1
+### Patch Changes
+
+- Updated dependencies [[`c75fd0a`](https://github.com/graphql-hive/gateway/commit/c75fd0a64730ab07a3a7115748841025e312f335)]:
+  - @graphql-hive/logger@1.1.0
+  - @graphql-hive/plugin-opentelemetry@1.3.11
+  - @graphql-mesh/plugin-prometheus@2.1.19
+  - @graphql-hive/gateway-runtime@2.7.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.28
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/transport-http@1.0.15
+  - @graphql-mesh/transport-http-callback@1.0.16
+  - @graphql-mesh/transport-ws@2.0.15
+
+## 2.5.0
+### Minor Changes
+
+
+
+- [#2005](https://github.com/graphql-hive/gateway/pull/2005) [`3866e36`](https://github.com/graphql-hive/gateway/commit/3866e3632d93a517a67b1ed6f0deab0a20bac374) Thanks [@ardatan](https://github.com/ardatan)! - Support Rust QP as builtin in Docker image
+  
+  While running the Docker image of the gateway, you can now use Rust QP as the builtin query planner.
+  
+  ```sh
+  docker run \
+    -e HIVE_ROUTER_RUNTIME=true \
+    -p 8080:8080 \
+    -v "$(pwd)/supergraph.graphql:/gateway/supergraph.graphql" \
+    ghcr.io/graphql-hive/gateway supergraph --port=8080
+  ```
+
+## 2.4.3
+### Patch Changes
+
+- Updated dependencies [[`107dcf2`](https://github.com/graphql-hive/gateway/commit/107dcf2e5f58aaf5feb6e69d7d6917cfb4f709dd)]:
+  - @graphql-hive/gateway-runtime@2.7.0
+  - @graphql-hive/plugin-aws-sigv4@2.0.27
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.3.10
+  - @graphql-mesh/plugin-prometheus@2.1.18
+
 ## 2.4.2
 ### Patch Changes
 

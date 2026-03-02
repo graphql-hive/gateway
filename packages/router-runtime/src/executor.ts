@@ -338,7 +338,7 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (typeof current === 'object' && current !== null) {
+      if (typeof current === 'object') {
         path.push(segment.name);
         const next = (current as Record<string, any>)[segment.name];
         traverseFlattenPath(next, rest, supergraphSchema, path, callback);
@@ -375,13 +375,14 @@ function traverseFlattenPath(
         }
         return;
       }
-      if (typeof current === 'object' && current !== null) {
-        const candidate = current as EntityRepresentation;
+      if (typeof current === 'object') {
+        const value = current as EntityRepresentation;
         const typename =
-          typeof candidate.__typename === 'string'
-            ? candidate.__typename
+          typeof value.__typename === 'string'
+            ? value.__typename
             : segment.typeCondition;
         if (
+          typename &&
           entitySatisfiesTypeCondition(
             supergraphSchema,
             typename,
@@ -855,8 +856,7 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
     return [];
   }
   const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
-  const path = responseKey ? [responseKey] : undefined;
-  return path ?? [];
+  return responseKey ? [responseKey] : [];
 });
 
 function stableStringify(value: unknown): string {
@@ -1104,7 +1104,7 @@ function applyValueSetter(
   }
   const nextData = data[keyProp];
   if (nextData == null) {
-    return nextData;
+    return data;
   }
   return {
     ...data,
@@ -1270,7 +1270,7 @@ function projectSelectionSet(
         ) {
           result[responseKey] = Object.assign(
             result[responseKey],
-            mergeDeep(result[responseKey], projectedValue),
+            mergeDeep([result[responseKey], projectedValue]),
           );
         } else {
           result[responseKey] = projectedValue;

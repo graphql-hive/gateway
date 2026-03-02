@@ -11,17 +11,8 @@ import type {
   OnDelegationPlanHook,
   OnDelegationStageExecuteHook,
   OnSubgraphExecuteHook,
-  TransportEntry,
 } from '@graphql-mesh/fusion-runtime';
-import {
-  getOnSubgraphExecute,
-  getStitchingDirectivesTransformerForSubschema,
-  getTransportEntryMapUsingFusionAndFederationDirectives,
-  handleFederationSubschema,
-  handleResolveToDirectives,
-  restoreExtraDirectives,
-  UnifiedGraphManager,
-} from '@graphql-mesh/fusion-runtime';
+import { UnifiedGraphManager } from '@graphql-mesh/fusion-runtime';
 import { useHmacUpstreamSignature } from '@graphql-mesh/hmac-upstream-signature';
 import useMeshResponseCache from '@graphql-mesh/plugin-response-cache';
 import { TransportContext } from '@graphql-mesh/transport-common';
@@ -29,30 +20,16 @@ import type { KeyValueCache, OnDelegateHook } from '@graphql-mesh/types';
 import {
   dispose,
   getHeadersObj,
-  getInContextSDK,
   isDisposable,
   isUrl,
 } from '@graphql-mesh/utils';
-import { batchDelegateToSchema } from '@graphql-tools/batch-delegate';
 import {
-  defaultMergedResolver,
-  delegateToSchema,
-  type SubschemaConfig,
-} from '@graphql-tools/delegate';
-import { defaultPrintFn } from '@graphql-tools/executor-common';
-import {
-  asArray,
-  getDirectiveExtensions,
   IResolvers,
   isDocumentNode,
   isValidPath,
-  mergeDeep,
-  parseSelectionSet,
-  printSchemaWithDirectives,
   type Executor,
-  type TypeSource,
 } from '@graphql-tools/utils';
-import { schemaFromExecutor, wrapSchema } from '@graphql-tools/wrap';
+import { schemaFromExecutor } from '@graphql-tools/wrap';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import { usePersistedOperations } from '@graphql-yoga/plugin-persisted-operations';
@@ -71,7 +48,6 @@ import {
   chain,
   createYoga,
   isAsyncIterable,
-  mergeSchemas,
   useExecutionCancellation,
   useReadinessCheck,
   Plugin as YogaPlugin,
@@ -110,6 +86,7 @@ import { useUpstreamCancel } from './plugins/useUpstreamCancel';
 import { useUpstreamRetry } from './plugins/useUpstreamRetry';
 import { useUpstreamTimeout } from './plugins/useUpstreamTimeout';
 import { useWebhooks } from './plugins/useWebhooks';
+import { serveSubgraph } from './serveSubgraph';
 import type {
   GatewayConfig,
   GatewayConfigContext,
@@ -123,7 +100,6 @@ import type {
   UnifiedGraphConfig,
 } from './types';
 import {
-  checkIfDataSatisfiesSelectionSet,
   defaultExtractPersistedOperationId,
   defaultQueryText,
   getExecuteFnFromExecutor,
@@ -481,233 +457,21 @@ export function createGatewayRuntime<
       initialFetch$ = schemaFetcher.fetch();
     };
   } else if ('subgraph' in config) {
-    const subgraphInConfig = config.subgraph;
-    let getSubschemaConfig$: MaybePromise<boolean> | undefined;
-    let subschemaConfig: SubschemaConfig;
-    const transportExecutorStack = new AsyncDisposableStack();
-    function getSubschemaConfig() {
-      if (getSubschemaConfig$ == null) {
-        getSubschemaConfig$ = handleMaybePromise(
-          () => handleUnifiedGraphConfig(subgraphInConfig, configContext),
-          (newUnifiedGraph) => {
-            if (isSchema(newUnifiedGraph)) {
-              unifiedGraph = newUnifiedGraph;
-            } else if (isDocumentNode(newUnifiedGraph)) {
-              unifiedGraph = buildASTSchema(newUnifiedGraph, {
-                assumeValid: true,
-                assumeValidSDL: true,
-              });
-            } else {
-              unifiedGraph = buildSchema(newUnifiedGraph, {
-                noLocation: true,
-                assumeValid: true,
-                assumeValidSDL: true,
-              });
-            }
-            unifiedGraph = restoreExtraDirectives(unifiedGraph);
-            subschemaConfig = {
-              name: getDirectiveExtensions(unifiedGraph)?.['transport']?.[0]?.[
-                'subgraph'
-              ],
-              schema: unifiedGraph,
-            };
-            const transportEntryMap: Record<string, TransportEntry> =
-              getTransportEntryMapUsingFusionAndFederationDirectives(
-                unifiedGraph,
-                config.transportEntries,
-              );
-            const additionalTypeDefs: TypeSource[] = [];
-
-            const stitchingDirectivesTransformer =
-              getStitchingDirectivesTransformerForSubschema();
-            const onSubgraphExecute = getOnSubgraphExecute({
-              onSubgraphExecuteHooks,
-              ...(config.transports ? { transports: config.transports } : {}),
-              transportContext: {
-                ...configContext,
-                logger: LegacyLogger.from(configContext.log),
-              },
-              transportEntryMap,
-              getSubgraphSchema() {
-                return unifiedGraph;
-              },
-              transportExecutorStack,
-              instrumentation: () => instrumentation,
-            });
-            subschemaConfig = handleFederationSubschema({
-              subschemaConfig,
-              additionalTypeDefs,
-              stitchingDirectivesTransformer,
-              onSubgraphExecute,
-            });
-            // TODO: Find better alternative later
-            unifiedGraph = wrapSchema(subschemaConfig);
-            const entities = Object.keys(subschemaConfig.merge || {});
-            let entitiesDef = 'union _Entity';
-            if (entities.length) {
-              entitiesDef += ` = ${entities.join(' | ')}`;
-            }
-            const additionalResolvers: IResolvers[] = asArray(
-              'additionalResolvers' in config ? config.additionalResolvers : [],
-            ).filter((r) => r != null);
-            const queryTypeName = unifiedGraph.getQueryType()?.name || 'Query';
-            const finalTypeDefs = handleResolveToDirectives(
-              parse(/* GraphQL */ `
-                type ${queryTypeName} {
-                  ${entities.length ? '_entities(representations: [_Any!]!): [_Entity]!' : ''}
-                  _service: _Service!
-                }
-
-                scalar _Any
-                ${entities.length ? entitiesDef : ''}
-                type _Service {
-                  sdl: String
-                }
-              `),
-              additionalTypeDefs,
-              additionalResolvers,
-            );
-            additionalResolvers.push({
-              [queryTypeName]: {
-                _service() {
-                  return {
-                    sdl() {
-                      if (isSchema(newUnifiedGraph)) {
-                        return printSchemaWithDirectives(newUnifiedGraph);
-                      }
-                      if (isDocumentNode(newUnifiedGraph)) {
-                        return defaultPrintFn(newUnifiedGraph);
-                      }
-                      return newUnifiedGraph;
-                    },
-                  };
-                },
-              },
-            });
-            if (entities.length) {
-              additionalResolvers.push({
-                [queryTypeName]: {
-                  _entities(_root, args, context, info) {
-                    if (Array.isArray(args.representations)) {
-                      return args.representations.map((representation: any) => {
-                        const typeName = representation.__typename;
-                        const mergeConfig = subschemaConfig.merge?.[typeName];
-                        const entryPoints = mergeConfig?.entryPoints || [
-                          mergeConfig,
-                        ];
-                        const satisfiedEntryPoint = entryPoints.find(
-                          (entryPoint) => {
-                            if (entryPoint?.selectionSet) {
-                              const selectionSet = parseSelectionSet(
-                                entryPoint.selectionSet,
-                                {
-                                  noLocation: true,
-                                },
-                              );
-                              return checkIfDataSatisfiesSelectionSet(
-                                selectionSet,
-                                representation,
-                              );
-                            }
-                            return true;
-                          },
-                        );
-                        if (satisfiedEntryPoint) {
-                          if (satisfiedEntryPoint.key) {
-                            return handleMaybePromise(
-                              () =>
-                                batchDelegateToSchema({
-                                  schema: subschemaConfig,
-                                  ...(satisfiedEntryPoint.fieldName
-                                    ? {
-                                        fieldName:
-                                          satisfiedEntryPoint.fieldName,
-                                      }
-                                    : {}),
-                                  key: satisfiedEntryPoint.key!(representation),
-                                  ...(satisfiedEntryPoint.argsFromKeys
-                                    ? {
-                                        argsFromKeys:
-                                          satisfiedEntryPoint.argsFromKeys,
-                                      }
-                                    : {}),
-                                  ...(satisfiedEntryPoint.valuesFromResults
-                                    ? {
-                                        valuesFromResults:
-                                          satisfiedEntryPoint.valuesFromResults,
-                                      }
-                                    : {}),
-                                  context,
-                                  info,
-                                }),
-                              (res) => mergeDeep([representation, res]),
-                            );
-                          }
-                          if (satisfiedEntryPoint.args) {
-                            return handleMaybePromise(
-                              () =>
-                                delegateToSchema({
-                                  schema: subschemaConfig,
-                                  ...(satisfiedEntryPoint.fieldName
-                                    ? {
-                                        fieldName:
-                                          satisfiedEntryPoint.fieldName,
-                                      }
-                                    : {}),
-                                  args: satisfiedEntryPoint.args!(
-                                    representation,
-                                  ),
-                                  context,
-                                  info,
-                                }),
-                              (res) => mergeDeep([representation, res]),
-                            );
-                          }
-                        }
-                        return representation;
-                      });
-                    }
-                    return [];
-                  },
-                },
-              });
-            }
-            unifiedGraph = mergeSchemas({
-              assumeValid: true,
-              assumeValidSDL: true,
-              schemas: [unifiedGraph],
-              typeDefs: finalTypeDefs,
-              resolvers: additionalResolvers,
-              defaultFieldResolver: defaultMergedResolver,
-            });
-            contextBuilder = <T>(base: T) =>
-              Object.assign(
-                // @ts-expect-error - Typings are wrong in legacy Mesh
-                base,
-                getInContextSDK(
-                  unifiedGraph,
-                  // @ts-expect-error - Typings are wrong in legacy Mesh
-                  [subschemaConfig],
-                  LegacyLogger.from(configContext.log),
-                  onDelegateHooks,
-                ),
-              ) as T;
-            return true;
-          },
-        );
-      }
-      return getSubschemaConfig$;
-    }
-    getSchema = () =>
-      handleMaybePromise(getSubschemaConfig, () => unifiedGraph);
-    schemaInvalidator = () => {
-      getSubschemaConfig$ = undefined;
-    };
-    unifiedGraphPlugin = {
-      onDispose() {
-        return transportExecutorStack.disposeAsync();
+    const result = serveSubgraph(
+      config,
+      configContext,
+      () => unifiedGraph,
+      (newUnifiedGraph) => {
+        unifiedGraph = newUnifiedGraph;
       },
-    };
+      onSubgraphExecuteHooks,
+      onDelegateHooks,
+      instrumentation,
+    );
+    getSchema = result.getSchema;
+    schemaInvalidator = result.schemaInvalidator;
+    unifiedGraphPlugin = result.unifiedGraphPlugin;
+    contextBuilder = result.contextBuilder;
   } /** 'supergraph' in config */ else {
     let unifiedGraphFetcher: {
       fetch: (
@@ -1066,12 +830,12 @@ export function createGatewayRuntime<
   }
 
   if (isDisposable(pubsub)) {
-    const cacheDisposePlugin = {
+    const pubsubDisposePlugin = {
       onDispose() {
         return dispose(pubsub);
       },
     };
-    basePlugins.push(cacheDisposePlugin);
+    basePlugins.push(pubsubDisposePlugin);
   }
 
   const extraPlugins: (
@@ -1152,9 +916,11 @@ export function createGatewayRuntime<
   if (config.demandControl) {
     if ('proxy' in config && config.schema == null) {
       log.warn(
-        '`demandControl` is enabled in proxy mode without a defined schema' +
-          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.' +
+        [
+          '`demandControl` is enabled in proxy mode without a defined schema',
+          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.',
           'You have to define "schema" in the gateway config to make them available.',
+        ].join(' '),
       );
     }
     extraPlugins.push(useDemandControl(config.demandControl));
@@ -1197,8 +963,6 @@ export function createGatewayRuntime<
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
       if (!ctx.headers) {
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
         ctx['headers'] = getHeadersObj(

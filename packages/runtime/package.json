@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/gateway-runtime",
-  "version": "2.6.1",
+  "version": "2.7.1",
   "type": "module",
   "repository": {
     "type": "git",
@@ -95,7 +95,7 @@
     "graphql": "^16.12.0",
     "graphql-sse": "^2.6.0",
     "html-minifier-terser": "7.2.0",
-    "pkgroll": "2.26.2",
+    "pkgroll": "2.27.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tsx": "4.21.0"

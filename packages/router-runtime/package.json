@@ -1,6 +1,6 @@
 {
   "name": "@graphql-hive/router-runtime",
-  "version": "1.1.10",
+  "version": "1.1.13",
   "type": "module",
   "repository": {
     "type": "git",
@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "graphql": "^16.9.0",
-    "pkgroll": "2.26.2"
+    "pkgroll": "2.27.0"
   },
   "sideEffects": false
 }

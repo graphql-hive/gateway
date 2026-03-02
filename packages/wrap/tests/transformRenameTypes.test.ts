@@ -1,4 +1,6 @@
 import { execute } from '@graphql-tools/executor';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { stitchSchemas } from '@graphql-tools/stitch';
 import { RenameTypes, wrapSchema } from '@graphql-tools/wrap';
 import { propertySchema } from '@internal/testing/fixtures/schemas';
 import { GraphQLSchema, parse } from 'graphql';
@@ -128,6 +130,102 @@ describe('RenameTypes', () => {
           },
         },
       });
+    });
+  });
+
+  test('rename variables correctly', async () => {
+    const downstreamSchema = makeExecutableSchema({
+      typeDefs: /* GraphQL */ `
+        scalar DateTime
+
+        type Article {
+          id: ID!
+          title: String!
+          publishedAt: DateTime!
+        }
+
+        type Viewer {
+          articlesByDate(date: DateTime!): [Article!]!
+        }
+
+        type Query {
+          view: Viewer
+        }
+      `,
+      resolvers: {
+        DateTime: {
+          serialize: (value: Date) => value.toISOString(),
+          parseValue: (value: string) => new Date(value),
+          parseLiteral: (ast: any) => new Date(ast.value),
+        },
+        Viewer: {
+          articlesByDate: (_root, args) => {
+            return [
+              {
+                id: '1',
+                title: 'Test Article',
+                publishedAt: args.date,
+              },
+            ];
+          },
+        },
+        Query: {
+          view() {
+            return {};
+          },
+        },
+      },
+    });
+
+    const stitchedSchema = stitchSchemas({
+      subschemas: [
+        {
+          schema: downstreamSchema,
+          transforms: [
+            new RenameTypes((typeName) => {
+              // Rename DateTime scalar to Datetime (lowercase 't')
+              if (typeName === 'DateTime') return 'Datetime';
+              return typeName;
+            }),
+          ],
+        },
+      ],
+    });
+
+    const testQuery = /* GraphQL */ `
+      query GetArticles($date: Datetime!) {
+        view {
+          articlesByDate(date: $date) {
+            id
+            title
+            publishedAt
+          }
+        }
+      }
+    `;
+
+    const testVariables = {
+      date: '2024-01-15T10:00:00Z',
+    };
+
+    const result = await execute({
+      schema: stitchedSchema,
+      document: parse(testQuery),
+      variableValues: testVariables,
+    });
+
+    expect(result).toEqual({
+      data: {
+        view: {
+          articlesByDate: [
+            {
+              id: '1',
+              title: 'Test Article',
+              publishedAt: '2024-01-15T10:00:00.000Z',
+            },
+          ],
+        },
+      },
     });
   });
 });

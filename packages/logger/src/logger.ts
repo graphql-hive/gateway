@@ -1,5 +1,6 @@
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { getEnvBool, getEnvStr } from '~internal/env';
+import fastRedact from 'fast-redact';
 import fastSafeStringify from 'fast-safe-stringify';
 import format from 'quick-format-unescaped';
 import {
@@ -17,6 +18,17 @@ export type { AttributeValue, MaybeLazy } from './utils';
 export type { Attributes };
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
+
+export type RedactOptions =
+  | string[]
+  | {
+      paths: string[];
+      censor?:
+        | string
+        | ((value: unknown, path: string[]) => unknown)
+        | undefined;
+      remove?: boolean;
+    };
 
 export interface LoggerOptions {
   /**
@@ -42,6 +54,17 @@ export interface LoggerOptions {
    * @default env.LOG_JSON ? [new JSONLogWriter()] : [new ConsoleLogWriter()]
    */
   writers?: [LogWriter, ...LogWriter[]];
+  /**
+   * Paths that should have their values redacted from any log output.
+   *
+   * Can be an array of path strings or an object with `paths`, `censor`, and `remove` options.
+   *
+   * Note that using the `remove` option will set the value at the specified paths to `undefined`
+   * instead of a deleting the key. This is the more performant option.
+   *
+   * @default undefined
+   */
+  redact?: RedactOptions;
 }
 
 export class Logger implements AsyncDisposable {
@@ -50,6 +73,8 @@ export class Logger implements AsyncDisposable {
   #attrs: Attributes | undefined;
   #writers: [LogWriter, ...LogWriter[]];
   #pendingWrites?: Set<Promise<void>>;
+  #redact: ReturnType<typeof fastRedact> | undefined;
+  #redactOption: RedactOptions | undefined;
 
   constructor(opts: LoggerOptions = {}) {
     let logLevelEnv = getEnvStr('LOG_LEVEL');
@@ -69,6 +94,28 @@ export class Logger implements AsyncDisposable {
       (getEnvBool('LOG_JSON')
         ? [new JSONLogWriter()]
         : [new ConsoleLogWriter()]);
+    if (opts.redact) {
+      this.#redactOption = opts.redact;
+      const paths = Array.isArray(opts.redact)
+        ? opts.redact
+        : opts.redact.paths;
+      const censor = Array.isArray(opts.redact)
+        ? undefined
+        : opts.redact.censor;
+      const remove = Array.isArray(opts.redact)
+        ? undefined
+        : opts.redact.remove;
+      if (paths.length > 0) {
+        this.#redact = fastRedact({
+          paths,
+          censor: remove
+            ? undefined
+            : ((censor ?? '[Redacted]') as string | ((v: any) => any)),
+          serialize: false,
+          strict: false,
+        });
+      }
+    }
   }
 
   /** The prefix that's prepended to each log message. */
@@ -166,6 +213,7 @@ export class Logger implements AsyncDisposable {
         prefix: (this.#prefix || '') + prefixOrAttrs,
         attrs: this.#attrs,
         writers: this.#writers,
+        redact: this.#redactOption,
       });
     }
     return new Logger({
@@ -173,6 +221,7 @@ export class Logger implements AsyncDisposable {
       prefix: (this.#prefix || '') + (prefix || '') || undefined,
       attrs: shallowMergeAttributes(this.#attrs, prefixOrAttrs),
       writers: this.#writers,
+      redact: this.#redactOption,
     });
   }
 
@@ -213,6 +262,10 @@ export class Logger implements AsyncDisposable {
     }
 
     attrs = shallowMergeAttributes(parseAttrs(this.#attrs), parseAttrs(attrs));
+
+    if (this.#redact && attrs) {
+      this.#redact(attrs);
+    }
 
     msg =
       msg && rest.length
