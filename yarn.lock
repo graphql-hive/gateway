@@ -4337,7 +4337,7 @@ __metadata:
     "@graphql-hive/logger": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-tools/utils": "npm:^11.0.0"
-    "@nestjs/common": "npm:11.1.14"
+    "@nestjs/common": "npm:11.1.15"
     "@nestjs/core": "npm:11.1.15"
     "@nestjs/graphql": "npm:13.2.4"
     "@nestjs/platform-express": "npm:^11.1.9"
@@ -6671,9 +6671,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/common@npm:11.1.14":
-  version: 11.1.14
-  resolution: "@nestjs/common@npm:11.1.14"
+"@nestjs/common@npm:11.1.15":
+  version: 11.1.15
+  resolution: "@nestjs/common@npm:11.1.15"
   dependencies:
     file-type: "npm:21.3.0"
     iterare: "npm:1.2.1"
@@ -6690,7 +6690,7 @@ __metadata:
       optional: true
     class-validator:
       optional: true
-  checksum: 10c0/bba35fabdc350dfd362009e15a2cb6b660a53325ee6c1863f04667df0201b51b334226ace2985505969727aaf5b494396dd33f682ce75d0f3b1cab1d206a11e9
+  checksum: 10c0/833fc5a556be5bc81af6cefe5d5e396694d6d0c7ead7d8feb1c7375f11a468dfd63deccc301b5981a30b518207af0ea8967163f95853f41e31163d5c4a7ef7c7
   languageName: node
   linkType: hard
 
@@ -9805,16 +9805,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.3.0
-  resolution: "@types/node@npm:25.3.0"
-  dependencies:
-    undici-types: "npm:~7.18.0"
-  checksum: 10c0/7b2b18c9d68047157367fc2f786d4f166d22dc0ad9f82331ca02fb16f2f391854123dbe604dcb938cda119c87051e4bb71dcb9ece44a579f483a6f96d4bd41de
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.3.3":
+"@types/node@npm:*, @types/node@npm:25.3.3, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.3.3
   resolution: "@types/node@npm:25.3.3"
   dependencies:
