@@ -114,13 +114,13 @@ it('should include prefix in child loggers', () => {
 });
 
 it('should include attributes and prefix in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' }, 'prefix ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
