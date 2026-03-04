@@ -126,17 +126,22 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             callParams.name,
             callParams.arguments || {},
           );
+          const callResult: Record<string, unknown> = {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+          // MCP spec: when a tool has outputSchema, the response must include structuredContent
+          if (tool.outputSchema) {
+            callResult.structuredContent = result;
+          }
           response = {
             jsonrpc: '2.0',
             id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify(result, null, 2),
-                },
-              ],
-            },
+            result: callResult,
           };
         } catch (error) {
           response = {
