@@ -1,4 +1,6 @@
 import { createServer } from 'node:http'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createYoga, createSchema } from 'graphql-yoga'
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
 import { useMCP } from '@graphql-hive/plugin-mcp'
@@ -19,31 +21,41 @@ const schema = createSchema({
         "City name or postal code"
         location: String!
       ): Weather!
+
       "Get weather forecast for upcoming days"
       forecast(
         "City name or postal code"
         location: String!
+
         "Number of days to forecast (default 5)"
         days: Int = 5
       ): [ForecastDay!]!
     }
+
     type Weather {
       "Temperature in Fahrenheit"
       temperature: Float!
+
       "Current weather conditions"
       conditions: String!
+
       "Humidity percentage"
       humidity: Int!
+
       "Location name"
       location: String!
     }
+
     type ForecastDay {
       "Date in YYYY-MM-DD format"
       date: String!
+
       "High temperature in Fahrenheit"
       high: Float!
+
       "Low temperature in Fahrenheit"
       low: Float!
+      
       "Expected weather conditions"
       conditions: String!
     }
@@ -85,16 +97,23 @@ const mcpPlugin = useMCP({
   name: 'weather-api',
   version: '1.0.0',
   path: '/mcp',
-  operationsPath: './operations/weather.graphql',
+  // .graphql files containing named operations and @mcpTool directives
+  operationsPath: join(dirname(fileURLToPath(import.meta.url)), 'operations/weather.graphql'),
   tools: [
+    // File-based source: references a named operation from operationsPath
     {
       name: 'get_weather',
-      source: { type: 'graphql', operationName: 'GetWeather', operationType: 'query' },
+      source: { 
+        type: 'graphql', 
+        operationName: 'GetWeather', 
+        operationType: 'query',
+      },
       tool: {
         title: 'Current Weather',
         description: 'Get the current weather for a city',
       },
       input: {
+        // Field-level input schema overrides (merged with auto-derived schema)
         schema: {
           properties: {
             location: { description: 'City name, e.g. "New York", "London", "Tokyo"' },
@@ -102,9 +121,30 @@ const mcpPlugin = useMCP({
         },
       },
     },
+    // File-based source: no overrides, description auto-derived from GraphQL schema
     {
       name: 'get_forecast',
-      source: { type: 'graphql', operationName: 'GetForecast', operationType: 'query' },
+      source: { 
+        type: 'graphql', 
+        operationName: 'GetForecast', 
+        operationType: 'query', 
+      },
+    },
+    // Inline source: query defined directly in config (no operations file needed)
+    {
+      name: 'get_conditions',
+      source: {
+        type: 'inline',
+        query: `query GetConditions($location: String!) {
+          weather(location: $location) { 
+            conditions 
+          }
+        }`,
+      },
+      tool: {
+        title: 'Weather Conditions',
+        description: 'Get just the weather conditions for a city',
+      },
     },
   ],
 })
