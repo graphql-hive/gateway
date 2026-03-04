@@ -13,7 +13,7 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
 }
 
 it('should write logs with levels, message and attributes', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   const err = stableError(new Error('Woah!'));
 
@@ -21,7 +21,7 @@ it('should write logs with levels, message and attributes', () => {
   log.log('info', { hello: 'world', err }, 'Hello, world!');
   log.log('info', '2nd Hello, world!');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -77,13 +77,13 @@ it('should write logs only if level is higher than set', () => {
 });
 
 it('should include attributes in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' });
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -97,13 +97,13 @@ it('should include attributes in child loggers', () => {
 });
 
 it('should include prefix in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child('prefix ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -134,7 +134,7 @@ it('should include attributes and prefix in child loggers', () => {
 });
 
 it('should have child inherit parent log level', () => {
-  let [log, writter] = createTLogger({ level: 'warn' });
+  let [log, writer] = createTLogger({ level: 'warn' });
 
   log = log.child({ par: 'ent' });
 
@@ -142,7 +142,7 @@ it('should have child inherit parent log level', () => {
   log.info('still no hello');
   log.warn('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -156,14 +156,14 @@ it('should have child inherit parent log level', () => {
 });
 
 it('should include attributes and prefix in nested child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' }, 'prefix ');
   log = log.child({ par2: 'ent2' }, 'prefix2 ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -178,7 +178,7 @@ it('should include attributes and prefix in nested child loggers', () => {
 });
 
 it('should unwrap lazy attribute values', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(
     () => ({
@@ -190,7 +190,7 @@ it('should unwrap lazy attribute values', () => {
     'hello',
   );
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -207,13 +207,13 @@ it('should unwrap lazy attribute values', () => {
 });
 
 it('should not log lazy attributes returning nothing', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(() => undefined, 'hello');
   log.info(() => null, 'wor');
   log.info(() => void 0, 'ld');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -232,7 +232,7 @@ it('should not log lazy attributes returning nothing', () => {
 });
 
 it('should not unwrap lazy attribute values', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(
     {
@@ -245,7 +245,7 @@ it('should not unwrap lazy attribute values', () => {
     'hello',
   );
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
