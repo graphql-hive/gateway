@@ -48,7 +48,7 @@ it('should write logs with levels, message and attributes', () => {
 });
 
 it('should write logs only if level is higher than set', () => {
-  const [log, writter] = createTLogger({
+  const [log, writer] = createTLogger({
     level: 'info',
   });
 
@@ -58,7 +58,7 @@ it('should write logs only if level is higher than set', () => {
   log.warn('Warn');
   log.error('Error');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
