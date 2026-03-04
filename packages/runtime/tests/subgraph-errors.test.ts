@@ -32,7 +32,6 @@ describe('Subgraph Errors', () => {
     });
     await using upstreamYoga = createYoga({
       schema: upstreamSchema,
-      logging: false,
     });
     await using upstreamServer = await createDisposableServer(upstreamYoga);
     const supergraph = await composeLocalSchemasWithApollo([
@@ -44,7 +43,6 @@ describe('Subgraph Errors', () => {
     ]);
     await using gw = createGatewayRuntime({
       supergraph,
-      logging: false,
     });
     const query = /* GraphQL */ `
       query hello {
