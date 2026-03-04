@@ -4259,7 +4259,6 @@ __metadata:
     adm-zip: "npm:^0.5.15"
     bun: "npm:^1.3.2"
     commander: "npm:^14.0.2"
-    dotenv: "npm:^17.2.3"
     graphql: "npm:^16.12.0"
     graphql-ws: "npm:^6.0.6"
     graphql-yoga: "npm:^5.16.2"
@@ -13105,7 +13104,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:^17.2.3, dotenv@npm:^17.3.1":
+"dotenv@npm:^17.3.1":
   version: 17.3.1
   resolution: "dotenv@npm:17.3.1"
   checksum: 10c0/c78e0c2d5a549c751e544cc60e2b95e7cb67e0c551f42e094d161c6b297aa44b630a3c2dcacf5569e529a6c2a6b84e2ab9be8d37b299d425df5a18b81ce4a35f

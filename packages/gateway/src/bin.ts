@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import 'dotenv/config'; // inject dotenv options to process.env
-
 import module from 'node:module';
 import type { InitializeData } from '@graphql-hive/importer/hooks';
 import { Logger } from '@graphql-hive/logger';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
+
+// inject dotenv options to process.env
+process.loadEnvFile();
 
 globalThis.__VERSION__ = 'dev';
 
