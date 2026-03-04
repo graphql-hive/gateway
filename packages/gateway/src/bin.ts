@@ -5,7 +5,7 @@ import { Logger } from '@graphql-hive/logger';
 import { enableModuleCachingIfPossible, handleNodeWarnings, run } from './cli';
 
 // inject dotenv options to process.env
-process.loadEnvFile();
+process.loadEnvFile?.();
 
 globalThis.__VERSION__ = 'dev';
 

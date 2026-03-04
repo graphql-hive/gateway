@@ -2,8 +2,6 @@ import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
-process.loadEnvFile(join(__dirname, '.env'));
-
 const { gateway } = createTenv(__dirname);
 
 const APOLLO_KEY =
