@@ -1,8 +1,13 @@
 import { createServer } from 'node:http'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { createYoga, createSchema } from 'graphql-yoga'
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime'
-import { useMCP, createLangfuseProvider } from '@graphql-hive/plugin-mcp'
-import Langfuse from 'langfuse'
+import { useMCP } from '@graphql-hive/plugin-mcp'
+import type { MCPConfig } from '@graphql-hive/plugin-mcp'
+// @ts-expect-error no type declarations
+import yaml from 'js-yaml'
 
 const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
@@ -15,15 +20,18 @@ const schema = createSchema({
     type Query {
       "Get current weather data for a location"
       weather(location: String!): Weather!
+
       "Get weather forecast for upcoming days"
       forecast(location: String!, days: Int = 5): [ForecastDay!]!
     }
+
     type Weather {
       temperature: Float!
       conditions: String!
       humidity: Int!
       location: String!
     }
+
     type ForecastDay {
       date: String!
       high: Float!
@@ -63,64 +71,9 @@ subgraphServer.listen(4001, () => {
   console.log('Subgraph running at http://localhost:4001/graphql')
 })
 
-const langfuse = new Langfuse({
-  secretKey: process.env.LANGFUSE_SECRET_KEY,
-  publicKey: process.env.LANGFUSE_PUBLIC_KEY,
-  baseUrl: process.env.LANGFUSE_BASE_URL,
-})
-
-const mcpPlugin = useMCP({
-  name: 'weather-api',
-  version: '1.0.0',
-  path: '/mcp',
-  tools: [
-    {
-      name: 'get_weather',
-      source: {
-        type: 'inline',
-        query: `query GetWeather($location: String!) {
-          weather(location: $location) {
-            temperature
-            conditions
-            humidity
-            location
-          }
-        }`,
-      },
-      tool: {
-        title: 'Current Weather',
-        descriptionProvider: {
-          type: 'langfuse',
-          prompt: 'get_weather_description',
-        },
-      },
-    },
-    {
-      name: 'get_forecast',
-      source: {
-        type: 'inline',
-        query: `query GetForecast($location: String!, $days: Int) {
-          forecast(location: $location, days: $days) {
-            date
-            high
-            low
-            conditions
-          }
-        }`,
-      },
-      tool: {
-        title: 'Weather Forecast',
-        descriptionProvider: {
-          type: 'langfuse',
-          prompt: 'get_forecast_description',
-        },
-      },
-    },
-  ],
-  providers: {
-    langfuse: createLangfuseProvider(langfuse),
-  },
-})
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const mcpConfig = yaml.load(readFileSync(join(__dirname, 'mcp.yaml'), 'utf-8')) as MCPConfig
+const mcpPlugin = useMCP(mcpConfig)
 
 const gateway = createGatewayRuntime({
   proxy: {
