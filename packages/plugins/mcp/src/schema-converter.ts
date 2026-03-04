@@ -174,7 +174,21 @@ export function selectionSetToOutputSchema(
     );
   }
 
-  return outputTypeToSchema(rootField.type, rootSelection.selectionSet, schema);
+  const fieldSchema = outputTypeToSchema(rootField.type, rootSelection.selectionSet, schema);
+
+  // Wrap in { data: { fieldName: ... } } to match the actual GraphQL response shape
+  // and ensure the top-level type is always "object" (required by some MCP clients)
+  return {
+    type: 'object',
+    properties: {
+      data: {
+        type: 'object',
+        properties: {
+          [rootSelection.name.value]: fieldSchema,
+        },
+      },
+    },
+  };
 }
 
 function outputTypeToSchema(

@@ -100,6 +100,47 @@ describe('createMCPHandler', () => {
     expect(body.result.content[0].type).toBe('text');
   });
 
+  it('includes structuredContent when tool has outputSchema', async () => {
+    const schemaWithOutput = buildSchema(`
+      type Query { getWeather(location: String!): Weather }
+      type Weather { temperature: Float! }
+    `);
+    const registryWithOutput = new ToolRegistry(
+      [
+        {
+          name: 'get_weather',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
+      schemaWithOutput,
+    );
+    const executeResult = { data: { getWeather: { temperature: 72 } } };
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: registryWithOutput,
+      execute: vi.fn().mockResolvedValue(executeResult),
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 5,
+        method: 'tools/call',
+        params: { name: 'get_weather', arguments: { location: 'NYC' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.structuredContent).toEqual(executeResult);
+    expect(body.result.content[0].type).toBe('text');
+  });
+
   it('returns error for unknown tool', async () => {
     const handler = createMCPHandler(options);
 
