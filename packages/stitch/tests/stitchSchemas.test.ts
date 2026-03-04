@@ -594,7 +594,7 @@ for (const {
         expect(stitchedResult).toEqual(propertyResult);
       });
 
-      test('works with custom scalars', async () => {
+      test('works with custom scalars in scalar schema', async () => {
         const scalarResult = await graphql({
           schema: scalarSchema,
           source: /* GraphQL */ `
