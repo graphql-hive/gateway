@@ -1,11 +1,8 @@
 import { join } from 'path';
 import { createTenv } from '@internal/e2e';
-import { config } from 'dotenv';
 import { expect, it } from 'vitest';
 
-config({
-  path: join(__dirname, '.env'),
-});
+process.loadEnvFile(join(__dirname, '.env'));
 
 const { gateway } = createTenv(__dirname);
 
