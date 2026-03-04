@@ -2725,10 +2725,6 @@ bookingById(id: "b1") {
         expect(stitchedSchema.getType('LinkType')?.description).toBe(
           'A new type linking the Property type.',
         );
-
-        expect(stitchedSchema.getType('LinkType')?.description).toBe(
-          'A new type linking the Property type.',
-        );
       });
 
       test('should parse descriptions on new fields', () => {
