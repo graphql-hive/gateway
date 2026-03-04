@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
 
