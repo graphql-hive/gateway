@@ -1,3 +1,4 @@
+import { config } from 'dotenv'
 import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +9,8 @@ import { useMCP } from '@graphql-hive/plugin-mcp'
 import type { MCPConfig } from '@graphql-hive/plugin-mcp'
 // @ts-expect-error no type declarations
 import yaml from 'js-yaml'
+
+config({ path: new URL('.env', import.meta.url).pathname })
 
 const weatherData: Record<string, { temperature: number; conditions: string; humidity: number }> = {
   'new york': { temperature: 72, conditions: 'Partly Cloudy', humidity: 65 },
