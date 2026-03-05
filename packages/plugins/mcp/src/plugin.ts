@@ -125,9 +125,12 @@ export function resolveToolConfigs(
     if (source.type === 'inline') {
       query = source.query;
     } else {
-      const allOps = parsedOps || [];
+      const opsPool =
+        source.file
+          ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'))
+          : parsedOps || [];
       const op = resolveOperation(
-        allOps,
+        opsPool,
         source.operationName,
         source.operationType,
       );
@@ -192,14 +195,6 @@ function loadOperationsSource(config: MCPConfig): string | undefined {
           `Cannot read operations from "${config.operationsPath}"`,
         );
       }
-    }
-  }
-
-  // Load per-tool source files
-  for (const tool of config.tools) {
-    if (tool.source.type === 'graphql' && tool.source.file) {
-      const fileContent = readFileSync(resolve(tool.source.file), 'utf-8');
-      operationsSource = (operationsSource || '') + '\n' + fileContent;
     }
   }
 
