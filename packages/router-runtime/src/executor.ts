@@ -788,9 +788,8 @@ function prepareBatchAliasStates(
     const representationOrder: number[] = [];
 
     // Lazily initialize deduplication structures per variable name
-    let dedupedRepresentations = variablesForFetch[
-      aliasSpec.representationsVariableName
-    ];
+    let dedupedRepresentations =
+      variablesForFetch[aliasSpec.representationsVariableName];
     let representationKeyToIndex = representationKeyToIndexByVar.get(
       aliasSpec.representationsVariableName,
     );

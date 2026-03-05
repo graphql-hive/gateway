@@ -1,4 +1,7 @@
-import type { BatchFetchNode, QueryPlan } from '@graphql-hive/router-query-planner';
+import type {
+  BatchFetchNode,
+  QueryPlan,
+} from '@graphql-hive/router-query-planner';
 import type { ExecutionResult } from '@graphql-tools/utils';
 import { buildSchema, parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
@@ -156,7 +159,7 @@ describe('BatchFetch plan node', () => {
       },
     });
 
-    expect(onSubgraphExecute).toHaveBeenCalledOnce();
+    expect(onSubgraphExecute).toHaveBeenCalledTimes(1);
     expect(onSubgraphExecute).toHaveBeenCalledWith(
       'inventory',
       expect.objectContaining({
