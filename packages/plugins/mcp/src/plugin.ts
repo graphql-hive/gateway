@@ -72,6 +72,8 @@ export interface MCPConfig {
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
   disableGraphQLEndpoint?: boolean;
+  /** Include text content alongside structuredContent for clients that don't support it */
+  includeContentFallback?: boolean;
 }
 
 export interface ResolvedToolConfig {
@@ -340,6 +342,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           registry,
+          includeContentFallback: config.includeContentFallback,
           resolveToolDescriptions:
             providerToolConfigs.length > 0
               ? async () => {
