@@ -1,18 +1,15 @@
+import type { Langfuse } from 'langfuse';
 import type {
   DescriptionProvider,
   DescriptionProviderConfig,
 } from '../description-provider.js';
 
-export interface LangfuseClient {
-  getPrompt(
-    name: string,
-    version?: number,
-    options?: { label?: string },
-  ): Promise<{ compile(): string }>;
-}
+export type LangfuseGetPromptOptions = NonNullable<
+  Parameters<Langfuse['getPrompt']>[2]
+>;
 
 export function createLangfuseProvider(
-  client: LangfuseClient,
+  client: Langfuse,
 ): DescriptionProvider {
   return {
     async fetchDescription(
@@ -26,10 +23,8 @@ export function createLangfuseProvider(
         );
       }
       const version = config['version'] as number | undefined;
-      const label = config['label'] as string | undefined;
-
-      const options = label !== undefined ? { label } : undefined;
-      const prompt = await client.getPrompt(promptName, version, options);
+      const options = config['options'] as LangfuseGetPromptOptions | undefined;
+      const prompt = await client.getPrompt(promptName, version, options as any);
       return prompt.compile();
     },
   };
