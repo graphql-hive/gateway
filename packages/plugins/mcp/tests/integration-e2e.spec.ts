@@ -203,7 +203,7 @@ describe('MCP E2E', () => {
     expect(body.result.content[0].type).toBe('text');
 
     const data = JSON.parse(body.result.content[0].text);
-    expect(data.data.weather).toMatchObject({
+    expect(data.weather).toMatchObject({
       temperature: 12.5,
       conditions: 'Cloudy',
       humidity: 65,
@@ -220,7 +220,7 @@ describe('MCP E2E', () => {
     const body = await res.json();
 
     const data = JSON.parse(body.result.content[0].text);
-    expect(data.data.cities[0]).toMatchObject({
+    expect(data.cities[0]).toMatchObject({
       name: 'New York City',
       country: 'US',
       population: 100000,
@@ -455,7 +455,7 @@ describe('MCP E2E', () => {
 
       expect(body.result.isError).toBeUndefined();
       const data = JSON.parse(body.result.content[0].text);
-      expect(data.data.weather).toMatchObject({
+      expect(data.weather).toMatchObject({
         temperature: 12.5,
         conditions: 'Cloudy',
         humidity: 65,
@@ -524,7 +524,7 @@ describe('MCP E2E', () => {
       });
       const callBody = await callRes.json();
       const data = JSON.parse(callBody.result.content[0].text);
-      expect(data.data.weather.temperature).toBe(12.5);
+      expect(data.weather.temperature).toBe(12.5);
     } finally {
       await directiveGateway[Symbol.asyncDispose]?.();
     }

@@ -44,7 +44,7 @@ describe('createGraphQLExecutor', () => {
         }),
       }),
     );
-    expect(result).toEqual({ data: { hello: 'World' } });
+    expect(result).toEqual({ hello: 'World' });
   });
 
   it('throws for unknown tool', async () => {

@@ -31,6 +31,18 @@ export function createGraphQLExecutor(
       }),
     });
 
-    return response.json();
+    const body = (await response.json()) as {
+      data?: unknown;
+      errors?: unknown[];
+    };
+
+    if (body.errors?.length) {
+      throw new Error(
+        (body.errors[0] as { message?: string })?.message ||
+          'GraphQL execution error',
+      );
+    }
+
+    return body.data;
   };
 }
