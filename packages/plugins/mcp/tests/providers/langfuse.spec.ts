@@ -44,7 +44,7 @@ describe('Langfuse provider', () => {
     );
   });
 
-  it('passes label in options', async () => {
+  it('passes options to getPrompt', async () => {
     const mockClient = {
       getPrompt: vi.fn(async () => ({
         compile: () => 'labeled description',
@@ -55,11 +55,12 @@ describe('Langfuse provider', () => {
     await provider.fetchDescription('tool', {
       type: 'langfuse',
       prompt: 'my_prompt',
-      label: 'production',
+      options: { label: 'production', cacheTtlSeconds: 5 },
     });
 
     expect(mockClient.getPrompt).toHaveBeenCalledWith('my_prompt', undefined, {
       label: 'production',
+      cacheTtlSeconds: 5,
     });
   });
 

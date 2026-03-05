@@ -1,7 +1,7 @@
 import type { ResolvedToolConfig } from './plugin.js';
 
 export interface DescriptionProviderConfig {
-  type: string;
+  type: string & {};
   [key: string]: unknown;
 }
 
@@ -30,6 +30,7 @@ function isDescriptionProvider(value: unknown): value is DescriptionProvider {
 
 async function resolveBuiltinProvider(
   name: string,
+  options: Record<string, unknown>,
 ): Promise<DescriptionProvider> {
   if (name === 'langfuse') {
     let Langfuse: any;
@@ -55,7 +56,7 @@ async function resolveBuiltinProvider(
     }
     const { createLangfuseProvider } = await import('./providers/langfuse.js');
     try {
-      return createLangfuseProvider(new Langfuse());
+      return createLangfuseProvider(new Langfuse(options));
     } catch (err) {
       throw new Error(
         `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASE_URL env vars are set. ` +
@@ -71,14 +72,15 @@ async function resolveBuiltinProvider(
 }
 
 export async function resolveProviders(
-  providers: Record<string, DescriptionProvider | Record<string, unknown>>,
+  providers: Record<string, DescriptionProvider | Record<string, unknown> | undefined>,
 ): Promise<ProviderRegistry> {
   const registry: ProviderRegistry = {};
 
   for (const [name, entry] of Object.entries(providers)) {
+    if (!entry) continue;
     registry[name] = isDescriptionProvider(entry)
       ? entry
-      : await resolveBuiltinProvider(name);
+      : await resolveBuiltinProvider(name, entry as Record<string, unknown>);
   }
 
   return registry;
