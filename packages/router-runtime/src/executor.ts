@@ -1,5 +1,6 @@
 import { documentStringMap } from '@envelop/core';
 import type {
+  BatchFetchNode,
   FetchNodePathSegment,
   FetchRewrite,
   FlattenNodePathSegment,
@@ -244,6 +245,29 @@ interface FlattenPreparedContext {
   errorPath?: string[];
 }
 
+interface BatchAliasPreparedPath {
+  entityRefs: EntityRepresentation[];
+  entityPaths: (string | number)[][];
+  representationIndexByTarget: number[];
+}
+
+interface BatchAliasPreparedContext {
+  alias: string;
+  pathStates: BatchAliasPreparedPath[];
+  entityPathsByRepresentationIndex: Map<number, (string | number)[][]>;
+  outputRewrites?: FetchRewrite[];
+}
+
+interface BatchVariablePreparedContext {
+  representations: EntityRepresentation[];
+  identityToEntityIndex: Map<string, number>;
+}
+
+interface BatchPreparedContext {
+  byAlias: Map<string, BatchAliasPreparedContext>;
+  representationsByVariableName: Map<string, BatchVariablePreparedContext>;
+}
+
 interface ExecutionState {
   representations?: EntityRepresentation[];
   errorPath?: (string | number)[];
@@ -486,6 +510,297 @@ function prepareFlattenContext(
   };
 }
 
+function prepareBatchFetchContext(
+  batchFetchNode: BatchFetchNode,
+  executionContext: QueryPlanExecutionContext,
+): BatchPreparedContext | null {
+  const byAlias = new Map<string, BatchAliasPreparedContext>();
+  const representationsByVariableName = new Map<
+    string,
+    BatchVariablePreparedContext
+  >();
+
+  for (const alias of batchFetchNode.entityBatch.aliases) {
+    const requires = alias.requires;
+    if (!requires || requires.length === 0) {
+      continue;
+    }
+
+    const pathStates: BatchAliasPreparedPath[] = [];
+    const entityPathsByRepresentationIndex = new Map<
+      number,
+      (string | number)[][]
+    >();
+    const representationsVariableName = alias.representationsVariableName;
+    let variableBatchState = representationsByVariableName.get(
+      representationsVariableName,
+    );
+    if (!variableBatchState) {
+      variableBatchState = {
+        representations: [],
+        identityToEntityIndex: new Map<string, number>(),
+      };
+      representationsByVariableName.set(
+        representationsVariableName,
+        variableBatchState,
+      );
+    }
+
+    for (const path of alias.paths) {
+      const normalizedPath = normalizeFlattenNodePath(path);
+      const entityLocations = collectFlattenEntities(
+        executionContext.data,
+        normalizedPath,
+        executionContext.supergraphSchema,
+      );
+      const entityRefs: EntityRepresentation[] = [];
+      const entityPaths: (string | number)[][] = [];
+      const representationIndexByTarget: number[] = [];
+
+      for (const location of entityLocations) {
+        const entityRef = location.entity;
+        if (!isEntityRepresentation(entityRef)) {
+          continue;
+        }
+
+        let representation = projectRequires(
+          requires,
+          entityRef,
+          executionContext.supergraphSchema,
+        );
+        if (!representation || Array.isArray(representation)) {
+          continue;
+        }
+        representation.__typename ??= entityRef.__typename;
+
+        if (alias.inputRewrites?.length) {
+          representation = applyInputRewrites(
+            representation,
+            alias.inputRewrites,
+            executionContext.supergraphSchema,
+          );
+        }
+
+        const identity = stableStringify(representation);
+        let dedupIndex = variableBatchState.identityToEntityIndex.get(identity);
+        if (dedupIndex == null) {
+          dedupIndex = variableBatchState.representations.length;
+          variableBatchState.identityToEntityIndex.set(identity, dedupIndex);
+          variableBatchState.representations.push(representation);
+        }
+
+        entityRefs.push(entityRef);
+        entityPaths.push(location.path);
+        representationIndexByTarget.push(dedupIndex);
+
+        const pathsForRepresentation =
+          entityPathsByRepresentationIndex.get(dedupIndex) ?? [];
+        pathsForRepresentation.push(location.path);
+        entityPathsByRepresentationIndex.set(
+          dedupIndex,
+          pathsForRepresentation,
+        );
+      }
+
+      pathStates.push({
+        entityRefs,
+        entityPaths,
+        representationIndexByTarget,
+      });
+    }
+
+    byAlias.set(alias.alias, {
+      alias: alias.alias,
+      pathStates,
+      entityPathsByRepresentationIndex,
+      outputRewrites: alias.outputRewrites,
+    });
+  }
+
+  const hasRepresentations = Array.from(
+    representationsByVariableName.values(),
+  ).some((state) => state.representations.length > 0);
+  if (!hasRepresentations) {
+    return null;
+  }
+
+  return {
+    byAlias,
+    representationsByVariableName,
+  };
+}
+
+function buildBatchFetchVariables(
+  batchContext: BatchPreparedContext,
+  selectedVariables: Record<string, any> | undefined,
+): Record<string, any> | undefined {
+  let variablesForFetch: Record<string, any> | undefined;
+  if (selectedVariables) {
+    variablesForFetch = { ...selectedVariables };
+  }
+  for (const [
+    variableName,
+    state,
+  ] of batchContext.representationsByVariableName.entries()) {
+    if (!state.representations.length) {
+      continue;
+    }
+    const targetVariables =
+      variablesForFetch ?? (Object.create(null) as Record<string, any>);
+    if (!variablesForFetch) {
+      variablesForFetch = targetVariables;
+    }
+    targetVariables[variableName] = state.representations;
+  }
+  return variablesForFetch;
+}
+
+function applyBatchAliasEntities(
+  returnedEntities: EntityRepresentation[],
+  aliasContext: BatchAliasPreparedContext,
+) {
+  for (const pathContext of aliasContext.pathStates) {
+    const { entityRefs, representationIndexByTarget } = pathContext;
+    for (let index = 0; index < entityRefs.length; index++) {
+      const target = entityRefs[index];
+      const dedupIndex = representationIndexByTarget[index];
+      if (dedupIndex == null) {
+        continue;
+      }
+      const entity = returnedEntities[dedupIndex];
+      if (!target || !entity) {
+        continue;
+      }
+      Object.assign(target, mergeDeep([target, entity], false, true, true));
+    }
+  }
+}
+
+function normalizeBatchFetchErrors(
+  errors: readonly GraphQLError[],
+  batchContext: BatchPreparedContext,
+): GraphQLError[] {
+  if (!errors.length) {
+    return [];
+  }
+
+  const relocated: GraphQLError[] = [];
+  for (const error of errors) {
+    const errorPath = error.path;
+    if (!errorPath || errorPath.length === 0) {
+      relocated.push(error);
+      continue;
+    }
+
+    const aliasName = errorPath[0];
+    if (typeof aliasName !== 'string') {
+      relocated.push(error);
+      continue;
+    }
+
+    const aliasContext = batchContext.byAlias.get(aliasName);
+    if (!aliasContext) {
+      relocated.push(error);
+      continue;
+    }
+
+    const entityIndex = errorPath[1];
+    if (typeof entityIndex !== 'number') {
+      relocated.push(error);
+      continue;
+    }
+
+    const mappedPaths =
+      aliasContext.entityPathsByRepresentationIndex.get(entityIndex);
+    if (!mappedPaths?.length) {
+      relocated.push(error);
+      continue;
+    }
+
+    const tail = errorPath.slice(2);
+    for (const mappedPath of mappedPaths) {
+      relocated.push(relocatedError(error, [...mappedPath, ...tail]));
+    }
+  }
+
+  return relocated;
+}
+
+function executeBatchFetchPlanNode(
+  batchFetchNode: BatchFetchNode,
+  executionContext: QueryPlanExecutionContext,
+  batchContext: BatchPreparedContext,
+): MaybePromise<any> {
+  const selectedVariables = selectFetchVariables(
+    executionContext.variableValues,
+    batchFetchNode.variableUsages,
+  );
+
+  const variablesForFetch = buildBatchFetchVariables(
+    batchContext,
+    selectedVariables,
+  );
+
+  const handleBatchResult = (
+    fetchResult: MaybeAsyncIterable<ExecutionResult<any, any>>,
+  ): MaybeAsyncIterable<unknown> | void => {
+    if (isAsyncIterable(fetchResult)) {
+      return mapAsyncIterator(fetchResult, handleBatchResult);
+    }
+
+    if (fetchResult.errors?.length) {
+      executionContext.errors.push(
+        ...normalizeBatchFetchErrors(fetchResult.errors, batchContext),
+      );
+    }
+
+    const responseData = fetchResult.data;
+    if (!responseData || typeof responseData !== 'object') {
+      return;
+    }
+
+    for (const [aliasName, aliasContext] of batchContext.byAlias.entries()) {
+      let aliasData = (responseData as Record<string, any>)[aliasName];
+      if (!aliasData) {
+        continue;
+      }
+      if (aliasContext.outputRewrites?.length) {
+        aliasData = applyOutputRewrites(
+          aliasData,
+          aliasContext.outputRewrites,
+          executionContext.supergraphSchema,
+        );
+      }
+      if (Array.isArray(aliasData)) {
+        applyBatchAliasEntities(
+          aliasData as EntityRepresentation[],
+          aliasContext,
+        );
+      }
+    }
+    return;
+  };
+
+  return handleMaybePromise(
+    () =>
+      executionContext.onSubgraphExecute(batchFetchNode.serviceName, {
+        document: getDocumentNodeOfFetchingNode(batchFetchNode),
+        variables: variablesForFetch,
+        operationType:
+          (batchFetchNode.operationKind as OperationTypeNode | undefined) ??
+          executionContext.operation.operation,
+        operationName: batchFetchNode.operationName,
+        extensions: executionContext.executionRequest.extensions,
+        rootValue: executionContext.executionRequest.rootValue,
+        context: executionContext.executionRequest.context,
+        subgraphName: batchFetchNode.serviceName,
+        info: executionContext.executionRequest.info,
+        signal: executionContext.executionRequest.signal,
+      }),
+    handleBatchResult,
+  );
+}
+
 function executeFetchPlanNode(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
   executionContext: QueryPlanExecutionContext,
@@ -640,7 +955,7 @@ function executeFetchPlanNode(
   return handleMaybePromise(
     () =>
       executionContext.onSubgraphExecute(fetchNode.serviceName, {
-        document: getDocumentNodeOfFetchNode(fetchNode),
+        document: getDocumentNodeOfFetchingNode(fetchNode),
         variables: variablesForFetch,
         operationType:
           (fetchNode.operationKind as OperationTypeNode | undefined) ??
@@ -829,19 +1144,21 @@ function applyOutputRewrites(
   return current;
 }
 
-const getDocumentNodeOfFetchNode = memoize1(function getDocumentNodeOfFetchNode(
-  fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
-): DocumentNode {
-  const doc = parse(fetchNode.operation, { noLocation: true });
-  // Set this so that `getDocumentString` picks it up from cache
-  documentStringMap.set(doc, fetchNode.operation);
-  return doc;
-});
+const getDocumentNodeOfFetchingNode = memoize1(
+  function getDocumentNodeOfFetchNode(
+    fetchingNode: Extract<PlanNode, { kind: 'Fetch' } | { kind: 'BatchFetch' }>,
+  ): DocumentNode {
+    const doc = parse(fetchingNode.operation, { noLocation: true });
+    // Set this so that `getDocumentString` picks it up from cache
+    documentStringMap.set(doc, fetchingNode.operation);
+    return doc;
+  },
+);
 
 const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
   fetchNode: Extract<PlanNode, { kind: 'Fetch' }>,
 ): (string | number)[] {
-  const document = getDocumentNodeOfFetchNode(fetchNode);
+  const document = getDocumentNodeOfFetchingNode(fetchNode);
   const operationAst = getOperationASTFromDocument(
     document,
     fetchNode.operationName,
@@ -945,6 +1262,17 @@ function executePlanNode(
     }
     case 'Fetch': {
       return executeFetchPlanNode(planNode, executionContext, state);
+    }
+    case 'BatchFetch': {
+      const batchContext = prepareBatchFetchContext(planNode, executionContext);
+      if (!batchContext) {
+        return;
+      }
+      return executeBatchFetchPlanNode(
+        planNode,
+        executionContext,
+        batchContext,
+      );
     }
     case 'Condition': {
       const conditionValue =
