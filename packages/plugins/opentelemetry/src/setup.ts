@@ -349,6 +349,7 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
       accessToken: options.accessToken,
       endpoint: options.endpoint,
       batching: options.batching,
+      logger: log,
     };
 
     logAttributes['endpoint'] = options.endpoint;

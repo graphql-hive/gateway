@@ -1,4 +1,5 @@
 import { CircuitBreakerConfiguration } from '@graphql-hive/core';
+import { Logger } from '@graphql-hive/logger';
 import { Context } from '@opentelemetry/api';
 import { hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -27,6 +28,7 @@ export type HiveTracingSpanProcessorOptions =
       batching?: BufferConfig;
       processor?: never;
       circuitBreaker?: CircuitBreakerConfiguration;
+      logger?: Logger;
     }
   | {
       processor: SpanProcessor;
@@ -58,6 +60,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
             },
           }),
           config.circuitBreaker,
+          config.logger,
         ),
         config.batching,
       );

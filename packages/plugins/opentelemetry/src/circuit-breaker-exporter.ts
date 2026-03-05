@@ -1,4 +1,5 @@
 import type { CircuitBreakerConfiguration } from '@graphql-hive/core';
+import { Logger } from '@graphql-hive/logger';
 import { ExportResult, ExportResultCode } from '@opentelemetry/core';
 import { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
 import CircuitBreaker from 'opossum';
@@ -28,7 +29,13 @@ export class CircuitBreakerExporter implements SpanExporter {
   constructor(
     private _exporter: SpanExporter,
     config: CircuitBreakerConfiguration = defaultCircuitBreakerConfiguration,
+    logger?: Logger,
   ) {
+    const resolvedConfig = {
+      ...defaultCircuitBreakerConfiguration,
+      ...config,
+    };
+
     this.circuitBreaker = new CircuitBreaker(
       (spans: ReadableSpan[]) =>
         new Promise((resolve, reject) => {
@@ -50,10 +57,93 @@ export class CircuitBreakerExporter implements SpanExporter {
         // to have all 3 failures (volumeThreshold) visible in the rolling window simultaneously, it
         // needs to cover at least 3 cycles: 3 × 13s = ~39s. 60s gives comfortable headroom.
         rollingCountTimeout: 60_000,
-        ...defaultCircuitBreakerConfiguration,
-        ...config,
+        ...resolvedConfig,
       },
     );
+
+    if (logger) {
+      logger.info(resolvedConfig, 'Circuit breaker span exporter configured');
+
+      this.circuitBreaker.on('open', () => {
+        const stats = this.circuitBreaker.stats;
+        logger.error(
+          {
+            state: 'open',
+            resetTimeout: resolvedConfig.resetTimeout,
+            errorThresholdPercentage: resolvedConfig.errorThresholdPercentage,
+            volumeThreshold: resolvedConfig.volumeThreshold,
+            stats: {
+              fires: stats.fires,
+              failures: stats.failures,
+              successes: stats.successes,
+              rejects: stats.rejects,
+              timeouts: stats.timeouts,
+              latencyMean: stats.latencyMean,
+            },
+          },
+          'Circuit breaker opened: span export failures exceeded threshold, dropping spans until circuit resets',
+        );
+      });
+
+      this.circuitBreaker.on('halfOpen', (resetTimeout) => {
+        const stats = this.circuitBreaker.stats;
+        logger.warn(
+          {
+            state: 'halfOpen',
+            resetTimeout,
+            stats: {
+              fires: stats.fires,
+              failures: stats.failures,
+              successes: stats.successes,
+              rejects: stats.rejects,
+              timeouts: stats.timeouts,
+              latencyMean: stats.latencyMean,
+            },
+          },
+          'Circuit breaker half-open: probing span exporter before closing',
+        );
+      });
+
+      this.circuitBreaker.on('close', () => {
+        const stats = this.circuitBreaker.stats;
+        logger.info(
+          {
+            state: 'closed',
+            stats: {
+              fires: stats.fires,
+              failures: stats.failures,
+              successes: stats.successes,
+              rejects: stats.rejects,
+              timeouts: stats.timeouts,
+              latencyMean: stats.latencyMean,
+            },
+          },
+          'Circuit breaker closed: span exporter recovered, resuming normal export',
+        );
+      });
+
+      this.circuitBreaker.on('failure', (error, latencyMs) => {
+        logger.warn(
+          {
+            state: this.circuitBreaker.opened
+              ? 'open'
+              : this.circuitBreaker.pendingClose
+                ? 'halfOpen'
+                : 'closed',
+            latencyMs,
+            error,
+          },
+          'Circuit breaker recorded a span export failure',
+        );
+      });
+
+      this.circuitBreaker.on('reject', () => {
+        logger.debug(
+          { state: 'open' },
+          'Circuit breaker rejected span export: circuit is open',
+        );
+      });
+    }
 
     if (this._exporter.forceFlush) {
       this.forceFlush = () => this._exporter.forceFlush!();
