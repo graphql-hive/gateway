@@ -28,7 +28,7 @@ export type HiveTracingSpanProcessorOptions =
       batching?: BufferConfig;
       processor?: never;
       circuitBreaker?: CircuitBreakerConfiguration;
-      logger?: Logger;
+      log?: Logger;
     }
   | {
       processor: SpanProcessor;
@@ -60,7 +60,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
             },
           }),
           config.circuitBreaker,
-          config.logger,
+          config.log,
         ),
         config.batching,
       );

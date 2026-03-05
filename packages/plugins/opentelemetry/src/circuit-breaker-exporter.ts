@@ -29,7 +29,7 @@ export class CircuitBreakerExporter implements SpanExporter {
   constructor(
     private _exporter: SpanExporter,
     config: CircuitBreakerConfiguration = defaultCircuitBreakerConfiguration,
-    logger?: Logger,
+    log?: Logger,
   ) {
     const resolvedConfig = {
       ...defaultCircuitBreakerConfiguration,
@@ -61,12 +61,12 @@ export class CircuitBreakerExporter implements SpanExporter {
       },
     );
 
-    if (logger) {
-      logger.info(resolvedConfig, 'Circuit breaker span exporter configured');
+    if (log) {
+      log.info(resolvedConfig, 'Circuit breaker span exporter configured');
 
       this.circuitBreaker.on('open', () => {
         const stats = this.circuitBreaker.stats;
-        logger.error(
+        log.error(
           {
             state: 'open',
             resetTimeout: resolvedConfig.resetTimeout,
@@ -87,7 +87,7 @@ export class CircuitBreakerExporter implements SpanExporter {
 
       this.circuitBreaker.on('halfOpen', (resetTimeout) => {
         const stats = this.circuitBreaker.stats;
-        logger.warn(
+        log.warn(
           {
             state: 'halfOpen',
             resetTimeout,
@@ -106,7 +106,7 @@ export class CircuitBreakerExporter implements SpanExporter {
 
       this.circuitBreaker.on('close', () => {
         const stats = this.circuitBreaker.stats;
-        logger.info(
+        log.info(
           {
             state: 'closed',
             stats: {
@@ -123,7 +123,7 @@ export class CircuitBreakerExporter implements SpanExporter {
       });
 
       this.circuitBreaker.on('failure', (error, latencyMs) => {
-        logger.warn(
+        log.warn(
           {
             state: this.circuitBreaker.opened
               ? 'open'
@@ -138,7 +138,7 @@ export class CircuitBreakerExporter implements SpanExporter {
       });
 
       this.circuitBreaker.on('reject', () => {
-        logger.debug(
+        log.debug(
           { state: 'open' },
           'Circuit breaker rejected span export: circuit is open',
         );

@@ -162,7 +162,7 @@ type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
 
 let initialized: false | { name: string; source: string } = false;
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  const log = options.log || new Logger();
+  const log = (options.log || new Logger()).child('[OpenTelemetry] ');
 
   if (initialized) {
     log.error(
@@ -311,7 +311,7 @@ export type HiveTracingSetupOptions = BaseOptions &
   TracerOptions;
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
-  const log = options.log || new Logger();
+  const log = (options.log || new Logger()).child('[Hive Tracing] ');
   const logAttributes: { [key: string | number]: AttributeValue } = {
     ...options._initialization?.logAttributes,
   };
@@ -349,7 +349,7 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
       accessToken: options.accessToken,
       endpoint: options.endpoint,
       batching: options.batching,
-      logger: log,
+      log,
     };
 
     logAttributes['endpoint'] = options.endpoint;
