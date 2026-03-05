@@ -9,6 +9,8 @@ import {
   type DescriptionProviderConfig,
   type ProviderRegistry,
 } from './description-provider.js';
+import type { LangfuseOptions } from 'langfuse';
+import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { createGraphQLExecutor } from './executor.js';
 import {
   loadOperationsFromString,
@@ -36,7 +38,9 @@ export type MCPToolSource =
 export interface MCPToolOverrides {
   title?: string;
   description?: string;
-  descriptionProvider?: DescriptionProviderConfig;
+  descriptionProvider?:
+    | { type: 'langfuse'; prompt: string; version?: number; options?: LangfuseGetPromptOptions }
+    | DescriptionProviderConfig;
 }
 
 export interface MCPInputOverrides {
@@ -63,7 +67,10 @@ export interface MCPConfig {
   operationsPath?: string;
   operationsStr?: string;
   tools: MCPToolConfig[];
-  providers?: Record<string, DescriptionProvider | Record<string, unknown>>;
+  providers?: {
+    langfuse?: LangfuseOptions;
+    [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
+  };
   disableGraphQLEndpoint?: boolean;
 }
 

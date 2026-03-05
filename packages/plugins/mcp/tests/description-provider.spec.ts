@@ -33,7 +33,7 @@ describe('resolveProviders', () => {
 
     const langfuseProvider = registry['langfuse'];
     expect(langfuseProvider).toBeDefined();
-    expect(MockLangfuse).toHaveBeenCalledWith();
+    expect(MockLangfuse).toHaveBeenCalledWith({});
 
     const desc = await langfuseProvider!.fetchDescription('test_tool', {
       type: 'langfuse',
