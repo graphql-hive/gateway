@@ -229,7 +229,7 @@ export function createGatewayRuntime<
       ...configContext,
       enabled: false, // disables only usage reporting
       log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
-      experimental__persistedDocuments: {
+      persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,

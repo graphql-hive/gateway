@@ -352,7 +352,7 @@ export interface GatewayHiveCDNOptions {
 export interface GatewayHiveReportingOptions extends Omit<
   HiveConsolePluginOptions,
   // we omit this property because we define persisted documents in GatewayHivePersistedDocumentsOptions
-  'experimental__persistedDocuments'
+  'persistedDocuments'
 > {
   type: 'hive';
   /** GraphQL Hive registry access token. */

@@ -73,7 +73,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       'type' in config.persistedDocuments &&
       config.persistedDocuments?.type === 'hive'
         ? {
-            experimental__persistedDocuments: {
+            persistedDocuments: {
               cdn: {
                 endpoint: config.persistedDocuments.endpoint,
                 accessToken: config.persistedDocuments.token,
