@@ -52,9 +52,23 @@ RUN set -eux; \
   done
 
 # Install security update for libgnutls30t64
-RUN wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
-RUN dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
-RUN rm -f "libgnutls30t64_3.8.9-3+deb13u2_${TARGETARCH}.deb"
+RUN set -eux; \
+  if [ -z "${TARGETARCH:-}" ]; then \
+    if ! command -v dpkg >/dev/null 2>&1; then \
+      echo "Error: dpkg is not available and TARGETARCH is not set. Cannot determine architecture for libgnutls30t64." >&2; \
+      exit 1; \
+    fi; \
+    arch="$(dpkg --print-architecture)"; \
+  else \
+    arch="${TARGETARCH}"; \
+  fi; \
+  if [ -z "$arch" ]; then \
+    echo "Error: Could not determine architecture for libgnutls30t64." >&2; \
+    exit 1; \
+  fi; \
+  wget "https://security.debian.org/debian-security/pool/updates/main/g/gnutls28/libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
+  dpkg -i "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"; \
+  rm -f "libgnutls30t64_3.8.9-3+deb13u2_${arch}.deb"
 
 RUN echo "deb http://security.debian.org/debian-security bookworm-security main" >> /etc/apt/sources.list && \
  apt-get update && \
@@ -104,12 +118,12 @@ RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/gl
 # npm uses glob v11, so we've just bumped it to the latest
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/glob
 
-# fix @isaacs/brace-expansion vulnerability by updating it to the latest version 5.0.1
-RUN npm install @isaacs/brace-expansion@5.0.1 -g
+# fix @isaacs/brace-expansion vulnerability by updating it to the latest version ^5.0.1
+RUN npm install @isaacs/brace-expansion@^5.0.1 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/@isaacs/brace-expansion
 
-# fix minimatch vulnerability by updating it to the latest version 10.2.1
-RUN npm install minimatch@10.2.1 -g
+# fix minimatch vulnerability by updating it to the latest version ^10.2.4
+RUN npm install minimatch@^10.2.4 -g
 RUN rm -rf /usr/local/lib/node_modules/npm/node_modules/minimatch
 
 USER node

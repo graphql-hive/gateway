@@ -13,7 +13,7 @@ function createTLogger(opts?: Partial<LoggerOptions>) {
 }
 
 it('should write logs with levels, message and attributes', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   const err = stableError(new Error('Woah!'));
 
@@ -21,7 +21,7 @@ it('should write logs with levels, message and attributes', () => {
   log.log('info', { hello: 'world', err }, 'Hello, world!');
   log.log('info', '2nd Hello, world!');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -48,7 +48,7 @@ it('should write logs with levels, message and attributes', () => {
 });
 
 it('should write logs only if level is higher than set', () => {
-  const [log, writter] = createTLogger({
+  const [log, writer] = createTLogger({
     level: 'info',
   });
 
@@ -58,7 +58,7 @@ it('should write logs only if level is higher than set', () => {
   log.warn('Warn');
   log.error('Error');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -77,13 +77,13 @@ it('should write logs only if level is higher than set', () => {
 });
 
 it('should include attributes in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' });
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -97,13 +97,13 @@ it('should include attributes in child loggers', () => {
 });
 
 it('should include prefix in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child('prefix ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -114,13 +114,13 @@ it('should include prefix in child loggers', () => {
 });
 
 it('should include attributes and prefix in child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' }, 'prefix ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -134,7 +134,7 @@ it('should include attributes and prefix in child loggers', () => {
 });
 
 it('should have child inherit parent log level', () => {
-  let [log, writter] = createTLogger({ level: 'warn' });
+  let [log, writer] = createTLogger({ level: 'warn' });
 
   log = log.child({ par: 'ent' });
 
@@ -142,7 +142,7 @@ it('should have child inherit parent log level', () => {
   log.info('still no hello');
   log.warn('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -156,14 +156,14 @@ it('should have child inherit parent log level', () => {
 });
 
 it('should include attributes and prefix in nested child loggers', () => {
-  let [log, writter] = createTLogger();
+  let [log, writer] = createTLogger();
 
   log = log.child({ par: 'ent' }, 'prefix ');
   log = log.child({ par2: 'ent2' }, 'prefix2 ');
 
   log.info('hello');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -178,7 +178,7 @@ it('should include attributes and prefix in nested child loggers', () => {
 });
 
 it('should unwrap lazy attribute values', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(
     () => ({
@@ -190,7 +190,7 @@ it('should unwrap lazy attribute values', () => {
     'hello',
   );
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -207,13 +207,13 @@ it('should unwrap lazy attribute values', () => {
 });
 
 it('should not log lazy attributes returning nothing', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(() => undefined, 'hello');
   log.info(() => null, 'wor');
   log.info(() => void 0, 'ld');
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "level": "info",
@@ -232,7 +232,7 @@ it('should not log lazy attributes returning nothing', () => {
 });
 
 it('should not unwrap lazy attribute values', () => {
-  const [log, writter] = createTLogger();
+  const [log, writer] = createTLogger();
 
   log.info(
     {
@@ -245,7 +245,7 @@ it('should not unwrap lazy attribute values', () => {
     'hello',
   );
 
-  expect(writter.logs).toMatchInlineSnapshot(`
+  expect(writer.logs).toMatchInlineSnapshot(`
     [
       {
         "attrs": {
@@ -926,6 +926,312 @@ it('should log using nodejs.util.inspect.custom symbol', () => {
         },
         "level": "info",
         "msg": "sy",
+      },
+    ]
+  `);
+});
+
+it('should redact paths provided as an array', () => {
+  const [log, writer] = createTLogger({
+    redact: ['key', 'path.to.key'],
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": "[Redacted]",
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": "[Redacted]",
+            },
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with wildcard paths', () => {
+  const [log, writer] = createTLogger({
+    redact: ['stuff.thats[*].secret'],
+  });
+
+  log.info({
+    stuff: {
+      thats: [
+        { secret: 'will be redacted', logme: 'will be logged' },
+        { secret: 'as will this', logme: 'as will this' },
+      ],
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "stuff": {
+            "thats": [
+              {
+                "logme": "will be logged",
+                "secret": "[Redacted]",
+              },
+              {
+                "logme": "as will this",
+                "secret": "[Redacted]",
+              },
+            ],
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with a custom censor string', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['key', 'path.to.key'],
+      censor: '**GDPR COMPLIANT**',
+    },
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": "**GDPR COMPLIANT**",
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": "**GDPR COMPLIANT**",
+            },
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with a censor function', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['password', 'nested.secret'],
+      censor: (value, path) =>
+        `[${path.join('.')}=${String(value).length} chars]`,
+    },
+  });
+
+  log.info({
+    password: 'super-secret',
+    nested: { secret: 'hidden', visible: 'shown' },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "nested": {
+            "secret": "[nested.secret=6 chars]",
+            "visible": "shown",
+          },
+          "password": "[password=12 chars]",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with remove option', () => {
+  const [log, writer] = createTLogger({
+    redact: {
+      paths: ['key', 'path.to.key', 'stuff.thats[*].secret'],
+      remove: true,
+    },
+  });
+
+  log.info({
+    key: 'will be redacted',
+    path: {
+      to: { key: 'sensitive', another: 'thing' },
+    },
+    stuff: {
+      thats: [
+        { secret: 'will be redacted', logme: 'will be logged' },
+        { secret: 'as will this', logme: 'as will this' },
+      ],
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "key": undefined,
+          "path": {
+            "to": {
+              "another": "thing",
+              "key": undefined,
+            },
+          },
+          "stuff": {
+            "thats": [
+              {
+                "logme": "will be logged",
+                "secret": undefined,
+              },
+              {
+                "logme": "as will this",
+                "secret": undefined,
+              },
+            ],
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not mutate the original object when redacting', () => {
+  const [log] = createTLogger({
+    redact: ['secret'],
+  });
+
+  const obj = { secret: 'value', visible: 'shown' };
+  log.info(obj);
+
+  expect(obj.secret).toBe('value');
+});
+
+it('should redact in child loggers', () => {
+  const [log, writer] = createTLogger({
+    redact: ['secret'],
+  });
+
+  const child = log.child({ component: 'auth' });
+
+  child.info({ secret: 'password', user: 'admin' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "component": "auth",
+          "secret": "[Redacted]",
+          "user": "admin",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact with bracket notation paths', () => {
+  const [log, writer] = createTLogger({
+    redact: ['headers["X-Auth-Token"]'],
+  });
+
+  log.info({
+    headers: {
+      'X-Auth-Token': 'bearer abc123',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Auth-Token": "[Redacted]",
+          },
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not fail when redact path does not exist in object', () => {
+  const [log, writer] = createTLogger({
+    redact: ['nonexistent.path'],
+  });
+
+  log.info({ hello: 'world' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "hello": "world",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should redact across multiple log calls', () => {
+  const [log, writer] = createTLogger({
+    redact: ['token'],
+  });
+
+  log.info({ token: 'first', data: 'a' });
+  log.info({ token: 'second', data: 'b' });
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "attrs": {
+          "data": "a",
+          "token": "[Redacted]",
+        },
+        "level": "info",
+      },
+      {
+        "attrs": {
+          "data": "b",
+          "token": "[Redacted]",
+        },
+        "level": "info",
+      },
+    ]
+  `);
+});
+
+it('should not redact when no attrs are provided', () => {
+  const [log, writer] = createTLogger({
+    redact: ['secret'],
+  });
+
+  log.info('just a message');
+
+  expect(writer.logs).toMatchInlineSnapshot(`
+    [
+      {
+        "level": "info",
+        "msg": "just a message",
       },
     ]
   `);
