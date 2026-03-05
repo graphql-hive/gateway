@@ -63,15 +63,10 @@ describe('ToolRegistry', () => {
       outputSchema: {
         type: 'object',
         properties: {
-          data: {
+          getWeather: {
             type: 'object',
             properties: {
-              getWeather: {
-                type: 'object',
-                properties: {
-                  temperature: { type: 'number', format: 'float' },
-                },
-              },
+              temperature: { type: 'number', format: 'float' },
             },
           },
         },
@@ -238,15 +233,10 @@ describe('ToolRegistry with overrides', () => {
     expect(tools[0]!.outputSchema).toEqual({
       type: 'object',
       properties: {
-        data: {
+        getWeather: {
           type: 'object',
           properties: {
-            getWeather: {
-              type: 'object',
-              properties: {
-                temperature: { type: 'number', format: 'float' },
-              },
-            },
+            temperature: { type: 'number', format: 'float' },
           },
         },
       },
