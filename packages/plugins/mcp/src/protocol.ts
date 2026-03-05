@@ -9,6 +9,7 @@ export interface MCPHandlerOptions {
     args: Record<string, unknown>,
   ) => Promise<unknown>;
   resolveToolDescriptions?: () => Promise<Map<string, string>>;
+  includeContentFallback?: boolean;
 }
 
 interface JsonRpcRequest {
@@ -126,13 +127,17 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             callParams.name,
             callParams.arguments || {},
           );
+          const textContent = {
+            content: [
+              { type: 'text', text: JSON.stringify(result, null, 2) },
+            ],
+          };
           const callResult: Record<string, unknown> = tool.outputSchema
-            ? { structuredContent: result }
-            : {
-                content: [
-                  { type: 'text', text: JSON.stringify(result, null, 2) },
-                ],
-              };
+            ? {
+                structuredContent: result,
+                ...(options.includeContentFallback && textContent),
+              }
+            : textContent;
           response = {
             jsonrpc: '2.0',
             id,
