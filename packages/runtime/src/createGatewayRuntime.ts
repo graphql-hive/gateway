@@ -238,6 +238,7 @@ export function createGatewayRuntime<
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
         layer2Cache,
+        fetch: configContext.fetch as typeof fetch,
       },
     });
 
