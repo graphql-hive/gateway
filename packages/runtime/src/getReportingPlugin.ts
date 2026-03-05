@@ -82,6 +82,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
               // Trick to satisfy the Hive Console plugin types
               layer2Cache,
+              fetch: configContext.fetch as typeof fetch,
             },
           }
         : {}),
