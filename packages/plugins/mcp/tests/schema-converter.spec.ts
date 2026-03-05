@@ -218,26 +218,21 @@ describe('selectionSetToOutputSchema', () => {
     expect(result).toEqual({
       type: 'object',
       properties: {
-        data: {
+        getWeatherData: {
           type: 'object',
           properties: {
-            getWeatherData: {
-              type: 'object',
-              properties: {
-                temperature: {
-                  type: 'number',
-                  format: 'float',
-                  description: 'Temperature in celsius',
-                },
-                conditions: {
-                  type: 'string',
-                  description: 'Weather conditions',
-                },
-                humidity: {
-                  type: 'string',
-                  description: 'Humidity percentage',
-                },
-              },
+            temperature: {
+              type: 'number',
+              format: 'float',
+              description: 'Temperature in celsius',
+            },
+            conditions: {
+              type: 'string',
+              description: 'Weather conditions',
+            },
+            humidity: {
+              type: 'string',
+              description: 'Humidity percentage',
             },
           },
         },
@@ -262,23 +257,18 @@ describe('selectionSetToOutputSchema', () => {
     expect(result).toEqual({
       type: 'object',
       properties: {
-        data: {
-          type: 'object',
-          properties: {
-            users: {
-              type: 'array',
-              items: {
+        users: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              address: {
                 type: 'object',
                 properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  address: {
-                    type: 'object',
-                    properties: {
-                      city: { type: 'string' },
-                      country: { type: 'string' },
-                    },
-                  },
+                  city: { type: 'string' },
+                  country: { type: 'string' },
                 },
               },
             },
@@ -300,18 +290,13 @@ describe('selectionSetToOutputSchema', () => {
     expect(result).toEqual({
       type: 'object',
       properties: {
-        data: {
+        getWeatherData: {
           type: 'object',
           properties: {
-            getWeatherData: {
-              type: 'object',
-              properties: {
-                temperature: {
-                  type: 'number',
-                  format: 'float',
-                  description: 'Temperature in celsius',
-                },
-              },
+            temperature: {
+              type: 'number',
+              format: 'float',
+              description: 'Temperature in celsius',
             },
           },
         },
