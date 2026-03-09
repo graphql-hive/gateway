@@ -229,7 +229,7 @@ export function createGatewayRuntime<
       ...configContext,
       enabled: false, // disables only usage reporting
       log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
-      experimental__persistedDocuments: {
+      persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,
@@ -238,6 +238,7 @@ export function createGatewayRuntime<
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
         layer2Cache,
+        fetch: configContext.fetch as typeof fetch,
       },
     });
 

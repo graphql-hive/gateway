@@ -594,7 +594,7 @@ for (const {
         expect(stitchedResult).toEqual(propertyResult);
       });
 
-      test('works with custom scalars', async () => {
+      test('works with custom scalars in scalar schema', async () => {
         const scalarResult = await graphql({
           schema: scalarSchema,
           source: /* GraphQL */ `
@@ -2720,10 +2720,6 @@ bookingById(id: "b1") {
 
         expect(stitchedSchema.getType('NumericEnum')?.description).toBe(
           'A type that uses an Enum with a numeric constant.',
-        );
-
-        expect(stitchedSchema.getType('LinkType')?.description).toBe(
-          'A new type linking the Property type.',
         );
 
         expect(stitchedSchema.getType('LinkType')?.description).toBe(

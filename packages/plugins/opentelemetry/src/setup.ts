@@ -1,4 +1,4 @@
-import { Attributes, Logger } from '@graphql-hive/logger';
+import { Attributes, AttributeValue, Logger } from '@graphql-hive/logger';
 import {
   context,
   ContextManager,
@@ -162,7 +162,7 @@ type OpentelemetrySetupOptions = TracingOptions & SamplingOptions & BaseOptions;
 
 let initialized: false | { name: string; source: string } = false;
 export function openTelemetrySetup(options: OpentelemetrySetupOptions) {
-  const log = options.log || new Logger();
+  const log = (options.log || new Logger()).child('[OpenTelemetry] ');
 
   if (initialized) {
     log.error(
@@ -311,24 +311,22 @@ export type HiveTracingSetupOptions = BaseOptions &
   TracerOptions;
 
 export function hiveTracingSetup(options: HiveTracingSetupOptions) {
-  const log = options.log || new Logger();
-  options.target ??= getEnvStr('HIVE_TARGET');
-
-  if (!options.target) {
-    throw new Error(
-      'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
-    );
-  }
-
-  const logAttributes: Attributes = {
+  const log = (options.log || new Logger()).child('[Hive Tracing] ');
+  const logAttributes: { [key: string | number]: AttributeValue } = {
     ...options._initialization?.logAttributes,
-    target: options.target,
   };
 
   let processorOptions: HiveTracingSpanProcessorOptions;
   if (options.processor) {
     processorOptions = { processor: options.processor };
   } else {
+    options.target ??= getEnvStr('HIVE_TARGET');
+    if (!options.target) {
+      throw new Error(
+        'You must specify the Hive Registry `target`. Either provide `target` option or `HIVE_TARGET` environment variable.',
+      );
+    }
+
     options.accessToken ??=
       getEnvStr('HIVE_TRACING_ACCESS_TOKEN') ?? getEnvStr('HIVE_ACCESS_TOKEN');
     if (!options.accessToken) {
@@ -351,10 +349,12 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
       accessToken: options.accessToken,
       endpoint: options.endpoint,
       batching: options.batching,
+      log,
     };
 
     logAttributes['endpoint'] = options.endpoint;
     logAttributes['batching'] = options.batching;
+    logAttributes['target'] = options.target;
   }
 
   openTelemetrySetup({

@@ -3,6 +3,7 @@ import type {
   PersistedDocumentsCache,
 } from '@graphql-hive/core';
 import type { KeyValueCache } from '@graphql-mesh/types';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 
 export interface PersistedDocumentsCacheOptions {
   ttlSeconds?: number;
@@ -19,13 +20,16 @@ export function createPersistedDocumentsCache(
   kvCache: KeyValueCache<string>,
 ): Layer2CacheConfiguration {
   const cache: PersistedDocumentsCache = {
-    async get(key) {
-      const value = await kvCache.get(key);
-      // KeyValueCache returns undefined for missing keys, convert to null
-      return value ?? null;
+    get(key) {
+      return fakePromise()
+        .then(() => kvCache.get(key))
+        .then((value) => {
+          // KeyValueCache returns undefined for missing keys, convert to null
+          return value ?? null;
+        });
     },
-    async set(key, value, opts) {
-      await kvCache.set(key, value, opts ? { ttl: opts.ttl } : {});
+    set(key, value, opts) {
+      return kvCache.set(key, value, opts ? { ttl: opts.ttl } : {});
     },
   };
 

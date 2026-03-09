@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import 'dotenv/config'; // inject dotenv options to process.env
-
+import './env';
 import module from 'node:module';
 import type { InitializeData } from '@graphql-hive/importer/hooks';
 import { Logger } from '@graphql-hive/logger';

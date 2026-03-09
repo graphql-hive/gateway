@@ -55,6 +55,7 @@ import {
 import { usingHiveRouterRuntime } from '~internal/env';
 import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
 import { hive } from '../src/api';
+import { CircuitBreakerExporter } from '../src/circuit-breaker-exporter';
 import type {
   ContextMatcher,
   OpenTelemetryContextExtension,
@@ -74,6 +75,9 @@ import {
 } from './utils';
 
 describe('useOpenTelemetry', () => {
+  const silentLog = new Logger({
+    level: false,
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     spanExporter.reset();
@@ -87,6 +91,7 @@ describe('useOpenTelemetry', () => {
 
     it('should setup OTEL with sain default', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: new AsyncLocalStorageContextManager(),
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -132,6 +137,7 @@ describe('useOpenTelemetry', () => {
       };
 
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           tracerProvider,
@@ -144,15 +150,14 @@ describe('useOpenTelemetry', () => {
     it('should not register a contextManager when passed null', () => {
       const before = getContextManager();
 
-      openTelemetrySetup({
-        contextManager: null,
-      });
+      openTelemetrySetup({ log: silentLog, contextManager: null });
 
       expect(getContextManager()).toBe(before);
     });
 
     it('should register a console exporter', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           console: true,
@@ -168,6 +173,7 @@ describe('useOpenTelemetry', () => {
 
     it('should register a console exporter even if an exporter is given', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -184,6 +190,7 @@ describe('useOpenTelemetry', () => {
 
     it('should register a console exporter even if a list of processors is given', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           processors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
@@ -200,6 +207,7 @@ describe('useOpenTelemetry', () => {
 
     it('should register a custom resource', () => {
       openTelemetrySetup({
+        log: silentLog,
         resource: resourceFromAttributes({
           'service.name': 'test-name',
           'service.version': 'test-version',
@@ -225,6 +233,7 @@ describe('useOpenTelemetry', () => {
         vi.stubEnv('OTEL_SERVICE_VERSION', 'test-version');
 
         openTelemetrySetup({
+          log: silentLog,
           traces: { console: true },
           contextManager: null,
         });
@@ -240,6 +249,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to register a custom sampler', () => {
       openTelemetrySetup({
+        log: silentLog,
         traces: {
           console: true,
         },
@@ -252,6 +262,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to configure a rate sampling strategy', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: { console: true },
         samplingRate: 0.1,
@@ -271,6 +282,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to disable batching', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -284,6 +296,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to configure batching', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           exporter: new OTLPTraceExporter(),
@@ -309,6 +322,7 @@ describe('useOpenTelemetry', () => {
     it('should allow to manually define processor', () => {
       const processor = {} as SpanProcessor;
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           processors: [processor],
@@ -323,6 +337,7 @@ describe('useOpenTelemetry', () => {
     it('should allow to customize propagators', () => {
       const propagator = {} as TextMapPropagator;
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         propagators: [propagator],
       });
@@ -334,6 +349,7 @@ describe('useOpenTelemetry', () => {
       const before = getPropagator();
 
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         propagators: [],
       });
@@ -343,6 +359,7 @@ describe('useOpenTelemetry', () => {
 
     it('should allow to customize limits', () => {
       openTelemetrySetup({
+        log: silentLog,
         contextManager: null,
         traces: {
           console: true,
@@ -381,6 +398,7 @@ describe('useOpenTelemetry', () => {
 
     it('should setup Hive Tracing', () => {
       hiveTracingSetup({
+        log: silentLog,
         contextManager: new AsyncLocalStorageContextManager(),
         target: 'target',
         accessToken: 'access-token',
@@ -394,12 +412,16 @@ describe('useOpenTelemetry', () => {
       const subProcessor = processor.processor as BatchSpanProcessor;
       expect(subProcessor).toBeInstanceOf(BatchSpanProcessor);
       // @ts-expect-error Access of private field
-      const exporter = subProcessor._exporter as OTLPTraceExporter;
-      expect(exporter).toBeInstanceOf(OTLPTraceExporter);
+      const exporter = subProcessor._exporter as CircuitBreakerExporter;
+      expect(exporter).toBeInstanceOf(CircuitBreakerExporter);
       // @ts-expect-error Access of private field
-      expect(exporter._delegate._transport._transport._parameters.url).toBe(
+      const subExporter = exporter._exporter as OTLPTraceExporter;
+      expect(subExporter).toBeInstanceOf(OTLPTraceExporter);
+      // @ts-expect-error Access of private field
+      expect(subExporter._delegate._transport._transport._parameters.url).toBe(
         'https://api.graphql-hive.com/otel/v1/traces',
       );
+      return processor.shutdown();
     });
   });
 
@@ -1233,6 +1255,7 @@ describe('useOpenTelemetry', () => {
       // Register testing OTEL api with a custom Span processor and an Async Context Manager
       disableAll();
       hiveTracingSetup({
+        log: silentLog,
         target: 'test-target',
         contextManager: new AsyncLocalStorageContextManager(),
         processor: new SimpleSpanProcessor(spanExporter),

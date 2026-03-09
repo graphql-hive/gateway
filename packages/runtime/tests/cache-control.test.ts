@@ -79,6 +79,12 @@ describe.skipIf(process.env['LEAK_TEST'])(
             requestDidStart,
           },
         ],
+        logger: {
+          debug() {},
+          info() {},
+          warn() {},
+          error() {},
+        },
       });
       const { url } = await startStandaloneServer(apolloServer, {
         listen: { port: 0 },

@@ -203,7 +203,7 @@ jobs:
         run: wmic /?
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - if: runner.os == 'Windows'
         name: Install Windows SDK
         run: scripts\install-winsdk.ps1
@@ -233,7 +233,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
         with:
           source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
@@ -268,7 +268,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -280,7 +280,7 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
         with:
           source: .
           # we build the e2e image because the release image cant be loaded due to annotations and platforms
@@ -292,7 +292,7 @@ jobs:
           # we must load so that the created image can be scanned
           load: true
       - name: Scan
-        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518 # 0.34.1
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 # 0.34.2
         with:
           image-ref: ghcr.io/graphql-hive/gateway:e2e${{ matrix.runtime == 'Bun' && '-bun' || '' }}
           format: table
