@@ -1,5 +1,17 @@
 # @graphql-tools/stitch
 
+## 10.1.13
+### Patch Changes
+
+
+
+- [#2022](https://github.com/graphql-hive/gateway/pull/2022) [`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756) Thanks [@ardatan](https://github.com/ardatan)! - Fix redundant extra calls to the same subschema in case of `@canonical` annotation
+
+- Updated dependencies [[`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756)]:
+  - @graphql-tools/delegate@12.0.9
+  - @graphql-tools/batch-delegate@10.0.15
+  - @graphql-tools/wrap@11.1.9
+
 ## 10.1.12
 ### Patch Changes
 

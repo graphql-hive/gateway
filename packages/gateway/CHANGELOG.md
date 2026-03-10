@@ -1,5 +1,20 @@
 # @graphql-hive/gateway
 
+## 2.5.4
+### Patch Changes
+
+
+
+- [#2045](https://github.com/graphql-hive/gateway/pull/2045) [`77def08`](https://github.com/graphql-hive/gateway/commit/77def088b7e5e170b3745a86a0d2d7b5596217f7) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Removed dependency [`dotenv@^17.2.3` ↗︎](https://www.npmjs.com/package/dotenv/v/17.2.3) (from `dependencies`)
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.29
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.4.2
+  - @graphql-mesh/plugin-prometheus@2.1.21
+
 ## 2.5.3
 ### Patch Changes
 
