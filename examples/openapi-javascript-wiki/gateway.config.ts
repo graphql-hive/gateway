@@ -1,5 +1,4 @@
 import { defineConfig } from '@graphql-hive/gateway';
-import moment from 'moment';
 
 export const gatewayConfig = defineConfig({
   transportEntries: {
@@ -11,7 +10,7 @@ export const gatewayConfig = defineConfig({
     Query: {
       async viewsInPastMonth(
         root: any,
-        { project }: any,
+        { project }: any, // args
         context: any,
         info: any,
       ) {
@@ -22,27 +21,30 @@ export const gatewayConfig = defineConfig({
               args: {
                 access: 'all_access',
                 agent: 'user',
-                end: moment().format('YYYYMMDD'),
-                start: moment()
-                  .startOf('month')
-                  .subtract(1, 'month')
-                  .format('YYYYMMDD'),
+                start: '20200101',
+                end: '20200226',
                 project,
                 granularity: 'daily',
               },
               context,
               info,
-              autoSelectionSetWithDepth: 2,
+              selectionSet: /* GraphQL */ `
+                {
+                  ... on pageview_project {
+                    items {
+                      views
+                    }
+                  }
+                }
+              `,
             },
           );
 
-        if (result == null || !('items' in result)) {
-          return null;
+        let total = BigInt(0);
+        for (const item of result?.items || []) {
+          total += BigInt(item.views);
         }
-
-        if ('items' in result) {
-          return result?.items?.[0]?.views || 0;
-        }
+        return total.toString();
       },
     },
   },
