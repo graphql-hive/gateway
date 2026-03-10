@@ -1,5 +1,15 @@
+import { join } from 'node:path';
 import { createTenv } from '@internal/e2e';
 import { expect, it } from 'vitest';
+
+try {
+  process.loadEnvFile(join(__dirname, '.env'));
+} catch (e) {
+  console.error(
+    'Failed to load .env file, make sure it exists and is properly formatted',
+    e,
+  );
+}
 
 const { gateway } = createTenv(__dirname);
 
