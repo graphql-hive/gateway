@@ -29,10 +29,8 @@ it.skipIf(!APOLLO_KEY || !APOLLO_GRAPH_REF)('works', async () => {
   const result = await gw.execute({
     query: /* GraphQL */ `
       query HiveGatewayE2ETest {
-        developer {
-          fieldConfigs {
-            errorRate
-          }
+        me {
+          name
         }
       }
     `,
@@ -43,8 +41,8 @@ it.skipIf(!APOLLO_KEY || !APOLLO_GRAPH_REF)('works', async () => {
   });
   expect(result).toEqual({
     data: {
-      developer: {
-        fieldConfigs: [],
+      me: {
+        name: expect.any(String),
       },
     },
   });
