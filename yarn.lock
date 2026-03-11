@@ -4333,7 +4333,7 @@ __metadata:
     "@nestjs/testing": "npm:11.1.16"
     "@types/supertest": "npm:7.2.0"
     "@whatwg-node/promise-helpers": "npm:^1.3.2"
-    fastify: "npm:5.8.2"
+    fastify: "npm:5.8.1"
     file-type: "npm:^21.1.0"
     graphql: "npm:^16.12.0"
     pkgroll: "npm:2.27.0"
