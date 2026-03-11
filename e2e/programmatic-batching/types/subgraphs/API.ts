@@ -1,8 +1,8 @@
 import type { InContextSdkMethod } from '@graphql-mesh/types';
 
 export namespace ApiTypes {
-  export type Maybe<T> = T | null;
-  export type InputMaybe<T> = Maybe<T>;
+  export type Maybe<T> = T | undefined;
+  export type InputMaybe<T> = T | undefined;
   export type Exact<T extends { [key: string]: unknown }> = {
     [K in keyof T]: T[K];
   };
@@ -47,6 +47,7 @@ export namespace ApiTypes {
     | 'TRACE';
 
   export type Mutation = {
+    __typename: 'Mutation';
     usersByIds?: Maybe<UsersByIdResponse>;
   };
 
@@ -55,10 +56,12 @@ export namespace ApiTypes {
   };
 
   export type Query = {
+    __typename: 'Query';
     dummy?: Maybe<Scalars['String']['output']>;
   };
 
   export type User = {
+    __typename: 'User';
     id: Scalars['Float']['output'];
     name: Scalars['String']['output'];
   };
@@ -68,6 +71,7 @@ export namespace ApiTypes {
   };
 
   export type UsersByIdResponse = {
+    __typename: 'UsersByIdResponse';
     results: Array<Maybe<User>>;
   };
 

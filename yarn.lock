@@ -3282,9 +3282,10 @@ __metadata:
     "@graphql-codegen/typescript-resolvers": "npm:^5.1.7"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
-    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.1"
+    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.3"
     "@omnigraph/openapi": "npm:^0.109.23"
     graphql: "npm:^16.12.0"
+    graphql-scalars: "npm:^1.25.0"
     tslib: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
@@ -3405,7 +3406,7 @@ __metadata:
     "@graphql-codegen/typescript-resolvers": "npm:^5.1.7"
     "@graphql-hive/gateway": "workspace:*"
     "@graphql-mesh/compose-cli": "npm:^1.5.3"
-    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.1"
+    "@graphql-mesh/incontext-sdk-codegen": "npm:^0.0.3"
     "@omnigraph/openapi": "npm:^0.109.23"
     fets: "npm:^0.8.4"
     graphql: "npm:16.13.1"
@@ -5013,9 +5014,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/incontext-sdk-codegen@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@graphql-mesh/incontext-sdk-codegen@npm:0.0.1"
+"@graphql-mesh/incontext-sdk-codegen@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "@graphql-mesh/incontext-sdk-codegen@npm:0.0.3"
   dependencies:
     "@graphql-codegen/core": "npm:^5.0.1"
     "@graphql-codegen/plugin-helpers": "npm:^6.1.1"
@@ -5032,7 +5033,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/f76e042c8d9727bf7fc1a308e4e3c8d3d216a43179eccd2301ec5626f6b460e67b6a762990fd2d674e596c1e08e2c90a8aa4bcd6636549ee3e97ee26225cc158
+  checksum: 10c0/f46ed71b79130a2c37cd218b216c66fe579d81f85212f4c2469e26ce1151b6fd96301629f3ca26a65805a8d1e4b4ad9498e8ed0261b88edd52ccb5c0e45690b8
   languageName: node
   linkType: hard
 
