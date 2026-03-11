@@ -155,6 +155,7 @@ export function handleResolveToDirectives(
 
 export interface HandleFederationSupergraphResult extends UnifiedGraphHandlerResult {
   getSubschema(subgraphName: string): SubschemaConfig;
+  subschemas: SubschemaConfig[];
 }
 
 export const handleFederationSupergraph = function ({
@@ -442,5 +443,6 @@ export const handleFederationSupergraph = function ({
       return subschema.schema;
     },
     getSubschema,
+    subschemas,
   };
 };
