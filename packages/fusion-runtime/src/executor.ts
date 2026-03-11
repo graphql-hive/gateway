@@ -14,8 +14,8 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import {
   handleMaybePromise,
   mapAsyncIterator,
+  MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import { MaybePromise } from 'bun';
 import { type DocumentNode } from 'graphql';
 import {
   UnifiedGraphManager,
