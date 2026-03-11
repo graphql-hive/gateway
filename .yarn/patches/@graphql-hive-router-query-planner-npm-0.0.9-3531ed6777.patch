@@ -1,0 +1,43 @@
+diff --git a/index.d.ts b/index.d.ts
+index 47dda675ad0e6ccae86955d717aa851105a36ca8..32e56d2b2ffe290630bc782f2ef40b8de95fd88a 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -13,6 +13,7 @@ export interface QueryPlan {
+ 
+ export type PlanNode =
+   | FetchNode
++  | BatchFetchNode
+   | SequenceNode
+   | ParallelNode
+   | FlattenNode
+@@ -32,6 +33,30 @@ export interface FetchNode {
+   outputRewrites?: OutputRewrite[];
+ }
+ 
++export interface BatchFetchNode {
++  kind: "BatchFetch";
++  serviceName: string;
++  variableUsages?: string[];
++  operationKind?: "query" | "mutation" | "subscription";
++  operationName?: string;
++  operation: string;
++  entityBatch: EntityBatch;
++}
++
++export interface EntityBatch {
++  aliases: EntityBatchAlias[];
++}
++
++export interface EntityBatchAlias {
++  alias: string;
++  representationsVariableName: string;
++  paths: FlattenNodePathSegment[][];
++  requires: RequiresSelection[];
++  entitiesSelection: RequiresSelection[];
++  inputRewrites?: InputRewrite[];
++  outputRewrites?: OutputRewrite[];
++}
++
+ export interface SubscriptionNode {
+   kind: "Subscription";
+   primary: PlanNode;
