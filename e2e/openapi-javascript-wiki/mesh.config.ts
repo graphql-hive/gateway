@@ -14,7 +14,11 @@ export const composeConfig = defineConfig({
   ],
   additionalTypeDefs: /* GraphQL */ `
     extend type Query {
-      viewsInPastMonth(project: String!): String!
+      viewsInPastMonth(
+        start: String = "20200101",
+        end: String = "20200226",
+        project: String!
+      ): String!
     }
   `,
 });

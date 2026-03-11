@@ -2,7 +2,7 @@ import type { Resolvers } from './types/resolvers';
 
 export const additionalResolvers: Resolvers = {
   Query: {
-    async viewsInPastMonth(root, { project }, context, info) {
+    async viewsInPastMonth(root, { start, end, project }, context, info) {
       const result =
         await context.Wiki.Query.metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end(
           {
@@ -10,8 +10,8 @@ export const additionalResolvers: Resolvers = {
             args: {
               access: 'all_access',
               agent: 'user',
-              start: '20200101',
-              end: '20200226',
+              start,
+              end,
               project,
               granularity: 'daily',
             },
