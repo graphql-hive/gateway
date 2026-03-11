@@ -1,5 +1,5 @@
-import type { Resolvers } from './types/resolvers';
 import { BigIntResolver } from 'graphql-scalars';
+import type { Resolvers } from './types/resolvers';
 
 export const additionalResolvers: Resolvers = {
   BigInt: BigIntResolver,

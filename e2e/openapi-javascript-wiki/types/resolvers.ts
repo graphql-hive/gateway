@@ -1,30 +1,52 @@
-import { GraphQLResolveInfo, SelectionSetNode, FieldNode, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+import {
+  FieldNode,
+  GraphQLResolveInfo,
+  GraphQLScalarType,
+  GraphQLScalarTypeConfig,
+  SelectionSetNode,
+} from 'graphql';
 import { MeshInContextSDK } from './incontext-sdk';
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
+    };
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]-?: NonNullable<T[P]>;
+};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
   /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
-  BigInt: { input: any; output: any; }
+  BigInt: { input: any; output: any };
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSON: { input: any; output: any; }
+  JSON: { input: any; output: any };
   /** A string that cannot be passed as an empty value */
-  NonEmptyString: { input: any; output: any; }
-  ObjMap: { input: any; output: any; }
-  _DirectiveExtensions: { input: any; output: any; }
-  join__FieldSet: { input: any; output: any; }
-  link__Import: { input: any; output: any; }
+  NonEmptyString: { input: any; output: any };
+  ObjMap: { input: any; output: any };
+  _DirectiveExtensions: { input: any; output: any };
+  join__FieldSet: { input: any; output: any };
+  link__Import: { input: any; output: any };
 };
 
 export enum HttpMethod {
@@ -36,7 +58,7 @@ export enum HttpMethod {
   Patch = 'PATCH',
   Post = 'POST',
   Put = 'PUT',
-  Trace = 'TRACE'
+  Trace = 'TRACE',
 }
 
 export type Mutation = {
@@ -69,23 +91,21 @@ export type Mutation = {
   post_transform_html_from_by_from_lang_to_by_to_lang_by_provider?: Maybe<Cx_Mt>;
 };
 
-
 export type MutationPost_Media_Math_Check_By_TypeArgs = {
   type: MutationInput_Post_Media_Math_Check_By_Type_Type;
 };
-
 
 export type MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs = {
   from_lang: Scalars['String']['input'];
   to_lang: Scalars['String']['input'];
 };
 
-
-export type MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs = {
-  from_lang: Scalars['String']['input'];
-  provider: MutationInput_Post_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_Provider_Provider;
-  to_lang: Scalars['String']['input'];
-};
+export type MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs =
+  {
+    from_lang: Scalars['String']['input'];
+    provider: MutationInput_Post_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_Provider_Provider;
+    to_lang: Scalars['String']['input'];
+  };
 
 export type Query = {
   __typename?: 'Query';
@@ -416,250 +436,244 @@ export type Query = {
   viewsInPastMonth: Scalars['BigInt']['output'];
 };
 
-
 export type QueryMedia_Math_Formula_By_HashArgs = {
   hash: Scalars['NonEmptyString']['input'];
 };
-
 
 export type QueryMedia_Math_Render_By_Format_By_HashArgs = {
   format: QueryInput_Media_Math_Render_By_Format_By_Hash_Format;
   hash: Scalars['NonEmptyString']['input'];
 };
 
+export type QueryMetrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_title: Scalars['String']['input'];
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_title: Scalars['String']['input'];
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_title: Scalars['String']['input'];
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs =
+  {
+    activity_level: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Activity_Level;
+    editor_type: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_title: Scalars['String']['input'];
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs = {
-  activity_level: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Activity_Level;
-  editor_type: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs =
+  {
+    activity_level: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Activity_Level;
+    editor_type: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs =
+  {
+    day: Scalars['String']['input'];
+    editor_type: QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
+    month: Scalars['String']['input'];
+    page_type: QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
+export type QueryMetrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_type: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs =
+  {
+    editor_type: QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
+    page_title: Scalars['String']['input'];
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
+export type QueryMetrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs =
+  {
+    access_site: QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_EndArgs =
+  {
+    access: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Access;
+    agent: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Agent;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Granularity;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
+export type QueryMetrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_EndArgs =
+  {
+    access: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Access;
+    agent: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Agent;
+    article: Scalars['String']['input'];
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Granularity;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_MonthArgs =
+  {
+    access: QueryInput_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Access;
+    month: Scalars['String']['input'];
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs = {
-  activity_level: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Activity_Level;
-  editor_type: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
+export type QueryMetrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_DayArgs =
+  {
+    access: QueryInput_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Access;
+    day: Scalars['String']['input'];
+    month: Scalars['String']['input'];
+    project: Scalars['String']['input'];
+    year: Scalars['String']['input'];
+  };
 
+export type QueryMetrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_EndArgs =
+  {
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Granularity;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
-export type QueryMetrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs = {
-  day: Scalars['String']['input'];
-  editor_type: QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Editor_Type;
-  month: Scalars['String']['input'];
-  page_type: QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type;
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_type: QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs = {
-  editor_type: QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Editor_Type;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity;
-  page_title: Scalars['String']['input'];
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs = {
-  access_site: QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_EndArgs = {
-  access: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Access;
-  agent: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Agent;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Granularity;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_EndArgs = {
-  access: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Access;
-  agent: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Agent;
-  article: Scalars['String']['input'];
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Granularity;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_MonthArgs = {
-  access: QueryInput_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Access;
-  month: Scalars['String']['input'];
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_DayArgs = {
-  access: QueryInput_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Access;
-  day: Scalars['String']['input'];
-  month: Scalars['String']['input'];
-  project: Scalars['String']['input'];
-  year: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_EndArgs = {
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Granularity;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
-
-export type QueryMetrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs = {
-  access_site: QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site;
-  end: Scalars['String']['input'];
-  granularity: QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity;
-  project: Scalars['String']['input'];
-  start: Scalars['String']['input'];
-};
-
+export type QueryMetrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs =
+  {
+    access_site: QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site;
+    end: Scalars['String']['input'];
+    granularity: QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity;
+    project: Scalars['String']['input'];
+    start: Scalars['String']['input'];
+  };
 
 export type QueryTransform_List_Pair_By_From_By_ToArgs = {
   from: Scalars['String']['input'];
   to: Scalars['String']['input'];
 };
 
-
 export type QueryTransform_List_Tool_By_ToolArgs = {
   tool: QueryInput_Transform_List_Tool_By_Tool_Tool;
 };
-
 
 export type QueryTransform_List_Tool_By_Tool_By_FromArgs = {
   from: Scalars['String']['input'];
   tool: QueryInput_Transform_List_Tool_By_Tool_By_From_Tool;
 };
-
 
 export type QueryTransform_List_Tool_By_Tool_By_From_By_ToArgs = {
   from: Scalars['String']['input'];
@@ -667,21 +681,19 @@ export type QueryTransform_List_Tool_By_Tool_By_From_By_ToArgs = {
   tool: QueryInput_Transform_List_Tool_By_Tool_By_From_By_To_Tool;
 };
 
-
 export type QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_WordArgs = {
   from_lang: Scalars['String']['input'];
   to_lang: Scalars['String']['input'];
   word: Scalars['String']['input'];
 };
 
-
-export type QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_ProviderArgs = {
-  from_lang: Scalars['String']['input'];
-  provider: QueryInput_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_Provider_Provider;
-  to_lang: Scalars['String']['input'];
-  word: Scalars['String']['input'];
-};
-
+export type QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_ProviderArgs =
+  {
+    from_lang: Scalars['String']['input'];
+    provider: QueryInput_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_Provider_Provider;
+    to_lang: Scalars['String']['input'];
+    word: Scalars['String']['input'];
+  };
 
 export type QueryViewsInPastMonthArgs = {
   end?: InputMaybe<Scalars['String']['input']>;
@@ -691,12 +703,20 @@ export type QueryViewsInPastMonthArgs = {
 
 export type Absolute_Bytes_Difference = {
   __typename?: 'absolute_bytes_difference';
-  items?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Absolute_Bytes_Difference_Per_Page = {
   __typename?: 'absolute_bytes_difference_per_page';
-  items?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Availability = {
@@ -715,7 +735,11 @@ export type Availability = {
 
 export type By_Country = {
   __typename?: 'by_country';
-  items?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items>
+    >
+  >;
 };
 
 export type Cx_Dict = {
@@ -723,7 +747,11 @@ export type Cx_Dict = {
   /** the original word to look up */
   source?: Maybe<Scalars['String']['output']>;
   /** the translations found */
-  translations?: Maybe<Array<Maybe<Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_Items>>>;
+  translations?: Maybe<
+    Array<
+      Maybe<Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_Items>
+    >
+  >;
 };
 
 export type Cx_Languagepairs = {
@@ -748,94 +776,142 @@ export type Cx_Mt = {
 
 export type Edited_Pages = {
   __typename?: 'edited_pages';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Editors = {
   __typename?: 'editors';
-  items?: Maybe<Array<Maybe<Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Edits = {
   __typename?: 'edits';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Edits_Per_Page = {
   __typename?: 'edits_per_page';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export enum Join__Graph {
-  Wiki = 'WIKI'
+  Wiki = 'WIKI',
 }
 
 export enum Link__Purpose {
   /** `EXECUTION` features provide metadata necessary for operation execution. */
   Execution = 'EXECUTION',
   /** `SECURITY` features provide metadata necessary to securely resolve fields. */
-  Security = 'SECURITY'
+  Security = 'SECURITY',
 }
 
 /** The input type of the given formula; can be tex or inline-tex */
 export enum MutationInput_Post_Media_Math_Check_By_Type_Type {
   Chem = 'chem',
   InlineTex = 'inline_tex',
-  Tex = 'tex'
+  Tex = 'tex',
 }
 
 /** The machine translation provider id */
 export enum MutationInput_Post_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_Provider_Provider {
   Apertium = 'Apertium',
   Yandex = 'Yandex',
-  Youdao = 'Youdao'
+  Youdao = 'Youdao',
 }
 
 export type Net_Bytes_Difference = {
   __typename?: 'net_bytes_difference';
-  items?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Net_Bytes_Difference_Per_Page = {
   __typename?: 'net_bytes_difference_per_page';
-  items?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type New_Pages = {
   __typename?: 'new_pages';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type New_Registered_Users = {
   __typename?: 'new_registered_users';
-  items?: Maybe<Array<Maybe<Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Pagecounts_Project = {
   __typename?: 'pagecounts_project';
-  items?: Maybe<Array<Maybe<Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Pageview_Article = {
   __typename?: 'pageview_article';
-  items?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Pageview_Project = {
   __typename?: 'pageview_project';
-  items?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
 export type Pageview_Tops = {
   __typename?: 'pageview_tops';
-  items?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 /** The output format; can be svg or mml */
 export enum QueryInput_Media_Math_Render_By_Format_By_Hash_Format {
   Mml = 'mml',
   Png = 'png',
-  Svg = 'svg'
+  Svg = 'svg',
 }
 
 /**
@@ -850,13 +926,13 @@ export enum QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /** Time unit for the response data. As of today, supported values are daily and monthly */
 export enum QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -867,7 +943,7 @@ export enum QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By
 export enum QueryInput_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -882,13 +958,13 @@ export enum QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /** Time unit for the response data. As of today, supported values are daily and monthly */
 export enum QueryInput_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -903,13 +979,13 @@ export enum QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Edit
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /** Time unit for the response data. As of today, supported values are daily and monthly */
 export enum QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -920,7 +996,7 @@ export enum QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Edit
 export enum QueryInput_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -935,13 +1011,13 @@ export enum QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /** Time unit for the response data. As of today, supported values are daily and monthly */
 export enum QueryInput_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -954,7 +1030,7 @@ export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_
   '5_24Edits' = '_5__24_edits',
   '25_99Edits' = '_25__99_edits',
   '100Edits' = '_100___edits',
-  AllActivityLevels = 'all_activity_levels'
+  AllActivityLevels = 'all_activity_levels',
 }
 
 /**
@@ -969,7 +1045,7 @@ export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -978,7 +1054,7 @@ export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_
  */
 export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -989,7 +1065,7 @@ export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_
 export enum QueryInput_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1004,7 +1080,7 @@ export enum QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Pag
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1013,7 +1089,7 @@ export enum QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Pag
  */
 export enum QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1024,7 +1100,7 @@ export enum QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Pag
 export enum QueryInput_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1039,7 +1115,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1050,7 +1126,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_
 export enum QueryInput_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1065,7 +1141,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Ty
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1076,7 +1152,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Ty
 export enum QueryInput_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1091,7 +1167,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Proje
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1102,7 +1178,7 @@ export enum QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Proje
 export enum QueryInput_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1115,7 +1191,7 @@ export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Pa
   '5_24Edits' = '_5__24_edits',
   '25_99Edits' = '_25__99_edits',
   '100Edits' = '_100___edits',
-  AllActivityLevels = 'all_activity_levels'
+  AllActivityLevels = 'all_activity_levels',
 }
 
 /**
@@ -1130,7 +1206,7 @@ export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Pa
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1139,7 +1215,7 @@ export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Pa
  */
 export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1150,7 +1226,7 @@ export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Pa
 export enum QueryInput_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1165,7 +1241,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Proje
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1176,7 +1252,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Proje
 export enum QueryInput_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1191,7 +1267,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1202,7 +1278,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By
 export enum QueryInput_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1217,7 +1293,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1228,7 +1304,7 @@ export enum QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By
 export enum QueryInput_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1243,7 +1319,7 @@ export enum QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1252,7 +1328,7 @@ export enum QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page
  */
 export enum QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1263,7 +1339,7 @@ export enum QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page
 export enum QueryInput_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Page_Type {
   AllPageTypes = 'all_page_types',
   Content = 'content',
-  NonContent = 'non_content'
+  NonContent = 'non_content',
 }
 
 /**
@@ -1278,20 +1354,20 @@ export enum QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor
   Anonymous = 'anonymous',
   GroupBot = 'group_bot',
   NameBot = 'name_bot',
-  User = 'user'
+  User = 'user',
 }
 
 /** Time unit for the response data. As of today, supported values are daily and monthly */
 export enum QueryInput_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /** If you want to filter by access site, use one of desktop-site or mobile-site. If you are interested in pagecounts regardless of access site use all-sites. */
 export enum QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site {
   AllSites = 'all_sites',
   DesktopSite = 'desktop_site',
-  MobileSite = 'mobile_site'
+  MobileSite = 'mobile_site',
 }
 
 /**
@@ -1301,7 +1377,7 @@ export enum QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_
 export enum QueryInput_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
   Hourly = 'hourly',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1312,7 +1388,7 @@ export enum QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent
   AllAccess = 'all_access',
   Desktop = 'desktop',
   MobileApp = 'mobile_app',
-  MobileWeb = 'mobile_web'
+  MobileWeb = 'mobile_web',
 }
 
 /**
@@ -1322,7 +1398,7 @@ export enum QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent
 export enum QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Agent {
   AllAgents = 'all_agents',
   Spider = 'spider',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1332,7 +1408,7 @@ export enum QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent
 export enum QueryInput_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
   Hourly = 'hourly',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1344,7 +1420,7 @@ export enum QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Age
   AllAccess = 'all_access',
   Desktop = 'desktop',
   MobileApp = 'mobile_app',
-  MobileWeb = 'mobile_web'
+  MobileWeb = 'mobile_web',
 }
 
 /**
@@ -1355,7 +1431,7 @@ export enum QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Age
   AllAgents = 'all_agents',
   Bot = 'bot',
   Spider = 'spider',
-  User = 'user'
+  User = 'user',
 }
 
 /**
@@ -1364,7 +1440,7 @@ export enum QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Age
  */
 export enum QueryInput_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1375,7 +1451,7 @@ export enum QueryInput_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_
   AllAccess = 'all_access',
   Desktop = 'desktop',
   MobileApp = 'mobile_app',
-  MobileWeb = 'mobile_web'
+  MobileWeb = 'mobile_web',
 }
 
 /**
@@ -1386,7 +1462,7 @@ export enum QueryInput_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Mon
   AllAccess = 'all_access',
   Desktop = 'desktop',
   MobileApp = 'mobile_app',
-  MobileWeb = 'mobile_web'
+  MobileWeb = 'mobile_web',
 }
 
 /**
@@ -1395,7 +1471,7 @@ export enum QueryInput_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Mon
  */
 export enum QueryInput_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /**
@@ -1405,7 +1481,7 @@ export enum QueryInput_Metrics_Registered_Users_New_By_Project_By_Granularity_By
 export enum QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Access_Site {
   AllSites = 'all_sites',
   DesktopSite = 'desktop_site',
-  MobileSite = 'mobile_site'
+  MobileSite = 'mobile_site',
 }
 
 /**
@@ -1414,436 +1490,604 @@ export enum QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granu
  */
 export enum QueryInput_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Granularity {
   Daily = 'daily',
-  Monthly = 'monthly'
+  Monthly = 'monthly',
 }
 
 /** The tool category to list tools and language pairs for */
 export enum QueryInput_Transform_List_Tool_By_Tool_By_From_By_To_Tool {
   Dictionary = 'dictionary',
-  Mt = 'mt'
+  Mt = 'mt',
 }
 
 /** The tool category to list tools and language pairs for */
 export enum QueryInput_Transform_List_Tool_By_Tool_By_From_Tool {
   Dictionary = 'dictionary',
-  Mt = 'mt'
+  Mt = 'mt',
 }
 
 /** The tool category to list tools and language pairs for */
 export enum QueryInput_Transform_List_Tool_By_Tool_Tool {
   Dictionary = 'dictionary',
-  Mt = 'mt'
+  Mt = 'mt',
 }
 
 /** The dictionary provider id */
 export enum QueryInput_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_Provider_Provider {
   Dictd = 'Dictd',
-  JsonDict = 'JsonDict'
+  JsonDict = 'JsonDict',
 }
 
-export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
-  abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
+    abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
-  abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
+    abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
-  net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
+    net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
-  net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
+    net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
-  activity_level?: Maybe<Scalars['String']['output']>;
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
+    activity_level?: Maybe<Scalars['String']['output']>;
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
-  edited_pages?: Maybe<Scalars['Int']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
+    edited_pages?: Maybe<Scalars['Int']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
-  new_pages?: Maybe<Scalars['Int']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
+    new_pages?: Maybe<Scalars['Int']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  edits?: Maybe<Scalars['BigInt']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    edits?: Maybe<Scalars['BigInt']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-};
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+  };
 
-export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
-  activity_level?: Maybe<Scalars['String']['output']>;
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
+    activity_level?: Maybe<Scalars['String']['output']>;
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
-  editors?: Maybe<Scalars['Int']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
+    editors?: Maybe<Scalars['Int']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-  user_text?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+    user_text?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  edits?: Maybe<Scalars['BigInt']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-  user_text?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    edits?: Maybe<Scalars['BigInt']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+    user_text?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
-  timestamp?: Maybe<Scalars['String']['output']>;
-  top?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>>>;
-};
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
+    timestamp?: Maybe<Scalars['String']['output']>;
+    top?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items = {
-  __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
-  net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-  user_text?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_Items =
+  {
+    __typename?: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
+    net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+    user_text?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_type?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_type?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
-  edits?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
+    edits?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
-  editor_type?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  page_title?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
+    editor_type?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    page_title?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
-  edits?: Maybe<Scalars['BigInt']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
+    edits?: Maybe<Scalars['BigInt']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
-  access_site?: Maybe<Scalars['String']['output']>;
-  count?: Maybe<Scalars['BigInt']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
+    access_site?: Maybe<Scalars['String']['output']>;
+    count?: Maybe<Scalars['BigInt']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items';
-  access?: Maybe<Scalars['String']['output']>;
-  agent?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-  views?: Maybe<Scalars['BigInt']['output']>;
-};
+export type Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items';
+    access?: Maybe<Scalars['String']['output']>;
+    agent?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+    views?: Maybe<Scalars['BigInt']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items';
-  access?: Maybe<Scalars['String']['output']>;
-  agent?: Maybe<Scalars['String']['output']>;
-  article?: Maybe<Scalars['String']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-  views?: Maybe<Scalars['BigInt']['output']>;
-};
+export type Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items';
+    access?: Maybe<Scalars['String']['output']>;
+    agent?: Maybe<Scalars['String']['output']>;
+    article?: Maybe<Scalars['String']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+    views?: Maybe<Scalars['BigInt']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items = {
-  __typename?: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items';
-  access?: Maybe<Scalars['String']['output']>;
-  countries?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_Items>>>;
-  month?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  year?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items =
+  {
+    __typename?: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items';
+    access?: Maybe<Scalars['String']['output']>;
+    countries?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_Items>
+      >
+    >;
+    month?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    year?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_Items = {
-  __typename?: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items';
-  country?: Maybe<Scalars['String']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-  views?: Maybe<Scalars['BigInt']['output']>;
-};
+export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_Items =
+  {
+    __typename?: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items';
+    country?: Maybe<Scalars['String']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+    views?: Maybe<Scalars['BigInt']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items = {
-  __typename?: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items';
-  access?: Maybe<Scalars['String']['output']>;
-  articles?: Maybe<Array<Maybe<Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_Items>>>;
-  day?: Maybe<Scalars['String']['output']>;
-  month?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  year?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items =
+  {
+    __typename?: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items';
+    access?: Maybe<Scalars['String']['output']>;
+    articles?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_Items>
+      >
+    >;
+    day?: Maybe<Scalars['String']['output']>;
+    month?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    year?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_Items = {
-  __typename?: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items';
-  article?: Maybe<Scalars['String']['output']>;
-  rank?: Maybe<Scalars['Int']['output']>;
-  views?: Maybe<Scalars['BigInt']['output']>;
-};
+export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_Items =
+  {
+    __typename?: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items';
+    article?: Maybe<Scalars['String']['output']>;
+    rank?: Maybe<Scalars['Int']['output']>;
+    views?: Maybe<Scalars['BigInt']['output']>;
+  };
 
-export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items';
-  granularity?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  results?: Maybe<Array<Maybe<Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_Items>>>;
-};
+export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items';
+    granularity?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    results?: Maybe<
+      Array<
+        Maybe<Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_Items>
+      >
+    >;
+  };
 
-export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_Items = {
-  __typename?: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items';
-  new_registered_users?: Maybe<Scalars['Int']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_Items =
+  {
+    __typename?: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items';
+    new_registered_users?: Maybe<Scalars['Int']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items = {
-  __typename?: 'query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
-  access_site?: Maybe<Scalars['String']['output']>;
-  devices?: Maybe<Scalars['BigInt']['output']>;
-  granularity?: Maybe<Scalars['String']['output']>;
-  project?: Maybe<Scalars['String']['output']>;
-  timestamp?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items =
+  {
+    __typename?: 'query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
+    access_site?: Maybe<Scalars['String']['output']>;
+    devices?: Maybe<Scalars['BigInt']['output']>;
+    granularity?: Maybe<Scalars['String']['output']>;
+    project?: Maybe<Scalars['String']['output']>;
+    timestamp?: Maybe<Scalars['String']['output']>;
+  };
 
-export type Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_Items = {
-  __typename?: 'query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items';
-  /** extra information about the phrase */
-  info?: Maybe<Scalars['String']['output']>;
-  /** the translated phrase */
-  phrase?: Maybe<Scalars['String']['output']>;
-  /** the source dictionary used for the translation */
-  sources?: Maybe<Scalars['String']['output']>;
-};
+export type Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_Items =
+  {
+    __typename?: 'query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items';
+    /** extra information about the phrase */
+    info?: Maybe<Scalars['String']['output']>;
+    /** the translated phrase */
+    phrase?: Maybe<Scalars['String']['output']>;
+    /** the source dictionary used for the translation */
+    sources?: Maybe<Scalars['String']['output']>;
+  };
 
 export type Top_Edited_Pages_By_Abs_Bytes_Diff = {
   __typename?: 'top_edited_pages_by_abs_bytes_diff';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Top_Edited_Pages_By_Edits = {
   __typename?: 'top_edited_pages_by_edits';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Top_Edited_Pages_By_Net_Bytes_Diff = {
   __typename?: 'top_edited_pages_by_net_bytes_diff';
-  items?: Maybe<Array<Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Top_Editors_By_Abs_Bytes_Diff = {
   __typename?: 'top_editors_by_abs_bytes_diff';
-  items?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Top_Editors_By_Edits = {
   __typename?: 'top_editors_by_edits';
-  items?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Top_Editors_By_Net_Bytes_Diff = {
   __typename?: 'top_editors_by_net_bytes_diff';
-  items?: Maybe<Array<Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items>
+    >
+  >;
 };
 
 export type Unique_Devices = {
   __typename?: 'unique_devices';
-  items?: Maybe<Array<Maybe<Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items>>>;
+  items?: Maybe<
+    Array<
+      Maybe<Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_Items>
+    >
+  >;
 };
 
-
-
 export type ResolverTypeWrapper<T> = Promise<T> | T;
-
 
 export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
   resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
@@ -1858,8 +2102,15 @@ export type NewStitchingResolver<TResult, TParent, TContext, TArgs> = {
   selectionSet: string | ((fieldNode: FieldNode) => SelectionSetNode);
   resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
 };
-export type StitchingResolver<TResult, TParent, TContext, TArgs> = LegacyStitchingResolver<TResult, TParent, TContext, TArgs> | NewStitchingResolver<TResult, TParent, TContext, TArgs>;
-export type Resolver<TResult, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> =
+export type StitchingResolver<TResult, TParent, TContext, TArgs> =
+  | LegacyStitchingResolver<TResult, TParent, TContext, TArgs>
+  | NewStitchingResolver<TResult, TParent, TContext, TArgs>;
+export type Resolver<
+  TResult,
+  TParent = Record<PropertyKey, never>,
+  TContext = Record<PropertyKey, never>,
+  TArgs = Record<PropertyKey, never>,
+> =
   | ResolverFn<TResult, TParent, TContext, TArgs>
   | ResolverWithResolve<TResult, TParent, TContext, TArgs>
   | StitchingResolver<TResult, TParent, TContext, TArgs>;
@@ -1868,26 +2119,42 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => Promise<TResult> | TResult;
 
 export type SubscriptionSubscribeFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => AsyncIterable<TResult> | Promise<AsyncIterable<TResult>>;
 
 export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
 
-export interface SubscriptionSubscriberObject<TResult, TKey extends string, TParent, TContext, TArgs> {
-  subscribe: SubscriptionSubscribeFn<{ [key in TKey]: TResult }, TParent, TContext, TArgs>;
-  resolve?: SubscriptionResolveFn<TResult, { [key in TKey]: TResult }, TContext, TArgs>;
+export interface SubscriptionSubscriberObject<
+  TResult,
+  TKey extends string,
+  TParent,
+  TContext,
+  TArgs,
+> {
+  subscribe: SubscriptionSubscribeFn<
+    { [key in TKey]: TResult },
+    TParent,
+    TContext,
+    TArgs
+  >;
+  resolve?: SubscriptionResolveFn<
+    TResult,
+    { [key in TKey]: TResult },
+    TContext,
+    TArgs
+  >;
 }
 
 export interface SubscriptionResolverObject<TResult, TParent, TContext, TArgs> {
@@ -1895,35 +2162,61 @@ export interface SubscriptionResolverObject<TResult, TParent, TContext, TArgs> {
   resolve: SubscriptionResolveFn<TResult, any, TContext, TArgs>;
 }
 
-export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, TArgs> =
+export type SubscriptionObject<
+  TResult,
+  TKey extends string,
+  TParent,
+  TContext,
+  TArgs,
+> =
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
 
-export type SubscriptionResolver<TResult, TKey extends string, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> =
-  | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
+export type SubscriptionResolver<
+  TResult,
+  TKey extends string,
+  TParent = Record<PropertyKey, never>,
+  TContext = Record<PropertyKey, never>,
+  TArgs = Record<PropertyKey, never>,
+> =
+  | ((
+      ...args: any[]
+    ) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
   | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
-export type TypeResolveFn<TTypes, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>> = (
+export type TypeResolveFn<
+  TTypes,
+  TParent = Record<PropertyKey, never>,
+  TContext = Record<PropertyKey, never>,
+> = (
   parent: TParent,
   context: TContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => Maybe<TTypes> | Promise<Maybe<TTypes>>;
 
-export type IsTypeOfResolverFn<T = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>> = (obj: T, context: TContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
+export type IsTypeOfResolverFn<
+  T = Record<PropertyKey, never>,
+  TContext = Record<PropertyKey, never>,
+> = (
+  obj: T,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>;
 
 export type NextResolverFn<T> = () => Promise<T>;
 
-export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> = (
+export type DirectiveResolverFn<
+  TResult = Record<PropertyKey, never>,
+  TParent = Record<PropertyKey, never>,
+  TContext = Record<PropertyKey, never>,
+  TArgs = Record<PropertyKey, never>,
+> = (
   next: NextResolverFn<TResult>,
   parent: TParent,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
-
-
-
-
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
@@ -1937,7 +2230,9 @@ export type ResolversTypes = {
   ObjMap: ResolverTypeWrapper<Scalars['ObjMap']['output']>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  _DirectiveExtensions: ResolverTypeWrapper<Scalars['_DirectiveExtensions']['output']>;
+  _DirectiveExtensions: ResolverTypeWrapper<
+    Scalars['_DirectiveExtensions']['output']
+  >;
   absolute_bytes_difference: ResolverTypeWrapper<Absolute_Bytes_Difference>;
   absolute_bytes_difference_per_page: ResolverTypeWrapper<Absolute_Bytes_Difference_Per_Page>;
   availability: ResolverTypeWrapper<Availability>;
@@ -2166,28 +2461,45 @@ export type ResolversParentTypes = {
   unique_devices: Unique_Devices;
 };
 
-export type AdditionalFieldDirectiveArgs = { };
+export type AdditionalFieldDirectiveArgs = {};
 
-export type AdditionalFieldDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = AdditionalFieldDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type AdditionalFieldDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = AdditionalFieldDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type EnumDirectiveArgs = {
   subgraph?: Maybe<Scalars['String']['input']>;
   value?: Maybe<Scalars['String']['input']>;
 };
 
-export type EnumDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = EnumDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type EnumDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = EnumDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type ExtraSchemaDefinitionDirectiveDirectiveArgs = {
   directives?: Maybe<Scalars['_DirectiveExtensions']['input']>;
 };
 
-export type ExtraSchemaDefinitionDirectiveDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = ExtraSchemaDefinitionDirectiveDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type ExtraSchemaDefinitionDirectiveDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = ExtraSchemaDefinitionDirectiveDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type HttpOperationDirectiveArgs = {
   httpMethod?: Maybe<HttpMethod>;
   isBinary?: Maybe<Scalars['Boolean']['input']>;
   jsonApiFields?: Maybe<Scalars['Boolean']['input']>;
-  operationSpecificHeaders?: Maybe<Array<Maybe<Array<Maybe<Scalars['String']['input']>>>>>;
+  operationSpecificHeaders?: Maybe<
+    Array<Maybe<Array<Maybe<Scalars['String']['input']>>>>
+  >;
   path?: Maybe<Scalars['String']['input']>;
   queryParamArgMap?: Maybe<Scalars['ObjMap']['input']>;
   queryStringOptions?: Maybe<Scalars['ObjMap']['input']>;
@@ -2196,13 +2508,23 @@ export type HttpOperationDirectiveArgs = {
   subgraph?: Maybe<Scalars['String']['input']>;
 };
 
-export type HttpOperationDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = HttpOperationDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type HttpOperationDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = HttpOperationDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__EnumValueDirectiveArgs = {
   graph: Join__Graph;
 };
 
-export type Join__EnumValueDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__EnumValueDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__EnumValueDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__EnumValueDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__FieldDirectiveArgs = {
   external?: Maybe<Scalars['Boolean']['input']>;
@@ -2214,21 +2536,36 @@ export type Join__FieldDirectiveArgs = {
   usedOverridden?: Maybe<Scalars['Boolean']['input']>;
 };
 
-export type Join__FieldDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__FieldDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__FieldDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__FieldDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__GraphDirectiveArgs = {
   name: Scalars['String']['input'];
   url: Scalars['String']['input'];
 };
 
-export type Join__GraphDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__GraphDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__GraphDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__GraphDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__ImplementsDirectiveArgs = {
   graph: Join__Graph;
   interface: Scalars['String']['input'];
 };
 
-export type Join__ImplementsDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__ImplementsDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__ImplementsDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__ImplementsDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__TypeDirectiveArgs = {
   extension?: Scalars['Boolean']['input'];
@@ -2238,14 +2575,24 @@ export type Join__TypeDirectiveArgs = {
   resolvable?: Scalars['Boolean']['input'];
 };
 
-export type Join__TypeDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__TypeDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__TypeDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__TypeDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type Join__UnionMemberDirectiveArgs = {
   graph: Join__Graph;
   member: Scalars['String']['input'];
 };
 
-export type Join__UnionMemberDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = Join__UnionMemberDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type Join__UnionMemberDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = Join__UnionMemberDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type LinkDirectiveArgs = {
   as?: Maybe<Scalars['String']['input']>;
@@ -2254,14 +2601,24 @@ export type LinkDirectiveArgs = {
   url?: Maybe<Scalars['String']['input']>;
 };
 
-export type LinkDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = LinkDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type LinkDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = LinkDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type ResolveRootFieldDirectiveArgs = {
   field?: Maybe<Scalars['String']['input']>;
   subgraph?: Maybe<Scalars['String']['input']>;
 };
 
-export type ResolveRootFieldDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = ResolveRootFieldDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type ResolveRootFieldDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = ResolveRootFieldDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
 export type TransportDirectiveArgs = {
   headers?: Maybe<Array<Maybe<Array<Maybe<Scalars['String']['input']>>>>>;
@@ -2272,504 +2629,2026 @@ export type TransportDirectiveArgs = {
   subgraph?: Maybe<Scalars['String']['input']>;
 };
 
-export type TransportDirectiveResolver<Result, Parent, ContextType = MeshInContextSDK, Args = TransportDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+export type TransportDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = MeshInContextSDK,
+  Args = TransportDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
 
-export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['BigInt'], any> {
+export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['BigInt'],
+  any
+> {
   name: 'BigInt';
 }
 
-export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSON'], any> {
+export interface JsonScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['JSON'],
+  any
+> {
   name: 'JSON';
 }
 
-export type MutationResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  post_media_math_check_by_type?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<MutationPost_Media_Math_Check_By_TypeArgs, 'type'>>;
-  post_transform_html_from_by_from_lang_to_by_to_lang?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs, 'from_lang' | 'to_lang'>>;
-  post_transform_html_from_by_from_lang_to_by_to_lang_by_provider?: Resolver<Maybe<ResolversTypes['cx_mt']>, ParentType, ContextType, RequireFields<MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs, 'from_lang' | 'provider' | 'to_lang'>>;
+export type MutationResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['Mutation'] =
+    ResolversParentTypes['Mutation'],
+> = {
+  post_media_math_check_by_type?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<MutationPost_Media_Math_Check_By_TypeArgs, 'type'>
+  >;
+  post_transform_html_from_by_from_lang_to_by_to_lang?: Resolver<
+    Maybe<ResolversTypes['cx_mt']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationPost_Transform_Html_From_By_From_Lang_To_By_To_LangArgs,
+      'from_lang' | 'to_lang'
+    >
+  >;
+  post_transform_html_from_by_from_lang_to_by_to_lang_by_provider?: Resolver<
+    Maybe<ResolversTypes['cx_mt']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationPost_Transform_Html_From_By_From_Lang_To_By_To_Lang_By_ProviderArgs,
+      'from_lang' | 'provider' | 'to_lang'
+    >
+  >;
 };
 
-export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {
+export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['NonEmptyString'],
+  any
+> {
   name: 'NonEmptyString';
 }
 
-export interface ObjMapScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['ObjMap'], any> {
+export interface ObjMapScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['ObjMap'],
+  any
+> {
   name: 'ObjMap';
 }
 
-export type QueryResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  feed_availability?: Resolver<Maybe<ResolversTypes['availability']>, ParentType, ContextType>;
-  media_math_formula_by_hash?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryMedia_Math_Formula_By_HashArgs, 'hash'>>;
-  media_math_render_by_format_by_hash?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryMedia_Math_Render_By_Format_By_HashArgs, 'format' | 'hash'>>;
-  metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['absolute_bytes_difference']>, ParentType, ContextType, RequireFields<QueryMetrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['absolute_bytes_difference_per_page']>, ParentType, ContextType, RequireFields<QueryMetrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'>>;
-  metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['net_bytes_difference']>, ParentType, ContextType, RequireFields<QueryMetrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['net_bytes_difference_per_page']>, ParentType, ContextType, RequireFields<QueryMetrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'>>;
-  metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['edited_pages']>, ParentType, ContextType, RequireFields<QueryMetrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs, 'activity_level' | 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['new_pages']>, ParentType, ContextType, RequireFields<QueryMetrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_edited_pages_by_abs_bytes_diff']>, ParentType, ContextType, RequireFields<QueryMetrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_edited_pages_by_edits']>, ParentType, ContextType, RequireFields<QueryMetrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_edited_pages_by_net_bytes_diff']>, ParentType, ContextType, RequireFields<QueryMetrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['editors']>, ParentType, ContextType, RequireFields<QueryMetrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs, 'activity_level' | 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_editors_by_abs_bytes_diff']>, ParentType, ContextType, RequireFields<QueryMetrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_editors_by_edits']>, ParentType, ContextType, RequireFields<QueryMetrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['top_editors_by_net_bytes_diff']>, ParentType, ContextType, RequireFields<QueryMetrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs, 'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'>>;
-  metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['edits']>, ParentType, ContextType, RequireFields<QueryMetrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'>>;
-  metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['edits_per_page']>, ParentType, ContextType, RequireFields<QueryMetrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs, 'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'>>;
-  metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['pagecounts_project']>, ParentType, ContextType, RequireFields<QueryMetrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs, 'access_site' | 'end' | 'granularity' | 'project' | 'start'>>;
-  metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['pageview_project']>, ParentType, ContextType, RequireFields<QueryMetrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_EndArgs, 'access' | 'agent' | 'end' | 'granularity' | 'project' | 'start'>>;
-  metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['pageview_article']>, ParentType, ContextType, RequireFields<QueryMetrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_EndArgs, 'access' | 'agent' | 'article' | 'end' | 'granularity' | 'project' | 'start'>>;
-  metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month?: Resolver<Maybe<ResolversTypes['by_country']>, ParentType, ContextType, RequireFields<QueryMetrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_MonthArgs, 'access' | 'month' | 'project' | 'year'>>;
-  metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day?: Resolver<Maybe<ResolversTypes['pageview_tops']>, ParentType, ContextType, RequireFields<QueryMetrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_DayArgs, 'access' | 'day' | 'month' | 'project' | 'year'>>;
-  metrics_registered_users_new_by_project_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['new_registered_users']>, ParentType, ContextType, RequireFields<QueryMetrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_EndArgs, 'end' | 'granularity' | 'project' | 'start'>>;
-  metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end?: Resolver<Maybe<ResolversTypes['unique_devices']>, ParentType, ContextType, RequireFields<QueryMetrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs, 'access_site' | 'end' | 'granularity' | 'project' | 'start'>>;
-  transform_list_languagepairs?: Resolver<Maybe<ResolversTypes['cx_languagepairs']>, ParentType, ContextType>;
-  transform_list_pair_by_from_by_to?: Resolver<Maybe<ResolversTypes['cx_list_tools']>, ParentType, ContextType, RequireFields<QueryTransform_List_Pair_By_From_By_ToArgs, 'from' | 'to'>>;
-  transform_list_tool_by_tool?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryTransform_List_Tool_By_ToolArgs, 'tool'>>;
-  transform_list_tool_by_tool_by_from?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryTransform_List_Tool_By_Tool_By_FromArgs, 'from' | 'tool'>>;
-  transform_list_tool_by_tool_by_from_by_to?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryTransform_List_Tool_By_Tool_By_From_By_ToArgs, 'from' | 'to' | 'tool'>>;
-  transform_word_from_by_from_lang_to_by_to_lang_by_word?: Resolver<Maybe<ResolversTypes['cx_dict']>, ParentType, ContextType, RequireFields<QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_WordArgs, 'from_lang' | 'to_lang' | 'word'>>;
-  transform_word_from_by_from_lang_to_by_to_lang_by_word_by_provider?: Resolver<Maybe<ResolversTypes['cx_dict']>, ParentType, ContextType, RequireFields<QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_ProviderArgs, 'from_lang' | 'provider' | 'to_lang' | 'word'>>;
-  viewsInPastMonth?: Resolver<ResolversTypes['BigInt'], ParentType, ContextType, RequireFields<QueryViewsInPastMonthArgs, 'end' | 'project' | 'start'>>;
+export type QueryResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['Query'] =
+    ResolversParentTypes['Query'],
+> = {
+  feed_availability?: Resolver<
+    Maybe<ResolversTypes['availability']>,
+    ParentType,
+    ContextType
+  >;
+  media_math_formula_by_hash?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryMedia_Math_Formula_By_HashArgs, 'hash'>
+  >;
+  media_math_render_by_format_by_hash?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMedia_Math_Render_By_Format_By_HashArgs,
+      'format' | 'hash'
+    >
+  >;
+  metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['absolute_bytes_difference']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'
+    >
+  >;
+  metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['absolute_bytes_difference_per_page']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'
+    >
+  >;
+  metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['net_bytes_difference']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'
+    >
+  >;
+  metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['net_bytes_difference_per_page']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'
+    >
+  >;
+  metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['edited_pages']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs,
+      | 'activity_level'
+      | 'editor_type'
+      | 'end'
+      | 'granularity'
+      | 'page_type'
+      | 'project'
+      | 'start'
+    >
+  >;
+  metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['new_pages']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'
+    >
+  >;
+  metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_edited_pages_by_abs_bytes_diff']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_edited_pages_by_edits']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_edited_pages_by_net_bytes_diff']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['editors']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_EndArgs,
+      | 'activity_level'
+      | 'editor_type'
+      | 'end'
+      | 'granularity'
+      | 'page_type'
+      | 'project'
+      | 'start'
+    >
+  >;
+  metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_editors_by_abs_bytes_diff']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_editors_by_edits']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['top_editors_by_net_bytes_diff']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_DayArgs,
+      'day' | 'editor_type' | 'month' | 'page_type' | 'project' | 'year'
+    >
+  >;
+  metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['edits']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_type' | 'project' | 'start'
+    >
+  >;
+  metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['edits_per_page']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_EndArgs,
+      'editor_type' | 'end' | 'granularity' | 'page_title' | 'project' | 'start'
+    >
+  >;
+  metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['pagecounts_project']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs,
+      'access_site' | 'end' | 'granularity' | 'project' | 'start'
+    >
+  >;
+  metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['pageview_project']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_EndArgs,
+      'access' | 'agent' | 'end' | 'granularity' | 'project' | 'start'
+    >
+  >;
+  metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['pageview_article']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_EndArgs,
+      | 'access'
+      | 'agent'
+      | 'article'
+      | 'end'
+      | 'granularity'
+      | 'project'
+      | 'start'
+    >
+  >;
+  metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month?: Resolver<
+    Maybe<ResolversTypes['by_country']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_MonthArgs,
+      'access' | 'month' | 'project' | 'year'
+    >
+  >;
+  metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day?: Resolver<
+    Maybe<ResolversTypes['pageview_tops']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_DayArgs,
+      'access' | 'day' | 'month' | 'project' | 'year'
+    >
+  >;
+  metrics_registered_users_new_by_project_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['new_registered_users']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_EndArgs,
+      'end' | 'granularity' | 'project' | 'start'
+    >
+  >;
+  metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end?: Resolver<
+    Maybe<ResolversTypes['unique_devices']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryMetrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_EndArgs,
+      'access_site' | 'end' | 'granularity' | 'project' | 'start'
+    >
+  >;
+  transform_list_languagepairs?: Resolver<
+    Maybe<ResolversTypes['cx_languagepairs']>,
+    ParentType,
+    ContextType
+  >;
+  transform_list_pair_by_from_by_to?: Resolver<
+    Maybe<ResolversTypes['cx_list_tools']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryTransform_List_Pair_By_From_By_ToArgs, 'from' | 'to'>
+  >;
+  transform_list_tool_by_tool?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryTransform_List_Tool_By_ToolArgs, 'tool'>
+  >;
+  transform_list_tool_by_tool_by_from?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryTransform_List_Tool_By_Tool_By_FromArgs, 'from' | 'tool'>
+  >;
+  transform_list_tool_by_tool_by_from_by_to?: Resolver<
+    Maybe<ResolversTypes['JSON']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryTransform_List_Tool_By_Tool_By_From_By_ToArgs,
+      'from' | 'to' | 'tool'
+    >
+  >;
+  transform_word_from_by_from_lang_to_by_to_lang_by_word?: Resolver<
+    Maybe<ResolversTypes['cx_dict']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_WordArgs,
+      'from_lang' | 'to_lang' | 'word'
+    >
+  >;
+  transform_word_from_by_from_lang_to_by_to_lang_by_word_by_provider?: Resolver<
+    Maybe<ResolversTypes['cx_dict']>,
+    ParentType,
+    ContextType,
+    RequireFields<
+      QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_ProviderArgs,
+      'from_lang' | 'provider' | 'to_lang' | 'word'
+    >
+  >;
+  viewsInPastMonth?: Resolver<
+    ResolversTypes['BigInt'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryViewsInPastMonthArgs, 'end' | 'project' | 'start'>
+  >;
 };
 
-export interface _DirectiveExtensionsScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['_DirectiveExtensions'], any> {
+export interface _DirectiveExtensionsScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['_DirectiveExtensions'],
+  any
+> {
   name: '_DirectiveExtensions';
 }
 
-export type Absolute_Bytes_DifferenceResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['absolute_bytes_difference'] = ResolversParentTypes['absolute_bytes_difference']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Absolute_Bytes_DifferenceResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['absolute_bytes_difference'] =
+    ResolversParentTypes['absolute_bytes_difference'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Absolute_Bytes_Difference_Per_PageResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['absolute_bytes_difference_per_page'] = ResolversParentTypes['absolute_bytes_difference_per_page']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Absolute_Bytes_Difference_Per_PageResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['absolute_bytes_difference_per_page'] =
+    ResolversParentTypes['absolute_bytes_difference_per_page'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type AvailabilityResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['availability'] = ResolversParentTypes['availability']> = {
-  in_the_news?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
-  most_read?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
-  on_this_day?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
-  picture_of_the_day?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
-  todays_featured_article?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
+export type AvailabilityResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['availability'] =
+    ResolversParentTypes['availability'],
+> = {
+  in_the_news?: Resolver<
+    Array<Maybe<ResolversTypes['String']>>,
+    ParentType,
+    ContextType
+  >;
+  most_read?: Resolver<
+    Array<Maybe<ResolversTypes['String']>>,
+    ParentType,
+    ContextType
+  >;
+  on_this_day?: Resolver<
+    Array<Maybe<ResolversTypes['String']>>,
+    ParentType,
+    ContextType
+  >;
+  picture_of_the_day?: Resolver<
+    Array<Maybe<ResolversTypes['String']>>,
+    ParentType,
+    ContextType
+  >;
+  todays_featured_article?: Resolver<
+    Array<Maybe<ResolversTypes['String']>>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type By_CountryResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['by_country'] = ResolversParentTypes['by_country']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items']>>>, ParentType, ContextType>;
+export type By_CountryResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['by_country'] =
+    ResolversParentTypes['by_country'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Cx_DictResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['cx_dict'] = ResolversParentTypes['cx_dict']> = {
+export type Cx_DictResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['cx_dict'] =
+    ResolversParentTypes['cx_dict'],
+> = {
   source?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  translations?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items']>>>, ParentType, ContextType>;
+  translations?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Cx_LanguagepairsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['cx_languagepairs'] = ResolversParentTypes['cx_languagepairs']> = {
-  source?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
-  target?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+export type Cx_LanguagepairsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['cx_languagepairs'] =
+    ResolversParentTypes['cx_languagepairs'],
+> = {
+  source?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['String']>>>,
+    ParentType,
+    ContextType
+  >;
+  target?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['String']>>>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Cx_List_ToolsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['cx_list_tools'] = ResolversParentTypes['cx_list_tools']> = {
-  tools?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+export type Cx_List_ToolsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['cx_list_tools'] =
+    ResolversParentTypes['cx_list_tools'],
+> = {
+  tools?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['String']>>>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Cx_MtResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['cx_mt'] = ResolversParentTypes['cx_mt']> = {
+export type Cx_MtResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['cx_mt'] =
+    ResolversParentTypes['cx_mt'],
+> = {
   contents?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
-export type Edited_PagesResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['edited_pages'] = ResolversParentTypes['edited_pages']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Edited_PagesResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['edited_pages'] =
+    ResolversParentTypes['edited_pages'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type EditorsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['editors'] = ResolversParentTypes['editors']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type EditorsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['editors'] =
+    ResolversParentTypes['editors'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type EditsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['edits'] = ResolversParentTypes['edits']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type EditsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['edits'] =
+    ResolversParentTypes['edits'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Edits_Per_PageResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['edits_per_page'] = ResolversParentTypes['edits_per_page']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Edits_Per_PageResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['edits_per_page'] =
+    ResolversParentTypes['edits_per_page'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export interface Join__FieldSetScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['join__FieldSet'], any> {
+export interface Join__FieldSetScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['join__FieldSet'],
+  any
+> {
   name: 'join__FieldSet';
 }
 
-export interface Link__ImportScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['link__Import'], any> {
+export interface Link__ImportScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['link__Import'],
+  any
+> {
   name: 'link__Import';
 }
 
-export type Net_Bytes_DifferenceResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['net_bytes_difference'] = ResolversParentTypes['net_bytes_difference']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Net_Bytes_DifferenceResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['net_bytes_difference'] =
+    ResolversParentTypes['net_bytes_difference'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Net_Bytes_Difference_Per_PageResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['net_bytes_difference_per_page'] = ResolversParentTypes['net_bytes_difference_per_page']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Net_Bytes_Difference_Per_PageResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['net_bytes_difference_per_page'] =
+    ResolversParentTypes['net_bytes_difference_per_page'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type New_PagesResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['new_pages'] = ResolversParentTypes['new_pages']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type New_PagesResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['new_pages'] =
+    ResolversParentTypes['new_pages'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type New_Registered_UsersResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['new_registered_users'] = ResolversParentTypes['new_registered_users']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type New_Registered_UsersResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['new_registered_users'] =
+    ResolversParentTypes['new_registered_users'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Pagecounts_ProjectResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['pagecounts_project'] = ResolversParentTypes['pagecounts_project']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Pagecounts_ProjectResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['pagecounts_project'] =
+    ResolversParentTypes['pagecounts_project'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Pageview_ArticleResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['pageview_article'] = ResolversParentTypes['pageview_article']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Pageview_ArticleResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['pageview_article'] =
+    ResolversParentTypes['pageview_article'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Pageview_ProjectResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['pageview_project'] = ResolversParentTypes['pageview_project']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Pageview_ProjectResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['pageview_project'] =
+    ResolversParentTypes['pageview_project'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Pageview_TopsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['pageview_tops'] = ResolversParentTypes['pageview_tops']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Pageview_TopsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['pageview_tops'] =
+    ResolversParentTypes['pageview_tops'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']> = {
-  abs_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Absolute_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  abs_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']> = {
-  abs_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Absolute_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  abs_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']> = {
-  net_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Net_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  net_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']> = {
-  net_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Bytes_Difference_Net_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  net_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']> = {
-  activity_level?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'],
+> = {
+  activity_level?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']> = {
-  edited_pages?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  edited_pages?: Resolver<
+    Maybe<ResolversTypes['Int']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']> = {
+export type Query_Metrics_Edited_Pages_New_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
   new_pages?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
-  abs_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
+  abs_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
+export type Query_Metrics_Edited_Pages_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
   edits?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
-  net_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edited_Pages_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
+  net_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items']> = {
-  activity_level?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items'],
+> = {
+  activity_level?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items']> = {
+export type Query_Metrics_Editors_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Activity_Level_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
   editors?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
-  abs_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Absolute_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
+  abs_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  user_text?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  user_text?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
+export type Query_Metrics_Editors_Top_By_Edits_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
   edits?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  user_text?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  user_text?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] = ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items']> = {
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  top?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']>>>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items'],
+> = {
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  top?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] = ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items']> = {
-  net_bytes_diff?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+export type Query_Metrics_Editors_Top_By_Net_Bytes_Difference_By_Project_By_Editor_Type_By_Page_Type_By_Year_By_Month_By_Day_Items_Items_Results_Items_Top_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'] =
+    ResolversParentTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items'],
+> = {
+  net_bytes_diff?: Resolver<
+    Maybe<ResolversTypes['BigInt']>,
+    ParentType,
+    ContextType
+  >;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  user_text?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  user_text?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items']> = {
+export type Query_Metrics_Edits_Aggregate_By_Project_By_Editor_Type_By_Page_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
   edits?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items']> = {
-  editor_type?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  page_title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items'],
+> = {
+  editor_type?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
+  page_title?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items']> = {
+export type Query_Metrics_Edits_Per_Page_By_Project_By_Page_Title_By_Editor_Type_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
   edits?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items']> = {
-  access_site?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Legacy_Pagecounts_Aggregate_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items'],
+> = {
+  access_site?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   count?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items']> = {
+export type Query_Metrics_Pageviews_Aggregate_By_Project_By_Access_By_Agent_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items'],
+> = {
   access?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   agent?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   views?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items']> = {
+export type Query_Metrics_Pageviews_Per_Article_By_Project_By_Access_By_Agent_By_Article_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items'],
+> = {
   access?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   agent?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   article?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   views?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items'] = ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items']> = {
+export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items'] =
+    ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items'],
+> = {
   access?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  countries?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items']>>>, ParentType, ContextType>;
+  countries?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
   month?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   year?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items'] = ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items']> = {
+export type Query_Metrics_Pageviews_Top_By_Country_By_Project_By_Access_By_Year_By_Month_Items_Items_Countries_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items'] =
+    ResolversParentTypes['query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items'],
+> = {
   country?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   views?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items'] = ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items']> = {
+export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items'] =
+    ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items'],
+> = {
   access?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  articles?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items']>>>, ParentType, ContextType>;
+  articles?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
   day?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   month?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   year?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items'] = ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items']> = {
+export type Query_Metrics_Pageviews_Top_By_Project_By_Access_By_Year_By_Month_By_Day_Items_Items_Articles_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items'] =
+    ResolversParentTypes['query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items'],
+> = {
   article?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   rank?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   views?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
 };
 
-export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items']> = {
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items'],
+> = {
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  results?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items']>>>, ParentType, ContextType>;
+  results?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items'] = ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items']> = {
-  new_registered_users?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Registered_Users_New_By_Project_By_Granularity_By_Start_By_End_Items_Items_Results_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items'] =
+    ResolversParentTypes['query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items'],
+> = {
+  new_registered_users?: Resolver<
+    Maybe<ResolversTypes['Int']>,
+    ParentType,
+    ContextType
+  >;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items'] = ResolversParentTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items']> = {
-  access_site?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+export type Query_Metrics_Unique_Devices_By_Project_By_Access_Site_By_Granularity_By_Start_By_End_Items_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items'] =
+    ResolversParentTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items'],
+> = {
+  access_site?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   devices?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  granularity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  granularity?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
   project?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  timestamp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  timestamp?: Resolver<
+    Maybe<ResolversTypes['String']>,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_ItemsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items'] = ResolversParentTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items']> = {
+export type Query_Transform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_Translations_ItemsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items'] =
+    ResolversParentTypes['query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items'],
+> = {
   info?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   phrase?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   sources?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
-export type Top_Edited_Pages_By_Abs_Bytes_DiffResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_edited_pages_by_abs_bytes_diff'] = ResolversParentTypes['top_edited_pages_by_abs_bytes_diff']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Edited_Pages_By_Abs_Bytes_DiffResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['top_edited_pages_by_abs_bytes_diff'] =
+    ResolversParentTypes['top_edited_pages_by_abs_bytes_diff'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Top_Edited_Pages_By_EditsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_edited_pages_by_edits'] = ResolversParentTypes['top_edited_pages_by_edits']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Edited_Pages_By_EditsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['top_edited_pages_by_edits'] =
+    ResolversParentTypes['top_edited_pages_by_edits'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Top_Edited_Pages_By_Net_Bytes_DiffResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_edited_pages_by_net_bytes_diff'] = ResolversParentTypes['top_edited_pages_by_net_bytes_diff']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Edited_Pages_By_Net_Bytes_DiffResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends
+    ResolversParentTypes['top_edited_pages_by_net_bytes_diff'] =
+    ResolversParentTypes['top_edited_pages_by_net_bytes_diff'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Top_Editors_By_Abs_Bytes_DiffResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_editors_by_abs_bytes_diff'] = ResolversParentTypes['top_editors_by_abs_bytes_diff']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Editors_By_Abs_Bytes_DiffResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['top_editors_by_abs_bytes_diff'] =
+    ResolversParentTypes['top_editors_by_abs_bytes_diff'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Top_Editors_By_EditsResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_editors_by_edits'] = ResolversParentTypes['top_editors_by_edits']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Editors_By_EditsResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['top_editors_by_edits'] =
+    ResolversParentTypes['top_editors_by_edits'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Top_Editors_By_Net_Bytes_DiffResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['top_editors_by_net_bytes_diff'] = ResolversParentTypes['top_editors_by_net_bytes_diff']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']>>>, ParentType, ContextType>;
+export type Top_Editors_By_Net_Bytes_DiffResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['top_editors_by_net_bytes_diff'] =
+    ResolversParentTypes['top_editors_by_net_bytes_diff'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
-export type Unique_DevicesResolvers<ContextType = MeshInContextSDK, ParentType extends ResolversParentTypes['unique_devices'] = ResolversParentTypes['unique_devices']> = {
-  items?: Resolver<Maybe<Array<Maybe<ResolversTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items']>>>, ParentType, ContextType>;
+export type Unique_DevicesResolvers<
+  ContextType = MeshInContextSDK,
+  ParentType extends ResolversParentTypes['unique_devices'] =
+    ResolversParentTypes['unique_devices'],
+> = {
+  items?: Resolver<
+    Maybe<
+      Array<
+        Maybe<
+          ResolversTypes['query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items']
+        >
+      >
+    >,
+    ParentType,
+    ContextType
+  >;
 };
 
 export type Resolvers<ContextType = MeshInContextSDK> = {
@@ -2861,7 +4740,11 @@ export type Resolvers<ContextType = MeshInContextSDK> = {
 export type DirectiveResolvers<ContextType = MeshInContextSDK> = {
   additionalField?: AdditionalFieldDirectiveResolver<any, any, ContextType>;
   enum?: EnumDirectiveResolver<any, any, ContextType>;
-  extraSchemaDefinitionDirective?: ExtraSchemaDefinitionDirectiveDirectiveResolver<any, any, ContextType>;
+  extraSchemaDefinitionDirective?: ExtraSchemaDefinitionDirectiveDirectiveResolver<
+    any,
+    any,
+    ContextType
+  >;
   httpOperation?: HttpOperationDirectiveResolver<any, any, ContextType>;
   join__enumValue?: Join__EnumValueDirectiveResolver<any, any, ContextType>;
   join__field?: Join__FieldDirectiveResolver<any, any, ContextType>;
