@@ -4672,6 +4672,10 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^15.9.0 || ^16.9.0
+    langfuse: ^3.0.0
+  peerDependenciesMeta:
+    langfuse:
+      optional: true
   languageName: unknown
   linkType: soft
 
