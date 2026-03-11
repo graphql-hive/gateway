@@ -1,8 +1,12 @@
-import { createDefaultExecutor } from '@graphql-mesh/transport-common';
+import {
+  createDefaultExecutor,
+  defaultPrintFn,
+} from '@graphql-mesh/transport-common';
+import { makeAsyncDisposable } from '@graphql-mesh/utils';
+import { getBatchingExecutor } from '@graphql-tools/batch-execute';
 import {
   Executor,
   isAsyncIterable,
-  type DisposableExecutor,
   type ExecutionRequest,
   type ExecutionResult,
 } from '@graphql-tools/utils';
@@ -11,7 +15,8 @@ import {
   handleMaybePromise,
   mapAsyncIterator,
 } from '@whatwg-node/promise-helpers';
-import { print, type DocumentNode } from 'graphql';
+import { MaybePromise } from 'bun';
+import { type DocumentNode } from 'graphql';
 import {
   UnifiedGraphManager,
   type UnifiedGraphManagerOptions,
@@ -36,7 +41,7 @@ export function getExecutorForUnifiedGraph<TContext>(
         function handleExecutor(executor: Executor) {
           opts?.transportContext?.log.debug(
             'Executing request on unified graph',
-            () => print(execReq.document),
+            () => defaultPrintFn(execReq.document),
           );
           return executor({
             ...execReq,
@@ -52,7 +57,7 @@ export function getExecutorForUnifiedGraph<TContext>(
                 (unifiedGraph) => {
                   opts?.transportContext?.log.debug(
                     'Executing request on unified graph',
-                    () => print(execReq.document),
+                    () => defaultPrintFn(execReq.document),
                   );
                   executor = createDefaultExecutor(unifiedGraph);
                   return handleExecutor(executor);
@@ -65,40 +70,67 @@ export function getExecutorForUnifiedGraph<TContext>(
       },
     );
   };
-  Object.defineProperty(unifiedGraphExecutor, DisposableSymbols.asyncDispose, {
-    configurable: true,
-    enumerable: true,
-    get() {
-      return function unifiedGraphExecutorDispose() {
-        opts?.transportContext?.log.debug('Disposing unified graph executor');
-        return unifiedGraphManager[DisposableSymbols.asyncDispose]();
-      };
+  return makeAsyncDisposable(
+    unifiedGraphExecutor,
+    function unifiedGraphExecutorDispose() {
+      opts?.transportContext?.log.debug('Disposing unified graph executor');
+      return unifiedGraphManager[DisposableSymbols.asyncDispose]();
     },
-  });
-  return unifiedGraphExecutor as DisposableExecutor<TContext>;
+  );
 }
 
+export interface SdkRequesterOptions extends UnifiedGraphManagerOptions<any> {
+  dataLoaderOptions?: Parameters<typeof getBatchingExecutor>[2];
+  extensionsReducer?: (
+    mergedExtensions: Record<string, any>,
+    request: ExecutionRequest,
+  ) => Record<string, any>;
+  onExecutionRequest?(
+    request: ExecutionRequest,
+  ): MaybePromise<ExecutionRequest>;
+}
+
+const identity = <T>(x: T) => x;
+
 export function getSdkRequesterForUnifiedGraph(
-  opts: UnifiedGraphManagerOptions<any>,
+  opts: SdkRequesterOptions,
 ): SdkRequester {
   const unifiedGraphExecutor = getExecutorForUnifiedGraph(opts);
+  const onExecutionRequest = opts.onExecutionRequest || identity;
   return function sdkRequester(
     document: DocumentNode,
     variables?: any,
     operationContext?: any,
   ) {
+    let executionRequest: ExecutionRequest = {
+      document,
+      variables,
+      context: operationContext,
+    };
     return handleMaybePromise(
-      () =>
-        unifiedGraphExecutor({
-          document,
-          variables,
-          context: operationContext,
-        }),
-      (result) => {
-        if (isAsyncIterable(result)) {
-          return mapAsyncIterator(result, extractDataOrThrowErrors);
+      () => onExecutionRequest(executionRequest),
+      (onExecutionRequestResult) => {
+        if (onExecutionRequestResult != null) {
+          executionRequest = onExecutionRequestResult;
         }
-        return extractDataOrThrowErrors(result);
+        const executor: Executor =
+          executionRequest.context != null
+            ? getBatchingExecutor(
+                executionRequest.context,
+                unifiedGraphExecutor,
+                opts?.dataLoaderOptions,
+                opts?.extensionsReducer,
+              )
+            : unifiedGraphExecutor;
+        return handleMaybePromise(
+          () => executor(executionRequest),
+          (result) => {
+            if (isAsyncIterable(result)) {
+              return mapAsyncIterator(result, extractDataOrThrowErrors);
+            }
+            return extractDataOrThrowErrors(result);
+          },
+        );
       },
     );
   };
