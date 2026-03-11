@@ -8,9 +8,7 @@ export type LangfuseGetPromptOptions = NonNullable<
   Parameters<Langfuse['getPrompt']>[2]
 >;
 
-export function createLangfuseProvider(
-  client: Langfuse,
-): DescriptionProvider {
+export function createLangfuseProvider(client: Langfuse): DescriptionProvider {
   return {
     async fetchDescription(
       _toolName: string,
@@ -24,7 +22,11 @@ export function createLangfuseProvider(
       }
       const version = config['version'] as number | undefined;
       const options = config['options'] as LangfuseGetPromptOptions | undefined;
-      const prompt = await client.getPrompt(promptName, version, options as any);
+      const prompt = await client.getPrompt(
+        promptName,
+        version,
+        options as any,
+      );
       return prompt.compile();
     },
   };

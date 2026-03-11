@@ -72,7 +72,10 @@ async function resolveBuiltinProvider(
 }
 
 export async function resolveProviders(
-  providers: Record<string, DescriptionProvider | Record<string, unknown> | undefined>,
+  providers: Record<
+    string,
+    DescriptionProvider | Record<string, unknown> | undefined
+  >,
 ): Promise<ProviderRegistry> {
   const registry: ProviderRegistry = {};
 
