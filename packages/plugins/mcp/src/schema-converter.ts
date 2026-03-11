@@ -174,7 +174,11 @@ export function selectionSetToOutputSchema(
     );
   }
 
-  const fieldSchema = outputTypeToSchema(rootField.type, rootSelection.selectionSet, schema);
+  const fieldSchema = outputTypeToSchema(
+    rootField.type,
+    rootSelection.selectionSet,
+    schema,
+  );
 
   return {
     type: 'object',

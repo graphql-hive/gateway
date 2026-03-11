@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { GraphQLSchema } from 'graphql';
+import type { LangfuseOptions } from 'langfuse';
 import {
   resolveDescriptions,
   resolveProviders,
@@ -9,8 +10,6 @@ import {
   type DescriptionProviderConfig,
   type ProviderRegistry,
 } from './description-provider.js';
-import type { LangfuseOptions } from 'langfuse';
-import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { createGraphQLExecutor } from './executor.js';
 import {
   loadOperationsFromString,
@@ -18,6 +17,7 @@ import {
   type ParsedOperation,
 } from './operation-loader.js';
 import { createMCPHandler } from './protocol.js';
+import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { ToolRegistry } from './registry.js';
 
 declare module '@graphql-hive/gateway-runtime' {
@@ -39,7 +39,12 @@ export interface MCPToolOverrides {
   title?: string;
   description?: string;
   descriptionProvider?:
-    | { type: 'langfuse'; prompt: string; version?: number; options?: LangfuseGetPromptOptions }
+    | {
+        type: 'langfuse';
+        prompt: string;
+        version?: number;
+        options?: LangfuseGetPromptOptions;
+      }
     | DescriptionProviderConfig;
 }
 
@@ -125,10 +130,9 @@ export function resolveToolConfigs(
     if (source.type === 'inline') {
       query = source.query;
     } else {
-      const opsPool =
-        source.file
-          ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'))
-          : parsedOps || [];
+      const opsPool = source.file
+        ? loadOperationsFromString(readFileSync(resolve(source.file), 'utf-8'))
+        : parsedOps || [];
       const op = resolveOperation(
         opsPool,
         source.operationName,

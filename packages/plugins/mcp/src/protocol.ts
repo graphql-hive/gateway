@@ -128,9 +128,7 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             callParams.arguments || {},
           );
           const textContent = {
-            content: [
-              { type: 'text', text: JSON.stringify(result, null, 2) },
-            ],
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };
           const callResult: Record<string, unknown> = tool.outputSchema
             ? {
