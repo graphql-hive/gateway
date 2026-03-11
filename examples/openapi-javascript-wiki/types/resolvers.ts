@@ -413,7 +413,7 @@ export type Query = {
    * Stability: [unstable](https://www.mediawiki.org/wiki/API_versioning#Unstable)
    */
   transform_word_from_by_from_lang_to_by_to_lang_by_word_by_provider?: Maybe<Cx_Dict>;
-  viewsInPastMonth: Scalars['String']['output'];
+  viewsInPastMonth: Scalars['BigInt']['output'];
 };
 
 
@@ -684,7 +684,9 @@ export type QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_Provi
 
 
 export type QueryViewsInPastMonthArgs = {
+  end?: InputMaybe<Scalars['String']['input']>;
   project: Scalars['String']['input'];
+  start?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Absolute_Bytes_Difference = {
@@ -2327,7 +2329,7 @@ export type QueryResolvers<ContextType = MeshInContextSDK, ParentType extends Re
   transform_list_tool_by_tool_by_from_by_to?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType, RequireFields<QueryTransform_List_Tool_By_Tool_By_From_By_ToArgs, 'from' | 'to' | 'tool'>>;
   transform_word_from_by_from_lang_to_by_to_lang_by_word?: Resolver<Maybe<ResolversTypes['cx_dict']>, ParentType, ContextType, RequireFields<QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_WordArgs, 'from_lang' | 'to_lang' | 'word'>>;
   transform_word_from_by_from_lang_to_by_to_lang_by_word_by_provider?: Resolver<Maybe<ResolversTypes['cx_dict']>, ParentType, ContextType, RequireFields<QueryTransform_Word_From_By_From_Lang_To_By_To_Lang_By_Word_By_ProviderArgs, 'from_lang' | 'provider' | 'to_lang' | 'word'>>;
-  viewsInPastMonth?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<QueryViewsInPastMonthArgs, 'project'>>;
+  viewsInPastMonth?: Resolver<ResolversTypes['BigInt'], ParentType, ContextType, RequireFields<QueryViewsInPastMonthArgs, 'end' | 'project' | 'start'>>;
 };
 
 export interface _DirectiveExtensionsScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['_DirectiveExtensions'], any> {

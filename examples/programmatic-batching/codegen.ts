@@ -2,6 +2,11 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
   schema: './supergraph.graphql',
+  config: {
+    maybeValue: 'T | undefined',
+    // Mesh uses Schema Stitching
+    noSchemaStitching: false,
+  },
   generates: {
     './types/incontext-sdk.ts': {
       plugins: ['@graphql-mesh/incontext-sdk-codegen'],
@@ -9,7 +14,6 @@ const config: CodegenConfig = {
     './types/resolvers.ts': {
       plugins: ['typescript', 'typescript-resolvers'],
       config: {
-        noSchemaStitching: false,
         contextType: './incontext-sdk#MeshInContextSDK',
       },
     },

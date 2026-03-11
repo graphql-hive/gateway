@@ -39,6 +39,7 @@ export type HTTPMethod =
   | 'TRACE';
 
 export type Mutation = {
+  __typename: 'Mutation';
   /**
    * Checks the supplied TeX formula for correctness and returns the
    * normalised formula representation as well as information about
@@ -86,6 +87,7 @@ export type Mutationpost_transform_html_from_by_from_lang_to_by_to_lang_by_provi
 };
 
 export type Query = {
+  __typename: 'Query';
   /**
    * Gets availability of featured feed content for the apps by wiki domain.
    *
@@ -679,14 +681,17 @@ export type Querytransform_word_from_by_from_lang_to_by_to_lang_by_word_by_provi
 };
 
 export type absolute_bytes_difference = {
+  __typename: 'absolute_bytes_difference';
   items?: Maybe<Array<Maybe<query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type absolute_bytes_difference_per_page = {
+  __typename: 'absolute_bytes_difference_per_page';
   items?: Maybe<Array<Maybe<query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type availability = {
+  __typename: 'availability';
   /** domains for wikis with this feature enabled, or [ '*.<project>.org' ] for all wikis in a project */
   in_the_news: Array<Maybe<Scalars['String']['output']>>;
   /** domains for wikis with this feature enabled, or [ '*.<project>.org' ] for all wikis in a project */
@@ -700,10 +705,12 @@ export type availability = {
 };
 
 export type by_country = {
+  __typename: 'by_country';
   items?: Maybe<Array<Maybe<query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items>>>;
 };
 
 export type cx_dict = {
+  __typename: 'cx_dict';
   /** the original word to look up */
   source?: Maybe<Scalars['String']['output']>;
   /** the translations found */
@@ -711,6 +718,7 @@ export type cx_dict = {
 };
 
 export type cx_languagepairs = {
+  __typename: 'cx_languagepairs';
   /** the list of available source languages */
   source?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   /** the list of available destination languages */
@@ -718,28 +726,34 @@ export type cx_languagepairs = {
 };
 
 export type cx_list_tools = {
+  __typename: 'cx_list_tools';
   /** the list of tools available for the given language pair */
   tools?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
 };
 
 export type cx_mt = {
+  __typename: 'cx_mt';
   /** the translated content */
   contents?: Maybe<Scalars['String']['output']>;
 };
 
 export type edited_pages = {
+  __typename: 'edited_pages';
   items?: Maybe<Array<Maybe<query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type editors = {
+  __typename: 'editors';
   items?: Maybe<Array<Maybe<query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type edits = {
+  __typename: 'edits';
   items?: Maybe<Array<Maybe<query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type edits_per_page = {
+  __typename: 'edits_per_page';
   items?: Maybe<Array<Maybe<query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
@@ -756,34 +770,42 @@ export type mutationInput_post_transform_html_from_by_from_lang_to_by_to_lang_by
   | 'Youdao';
 
 export type net_bytes_difference = {
+  __typename: 'net_bytes_difference';
   items?: Maybe<Array<Maybe<query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type net_bytes_difference_per_page = {
+  __typename: 'net_bytes_difference_per_page';
   items?: Maybe<Array<Maybe<query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type new_pages = {
+  __typename: 'new_pages';
   items?: Maybe<Array<Maybe<query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type new_registered_users = {
+  __typename: 'new_registered_users';
   items?: Maybe<Array<Maybe<query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type pagecounts_project = {
+  __typename: 'pagecounts_project';
   items?: Maybe<Array<Maybe<query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type pageview_article = {
+  __typename: 'pageview_article';
   items?: Maybe<Array<Maybe<query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type pageview_project = {
+  __typename: 'pageview_project';
   items?: Maybe<Array<Maybe<query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items>>>;
 };
 
 export type pageview_tops = {
+  __typename: 'pageview_tops';
   items?: Maybe<Array<Maybe<query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items>>>;
 };
 
@@ -1342,6 +1364,7 @@ export type queryInput_transform_word_from_by_from_lang_to_by_to_lang_by_word_by
   | 'JsonDict';
 
 export type query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1350,11 +1373,13 @@ export type query_metrics_bytes_difference_absolute_aggregate_by_project_by_edit
 };
 
 export type query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_bytes_difference_absolute_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
   abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
@@ -1363,11 +1388,13 @@ export type query_metrics_bytes_difference_absolute_per_page_by_project_by_page_
 };
 
 export type query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_bytes_difference_absolute_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
   abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1376,11 +1403,13 @@ export type query_metrics_bytes_difference_net_aggregate_by_project_by_editor_ty
 };
 
 export type query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_bytes_difference_net_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
   net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
@@ -1389,11 +1418,13 @@ export type query_metrics_bytes_difference_net_per_page_by_project_by_page_title
 };
 
 export type query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_bytes_difference_net_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
   net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
   activity_level?: Maybe<Scalars['String']['output']>;
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
@@ -1403,11 +1434,13 @@ export type query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_pa
 };
 
 export type query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_edited_pages_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
   edited_pages?: Maybe<Scalars['Int']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1416,11 +1449,13 @@ export type query_metrics_edited_pages_new_by_project_by_editor_type_by_page_typ
 };
 
 export type query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_edited_pages_new_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
   new_pages?: Maybe<Scalars['Int']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1429,17 +1464,20 @@ export type query_metrics_edited_pages_top_by_absolute_bytes_difference_by_proje
 };
 
 export type query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
 };
 
 export type query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1448,17 +1486,20 @@ export type query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by
 };
 
 export type query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   edits?: Maybe<Scalars['BigInt']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
 };
 
 export type query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1467,17 +1508,20 @@ export type query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by
 };
 
 export type query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
 };
 
 export type query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items';
   activity_level?: Maybe<Scalars['String']['output']>;
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
@@ -1487,11 +1531,13 @@ export type query_metrics_editors_aggregate_by_project_by_editor_type_by_page_ty
 };
 
 export type query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_editors_aggregate_by_project_by_editor_type_by_page_type_by_activity_level_by_granularity_by_start_by_end_items_items_results_items';
   editors?: Maybe<Scalars['Int']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1500,17 +1546,20 @@ export type query_metrics_editors_top_by_absolute_bytes_difference_by_project_by
 };
 
 export type query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   abs_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
   user_text?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1519,17 +1568,20 @@ export type query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page
 };
 
 export type query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   edits?: Maybe<Scalars['BigInt']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
   user_text?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1538,17 +1590,20 @@ export type query_metrics_editors_top_by_net_bytes_difference_by_project_by_edit
 };
 
 export type query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items = {
+  __typename: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items';
   timestamp?: Maybe<Scalars['String']['output']>;
   top?: Maybe<Array<Maybe<query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items>>>;
 };
 
 export type query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items = {
+  __typename: 'query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items_results_items_top_items';
   net_bytes_diff?: Maybe<Scalars['BigInt']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
   user_text?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_type?: Maybe<Scalars['String']['output']>;
@@ -1557,11 +1612,13 @@ export type query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type
 };
 
 export type query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_edits_aggregate_by_project_by_editor_type_by_page_type_by_granularity_by_start_by_end_items_items_results_items';
   edits?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items';
   editor_type?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
   page_title?: Maybe<Scalars['String']['output']>;
@@ -1570,11 +1627,13 @@ export type query_metrics_edits_per_page_by_project_by_page_title_by_editor_type
 };
 
 export type query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_edits_per_page_by_project_by_page_title_by_editor_type_by_granularity_by_start_by_end_items_items_results_items';
   edits?: Maybe<Scalars['BigInt']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
   access_site?: Maybe<Scalars['String']['output']>;
   count?: Maybe<Scalars['BigInt']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
@@ -1583,6 +1642,7 @@ export type query_metrics_legacy_pagecounts_aggregate_by_project_by_access_site_
 };
 
 export type query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_granularity_by_start_by_end_items_items';
   access?: Maybe<Scalars['String']['output']>;
   agent?: Maybe<Scalars['String']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
@@ -1592,6 +1652,7 @@ export type query_metrics_pageviews_aggregate_by_project_by_access_by_agent_by_g
 };
 
 export type query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_pageviews_per_article_by_project_by_access_by_agent_by_article_by_granularity_by_start_by_end_items_items';
   access?: Maybe<Scalars['String']['output']>;
   agent?: Maybe<Scalars['String']['output']>;
   article?: Maybe<Scalars['String']['output']>;
@@ -1602,6 +1663,7 @@ export type query_metrics_pageviews_per_article_by_project_by_access_by_agent_by
 };
 
 export type query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items = {
+  __typename: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items';
   access?: Maybe<Scalars['String']['output']>;
   countries?: Maybe<Array<Maybe<query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items>>>;
   month?: Maybe<Scalars['String']['output']>;
@@ -1610,12 +1672,14 @@ export type query_metrics_pageviews_top_by_country_by_project_by_access_by_year_
 };
 
 export type query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items = {
+  __typename: 'query_metrics_pageviews_top_by_country_by_project_by_access_by_year_by_month_items_items_countries_items';
   country?: Maybe<Scalars['String']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
   views?: Maybe<Scalars['BigInt']['output']>;
 };
 
 export type query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items = {
+  __typename: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items';
   access?: Maybe<Scalars['String']['output']>;
   articles?: Maybe<Array<Maybe<query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items>>>;
   day?: Maybe<Scalars['String']['output']>;
@@ -1625,23 +1689,27 @@ export type query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by
 };
 
 export type query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items = {
+  __typename: 'query_metrics_pageviews_top_by_project_by_access_by_year_by_month_by_day_items_items_articles_items';
   article?: Maybe<Scalars['String']['output']>;
   rank?: Maybe<Scalars['Int']['output']>;
   views?: Maybe<Scalars['BigInt']['output']>;
 };
 
 export type query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items';
   granularity?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Scalars['String']['output']>;
   results?: Maybe<Array<Maybe<query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items>>>;
 };
 
 export type query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items = {
+  __typename: 'query_metrics_registered_users_new_by_project_by_granularity_by_start_by_end_items_items_results_items';
   new_registered_users?: Maybe<Scalars['Int']['output']>;
   timestamp?: Maybe<Scalars['String']['output']>;
 };
 
 export type query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items = {
+  __typename: 'query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items';
   access_site?: Maybe<Scalars['String']['output']>;
   devices?: Maybe<Scalars['BigInt']['output']>;
   granularity?: Maybe<Scalars['String']['output']>;
@@ -1650,6 +1718,7 @@ export type query_metrics_unique_devices_by_project_by_access_site_by_granularit
 };
 
 export type query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items = {
+  __typename: 'query_transform_word_from_by_from_lang_to_by_to_lang_by_word_translations_items';
   /** extra information about the phrase */
   info?: Maybe<Scalars['String']['output']>;
   /** the translated phrase */
@@ -1659,30 +1728,37 @@ export type query_transform_word_from_by_from_lang_to_by_to_lang_by_word_transla
 };
 
 export type top_edited_pages_by_abs_bytes_diff = {
+  __typename: 'top_edited_pages_by_abs_bytes_diff';
   items?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type top_edited_pages_by_edits = {
+  __typename: 'top_edited_pages_by_edits';
   items?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type top_edited_pages_by_net_bytes_diff = {
+  __typename: 'top_edited_pages_by_net_bytes_diff';
   items?: Maybe<Array<Maybe<query_metrics_edited_pages_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type top_editors_by_abs_bytes_diff = {
+  __typename: 'top_editors_by_abs_bytes_diff';
   items?: Maybe<Array<Maybe<query_metrics_editors_top_by_absolute_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type top_editors_by_edits = {
+  __typename: 'top_editors_by_edits';
   items?: Maybe<Array<Maybe<query_metrics_editors_top_by_edits_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type top_editors_by_net_bytes_diff = {
+  __typename: 'top_editors_by_net_bytes_diff';
   items?: Maybe<Array<Maybe<query_metrics_editors_top_by_net_bytes_difference_by_project_by_editor_type_by_page_type_by_year_by_month_by_day_items_items>>>;
 };
 
 export type unique_devices = {
+  __typename: 'unique_devices';
   items?: Maybe<Array<Maybe<query_metrics_unique_devices_by_project_by_access_site_by_granularity_by_start_by_end_items_items>>>;
 };
 

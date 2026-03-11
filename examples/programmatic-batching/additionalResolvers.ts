@@ -1,5 +1,5 @@
 import { print } from 'graphql';
-import type { Maybe, Resolvers, UsersByIdResponse } from './types/resolvers';
+import type { Resolvers, UsersByIdResponse } from './types/resolvers';
 
 export const additionalResolvers: Resolvers = {
   Query: {
@@ -13,8 +13,7 @@ export const additionalResolvers: Resolvers = {
         // Arguments for the following batched request
         argsFromKeys: (ids) => ({ input: { ids } }),
         // Function to extract the result from the batched response
-        valuesFromResults: (data?: Maybe<UsersByIdResponse>) =>
-          data?.results || null,
+        valuesFromResults: (data?: UsersByIdResponse) => data?.results,
         // Function to generate the selectionSet for the batched request
         selectionSet: (userSelectionSet) => /* GraphQL */ `
           {
