@@ -1,5 +1,12 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.7.0
+### Minor Changes
+
+
+
+- [`5468882`](https://github.com/graphql-hive/gateway/commit/5468882253927113fa22030bceb265a31101792e) Thanks [@ardatan](https://github.com/ardatan)! - Expose `subschemas` in `handleFederationSupergraph` result
+
 ## 1.6.11
 ### Patch Changes
 
