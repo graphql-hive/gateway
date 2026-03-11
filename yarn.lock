@@ -5016,8 +5016,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/plugin-http-cache@npm:^0.105.17":
-  version: 0.105.26
-  resolution: "@graphql-mesh/plugin-http-cache@npm:0.105.26"
+  version: 0.105.27
+  resolution: "@graphql-mesh/plugin-http-cache@npm:0.105.27"
   dependencies:
     "@graphql-mesh/types": "npm:^0.104.23"
     "@graphql-mesh/utils": "npm:^0.104.25"
@@ -5027,7 +5027,7 @@ __metadata:
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/30c85f82039535d1abcab9f2d82378473fce613144705bcd165e4185cf9330d1fa109c102a3ea96a714c87a01d1ef4d9ecd8e08e9bbe059997ed45770b303507
+  checksum: 10c0/58eb7f4ad4e623468c0959f44d11ebfe813529a2ccb71c924d98a2addaa5e8755f87f7f16aa631751d6260f7f9018df5bd90beb5c1a064152c95937928e59f3e
   languageName: node
   linkType: hard
 
@@ -5282,8 +5282,8 @@ __metadata:
   linkType: hard
 
 "@graphql-mesh/transport-soap@npm:^0.10.28":
-  version: 0.10.29
-  resolution: "@graphql-mesh/transport-soap@npm:0.10.29"
+  version: 0.10.30
+  resolution: "@graphql-mesh/transport-soap@npm:0.10.30"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.12"
     "@graphql-mesh/string-interpolation": "npm:^0.5.11"
@@ -5293,11 +5293,11 @@ __metadata:
     "@graphql-tools/executor": "npm:^1.5.1"
     "@graphql-tools/utils": "npm:^11.0.0"
     "@whatwg-node/fetch": "npm:^0.10.6"
-    fast-xml-parser: "npm:^5.4.2"
+    fast-xml-parser: "npm:^5.5.1"
     tslib: "npm:^2.4.0"
   peerDependencies:
     graphql: "*"
-  checksum: 10c0/229594516f5828cd0dd3ae89b69b40afd872080120c428c0e926e18aed58e5141c302f62f3248989ca575f80e3db528adaf5034275b946933d0c81bdfacfc42a
+  checksum: 10c0/f070a7561f03fc3f3a10ed90ef9741a1d7c487b8d81fae581c17ca16ef106f4f3bb2b5e70de8eb5fd69ccbb9e170dbd7dfae30c6ac64f65187f5a842c6f2d972
   languageName: node
   linkType: hard
 
@@ -14968,6 +14968,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-xml-builder@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "fast-xml-builder@npm:1.1.1"
+  dependencies:
+    path-expression-matcher: "npm:^1.1.3"
+  checksum: 10c0/c469c207e7731c4b17af84bbdcbca7d1e2e6b09c85fe842c0c2dcdf18d12a5985c4cb474a2c9eeb55d8998efb7a8d72aed72cb7cf6cb51f0bdd1daf11a765f14
+  languageName: node
+  linkType: hard
+
 "fast-xml-parser@npm:5.4.1":
   version: 5.4.1
   resolution: "fast-xml-parser@npm:5.4.1"
@@ -14980,15 +14989,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:^5.4.2":
-  version: 5.4.2
-  resolution: "fast-xml-parser@npm:5.4.2"
+"fast-xml-parser@npm:^5.5.1":
+  version: 5.5.2
+  resolution: "fast-xml-parser@npm:5.5.2"
   dependencies:
-    fast-xml-builder: "npm:^1.0.0"
+    fast-xml-builder: "npm:^1.1.1"
+    path-expression-matcher: "npm:^1.1.3"
     strnum: "npm:^2.1.2"
   bin:
     fxparser: src/cli/cli.js
-  checksum: 10c0/83ea57fda336f3fdcc8938ecc8730236a3e084843cbe6c2fb009c3f2fe2811570316735c1c7e76a4d3dbce2b0387312b106444d5d603dc6135b4bcf0e07251bb
+  checksum: 10c0/0c7dd0c9136f8d3c0bc5ef23d56808d2a7b56943b862d0cbf16a8f3edd5227f72e306b80251d3baf788d6852d542070fd0f24ec2014256282eef00dec929bba3
   languageName: node
   linkType: hard
 
@@ -19464,6 +19474,13 @@ __metadata:
   version: 4.0.0
   resolution: "path-exists@npm:4.0.0"
   checksum: 10c0/8c0bd3f5238188197dc78dced15207a4716c51cc4e3624c44fc97acf69558f5ebb9a2afff486fe1b4ee148e0c133e96c5e11a9aa5c48a3006e3467da070e5e1b
+  languageName: node
+  linkType: hard
+
+"path-expression-matcher@npm:^1.1.3":
+  version: 1.1.3
+  resolution: "path-expression-matcher@npm:1.1.3"
+  checksum: 10c0/45c01471bc62c5f38d069418aec831763e6f45bb85f9520b08de441e6cd14f84b3098ecb66255e819c2af21102abcd2b45550dc1285996717ce9292802df2bc5
   languageName: node
   linkType: hard
 
