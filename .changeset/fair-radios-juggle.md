@@ -2,9 +2,9 @@
 '@graphql-hive/signal': minor
 ---
 
-# New utility `AbortSignal.all`
+# New utility `abortSignalAll`
 
-We have introduced a new utility function `AbortSignal.all` that allows you to combine multiple `AbortSignal` instances into a single signal. This is particularly useful in scenarios where you want to abort an operation if all of the individual signals are aborted.
+We have introduced a new utility function `abortSignalAll` that allows you to combine multiple `AbortSignal` instances into a single signal. This is particularly useful in scenarios where you want to abort an operation if all of the individual signals are aborted.
 
 ```ts
 import { abortSignalAll } from '@graphql-hive/signal';
