@@ -14,7 +14,11 @@ export function splitResult(
 
   if (data) {
     for (const prefixedKey in data) {
-      if (prefixedKey === '__proto__' || prefixedKey === 'constructor' || prefixedKey === 'prototype') {
+      if (
+        prefixedKey === '__proto__' ||
+        prefixedKey === 'constructor' ||
+        prefixedKey === 'prototype'
+      ) {
         continue;
       }
       const { index, originalKey } = parseKey(prefixedKey);
