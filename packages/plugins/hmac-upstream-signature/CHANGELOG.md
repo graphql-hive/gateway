@@ -1,5 +1,14 @@
 # @graphql-mesh/hmac-upstream-signature
 
+## 2.0.10
+### Patch Changes
+
+
+
+- [#2079](https://github.com/graphql-hive/gateway/pull/2079) [`47c9fae`](https://github.com/graphql-hive/gateway/commit/47c9faecac7035e6ccfb2eb2b4146fca0ca07e47) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Removed dependency [`json-stable-stringify@^1.1.1` ↗︎](https://www.npmjs.com/package/json-stable-stringify/v/1.1.1) (from `dependencies`)
+
 ## 2.0.9
 ### Patch Changes
 

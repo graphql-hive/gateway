@@ -1,5 +1,11 @@
 # @graphql-hive/gateway-testing
 
+## 6.0.5
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.5
+
 ## 6.0.4
 ### Patch Changes
 
