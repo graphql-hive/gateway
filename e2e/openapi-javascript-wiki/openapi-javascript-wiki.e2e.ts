@@ -16,7 +16,7 @@ it('should execute', async () => {
   ).resolves.toMatchInlineSnapshot(`
     {
       "data": {
-        "viewsInPastMonth": "15113694589",
+        "viewsInPastMonth": 15113694589,
       },
     }
   `);

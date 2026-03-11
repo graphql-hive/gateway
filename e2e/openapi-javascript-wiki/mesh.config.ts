@@ -18,7 +18,7 @@ export const composeConfig = defineConfig({
         start: String = "20200101",
         end: String = "20200226",
         project: String!
-      ): String!
+      ): BigInt!
     }
   `,
 });

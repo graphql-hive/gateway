@@ -1,6 +1,8 @@
 import type { Resolvers } from './types/resolvers';
+import { BigIntResolver } from 'graphql-scalars';
 
 export const additionalResolvers: Resolvers = {
+  BigInt: BigIntResolver,
   Query: {
     async viewsInPastMonth(root, { start, end, project }, context, info) {
       const result =
@@ -29,13 +31,10 @@ export const additionalResolvers: Resolvers = {
           },
         );
 
-      let total = BigInt(0);
-      for (const item of result?.items || []) {
-        if (item?.views) {
-          total += BigInt(item.views);
-        }
-      }
-      return total.toString();
+      return (result?.items || []).reduce(
+        (sum, item) => sum + (item?.views ? BigInt(item.views) : 0n),
+        0n,
+      );
     },
   },
 };
