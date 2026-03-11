@@ -2,7 +2,8 @@
   "name": "@e2e/openapi-javascript-wiki",
   "private": true,
   "scripts": {
-    "codegen": "graphql-codegen"
+    "codegen": "npm run compose && graphql-codegen",
+    "compose": "mesh-compose -o supergraph.graphql"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^6.1.3",
