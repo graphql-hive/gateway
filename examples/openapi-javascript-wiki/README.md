@@ -25,6 +25,14 @@ Visit [githubbox.com/graphql-hive/gateway/tree/main/examples/openapi-javascript-
    ```sh
    npm i
    ```
+1. Run codegen
+   ```sh
+   npm run codegen
+   ```
+1. Run compose
+   ```sh
+   npm run compose
+   ```
 1. Compose
    ```sh
    npm run compose
