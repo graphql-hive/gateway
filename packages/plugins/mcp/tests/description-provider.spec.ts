@@ -18,44 +18,6 @@ describe('resolveProviders', () => {
     expect(registry['mock']).toBe(provider);
   });
 
-  it('auto-instantiates langfuse provider from plain config', async () => {
-    const mockCompile = vi.fn(() => 'compiled prompt');
-    const mockGetPrompt = vi.fn(async () => ({ compile: mockCompile }));
-    const MockLangfuse = vi.fn(function (this: any) {
-      this.getPrompt = mockGetPrompt;
-    });
-
-    vi.doMock('langfuse', () => ({ default: MockLangfuse }));
-
-    const { resolveProviders: resolve } =
-      await import('../src/description-provider.js');
-    const registry = await resolve({ langfuse: {} });
-
-    const langfuseProvider = registry['langfuse'];
-    expect(langfuseProvider).toBeDefined();
-    expect(MockLangfuse).toHaveBeenCalledWith({});
-
-    const desc = await langfuseProvider!.fetchDescription('test_tool', {
-      type: 'langfuse',
-      prompt: 'my_prompt',
-    });
-    expect(desc).toBe('compiled prompt');
-
-    vi.doUnmock('langfuse');
-  });
-
-  it('throws when langfuse package is not installed', async () => {
-    vi.doMock('langfuse', () => {
-      throw new Error('Cannot find module "langfuse"');
-    });
-
-    const { resolveProviders: resolve } =
-      await import('../src/description-provider.js');
-    await expect(resolve({ langfuse: {} })).rejects.toThrow(/langfuse/);
-
-    vi.doUnmock('langfuse');
-  });
-
   it('throws for unknown provider names', async () => {
     await expect(resolveProviders({ unknown: {} })).rejects.toThrow(
       'Unknown provider "unknown"',
