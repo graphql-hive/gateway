@@ -334,10 +334,10 @@ describe('operationToInputSchema with descriptions', () => {
       }
     `;
     const result = operationToInputSchema(operation, schema);
-    expect(result.properties!.location.description).toBe(
+    expect(result.properties!['location']!.description).toBe(
       'City name or postal code',
     );
-    expect(result.properties!.units.description).toBe(
+    expect(result.properties!['units']!.description).toBe(
       'Temperature unit preference',
     );
   });
@@ -350,7 +350,7 @@ describe('operationToInputSchema with descriptions', () => {
     `);
     const operation = `query($location: String!) { getWeather(location: $location) }`;
     const result = operationToInputSchema(operation, schemaNoDesc);
-    expect(result.properties!.location.description).toBeUndefined();
+    expect(result.properties!['location']!.description).toBeUndefined();
   });
 });
 
