@@ -182,7 +182,7 @@ interface CreateExecutionContextOpts {
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
 }
 
-const globalEmpty = {};
+const EMPTY_VARIABLES_OBJECT = {};
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
@@ -197,7 +197,7 @@ function createQueryPlanExecutionContext({
     const variableValuesResult = getVariableValues(
       supergraphSchema,
       operation.variableDefinitions,
-      variableValues || globalEmpty,
+      variableValues || EMPTY_VARIABLES_OBJECT,
     );
     if (variableValuesResult.errors?.length) {
       if (variableValuesResult.errors.length === 1) {
@@ -856,7 +856,7 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
     return [];
   }
   const responseKey = rootSelection.alias?.value ?? rootSelection.name.value;
-  return responseKey ? [responseKey] : [];
+  return [responseKey];
 });
 
 function stableStringify(value: unknown): string {
@@ -1196,8 +1196,6 @@ function projectSelectionSet(
                 continue selectionLoop;
               }
             }
-          } else {
-            continue selectionLoop;
           }
         }
         if (directiveNode.name.value === 'include') {
@@ -1213,8 +1211,6 @@ function projectSelectionSet(
                 continue selectionLoop;
               }
             }
-          } else {
-            continue selectionLoop;
           }
         }
       }
@@ -1475,10 +1471,8 @@ function projectRequires(
         break;
     }
   }
-  if (
-    (Object.keys(result).length === 1 && result.__typename) ||
-    Object.keys(result).length === 0
-  ) {
+  const length = Object.keys(result).length;
+  if ((length === 1 && result.__typename) || length === 0) {
     return null;
   }
   return result;
