@@ -286,7 +286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/rover@npm:0.37.0":
+"@apollo/rover@npm:0.37.0, @apollo/rover@npm:^0.37.0":
   version: 0.37.0
   resolution: "@apollo/rover@npm:0.37.0"
   dependencies:
@@ -4023,6 +4023,270 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@example/apq-subgraphs@workspace:examples/apq-subgraphs":
+  version: 0.0.0-use.local
+  resolution: "@example/apq-subgraphs@workspace:examples/apq-subgraphs"
+  dependencies:
+    "@apollo/server": "npm:^5.4.0"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/extra-fields@workspace:examples/extra-fields":
+  version: 0.0.0-use.local
+  resolution: "@example/extra-fields@workspace:examples/extra-fields"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.16.2"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/federation-example@workspace:examples/federation-example":
+  version: 0.0.0-use.local
+  resolution: "@example/federation-example@workspace:examples/federation-example"
+  dependencies:
+    "@apollo/rover": "npm:^0.37.0"
+    "@apollo/server": "npm:^5.4.0"
+    "@apollo/subgraph": "npm:^2.11.3"
+    "@graphql-hive/gateway": "workspace:*"
+    graphql: "npm:^16.12.0"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/federation-mixed@workspace:examples/federation-mixed":
+  version: 0.0.0-use.local
+  resolution: "@example/federation-mixed@workspace:examples/federation-mixed"
+  dependencies:
+    "@apollo/rover": "npm:^0.37.0"
+    "@apollo/server": "npm:^5.4.0"
+    "@apollo/subgraph": "npm:^2.11.3"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    fets: "npm:^0.8.4"
+    graphql: "npm:^16.12.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/federation-subscriptions-passthrough@workspace:examples/federation-subscriptions-passthrough":
+  version: 0.0.0-use.local
+  resolution: "@example/federation-subscriptions-passthrough@workspace:examples/federation-subscriptions-passthrough"
+  dependencies:
+    "@apollo/rover": "npm:^0.37.0"
+    "@apollo/server": "npm:^5.4.0"
+    "@apollo/subgraph": "npm:^2.11.3"
+    "@as-integrations/express5": "npm:^1.1.2"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/transport-ws": "npm:^2.0.15"
+    "@repeaterjs/repeater": "npm:^3.0.6"
+    "@types/express": "npm:^5.0.5"
+    "@types/ws": "npm:^8"
+    "@whatwg-node/fetch": "npm:^0.10.13"
+    express: "npm:^5.0.0"
+    graphql: "npm:^16.12.0"
+    graphql-sse: "npm:^2.6.0"
+    graphql-ws: "npm:^6.0.6"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+    ws: "npm:^8.18.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/file-upload@workspace:examples/file-upload":
+  version: 0.0.0-use.local
+  resolution: "@example/file-upload@workspace:examples/file-upload"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/hmac-auth-https@workspace:examples/hmac-auth-https":
+  version: 0.0.0-use.local
+  resolution: "@example/hmac-auth-https@workspace:examples/hmac-auth-https"
+  dependencies:
+    "@apollo/server": "npm:^5.4.0"
+    "@apollo/subgraph": "npm:^2.11.3"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-hive/logger": "npm:^1.1.0"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@graphql-mesh/hmac-upstream-signature": "npm:^2.0.9"
+    "@graphql-mesh/plugin-jwt-auth": "npm:^2.0.9"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.16.2"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/interface-additional-resolvers@workspace:examples/interface-additional-resolvers":
+  version: 0.0.0-use.local
+  resolution: "@example/interface-additional-resolvers@workspace:examples/interface-additional-resolvers"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.16.2"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/json-schema-subscriptions@workspace:examples/json-schema-subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@example/json-schema-subscriptions@workspace:examples/json-schema-subscriptions"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@graphql-mesh/cross-helpers": "npm:^0.4.10"
+    "@graphql-mesh/plugin-live-query": "npm:^0.104.17"
+    "@omnigraph/json-schema": "npm:^0.109.17"
+    fets: "npm:^0.8.4"
+    graphql: "npm:^16.12.0"
+    graphql-sse: "npm:^2.6.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/launchdarkly-override@workspace:examples/launchdarkly-override":
+  version: 0.0.0-use.local
+  resolution: "@example/launchdarkly-override@workspace:examples/launchdarkly-override"
+  dependencies:
+    "@apollo/rover": "npm:^0.37.0"
+    "@apollo/subgraph": "npm:2.13.1"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@launchdarkly/node-server-sdk": "npm:9.10.8"
+    graphql: "npm:16.13.0"
+    graphql-yoga: "npm:5.18.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/openapi-additional-resolvers@workspace:examples/openapi-additional-resolvers":
+  version: 0.0.0-use.local
+  resolution: "@example/openapi-additional-resolvers@workspace:examples/openapi-additional-resolvers"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    graphql: "npm:^16.12.0"
+    moment: "npm:^2.30.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@example/openapi-arg-rename@workspace:examples/openapi-arg-rename":
+  version: 0.0.0-use.local
+  resolution: "@example/openapi-arg-rename@workspace:examples/openapi-arg-rename"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    graphql: "npm:16.13.0"
+    moment: "npm:2.30.1"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/openapi-javascript-wiki@workspace:examples/openapi-javascript-wiki":
+  version: 0.0.0-use.local
+  resolution: "@example/openapi-javascript-wiki@workspace:examples/openapi-javascript-wiki"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    graphql: "npm:^16.12.0"
+    moment: "npm:^2.30.1"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@example/openapi-subscriptions@workspace:examples/openapi-subscriptions":
+  version: 0.0.0-use.local
+  resolution: "@example/openapi-subscriptions@workspace:examples/openapi-subscriptions"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    fets: "npm:^0.8.4"
+    graphql: "npm:^16.12.0"
+    graphql-sse: "npm:^2.6.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+    url-join: "npm:^5.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@example/operation-field-permissions@workspace:examples/operation-field-permissions":
+  version: 0.0.0-use.local
+  resolution: "@example/operation-field-permissions@workspace:examples/operation-field-permissions"
+  dependencies:
+    "@envelop/core": "npm:^5.4.0"
+    "@envelop/operation-field-permissions": "npm:^9.0.0"
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/programmatic-batching@workspace:examples/programmatic-batching":
+  version: 0.0.0-use.local
+  resolution: "@example/programmatic-batching@workspace:examples/programmatic-batching"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    "@omnigraph/openapi": "npm:^0.109.23"
+    fets: "npm:^0.8.4"
+    graphql: "npm:16.13.0"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/subscriptions-with-transforms@workspace:examples/subscriptions-with-transforms":
+  version: 0.0.0-use.local
+  resolution: "@example/subscriptions-with-transforms@workspace:examples/subscriptions-with-transforms"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:16.13.0"
+    graphql-sse: "npm:^2.6.0"
+    graphql-yoga: "npm:^5.16.2"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
+"@example/type-merging-batching@workspace:examples/type-merging-batching":
+  version: 0.0.0-use.local
+  resolution: "@example/type-merging-batching@workspace:examples/type-merging-batching"
+  dependencies:
+    "@graphql-hive/gateway": "npm:^2.5.1"
+    "@graphql-mesh/compose-cli": "npm:^1.5.3"
+    graphql: "npm:^16.12.0"
+    graphql-yoga: "npm:^5.16.2"
+    tslib: "npm:^2.8.1"
+    tsx: "npm:^4.20.3"
+  languageName: unknown
+  linkType: soft
+
 "@fastify/ajv-compiler@npm:^4.0.5":
   version: 4.0.5
   resolution: "@fastify/ajv-compiler@npm:4.0.5"
@@ -4429,7 +4693,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
+"@graphql-hive/gateway@npm:^2.5.1, @graphql-hive/gateway@workspace:*, @graphql-hive/gateway@workspace:^, @graphql-hive/gateway@workspace:packages/gateway":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/gateway@workspace:packages/gateway"
   dependencies:
@@ -4444,6 +4708,7 @@ __metadata:
     "@graphql-hive/plugin-aws-sigv4": "workspace:^"
     "@graphql-hive/plugin-opentelemetry": "workspace:^"
     "@graphql-hive/pubsub": "workspace:^"
+    "@graphql-hive/render-laboratory": "npm:^0.1.0"
     "@graphql-mesh/cache-cfw-kv": "npm:^0.105.16"
     "@graphql-mesh/cache-localforage": "npm:^0.105.17"
     "@graphql-mesh/cache-redis": "npm:^0.105.2"
@@ -4526,7 +4791,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-hive/logger@npm:^1.0.9, @graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
+"@graphql-hive/laboratory@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@graphql-hive/laboratory@npm:0.1.0"
+  peerDependencies:
+    "@tanstack/react-form": ^1.23.8
+    date-fns: ^4.1.0
+    graphql-ws: ^6.0.6
+    lucide-react: ^0.548.0
+    lz-string: ^1.5.0
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+    tslib: ^2.8.1
+    zod: ^4.1.12
+  checksum: 10c0/f7440ad8628afb4ccdf061a6511a9f2acb3566a65935d35abf46120cccee1327d74be3a1cb100f4212aee6ced70738661f4dc3d0de134320d24602c569d2490f
+  languageName: node
+  linkType: hard
+
+"@graphql-hive/logger@npm:^1.0.9, @graphql-hive/logger@npm:^1.1.0, @graphql-hive/logger@workspace:^, @graphql-hive/logger@workspace:packages/logger":
   version: 0.0.0-use.local
   resolution: "@graphql-hive/logger@workspace:packages/logger"
   dependencies:
@@ -4699,6 +4981,16 @@ __metadata:
       optional: true
   languageName: unknown
   linkType: soft
+
+"@graphql-hive/render-laboratory@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@graphql-hive/render-laboratory@npm:0.1.0"
+  dependencies:
+    "@graphql-hive/laboratory": "npm:0.1.0"
+    graphql-yoga: "npm:5.13.3"
+  checksum: 10c0/2ec728a517bfb8f9dd22575c3f1870b2c0d5686748add0c58305bf1616767481d34dbd7f1262fb905f90c2a8965030c464b9a0e74ca69c60eb5e7a16beb82657
+  languageName: node
+  linkType: hard
 
 "@graphql-hive/router-query-planner@npm:^0.0.9":
   version: 0.0.9
@@ -4931,7 +5223,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphql-mesh/hmac-upstream-signature@workspace:^, @graphql-mesh/hmac-upstream-signature@workspace:packages/plugins/hmac-upstream-signature":
+"@graphql-mesh/hmac-upstream-signature@npm:^2.0.9, @graphql-mesh/hmac-upstream-signature@workspace:^, @graphql-mesh/hmac-upstream-signature@workspace:packages/plugins/hmac-upstream-signature":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/hmac-upstream-signature@workspace:packages/plugins/hmac-upstream-signature"
   dependencies:
@@ -5021,7 +5313,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/plugin-jwt-auth@workspace:^, @graphql-mesh/plugin-jwt-auth@workspace:packages/plugins/jwt-auth":
+"@graphql-mesh/plugin-jwt-auth@npm:^2.0.9, @graphql-mesh/plugin-jwt-auth@workspace:^, @graphql-mesh/plugin-jwt-auth@workspace:packages/plugins/jwt-auth":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/plugin-jwt-auth@workspace:packages/plugins/jwt-auth"
   dependencies:
@@ -5276,7 +5568,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/transport-ws@workspace:^, @graphql-mesh/transport-ws@workspace:packages/transports/ws":
+"@graphql-mesh/transport-ws@npm:^2.0.15, @graphql-mesh/transport-ws@workspace:^, @graphql-mesh/transport-ws@workspace:packages/transports/ws":
   version: 0.0.0-use.local
   resolution: "@graphql-mesh/transport-ws@workspace:packages/transports/ws"
   dependencies:
@@ -5994,7 +6286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/subscription@npm:^5.0.5":
+"@graphql-yoga/subscription@npm:^5.0.4, @graphql-yoga/subscription@npm:^5.0.5":
   version: 5.0.5
   resolution: "@graphql-yoga/subscription@npm:5.0.5"
   dependencies:
@@ -11120,7 +11412,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.6":
+"@whatwg-node/fetch@npm:^0.10.0, @whatwg-node/fetch@npm:^0.10.13, @whatwg-node/fetch@npm:^0.10.5, @whatwg-node/fetch@npm:^0.10.6":
   version: 0.10.13
   resolution: "@whatwg-node/fetch@npm:0.10.13"
   dependencies:
@@ -11162,7 +11454,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.17, @whatwg-node/server@npm:^0.10.5":
+"@whatwg-node/server@npm:^0.10.0, @whatwg-node/server@npm:^0.10.14, @whatwg-node/server@npm:^0.10.17, @whatwg-node/server@npm:^0.10.2, @whatwg-node/server@npm:^0.10.5":
   version: 0.10.18
   resolution: "@whatwg-node/server@npm:0.10.18"
   dependencies:
@@ -15908,6 +16200,29 @@ __metadata:
     ws:
       optional: true
   checksum: 10c0/3faba221334a96d3221fc49a8649554831f1504123f03857d1f62761eb5fc4f6f1a0f345dfb2442e871ea63009ed98d4dd995d74bcc671e7e3577ba1b4923953
+  languageName: node
+  linkType: hard
+
+"graphql-yoga@npm:5.13.3":
+  version: 5.13.3
+  resolution: "graphql-yoga@npm:5.13.3"
+  dependencies:
+    "@envelop/core": "npm:^5.2.3"
+    "@envelop/instrumentation": "npm:^1.0.0"
+    "@graphql-tools/executor": "npm:^1.4.0"
+    "@graphql-tools/schema": "npm:^10.0.11"
+    "@graphql-tools/utils": "npm:^10.6.2"
+    "@graphql-yoga/logger": "npm:^2.0.1"
+    "@graphql-yoga/subscription": "npm:^5.0.4"
+    "@whatwg-node/fetch": "npm:^0.10.5"
+    "@whatwg-node/promise-helpers": "npm:^1.2.4"
+    "@whatwg-node/server": "npm:^0.10.2"
+    dset: "npm:^3.1.4"
+    lru-cache: "npm:^10.0.0"
+    tslib: "npm:^2.8.1"
+  peerDependencies:
+    graphql: ^15.2.0 || ^16.0.0
+  checksum: 10c0/fb124ecba20c377d661af499d14ea5127693306f6f12d6ae259b058f3bca1f9b49582b9da7c3151df1212bb832ab4e23b4235571a305c54306340403e7b3ca52
   languageName: node
   linkType: hard
 

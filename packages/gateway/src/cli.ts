@@ -19,12 +19,13 @@ import { Logger } from '@graphql-hive/logger';
 import type { AWSSignv4PluginOptions } from '@graphql-hive/plugin-aws-sigv4';
 import type { OpenTelemetryGatewayPluginOptions } from '@graphql-hive/plugin-opentelemetry';
 import type { PubSub } from '@graphql-hive/pubsub';
+import { renderLaboratory } from '@graphql-hive/render-laboratory';
 import type UpstashRedisCache from '@graphql-mesh/cache-upstash-redis';
 import type { JWTAuthPluginOptions } from '@graphql-mesh/plugin-jwt-auth';
 import type { PrometheusPluginOptions } from '@graphql-mesh/plugin-prometheus';
 import type { KeyValueCache, YamlConfig } from '@graphql-mesh/types';
-import { renderGraphiQL } from '@graphql-yoga/render-graphiql';
 import { getEnvBool, isDebug } from '~internal/env';
+import type { GraphiQLRenderer } from 'graphql-yoga';
 import parseDuration from 'parse-duration';
 import { addCommands } from './commands/index';
 import { createDefaultConfigPaths } from './config';
@@ -267,7 +268,13 @@ export type AddCommand = (ctx: CLIContext, cli: CLI) => void;
 
 // we dont use `Option.default()` in the command definitions because we want the CLI options to
 // override the config file (with option defaults, config file will always be overwritten)
-export const defaultOptions = {
+export const defaultOptions: {
+  fork: number;
+  host: string;
+  port: number;
+  pollingInterval: number;
+  renderGraphiQL: GraphiQLRenderer;
+} = {
   fork: 1,
   host:
     platform().toLowerCase() === 'win32' ||
@@ -277,7 +284,7 @@ export const defaultOptions = {
       : '0.0.0.0',
   port: 4000,
   pollingInterval: 10_000,
-  renderGraphiQL,
+  renderGraphiQL: renderLaboratory,
 };
 
 /** Root cli for the gateway. */
