@@ -24,6 +24,39 @@ export interface RegisteredTool {
   outputSchema?: JsonSchema;
   /** Maps alias name -> original GraphQL variable name */
   argumentAliases?: Record<string, string>;
+  /** Dot-notation path to extract from the GraphQL response data */
+  outputPath?: string;
+}
+
+/** Walk a dot-notation path through an object, returning the value at that path. */
+export function getByPath(obj: unknown, path: string): unknown {
+  let current = obj;
+  for (const key of path.split('.')) {
+    if (current == null || typeof current !== 'object') return undefined;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+/** Walk a dot-notation path through a JSON Schema, returning the sub-schema at that path. */
+function getSchemaByPath(schema: JsonSchema, path: string): JsonSchema | undefined {
+  let current = schema;
+  for (const key of path.split('.')) {
+    if (current.type === 'object' && current.properties?.[key]) {
+      current = current.properties[key];
+    } else if (current.type === 'array' && current.items) {
+      // Walk into array items, then look for the key
+      const items = current.items;
+      if (items.type === 'object' && items.properties?.[key]) {
+        current = items.properties[key];
+      } else {
+        return undefined;
+      }
+    } else {
+      return undefined;
+    }
+  }
+  return current;
 }
 
 export class ToolRegistry {
@@ -111,6 +144,35 @@ export class ToolRegistry {
         );
       }
 
+      const outputPath = config.output?.path;
+
+      // Validate output path format
+      if (outputPath !== undefined) {
+        if (typeof outputPath !== 'string' || outputPath.trim().length === 0) {
+          throw new Error(
+            `Tool "${config.name}": output.path must be a non-empty string.`,
+          );
+        }
+        if (outputPath.startsWith('.') || outputPath.endsWith('.') || outputPath.includes('..')) {
+          throw new Error(
+            `Tool "${config.name}": output.path "${outputPath}" is invalid. Use dot-notation like "search.items".`,
+          );
+        }
+      }
+
+      // Narrow output schema to match the extraction path
+      if (outputPath && outputSchema) {
+        const narrowed = getSchemaByPath(outputSchema, outputPath);
+        if (narrowed) {
+          outputSchema = narrowed;
+        } else {
+          throw new Error(
+            `Tool "${config.name}": output.path "${outputPath}" does not match the output schema. ` +
+              `Verify the path matches the GraphQL query's selection set.`,
+          );
+        }
+      }
+
       this.tools.set(config.name, {
         name: config.name,
         description,
@@ -119,6 +181,7 @@ export class ToolRegistry {
         inputSchema,
         outputSchema,
         argumentAliases,
+        outputPath,
       });
     }
   }

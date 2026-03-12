@@ -1,7 +1,47 @@
 import { buildSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import type { ResolvedToolConfig } from '../src/plugin.js';
-import { ToolRegistry } from '../src/registry.js';
+import { getByPath, ToolRegistry } from '../src/registry.js';
+
+describe('getByPath', () => {
+  it('extracts a shallow key', () => {
+    expect(getByPath({ a: 1 }, 'a')).toBe(1);
+  });
+
+  it('extracts a deep key', () => {
+    expect(getByPath({ a: { b: { c: 42 } } }, 'a.b.c')).toBe(42);
+  });
+
+  it('returns undefined for missing key', () => {
+    expect(getByPath({ a: 1 }, 'b')).toBeUndefined();
+  });
+
+  it('returns undefined for non-object intermediate', () => {
+    expect(getByPath({ a: 'string' }, 'a.b')).toBeUndefined();
+  });
+
+  it('returns undefined when intermediate is null', () => {
+    expect(getByPath({ a: null }, 'a.b')).toBeUndefined();
+  });
+
+  it('returns undefined when root is null', () => {
+    expect(getByPath(null, 'a')).toBeUndefined();
+  });
+
+  it('returns undefined when root is undefined', () => {
+    expect(getByPath(undefined, 'a')).toBeUndefined();
+  });
+
+  it('returns falsy values correctly', () => {
+    expect(getByPath({ a: { b: 0 } }, 'a.b')).toBe(0);
+    expect(getByPath({ a: { b: false } }, 'a.b')).toBe(false);
+    expect(getByPath({ a: { b: '' } }, 'a.b')).toBe('');
+  });
+
+  it('returns array value at leaf', () => {
+    expect(getByPath({ a: [1, 2, 3] }, 'a')).toEqual([1, 2, 3]);
+  });
+});
 
 describe('ToolRegistry', () => {
   const schema = buildSchema(`
@@ -387,6 +427,81 @@ describe('ToolRegistry with overrides', () => {
     const prop = tools[0]!.inputSchema.properties!['query']!;
     expect(prop.description).toBe('Search term');
     expect((prop as any).descriptionProvider).toBeUndefined();
+  });
+
+  it('narrows output schema when output.path is set', () => {
+    const nestedSchema = buildSchema(`
+      type Query {
+        search(query: String!): SearchResult
+      }
+      type SearchResult {
+        items: [Item!]!
+        total: Int
+      }
+      type Item {
+        name: String
+        score: Float
+      }
+    `);
+    const registry = new ToolRegistry(
+      [{
+        name: 'search',
+        query: 'query($query: String!) { search(query: $query) { items { name score } total } }',
+        output: { path: 'search.items' },
+      }],
+      nestedSchema,
+    );
+    const tools = registry.getMCPTools();
+    // Output schema should be narrowed to the items array schema
+    expect(tools[0]!.outputSchema).toEqual({
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          score: { type: 'number', format: 'float' },
+        },
+      },
+    });
+  });
+
+  it('narrows output schema to single level path', () => {
+    const schemaWithOutput = buildSchema(`
+      type Query {
+        getWeather(location: String!): Weather
+      }
+      type Weather {
+        temperature: Float!
+      }
+    `);
+    const registry = new ToolRegistry(
+      [{
+        name: 'weather',
+        query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
+        output: { path: 'getWeather' },
+      }],
+      schemaWithOutput,
+    );
+    const tools = registry.getMCPTools();
+    expect(tools[0]!.outputSchema).toEqual({
+      type: 'object',
+      properties: {
+        temperature: { type: 'number', format: 'float' },
+      },
+    });
+  });
+
+  it('stores outputPath on registered tool', () => {
+    const registry = new ToolRegistry(
+      [{
+        name: 'search',
+        query: 'query($query: String!) { searchProducts(query: $query) }',
+        output: { path: 'searchProducts' },
+      }],
+      schema,
+    );
+    const tool = registry.getTool('search');
+    expect(tool!.outputPath).toBe('searchProducts');
   });
 
   it('includes output schema', () => {

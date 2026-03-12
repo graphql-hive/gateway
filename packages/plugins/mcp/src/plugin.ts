@@ -64,11 +64,17 @@ export interface MCPInputOverrides {
   };
 }
 
+export interface MCPOutputOverrides {
+  /** Dot-notation path to extract from the GraphQL response data, e.g. "search.items" */
+  path: string;
+}
+
 export interface MCPToolConfig {
   name: string;
   source: MCPToolSource;
   tool?: MCPToolOverrides; // metadata overrides
   input?: MCPInputOverrides; // field-level overrides
+  output?: MCPOutputOverrides; // output extraction
 }
 
 export interface MCPConfig {
@@ -93,6 +99,7 @@ export interface ResolvedToolConfig {
   query: string;
   tool?: MCPToolOverrides;
   input?: MCPInputOverrides;
+  output?: MCPOutputOverrides;
   directiveDescription?: string;
   providerDescription?: string;
 }
@@ -158,6 +165,7 @@ export function resolveToolConfigs(
       query,
       tool: tool.tool,
       input: tool.input,
+      output: tool.output,
     });
   }
 
@@ -175,6 +183,7 @@ export function resolveToolConfigs(
           ...configTool.tool,
         },
         input: configTool.input || base.input,
+        output: configTool.output || base.output,
       });
     } else {
       merged.set(name, configTool);
