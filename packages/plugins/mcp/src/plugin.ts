@@ -9,6 +9,7 @@ import {
   resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
+  type DescriptionProviderContext,
   type ProviderRegistry,
 } from './description-provider.js';
 import { createGraphQLExecutor } from './executor.js';
@@ -86,7 +87,7 @@ export interface MCPConfig {
   operationsStr?: string;
   tools: MCPToolConfig[];
   providers?: {
-    langfuse?: LangfuseOptions;
+    langfuse?: LangfuseOptions & { defaults?: Partial<LangfuseGetPromptOptions> };
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
   disableGraphQLEndpoint?: boolean;
@@ -376,6 +377,24 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           dispatch,
         );
 
+        const rawPromptLabel = url.searchParams.get('promptLabel');
+        const promptLabel =
+          rawPromptLabel && rawPromptLabel.length <= 256 && /^[\w-]+$/.test(rawPromptLabel)
+            ? rawPromptLabel
+            : undefined;
+        if (rawPromptLabel && !promptLabel) {
+          console.warn(
+            `[MCP] Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
+          );
+        }
+        if (promptLabel && providerToolConfigs.length === 0 && fieldProviderToolConfigs.length === 0) {
+          console.warn(
+            `[MCP] "promptLabel" query parameter was provided but no tools use description providers. The parameter has no effect.`,
+          );
+        }
+        const providerContext: DescriptionProviderContext | undefined =
+          promptLabel ? { label: promptLabel } : undefined;
+
         const handler = createMCPHandler({
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
@@ -392,7 +411,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   const resolved = await resolveDescriptions(
                     providerToolConfigs,
                     resolvedProviders,
-                    { isStartup: false },
+                    { isStartup: false, context: providerContext },
                   );
                   const map = new Map();
                   for (const tool of resolved) {
@@ -414,7 +433,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                   const fieldDescs = await resolveFieldDescriptions(
                     fieldProviderToolConfigs,
                     resolvedProviders,
-                    { isStartup: false },
+                    { isStartup: false, context: providerContext },
                   );
                   // Remap original field names to alias names
                   for (const tool of fieldProviderToolConfigs) {
