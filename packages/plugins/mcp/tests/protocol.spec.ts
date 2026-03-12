@@ -141,6 +141,47 @@ describe('createMCPHandler', () => {
     expect(body.result.content).toBeUndefined();
   });
 
+  it('extracts data by outputPath on tools/call', async () => {
+    const pathSchema = buildSchema(`
+      type Query { search(q: String!): SearchResult }
+      type SearchResult { items: [String!]! }
+    `);
+    const pathRegistry = new ToolRegistry(
+      [{
+        name: 'search',
+        query: 'query($q: String!) { search(q: $q) { items } }',
+        output: { path: 'search.items' },
+      }],
+      pathSchema,
+    );
+    const pathExecute = vi.fn().mockResolvedValue({
+      search: { items: ['a', 'b', 'c'] },
+    });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: pathRegistry,
+      execute: pathExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 20,
+        method: 'tools/call',
+        params: { name: 'search', arguments: { q: 'test' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    // Should return just the extracted array, not the full nested object
+    expect(body.result.structuredContent).toEqual(['a', 'b', 'c']);
+  });
+
   it('returns error for unknown tool', async () => {
     const handler = createMCPHandler(options);
 
