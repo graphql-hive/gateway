@@ -1,3 +1,3 @@
 FROM gateway_e2e-bun
 
-RUN bun i moment
+RUN bun i graphql-scalars
