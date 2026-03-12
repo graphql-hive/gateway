@@ -165,19 +165,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/composition@npm:2.11.3":
-  version: 2.11.3
-  resolution: "@apollo/composition@npm:2.11.3"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.11.3"
-    "@apollo/query-graphs": "npm:2.11.3"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/ec9093b33a705eb4c3177a3f9a2d1c3af82d25081280a567fa5a2181b5d5dcd962803eaa9e707b60bdb7e8d5e4dbf2a8a1f832e591aa75cb07f8c2b0141daff6
-  languageName: node
-  linkType: hard
-
-"@apollo/composition@npm:2.13.1":
+"@apollo/composition@npm:^2.11.5":
   version: 2.13.1
   resolution: "@apollo/composition@npm:2.13.1"
   dependencies:
@@ -265,20 +253,6 @@ __metadata:
     apollo-pbjs: bin/pbjs
     apollo-pbts: bin/pbts
   checksum: 10c0/24b08929c5216f75e3bf457cf7e132d957d6774b0feebb104e98d9b0c06e801ef3919ee23d6a63a6297fb4aa41da3491b8e9acc3481fea0909c90f41f1e5a0f6
-  languageName: node
-  linkType: hard
-
-"@apollo/query-graphs@npm:2.11.3":
-  version: 2.11.3
-  resolution: "@apollo/query-graphs@npm:2.11.3"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.11.3"
-    deep-equal: "npm:^2.0.5"
-    ts-graphviz: "npm:^1.5.4"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/2e7edd1266fc619574ecedc139d569ab0f838c9a763e39efbf18a4848987840306416e23a07fefc7d75c5e5cbe8b0e217929c9948262d736612ce3556ec9f55e
   languageName: node
   linkType: hard
 
@@ -4240,23 +4214,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-codegen/plugin-helpers@npm:^6.0.0, @graphql-codegen/plugin-helpers@npm:^6.1.1":
-  version: 6.1.1
-  resolution: "@graphql-codegen/plugin-helpers@npm:6.1.1"
-  dependencies:
-    "@graphql-tools/utils": "npm:^11.0.0"
-    change-case-all: "npm:1.0.15"
-    common-tags: "npm:1.8.2"
-    import-from: "npm:4.0.0"
-    lodash: "npm:~4.17.0"
-    tslib: "npm:~2.6.0"
-  peerDependencies:
-    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/4e38b08cfad92758b3ed09b35b027f215a434f6531de64aa258c879c5014a23345016e6b47f6f39aadd4975340d173cfb670ce6ab0b5f349835196e2717f31cc
-  languageName: node
-  linkType: hard
-
-"@graphql-codegen/plugin-helpers@npm:^6.2.0":
+"@graphql-codegen/plugin-helpers@npm:^6.0.0, @graphql-codegen/plugin-helpers@npm:^6.1.1, @graphql-codegen/plugin-helpers@npm:^6.2.0":
   version: 6.2.0
   resolution: "@graphql-codegen/plugin-helpers@npm:6.2.0"
   dependencies:
@@ -14978,14 +14936,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-builder@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "fast-xml-builder@npm:1.0.0"
-  checksum: 10c0/2631fda265c81e8008884d08944eeed4e284430116faa5b8b7a43a3602af367223b7bf01c933215c9ad2358b8666e45041bc038d64877156a2f88821841b3014
-  languageName: node
-  linkType: hard
-
-"fast-xml-builder@npm:^1.1.1":
+"fast-xml-builder@npm:^1.0.0, fast-xml-builder@npm:^1.1.1":
   version: 1.1.1
   resolution: "fast-xml-builder@npm:1.1.1"
   dependencies:
@@ -15135,19 +15086,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-type@npm:21.3.0":
-  version: 21.3.0
-  resolution: "file-type@npm:21.3.0"
-  dependencies:
-    "@tokenizer/inflate": "npm:^0.4.1"
-    strtok3: "npm:^10.3.4"
-    token-types: "npm:^6.1.1"
-    uint8array-extras: "npm:^1.4.0"
-  checksum: 10c0/1b1fa909e6063044a6da1d2ea348ee4d747ed9286382d3f0d4d6532c11fb2ea9f2e7e67b2bc7d745d1bc937e05dee1aa8cb912c64250933bcb393a3744f4e284
-  languageName: node
-  linkType: hard
-
-"file-type@npm:^21.1.0":
+"file-type@npm:^21.3.1":
   version: 21.3.1
   resolution: "file-type@npm:21.3.1"
   dependencies:
@@ -17649,13 +17588,13 @@ __metadata:
   linkType: hard
 
 "js-yaml@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "js-yaml@npm:4.1.0"
+  version: 4.1.1
+  resolution: "js-yaml@npm:4.1.1"
   dependencies:
     argparse: "npm:^2.0.1"
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 10c0/184a24b4eaacfce40ad9074c64fd42ac83cf74d8c8cd137718d456ced75051229e5061b8633c3366b8aada17945a7a356b337828c19da92b51ae62126575018f
+  checksum: 10c0/561c7d7088c40a9bb53cc75becbfb1df6ae49b34b5e6e5a81744b14ae8667ec564ad2527709d1a6e7d5e5fa6d483aa0f373a50ad98d42fde368ec4a190d4fae7
   languageName: node
   linkType: hard
 

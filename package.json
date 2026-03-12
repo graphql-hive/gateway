@@ -63,6 +63,7 @@
     "vitest": "4.0.18"
   },
   "resolutions": {
+    "@apollo/composition": "^2.11.5",
     "@apollo/server": "5.4.0",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
@@ -79,6 +80,7 @@
     "esbuild": "0.25.5",
     "express": "^5.2.0",
     "fastify": "5.8.1",
+    "file-type": "^21.3.1",
     "graphql": "16.13.1",
     "ioredis-mock": "patch:ioredis-mock@8.9.0#~/.yarn/patches/ioredis-mock-npm-8.9.0-530d4422b9.patch",
     "jest-environment-node@npm:30.2.0": "patch:jest-environment-node@npm%3A30.2.0#~/.yarn/patches/jest-environment-node-npm-30.2.0-b72db4433a.patch",
