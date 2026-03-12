@@ -101,4 +101,109 @@ describe('Langfuse provider', () => {
       }),
     ).rejects.toThrow('Langfuse API error');
   });
+
+  describe('defaults and context', () => {
+    function createMockClient() {
+      return {
+        getPrompt: vi.fn(async (_name: string, _version?: number, options?: any) => ({
+          compile: () => `compiled with label=${options?.label ?? 'none'}`,
+        })),
+      };
+    }
+
+    it('uses global defaults when no per-tool options', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any, {
+        label: 'preproduction',
+      });
+
+      await provider.fetchDescription('tool', {
+        type: 'langfuse',
+        prompt: 'my_prompt',
+      });
+
+      expect(client.getPrompt).toHaveBeenCalledWith(
+        'my_prompt',
+        undefined,
+        expect.objectContaining({ label: 'preproduction' }),
+      );
+    });
+
+    it('per-tool options override global defaults', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any, {
+        label: 'preproduction',
+      });
+
+      await provider.fetchDescription('tool', {
+        type: 'langfuse',
+        prompt: 'my_prompt',
+        options: { label: 'production' },
+      });
+
+      expect(client.getPrompt).toHaveBeenCalledWith(
+        'my_prompt',
+        undefined,
+        expect.objectContaining({ label: 'production' }),
+      );
+    });
+
+    it('per-request context label overrides everything', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any, {
+        label: 'preproduction',
+      });
+
+      await provider.fetchDescription(
+        'tool',
+        {
+          type: 'langfuse',
+          prompt: 'my_prompt',
+          options: { label: 'production' },
+        },
+        { label: 'staging' },
+      );
+
+      expect(client.getPrompt).toHaveBeenCalledWith(
+        'my_prompt',
+        undefined,
+        expect.objectContaining({ label: 'staging' }),
+      );
+    });
+
+    it('context without label does not override defaults', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any, {
+        label: 'preproduction',
+      });
+
+      await provider.fetchDescription(
+        'tool',
+        { type: 'langfuse', prompt: 'my_prompt' },
+        {},
+      );
+
+      expect(client.getPrompt).toHaveBeenCalledWith(
+        'my_prompt',
+        undefined,
+        expect.objectContaining({ label: 'preproduction' }),
+      );
+    });
+
+    it('works without defaults or context', async () => {
+      const client = createMockClient();
+      const provider = createLangfuseProvider(client as any);
+
+      await provider.fetchDescription('tool', {
+        type: 'langfuse',
+        prompt: 'my_prompt',
+      });
+
+      expect(client.getPrompt).toHaveBeenCalledWith(
+        'my_prompt',
+        undefined,
+        undefined,
+      );
+    });
+  });
 });

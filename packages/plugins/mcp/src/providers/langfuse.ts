@@ -2,17 +2,22 @@ import type { Langfuse } from 'langfuse';
 import type {
   DescriptionProvider,
   DescriptionProviderConfig,
+  DescriptionProviderContext,
 } from '../description-provider.js';
 
 export type LangfuseGetPromptOptions = NonNullable<
   Parameters<Langfuse['getPrompt']>[2]
 >;
 
-export function createLangfuseProvider(client: Langfuse): DescriptionProvider {
+export function createLangfuseProvider(
+  client: Langfuse,
+  defaults?: Partial<LangfuseGetPromptOptions>,
+): DescriptionProvider {
   return {
     async fetchDescription(
       _toolName: string,
       config: DescriptionProviderConfig,
+      context?: DescriptionProviderContext,
     ): Promise<string> {
       const promptName = config['prompt'];
       if (typeof promptName !== 'string' || !promptName) {
@@ -21,7 +26,16 @@ export function createLangfuseProvider(client: Langfuse): DescriptionProvider {
         );
       }
       const version = config['version'] as number | undefined;
-      const options = config['options'] as LangfuseGetPromptOptions | undefined;
+      const perToolOptions = config['options'] as LangfuseGetPromptOptions | undefined;
+      const hasDefaults = defaults && Object.keys(defaults).length > 0;
+      const hasOverrides = hasDefaults || perToolOptions || context?.label;
+      const options = hasOverrides
+        ? {
+            ...defaults,
+            ...perToolOptions,
+            ...(context?.label ? { label: context.label } : undefined),
+          }
+        : perToolOptions;
       const prompt = await client.getPrompt(
         promptName,
         version,
