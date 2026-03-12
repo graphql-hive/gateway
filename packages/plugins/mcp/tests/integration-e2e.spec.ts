@@ -4,7 +4,10 @@ import {
 } from '@graphql-hive/gateway-runtime';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { afterAll, describe, expect, it, vi } from 'vitest';
-import type { DescriptionProvider } from '../src/description-provider.js';
+import type {
+  DescriptionProvider,
+  DescriptionProviderContext,
+} from '../src/description-provider.js';
 import { useMCP } from '../src/plugin.js';
 
 describe('MCP E2E', () => {
@@ -853,6 +856,89 @@ describe('MCP E2E', () => {
       expect(tool.outputSchema.items.properties.name).toBeDefined();
     } finally {
       await pathGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('promptLabel query param flows context to description providers', async () => {
+    const capturedContexts: (DescriptionProviderContext | undefined)[] = [];
+    const contextProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_toolName, _, context) => {
+        capturedContexts.push(context);
+        return `Desc with label=${context?.label ?? 'none'}`;
+      }),
+    };
+
+    const labelGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'label-gateway',
+          providers: { mock: contextProvider },
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) {
+                  weather(location: $location) { temperature }
+                }`,
+              },
+              tool: {
+                descriptionProvider: { type: 'mock', prompt: 'weather_desc' },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await labelGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // With promptLabel
+      const res = await labelGateway.fetch(
+        'http://localhost/mcp?promptLabel=staging',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'tools/list',
+            params: {},
+          }),
+        },
+      );
+      const body = await res.json();
+      expect(body.result.tools[0].description).toBe(
+        'Desc with label=staging',
+      );
+      expect(capturedContexts[0]).toEqual({ label: 'staging' });
+
+      // Without promptLabel context should be undefined
+      capturedContexts.length = 0;
+      await labelGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      expect(capturedContexts[0]).toBeUndefined();
+    } finally {
+      await labelGateway[Symbol.asyncDispose]?.();
     }
   });
 

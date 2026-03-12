@@ -5,10 +5,15 @@ export interface DescriptionProviderConfig {
   [key: string]: unknown;
 }
 
+export interface DescriptionProviderContext {
+  label?: string;
+}
+
 export interface DescriptionProvider {
   fetchDescription(
     toolName: string,
     config: DescriptionProviderConfig,
+    context?: DescriptionProviderContext,
   ): Promise<string>;
 }
 
@@ -55,8 +60,17 @@ async function resolveBuiltinProvider(
       );
     }
     const { createLangfuseProvider } = await import('./providers/langfuse.js');
+    const { defaults, ...langfuseOptions } = options;
+    if (defaults !== undefined && (typeof defaults !== 'object' || defaults === null || Array.isArray(defaults))) {
+      throw new Error(
+        `Langfuse provider "defaults" must be an object (e.g., { label: "production" }), got ${Array.isArray(defaults) ? 'array' : typeof defaults}`,
+      );
+    }
     try {
-      return createLangfuseProvider(new Langfuse(options));
+      return createLangfuseProvider(
+        new Langfuse(langfuseOptions),
+        defaults as Parameters<typeof createLangfuseProvider>[1],
+      );
     } catch (err) {
       throw new Error(
         `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASE_URL env vars are set. ` +
@@ -91,6 +105,7 @@ export async function resolveProviders(
 
 interface ResolveDescriptionsOptions {
   isStartup?: boolean;
+  context?: DescriptionProviderContext;
 }
 
 export async function resolveDescriptions(
@@ -114,6 +129,7 @@ export async function resolveDescriptions(
         const description = await provider.fetchDescription(
           tool.name,
           providerConfig,
+          options.context,
         );
         return { ...tool, providerDescription: description };
       } catch (err) {
@@ -165,6 +181,7 @@ export async function resolveFieldDescriptions(
             const description = await provider.fetchDescription(
               tool.name,
               providerConfig,
+              options.context,
             );
             fieldMap.set(fieldName, description);
           } catch (err) {

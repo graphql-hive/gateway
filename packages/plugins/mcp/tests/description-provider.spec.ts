@@ -6,6 +6,7 @@ import {
   resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
+  type DescriptionProviderContext,
 } from '../src/description-provider.js';
 import type { ResolvedToolConfig } from '../src/plugin.js';
 
@@ -133,6 +134,68 @@ describe('resolveDescriptions', () => {
     await expect(
       resolveDescriptions(tools, providerRegistry, { isStartup: true }),
     ).rejects.toThrow('Unknown description provider type: "unknown"');
+  });
+
+  it('passes context through to fetchDescription', async () => {
+    const contextCapture: (DescriptionProviderContext | undefined)[] = [];
+    const contextProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(
+        async (
+          _toolName: string,
+          _config: DescriptionProviderConfig,
+          context?: DescriptionProviderContext,
+        ) => {
+          contextCapture.push(context);
+          return 'desc';
+        },
+      ),
+    };
+    const registry = createProviderRegistry({ ctx: contextProvider });
+
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'get_weather',
+        query: 'query { weather { temp } }',
+        tool: {
+          descriptionProvider: { type: 'ctx', prompt: 'test' },
+        },
+      },
+    ];
+
+    await resolveDescriptions(tools, registry, {
+      context: { label: 'staging' },
+    });
+    expect(contextCapture[0]).toEqual({ label: 'staging' });
+  });
+
+  it('passes undefined context when not provided', async () => {
+    const contextCapture: (DescriptionProviderContext | undefined)[] = [];
+    const contextProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(
+        async (
+          _toolName: string,
+          _config: DescriptionProviderConfig,
+          context?: DescriptionProviderContext,
+        ) => {
+          contextCapture.push(context);
+          return 'desc';
+        },
+      ),
+    };
+    const registry = createProviderRegistry({ ctx: contextProvider });
+
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'get_weather',
+        query: 'query { weather { temp } }',
+        tool: {
+          descriptionProvider: { type: 'ctx', prompt: 'test' },
+        },
+      },
+    ];
+
+    await resolveDescriptions(tools, registry);
+    expect(contextCapture[0]).toBeUndefined();
   });
 });
 
@@ -278,5 +341,43 @@ describe('resolveFieldDescriptions', () => {
     ).rejects.toThrow(
       'Unknown field description provider type: "unknown"',
     );
+  });
+
+  it('passes context through to field fetchDescription', async () => {
+    const contextCapture: (DescriptionProviderContext | undefined)[] = [];
+    const contextProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(
+        async (
+          _toolName: string,
+          _config: DescriptionProviderConfig,
+          context?: DescriptionProviderContext,
+        ) => {
+          contextCapture.push(context);
+          return 'field desc';
+        },
+      ),
+    };
+    const registry = createProviderRegistry({ ctx: contextProvider });
+
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: {
+                descriptionProvider: { type: 'ctx', prompt: 'test' },
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    await resolveFieldDescriptions(tools, registry, {
+      context: { label: 'preproduction' },
+    });
+    expect(contextCapture[0]).toEqual({ label: 'preproduction' });
   });
 });
