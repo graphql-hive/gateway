@@ -229,7 +229,7 @@ function createQueryPlanExecutionContext({
 
 type NormalizedFlattenNodePathSegment =
   | { kind: 'Field'; name: string }
-  | { kind: 'Cast'; typeCondition: string }
+  | { kind: 'Cast'; typeCondition: string[] }
   | { kind: 'List' };
 
 interface EntityLocation {
@@ -284,8 +284,8 @@ function normalizeFlattenNodePath(
       continue;
     } else if ('Field' in segment) {
       normalized.push({ kind: 'Field', name: segment.Field });
-    } else if ('Cast' in segment) {
-      normalized.push({ kind: 'Cast', typeCondition: segment.Cast });
+    } else if ('TypeCondition' in segment) {
+      normalized.push({ kind: 'Cast', typeCondition: segment.TypeCondition });
     } else {
       throw new Error(
         `Unsupported flatten path segment received from query planner: ${JSON.stringify(segment)}`,
@@ -401,16 +401,17 @@ function traverseFlattenPath(
       }
       if (typeof current === 'object') {
         const value = current as EntityRepresentation;
-        const typename =
+        const candidateTypenames =
           typeof value.__typename === 'string'
-            ? value.__typename
+            ? [value.__typename]
             : segment.typeCondition;
         if (
-          typename &&
-          entitySatisfiesTypeCondition(
-            supergraphSchema,
-            typename,
-            segment.typeCondition,
+          candidateTypenames.some((typeName) =>
+            entitySatisfiesTypeCondition(
+              supergraphSchema,
+              typeName,
+              segment.typeCondition,
+            ),
           )
         ) {
           traverseFlattenPath(current, rest, supergraphSchema, path, callback);
@@ -1455,21 +1456,35 @@ function applyValueSetter(
 function entitySatisfiesTypeCondition(
   supergraphSchema: GraphQLSchema,
   typeNameInEntity: string,
-  typeConditionInInlineFragment: string | undefined,
+  typeConditionInInlineFragment: string | readonly string[] | undefined,
 ) {
   if (!typeConditionInInlineFragment) {
     return false; // unknown actually
   }
-  if (typeNameInEntity === typeConditionInInlineFragment) {
+
+  const normalizedTypeConditions = Array.isArray(typeConditionInInlineFragment)
+    ? typeConditionInInlineFragment
+    : [typeConditionInInlineFragment];
+
+  if (normalizedTypeConditions.includes(typeNameInEntity)) {
     return true;
   }
-  const conditionType = supergraphSchema.getType(typeConditionInInlineFragment);
+
   const entityType = supergraphSchema.getType(typeNameInEntity);
-  return (
-    isObjectType(entityType) &&
-    isAbstractType(conditionType) &&
-    supergraphSchema.isSubType(conditionType, entityType)
-  );
+  if (!isObjectType(entityType)) {
+    return false;
+  }
+
+  for (const typeCondition of normalizedTypeConditions) {
+    const conditionType = supergraphSchema.getType(typeCondition);
+    if (
+      isAbstractType(conditionType) &&
+      supergraphSchema.isSubType(conditionType, entityType)
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
