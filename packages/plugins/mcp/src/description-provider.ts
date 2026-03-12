@@ -96,7 +96,7 @@ interface ResolveDescriptionsOptions {
 export async function resolveDescriptions(
   tools: ResolvedToolConfig[],
   providers: ProviderRegistry,
-  options: ResolveDescriptionsOptions = { isStartup: true },
+  options: ResolveDescriptionsOptions = { isStartup: false },
 ): Promise<ResolvedToolConfig[]> {
   const resolved = await Promise.all(
     tools.map(async (tool) => {
@@ -129,4 +129,60 @@ export async function resolveDescriptions(
   );
 
   return resolved;
+}
+
+/** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
+export async function resolveFieldDescriptions(
+  tools: ResolvedToolConfig[],
+  providers: ProviderRegistry,
+  options: ResolveDescriptionsOptions = { isStartup: false },
+): Promise<Map<string, Map<string, string>>> {
+  const result = new Map<string, Map<string, string>>();
+
+  await Promise.all(
+    tools.map(async (tool) => {
+      const properties = tool.input?.schema?.properties;
+      if (!properties) return;
+
+      const fieldEntries = Object.entries(properties).filter(
+        ([, v]) => v.descriptionProvider,
+      );
+      if (fieldEntries.length === 0) return;
+
+      const fieldMap = new Map<string, string>();
+
+      await Promise.all(
+        fieldEntries.map(async ([fieldName, fieldOverrides]) => {
+          const providerConfig = fieldOverrides.descriptionProvider!;
+          const provider = providers[providerConfig.type];
+          if (!provider) {
+            throw new Error(
+              `Unknown field description provider type: "${providerConfig.type}" for tool "${tool.name}" field "${fieldName}"`,
+            );
+          }
+
+          try {
+            const description = await provider.fetchDescription(
+              tool.name,
+              providerConfig,
+            );
+            fieldMap.set(fieldName, description);
+          } catch (err) {
+            if (options.isStartup) {
+              throw err;
+            }
+            console.warn(
+              `[MCP] Field description provider failed for tool "${tool.name}" field "${fieldName}": ${err instanceof Error ? err.message : String(err)}`,
+            );
+          }
+        }),
+      );
+
+      if (fieldMap.size > 0) {
+        result.set(tool.name, fieldMap);
+      }
+    }),
+  );
+
+  return result;
 }
