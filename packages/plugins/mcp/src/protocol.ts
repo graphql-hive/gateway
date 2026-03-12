@@ -1,4 +1,4 @@
-import type { ToolRegistry } from './registry.js';
+import { getByPath, type ToolRegistry } from './registry.js';
 
 export interface MCPHandlerOptions {
   serverName: string;
@@ -160,7 +160,17 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             }
             args = dealiased;
           }
-          const result = await options.execute(callParams.name, args);
+          let result = await options.execute(callParams.name, args);
+          if (tool.outputPath) {
+            const extracted = getByPath(result, tool.outputPath);
+            if (extracted === undefined && result !== undefined) {
+              console.warn(
+                `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${callParams.name}". ` +
+                  `Check your output.path configuration.`,
+              );
+            }
+            result = extracted ?? null;
+          }
           const textContent = {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };

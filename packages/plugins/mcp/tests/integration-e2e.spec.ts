@@ -782,6 +782,80 @@ describe('MCP E2E', () => {
     }
   });
 
+  it('output.path extracts subset of response data', async () => {
+    const pathGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'path-gateway',
+          tools: [
+            {
+              name: 'search_cities',
+              source: {
+                type: 'inline',
+                query: `query SearchCities($query: String!) {
+                  cities(query: $query) { name country population }
+                }`,
+              },
+              tool: { description: 'Search cities' },
+              output: { path: 'cities' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await pathGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // tools/call should return just the cities array, not { cities: [...] }
+      const res = await pathGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'search_cities', arguments: { query: 'New York' } },
+        }),
+      });
+      const body = await res.json();
+
+      // structuredContent should be the extracted array directly
+      expect(body.result.structuredContent).toEqual([
+        { name: 'New York City', country: 'US', population: 100000 },
+      ]);
+
+      // Output schema should also be narrowed
+      const listRes = await pathGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      const tool = listBody.result.tools[0];
+      // Output schema should describe an array of city objects, not { cities: [...] }
+      expect(tool.outputSchema.type).toBe('array');
+      expect(tool.outputSchema.items.properties.name).toBeDefined();
+    } finally {
+      await pathGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
   it('auto-registers tools from @mcpTool directive in operations', async () => {
     const directiveGateway = createGatewayRuntime({
       logging: false,
