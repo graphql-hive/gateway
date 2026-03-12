@@ -184,7 +184,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
           type: 'graphos',
           apiKey: apolloKey,
           graphRef: apolloGraphRef,
-          upLink: apolloUplink,
+          ...(apolloUplink ? { upLink: apolloUplink } : {}),
         };
       } else if ('supergraph' in loadedConfig) {
         supergraph = loadedConfig.supergraph!; // TODO: assertion wont be necessary when exactOptionalPropertyTypes
@@ -395,7 +395,7 @@ export async function runSupergraph(
         .then(() => {
           log.info(
             { path: absSchemaPath },
-            'Supergraph watcher successfuly closed',
+            'Supergraph watcher successfully closed',
           );
         });
     }
