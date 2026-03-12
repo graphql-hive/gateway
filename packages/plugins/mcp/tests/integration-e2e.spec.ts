@@ -457,6 +457,79 @@ describe('MCP E2E', () => {
     });
   });
 
+  it('forwards headers from MCP request to internal dispatch', async () => {
+    let capturedRequest: Request | undefined;
+
+    const headerGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        {
+          onRequest({ request }: { request: Request }) {
+            if (request.headers.get('content-type') === 'application/json') {
+              capturedRequest = request;
+            }
+          },
+        } as any,
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'header-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) { weather(location: $location) { temperature } }`,
+              },
+              tool: { description: 'Get weather' },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Trigger schema load
+      await headerGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      capturedRequest = undefined;
+
+      await headerGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test-token-123',
+          'X-Custom-Header': 'custom-value',
+          'X-Request-Id': 'req-456',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'London' } },
+        }),
+      });
+
+      expect(capturedRequest).toBeDefined();
+      expect(capturedRequest!.headers.get('authorization')).toBe(
+        'Bearer test-token-123',
+      );
+      expect(capturedRequest!.headers.get('x-custom-header')).toBe(
+        'custom-value',
+      );
+      expect(capturedRequest!.headers.get('x-request-id')).toBe('req-456');
+    } finally {
+      await headerGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
   it('auto-registers tools from @mcpTool directive in operations', async () => {
     const directiveGateway = createGatewayRuntime({
       logging: false,
