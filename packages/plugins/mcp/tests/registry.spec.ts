@@ -146,6 +146,61 @@ describe('ToolRegistry with overrides', () => {
     ).toBeUndefined();
   });
 
+  it('renames input properties when alias is set', () => {
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          input: {
+            schema: {
+              properties: {
+                query: { alias: 'searchQuery', description: 'Search term' },
+              },
+            },
+          },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    // Alias replaces original name
+    expect(tools[0]!.inputSchema.properties!['searchQuery']).toBeDefined();
+    expect(tools[0]!.inputSchema.properties!['query']).toBeUndefined();
+    // Description is applied to the aliased property
+    expect(
+      tools[0]!.inputSchema.properties!['searchQuery']!.description,
+    ).toBe('Search term');
+    // Non-aliased field is unchanged
+    expect(tools[0]!.inputSchema.properties!['category']).toBeDefined();
+    // Required array uses alias name
+    expect(tools[0]!.inputSchema.required).toContain('searchQuery');
+    expect(tools[0]!.inputSchema.required).not.toContain('query');
+  });
+
+  it('stores argumentAliases on registered tool', () => {
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!) { searchProducts(query: $query) }',
+          input: {
+            schema: {
+              properties: {
+                query: { alias: 'searchQuery' },
+              },
+            },
+          },
+        },
+      ],
+      schema,
+    );
+    const tool = registry.getTool('search');
+    expect(tool!.argumentAliases).toEqual({ searchQuery: 'query' });
+  });
+
   it('config description wins over schema description', () => {
     const registry = new ToolRegistry(
       [
@@ -208,6 +263,130 @@ describe('ToolRegistry with overrides', () => {
     );
     const tools = registry.getMCPTools();
     expect(tools[0]!.description).toBe('Search products by keyword');
+  });
+
+  it('throws when alias collides with existing field', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'search',
+              query:
+                'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+              input: {
+                schema: {
+                  properties: {
+                    query: { alias: 'category' },
+                  },
+                },
+              },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow(
+      'Alias "category" for field "query" in tool "search" collides with existing field "category"',
+    );
+  });
+
+  it('throws when override references non-existent field', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'search',
+              query: 'query($query: String!) { searchProducts(query: $query) }',
+              input: {
+                schema: {
+                  properties: {
+                    nonExistent: { description: 'does not exist' },
+                  },
+                },
+              },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('nonExistent');
+  });
+
+  it('throws when alias is empty string', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'search',
+              query: 'query($query: String!) { searchProducts(query: $query) }',
+              input: {
+                schema: {
+                  properties: {
+                    query: { alias: '' },
+                  },
+                },
+              },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('must be a non-empty string');
+  });
+
+  it('throws when two fields alias to the same name', () => {
+    const multiFieldSchema = buildSchema(`
+      type Query {
+        searchProducts(query: String!, category: String): String
+      }
+    `);
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'search',
+              query:
+                'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+              input: {
+                schema: {
+                  properties: {
+                    query: { alias: 'term' },
+                    category: { alias: 'term' },
+                  },
+                },
+              },
+            },
+          ],
+          multiFieldSchema,
+        ),
+    ).toThrow('Alias "term"');
+  });
+
+  it('does not leak descriptionProvider into inputSchema', () => {
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          input: {
+            schema: {
+              properties: {
+                query: {
+                  description: 'Search term',
+                  descriptionProvider: { type: 'mock', prompt: 'test' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+    const prop = tools[0]!.inputSchema.properties!['query']!;
+    expect(prop.description).toBe('Search term');
+    expect((prop as any).descriptionProvider).toBeUndefined();
   });
 
   it('includes output schema', () => {

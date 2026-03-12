@@ -525,8 +525,260 @@ describe('MCP E2E', () => {
         'custom-value',
       );
       expect(capturedRequest!.headers.get('x-request-id')).toBe('req-456');
+      expect(capturedRequest!.headers.get('x-mcp-internal')).toBe('1');
     } finally {
       await headerGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('argument aliasing renames input and de-aliases on call', async () => {
+    await graphqlRequest('{ __typename }');
+
+    const aliasGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'alias-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) {
+                  weather(location: $location) { temperature conditions }
+                }`,
+              },
+              tool: { description: 'Get weather' },
+              input: {
+                schema: {
+                  properties: {
+                    location: { alias: 'city' },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await aliasGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // tools/list should show aliased name
+      const listRes = await aliasGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      const tool = listBody.result.tools[0];
+      expect(tool.inputSchema.properties.city).toBeDefined();
+      expect(tool.inputSchema.properties.location).toBeUndefined();
+      expect(tool.inputSchema.required).toContain('city');
+
+      // tools/call with alias should work
+      const callRes = await aliasGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { city: 'London' } },
+        }),
+      });
+      const callBody = await callRes.json();
+      expect(callBody.result.structuredContent.weather.temperature).toBe(12.5);
+      expect(callBody.result.structuredContent.weather.conditions).toBe(
+        'Cloudy',
+      );
+    } finally {
+      await aliasGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('per-field description provider overrides field descriptions', async () => {
+    const fieldProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_toolName, config) => {
+        return `From provider: ${config['prompt']}`;
+      }),
+    };
+
+    const fieldGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'field-provider-gateway',
+          providers: { mock: fieldProvider },
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) {
+                  weather(location: $location) { temperature }
+                }`,
+              },
+              tool: { description: 'Get weather' },
+              input: {
+                schema: {
+                  properties: {
+                    location: {
+                      descriptionProvider: {
+                        type: 'mock',
+                        prompt: 'location_desc',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await fieldGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      const res = await fieldGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const body = await res.json();
+
+      expect(
+        body.result.tools[0].inputSchema.properties.location.description,
+      ).toBe('From provider: location_desc');
+      expect(fieldProvider.fetchDescription).toHaveBeenCalled();
+    } finally {
+      await fieldGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
+  it('alias + per-field descriptionProvider combined', async () => {
+    const fieldProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async (_toolName, config) => {
+        return `Provider: ${config['prompt']}`;
+      }),
+    };
+
+    const comboGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'combo-gateway',
+          providers: { mock: fieldProvider },
+          tools: [
+            {
+              name: 'search_cities',
+              source: {
+                type: 'inline',
+                query: `query($query: String!) {
+                  cities(query: $query) { name country }
+                }`,
+              },
+              tool: { description: 'Search cities' },
+              input: {
+                schema: {
+                  properties: {
+                    query: {
+                      alias: 'searchTerm',
+                      descriptionProvider: {
+                        type: 'mock',
+                        prompt: 'search_query_desc',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      await comboGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // tools/list: alias applied + provider description on aliased field
+      const listRes = await comboGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      const tool = listBody.result.tools[0];
+      expect(tool.inputSchema.properties.searchTerm).toBeDefined();
+      expect(tool.inputSchema.properties.query).toBeUndefined();
+      expect(tool.inputSchema.properties.searchTerm.description).toBe(
+        'Provider: search_query_desc',
+      );
+
+      // tools/call: alias de-aliased, query executes correctly
+      const callRes = await comboGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: {
+            name: 'search_cities',
+            arguments: { searchTerm: 'New York' },
+          },
+        }),
+      });
+      const callBody = await callRes.json();
+      expect(callBody.result.structuredContent.cities[0].name).toBe(
+        'New York City',
+      );
+    } finally {
+      await comboGateway[Symbol.asyncDispose]?.();
     }
   });
 

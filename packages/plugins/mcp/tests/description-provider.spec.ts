@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createProviderRegistry,
   resolveDescriptions,
+  resolveFieldDescriptions,
   resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
@@ -132,5 +133,150 @@ describe('resolveDescriptions', () => {
     await expect(
       resolveDescriptions(tools, providerRegistry, { isStartup: true }),
     ).rejects.toThrow('Unknown description provider type: "unknown"');
+  });
+});
+
+describe('resolveFieldDescriptions', () => {
+  const mockProvider: DescriptionProvider = {
+    fetchDescription: vi.fn(
+      async (_toolName: string, config: DescriptionProviderConfig) => {
+        return `Field desc for ${config['prompt']}`;
+      },
+    ),
+  };
+
+  const providerRegistry = createProviderRegistry({ mock: mockProvider });
+
+  it('resolves per-field descriptions from providers', async () => {
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: {
+                descriptionProvider: { type: 'mock', prompt: 'search_query' },
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    const result = await resolveFieldDescriptions(tools, providerRegistry);
+    expect(result.get('search')?.get('q')).toBe(
+      'Field desc for search_query',
+    );
+  });
+
+  it('skips tools without field providers', async () => {
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: { description: 'static' },
+            },
+          },
+        },
+      },
+    ];
+
+    const result = await resolveFieldDescriptions(tools, providerRegistry);
+    expect(result.size).toBe(0);
+  });
+
+  it('throws on startup when provider fails', async () => {
+    const failingProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async () => {
+        throw new Error('Langfuse unreachable');
+      }),
+    };
+    const registry = createProviderRegistry({ failing: failingProvider });
+
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: {
+                descriptionProvider: { type: 'failing', prompt: 'test' },
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    await expect(
+      resolveFieldDescriptions(tools, registry, { isStartup: true }),
+    ).rejects.toThrow('Langfuse unreachable');
+  });
+
+  it('warns and skips field on runtime failure', async () => {
+    const failingProvider: DescriptionProvider = {
+      fetchDescription: vi.fn(async () => {
+        throw new Error('Network timeout');
+      }),
+    };
+    const registry = createProviderRegistry({ failing: failingProvider });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: {
+                descriptionProvider: { type: 'failing', prompt: 'test' },
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    const result = await resolveFieldDescriptions(tools, registry, {
+      isStartup: false,
+    });
+    expect(result.size).toBe(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('search'),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('q'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('throws for unknown provider type', async () => {
+    const tools: ResolvedToolConfig[] = [
+      {
+        name: 'search',
+        query: 'query { search }',
+        input: {
+          schema: {
+            properties: {
+              q: {
+                descriptionProvider: { type: 'unknown', prompt: 'test' },
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    await expect(
+      resolveFieldDescriptions(tools, providerRegistry),
+    ).rejects.toThrow(
+      'Unknown field description provider type: "unknown"',
+    );
   });
 });

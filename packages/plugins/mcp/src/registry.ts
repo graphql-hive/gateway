@@ -22,6 +22,8 @@ export interface RegisteredTool {
   query: string;
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
+  /** Maps alias name -> original GraphQL variable name */
+  argumentAliases?: Record<string, string>;
 }
 
 export class ToolRegistry {
@@ -31,12 +33,58 @@ export class ToolRegistry {
     for (const config of configs) {
       const query = config.query;
       let inputSchema = operationToInputSchema(query, schema);
+      let argumentAliases: Record<string, string> | undefined;
 
       if (config.input?.schema?.properties) {
         const overrides = config.input.schema.properties;
         for (const [fieldName, fieldOverrides] of Object.entries(overrides)) {
-          if (inputSchema.properties?.[fieldName]) {
-            Object.assign(inputSchema.properties[fieldName], fieldOverrides);
+          if (!inputSchema.properties?.[fieldName]) {
+            throw new Error(
+              `Tool "${config.name}" has override for field "${fieldName}" but this field does not exist in the operation's variables. ` +
+                `Available variables: ${Object.keys(inputSchema.properties || {}).join(', ')}`,
+            );
+          }
+
+          // Apply non-alias overrides (description, examples, default)
+          const { alias, descriptionProvider, ...schemaOverrides } = fieldOverrides;
+          if (Object.keys(schemaOverrides).length > 0) {
+            Object.assign(
+              inputSchema.properties[fieldName],
+              schemaOverrides,
+            );
+          }
+
+          // Handle alias: rename the property in the input schema
+          if (alias !== undefined && alias !== fieldName) {
+            if (typeof alias !== 'string' || alias.trim().length === 0) {
+              throw new Error(
+                `Alias for field "${fieldName}" in tool "${config.name}" must be a non-empty string.`,
+              );
+            }
+            if (
+              inputSchema.properties[alias]
+            ) {
+              throw new Error(
+                `Alias "${alias}" for field "${fieldName}" in tool "${config.name}" collides with existing field "${alias}". Choose a different alias name.`,
+              );
+            }
+            argumentAliases ??= {};
+            if (argumentAliases[alias]) {
+              throw new Error(
+                `Alias "${alias}" is used for both field "${argumentAliases[alias]}" and field "${fieldName}" in tool "${config.name}". Each alias must be unique.`,
+              );
+            }
+            argumentAliases[alias] = fieldName;
+            inputSchema.properties[alias] = inputSchema.properties[fieldName];
+            delete inputSchema.properties[fieldName];
+
+            // Update required array
+            if (inputSchema.required) {
+              const idx = inputSchema.required.indexOf(fieldName);
+              if (idx !== -1) {
+                inputSchema.required[idx] = alias;
+              }
+            }
           }
         }
       }
@@ -70,6 +118,7 @@ export class ToolRegistry {
         query,
         inputSchema,
         outputSchema,
+        argumentAliases,
       });
     }
   }

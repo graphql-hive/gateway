@@ -4,7 +4,7 @@ import {
   resolveDescriptions,
   type DescriptionProvider,
 } from '../src/description-provider.js';
-import { resolveToolConfigs } from '../src/plugin.js';
+import { resolveToolConfigs, useMCP } from '../src/plugin.js';
 
 describe('resolveToolConfigs', () => {
   it('returns inline source tools with query extracted', () => {
@@ -153,6 +153,36 @@ describe('resolveToolConfigs', () => {
     `;
     const tools = resolveToolConfigs({ tools: [], operationsSource });
     expect(tools).toHaveLength(0);
+  });
+});
+
+describe('useMCP startup validation', () => {
+  it('throws when field-level descriptionProvider references unknown provider', () => {
+    expect(() =>
+      useMCP({
+        name: 'test',
+        tools: [
+          {
+            name: 'search',
+            source: { type: 'inline', query: 'query($q: String!) { search(q: $q) }' },
+            input: {
+              schema: {
+                properties: {
+                  q: {
+                    descriptionProvider: {
+                      type: 'nonexistent',
+                      prompt: 'test',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      }),
+    ).toThrow(
+      'Unknown description provider type: "nonexistent" for tool "search" field "q"',
+    );
   });
 });
 
