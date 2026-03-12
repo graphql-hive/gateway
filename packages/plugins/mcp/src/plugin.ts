@@ -366,10 +366,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               : undefined,
           execute: async (toolName, args) => {
             const headers: Record<string, string> = {};
-            const auth = request.headers.get('authorization');
-            if (auth) {
-              headers['authorization'] = auth;
-            }
+            request.headers.forEach((value, key) => {
+              if (key !== 'host' && key !== 'content-type' && key !== 'content-length') {
+                headers[key] = value;
+              }
+            });
             return execute(toolName, args, { headers });
           },
         });
