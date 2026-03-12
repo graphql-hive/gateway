@@ -83,6 +83,31 @@ describe('createGraphQLExecutor', () => {
         headers: expect.objectContaining({
           Authorization: 'Bearer token123',
           'Content-Type': 'application/json',
+          'x-mcp-internal': '1',
+        }),
+      }),
+    );
+  });
+
+  it('includes x-mcp-internal header on all dispatched requests', async () => {
+    const dispatch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ data: { hello: 'World' } })),
+      );
+
+    const execute = createGraphQLExecutor(
+      registry,
+      'http://localhost:4000/graphql',
+      dispatch,
+    );
+    await execute('say_hello', { name: 'World' });
+
+    expect(dispatch).toHaveBeenCalledWith(
+      'http://localhost:4000/graphql',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'x-mcp-internal': '1',
         }),
       }),
     );

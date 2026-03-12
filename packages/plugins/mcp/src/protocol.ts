@@ -9,6 +9,8 @@ export interface MCPHandlerOptions {
     args: Record<string, unknown>,
   ) => Promise<unknown>;
   resolveToolDescriptions?: () => Promise<Map<string, string>>;
+  /** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
+  resolveFieldDescriptions?: () => Promise<Map<string, Map<string, string>>>;
   includeContentFallback?: boolean;
 }
 
@@ -77,9 +79,34 @@ export function createMCPHandler(options: MCPHandlerOptions) {
               }
             }
           } catch (err) {
-            // Provider failure should not prevent tool discovery
             console.warn(
               `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
+            );
+          }
+        }
+
+        if (options.resolveFieldDescriptions) {
+          try {
+            const fieldDescs = await options.resolveFieldDescriptions();
+            for (const tool of tools) {
+              const fields = fieldDescs.get(tool.name);
+              if (fields && tool.inputSchema.properties) {
+                for (const [fieldName, description] of fields) {
+                  if (tool.inputSchema.properties[fieldName]) {
+                    tool.inputSchema.properties[fieldName].description =
+                      description;
+                  } else {
+                    console.warn(
+                      `[MCP] Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
+                        `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
+                    );
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.warn(
+              `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
             );
           }
         }
@@ -123,10 +150,17 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         }
 
         try {
-          const result = await options.execute(
-            callParams.name,
-            callParams.arguments || {},
-          );
+          // De-alias arguments: map MCP alias names back to GraphQL variable names
+          let args = callParams.arguments || {};
+          if (tool.argumentAliases) {
+            const dealiased: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(args)) {
+              const originalName = tool.argumentAliases[key] || key;
+              dealiased[originalName] = value;
+            }
+            args = dealiased;
+          }
+          const result = await options.execute(callParams.name, args);
           const textContent = {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };

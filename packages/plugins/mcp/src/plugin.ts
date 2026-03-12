@@ -5,6 +5,7 @@ import type { GraphQLSchema } from 'graphql';
 import type { LangfuseOptions } from 'langfuse';
 import {
   resolveDescriptions,
+  resolveFieldDescriptions,
   resolveProviders,
   type DescriptionProvider,
   type DescriptionProviderConfig,
@@ -52,7 +53,13 @@ export interface MCPInputOverrides {
   schema?: {
     properties?: Record<
       string,
-      { description?: string; examples?: unknown[]; default?: unknown }
+      {
+        description?: string;
+        examples?: unknown[];
+        default?: unknown;
+        alias?: string;
+        descriptionProvider?: DescriptionProviderConfig;
+      }
     >;
   };
 }
@@ -227,6 +234,19 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         `Unknown description provider type: "${providerType}" for tool "${tool.name}"`,
       );
     }
+    // Validate field-level providers
+    if (tool.input?.schema?.properties) {
+      for (const [fieldName, fieldOverrides] of Object.entries(
+        tool.input.schema.properties,
+      )) {
+        const fieldProviderType = fieldOverrides.descriptionProvider?.type;
+        if (fieldProviderType && !config.providers?.[fieldProviderType]) {
+          throw new Error(
+            `Unknown description provider type: "${fieldProviderType}" for tool "${tool.name}" field "${fieldName}"`,
+          );
+        }
+      }
+    }
   }
 
   // Resolved lazily on first use, then cached
@@ -235,6 +255,13 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   // Tools that use provider descriptions (provider wins over config)
   const providerToolConfigs = resolvedTools.filter(
     (t) => t.tool?.descriptionProvider,
+  );
+
+  // Tools that have per-field description providers
+  const fieldProviderToolConfigs = resolvedTools.filter((t) =>
+    Object.values(t.input?.schema?.properties || {}).some(
+      (p) => p.descriptionProvider,
+    ),
   );
 
   const internalRequests = new WeakSet<Request>();
@@ -297,7 +324,10 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             try {
               await dispatch(graphqlEndpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-mcp-internal': '1',
+                },
                 body: JSON.stringify({ query: '{ __typename }' }),
               });
             } finally {
@@ -362,6 +392,38 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                     }
                   }
                   return map;
+                }
+              : undefined,
+          resolveFieldDescriptions:
+            fieldProviderToolConfigs.length > 0
+              ? async () => {
+                  if (!resolvedProviders) {
+                    resolvedProviders = await resolveProviders(
+                      config.providers || {},
+                    );
+                  }
+                  const fieldDescs = await resolveFieldDescriptions(
+                    fieldProviderToolConfigs,
+                    resolvedProviders,
+                    { isStartup: false },
+                  );
+                  // Remap original field names to alias names
+                  for (const tool of fieldProviderToolConfigs) {
+                    const toolDescs = fieldDescs.get(tool.name);
+                    if (!toolDescs) continue;
+                    const aliases = tool.input?.schema?.properties;
+                    if (!aliases) continue;
+                    for (const [origName, overrides] of Object.entries(
+                      aliases,
+                    )) {
+                      if (overrides.alias && toolDescs.has(origName)) {
+                        const desc = toolDescs.get(origName)!;
+                        toolDescs.delete(origName);
+                        toolDescs.set(overrides.alias, desc);
+                      }
+                    }
+                  }
+                  return fieldDescs;
                 }
               : undefined,
           execute: async (toolName, args) => {

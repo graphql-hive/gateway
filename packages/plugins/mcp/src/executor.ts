@@ -24,6 +24,7 @@ export function createGraphQLExecutor(
       headers: {
         'Content-Type': 'application/json',
         ...context?.headers,
+        'x-mcp-internal': '1',
       },
       body: JSON.stringify({
         query: tool.query,
