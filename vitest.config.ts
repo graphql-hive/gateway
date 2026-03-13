@@ -1,4 +1,4 @@
-import tsconfigPaths from 'vite-tsconfig-paths'; 
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 import { timeout as testTimeout } from './internal/e2e/src/timeout';
 import { isCI, usingHiveRouterRuntime } from './internal/env/src/index';
@@ -13,7 +13,7 @@ const inline = [
   /@graphql-mesh\/.*/,
   /@omnigraph\/.*/,
   /@graphql-hive\/core/,
-  /@graphql-hive\/yoga/
+  /@graphql-hive\/yoga/,
 ];
 
 export default defineConfig({
