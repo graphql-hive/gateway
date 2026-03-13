@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import {
   createGatewayRuntime,
   GatewayRuntime,
@@ -21,7 +22,6 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from 'graphql';
-import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
