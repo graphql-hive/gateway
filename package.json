@@ -51,6 +51,7 @@
     "eslint-plugin-n": "17.24.0",
     "graphql": "16.13.1",
     "jest": "30.3.0",
+    "langfuse": "^3.38.6",
     "prettier": "3.8.1",
     "prettier-plugin-pkg": "0.21.2",
     "prettier-plugin-sh": "0.18.0",
