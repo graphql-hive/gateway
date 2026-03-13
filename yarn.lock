@@ -374,19 +374,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.13.1, @apollo/subgraph@npm:^2.11.3":
-  version: 2.13.1
-  resolution: "@apollo/subgraph@npm:2.13.1"
-  dependencies:
-    "@apollo/cache-control-types": "npm:^1.0.2"
-    "@apollo/federation-internals": "npm:2.13.1"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/a607317d20ca3e80cead539a90eee1ddfe3ba4b249e0cd68a5cb9e114e5dcf3fad8ee04cf5c558ad384f9bce9f8b135117ac657eca55ebb44801d1b96e68b8a8
-  languageName: node
-  linkType: hard
-
-"@apollo/subgraph@npm:^2.13.2":
+"@apollo/subgraph@npm:2.13.2, @apollo/subgraph@npm:^2.11.3, @apollo/subgraph@npm:^2.13.2":
   version: 2.13.2
   resolution: "@apollo/subgraph@npm:2.13.2"
   dependencies:
@@ -10480,16 +10468,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.4.0
-  resolution: "@types/node@npm:25.4.0"
-  dependencies:
-    undici-types: "npm:~7.18.0"
-  checksum: 10c0/da81e8b0a3a57964b1b5f85d134bfefc1b923fd67ed41756842348a049d7915b72e8773f5598d6929b9cb8119c2427993c55d364fd93bd572a3450e58b98a60e
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.5.0":
+"@types/node@npm:*, @types/node@npm:25.5.0, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.5.0
   resolution: "@types/node@npm:25.5.0"
   dependencies:
@@ -12303,18 +12282,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.13.1":
-  version: 1.13.5
-  resolution: "axios@npm:1.13.5"
-  dependencies:
-    follow-redirects: "npm:^1.15.11"
-    form-data: "npm:^4.0.5"
-    proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/abf468c34f2d145f3dc7dbc0f1be67e520630624307bda69a41bbe8d386bd672d87b4405c4ee77f9ff54b235ab02f96a9968fb00e75b13ce64706e352a3068fd
-  languageName: node
-  linkType: hard
-
-"axios@npm:^1.13.5":
+"axios@npm:^1.13.1, axios@npm:^1.13.5":
   version: 1.13.6
   resolution: "axios@npm:1.13.6"
   dependencies:
