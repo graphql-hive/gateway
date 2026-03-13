@@ -165,29 +165,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/composition@npm:^2.11.5":
-  version: 2.13.1
-  resolution: "@apollo/composition@npm:2.13.1"
+"@apollo/composition@npm:^2.13.1":
+  version: 2.13.2
+  resolution: "@apollo/composition@npm:2.13.2"
   dependencies:
-    "@apollo/federation-internals": "npm:2.13.1"
-    "@apollo/query-graphs": "npm:2.13.1"
+    "@apollo/federation-internals": "npm:2.13.2"
+    "@apollo/query-graphs": "npm:2.13.2"
   peerDependencies:
     graphql: ^16.5.0
-  checksum: 10c0/7b874f116ca331ba7babfca269ac4a51a2e5e754b0cd81b774fc979a4c92f57a3e9e295638255b2ae27ed7dcb4527cb5c963e6e2afbdac0e6287e4ee6719306f
-  languageName: node
-  linkType: hard
-
-"@apollo/federation-internals@npm:2.13.1":
-  version: 2.13.1
-  resolution: "@apollo/federation-internals@npm:2.13.1"
-  dependencies:
-    "@types/uuid": "npm:^9.0.0"
-    chalk: "npm:^4.1.0"
-    js-levenshtein: "npm:^1.1.6"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/0f699d2c69b49b6ae8091343edbe974c6e41e090c797cf7536f5304b7a198a88368f3d8fe07a900d3e5351391f6c4baa0e539e243b0f7782f64ca1cda7cae6c8
+  checksum: 10c0/374294edd7a483f23cb6d40e4a13a5057410ff44d56caaaeefd5454357627b7a3648cb61b9bcc4dc276702e578bd28b15ec971d42f334a4e87bce0dbd665e634
   languageName: node
   linkType: hard
 
@@ -253,20 +239,6 @@ __metadata:
     apollo-pbjs: bin/pbjs
     apollo-pbts: bin/pbts
   checksum: 10c0/24b08929c5216f75e3bf457cf7e132d957d6774b0feebb104e98d9b0c06e801ef3919ee23d6a63a6297fb4aa41da3491b8e9acc3481fea0909c90f41f1e5a0f6
-  languageName: node
-  linkType: hard
-
-"@apollo/query-graphs@npm:2.13.1":
-  version: 2.13.1
-  resolution: "@apollo/query-graphs@npm:2.13.1"
-  dependencies:
-    "@apollo/federation-internals": "npm:2.13.1"
-    deep-equal: "npm:^2.0.5"
-    ts-graphviz: "npm:^1.5.4"
-    uuid: "npm:^9.0.0"
-  peerDependencies:
-    graphql: ^16.5.0
-  checksum: 10c0/4cace8f66d945dfed91ead4cd0d2e1a98a6ff93e67c02910677f85894d9e2871ba5abea0d4c6e6a1edd28e65217266b65d0e921eb951c62a38615dd18f55281e
   languageName: node
   linkType: hard
 
