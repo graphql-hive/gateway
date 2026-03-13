@@ -63,7 +63,7 @@
     "vitest": "4.0.18"
   },
   "resolutions": {
-    "@apollo/composition": "^2.11.5",
+    "@apollo/composition": "^2.13.1",
     "@apollo/server": "5.4.0",
     "@graphql-mesh/types": "0.104.13",
     "@graphql-mesh/utils": "0.104.13",
