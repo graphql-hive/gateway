@@ -58,7 +58,7 @@
     "@apollo/server": "^5.4.0",
     "@apollo/server-gateway-interface": "^2.0.0",
     "@apollo/subgraph": "^2.11.3",
-    "@graphql-hive/federation-gateway-audit": "0.0.1",
+    "@graphql-hive/federation-gateway-audit": "0.0.2",
     "@types/lodash": "4.17.24",
     "change-case": "^5.4.4",
     "graphql": "^16.12.0",
