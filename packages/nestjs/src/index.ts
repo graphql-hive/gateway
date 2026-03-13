@@ -29,7 +29,7 @@ import {
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { lexicographicSortSchema } from 'graphql';
-import tslib from 'tslib';
+import { __decorate } from 'tslib';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -307,4 +307,4 @@ export class HiveGatewayDriver<
   }
 }
 
-tslib.__decorate([Injectable()], HiveGatewayDriver);
+__decorate([Injectable()], HiveGatewayDriver);
