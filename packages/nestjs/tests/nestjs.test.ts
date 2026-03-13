@@ -10,7 +10,10 @@ import {
   GraphQLSchemaHost,
 } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
-import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
@@ -69,8 +72,8 @@ async function createNestApp(
     port,
     [DisposableSymbols.asyncDispose]() {
       return disposableStack.disposeAsync();
-    }
-  }
+    },
+  };
 }
 
 describe('NestJS', () => {
