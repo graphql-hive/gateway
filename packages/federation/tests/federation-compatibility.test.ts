@@ -21,7 +21,7 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from 'graphql';
-import { createRouter } from 'graphql-federation-gateway-audit';
+import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
@@ -30,7 +30,7 @@ describe('Federation Compatibility', () => {
   const supergraphList = readdirSync(
     join(
       __dirname,
-      '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+      '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
     ),
   );
   const supergraphSdlMap = new Map<string, string>();
@@ -67,7 +67,7 @@ describe('Federation Compatibility', () => {
       const testFile = readFileSync(
         join(
           __dirname,
-          '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+          '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
           supergraphName,
           'test.ts',
         ),
