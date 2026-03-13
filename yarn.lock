@@ -360,7 +360,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:2.13.1, @apollo/subgraph@npm:^2.11.3":
+"@apollo/subgraph@npm:2.13.1":
   version: 2.13.1
   resolution: "@apollo/subgraph@npm:2.13.1"
   dependencies:
@@ -372,7 +372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/subgraph@npm:^2.13.2":
+"@apollo/subgraph@npm:^2.11.3, @apollo/subgraph@npm:^2.13.2":
   version: 2.13.2
   resolution: "@apollo/subgraph@npm:2.13.2"
   dependencies:
@@ -3531,17 +3531,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@emnapi/core@npm:^1.4.3":
-  version: 1.4.4
-  resolution: "@emnapi/core@npm:1.4.4"
-  dependencies:
-    "@emnapi/wasi-threads": "npm:1.0.3"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/a3a87b384de7c87edc8d64dfbd0c695fb8e9c8547d2d53f284b15415cfea29150f933cb21017dc4d0fa9dbfb2b544d23c77da7cde8c82f21e68323db50a829dd
-  languageName: node
-  linkType: hard
-
-"@emnapi/core@npm:^1.7.1":
+"@emnapi/core@npm:^1.4.3, @emnapi/core@npm:^1.7.1":
   version: 1.9.0
   resolution: "@emnapi/core@npm:1.9.0"
   dependencies:
@@ -3551,30 +3541,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emnapi/runtime@npm:^1.4.3, @emnapi/runtime@npm:^1.7.0":
-  version: 1.8.1
-  resolution: "@emnapi/runtime@npm:1.8.1"
-  dependencies:
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/f4929d75e37aafb24da77d2f58816761fe3f826aad2e37fa6d4421dac9060cbd5098eea1ac3c9ecc4526b89deb58153852fa432f87021dc57863f2ff726d713f
-  languageName: node
-  linkType: hard
-
-"@emnapi/runtime@npm:^1.7.1":
+"@emnapi/runtime@npm:^1.4.3, @emnapi/runtime@npm:^1.7.0, @emnapi/runtime@npm:^1.7.1":
   version: 1.9.0
   resolution: "@emnapi/runtime@npm:1.9.0"
   dependencies:
     tslib: "npm:^2.4.0"
   checksum: 10c0/f825e53b2d3f9d31fd880e669197d006bb5158c3a52ab25f0546f3d52ac58eb539a4bd1dcc378af6c10d202956fa064b28ab7b572a76de58972c0b8656a692ef
-  languageName: node
-  linkType: hard
-
-"@emnapi/wasi-threads@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@emnapi/wasi-threads@npm:1.0.3"
-  dependencies:
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/00cae4dd64143cca21a3aedbf64a7a5528a5991b69bcc0b7306812ff31a3fdc4aaf5bc9413a29fbd5d577c78aae49db4fc4e736d013aec5d416b5a64d403f391
   languageName: node
   linkType: hard
 
@@ -10189,16 +10161,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tybys/wasm-util@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@tybys/wasm-util@npm:0.10.0"
-  dependencies:
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/044feba55c1e2af703aa4946139969badb183ce1a659a75ed60bc195a90e73a3f3fc53bcd643497c9954597763ddb051fec62f80962b2ca6fc716ba897dc696e
-  languageName: node
-  linkType: hard
-
-"@tybys/wasm-util@npm:^0.10.1":
+"@tybys/wasm-util@npm:^0.10.0, @tybys/wasm-util@npm:^0.10.1":
   version: 0.10.1
   resolution: "@tybys/wasm-util@npm:0.10.1"
   dependencies:
@@ -10642,16 +10605,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
-  version: 25.4.0
-  resolution: "@types/node@npm:25.4.0"
-  dependencies:
-    undici-types: "npm:~7.18.0"
-  checksum: 10c0/da81e8b0a3a57964b1b5f85d134bfefc1b923fd67ed41756842348a049d7915b72e8773f5598d6929b9cb8119c2427993c55d364fd93bd572a3450e58b98a60e
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:25.5.0":
+"@types/node@npm:*, @types/node@npm:25.5.0, @types/node@npm:>=13.7.0, @types/node@npm:^25.0.0":
   version: 25.5.0
   resolution: "@types/node@npm:25.5.0"
   dependencies:
@@ -12465,18 +12419,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.13.1":
-  version: 1.13.5
-  resolution: "axios@npm:1.13.5"
-  dependencies:
-    follow-redirects: "npm:^1.15.11"
-    form-data: "npm:^4.0.5"
-    proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/abf468c34f2d145f3dc7dbc0f1be67e520630624307bda69a41bbe8d386bd672d87b4405c4ee77f9ff54b235ab02f96a9968fb00e75b13ce64706e352a3068fd
-  languageName: node
-  linkType: hard
-
-"axios@npm:^1.13.5":
+"axios@npm:^1.13.1, axios@npm:^1.13.5":
   version: 1.13.6
   resolution: "axios@npm:1.13.6"
   dependencies:
@@ -15661,6 +15604,7 @@ __metadata:
     typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.57.0"
     vite: "npm:8.0.0"
+    vite-tsconfig-paths: "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch"
     vitest: "npm:4.0.18"
   languageName: unknown
   linkType: soft
@@ -22675,6 +22619,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tsconfck@npm:^3.0.3":
+  version: 3.1.6
+  resolution: "tsconfck@npm:3.1.6"
+  peerDependencies:
+    typescript: ^5.0.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  bin:
+    tsconfck: bin/tsconfck.js
+  checksum: 10c0/269c3c513540be44844117bb9b9258fe6f8aeab026d32aeebf458d5299125f330711429dbb556dbf125a0bc25f4a81e6c24ac96de2740badd295c3fb400f66c4
+  languageName: node
+  linkType: hard
+
 "tsconfig-paths@npm:^3.15.0":
   version: 3.15.0
   resolution: "tsconfig-paths@npm:3.15.0"
@@ -23329,6 +23287,38 @@ __metadata:
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
   checksum: 10c0/f15d588d79f3675135ba783c91a4083dcd290a2a5be9fcb6514220a1634e23df116847b1cc51f66bfb0644cf9353b2abb7815ae499bab06e46dd33c1a6bf1f4f
+  languageName: node
+  linkType: hard
+
+"vite-tsconfig-paths@npm:5.1.3":
+  version: 5.1.3
+  resolution: "vite-tsconfig-paths@npm:5.1.3"
+  dependencies:
+    debug: "npm:^4.1.1"
+    globrex: "npm:^0.1.2"
+    tsconfck: "npm:^3.0.3"
+  peerDependencies:
+    vite: "*"
+  peerDependenciesMeta:
+    vite:
+      optional: true
+  checksum: 10c0/fb7480efa31fd50439f4a12c91bc953e5cc09d69fdc7eeb6ffff7cc796bc2c1f2c617c3abfdcbf5d7414848076cea9deb60bc002142f93b6e3131e5458760710
+  languageName: node
+  linkType: hard
+
+"vite-tsconfig-paths@patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch":
+  version: 5.1.3
+  resolution: "vite-tsconfig-paths@patch:vite-tsconfig-paths@npm%3A5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch::version=5.1.3&hash=8280b2"
+  dependencies:
+    debug: "npm:^4.1.1"
+    globrex: "npm:^0.1.2"
+    tsconfck: "npm:^3.0.3"
+  peerDependencies:
+    vite: "*"
+  peerDependenciesMeta:
+    vite:
+      optional: true
+  checksum: 10c0/e015460d6fc401b366ad1b2d6f410d46ab9c566527b7923fa71c99830f3e4d163bd618c7051d91bc060b99bf737a2b1a6d5b7b172ddb3baf02656e0cd14c59aa
   languageName: node
   linkType: hard
 
