@@ -45,6 +45,7 @@ describe('Schema reload', () => {
     });
     await using secondUpstreamYoga = createYoga({
       schema: secondUpstreamSchema,
+      logging: false,
     });
     await using secondUpstreamServer =
       await createDisposableServer(secondUpstreamYoga);
@@ -72,6 +73,7 @@ describe('Schema reload', () => {
         throw new Error('Unexpected fetch count');
       },
       pollingInterval: 300,
+      logging: false,
     });
     interval = setInterval(() => {
       gw.fetch('http://mesh/graphql', {
