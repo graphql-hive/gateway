@@ -860,12 +860,21 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
 });
 
 function stableStringify(value: unknown): string {
-  if (value === null) {
+  if (value == null) {
     return 'null';
   }
+  if (value === true) {
+    return 'true';
+  }
+  if (value === false) {
+    return 'false';
+  }
   const type = typeof value;
-  if (type === 'number' || type === 'boolean') {
-    return JSON.stringify(value);
+  if (type === 'number') {
+    return value.toString();
+  }
+  if (type === 'bigint') {
+    return value.toString();
   }
   if (type === 'string') {
     return JSON.stringify(value);
@@ -879,11 +888,11 @@ function stableStringify(value: unknown): string {
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(
         ([key, entryValue]) =>
-          `${JSON.stringify(key)}:${stableStringify(entryValue)}`,
+          `${stableStringify(key)}:${stableStringify(entryValue)}`,
       );
     return `{${entries.join(',')}}`;
   }
-  return JSON.stringify(null);
+  return 'null';
 }
 
 /**
