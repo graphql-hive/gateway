@@ -97,7 +97,7 @@ export interface UnifiedGraphHandlerResult {
   executor?: Executor;
   getSubgraphSchema(subgraphName: string): GraphQLSchema;
   inContextSDK?: any;
-  overrideLabels?: Set<string>;
+  overrideLabels?: Iterable<string>;
 }
 
 export interface UnifiedGraphManagerOptions<TContext> {
@@ -177,7 +177,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
   private executor?: Executor;
   private instrumentation: () => Instrumentation | undefined;
   private overrideLabelsByContext: WeakMap<any, Set<string>> = new WeakMap();
-  private overrideLabels: Set<string> = new Set<string>();
+  private overrideLabels: Iterable<string> | undefined;
 
   constructor(private opts: UnifiedGraphManagerOptions<TContext>) {
     this.batch = opts.batch ?? true;
@@ -374,7 +374,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           executor,
           overrideLabels,
         }) => {
-          this.overrideLabels = overrideLabels ?? new Set<string>();
+          this.overrideLabels = overrideLabels;
           const transportExecutorStack = new AsyncDisposableStack();
           onSubgraphExecute = getOnSubgraphExecute({
             onSubgraphExecuteHooks: this.onSubgraphExecuteHooks,
@@ -503,7 +503,7 @@ export class UnifiedGraphManager<TContext> implements AsyncDisposable {
           }
         }
         const handleProgressiveOverride = this.opts.handleProgressiveOverride;
-        if (handleProgressiveOverride) {
+        if (handleProgressiveOverride && this.overrideLabels) {
           const jobs$: MaybePromise<void>[] = [];
           for (const label of this.overrideLabels) {
             const result$ = handleProgressiveOverride(label, base);
