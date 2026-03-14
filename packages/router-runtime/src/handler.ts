@@ -6,8 +6,15 @@ import {
 } from '@graphql-mesh/fusion-runtime';
 import { createDefaultExecutor } from '@graphql-mesh/transport-common';
 import { defaultPrintFn } from '@graphql-tools/executor-common';
-import { filterInternalFieldsAndTypes } from '@graphql-tools/federation';
-import { ExecutionResult, isAsyncIterable } from '@graphql-tools/utils';
+import {
+  filterInternalFieldsAndTypes,
+  getRngFromEnv,
+} from '@graphql-tools/federation';
+import {
+  ExecutionRequest,
+  ExecutionResult,
+  isAsyncIterable,
+} from '@graphql-tools/utils';
 import {
   handleMaybePromise,
   mapAsyncIterator,
@@ -15,62 +22,105 @@ import {
 } from '@whatwg-node/promise-helpers';
 import { BREAK, DocumentNode, visit } from 'graphql';
 import { executeQueryPlan } from './executor';
-import {
-  getLazyFactory,
-  getLazyValue,
-  queryPlanForExecutionRequestContext,
-} from './utils';
+import { getLazyFactory, queryPlanForExecutionRequestContext } from './utils';
 
-export function unifiedGraphHandler(
+export async function unifiedGraphHandler(
   opts: UnifiedGraphHandlerOpts,
-): UnifiedGraphHandlerResult {
+): Promise<UnifiedGraphHandlerResult> {
   // TODO: should we do it this way? we only need the tools handler to pluck out the subgraphs
   const getSubschema = getLazyFactory(
     () => handleFederationSupergraph(opts).getSubschema,
   );
 
-  const getQueryPlanner = getLazyValue(() => {
-    const moduleName = '@graphql-hive/router-query-planner';
-    const supergraphSdl = opts.getUnifiedGraphSDL();
-    return import(moduleName).then(
-      ({ QueryPlanner }: typeof import('@graphql-hive/router-query-planner')) =>
-        new QueryPlanner(supergraphSdl),
-    );
-  });
+  const moduleName = '@graphql-hive/router-query-planner';
+  const { QueryPlanner }: typeof import('@graphql-hive/router-query-planner') =
+    await import(moduleName);
+  const supergraphSdl = opts.getUnifiedGraphSDL();
+  const queryPlanner = new QueryPlanner(supergraphSdl);
+
+  const overrideLabels = queryPlanner.overrideLabels;
+  const overridePercentages = queryPlanner.overridePercentages;
+
+  function getActivePercentLabels(percentageValue: number) {
+    const activePercentLabels = new Set<string>();
+    for (const percentage of overridePercentages) {
+      if (percentageValue > percentage) {
+        activePercentLabels.add(`percent(${percentage})`);
+      }
+    }
+    return activePercentLabels;
+  }
 
   const supergraphSchema = filterInternalFieldsAndTypes(opts.unifiedGraph);
   const defaultExecutor = getLazyFactory(() =>
     createDefaultExecutor(supergraphSchema),
   );
 
+  function calculateCacheKeyForDocument(
+    activeLabels: Set<string>,
+    percentageValue: number,
+    operationName?: string,
+  ) {
+    let cacheKey = operationName || '';
+    for (const label of activeLabels) {
+      cacheKey += `|${label}`;
+    }
+    const activePercentLabels = getActivePercentLabels(percentageValue);
+    for (const label of activePercentLabels) {
+      cacheKey += `|${label}`;
+    }
+    return cacheKey;
+  }
+
   const documentOperationPlanCache = new WeakMap<
     DocumentNode,
     Map<string | null, MaybePromise<QueryPlan>>
   >();
-  function planDocument(document: DocumentNode, operationName: string | null) {
-    let operationCache = documentOperationPlanCache.get(document);
+  function planDocument(executionRequest: ExecutionRequest) {
+    let operationCache = documentOperationPlanCache.get(
+      executionRequest.document,
+    );
+    const activeLabels = new Set<string>();
+    for (const label of overrideLabels) {
+      if (opts.handleProgressiveOverride?.(label, executionRequest.context)) {
+        activeLabels.add(label);
+      }
+    }
+    const rng = getRngFromEnv() || Math.random();
+    const percentageValue = rng * 100;
+    const cacheKey = calculateCacheKeyForDocument(
+      activeLabels,
+      percentageValue,
+      executionRequest.operationName,
+    );
 
     // we dont need to worry about releasing values. the map values in weakmap
     // will all be released when document node is GCed
     if (operationCache) {
-      const plan = operationCache.get(operationName);
+      const plan = operationCache.get(cacheKey);
       if (plan) {
         return plan;
       }
     } else {
       operationCache = new Map<string, MaybePromise<QueryPlan>>();
-      documentOperationPlanCache.set(document, operationCache);
+      documentOperationPlanCache.set(executionRequest.document, operationCache);
     }
 
-    const plan = handleMaybePromise(getQueryPlanner, (qp) =>
-      qp
-        .planAsync(defaultPrintFn(document), operationName, new Set(), 0)
-        .then((queryPlan) => {
-          operationCache.set(operationName, queryPlan);
-          return queryPlan;
-        }),
+    const plan = handleMaybePromise(
+      () =>
+        queryPlanner.plan(
+          defaultPrintFn(executionRequest.document),
+          executionRequest.operationName,
+          activeLabels,
+          percentageValue,
+          executionRequest.signal,
+        ),
+      (queryPlan) => {
+        operationCache.set(cacheKey, queryPlan);
+        return queryPlan;
+      },
     );
-    operationCache.set(operationName, plan);
+    operationCache.set(cacheKey, plan);
     return plan;
   }
 
@@ -84,11 +134,7 @@ export function unifiedGraphHandler(
         return defaultExecutor(executionRequest);
       }
       return handleMaybePromise(
-        () =>
-          planDocument(
-            executionRequest.document,
-            executionRequest.operationName || null,
-          ),
+        () => planDocument(executionRequest),
         (queryPlan) => {
           queryPlanForExecutionRequestContext.set(
             // setter like getter
@@ -143,6 +189,7 @@ export function unifiedGraphHandler(
         },
       );
     },
+    overrideLabels,
   };
 }
 
