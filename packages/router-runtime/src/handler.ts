@@ -38,12 +38,9 @@ export async function unifiedGraphHandler(
   const supergraphSdl = opts.getUnifiedGraphSDL();
   const queryPlanner = new QueryPlanner(supergraphSdl);
 
-  const overrideLabels = queryPlanner.overrideLabels;
-  const overridePercentages = queryPlanner.overridePercentages;
-
   function getActivePercentLabels(percentageValue: number) {
     const activePercentLabels = new Set<string>();
-    for (const percentage of overridePercentages) {
+    for (const percentage of queryPlanner.overridePercentages) {
       if (percentageValue > percentage) {
         activePercentLabels.add(`percent(${percentage})`);
       }
@@ -81,7 +78,7 @@ export async function unifiedGraphHandler(
       executionRequest.document,
     );
     const activeLabels = new Set<string>();
-    for (const label of overrideLabels) {
+    for (const label of queryPlanner.overrideLabels) {
       if (opts.handleProgressiveOverride?.(label, executionRequest.context)) {
         activeLabels.add(label);
       }
@@ -108,7 +105,7 @@ export async function unifiedGraphHandler(
 
     const plan = handleMaybePromise(
       () =>
-        queryPlanner.plan(
+        queryPlanner.planAsync(
           defaultPrintFn(executionRequest.document),
           executionRequest.operationName,
           activeLabels,
@@ -189,7 +186,7 @@ export async function unifiedGraphHandler(
         },
       );
     },
-    overrideLabels,
+    overrideLabels: queryPlanner.overrideLabels,
   };
 }
 

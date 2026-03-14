@@ -228,7 +228,7 @@ function createQueryPlanExecutionContext({
 
 type NormalizedFlattenNodePathSegment =
   | { kind: 'Field'; name: string }
-  | { kind: 'Cast'; typeCondition: string }
+  | { kind: 'Cast'; typeCondition: string[] }
   | { kind: 'List' };
 
 interface EntityLocation {
@@ -261,7 +261,7 @@ function normalizeFlattenNodePath(
     } else if ('Field' in segment) {
       normalized.push({ kind: 'Field', name: segment.Field });
     } else if ('Cast' in segment) {
-      normalized.push({ kind: 'Cast', typeCondition: segment.Cast });
+      normalized.push({ kind: 'Cast', typeCondition: segment.TypeCondition });
     } else {
       throw new Error(
         `Unsupported flatten path segment received from query planner: ${JSON.stringify(segment)}`,
@@ -378,15 +378,15 @@ function traverseFlattenPath(
       if (typeof current === 'object') {
         const value = current as EntityRepresentation;
         const typename =
-          typeof value.__typename === 'string'
-            ? value.__typename
-            : segment.typeCondition;
+          typeof value.__typename === 'string' && value.__typename;
         if (
           typename &&
-          entitySatisfiesTypeCondition(
-            supergraphSchema,
-            typename,
-            segment.typeCondition,
+          segment.typeCondition.some((typeCondition) =>
+            entitySatisfiesTypeCondition(
+              supergraphSchema,
+              typename,
+              typeCondition,
+            ),
           )
         ) {
           traverseFlattenPath(current, rest, supergraphSchema, path, callback);
