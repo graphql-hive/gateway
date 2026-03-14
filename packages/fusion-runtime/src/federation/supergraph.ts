@@ -435,6 +435,9 @@ export const handleFederationSupergraph = function ({
     }
     return subgraph;
   }
+  const overrideLabels = executableUnifiedGraph.extensions?.[
+    'overrideLabels'
+  ] as Set<string> | undefined;
   return {
     unifiedGraph: executableUnifiedGraph,
     inContextSDK,
@@ -444,5 +447,6 @@ export const handleFederationSupergraph = function ({
     },
     getSubschema,
     subschemas,
+    overrideLabels,
   };
 };

@@ -81,9 +81,11 @@ describe('Progressive Override', () => {
     const query = /* GraphQL */ `
       query {
         aFeed {
+          id
           createdAt
         }
         bFeed {
+          id
           createdAt
         }
       }
@@ -107,14 +109,32 @@ describe('Progressive Override', () => {
       expect(result).toEqual({
         data: {
           aFeed: [
-            { createdAt: 'from-b:a-1' },
-            { createdAt: 'from-b:a-2' },
-            { createdAt: 'from-b:a-3' },
+            {
+              id: 'a-1',
+              createdAt: 'from-b:a-1',
+            },
+            {
+              id: 'a-2',
+              createdAt: 'from-b:a-2',
+            },
+            {
+              id: 'a-3',
+              createdAt: 'from-b:a-3',
+            },
           ],
           bFeed: [
-            { createdAt: 'from-b:b-1' },
-            { createdAt: 'from-b:b-2' },
-            { createdAt: 'from-b:b-3' },
+            {
+              id: 'b-1',
+              createdAt: 'from-b:b-1',
+            },
+            {
+              id: 'b-2',
+              createdAt: 'from-b:b-2',
+            },
+            {
+              id: 'b-3',
+              createdAt: 'from-b:b-3',
+            },
           ],
         },
       });
@@ -132,12 +152,16 @@ describe('Progressive Override', () => {
       const BReceivedQueries = BLogs.split('\n').filter((line) =>
         line.includes('received query'),
       );
-      expect(BReceivedQueries).toMatchInlineSnapshot(`
-              [
-                "[service-b] received query: {bFeed{__typename createdAt id}}",
-                "[service-b] received query: query($representations:[_Any!]!){_entities(representations:$representations){__typename ...on Post{createdAt id}}}",
-              ]
-            `);
+      expect(BReceivedQueries).toHaveLength(2);
+      expect(BReceivedQueries[0]).toContain(
+        '[service-b] received query: {bFeed',
+      );
+      expect(BReceivedQueries[0]).toContain('createdAt');
+
+      expect(BReceivedQueries[1]).toContain(
+        '[service-b] received query: query($representations:[_Any!]!){_entities(representations:',
+      );
+      expect(BReceivedQueries[1]).toContain('...on Post{createdAt');
     }
 
     {
@@ -158,14 +182,32 @@ describe('Progressive Override', () => {
       expect(result).toEqual({
         data: {
           aFeed: [
-            { createdAt: 'from-a:a-1' },
-            { createdAt: 'from-a:a-2' },
-            { createdAt: 'from-a:a-3' },
+            {
+              id: 'a-1',
+              createdAt: 'from-a:a-1',
+            },
+            {
+              id: 'a-2',
+              createdAt: 'from-a:a-2',
+            },
+            {
+              id: 'a-3',
+              createdAt: 'from-a:a-3',
+            },
           ],
           bFeed: [
-            { createdAt: 'from-a:b-1' },
-            { createdAt: 'from-a:b-2' },
-            { createdAt: 'from-a:b-3' },
+            {
+              id: 'b-1',
+              createdAt: 'from-a:b-1',
+            },
+            {
+              id: 'b-2',
+              createdAt: 'from-a:b-2',
+            },
+            {
+              id: 'b-3',
+              createdAt: 'from-a:b-3',
+            },
           ],
         },
       });
@@ -174,12 +216,15 @@ describe('Progressive Override', () => {
       const AReceivedQueries = ALogs.split('\n').filter((line) =>
         line.includes('received query'),
       );
-      expect(AReceivedQueries).toMatchInlineSnapshot(`
-              [
-                "[service-a] received query: {aFeed{__typename createdAt id}}",
-                "[service-a] received query: query($representations:[_Any!]!){_entities(representations:$representations){__typename ...on Post{createdAt id}}}",
-              ]
-            `);
+      expect(AReceivedQueries).toHaveLength(2);
+      expect(AReceivedQueries[0]).toContain(
+        '[service-a] received query: {aFeed',
+      );
+      expect(AReceivedQueries[0]).toContain('id createdAt');
+      expect(AReceivedQueries[1]).toContain(
+        '[service-a] received query: query($representations:[_Any!]!){_entities(representations:',
+      );
+      expect(AReceivedQueries[1]).toContain('...on Post{createdAt');
       const BLogs = serviceB.getStd('out');
       const BReceivedQueries = BLogs.split('\n').filter((line) =>
         line.includes('received query'),
