@@ -60,7 +60,7 @@
     "typescript-eslint": "8.57.0",
     "vite": "8.0.0",
     "vite-tsconfig-paths": "patch:vite-tsconfig-paths@npm:5.1.3#~/.yarn/patches/vite-tsconfig-paths-npm-5.1.3-1736ca1872.patch",
-    "vitest": "4.0.18"
+    "vitest": "4.1.0"
   },
   "resolutions": {
     "@apollo/composition": "^2.13.1",
