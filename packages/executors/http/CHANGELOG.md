@@ -1,5 +1,12 @@
 # @graphql-tools/executor-http
 
+## 3.1.1
+### Patch Changes
+
+
+
+- [#2099](https://github.com/graphql-hive/gateway/pull/2099) [`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix missing NPM provenance attestation by enabling `npmPublishProvenance` in Yarn configuration
+
 ## 3.1.0
 ### Minor Changes
 
