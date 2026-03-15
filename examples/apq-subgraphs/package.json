@@ -12,7 +12,7 @@
     "@graphql-hive/gateway": "^2.5.6"
   },
   "overrides": {
-    "esbuild": "^0.25.5",
+    "esbuild": "^0.25.12",
     "minimatch": "^10.2.4"
   },
   "scripts": {
