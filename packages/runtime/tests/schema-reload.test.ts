@@ -1,5 +1,6 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
@@ -76,21 +77,26 @@ describe('Schema reload', () => {
       logging: false,
     });
     interval = setInterval(() => {
-      gw.fetch('http://mesh/graphql', {
-        method: 'POST',
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              __typename
-            }
-          `,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
+      handleMaybePromise(
+        () =>
+          gw.fetch('http://mesh/graphql', {
+            method: 'POST',
+            body: JSON.stringify({
+              query: /* GraphQL */ `
+                query {
+                  __typename
+                }
+              `,
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+        () => {},
+        () => {
+          // ignore errors from background fetches to avoid unhandled rejections
         },
-      }).catch(() => {
-        // ignore errors from background fetches to avoid unhandled rejections
-      });
+      );
     }, 100);
     const response = await gw.fetch('http://mesh/graphql', {
       method: 'POST',

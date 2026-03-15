@@ -189,7 +189,7 @@ describe('Federation Compatibility', () => {
             expect(received).toEqual(expected);
           } catch (e) {
             result.errors?.forEach((err) => {
-              console.log(err);
+              console.error(err);
             });
             throw e;
           }
