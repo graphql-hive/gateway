@@ -88,6 +88,8 @@ describe('Schema reload', () => {
         headers: {
           'Content-Type': 'application/json',
         },
+      }).catch(() => {
+        // ignore errors from background fetches to avoid unhandled rejections
       });
     }, 100);
     const response = await gw.fetch('http://mesh/graphql', {

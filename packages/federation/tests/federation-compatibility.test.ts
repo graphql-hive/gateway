@@ -34,7 +34,8 @@ describe('Federation Compatibility', () => {
     ),
   );
   const supergraphSdlMap = new Map<string, string>();
-  const supergraphTestMap = new Map<string, any>();
+  type SupergraphTestDefinition = unknown;
+  const supergraphTestMap = new Map<string, SupergraphTestDefinition>();
   beforeAll(async () => {
     const supergraphPathListRes = await auditRouter.fetch(
       'http://localhost/supergraphs',
@@ -73,13 +74,7 @@ describe('Federation Compatibility', () => {
         ),
         'utf-8',
       );
-      let tests: { query: string; expected: any }[] = new Array<{
-        query: string;
-        expected: any;
-      }>(testFile.match(/createTest\(/g)?.length ?? 0).fill({
-        query: '',
-        expected: {},
-      });
+      let tests: { query: string; expected: any }[];
       let gatewayRuntime: GatewayRuntime;
       beforeAll(() => {
         supergraphSdl = supergraphSdlMap.get(supergraphName)!;
@@ -188,7 +183,7 @@ describe('Federation Compatibility', () => {
             expect(received).toEqual(expected);
           } catch (e) {
             result.errors?.forEach((err) => {
-              console.error(err);
+              console.log(err);
             });
             throw e;
           }

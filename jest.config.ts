@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 // by importing the router query planner binaries here
-// we allow leak tests to not get fail when detecting open handles
-// showing that jest wouldnt close due to napi-rs customgc
+// we allow leak tests to not fail when detecting open handles
+// showing that jest wouldn't close due to napi-rs customgc
 import * as HIVE_ROUTER_QP from '@graphql-hive/router-query-planner';
 import type { Config } from 'jest';
 import JSON5 from 'json5';
@@ -48,7 +48,7 @@ export default {
   transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
   testPathIgnorePatterns: [
     '/node_modules/',
-    // we dont care about leaks in internal tests
+    // we don't care about leaks in internal tests
     // furthermore, some internal files use ESM (and import.meta) which jest does not support
     'internal/',
   ],
