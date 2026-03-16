@@ -1,10 +1,10 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { createGatewayRuntime } from '@graphql-hive/gateway-runtime';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
 } from '@internal/testing';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
