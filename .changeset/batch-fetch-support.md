@@ -1,4 +1,5 @@
 ---
+"@graphql-hive/gateway": patch
 "@graphql-hive/router-runtime": minor
 ---
 

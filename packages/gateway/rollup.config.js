@@ -99,7 +99,7 @@ const deps = {
   'node_modules/@graphql-hive/router-runtime/index':
     '../router-runtime/src/index.ts',
   'node_modules/@graphql-hive/router-query-planner/index':
-    '../../node_modules/@graphql-hive/router-query-planner/index.js',
+    '../../node_modules/@graphql-hive/router-query-planner/dist/index.js',
   ...Object.fromEntries(
     // To ease the OTEL setup, we need to bundle some important OTEL packages.
     // Those are most used features.
