@@ -63,10 +63,12 @@ export function unifiedGraphHandler(
     }
 
     const plan = handleMaybePromise(getQueryPlanner, (qp) =>
-      qp.plan(defaultPrintFn(document), operationName).then((queryPlan) => {
-        operationCache.set(operationName, queryPlan);
-        return queryPlan;
-      }),
+      qp
+        .planAsync(defaultPrintFn(document), operationName, new Set(), 0)
+        .then((queryPlan) => {
+          operationCache.set(operationName, queryPlan);
+          return queryPlan;
+        }),
     );
     operationCache.set(operationName, plan);
     return plan;
