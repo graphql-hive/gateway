@@ -51,8 +51,18 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
     typeof Bun === 'undefined' // Bun also has process.versions.node
   ) {
     const sdk = new NodeSDK({
-      // Use spanProcessor instead of spanExporter to remove batching for test speed
-      spanProcessors: [new tracing.SimpleSpanProcessor(exporter)],
+      spanProcessors: [
+        // In memtests, use BatchSpanProcessor to avoid false-positive memory leak detection.
+        // SimpleSpanProcessor triggers a separate async export for every span, which under high
+        // load (100 VUs) accumulates many in-flight export requests whose closures retain span
+        // Object references that outlive the calmdown phase's GC sweep.
+        // BatchSpanProcessor collects spans into batches before exporting, so far fewer
+        // in-flight requests exist at any given time and their lifecycle is well-defined.
+        // For regular e2e tests, SimpleSpanProcessor is still preferred for faster span visibility.
+        process.env['MEMTEST']
+          ? new tracing.BatchSpanProcessor(exporter)
+          : new tracing.SimpleSpanProcessor(exporter),
+      ],
       resource,
       instrumentations: getNodeAutoInstrumentations(),
       resourceDetectors: getResourceDetectors(),
