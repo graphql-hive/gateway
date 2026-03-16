@@ -1,5 +1,12 @@
 # @graphql-hive/gateway
 
+## 2.5.9
+### Patch Changes
+
+
+
+- [#2110](https://github.com/graphql-hive/gateway/pull/2110) [`37cb0e2`](https://github.com/graphql-hive/gateway/commit/37cb0e255a399822658474c6d3adb62d65be7856) Thanks [@ardatan](https://github.com/ardatan)! - Fix Rust Query Planner support in Docker image
+
 ## 2.5.8
 ### Patch Changes
 
