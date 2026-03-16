@@ -3,7 +3,9 @@
 #
 # Script is modified to constantly use the Windows SDK 10.0.26100.0 and not accept any parameters.
 #
-# Note that changing the Windows SDK version will also require a change in the package-binary.ts#signToolPath.
+# This script is used for production/release builds. For CI testing, the pre-installed
+# Windows SDK on the GitHub Actions runner is used via dynamic signtool discovery in
+# package-binary.ts.
 #
 
 [CmdletBinding()]
