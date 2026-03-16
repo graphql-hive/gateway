@@ -77,7 +77,7 @@ async function createNestApp(
 }
 
 describe('NestJS', () => {
-  it('should execute queries and have the correct schama', async () => {
+  it('should execute queries and have the correct schema', async () => {
     await using nestApp = await createNestApp();
     const res = await fetch(`http://localhost:${nestApp.port}/graphql`, {
       method: 'POST',

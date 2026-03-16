@@ -4,6 +4,7 @@ import {
   composeLocalSchemasWithApollo,
   createDisposableServer,
 } from '@internal/testing';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { parse } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -76,19 +77,26 @@ describe('Schema reload', () => {
       logging: false,
     });
     interval = setInterval(() => {
-      gw.fetch('http://mesh/graphql', {
-        method: 'POST',
-        body: JSON.stringify({
-          query: /* GraphQL */ `
-            query {
-              __typename
-            }
-          `,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
+      handleMaybePromise(
+        () =>
+          gw.fetch('http://mesh/graphql', {
+            method: 'POST',
+            body: JSON.stringify({
+              query: /* GraphQL */ `
+                query {
+                  __typename
+                }
+              `,
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+        () => {},
+        () => {
+          // ignore errors from background fetches to avoid unhandled rejections
         },
-      });
+      );
     }, 100);
     const response = await gw.fetch('http://mesh/graphql', {
       method: 'POST',
