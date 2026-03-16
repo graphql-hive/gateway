@@ -246,7 +246,7 @@ export type ProgressiveOverrideHandler = (
   info: GraphQLResolveInfo,
 ) => boolean;
 
-function getRngFromEnv() {
+export function getRngFromEnv() {
   const rngEnv = globalThis.process?.env?.['PROGRESSIVE_OVERRIDE_RNG'];
   if (rngEnv) {
     const rngSeed = parseFloat(rngEnv);
