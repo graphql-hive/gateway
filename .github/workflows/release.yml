@@ -223,9 +223,6 @@ jobs:
             return version;
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
-      - if: runner.os == 'Windows'
-        name: Install Windows SDK
-        run: scripts\install-winsdk.ps1
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
