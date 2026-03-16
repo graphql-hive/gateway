@@ -64,8 +64,13 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
           : new tracing.SimpleSpanProcessor(exporter),
       ],
       resource,
-      instrumentations: getNodeAutoInstrumentations(),
-      resourceDetectors: getResourceDetectors(),
+      // In memtests, disable auto-instrumentations entirely to prevent the OTLP exporter's own
+      // gRPC/HTTP calls from being auto-instrumented. Without this, every batch export creates
+      // "meta-spans" that are queued, exported (creating more "meta-meta-spans"), and so on.
+      // This feedback loop causes Object instances from gRPC call state to accumulate across
+      // calmdown phases faster than they are freed, producing false-positive leak detections.
+      instrumentations: process.env['MEMTEST'] ? [] : getNodeAutoInstrumentations(),
+      resourceDetectors: process.env['MEMTEST'] ? [] : getResourceDetectors(),
     });
 
     sdk.start();
