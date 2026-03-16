@@ -894,3 +894,155 @@ it('deduplicates the required fields from @key if they exists in the original qu
     }"
   `);
 });
+
+it('removes empty fragments', async () => {
+  const reviewsSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type GuestRating @key(fields: "id") {
+        id: ID!
+        rating: Int!
+        ratingSystem: String!
+      }
+    `),
+    resolvers: {
+      GuestRating: {
+        __resolveReference(reference: { id: string }) {
+          return {
+            id: reference.id,
+            rating: 5,
+            ratingSystem: 'stars',
+          };
+        },
+      },
+    },
+  });
+  const postsSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      type GuestRating @key(fields: "id") @extends {
+        id: ID! @external
+      }
+
+      type Post @key(fields: "id") {
+        id: ID!
+        authorRating: GuestRating
+      }
+
+      type Query {
+        posts: [Post]
+      }
+    `),
+    resolvers: {
+      Query: {
+        posts() {
+          return [
+            {
+              id: '1',
+              authorRating: {
+                id: '1',
+              },
+            },
+          ];
+        },
+      },
+      Post: {
+        __resolveReference(reference: { id: string }) {
+          return {
+            id: reference.id,
+            authorRating: {
+              id: '1',
+            },
+          };
+        },
+      },
+    },
+  });
+
+  const sentRequests: {
+    subgraphName: string;
+    query: string;
+  }[] = [];
+
+  const schema = await getStitchedSchemaFromLocalSchemas({
+    localSchemas: {
+      reviews: reviewsSubgraph,
+      posts: postsSubgraph,
+    },
+    onSubgraphExecute(subgraphName, executionRequest) {
+      sentRequests.push({
+        subgraphName,
+        query: print(executionRequest.document),
+      });
+    },
+  });
+
+  const document = parse(/* GraphQL */ `
+    query getPosts {
+      posts {
+        id
+        authorRating {
+          ...RatingFields
+        }
+      }
+    }
+
+    fragment RatingFields on GuestRating {
+      id
+      rating
+      ratingSystem
+    }
+  `);
+  const result = await normalizedExecutor({
+    schema,
+    document,
+  });
+
+  expect(result).toEqual({
+    data: {
+      posts: [
+        {
+          id: '1',
+          authorRating: {
+            id: '1',
+            rating: 5,
+            ratingSystem: 'stars',
+          },
+        },
+      ],
+    },
+  });
+
+  expect(sentRequests).toMatchInlineSnapshot(`
+    [
+      {
+        "query": "query getPosts {
+      posts {
+        __typename
+        id
+        authorRating {
+          ...RatingFields
+        }
+      }
+    }
+
+    fragment RatingFields on GuestRating {
+      __typename
+      id
+    }",
+        "subgraphName": "posts",
+      },
+      {
+        "query": "query getPosts($representations: [_Any!]!) {
+      _entities(representations: $representations) {
+        __typename
+        ... on GuestRating {
+          rating
+          id
+          ratingSystem
+        }
+      }
+    }",
+        "subgraphName": "reviews",
+      },
+    ]
+  `);
+});
