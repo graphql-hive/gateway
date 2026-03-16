@@ -1,5 +1,27 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.8.0
+### Minor Changes
+
+
+
+- [#2096](https://github.com/graphql-hive/gateway/pull/2096) [`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override Support in Rust QP Runtime
+
+
+
+- [#2076](https://github.com/graphql-hive/gateway/pull/2076) [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87) Thanks [@ardatan](https://github.com/ardatan)! - Add automatic batching to SDK requester
+
+
+### Patch Changes
+
+- Updated dependencies [[`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6), [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87)]:
+  - @graphql-tools/federation@4.3.0
+  - @graphql-tools/batch-execute@10.0.7
+  - @graphql-tools/delegate@12.0.11
+  - @graphql-tools/stitch@10.1.15
+  - @graphql-tools/stitching-directives@4.0.17
+  - @graphql-tools/wrap@11.1.11
+
 ## 1.7.1
 ### Patch Changes
 
