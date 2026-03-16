@@ -41,7 +41,7 @@ function findSigntool(): string | null {
   try {
     const versions = fsSync
       .readdirSync(winKitsDir)
-      .filter(v => /^\d+\.\d+\.\d+\.\d+$/.test(v))
+      .filter((v) => /^\d+\.\d+\.\d+\.\d+$/.test(v))
       .sort((a, b) => b.localeCompare(a, undefined, { numeric: true })); // newest first
     for (const version of versions) {
       const signtoolPath = `${winKitsDir}\\${version}\\x64\\signtool.exe`;
