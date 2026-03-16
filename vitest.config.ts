@@ -70,11 +70,9 @@ export default defineConfig({
                   '!**/e2e/openapi-additional-resolvers', // has additional resolvers
                   '!**/e2e/programmatic-batching', // has additional resolvers and is specific to stitching
                   '!**/e2e/type-merging-batching', // has custom type merging (using @merge and @resolveTo)
-                  '!**/e2e/progressive-override', // has progressive override
-                  '!**/e2e/progressive-override-percent', // has progressive override
-                  '!**/e2e/progressive-override-mixed', // has progressive override
                   '!**/e2e/subscriptions-data-other-subgraph', // cannot "stitch" together from other subgraphs
                   '!**/e2e/federation-subscriptions-passthrough', // cannot "stitch" together from other subgraphs
+                  '!**/e2e/openapi-javascript-wiki', // has additional resolvers
                   '!**/e2e/cloudflare-workers', // runs gateway in proxy mode
                 ]
               : []),

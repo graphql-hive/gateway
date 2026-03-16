@@ -73,7 +73,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
       'type' in config.persistedDocuments &&
       config.persistedDocuments?.type === 'hive'
         ? {
-            experimental__persistedDocuments: {
+            persistedDocuments: {
               cdn: {
                 endpoint: config.persistedDocuments.endpoint,
                 accessToken: config.persistedDocuments.token,
@@ -82,6 +82,7 @@ export function getReportingPlugin<TContext extends Record<string, any>>(
               allowArbitraryDocuments: allowArbitraryDocuments as boolean,
               // Trick to satisfy the Hive Console plugin types
               layer2Cache,
+              fetch: configContext.fetch as typeof fetch,
             },
           }
         : {}),

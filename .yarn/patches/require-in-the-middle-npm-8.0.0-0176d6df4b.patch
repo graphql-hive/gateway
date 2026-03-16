@@ -1,0 +1,69 @@
+diff --git a/index.js b/index.js
+index 67ed0b7af712c0b7e80d61c1b858e9f8279296a2..0d3f31793a581ab7303ae07e0075b1b24eccfd0b 100644
+--- a/index.js
++++ b/index.js
+@@ -41,6 +41,24 @@ if (Module.isBuiltin) { // Added in node v18.6.0, v16.17.0
+ // 'foo/bar.js' or 'foo/bar/index.js' => 'foo/bar'
+ const normalize = /([/\\]index)?(\.js)?$/
+ 
++function getFromCache(filename) {
++  try {
++    return require.cache[filename];
++  } catch (e) {
++    debug('Error accessing require.cache for filename "%s": %s', filename, e.message);
++    return undefined;
++  }
++}
++
++function checkInCache(filename) {
++  try {
++    return filename in require.cache;
++  } catch (e) {
++    debug('Error checking require.cache for filename "%s": %s', filename, e.message);
++    return false;
++  }
++}
++
+ // Cache `onrequire`-patched exports for modules.
+ //
+ // Exports for built-in (a.k.a. "core") modules are stored in an internal Map.
+@@ -64,7 +82,7 @@ class ExportsCache {
+     if (this._localCache.has(filename)) {
+       return true
+     } else if (!isBuiltin) {
+-      const mod = require.cache[filename]
++      const mod = getFromCache(filename);
+       return !!(mod && this._kRitmExports in mod)
+     } else {
+       return false
+@@ -76,7 +94,7 @@ class ExportsCache {
+     if (cachedExports !== undefined) {
+       return cachedExports
+     } else if (!isBuiltin) {
+-      const mod = require.cache[filename]
++      const mod = getFromCache(filename);
+       return (mod && mod[this._kRitmExports])
+     }
+   }
+@@ -84,11 +102,17 @@ class ExportsCache {
+   set (filename, exports, isBuiltin) {
+     if (isBuiltin) {
+       this._localCache.set(filename, exports)
+-    } else if (filename in require.cache) {
+-      require.cache[filename][this._kRitmExports] = exports
++    } else if (checkInCache(filename)) {
++      const cacheEntry = getFromCache(filename);
++      if (cacheEntry) {
++        cacheEntry[this._kRitmExports] = exports;
++      }
+     } else {
+-      debug('non-core module is unexpectedly not in require.cache: "%s"', filename)
+-      this._localCache.set(filename, exports)
++      debug(
++        'non-core module is unexpectedly not in require.cache: "%s"',
++        filename,
++      );
++      this._localCache.set(filename, exports);
+     }
+   }
+ }

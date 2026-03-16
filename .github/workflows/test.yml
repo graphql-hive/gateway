@@ -135,16 +135,22 @@ jobs:
             os: ubuntu-latest
             gateway-runner: docker
             hive-router-runtime: 0
+          - workflow-name: Node Docker on Ubuntu with Router Runtime
+            os: ubuntu-latest
+            gateway-runner: docker
+            hive-router-runtime: 1
 
           # Node Binary
           - workflow-name: Node Binary on Ubuntu
             os: ubuntu-latest
             gateway-runner: bin
             hive-router-runtime: 0
+            node-version: 25.2.0
           - workflow-name: Node Binary on Windows
             os: windows-latest
             gateway-runner: bin
             hive-router-runtime: 0
+            node-version: 25.2.0
 
           # Should be the same with Linux
           # - workflow-name: Node Binary on MacOS Arm64
@@ -174,33 +180,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
-      - if: runner.os == 'Windows'
-        name: Cache WMIC
-        id: cache-wmic
-        uses: actions/cache@v5
-        with:
-          path: |
-            C:\Windows\System32\wbem\WMIC.exe
-            C:\Windows\System32\wbem\wmic.exe
-          key: wmic-${{ matrix.setup.os }}
-      - if: runner.os == 'Windows' && !contains(steps.cache-wmic.outputs.cache-hit, 'true')
-        name: Enable WMIC
-        run: DISM /Online /Add-Capability /CapabilityName:WMIC~~~~
-      - name: Check if WMIC is installed
-        if: runner.os == 'Windows'
-        run: C:\Windows\System32\wbem\wmic.exe /?
-      - name: Add WMIC to PATH
-        if: runner.os == 'Windows'
-        run: echo "C:\Windows\System32\wbem" >> "$GITHUB_PATH"
-      - name: Check if WMIC works
-        if: runner.os == 'Windows'
-        run: wmic /?
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - if: runner.os == 'Windows'
-        name: Install Windows SDK
-        run: scripts\install-winsdk.ps1
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -227,7 +209,7 @@ jobs:
         run: yarn workspace @graphql-hive/gateway bundle
       - if: matrix.setup.gateway-runner == 'docker' || matrix.setup.gateway-runner == 'bun-docker'
         name: Bake
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
         with:
           source: .
           targets: e2e${{ matrix.setup.gateway-runner == 'bun-docker' && '_bun' || '' }}
@@ -262,7 +244,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Set up env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -274,7 +256,7 @@ jobs:
           E2E_GATEWAY_RUNNER: ${{ matrix.runtime == 'Bun' && 'bun-docker' || 'docker' }}
         run: yarn workspace @graphql-hive/gateway bundle
       - name: Bake
-        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action@82490499d2e5613fcead7e128237ef0b0ea210f7 # v7.0.0
         with:
           source: .
           # we build the e2e image because the release image cant be loaded due to annotations and platforms
@@ -286,7 +268,7 @@ jobs:
           # we must load so that the created image can be scanned
           load: true
       - name: Scan
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284 # 0.34.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           image-ref: ghcr.io/graphql-hive/gateway:e2e${{ matrix.runtime == 'Bun' && '-bun' || '' }}
           format: table

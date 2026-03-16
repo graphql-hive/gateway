@@ -1,11 +1,15 @@
-import { join } from 'path';
+import { join } from 'node:path';
 import { createTenv } from '@internal/e2e';
-import { config } from 'dotenv';
 import { expect, it } from 'vitest';
 
-config({
-  path: join(__dirname, '.env'),
-});
+try {
+  process.loadEnvFile(join(__dirname, '.env'));
+} catch (e) {
+  console.error(
+    'Failed to load .env file, make sure it exists and is properly formatted',
+    e,
+  );
+}
 
 const { gateway } = createTenv(__dirname);
 
@@ -25,10 +29,8 @@ it.skipIf(!APOLLO_KEY || !APOLLO_GRAPH_REF)('works', async () => {
   const result = await gw.execute({
     query: /* GraphQL */ `
       query HiveGatewayE2ETest {
-        developer {
-          fieldConfigs {
-            errorRate
-          }
+        me {
+          name
         }
       }
     `,
@@ -39,8 +41,8 @@ it.skipIf(!APOLLO_KEY || !APOLLO_GRAPH_REF)('works', async () => {
   });
   expect(result).toEqual({
     data: {
-      developer: {
-        fieldConfigs: [],
+      me: {
+        name: expect.any(String),
       },
     },
   });

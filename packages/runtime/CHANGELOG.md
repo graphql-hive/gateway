@@ -1,5 +1,64 @@
 # @graphql-hive/gateway-runtime
 
+## 2.7.6
+### Patch Changes
+
+- Updated dependencies [[`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d)]:
+  - @graphql-tools/executor-http@3.1.1
+  - @graphql-tools/wrap@11.1.10
+  - @graphql-tools/delegate@12.0.10
+  - @graphql-tools/federation@4.2.14
+  - @graphql-mesh/fusion-runtime@1.7.1
+  - @graphql-tools/stitch@10.1.14
+  - @graphql-tools/batch-delegate@10.0.16
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.7.5
+### Patch Changes
+
+- Updated dependencies [[`47c9fae`](https://github.com/graphql-hive/gateway/commit/47c9faecac7035e6ccfb2eb2b4146fca0ca07e47)]:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
+## 2.7.4
+### Patch Changes
+
+- Updated dependencies [[`5468882`](https://github.com/graphql-hive/gateway/commit/5468882253927113fa22030bceb265a31101792e)]:
+  - @graphql-mesh/fusion-runtime@1.7.0
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
+## 2.7.3
+### Patch Changes
+
+- Updated dependencies [[`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756)]:
+  - @graphql-tools/delegate@12.0.9
+  - @graphql-tools/stitch@10.1.13
+  - @graphql-tools/batch-delegate@10.0.15
+  - @graphql-tools/federation@4.2.13
+  - @graphql-mesh/fusion-runtime@1.6.11
+  - @graphql-tools/wrap@11.1.9
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
+## 2.7.2
+### Patch Changes
+
+
+
+- [#2056](https://github.com/graphql-hive/gateway/pull/2056) [`bd5e436`](https://github.com/graphql-hive/gateway/commit/bd5e436ec951cb572eadaaf2f5831480201c18b0) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.21.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.21.0) (from `^0.20.2`, in `dependencies`)
+  - Updated dependency [`@graphql-hive/yoga@^0.48.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/yoga/v/0.48.0) (from `^0.47.3`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [[`c75fd0a`](https://github.com/graphql-hive/gateway/commit/c75fd0a64730ab07a3a7115748841025e312f335)]:
+  - @graphql-hive/logger@1.1.0
+  - @graphql-mesh/fusion-runtime@1.6.10
+  - @graphql-mesh/transport-common@1.0.15
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+
 ## 2.7.0
 ### Minor Changes
 

@@ -99,10 +99,10 @@ export const getExecuteFnFromExecutor = memoize1(
     return function executeFn(args: ExecutionArgs) {
       return executor({
         document: args.document,
-        variables: args.variableValues,
-        operationName: args.operationName ?? undefined,
         rootValue: args.rootValue,
         context: args.contextValue,
+        variables: args.variableValues,
+        operationName: args.operationName ?? undefined,
         signal: args.signal,
       });
     };

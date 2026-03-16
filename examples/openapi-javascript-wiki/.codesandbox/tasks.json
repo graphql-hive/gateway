@@ -5,6 +5,14 @@
       "command": "npm i"
     },
     {
+      "name": "Run codegen",
+      "command": "npm run codegen"
+    },
+    {
+      "name": "Run compose",
+      "command": "npm run compose"
+    },
+    {
       "name": "Compose",
       "command": "npm run compose"
     }

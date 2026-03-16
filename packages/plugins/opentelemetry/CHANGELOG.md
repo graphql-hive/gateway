@@ -1,5 +1,77 @@
 # @graphql-hive/plugin-opentelemetry
 
+## 1.4.5
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.6
+
+## 1.4.4
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.5
+
+## 1.4.3
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.4
+
+## 1.4.2
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.3
+
+## 1.4.1
+### Patch Changes
+
+
+
+- [#2056](https://github.com/graphql-hive/gateway/pull/2056) [`bd5e436`](https://github.com/graphql-hive/gateway/commit/bd5e436ec951cb572eadaaf2f5831480201c18b0) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-hive/core@^0.21.0` ↗︎](https://www.npmjs.com/package/@graphql-hive/core/v/0.21.0) (from `^0.20.0`, in `dependencies`)
+
+
+- [#2058](https://github.com/graphql-hive/gateway/pull/2058) [`02a3ec9`](https://github.com/graphql-hive/gateway/commit/02a3ec9b59287a546d2743e0af63e36feca64ec8) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/auto-instrumentations-node@^0.71.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/auto-instrumentations-node/v/0.71.0) (from `^0.70.0`, in `dependencies`)
+- Updated dependencies [[`bd5e436`](https://github.com/graphql-hive/gateway/commit/bd5e436ec951cb572eadaaf2f5831480201c18b0)]:
+  - @graphql-hive/gateway-runtime@2.7.2
+
+## 1.4.0
+### Minor Changes
+
+
+
+- [#2007](https://github.com/graphql-hive/gateway/pull/2007) [`2837a9e`](https://github.com/graphql-hive/gateway/commit/2837a9e570dc6cdeb1b97af33774cf9b1893fee0) Thanks [@ardatan](https://github.com/ardatan)! - Circuit Breaker support in Hive Tracing
+
+
+### Patch Changes
+
+
+
+- [#2049](https://github.com/graphql-hive/gateway/pull/2049) [`3aa5385`](https://github.com/graphql-hive/gateway/commit/3aa53851349cfa50622d1f717b96ec2c6005eb41) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-grpc@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-grpc/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/exporter-trace-otlp-http@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-http/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/instrumentation@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/instrumentation/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-node@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-node/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+
+
+- [#2007](https://github.com/graphql-hive/gateway/pull/2007) [`2837a9e`](https://github.com/graphql-hive/gateway/commit/2837a9e570dc6cdeb1b97af33774cf9b1893fee0) Thanks [@ardatan](https://github.com/ardatan)! - Hive Tracing setup can use a custom processor not requiring a target
+
+## 1.3.11
+### Patch Changes
+
+- Updated dependencies [[`c75fd0a`](https://github.com/graphql-hive/gateway/commit/c75fd0a64730ab07a3a7115748841025e312f335)]:
+  - @graphql-hive/logger@1.1.0
+  - @graphql-hive/gateway-runtime@2.7.1
+  - @graphql-mesh/transport-common@1.0.15
+
 ## 1.3.10
 ### Patch Changes
 

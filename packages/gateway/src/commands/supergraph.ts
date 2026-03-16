@@ -156,8 +156,7 @@ export const addCommand: AddCommand = (ctx, cli) =>
         }
         if (!hiveCdnKey) {
           ctx.log.error(
-            `Hive CDN requires an API key. Please provide an API key using the --hive-cdn-key option.` +
-              `Learn more at https://the-guild.dev/graphql/hive/docs/features/high-availability-cdn#cdn-access-tokens`,
+            `Hive CDN requires an API key. Please provide an API key using the --hive-cdn-key option. Learn more at https://the-guild.dev/graphql/hive/docs/features/high-availability-cdn#cdn-access-tokens`,
           );
           process.exit(1);
         }

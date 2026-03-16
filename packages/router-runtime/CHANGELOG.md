@@ -1,5 +1,42 @@
 # @graphql-hive/router-runtime
 
+## 1.1.16
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.2.14
+  - @graphql-mesh/fusion-runtime@1.7.1
+
+## 1.1.15
+### Patch Changes
+
+- Updated dependencies [[`5468882`](https://github.com/graphql-hive/gateway/commit/5468882253927113fa22030bceb265a31101792e)]:
+  - @graphql-mesh/fusion-runtime@1.7.0
+
+## 1.1.14
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/federation@4.2.13
+  - @graphql-mesh/fusion-runtime@1.6.11
+
+## 1.1.13
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.6.10
+  - @graphql-mesh/transport-common@1.0.15
+
+## 1.1.12
+### Patch Changes
+
+
+
+- [#2001](https://github.com/graphql-hive/gateway/pull/2001) [`0408878`](https://github.com/graphql-hive/gateway/commit/04088789b84c037886c88c6545fa2452c55927cc) Thanks [@ardatan](https://github.com/ardatan)! - Fix projection while using Rust QP
+
+- Updated dependencies []:
+  - @graphql-mesh/fusion-runtime@1.6.9
+
 ## 1.1.11
 ### Patch Changes
 

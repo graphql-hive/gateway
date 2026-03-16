@@ -1,5 +1,106 @@
 # @graphql-hive/gateway
 
+## 2.5.7
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.6
+  - @graphql-mesh/transport-http@1.0.16
+  - @graphql-mesh/transport-ws@2.0.16
+  - @graphql-hive/plugin-aws-sigv4@2.0.31
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.5
+  - @graphql-mesh/plugin-prometheus@2.1.24
+
+## 2.5.6
+### Patch Changes
+
+- Updated dependencies [[`47c9fae`](https://github.com/graphql-hive/gateway/commit/47c9faecac7035e6ccfb2eb2b4146fca0ca07e47)]:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/gateway-runtime@2.7.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.30
+  - @graphql-hive/plugin-opentelemetry@1.4.4
+  - @graphql-mesh/plugin-prometheus@2.1.23
+
+## 2.5.5
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.30
+  - @graphql-hive/gateway-runtime@2.7.4
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.4.3
+  - @graphql-mesh/plugin-prometheus@2.1.22
+
+## 2.5.4
+### Patch Changes
+
+
+
+- [#2045](https://github.com/graphql-hive/gateway/pull/2045) [`77def08`](https://github.com/graphql-hive/gateway/commit/77def088b7e5e170b3745a86a0d2d7b5596217f7) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Removed dependency [`dotenv@^17.2.3` ↗︎](https://www.npmjs.com/package/dotenv/v/17.2.3) (from `dependencies`)
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.29
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.4.2
+  - @graphql-mesh/plugin-prometheus@2.1.21
+
+## 2.5.3
+### Patch Changes
+
+- Updated dependencies [[`bd5e436`](https://github.com/graphql-hive/gateway/commit/bd5e436ec951cb572eadaaf2f5831480201c18b0), [`bd5e436`](https://github.com/graphql-hive/gateway/commit/bd5e436ec951cb572eadaaf2f5831480201c18b0), [`02a3ec9`](https://github.com/graphql-hive/gateway/commit/02a3ec9b59287a546d2743e0af63e36feca64ec8)]:
+  - @graphql-hive/gateway-runtime@2.7.2
+  - @graphql-hive/plugin-opentelemetry@1.4.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.28
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/plugin-prometheus@2.1.20
+
+## 2.5.2
+### Patch Changes
+
+
+
+- [#2049](https://github.com/graphql-hive/gateway/pull/2049) [`3aa5385`](https://github.com/graphql-hive/gateway/commit/3aa53851349cfa50622d1f717b96ec2c6005eb41) Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies updates:
+  
+  - Updated dependency [`@opentelemetry/api-logs@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/api-logs/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sampler-jaeger-remote@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sampler-jaeger-remote/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+  - Updated dependency [`@opentelemetry/sdk-logs@^0.213.0` ↗︎](https://www.npmjs.com/package/@opentelemetry/sdk-logs/v/0.213.0) (from `^0.212.0`, in `dependencies`)
+- Updated dependencies [[`3aa5385`](https://github.com/graphql-hive/gateway/commit/3aa53851349cfa50622d1f717b96ec2c6005eb41), [`2837a9e`](https://github.com/graphql-hive/gateway/commit/2837a9e570dc6cdeb1b97af33774cf9b1893fee0), [`2837a9e`](https://github.com/graphql-hive/gateway/commit/2837a9e570dc6cdeb1b97af33774cf9b1893fee0)]:
+  - @graphql-hive/plugin-opentelemetry@1.4.0
+
+## 2.5.1
+### Patch Changes
+
+- Updated dependencies [[`c75fd0a`](https://github.com/graphql-hive/gateway/commit/c75fd0a64730ab07a3a7115748841025e312f335)]:
+  - @graphql-hive/logger@1.1.0
+  - @graphql-hive/plugin-opentelemetry@1.3.11
+  - @graphql-mesh/plugin-prometheus@2.1.19
+  - @graphql-hive/gateway-runtime@2.7.1
+  - @graphql-hive/plugin-aws-sigv4@2.0.28
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-mesh/transport-http@1.0.15
+  - @graphql-mesh/transport-http-callback@1.0.16
+  - @graphql-mesh/transport-ws@2.0.15
+
+## 2.5.0
+### Minor Changes
+
+
+
+- [#2005](https://github.com/graphql-hive/gateway/pull/2005) [`3866e36`](https://github.com/graphql-hive/gateway/commit/3866e3632d93a517a67b1ed6f0deab0a20bac374) Thanks [@ardatan](https://github.com/ardatan)! - Support Rust QP as builtin in Docker image
+  
+  While running the Docker image of the gateway, you can now use Rust QP as the builtin query planner.
+  
+  ```sh
+  docker run \
+    -e HIVE_ROUTER_RUNTIME=true \
+    -p 8080:8080 \
+    -v "$(pwd)/supergraph.graphql:/gateway/supergraph.graphql" \
+    ghcr.io/graphql-hive/gateway supergraph --port=8080
+  ```
+
 ## 2.4.3
 ### Patch Changes
 

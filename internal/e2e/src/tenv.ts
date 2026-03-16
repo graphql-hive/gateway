@@ -396,6 +396,16 @@ export function createTenv(cwd: string): Tenv {
         supergraph = output;
       }
 
+      // for debugging purposes, write the supergraph to
+      const debugWriteSubgraphTo = process.env['E2E_WRITE_SUPERGRAPH_TO'];
+      if (debugWriteSubgraphTo && supergraph) {
+        const supergraphSdl = await tenv.fs.read(supergraph);
+        await tenv.fs.write(
+          path.join(cwd, debugWriteSubgraphTo),
+          supergraphSdl,
+        );
+      }
+
       let subgraph: string | null = null;
       if (typeof subgraphOpt === 'string') {
         subgraph = subgraphOpt;
@@ -407,6 +417,10 @@ export function createTenv(cwd: string): Tenv {
           pipeLogs: subgraphOpt?.pipeLogs,
         });
         subgraph = output;
+      }
+
+      if (gatewayRunner.includes('docker')) {
+        args.unshift('--host=0.0.0.0');
       }
 
       function getFullArgs() {

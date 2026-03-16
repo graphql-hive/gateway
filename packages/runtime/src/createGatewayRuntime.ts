@@ -229,7 +229,7 @@ export function createGatewayRuntime<
       ...configContext,
       enabled: false, // disables only usage reporting
       log: configContext.log.child('[useHiveConsole.persistedDocuments] '),
-      experimental__persistedDocuments: {
+      persistedDocuments: {
         cdn: {
           endpoint: config.persistedDocuments.endpoint,
           accessToken: config.persistedDocuments.token,
@@ -238,6 +238,7 @@ export function createGatewayRuntime<
         // @ts-expect-error - Hive Console plugin options are not compatible yet
         allowArbitraryDocuments: allowArbitraryDocumentsForPersistedDocuments,
         layer2Cache,
+        fetch: configContext.fetch as typeof fetch,
       },
     });
 
@@ -830,12 +831,12 @@ export function createGatewayRuntime<
   }
 
   if (isDisposable(pubsub)) {
-    const cacheDisposePlugin = {
+    const pubsubDisposePlugin = {
       onDispose() {
         return dispose(pubsub);
       },
     };
-    basePlugins.push(cacheDisposePlugin);
+    basePlugins.push(pubsubDisposePlugin);
   }
 
   const extraPlugins: (
@@ -916,9 +917,11 @@ export function createGatewayRuntime<
   if (config.demandControl) {
     if ('proxy' in config && config.schema == null) {
       log.warn(
-        '`demandControl` is enabled in proxy mode without a defined schema' +
-          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.' +
+        [
+          '`demandControl` is enabled in proxy mode without a defined schema',
+          'If you use directives like "@cost" or "@listSize", these won\'t be available for cost calculation.',
           'You have to define "schema" in the gateway config to make them available.',
+        ].join(' '),
       );
     }
     extraPlugins.push(useDemandControl(config.demandControl));
@@ -961,8 +964,6 @@ export function createGatewayRuntime<
     context(ctx) {
       // @ts-expect-error - ctx.headers might be present
       if (!ctx.headers) {
-        // context will change, for example: when we have an operation happening over WebSockets,
-        // there wont be a fetch Request - there'll only be the upgrade http node request
         // context will change, for example: when we have an operation happening over WebSockets,
         // there wont be a fetch Request - there'll only be the upgrade http node request
         ctx['headers'] = getHeadersObj(
