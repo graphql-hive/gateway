@@ -65,7 +65,7 @@ export class HiveGatewayDriver<
     ...options
   }: HiveGatewayDriverConfig<TContext>) {
     if (this._gatewayRuntime) {
-      // the gateway runtime can already be initialized beacuse Nest calls `generateSchema` before `start`
+      // the gateway runtime can already be initialized because Nest calls `generateSchema` before `start`
       // dont create multiple instances, just return the existing one if it exists
       return this._gatewayRuntime;
     }
