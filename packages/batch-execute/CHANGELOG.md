@@ -1,5 +1,12 @@
 # @graphql-tools/batch-execute
 
+## 10.0.7
+### Patch Changes
+
+
+
+- [#2076](https://github.com/graphql-hive/gateway/pull/2076) [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87) Thanks [@ardatan](https://github.com/ardatan)! - Add automatic batching to SDK requester
+
 ## 10.0.6
 ### Patch Changes
 
