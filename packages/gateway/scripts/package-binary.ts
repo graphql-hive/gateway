@@ -1,6 +1,7 @@
 // tsx package-binary.ts [platform] [arch]
 
 import { execSync } from 'node:child_process';
+import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { inject } from 'postject';
@@ -17,8 +18,43 @@ if (!isDarwin && !isWindows && !isLinux) {
 
 const dest = 'hive-gateway' + (isWindows ? '.exe' : '');
 
-const signToolPath =
-  'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe';
+/**
+ * Finds the path to signtool.exe on Windows by searching:
+ * 1. PATH (via `where signtool`)
+ * 2. Common Windows Kits locations (sorted by newest version first)
+ * Returns null if signtool cannot be found.
+ */
+function findSigntool(): string | null {
+  // Try signtool from PATH first
+  try {
+    execSync('signtool /?', { stdio: 'pipe' });
+    return 'signtool';
+  } catch {
+    // Not in PATH, continue searching
+  }
+
+  // Search common Windows Kits installation directories
+  const programFilesX86 =
+    process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)';
+  const winKitsDir = `${programFilesX86}\\Windows Kits\\10\\bin`;
+
+  try {
+    const versions = fsSync
+      .readdirSync(winKitsDir)
+      .filter(v => /^\d+\.\d+\.\d+\.\d+$/.test(v))
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true })); // newest first
+    for (const version of versions) {
+      const signtoolPath = `${winKitsDir}\\${version}\\x64\\signtool.exe`;
+      if (fsSync.existsSync(signtoolPath)) {
+        return signtoolPath;
+      }
+    }
+  } catch {
+    // Cannot read directory
+  }
+
+  return null;
+}
 
 console.log(
   `Packaging binary with Node SEA for ${platform}-${arch} to ${dest}`,
@@ -36,11 +72,16 @@ if (isDarwin) {
   console.log('Removing the signature w/ codesign');
   execSync(`codesign --remove-signature ${dest}`);
 } else if (isWindows) {
-  try {
-    console.log('Removing the signature w/ signtool');
-    execSync(`"${signToolPath}" remove /s ${dest}`);
-  } catch (e) {
-    console.warn('Removing signature failed w/ signtool', e);
+  const signtool = findSigntool();
+  if (signtool) {
+    try {
+      console.log(`Removing the signature w/ signtool (${signtool})`);
+      execSync(`"${signtool}" remove /s ${dest}`);
+    } catch (e) {
+      console.warn('Removing signature failed w/ signtool', e);
+    }
+  } else {
+    console.warn('signtool not found, skipping signature removal');
   }
 }
 
@@ -55,11 +96,16 @@ if (isDarwin) {
   console.log('Signing binary w/ codesign');
   execSync(`codesign --sign - ${dest}`);
 } else if (isWindows) {
-  try {
-    console.log('Signing binary w/ signtool');
-    execSync(`"${signToolPath}" sign /fd SHA256 ${dest}`);
-  } catch (e) {
-    console.warn('Signing failed w/ signtool', e);
+  const signtool = findSigntool();
+  if (signtool) {
+    try {
+      console.log(`Signing binary w/ signtool (${signtool})`);
+      execSync(`"${signtool}" sign /fd SHA256 ${dest}`);
+    } catch (e) {
+      console.warn('Signing failed w/ signtool', e);
+    }
+  } else {
+    console.warn('signtool not found, skipping binary signing');
   }
 }
 
