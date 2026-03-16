@@ -69,8 +69,12 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
       // "meta-spans" that are queued, exported (creating more "meta-meta-spans"), and so on.
       // This feedback loop causes Object instances from gRPC call state to accumulate across
       // calmdown phases faster than they are freed, producing false-positive leak detections.
-      instrumentations: process.env['MEMTEST'] ? [] : getNodeAutoInstrumentations(),
-      resourceDetectors: process.env['MEMTEST'] ? [] : getResourceDetectors(),
+      instrumentations: process.env['MEMTEST']
+        ? []
+        : getNodeAutoInstrumentations(),
+      resourceDetectors: process.env['MEMTEST']
+        ? []
+        : getResourceDetectors(),
     });
 
     sdk.start();
