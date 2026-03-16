@@ -72,9 +72,7 @@ if (process.env['DISABLE_OPENTELEMETRY_SETUP'] !== '1') {
       instrumentations: process.env['MEMTEST']
         ? []
         : getNodeAutoInstrumentations(),
-      resourceDetectors: process.env['MEMTEST']
-        ? []
-        : getResourceDetectors(),
+      resourceDetectors: process.env['MEMTEST'] ? [] : getResourceDetectors(),
     });
 
     sdk.start();
