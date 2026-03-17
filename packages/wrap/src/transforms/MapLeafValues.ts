@@ -1,5 +1,6 @@
 import {
   DelegationContext,
+  getTypeInfo,
   SubschemaConfig,
   Transform,
 } from '@graphql-tools/delegate';
@@ -26,7 +27,6 @@ import {
   visit,
   visitWithTypeInfo,
 } from 'graphql';
-import { getTypeInfo } from '../../../delegate/src/getTypeInfo.js';
 import { LeafValueTransformer } from '../types.js';
 
 export interface MapLeafValuesTransformationContext {

@@ -1,5 +1,9 @@
 import { hashOperation } from '@graphql-hive/core';
-import { OnCacheGetHookEventPayload } from '@graphql-hive/gateway-runtime';
+import {
+  getRetryInfo,
+  isRetryExecutionRequest,
+  OnCacheGetHookEventPayload,
+} from '@graphql-hive/gateway-runtime';
 import { defaultPrintFn } from '@graphql-mesh/transport-common';
 import {
   getOperationASTFromDocument,
@@ -30,10 +34,6 @@ import {
   type ExecutionArgs,
 } from 'graphql';
 import type { GraphQLParams } from 'graphql-yoga';
-import {
-  getRetryInfo,
-  isRetryExecutionRequest,
-} from '../../../runtime/src/plugins/useUpstreamRetry';
 import {
   SEMATTRS_GRAPHQL_DOCUMENT,
   SEMATTRS_GRAPHQL_OPERATION_NAME,
