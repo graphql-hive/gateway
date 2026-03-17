@@ -12,7 +12,6 @@ export interface MCPHandlerOptions {
   resolveToolDescriptions?: () => Promise<Map<string, string>>;
   /** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
   resolveFieldDescriptions?: () => Promise<Map<string, Map<string, string>>>;
-  includeContentFallback?: boolean;
   requestContext?: {
     headers: Record<string, string>;
   };
@@ -232,7 +231,7 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             tool.outputSchema && !hookModified
               ? {
                   structuredContent: result,
-                  ...(options.includeContentFallback && textContent),
+                  ...textContent,
                 }
               : textContent;
           response = {
