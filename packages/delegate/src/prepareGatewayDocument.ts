@@ -197,6 +197,15 @@ function visitSelectionSet(
         delegationContext,
       )
     ) {
+      if (isAbstractType(delegationContext.returnType)) {
+        addSelectionNodeToSelections(newSelections, {
+          kind: Kind.FIELD,
+          name: {
+            kind: Kind.NAME,
+            value: '__typename',
+          },
+        });
+      }
       for (const selection of node.selections) {
         addSelectionNodeToSelections(newSelections, selection);
       }
@@ -448,9 +457,12 @@ export function isSelectionSetSatisfiedBySchema(
   if (isLeafType(namedType)) {
     return true;
   }
+  const fields =
+    isObjectType(namedType) || isInterfaceType(namedType)
+      ? namedType.getFields()
+      : null;
   for (const selection of selectionSet.selections) {
     if (selection.kind === Kind.FIELD) {
-      // TODO: Improve this later
       if (isAbstractType(namedType)) {
         return false;
       }
@@ -458,8 +470,8 @@ export function isSelectionSetSatisfiedBySchema(
       if (fieldName === '__typename') {
         continue;
       }
-      if (isObjectType(namedType) || isInterfaceType(namedType)) {
-        const field = namedType.getFields()[fieldName];
+      if (fields) {
+        const field = fields[fieldName];
         if (!field) {
           return false;
         }
