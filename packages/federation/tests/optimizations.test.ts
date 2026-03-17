@@ -983,7 +983,7 @@ it('does not add extra key fields', async () => {
   });
 });
 
-it('do not resolve stub types', async () => {
+it('does not resolve stub types', async () => {
   const usersSubgraph = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
       extend schema
