@@ -26,7 +26,6 @@ const mcpPlugin = useMCP({
   providers: {
     langfuse: {},
   },
-  includeContentFallback: true, // For Gemini compatibility
   // disableGraphQLEndpoint: true,
   tools: [
     {

@@ -97,7 +97,7 @@ describe('createMCPHandler', () => {
 
     expect(mockExecute).toHaveBeenCalledWith('say_hello', { name: 'World' });
     expect(body.result.structuredContent).toBeDefined();
-    expect(body.result.content).toBeUndefined();
+    expect(body.result.content).toBeDefined();
   });
 
   it('includes structuredContent when tool has outputSchema', async () => {
@@ -138,7 +138,7 @@ describe('createMCPHandler', () => {
     const body = await response.json();
 
     expect(body.result.structuredContent).toEqual(executeResult);
-    expect(body.result.content).toBeUndefined();
+    expect(body.result.content).toBeDefined();
   });
 
   it('extracts data by outputPath on tools/call', async () => {

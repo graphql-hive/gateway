@@ -175,7 +175,6 @@ const mcpPlugin = useMCP({
   },
 
   // disableGraphQLEndpoint: true,    // Block external /graphql access (MCP-only mode)
-  // includeContentFallback: true,    // Include text content alongside structuredContent
 
   // Each tool maps to a GraphQL operation. The MCP input schema is auto-derived
   // from the operation's variables, and the output schema from its selection set.
