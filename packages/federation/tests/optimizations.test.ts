@@ -1028,7 +1028,6 @@ it('does not resolve stub types', async () => {
     resolvers: {
       Query: {
         getUsers: (_: unknown, args: { userIds: string[] }) => {
-          console.log('[users] Query.getUsers:', args.userIds);
           return {
             __typename: 'GetUsersSuccess',
             users: args.userIds.map((id) => ({
@@ -1045,7 +1044,6 @@ it('does not resolve stub types', async () => {
       },
       User: {
         __resolveReference: (ref: { id: string }) => {
-          console.log('[users] User.__resolveReference:', ref.id);
           return {
             id: ref.id,
             name: `User ${ref.id}`,
