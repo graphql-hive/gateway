@@ -28,14 +28,17 @@ import {
 } from 'graphql';
 import { getDocumentMetadata } from './getDocumentMetadata.js';
 import { getTypeInfo } from './getTypeInfo.js';
-import { StitchingInfo } from './types.js';
+import { handleOverrideByDelegation } from './handleOverrideByDelegation.js';
+import { DelegationContext, StitchingInfo } from './types.js';
 
 export function prepareGatewayDocument(
   originalDocument: DocumentNode,
-  transformedSchema: GraphQLSchema,
-  returnType: GraphQLOutputType,
-  infoSchema?: GraphQLSchema,
+  delegationContext: DelegationContext<any>,
 ): DocumentNode {
+  const transformedSchema = delegationContext.transformedSchema;
+  const returnType = delegationContext.returnType;
+  const infoSchema = delegationContext.info?.schema;
+
   const wrappedConcreteTypesDocument = wrapConcreteTypes(
     returnType,
     transformedSchema,
@@ -108,6 +111,7 @@ export function prepareGatewayDocument(
           infoSchema,
           visitedSelections,
           fragmentMap,
+          delegationContext,
         ),
     }),
     // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
@@ -177,6 +181,7 @@ function visitSelectionSet(
   infoSchema: GraphQLSchema,
   visitedSelections: WeakSet<SelectionNode>,
   fragmentMap: Record<string, FragmentDefinitionNode>,
+  delegationContext: DelegationContext,
 ): SelectionSetNode {
   const newSelections = new Set<SelectionNode>();
   const maybeType = typeInfo.getParentType();
@@ -189,6 +194,7 @@ function visitSelectionSet(
         node,
         fragmentMap,
         infoSchema,
+        delegationContext,
       )
     ) {
       for (const selection of node.selections) {
@@ -436,6 +442,7 @@ export function isSelectionSetSatisfiedBySchema(
   selectionSet: SelectionSetNode,
   fragmentsMap: Record<string, FragmentDefinitionNode>,
   infoSchema: GraphQLSchema,
+  delegationContext: DelegationContext,
 ) {
   const namedType = getNamedType(type);
   if (isLeafType(namedType)) {
@@ -469,6 +476,21 @@ export function isSelectionSetSatisfiedBySchema(
         ) {
           return false;
         }
+        if (delegationContext.info) {
+          const overrideHandler =
+            delegationContext.subschemaConfig?.merge?.[namedType.name]
+              ?.fields?.[field.name]?.override;
+          if (overrideHandler != null) {
+            const overridden = handleOverrideByDelegation(
+              delegationContext.info,
+              delegationContext.context,
+              overrideHandler,
+            );
+            if (!overridden) {
+              return false;
+            }
+          }
+        }
         if (selection.selectionSet) {
           const fieldType = getNamedType(field.type);
           const satisfied = isSelectionSetSatisfiedBySchema(
@@ -477,6 +499,7 @@ export function isSelectionSetSatisfiedBySchema(
             selection.selectionSet,
             fragmentsMap,
             infoSchema,
+            delegationContext,
           );
           if (!satisfied) {
             return false;
@@ -498,6 +521,7 @@ export function isSelectionSetSatisfiedBySchema(
           selection.selectionSet,
           fragmentsMap,
           infoSchema,
+          delegationContext,
         );
         if (!satisfied) {
           return false;
@@ -509,6 +533,7 @@ export function isSelectionSetSatisfiedBySchema(
           selection.selectionSet,
           fragmentsMap,
           infoSchema,
+          delegationContext,
         );
         if (!satisfied) {
           return false;
@@ -531,6 +556,7 @@ export function isSelectionSetSatisfiedBySchema(
         fragment.selectionSet,
         fragmentsMap,
         infoSchema,
+        delegationContext,
       );
       if (!satisfied) {
         return false;
