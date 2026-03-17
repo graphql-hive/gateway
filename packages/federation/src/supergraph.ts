@@ -83,6 +83,32 @@ import {
   progressiveOverridePossibilityHandler,
 } from './utils.js';
 
+function keySelectionIncludesAllFields(
+  keyFieldSet: string,
+  fieldDefinitionNodesOfSubgraph: ReadonlyArray<FieldDefinitionNode>,
+): boolean {
+  let selectionSet: SelectionSetNode;
+  try {
+    // `keyFieldSet` is a federation field set string (e.g. "id", "id orderId").
+    // Wrap it in braces so it can be parsed as a GraphQL selection set.
+    selectionSet = parseSelectionSet(`{ ${keyFieldSet} }`);
+  } catch {
+    // If the key cannot be parsed, conservatively report that not all fields are included.
+    return false;
+  }
+
+  const topLevelFieldNames = new Set<string>();
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.FIELD) {
+      topLevelFieldNames.add(selection.name.value);
+    }
+  }
+
+  return fieldDefinitionNodesOfSubgraph.every(fieldDefNode =>
+    topLevelFieldNames.has(fieldDefNode.name.value),
+  );
+}
+
 export function ensureSupergraphSDLAst(
   supergraphSdl: string | DocumentNode,
 ): DocumentNode {
@@ -605,8 +631,9 @@ export function getStitchingOptionsFromSupergraphSdl(
               if (isResolvable) {
                 if (
                   typeNode.kind !== Kind.OBJECT_TYPE_DEFINITION ||
-                  !fieldDefinitionNodesOfSubgraph.every((fieldDefNode) =>
-                    keyArgVal.includes(fieldDefNode.name.value),
+                  !keySelectionIncludesAllFields(
+                    keyArgVal,
+                    fieldDefinitionNodesOfSubgraph,
                   )
                 ) {
                   let typeNameKeysMap =
