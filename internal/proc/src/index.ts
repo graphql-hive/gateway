@@ -8,6 +8,35 @@ import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import terminate from 'terminate/promise';
 
+/**
+ * Terminates the process tree rooted at {@link pid}.
+ *
+ * On Windows, `ps-tree` (used internally by `terminate`) relies on `wmic`
+ * whose output format changed in recent Windows releases, causing an
+ * "Unknown process listing header" error. We therefore use the built-in
+ * `taskkill /F /T` on Windows, which kills a process and all its
+ * descendants without needing `wmic`.
+ */
+function terminateProcessTree(pid: number): Promise<void> {
+  if (process.platform === 'win32') {
+    return new Promise<void>((resolve, reject) => {
+      childProcess.exec(`taskkill /F /T /PID ${pid}`, (err) => {
+        if (err) {
+          // Exit code 128 means the process was not found – treat as success.
+          if ((err as NodeJS.ErrnoException & { code?: number }).code === 128) {
+            resolve();
+          } else {
+            reject(err);
+          }
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+  return terminate(pid);
+}
+
 export interface Proc extends AsyncDisposable {
   waitForExit: Promise<void>;
   /** Sends a signal to the process. */
@@ -130,7 +159,7 @@ export function spawn(
         return fakePromise();
       }
       if (child.pid) {
-        await terminate(child.pid).catch((e) => {
+        await terminateProcessTree(child.pid).catch((e) => {
           // ignore errors when terminating the process
           console.error(`Failed to terminate process ${child.pid}:`, e);
         });

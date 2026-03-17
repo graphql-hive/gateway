@@ -29,6 +29,7 @@ import {
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { lexicographicSortSchema } from 'graphql';
+import { __decorate } from 'tslib';
 
 export type HiveGatewayDriverConfig<
   TContext extends Record<string, any> = Record<string, any>,
@@ -51,7 +52,6 @@ export type HiveGatewayDriverConfig<
       subscriptions?: SubscriptionConfig;
     };
 
-@Injectable()
 export class HiveGatewayDriver<
   TContext extends Record<string, any>,
 > extends AbstractGraphQLDriver<HiveGatewayDriverConfig<TContext>> {
@@ -65,7 +65,7 @@ export class HiveGatewayDriver<
     ...options
   }: HiveGatewayDriverConfig<TContext>) {
     if (this._gatewayRuntime) {
-      // the gateway runtime can already be initialized beacuse Nest calls `generateSchema` before `start`
+      // the gateway runtime can already be initialized because Nest calls `generateSchema` before `start`
       // dont create multiple instances, just return the existing one if it exists
       return this._gatewayRuntime;
     }
@@ -306,3 +306,5 @@ export class HiveGatewayDriver<
       });
   }
 }
+
+__decorate([Injectable()], HiveGatewayDriver);

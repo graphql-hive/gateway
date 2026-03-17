@@ -1,5 +1,55 @@
 # @graphql-mesh/fusion-runtime
 
+## 1.8.0
+### Minor Changes
+
+
+
+- [#2096](https://github.com/graphql-hive/gateway/pull/2096) [`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override Support in Rust QP Runtime
+
+
+
+- [#2076](https://github.com/graphql-hive/gateway/pull/2076) [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87) Thanks [@ardatan](https://github.com/ardatan)! - Add automatic batching to SDK requester
+
+
+### Patch Changes
+
+- Updated dependencies [[`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6), [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87)]:
+  - @graphql-tools/federation@4.3.0
+  - @graphql-tools/batch-execute@10.0.7
+  - @graphql-tools/delegate@12.0.11
+  - @graphql-tools/stitch@10.1.15
+  - @graphql-tools/stitching-directives@4.0.17
+  - @graphql-tools/wrap@11.1.11
+
+## 1.7.1
+### Patch Changes
+
+- Updated dependencies [[`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d)]:
+  - @graphql-tools/wrap@11.1.10
+  - @graphql-tools/delegate@12.0.10
+  - @graphql-tools/batch-execute@10.0.6
+  - @graphql-tools/federation@4.2.14
+  - @graphql-tools/stitch@10.1.14
+  - @graphql-tools/stitching-directives@4.0.16
+
+## 1.7.0
+### Minor Changes
+
+
+
+- [`5468882`](https://github.com/graphql-hive/gateway/commit/5468882253927113fa22030bceb265a31101792e) Thanks [@ardatan](https://github.com/ardatan)! - Expose `subschemas` in `handleFederationSupergraph` result
+
+## 1.6.11
+### Patch Changes
+
+- Updated dependencies [[`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756)]:
+  - @graphql-tools/delegate@12.0.9
+  - @graphql-tools/stitch@10.1.13
+  - @graphql-tools/federation@4.2.13
+  - @graphql-tools/stitching-directives@4.0.15
+  - @graphql-tools/wrap@11.1.9
+
 ## 1.6.10
 ### Patch Changes
 

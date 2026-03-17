@@ -1,3 +1,3 @@
 FROM gateway_e2e
 
-RUN npm i moment
+RUN npm i graphql-scalars

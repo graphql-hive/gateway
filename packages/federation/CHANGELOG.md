@@ -1,5 +1,37 @@
 # @graphql-tools/federation
 
+## 4.3.0
+### Minor Changes
+
+
+
+- [#2096](https://github.com/graphql-hive/gateway/pull/2096) [`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override Support in Rust QP Runtime
+
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-tools/delegate@12.0.11
+  - @graphql-tools/stitch@10.1.15
+  - @graphql-tools/wrap@11.1.11
+
+## 4.2.14
+### Patch Changes
+
+- Updated dependencies [[`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d)]:
+  - @graphql-tools/executor-http@3.1.1
+  - @graphql-tools/wrap@11.1.10
+  - @graphql-tools/delegate@12.0.10
+  - @graphql-tools/stitch@10.1.14
+
+## 4.2.13
+### Patch Changes
+
+- Updated dependencies [[`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756)]:
+  - @graphql-tools/delegate@12.0.9
+  - @graphql-tools/stitch@10.1.13
+  - @graphql-tools/wrap@11.1.9
+
 ## 4.2.12
 ### Patch Changes
 

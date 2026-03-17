@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { createRouter } from '@graphql-hive/federation-gateway-audit';
 import {
   createGatewayRuntime,
   GatewayRuntime,
@@ -21,7 +22,6 @@ import {
   lexicographicSortSchema,
   printSchema,
 } from 'graphql';
-import { createRouter } from 'graphql-federation-gateway-audit';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { getStitchedSchemaFromSupergraphSdl } from '../src/supergraph';
 
@@ -30,11 +30,12 @@ describe('Federation Compatibility', () => {
   const supergraphList = readdirSync(
     join(
       __dirname,
-      '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+      '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
     ),
   );
   const supergraphSdlMap = new Map<string, string>();
-  const supergraphTestMap = new Map<string, any>();
+  type SupergraphTestDefinition = { query: string; expected: any }[];
+  const supergraphTestMap = new Map<string, SupergraphTestDefinition>();
   beforeAll(async () => {
     const supergraphPathListRes = await auditRouter.fetch(
       'http://localhost/supergraphs',
@@ -67,13 +68,13 @@ describe('Federation Compatibility', () => {
       const testFile = readFileSync(
         join(
           __dirname,
-          '../../../node_modules/graphql-federation-gateway-audit/src/test-suites',
+          '../../../node_modules/@graphql-hive/federation-gateway-audit/src/test-suites',
           supergraphName,
           'test.ts',
         ),
         'utf-8',
       );
-      let tests: { query: string; expected: any }[] = new Array<{
+      let tests: SupergraphTestDefinition = Array<{
         query: string;
         expected: any;
       }>(testFile.match(/createTest\(/g)?.length ?? 0).fill({

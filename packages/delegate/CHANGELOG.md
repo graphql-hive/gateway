@@ -1,5 +1,28 @@
 # @graphql-tools/delegate
 
+## 12.0.11
+### Patch Changes
+
+- Updated dependencies [[`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87)]:
+  - @graphql-tools/batch-execute@10.0.7
+
+## 12.0.10
+### Patch Changes
+
+
+
+- [#2099](https://github.com/graphql-hive/gateway/pull/2099) [`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix missing NPM provenance attestation by enabling `npmPublishProvenance` in Yarn configuration
+
+- Updated dependencies [[`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d)]:
+  - @graphql-tools/batch-execute@10.0.6
+
+## 12.0.9
+### Patch Changes
+
+
+
+- [#2022](https://github.com/graphql-hive/gateway/pull/2022) [`43aaa6a`](https://github.com/graphql-hive/gateway/commit/43aaa6ab8c1c64cae92e9cdff7016ebdf1afa756) Thanks [@ardatan](https://github.com/ardatan)! - Fix redundant extra calls to the same subschema in case of `@canonical` annotation
+
 ## 12.0.8
 ### Patch Changes
 

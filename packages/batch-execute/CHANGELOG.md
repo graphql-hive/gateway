@@ -1,5 +1,19 @@
 # @graphql-tools/batch-execute
 
+## 10.0.7
+### Patch Changes
+
+
+
+- [#2076](https://github.com/graphql-hive/gateway/pull/2076) [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87) Thanks [@ardatan](https://github.com/ardatan)! - Add automatic batching to SDK requester
+
+## 10.0.6
+### Patch Changes
+
+
+
+- [#2099](https://github.com/graphql-hive/gateway/pull/2099) [`dae3fe4`](https://github.com/graphql-hive/gateway/commit/dae3fe4fbb9c78598d1bbf91c2ed07ab1b90f05d) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix missing NPM provenance attestation by enabling `npmPublishProvenance` in Yarn configuration
+
 ## 10.0.5
 ### Patch Changes
 

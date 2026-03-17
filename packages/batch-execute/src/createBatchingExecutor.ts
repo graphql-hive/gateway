@@ -3,6 +3,7 @@ import {
   ExecutionResult,
   Executor,
   getOperationASTFromRequest,
+  MaybeAsyncIterable,
 } from '@graphql-tools/utils';
 import { fakePromise } from '@whatwg-node/promise-helpers';
 import DataLoader from 'dataloader';
@@ -11,7 +12,10 @@ import { splitResult } from './splitResult.js';
 
 export function createBatchingExecutor(
   executor: Executor,
-  dataLoaderOptions?: DataLoader.Options<any, any, any>,
+  dataLoaderOptions?: DataLoader.Options<
+    ExecutionRequest,
+    MaybeAsyncIterable<any>
+  >,
   extensionsReducer: (
     mergedExtensions: Record<string, any>,
     request: ExecutionRequest,

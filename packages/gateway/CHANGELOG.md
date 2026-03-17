@@ -1,5 +1,73 @@
 # @graphql-hive/gateway
 
+## 2.5.9
+### Patch Changes
+
+
+
+- [#2110](https://github.com/graphql-hive/gateway/pull/2110) [`37cb0e2`](https://github.com/graphql-hive/gateway/commit/37cb0e255a399822658474c6d3adb62d65be7856) Thanks [@ardatan](https://github.com/ardatan)! - Fix Rust Query Planner support in Docker image
+
+## 2.5.8
+### Patch Changes
+
+
+
+- [#2086](https://github.com/graphql-hive/gateway/pull/2086) [`cd81bf1`](https://github.com/graphql-hive/gateway/commit/cd81bf1393e151bf56749e2fc23787517edeb469) Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - Add support for the `BatchFetch` plan node. When the query planner groups compatible entity fetches into a single `BatchFetch` node, the gateway runtime now executes them as one subgraph request with aliased `_entities` calls, reducing the number of downstream HTTP requests.
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.32
+  - @graphql-hive/gateway-runtime@2.7.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.6
+  - @graphql-mesh/plugin-prometheus@2.1.25
+
+## 2.5.7
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.6
+  - @graphql-mesh/transport-http@1.0.16
+  - @graphql-mesh/transport-ws@2.0.16
+  - @graphql-hive/plugin-aws-sigv4@2.0.31
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.5
+  - @graphql-mesh/plugin-prometheus@2.1.24
+
+## 2.5.6
+### Patch Changes
+
+- Updated dependencies [[`47c9fae`](https://github.com/graphql-hive/gateway/commit/47c9faecac7035e6ccfb2eb2b4146fca0ca07e47)]:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/gateway-runtime@2.7.5
+  - @graphql-hive/plugin-aws-sigv4@2.0.30
+  - @graphql-hive/plugin-opentelemetry@1.4.4
+  - @graphql-mesh/plugin-prometheus@2.1.23
+
+## 2.5.5
+### Patch Changes
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.30
+  - @graphql-hive/gateway-runtime@2.7.4
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.4.3
+  - @graphql-mesh/plugin-prometheus@2.1.22
+
+## 2.5.4
+### Patch Changes
+
+
+
+- [#2045](https://github.com/graphql-hive/gateway/pull/2045) [`77def08`](https://github.com/graphql-hive/gateway/commit/77def088b7e5e170b3745a86a0d2d7b5596217f7) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Removed dependency [`dotenv@^17.2.3` ↗︎](https://www.npmjs.com/package/dotenv/v/17.2.3) (from `dependencies`)
+- Updated dependencies []:
+  - @graphql-hive/gateway-runtime@2.7.3
+  - @graphql-hive/plugin-aws-sigv4@2.0.29
+  - @graphql-mesh/hmac-upstream-signature@2.0.9
+  - @graphql-hive/plugin-opentelemetry@1.4.2
+  - @graphql-mesh/plugin-prometheus@2.1.21
+
 ## 2.5.3
 ### Patch Changes
 

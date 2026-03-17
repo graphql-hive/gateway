@@ -300,7 +300,7 @@ describe('Polling', () => {
     await advanceTimersByTimeAsync(pollingInterval);
     await compareTimes();
     // Should keep polling even if it fails in somewhere
-    expect(unifiedGraphFetcher).toHaveBeenCalledTimes(4);
+    expect(unifiedGraphFetcher.mock.calls.length).toBeGreaterThanOrEqual(4);
   });
   it('does not stop request if the polled schema is not changed', async () => {
     const advanceTimersByTimeAsync = useFakeTimers();

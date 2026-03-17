@@ -10,25 +10,27 @@ import {
   GraphQLSchemaHost,
 } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
-import { AsyncDisposableStack } from '@whatwg-node/disposablestack';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
-
-const disposableStack = new AsyncDisposableStack();
-afterAll(() => disposableStack.disposeAsync());
 
 const schemaSDL = /* GraphQL */ `
   type Query {
     hello: String!
   }
 `;
+
 async function createNestApp(
   opts: Omit<HiveGatewayDriverConfig, 'supergraph'> &
     Omit<GqlModuleOptions, 'driver'> = {},
 ) {
+  const disposableStack = new AsyncDisposableStack();
   const upstreamSchema = buildSubgraphSchema({
     typeDefs: parse(schemaSDL),
     resolvers: {
@@ -65,13 +67,19 @@ async function createNestApp(
   // app.init(); // app.listen() will call init
   await app.listen(port);
 
-  return [app, port] as const;
+  return {
+    app,
+    port,
+    [DisposableSymbols.asyncDispose]() {
+      return disposableStack.disposeAsync();
+    },
+  };
 }
 
 describe('NestJS', () => {
-  it('should execute queries and have the correct schama', async () => {
-    const [app, port] = await createNestApp();
-    const res = await fetch(`http://localhost:${port}/graphql`, {
+  it('should execute queries and have the correct schema', async () => {
+    await using nestApp = await createNestApp();
+    const res = await fetch(`http://localhost:${nestApp.port}/graphql`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +97,7 @@ describe('NestJS', () => {
         hello: 'world',
       },
     });
-    const { schema } = app.get(GraphQLSchemaHost);
+    const { schema } = nestApp.app.get(GraphQLSchemaHost);
     expect(stripIgnoredCharacters(printSchema(schema))).toBe(
       stripIgnoredCharacters(schemaSDL),
     );
@@ -97,7 +105,7 @@ describe('NestJS', () => {
 
   it('should run transform schema only once', async () => {
     const transformFn = vi.fn((schema) => schema);
-    await createNestApp({
+    await using _ = await createNestApp({
       transformSchema: transformFn,
     });
     expect(transformFn).toHaveBeenCalledTimes(1);
@@ -105,7 +113,7 @@ describe('NestJS', () => {
 
   it('should sort schema only once', async () => {
     const schemaChangeFn = vi.fn();
-    await createNestApp({
+    await using _ = await createNestApp({
       sortSchema: true,
       plugins: () => [
         {
@@ -118,7 +126,7 @@ describe('NestJS', () => {
 
   it('should use cache', async () => {
     const onCacheSetErrorFn = vi.fn();
-    const [, port] = await createNestApp({
+    await using nestApp = await createNestApp({
       cache: {
         type: 'localforage',
       },
@@ -130,7 +138,7 @@ describe('NestJS', () => {
         },
       ],
     });
-    const res = await fetch(`http://localhost:${port}/graphql`, {
+    const res = await fetch(`http://localhost:${nestApp.port}/graphql`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
