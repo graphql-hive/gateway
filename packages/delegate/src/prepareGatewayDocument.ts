@@ -9,6 +9,7 @@ import {
   FieldNode,
   FragmentDefinitionNode,
   getNamedType,
+  GraphQLInterfaceType,
   GraphQLNamedOutputType,
   GraphQLNamedType,
   GraphQLObjectType,

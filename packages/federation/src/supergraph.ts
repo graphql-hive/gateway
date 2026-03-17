@@ -189,7 +189,7 @@ export function getStitchingOptionsFromSupergraphSdl(
   const supergraphAst = ensureSupergraphSDLAst(opts.supergraphSdl);
   const subgraphEndpointMap = new Map<string, string>();
   const subgraphTypesMap = new Map<string, TypeDefinitionNode[]>();
-  const typeNameKeysBySubgraphMap = new Map<string, Map<string, string[]>>();
+  const typeNameKeysBySubgraphMap = new Map<string, Map<string, Set<string>>>();
   const typeNameFieldsKeyBySubgraphMap = new Map<
     string,
     Map<string, Map<string, string>>
@@ -585,6 +585,10 @@ export function getStitchingOptionsFromSupergraphSdl(
               }
             });
             // Add if no join__field directive
+            const keys = typeNameKeysBySubgraphMap
+              .get(graphName)
+              ?.get(typeNode.name.value);
+            const keysArr = keys && Array.from(keys);
             if (!joinFieldDirectives?.length) {
               fieldDefinitionNodesOfSubgraph.push({
                 ...fieldNode,
@@ -594,10 +598,9 @@ export function getStitchingOptionsFromSupergraphSdl(
               });
             } else if (
               notInSubgraph &&
-              typeNameKeysBySubgraphMap
-                .get(graphName)
-                ?.get(typeNode.name.value)
-                ?.some((key) => key.split(' ').includes(fieldNode.name.value))
+              keysArr?.some((key) =>
+                key.split(' ').includes(fieldNode.name.value),
+              )
             ) {
               fieldDefinitionNodesOfSubgraph.push({
                 ...fieldNode,
@@ -644,10 +647,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                   }
                   let keys = typeNameKeysMap.get(typeNode.name.value);
                   if (!keys) {
-                    keys = [];
+                    keys = new Set();
                     typeNameKeysMap.set(typeNode.name.value, keys);
                   }
-                  keys.push(keyArgVal);
+                  keys.add(keyArgVal);
                 }
               }
             }
@@ -1003,11 +1006,15 @@ export function getStitchingOptionsFromSupergraphSdl(
           };
         }
 
-        if (keys.length === 1 && keys[0]) {
-          Object.assign(mergedTypeConfig, getMergedTypeConfigFromKey(keys[0]));
+        const keysArr = Array.from(keys);
+        if (keysArr.length === 1 && keysArr[0]) {
+          Object.assign(
+            mergedTypeConfig,
+            getMergedTypeConfigFromKey(keysArr[0]),
+          );
         }
-        if (keys.length > 1) {
-          const entryPoints = keys.map((key) =>
+        if (keysArr.length > 1) {
+          const entryPoints = keysArr.map((key) =>
             getMergedTypeConfigFromKey(key),
           );
           mergedTypeConfig.entryPoints = entryPoints;
