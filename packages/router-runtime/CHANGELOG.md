@@ -1,5 +1,23 @@
 # @graphql-hive/router-runtime
 
+## 1.2.0
+### Minor Changes
+
+
+
+- [#2086](https://github.com/graphql-hive/gateway/pull/2086) [`cd81bf1`](https://github.com/graphql-hive/gateway/commit/cd81bf1393e151bf56749e2fc23787517edeb469) Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - Add support for the `BatchFetch` plan node. When the query planner groups compatible entity fetches into a single `BatchFetch` node, the gateway runtime now executes them as one subgraph request with aliased `_entities` calls, reducing the number of downstream HTTP requests.
+
+
+
+- [#2096](https://github.com/graphql-hive/gateway/pull/2096) [`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6) Thanks [@ardatan](https://github.com/ardatan)! - Progressive Override Support in Rust QP Runtime
+
+
+### Patch Changes
+
+- Updated dependencies [[`4e626d4`](https://github.com/graphql-hive/gateway/commit/4e626d4cd2f1a6050a30b1219f5b5408ff56b3a6), [`08c9da2`](https://github.com/graphql-hive/gateway/commit/08c9da28af4587aa823f3b7a10af493fa87dab87)]:
+  - @graphql-mesh/fusion-runtime@1.8.0
+  - @graphql-tools/federation@4.3.0
+
 ## 1.1.16
 ### Patch Changes
 

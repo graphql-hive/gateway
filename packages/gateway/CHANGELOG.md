@@ -1,5 +1,26 @@
 # @graphql-hive/gateway
 
+## 2.5.9
+### Patch Changes
+
+
+
+- [#2110](https://github.com/graphql-hive/gateway/pull/2110) [`37cb0e2`](https://github.com/graphql-hive/gateway/commit/37cb0e255a399822658474c6d3adb62d65be7856) Thanks [@ardatan](https://github.com/ardatan)! - Fix Rust Query Planner support in Docker image
+
+## 2.5.8
+### Patch Changes
+
+
+
+- [#2086](https://github.com/graphql-hive/gateway/pull/2086) [`cd81bf1`](https://github.com/graphql-hive/gateway/commit/cd81bf1393e151bf56749e2fc23787517edeb469) Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - Add support for the `BatchFetch` plan node. When the query planner groups compatible entity fetches into a single `BatchFetch` node, the gateway runtime now executes them as one subgraph request with aliased `_entities` calls, reducing the number of downstream HTTP requests.
+
+- Updated dependencies []:
+  - @graphql-hive/plugin-aws-sigv4@2.0.32
+  - @graphql-hive/gateway-runtime@2.7.7
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+  - @graphql-hive/plugin-opentelemetry@1.4.6
+  - @graphql-mesh/plugin-prometheus@2.1.25
+
 ## 2.5.7
 ### Patch Changes
 

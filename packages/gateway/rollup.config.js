@@ -178,7 +178,7 @@ export default defineConfig({
     copy({
       targets: [
         {
-          src: '../../node_modules/@graphql-hive/router-query-planner/*.node',
+          src: '../../node_modules/@graphql-hive/router-query-planner/dist/*.node',
           dest: 'bundle/node_modules/@graphql-hive/router-query-planner',
         },
       ],
