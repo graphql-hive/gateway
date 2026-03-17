@@ -77,6 +77,7 @@ import { useMaybeDelegationPlanDebug } from './plugins/useDelegationPlanDebug';
 import { useDemandControl } from './plugins/useDemandControl';
 import { useFetchDebug } from './plugins/useFetchDebug';
 import useHiveConsole from './plugins/useHiveConsole';
+import { useInboundRequestDeduplication } from './plugins/useInboundRequestDeduplication';
 import { usePropagateHeaders } from './plugins/usePropagateHeaders';
 import { useRequestId } from './plugins/useRequestId';
 import { useRetryOnSchemaReload } from './plugins/useRetryOnSchemaReload';
@@ -819,6 +820,21 @@ export function createGatewayRuntime<
       typeof config.requestId === 'object' ? config.requestId : undefined,
     );
     basePlugins.push(reqIdPlugin);
+  }
+
+  if (config.inboundRequestDeduplication) {
+    if (
+      config.inboundRequestDeduplication === true ||
+      config.inboundRequestDeduplication.enabled !== false
+    ) {
+      basePlugins.push(
+        useInboundRequestDeduplication(
+          typeof config.inboundRequestDeduplication === 'object'
+            ? config.inboundRequestDeduplication.headers
+            : undefined,
+        ),
+      );
+    }
   }
 
   if (isDisposable(wrappedCache)) {

@@ -820,6 +820,28 @@ export interface GatewayConfigBase<TContext extends Record<string, any>> {
   requestId?: boolean | RequestIdOptions<Partial<TContext>>;
 
   /**
+   * Enable in-flight deduplication for identical inbound GraphQL query requests.
+   *
+   * Useful to reduce duplicated work when the same query is requested concurrently.
+   */
+  inboundRequestDeduplication?:
+    | boolean
+    | {
+        /**
+         * Enable or disable deduplication when using object configuration.
+         *
+         * @default true
+         */
+        enabled?: boolean;
+        /**
+         * Which headers should be included in deduplication key generation.
+         *
+         * @default 'all'
+         */
+        headers?: 'all' | 'none' | { include: string[] };
+      };
+
+  /**
    * Demand Control
    *
    * Configure the demand control for upstream requests.

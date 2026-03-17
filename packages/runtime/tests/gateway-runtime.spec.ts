@@ -518,6 +518,169 @@ describe('Gateway Runtime', () => {
     expect(subgraphCallCnt).toBe(1);
   });
 
+  describe('inboundRequestDeduplication', () => {
+    it('deduplicates identical parallel query requests', async () => {
+      const upstream = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              foo: String!
+            }
+          `,
+          resolvers: {
+            Query: {
+              foo: () => 'bar',
+            },
+          },
+        }),
+      });
+      const upstreamFetch = vi.fn(
+        async (url: string, init: RequestInit) => {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+          return upstream.fetch(url, init);
+        },
+      );
+      await using gateway = createGatewayRuntime({
+        logging: isDebug(),
+        inboundRequestDeduplication: true,
+        proxy: {
+          endpoint: 'http://localhost:4000/graphql',
+          deduplicateInflightRequests: false,
+        },
+        schema: buildSchema(
+          /* GraphQL */ `
+            type Query {
+              foo: String!
+            }
+          `,
+        ),
+        plugins: () => [
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          useCustomFetch(upstreamFetch),
+        ],
+      });
+
+      const [response1, response2] = await Promise.all([
+        gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          }),
+        }),
+        gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              query {
+                foo
+              }
+            `,
+          }),
+        }),
+      ]);
+
+      await expect(response1.json()).resolves.toEqual({ data: { foo: 'bar' } });
+      await expect(response2.json()).resolves.toEqual({ data: { foo: 'bar' } });
+      expect(upstreamFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not deduplicate mutations', async () => {
+      let callCount = 0;
+      const upstream = createYoga({
+        schema: createSchema({
+          typeDefs: /* GraphQL */ `
+            type Query {
+              ping: Boolean!
+            }
+
+            type Mutation {
+              increment: Int!
+            }
+          `,
+          resolvers: {
+            Query: {
+              ping: () => true,
+            },
+            Mutation: {
+              increment: () => ++callCount,
+            },
+          },
+        }),
+      });
+      const upstreamFetch = vi.fn(
+        async (url: string, init: RequestInit) => {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+          return upstream.fetch(url, init);
+        },
+      );
+      await using gateway = createGatewayRuntime({
+        logging: isDebug(),
+        inboundRequestDeduplication: true,
+        proxy: {
+          endpoint: 'http://localhost:4000/graphql',
+          deduplicateInflightRequests: false,
+        },
+        schema: buildSchema(
+          /* GraphQL */ `
+            type Query {
+              ping: Boolean!
+            }
+
+            type Mutation {
+              increment: Int!
+            }
+          `,
+        ),
+        plugins: () => [
+          // @ts-expect-error TODO: MeshFetch is not compatible with @whatwg-node/server fetch
+          useCustomFetch(upstreamFetch),
+        ],
+      });
+
+      const [response1, response2] = await Promise.all([
+        gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              mutation {
+                increment
+              }
+            `,
+          }),
+        }),
+        gateway.fetch('http://localhost:4000/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: /* GraphQL */ `
+              mutation {
+                increment
+              }
+            `,
+          }),
+        }),
+      ]);
+
+      const json1 = await response1.json();
+      const json2 = await response2.json();
+
+      expect([json1, json2]).toEqual(
+        expect.arrayContaining([
+          { data: { increment: 1 } },
+          { data: { increment: 2 } },
+        ]),
+      );
+      expect(upstreamFetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('proxy mode respects transportEntries in the config', async () => {
     const proxyWithCustomHeaders = createGatewayRuntime({
       logging: isDebug(),
