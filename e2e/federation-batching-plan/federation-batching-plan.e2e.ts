@@ -481,7 +481,6 @@ it('should consistently explain the query plan', async () => {
     }
 
     fragment User on User {
-      __typename
       id
       username
       name
@@ -495,14 +494,12 @@ it('should consistently explain the query plan', async () => {
         __typename
         ... on Product {
           inStock
-          upc
         }
       }
       _v1__entities: _entities(representations: $_v1_representations) {
         __typename
         ... on Product {
           shippingEstimate
-          upc
         }
       }
     }",
@@ -577,7 +574,6 @@ it('should consistently explain the query plan', async () => {
         __typename
         ... on Product {
           name
-          upc
           price
           weight
         }
@@ -642,7 +638,6 @@ it('should consistently explain the query plan', async () => {
     }
 
     fragment Review on Review {
-      __typename
       id
       body
     }",
@@ -670,7 +665,6 @@ it('should consistently explain the query plan', async () => {
         __typename
         ... on User {
           name
-          id
         }
       }
     }",
@@ -739,7 +733,6 @@ it('should consistently explain the query plan', async () => {
     }
 
     fragment Review on Review {
-      __typename
       id
       body
     }",

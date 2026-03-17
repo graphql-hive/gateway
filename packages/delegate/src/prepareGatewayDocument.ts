@@ -11,6 +11,7 @@ import {
   getNamedType,
   GraphQLNamedOutputType,
   GraphQLNamedType,
+  GraphQLObjectType,
   GraphQLOutputType,
   GraphQLSchema,
   InlineFragmentNode,
@@ -187,9 +188,16 @@ function visitSelectionSet(
         parentType,
         node,
         fragmentMap,
+        infoSchema,
       )
     ) {
-      return node;
+      for (const selection of node.selections) {
+        addSelectionNodeToSelections(newSelections, selection);
+      }
+      return {
+        ...node,
+        selections: Array.from(newSelections),
+      };
     }
     const parentTypeName = parentType.name;
 
@@ -427,6 +435,7 @@ export function isSelectionSetSatisfiedBySchema(
   type: GraphQLNamedType,
   selectionSet: SelectionSetNode,
   fragmentsMap: Record<string, FragmentDefinitionNode>,
+  infoSchema: GraphQLSchema,
 ) {
   const namedType = getNamedType(type);
   if (isLeafType(namedType)) {
@@ -447,6 +456,19 @@ export function isSelectionSetSatisfiedBySchema(
         if (!field) {
           return false;
         }
+        const typeInInfoSchema = infoSchema.getType(
+          namedType.name,
+        ) as GraphQLObjectType;
+        const fieldInInfoSchema = typeInInfoSchema?.getFields?.()?.[fieldName];
+        const resolverInInfoSchema = fieldInInfoSchema?.resolve;
+        // Is additional field?
+        if (
+          resolverInInfoSchema != null &&
+          resolverInInfoSchema.name !== 'defaultMergedResolver' &&
+          resolverInInfoSchema.name !== 'defaultFieldResolver'
+        ) {
+          return false;
+        }
         if (selection.selectionSet) {
           const fieldType = getNamedType(field.type);
           const satisfied = isSelectionSetSatisfiedBySchema(
@@ -454,6 +476,7 @@ export function isSelectionSetSatisfiedBySchema(
             fieldType,
             selection.selectionSet,
             fragmentsMap,
+            infoSchema,
           );
           if (!satisfied) {
             return false;
@@ -474,6 +497,7 @@ export function isSelectionSetSatisfiedBySchema(
           typeCondition,
           selection.selectionSet,
           fragmentsMap,
+          infoSchema,
         );
         if (!satisfied) {
           return false;
@@ -484,6 +508,7 @@ export function isSelectionSetSatisfiedBySchema(
           type,
           selection.selectionSet,
           fragmentsMap,
+          infoSchema,
         );
         if (!satisfied) {
           return false;
@@ -505,6 +530,7 @@ export function isSelectionSetSatisfiedBySchema(
         typeCondition,
         fragment.selectionSet,
         fragmentsMap,
+        infoSchema,
       );
       if (!satisfied) {
         return false;

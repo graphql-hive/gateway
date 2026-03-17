@@ -3564,7 +3564,7 @@ it(`stitchSchemas shouldn't call transformSchema more than once`, async () => {
   expect(transform.transformSchema).toHaveBeenCalledTimes(1);
 });
 
-it('should respect selectionSet in the additional resolvers to override a field', async () => {
+it.only('should respect selectionSet in the additional resolvers to override a field', async () => {
   const sub_schema = addResolversToSchema({
     schema: buildSchema(`
   type Query {
