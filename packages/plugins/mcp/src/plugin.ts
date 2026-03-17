@@ -70,12 +70,44 @@ export interface MCPOutputOverrides {
   path: string;
 }
 
+export interface ToolHookContext {
+  toolName: string;
+  headers: Record<string, string>;
+  query: string;
+}
+
+export interface MCPToolHooks {
+  /**
+   * Called before GraphQL execution. Receives de-aliased arguments
+   * (original GraphQL variable names, not MCP alias names).
+   * Return a non-undefined value to short-circuit execution and use that value as the tool result.
+   * Return undefined (or void) to continue with normal GraphQL execution.
+   * When preprocess short-circuits, postprocess is NOT called.
+   */
+  preprocess?: (
+    args: Record<string, unknown>,
+    context: ToolHookContext,
+  ) => unknown | Promise<unknown>;
+  /**
+   * Called after GraphQL execution (and output.path extraction) to transform the result.
+   * Not called when preprocess short-circuits.
+   * When a postprocess hook is registered, the response uses text content
+   * instead of structuredContent since the hook may change the result shape.
+   */
+  postprocess?: (
+    result: unknown,
+    args: Record<string, unknown>,
+    context: ToolHookContext,
+  ) => unknown | Promise<unknown>;
+}
+
 export interface MCPToolConfig {
   name: string;
   source: MCPToolSource;
   tool?: MCPToolOverrides; // metadata overrides
   input?: MCPInputOverrides; // field-level overrides
   output?: MCPOutputOverrides; // output extraction
+  hooks?: MCPToolHooks;
 }
 
 export interface MCPConfig {
@@ -101,6 +133,7 @@ export interface ResolvedToolConfig {
   tool?: MCPToolOverrides;
   input?: MCPInputOverrides;
   output?: MCPOutputOverrides;
+  hooks?: MCPToolHooks;
   directiveDescription?: string;
   providerDescription?: string;
 }
@@ -167,6 +200,7 @@ export function resolveToolConfigs(
       tool: tool.tool,
       input: tool.input,
       output: tool.output,
+      hooks: tool.hooks,
     });
   }
 
@@ -185,6 +219,7 @@ export function resolveToolConfigs(
         },
         input: configTool.input || base.input,
         output: configTool.output || base.output,
+        hooks: configTool.hooks || base.hooks,
       });
     } else {
       merged.set(name, configTool);
@@ -395,11 +430,22 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         const providerContext: DescriptionProviderContext | undefined =
           promptLabel ? { label: promptLabel } : undefined;
 
+        // Extract headers once for both requestContext and execute
+        const forwardedHeaders: Record<string, string> = {};
+        request.headers.forEach((value, key) => {
+          if (key !== 'host' && key !== 'content-type' && key !== 'content-length') {
+            forwardedHeaders[key] = value;
+          }
+        });
+
         const handler = createMCPHandler({
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           registry,
           includeContentFallback: config.includeContentFallback,
+          requestContext: {
+            headers: forwardedHeaders,
+          },
           resolveToolDescriptions:
             providerToolConfigs.length > 0
               ? async () => {
@@ -455,13 +501,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 }
               : undefined,
           execute: async (toolName, args) => {
-            const headers: Record<string, string> = {};
-            request.headers.forEach((value, key) => {
-              if (key !== 'host' && key !== 'content-type' && key !== 'content-length') {
-                headers[key] = value;
-              }
-            });
-            return execute(toolName, args, { headers });
+            return execute(toolName, args, { headers: forwardedHeaders });
           },
         });
 

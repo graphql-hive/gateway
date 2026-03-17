@@ -504,6 +504,38 @@ describe('ToolRegistry with overrides', () => {
     expect(tool!.outputPath).toBe('searchProducts');
   });
 
+  it('throws when hooks.preprocess is not a function', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'bad_hooks',
+              query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
+              hooks: { preprocess: 'not a function' as any },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('hooks.preprocess must be a function');
+  });
+
+  it('throws when hooks.postprocess is not a function', () => {
+    expect(
+      () =>
+        new ToolRegistry(
+          [
+            {
+              name: 'bad_hooks',
+              query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
+              hooks: { postprocess: 42 as any },
+            },
+          ],
+          schema,
+        ),
+    ).toThrow('hooks.postprocess must be a function');
+  });
+
   it('includes output schema', () => {
     const schemaWithOutput = buildSchema(`
       type Query {

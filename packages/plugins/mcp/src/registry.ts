@@ -1,5 +1,5 @@
 import { parse, type GraphQLSchema } from 'graphql';
-import type { ResolvedToolConfig } from './plugin.js';
+import type { MCPToolHooks, ResolvedToolConfig } from './plugin.js';
 import {
   getToolDescriptionFromSchema,
   operationToInputSchema,
@@ -26,6 +26,7 @@ export interface RegisteredTool {
   argumentAliases?: Record<string, string>;
   /** Dot-notation path to extract from the GraphQL response data */
   outputPath?: string;
+  hooks?: MCPToolHooks;
 }
 
 /** Walk a dot-notation path through an object, returning the value at that path. */
@@ -173,6 +174,20 @@ export class ToolRegistry {
         }
       }
 
+      // Validate hooks are functions
+      if (config.hooks) {
+        if (config.hooks.preprocess && typeof config.hooks.preprocess !== 'function') {
+          throw new Error(
+            `Tool "${config.name}": hooks.preprocess must be a function, got ${typeof config.hooks.preprocess}`,
+          );
+        }
+        if (config.hooks.postprocess && typeof config.hooks.postprocess !== 'function') {
+          throw new Error(
+            `Tool "${config.name}": hooks.postprocess must be a function, got ${typeof config.hooks.postprocess}`,
+          );
+        }
+      }
+
       this.tools.set(config.name, {
         name: config.name,
         description,
@@ -182,6 +197,7 @@ export class ToolRegistry {
         outputSchema,
         argumentAliases,
         outputPath,
+        hooks: config.hooks,
       });
     }
   }
