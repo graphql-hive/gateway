@@ -1,5 +1,17 @@
 # @graphql-tools/federation
 
+## 4.3.1
+### Patch Changes
+
+
+
+- [#2106](https://github.com/graphql-hive/gateway/pull/2106) [`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e) Thanks [@ardatan](https://github.com/ardatan)! - - Optimizations to select ONLY required fields when fetching the missing fields from other subgraphs
+  - Do not try to resolve types from the subschemas which only have the stub types, for example if a subgraph only has `id` field as a stub, do not use that subgraph as a target subgraph for resolving the type, because it will not have any other fields than `id`.
+- Updated dependencies [[`da68d27`](https://github.com/graphql-hive/gateway/commit/da68d2710dff1f8bca5b17bcd5368e631f72114e)]:
+  - @graphql-tools/delegate@12.0.12
+  - @graphql-tools/stitch@10.1.16
+  - @graphql-tools/wrap@11.1.12
+
 ## 4.3.0
 ### Minor Changes
 
