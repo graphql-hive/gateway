@@ -1,8 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { stitchSchemas } from '@graphql-tools/stitch';
-import { DocumentNode, parse, print } from 'graphql';
+import { DocumentNode, GraphQLNamedOutputType, parse, print } from 'graphql';
 import { prepareGatewayDocument } from '../src/prepareGatewayDocument';
 import '@internal/testing/to-be-similar-gql-doc';
+import { DelegationContext } from '@graphql-tools/delegate';
 import { normalizedExecutor } from '@graphql-tools/executor';
 import { Executor } from '@graphql-tools/utils';
 import { describe, expect, it, vi } from 'vitest';
@@ -199,11 +200,24 @@ describe('prepareGatewayDocument', () => {
         }
       }
     `);
+    const delegationContext = {
+      subschema: postSchema,
+      targetSchema: gatewaySchema,
+      operation: 'query' as any,
+      transformedSchema: postSchema,
+      info: {
+        fieldName: 'userByIdWithPosts',
+        fieldNodes: [],
+        returnType: gatewaySchema.getType('User')! as GraphQLNamedOutputType,
+        parentType: gatewaySchema.getQueryType()!,
+        schema: gatewaySchema,
+        fragments: {},
+        variableValues: {},
+      } as any,
+    } as DelegationContext;
     const preparedDocument = prepareGatewayDocument(
       originalDocument,
-      postSchema,
-      postSchema.getQueryType()!,
-      gatewaySchema,
+      delegationContext,
     );
     expect(print(preparedDocument)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {
@@ -230,11 +244,24 @@ describe('prepareGatewayDocument', () => {
         }
       }
     `);
+    const delegationContext = {
+      subschema: postSchema,
+      targetSchema: gatewaySchema,
+      operation: 'query' as any,
+      transformedSchema: postSchema,
+      info: {
+        fieldName: 'userByIdWithPosts',
+        fieldNodes: [],
+        returnType: gatewaySchema.getType('User')! as GraphQLNamedOutputType,
+        parentType: gatewaySchema.getQueryType()!,
+        schema: gatewaySchema,
+        fragments: {},
+        variableValues: {},
+      } as any,
+    } as DelegationContext;
     const preparedDocument = prepareGatewayDocument(
       originalDocument,
-      postSchema,
-      postSchema.getQueryType()!,
-      gatewaySchema,
+      delegationContext,
     );
     expect(print(preparedDocument)).toBeSimilarGqlDoc(/* GraphQL */ `
       query {

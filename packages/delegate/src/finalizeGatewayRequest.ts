@@ -53,6 +53,9 @@ function finalizeGatewayDocument<TContext>(
   const validFragmentsWithType: Record<string, GraphQLNamedType> =
     Object.create(null);
   for (const fragment of fragments) {
+    if (fragment.selectionSet.selections.length === 0) {
+      continue;
+    }
     const typeName = fragment.typeCondition.name.value;
     const type = targetSchema.getType(typeName);
     if (type != null) {

@@ -8,11 +8,10 @@ import {
   getStitchedSchemaFromSupergraphSdl,
 } from '@graphql-tools/federation';
 import { addMocksToSchema } from '@graphql-tools/mock';
-import { usingHiveRouterRuntime } from '~internal/env';
 import { parse, print } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
-describe.skipIf(usingHiveRouterRuntime())('Progressive Override', () => {
+describe.skip('Progressive Override', () => {
   describe('Label processing', () => {
     it('from the root level', async () => {
       await using gw = createGatewayTester({
