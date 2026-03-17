@@ -19031,11 +19031,11 @@ __metadata:
   linkType: hard
 
 "nan@npm:^2.19.0, nan@npm:^2.20.0":
-  version: 2.22.2
-  resolution: "nan@npm:2.22.2"
+  version: 2.26.0
+  resolution: "nan@npm:2.26.0"
   dependencies:
     node-gyp: "npm:latest"
-  checksum: 10c0/971f963b8120631880fa47a389c71b00cadc1c1b00ef8f147782a3f4387d4fc8195d0695911272d57438c11562fb27b24c4ae5f8c05d5e4eeb4478ba51bb73c5
+  checksum: 10c0/dcad37df4da887991ba139c26817f070868c8b28716f4e77fe3de958146c2d275337d42a95c4166ae347a41f61e9a6127a68eedeb3773474996ff5db45c73a53
   languageName: node
   linkType: hard
 
