@@ -926,12 +926,7 @@ it('does not add extra key fields', async () => {
     `),
     resolvers: {
       Mutation: {
-        confirmGuest(
-          _,
-          {
-            input,
-          }: { input: { id: string } },
-        ) {
+        confirmGuest(_, { input }: { input: { id: string } }) {
           return {
             __typename: 'ConfirmGuestSuccess',
             guest: {
