@@ -178,7 +178,10 @@ describe('useMCP startup validation', () => {
         tools: [
           {
             name: 'search',
-            source: { type: 'inline', query: 'query($q: String!) { search(q: $q) }' },
+            source: {
+              type: 'inline',
+              query: 'query($q: String!) { search(q: $q) }',
+            },
             input: {
               schema: {
                 properties: {

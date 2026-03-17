@@ -209,9 +209,9 @@ describe('ToolRegistry with overrides', () => {
     expect(tools[0]!.inputSchema.properties!['searchQuery']).toBeDefined();
     expect(tools[0]!.inputSchema.properties!['query']).toBeUndefined();
     // Description is applied to the aliased property
-    expect(
-      tools[0]!.inputSchema.properties!['searchQuery']!.description,
-    ).toBe('Search term');
+    expect(tools[0]!.inputSchema.properties!['searchQuery']!.description).toBe(
+      'Search term',
+    );
     // Non-aliased field is unchanged
     expect(tools[0]!.inputSchema.properties!['category']).toBeDefined();
     // Required array uses alias name
@@ -224,8 +224,7 @@ describe('ToolRegistry with overrides', () => {
       [
         {
           name: 'search',
-          query:
-            'query($query: String!) { searchProducts(query: $query) }',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
           input: {
             schema: {
               properties: {
@@ -444,11 +443,14 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { search(query: $query) { items { name score } total } }',
-        output: { path: 'search.items' },
-      }],
+      [
+        {
+          name: 'search',
+          query:
+            'query($query: String!) { search(query: $query) { items { name score } total } }',
+          output: { path: 'search.items' },
+        },
+      ],
       nestedSchema,
     );
     const tools = registry.getMCPTools();
@@ -475,11 +477,14 @@ describe('ToolRegistry with overrides', () => {
       }
     `);
     const registry = new ToolRegistry(
-      [{
-        name: 'weather',
-        query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
-        output: { path: 'getWeather' },
-      }],
+      [
+        {
+          name: 'weather',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+          output: { path: 'getWeather' },
+        },
+      ],
       schemaWithOutput,
     );
     const tools = registry.getMCPTools();
@@ -493,11 +498,13 @@ describe('ToolRegistry with overrides', () => {
 
   it('stores outputPath on registered tool', () => {
     const registry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($query: String!) { searchProducts(query: $query) }',
-        output: { path: 'searchProducts' },
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($query: String!) { searchProducts(query: $query) }',
+          output: { path: 'searchProducts' },
+        },
+      ],
       schema,
     );
     const tool = registry.getTool('search');
@@ -511,7 +518,8 @@ describe('ToolRegistry with overrides', () => {
           [
             {
               name: 'bad_hooks',
-              query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
+              query:
+                'query($location: String!) { getWeather(location: $location) { temperature } }',
               hooks: { preprocess: 'not a function' as any },
             },
           ],
@@ -527,7 +535,8 @@ describe('ToolRegistry with overrides', () => {
           [
             {
               name: 'bad_hooks',
-              query: 'query($location: String!) { getWeather(location: $location) { temperature } }',
+              query:
+                'query($location: String!) { getWeather(location: $location) { temperature } }',
               hooks: { postprocess: 42 as any },
             },
           ],

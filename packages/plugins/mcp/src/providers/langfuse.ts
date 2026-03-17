@@ -26,7 +26,9 @@ export function createLangfuseProvider(
         );
       }
       const version = config['version'] as number | undefined;
-      const perToolOptions = config['options'] as LangfuseGetPromptOptions | undefined;
+      const perToolOptions = config['options'] as
+        | LangfuseGetPromptOptions
+        | undefined;
       const hasDefaults = defaults && Object.keys(defaults).length > 0;
       const hasOverrides = hasDefaults || perToolOptions || context?.label;
       const options = hasOverrides

@@ -176,7 +176,10 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           let shortCircuited = false;
           if (tool.hooks?.preprocess) {
             try {
-              const preprocessResult = await tool.hooks.preprocess(args, hookContext);
+              const preprocessResult = await tool.hooks.preprocess(
+                args,
+                hookContext,
+              );
               if (preprocessResult !== undefined) {
                 result = preprocessResult;
                 shortCircuited = true;

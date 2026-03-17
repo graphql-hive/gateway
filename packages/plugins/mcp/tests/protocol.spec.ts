@@ -147,11 +147,13 @@ describe('createMCPHandler', () => {
       type SearchResult { items: [String!]! }
     `);
     const pathRegistry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($q: String!) { search(q: $q) { items } }',
-        output: { path: 'search.items' },
-      }],
+      [
+        {
+          name: 'search',
+          query: 'query($q: String!) { search(q: $q) { items } }',
+          output: { path: 'search.items' },
+        },
+      ],
       pathSchema,
     );
     const pathExecute = vi.fn().mockResolvedValue({
@@ -257,7 +259,8 @@ describe('createMCPHandler', () => {
       [
         {
           name: 'search',
-          query: 'query($q: String!, $limit: Int) { search(q: $q, limit: $limit) }',
+          query:
+            'query($q: String!, $limit: Int) { search(q: $q, limit: $limit) }',
           input: {
             schema: {
               properties: {
@@ -323,9 +326,9 @@ describe('createMCPHandler', () => {
     const response = await handler(request);
     const body = await response.json();
 
-    expect(
-      body.result.tools[0].inputSchema.properties.name.description,
-    ).toBe('The person to greet');
+    expect(body.result.tools[0].inputSchema.properties.name.description).toBe(
+      'The person to greet',
+    );
   });
 
   it('warns when resolveFieldDescriptions returns a field not in inputSchema', async () => {
@@ -364,20 +367,27 @@ describe('createMCPHandler', () => {
   });
 
   it('preprocess hook short-circuits execution when returning a value', async () => {
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'gated_tool',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: (args) => {
-            if (!args['_confirmed']) {
-              return { confirmationRequired: true, message: `Confirm for ${args['name']}?` };
-            }
-            return undefined;
+      [
+        {
+          name: 'gated_tool',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: (args) => {
+              if (!args['_confirmed']) {
+                return {
+                  confirmationRequired: true,
+                  message: `Confirm for ${args['name']}?`,
+                };
+              }
+              return undefined;
+            },
           },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -408,15 +418,19 @@ describe('createMCPHandler', () => {
   });
 
   it('preprocess hook returning undefined continues normal execution', async () => {
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'passthrough_tool',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: () => undefined,
+      [
+        {
+          name: 'passthrough_tool',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: () => undefined,
+          },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -441,7 +455,9 @@ describe('createMCPHandler', () => {
     const response = await handler(request);
     const body = await response.json();
 
-    expect(hookExecute).toHaveBeenCalledWith('passthrough_tool', { name: 'Bob' });
+    expect(hookExecute).toHaveBeenCalledWith('passthrough_tool', {
+      name: 'Bob',
+    });
     // Tool has outputSchema so result uses structuredContent format
     expect(body.result.structuredContent).toEqual({ hello: 'world' });
   });
@@ -453,16 +469,22 @@ describe('createMCPHandler', () => {
       type Item { title: String! url: String! }
     `);
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'search',
-        query: 'query($q: String!) { search(q: $q) { items { title url } } }',
-        hooks: {
-          postprocess: (result) => {
-            const data = result as { search: { items: { title: string; url: string }[] } };
-            return data.search.items.map(i => `- [${i.title}](${i.url})`).join('\n');
+      [
+        {
+          name: 'search',
+          query: 'query($q: String!) { search(q: $q) { items { title url } } }',
+          hooks: {
+            postprocess: (result) => {
+              const data = result as {
+                search: { items: { title: string; url: string }[] };
+              };
+              return data.search.items
+                .map((i) => `- [${i.title}](${i.url})`)
+                .join('\n');
+            },
           },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({
@@ -489,7 +511,9 @@ describe('createMCPHandler', () => {
     const response = await handler(request);
     const body = await response.json();
 
-    expect(body.result.content[0].text).toContain('- [Doc](https://example.com)');
+    expect(body.result.content[0].text).toContain(
+      '- [Doc](https://example.com)',
+    );
   });
 
   it('applies output.path before postprocess', async () => {
@@ -498,17 +522,19 @@ describe('createMCPHandler', () => {
       type SearchResult { items: [String!]! }
     `);
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'search_extract',
-        query: 'query($q: String!) { search(q: $q) { items } }',
-        output: { path: 'search.items' },
-        hooks: {
-          postprocess: (result) => {
-            // result should already be the extracted array from output.path
-            return (result as string[]).map(s => s.toUpperCase());
+      [
+        {
+          name: 'search_extract',
+          query: 'query($q: String!) { search(q: $q) { items } }',
+          output: { path: 'search.items' },
+          hooks: {
+            postprocess: (result) => {
+              // result should already be the extracted array from output.path
+              return (result as string[]).map((s) => s.toUpperCase());
+            },
           },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({
@@ -541,15 +567,21 @@ describe('createMCPHandler', () => {
 
   it('returns MCP error when preprocess hook throws', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'error_tool',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: () => { throw new Error('preprocess failed'); },
+      [
+        {
+          name: 'error_tool',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: () => {
+              throw new Error('preprocess failed');
+            },
+          },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn();
@@ -587,15 +619,21 @@ describe('createMCPHandler', () => {
 
   it('returns MCP error when postprocess hook throws', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'post_error_tool',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          postprocess: () => { throw new Error('postprocess failed'); },
+      [
+        {
+          name: 'post_error_tool',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            postprocess: () => {
+              throw new Error('postprocess failed');
+            },
+          },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -633,14 +671,18 @@ describe('createMCPHandler', () => {
 
   it('passes headers and query in hook context', async () => {
     const contextSpy = vi.fn().mockReturnValue(undefined);
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookQuery = 'query($name: String!) { hello(name: $name) }';
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'context_tool',
-        query: hookQuery,
-        hooks: { preprocess: contextSpy },
-      }],
+      [
+        {
+          name: 'context_tool',
+          query: hookQuery,
+          hooks: { preprocess: contextSpy },
+        },
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -679,16 +721,20 @@ describe('createMCPHandler', () => {
 
   it('does not call postprocess when preprocess short-circuits', async () => {
     const postprocessSpy = vi.fn();
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'both_hooks_tool',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: () => ({ shortCircuit: true }),
-          postprocess: postprocessSpy,
+      [
+        {
+          name: 'both_hooks_tool',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: () => ({ shortCircuit: true }),
+            postprocess: postprocessSpy,
+          },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn();
@@ -720,19 +766,23 @@ describe('createMCPHandler', () => {
   });
 
   it('runs both preprocess (passthrough) and postprocess together', async () => {
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'both_hooks_passthrough',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: () => undefined,
-          postprocess: (result) => {
-            const data = result as { hello: string };
-            return { greeting: data.hello.toUpperCase() };
+      [
+        {
+          name: 'both_hooks_passthrough',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: () => undefined,
+            postprocess: (result) => {
+              const data = result as { hello: string };
+              return { greeting: data.hello.toUpperCase() };
+            },
           },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -764,17 +814,21 @@ describe('createMCPHandler', () => {
   });
 
   it('handles async preprocess hook that short-circuits', async () => {
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'async_preprocess',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          preprocess: async (args) => {
-            return { async: true, name: args['name'] };
+      [
+        {
+          name: 'async_preprocess',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: async (args) => {
+              return { async: true, name: args['name'] };
+            },
           },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn();
@@ -806,15 +860,20 @@ describe('createMCPHandler', () => {
 
   it('handles async postprocess hook rejection', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const hookSchema = buildSchema(`type Query { hello(name: String!): String }`);
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
     const hookRegistry = new ToolRegistry(
-      [{
-        name: 'async_post_error',
-        query: 'query($name: String!) { hello(name: $name) }',
-        hooks: {
-          postprocess: () => Promise.reject(new Error('async postprocess failed')),
+      [
+        {
+          name: 'async_post_error',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            postprocess: () =>
+              Promise.reject(new Error('async postprocess failed')),
+          },
         },
-      }],
+      ],
       hookSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
@@ -850,18 +909,21 @@ describe('createMCPHandler', () => {
       type Query { searchProducts(query: String!, category: String): String }
     `);
     const aliasRegistry = new ToolRegistry(
-      [{
-        name: 'alias_hook_tool',
-        query: 'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
-        input: {
-          schema: {
-            properties: {
-              query: { alias: 'searchQuery' },
+      [
+        {
+          name: 'alias_hook_tool',
+          query:
+            'query($query: String!, $category: String) { searchProducts(query: $query, category: $category) }',
+          input: {
+            schema: {
+              properties: {
+                query: { alias: 'searchQuery' },
+              },
             },
           },
+          hooks: { preprocess: preprocessSpy },
         },
-        hooks: { preprocess: preprocessSpy },
-      }],
+      ],
       aliasSchema,
     );
     const hookExecute = vi.fn().mockResolvedValue({ searchProducts: 'result' });
@@ -879,7 +941,10 @@ describe('createMCPHandler', () => {
         jsonrpc: '2.0',
         id: 114,
         method: 'tools/call',
-        params: { name: 'alias_hook_tool', arguments: { searchQuery: 'test', category: 'docs' } },
+        params: {
+          name: 'alias_hook_tool',
+          arguments: { searchQuery: 'test', category: 'docs' },
+        },
       }),
     });
 

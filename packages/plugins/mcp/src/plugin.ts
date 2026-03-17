@@ -119,7 +119,9 @@ export interface MCPConfig {
   operationsStr?: string;
   tools: MCPToolConfig[];
   providers?: {
-    langfuse?: LangfuseOptions & { defaults?: Partial<LangfuseGetPromptOptions> };
+    langfuse?: LangfuseOptions & {
+      defaults?: Partial<LangfuseGetPromptOptions>;
+    };
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
   disableGraphQLEndpoint?: boolean;
@@ -414,7 +416,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
         const rawPromptLabel = url.searchParams.get('promptLabel');
         const promptLabel =
-          rawPromptLabel && rawPromptLabel.length <= 256 && /^[\w-]+$/.test(rawPromptLabel)
+          rawPromptLabel &&
+          rawPromptLabel.length <= 256 &&
+          /^[\w-]+$/.test(rawPromptLabel)
             ? rawPromptLabel
             : undefined;
         if (rawPromptLabel && !promptLabel) {
@@ -422,7 +426,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             `[MCP] Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
           );
         }
-        if (promptLabel && providerToolConfigs.length === 0 && fieldProviderToolConfigs.length === 0) {
+        if (
+          promptLabel &&
+          providerToolConfigs.length === 0 &&
+          fieldProviderToolConfigs.length === 0
+        ) {
           console.warn(
             `[MCP] "promptLabel" query parameter was provided but no tools use description providers. The parameter has no effect.`,
           );
@@ -433,7 +441,11 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         // Extract headers once for both requestContext and execute
         const forwardedHeaders: Record<string, string> = {};
         request.headers.forEach((value, key) => {
-          if (key !== 'host' && key !== 'content-type' && key !== 'content-length') {
+          if (
+            key !== 'host' &&
+            key !== 'content-type' &&
+            key !== 'content-length'
+          ) {
             forwardedHeaders[key] = value;
           }
         });
