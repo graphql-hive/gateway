@@ -6,6 +6,8 @@ export type {
   MCPToolOverrides,
   MCPInputOverrides,
   MCPOutputOverrides,
+  MCPToolHooks,
+  ToolHookContext,
   ResolvedToolConfig,
 } from './plugin.js';
 export { createLangfuseProvider } from './providers/langfuse.js';

@@ -145,6 +145,20 @@ describe('resolveToolConfigs', () => {
     );
   });
 
+  it('preserves hooks through resolveToolConfigs', () => {
+    const hooks = { preprocess: () => undefined };
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'test',
+          source: { type: 'inline', query: 'query { hello }' },
+          hooks,
+        },
+      ],
+    });
+    expect(tools[0]!.hooks).toBe(hooks);
+  });
+
   it('does not auto-register operations without @mcpTool', () => {
     const operationsSource = `
       query GetWeather($location: String!) {

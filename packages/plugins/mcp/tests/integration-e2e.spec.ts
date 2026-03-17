@@ -942,6 +942,99 @@ describe('MCP E2E', () => {
     }
   });
 
+  it('hooks transform tool call results end-to-end', async () => {
+    const hooksGateway = createGatewayRuntime({
+      logging: false,
+      proxy: { endpoint: 'http://upstream:4000/graphql' },
+      plugins: () => [
+        useCustomFetch(
+          // @ts-expect-error MeshFetch type mismatch
+          (url: string, init: RequestInit) => upstream.fetch(url, init),
+        ),
+        useMCP({
+          name: 'hooks-gateway',
+          tools: [
+            {
+              name: 'get_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) {
+                  weather(location: $location) { temperature conditions }
+                }`,
+              },
+              hooks: {
+                postprocess: (result) => {
+                  const data = result as { weather: { temperature: number; conditions: string } };
+                  return `${data.weather.temperature}F and ${data.weather.conditions}`;
+                },
+              },
+            },
+            {
+              name: 'gated_weather',
+              source: {
+                type: 'inline',
+                query: `query($location: String!) {
+                  weather(location: $location) { temperature }
+                }`,
+              },
+              hooks: {
+                preprocess: (args) => {
+                  if (!args['_confirmed']) {
+                    return { needsConfirmation: true, location: args['location'] };
+                  }
+                  return undefined;
+                },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+
+    try {
+      // Load schema
+      await hooksGateway.fetch('http://localhost/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ __typename }' }),
+      });
+
+      // Test postprocess transforms result
+      const postRes = await hooksGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name: 'get_weather', arguments: { location: 'New York' } },
+        }),
+      });
+      const postBody = await postRes.json();
+      // Postprocess converts to string, so result should be text content (not structuredContent)
+      expect(postBody.result.content[0].text).toContain('22');
+      expect(postBody.result.content[0].text).toContain('Sunny');
+      expect(postBody.result.structuredContent).toBeUndefined();
+
+      // Test preprocess short-circuits
+      const preRes = await hooksGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/call',
+          params: { name: 'gated_weather', arguments: { location: 'London' } },
+        }),
+      });
+      const preBody = await preRes.json();
+      expect(preBody.result.content[0].text).toContain('needsConfirmation');
+      expect(preBody.result.content[0].text).toContain('London');
+    } finally {
+      await hooksGateway[Symbol.asyncDispose]?.();
+    }
+  });
+
   it('auto-registers tools from @mcpTool directive in operations', async () => {
     const directiveGateway = createGatewayRuntime({
       logging: false,

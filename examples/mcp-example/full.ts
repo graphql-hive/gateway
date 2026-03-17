@@ -45,6 +45,21 @@ const schema = createSchema({
       ): SearchResult!
     }
 
+    type Mutation {
+      "Cancel an order by ID. This is a destructive action."
+      cancelOrder(
+        "The order ID to cancel"
+        orderId: String!
+        "Confirmation token (required to execute)"
+        confirmationId: String
+      ): CancelResult!
+    }
+
+    type CancelResult {
+      success: Boolean!
+      message: String!
+    }
+
     enum SearchDataSource {
       ToastCentralArticle
       KnowledgeBase
@@ -114,6 +129,14 @@ const schema = createSchema({
           })
         }
         return result
+      },
+    },
+    Mutation: {
+      cancelOrder: (_, { orderId, confirmationId }: { orderId: string; confirmationId?: string }) => {
+        if (!confirmationId) {
+          return { success: false, message: 'Confirmation required' }
+        }
+        return { success: true, message: `Order ${orderId} cancelled` }
       },
     },
   },
@@ -295,10 +318,62 @@ const mcpPlugin = useMCP({
           },
         },
       },
-      output: { path: 'search.items' },         // Returns items array directly
+      output: { 
+        path: 'search.items', // Returns items array directly 
+      },         
+      // hooks transform inputs/outputs without changing the GraphQL query.
+      // postprocess: format the JSON array as a markdown table for LLM readability.
+      hooks: {
+        postprocess: (result) => {
+          const items = result as Array<{ path: string; topic: string; description: string; score: number }>
+          if (!Array.isArray(items) || items.length === 0) return result
+          const header = '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|'
+          const rows = items.map(
+            (item) => `| ${item.topic} | ${item.description} | ${item.score} | ${item.path} |`,
+          )
+          return `${header}\n${rows.join('\n')}`
+        },
+      },
     },
 
-    // Tool 5: @mcpTool directive (auto-registered)
+    // Tool 5: Mutation with preprocess confirmation gate
+    // The preprocess hook checks for a _confirmationId argument. If missing, it
+    // short-circuits and returns a confirmation prompt instead of executing the mutation.
+    {
+      name: 'cancel_order',
+      source: {
+        type: 'inline',
+        query: `mutation CancelOrder($orderId: String!, $confirmationId: String) {
+          cancelOrder(orderId: $orderId, confirmationId: $confirmationId) {
+            success
+            message
+          }
+        }`,
+      },
+      tool: {
+        title: 'Cancel Order',
+        description: 'Cancel an order. Requires confirmation — call once to get a confirmation prompt, then again with the confirmationId.',
+      },
+      output: { 
+        path: 'cancelOrder', 
+      },
+      hooks: {
+        // Gate destructive mutations: require a confirmation round-trip before executing.
+        preprocess: (args) => {
+          if (!args.confirmationId) {
+            return {
+              needsConfirmation: true,
+              message: `Are you sure you want to cancel order "${args.orderId}"? This cannot be undone. Call again with confirmationId: "confirm-${args.orderId}" to proceed.`,
+              confirmationId: `confirm-${args.orderId}`,
+            }
+          }
+          // Has confirmationId — continue to GraphQL execution
+          return undefined
+        },
+      },
+    },
+
+    // Tool 6: @mcpTool directive (auto-registered)
     // Operations with @mcpTool directives in operationsPath are auto-registered.
     // Example in weather_directive.graphql:
     //   query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check") { ... }

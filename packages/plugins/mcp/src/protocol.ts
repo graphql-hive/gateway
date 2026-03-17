@@ -1,3 +1,4 @@
+import type { ToolHookContext } from './plugin.js';
 import { getByPath, type ToolRegistry } from './registry.js';
 
 export interface MCPHandlerOptions {
@@ -12,6 +13,9 @@ export interface MCPHandlerOptions {
   /** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
   resolveFieldDescriptions?: () => Promise<Map<string, Map<string, string>>>;
   includeContentFallback?: boolean;
+  requestContext?: {
+    headers: Record<string, string>;
+  };
 }
 
 interface JsonRpcRequest {
@@ -160,32 +164,84 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             }
             args = dealiased;
           }
-          let result = await options.execute(callParams.name, args);
-          if (tool.outputPath) {
-            const extracted = getByPath(result, tool.outputPath);
-            if (extracted === undefined && result !== undefined) {
-              console.warn(
-                `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${callParams.name}". ` +
-                  `Check your output.path configuration.`,
+
+          const hookContext: ToolHookContext = {
+            toolName: callParams.name,
+            headers: options.requestContext?.headers ?? {},
+            query: tool.query,
+          };
+
+          // Preprocess hook can short-circuit by returning non-undefined
+          let result: unknown;
+          let shortCircuited = false;
+          if (tool.hooks?.preprocess) {
+            try {
+              const preprocessResult = await tool.hooks.preprocess(args, hookContext);
+              if (preprocessResult !== undefined) {
+                result = preprocessResult;
+                shortCircuited = true;
+              }
+            } catch (hookError) {
+              throw new Error(
+                `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
               );
             }
-            result = extracted ?? null;
           }
+
+          if (!shortCircuited) {
+            result = await options.execute(callParams.name, args);
+            if (tool.outputPath) {
+              const extracted = getByPath(result, tool.outputPath);
+              if (extracted === undefined && result !== undefined) {
+                console.warn(
+                  `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${callParams.name}". ` +
+                    `Check your output.path configuration.`,
+                );
+              }
+              result = extracted ?? null;
+            }
+          }
+
+          // Postprocess hook transforms result (skipped when preprocess short-circuits)
+          if (!shortCircuited && tool.hooks?.postprocess) {
+            try {
+              result = await tool.hooks.postprocess(result, args, hookContext);
+            } catch (hookError) {
+              throw new Error(
+                `postprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+              );
+            }
+          }
+
           const textContent = {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };
-          const callResult: Record<string, unknown> = tool.outputSchema
-            ? {
-                structuredContent: result,
-                ...(options.includeContentFallback && textContent),
-              }
-            : textContent;
+          // Hooks (preprocess short-circuit or postprocess) transform the result shape,
+          // so structuredContent (which relies on outputSchema) would be wrong.
+          // Use structuredContent only when no hooks modified the result.
+          const hookModified = shortCircuited || !!tool.hooks?.postprocess;
+          if (tool.outputSchema && hookModified) {
+            console.debug(
+              `[MCP] Tool "${callParams.name}" has hooks registered; using text content instead of structuredContent.`,
+            );
+          }
+          const callResult: Record<string, unknown> =
+            tool.outputSchema && !hookModified
+              ? {
+                  structuredContent: result,
+                  ...(options.includeContentFallback && textContent),
+                }
+              : textContent;
           response = {
             jsonrpc: '2.0',
             id,
             result: callResult,
           };
         } catch (error) {
+          console.error(
+            `[MCP] tools/call failed for tool "${callParams.name}":`,
+            error instanceof Error ? error.message : error,
+          );
           response = {
             jsonrpc: '2.0',
             id,
