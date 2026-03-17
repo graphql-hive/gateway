@@ -40,7 +40,10 @@ export function getByPath(obj: unknown, path: string): unknown {
 }
 
 /** Walk a dot-notation path through a JSON Schema, returning the sub-schema at that path. */
-function getSchemaByPath(schema: JsonSchema, path: string): JsonSchema | undefined {
+function getSchemaByPath(
+  schema: JsonSchema,
+  path: string,
+): JsonSchema | undefined {
   let current = schema;
   for (const key of path.split('.')) {
     if (current.type === 'object' && current.properties?.[key]) {
@@ -80,12 +83,10 @@ export class ToolRegistry {
           }
 
           // Apply non-alias overrides (description, examples, default)
-          const { alias, descriptionProvider, ...schemaOverrides } = fieldOverrides;
+          const { alias, descriptionProvider, ...schemaOverrides } =
+            fieldOverrides;
           if (Object.keys(schemaOverrides).length > 0) {
-            Object.assign(
-              inputSchema.properties[fieldName],
-              schemaOverrides,
-            );
+            Object.assign(inputSchema.properties[fieldName], schemaOverrides);
           }
 
           // Handle alias: rename the property in the input schema
@@ -95,9 +96,7 @@ export class ToolRegistry {
                 `Alias for field "${fieldName}" in tool "${config.name}" must be a non-empty string.`,
               );
             }
-            if (
-              inputSchema.properties[alias]
-            ) {
+            if (inputSchema.properties[alias]) {
               throw new Error(
                 `Alias "${alias}" for field "${fieldName}" in tool "${config.name}" collides with existing field "${alias}". Choose a different alias name.`,
               );
@@ -154,7 +153,11 @@ export class ToolRegistry {
             `Tool "${config.name}": output.path must be a non-empty string.`,
           );
         }
-        if (outputPath.startsWith('.') || outputPath.endsWith('.') || outputPath.includes('..')) {
+        if (
+          outputPath.startsWith('.') ||
+          outputPath.endsWith('.') ||
+          outputPath.includes('..')
+        ) {
           throw new Error(
             `Tool "${config.name}": output.path "${outputPath}" is invalid. Use dot-notation like "search.items".`,
           );
@@ -176,12 +179,18 @@ export class ToolRegistry {
 
       // Validate hooks are functions
       if (config.hooks) {
-        if (config.hooks.preprocess && typeof config.hooks.preprocess !== 'function') {
+        if (
+          config.hooks.preprocess &&
+          typeof config.hooks.preprocess !== 'function'
+        ) {
           throw new Error(
             `Tool "${config.name}": hooks.preprocess must be a function, got ${typeof config.hooks.preprocess}`,
           );
         }
-        if (config.hooks.postprocess && typeof config.hooks.postprocess !== 'function') {
+        if (
+          config.hooks.postprocess &&
+          typeof config.hooks.postprocess !== 'function'
+        ) {
           throw new Error(
             `Tool "${config.name}": hooks.postprocess must be a function, got ${typeof config.hooks.postprocess}`,
           );

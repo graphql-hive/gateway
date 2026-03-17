@@ -105,9 +105,11 @@ describe('Langfuse provider', () => {
   describe('defaults and context', () => {
     function createMockClient() {
       return {
-        getPrompt: vi.fn(async (_name: string, _version?: number, options?: any) => ({
-          compile: () => `compiled with label=${options?.label ?? 'none'}`,
-        })),
+        getPrompt: vi.fn(
+          async (_name: string, _version?: number, options?: any) => ({
+            compile: () => `compiled with label=${options?.label ?? 'none'}`,
+          }),
+        ),
       };
     }
 

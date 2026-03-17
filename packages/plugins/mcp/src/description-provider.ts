@@ -61,7 +61,12 @@ async function resolveBuiltinProvider(
     }
     const { createLangfuseProvider } = await import('./providers/langfuse.js');
     const { defaults, ...langfuseOptions } = options;
-    if (defaults !== undefined && (typeof defaults !== 'object' || defaults === null || Array.isArray(defaults))) {
+    if (
+      defaults !== undefined &&
+      (typeof defaults !== 'object' ||
+        defaults === null ||
+        Array.isArray(defaults))
+    ) {
       throw new Error(
         `Langfuse provider "defaults" must be an object (e.g., { label: "production" }), got ${Array.isArray(defaults) ? 'array' : typeof defaults}`,
       );

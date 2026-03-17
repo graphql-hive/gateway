@@ -228,9 +228,7 @@ describe('resolveFieldDescriptions', () => {
     ];
 
     const result = await resolveFieldDescriptions(tools, providerRegistry);
-    expect(result.get('search')?.get('q')).toBe(
-      'Field desc for search_query',
-    );
+    expect(result.get('search')?.get('q')).toBe('Field desc for search_query');
   });
 
   it('skips tools without field providers', async () => {
@@ -310,12 +308,8 @@ describe('resolveFieldDescriptions', () => {
       isStartup: false,
     });
     expect(result.size).toBe(0);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('search'),
-    );
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('q'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('search'));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('q'));
     warnSpy.mockRestore();
   });
 
@@ -338,9 +332,7 @@ describe('resolveFieldDescriptions', () => {
 
     await expect(
       resolveFieldDescriptions(tools, providerRegistry),
-    ).rejects.toThrow(
-      'Unknown field description provider type: "unknown"',
-    );
+    ).rejects.toThrow('Unknown field description provider type: "unknown"');
   });
 
   it('passes context through to field fetchDescription', async () => {

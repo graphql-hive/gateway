@@ -919,9 +919,7 @@ describe('MCP E2E', () => {
         },
       );
       const body = await res.json();
-      expect(body.result.tools[0].description).toBe(
-        'Desc with label=staging',
-      );
+      expect(body.result.tools[0].description).toBe('Desc with label=staging');
       expect(capturedContexts[0]).toEqual({ label: 'staging' });
 
       // Without promptLabel context should be undefined
@@ -964,7 +962,9 @@ describe('MCP E2E', () => {
               },
               hooks: {
                 postprocess: (result) => {
-                  const data = result as { weather: { temperature: number; conditions: string } };
+                  const data = result as {
+                    weather: { temperature: number; conditions: string };
+                  };
                   return `${data.weather.temperature}F and ${data.weather.conditions}`;
                 },
               },
@@ -980,7 +980,10 @@ describe('MCP E2E', () => {
               hooks: {
                 preprocess: (args) => {
                   if (!args['_confirmed']) {
-                    return { needsConfirmation: true, location: args['location'] };
+                    return {
+                      needsConfirmation: true,
+                      location: args['location'],
+                    };
                   }
                   return undefined;
                 },
