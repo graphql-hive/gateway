@@ -42,8 +42,14 @@ jobs:
           HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
 
   unit-bun:
-    name: Unit / Bun
+    name: Unit / Bun / ${{matrix.hive-router-runtime == 1 && 'Router' || 'Stitching'}} Runtime
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        hive-router-runtime:
+          - 0
+          - 1
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
@@ -53,14 +59,8 @@ jobs:
           node-version-file: .node-version
       - name: Test with Stitching Runtime
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: yarn test:bun
-      - name: Test with Router Runtime
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         env:
-          HIVE_ROUTER_RUNTIME: 1
+          HIVE_ROUTER_RUNTIME: ${{matrix.hive-router-runtime}}
         with:
           timeout_minutes: 10
           max_attempts: 3
