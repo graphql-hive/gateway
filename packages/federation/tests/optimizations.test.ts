@@ -42,7 +42,7 @@ describe('Optimizations', () => {
       },
     });
   });
-  it.skip('should not do extra calls with "@provides"', async () => {
+  it('should not do extra calls with "@provides"', async () => {
     const query = /* GraphQL */ `
       query {
         topProducts {
@@ -864,7 +864,6 @@ it('deduplicates the required fields from @key if they exists in the original qu
     "mutation ($input: BuyBookInput!) {
       buyBook(input: $input) {
         book {
-          __typename
           upc
           otherUpc
           shop {
@@ -883,7 +882,6 @@ it('deduplicates the required fields from @key if they exists in the original qu
         __typename
         ... on Shop {
           name
-          id
           location {
             address1
             city
@@ -895,154 +893,454 @@ it('deduplicates the required fields from @key if they exists in the original qu
   `);
 });
 
-it('removes empty fragments', async () => {
-  const reviewsSubgraph = buildSubgraphSchema({
+it('does not add extra key fields', async () => {
+  const guest = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
-      type GuestRating @key(fields: "id") {
+      type Guest @key(fields: "id") @key(fields: "authenticatedPhoneNumber") {
         id: ID!
-        rating: Int!
-        ratingSystem: String!
+        authenticatedPhoneNumber: String!
+        # other fields...
+      }
+
+      type Query {
+        guest(id: ID!): Guest
+      }
+
+      type Mutation {
+        confirmGuest(input: ConfirmGuestInput!): ConfirmGuestPayload
+      }
+
+      union ConfirmGuestPayload = ConfirmGuestSuccess | ConfirmGuestFailure
+
+      input ConfirmGuestInput {
+        id: ID!
+      }
+
+      type ConfirmGuestSuccess {
+        guest: Guest!
+      }
+
+      type ConfirmGuestFailure {
+        reason: String!
       }
     `),
     resolvers: {
-      GuestRating: {
-        __resolveReference(reference: { id: string }) {
+      Mutation: {
+        confirmGuest(
+          _,
+          {
+            input,
+          }: { input: { id: string; authenticatedPhoneNumber: string } },
+        ) {
           return {
-            id: reference.id,
-            rating: 5,
-            ratingSystem: 'stars',
+            __typename: 'ConfirmGuestSuccess',
+            guest: {
+              id: input.id,
+              authenticatedPhoneNumber: new Error('Should not be called'),
+            },
           };
+        },
+      },
+    },
+  });
+  const schema = await getStitchedSchemaFromLocalSchemas({
+    localSchemas: {
+      guest,
+    },
+  });
+
+  const document = parse(/* GraphQL */ `
+    mutation confirmGuest($input: ConfirmGuestInput!) {
+      confirmGuest(input: $input) {
+        ... on ConfirmGuestSuccess {
+          guest {
+            id # Only requesting 'id'
+            __typename
+          }
+        }
+      }
+    }
+  `);
+  const result = await normalizedExecutor({
+    schema,
+    document,
+    variableValues: {
+      input: {
+        id: 'guest-id',
+      },
+    },
+  });
+
+  expect(result).toEqual({
+    data: {
+      confirmGuest: {
+        guest: {
+          id: 'guest-id',
+          __typename: 'Guest',
+        },
+      },
+    },
+  });
+});
+
+it('reproduction of empty fragments issue', async () => {
+  const usersSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      extend schema
+        @link(
+          url: "https://specs.apollo.dev/federation/v2.7"
+          import: ["@key", "@shareable"]
+        )
+
+      type Query {
+        getUsers(userIds: [ID!]!): GetUsersResult!
+      }
+
+      union GetUsersResult =
+        | GetUsersSuccess
+        | UserDoesNotExistError
+        | UnexpectedError
+
+      type GetUsersSuccess {
+        users: [User!]!
+      }
+
+      type UserDoesNotExistError {
+        message: String!
+      }
+
+      type UnexpectedError @shareable {
+        message: String!
+      }
+
+      enum UserVisibility {
+        PUBLIC
+        PRIVATE
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        name: String!
+        isMe: Boolean!
+        userVisibility: UserVisibility!
+      }
+    `),
+    resolvers: {
+      Query: {
+        getUsers: (_: unknown, args: { userIds: string[] }) => {
+          console.log('[users] Query.getUsers:', args.userIds);
+          return {
+            __typename: 'GetUsersSuccess',
+            users: args.userIds.map((id) => ({
+              id,
+              name: `User ${id}`,
+              isMe: false,
+              userVisibility: 'PUBLIC',
+            })),
+          };
+        },
+      },
+      GetUsersResult: {
+        __resolveType: (obj: { __typename?: string }) => obj.__typename,
+      },
+      User: {
+        __resolveReference: (ref: { id: string }) => {
+          console.log('[users] User.__resolveReference:', ref.id);
+          return {
+            id: ref.id,
+            name: `User ${ref.id}`,
+            isMe: false,
+            userVisibility: 'PUBLIC',
+          };
+        },
+      },
+    },
+  });
+  const reviewsSubgraph = buildSubgraphSchema({
+    typeDefs: parse(/* GraphQL */ `
+      extend schema
+        @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"])
+
+      type Query {
+        _reviewsPlaceholder: String
+      }
+
+      type Rating @key(fields: "id") {
+        id: ID!
+        score: Int!
+        maxScore: Int!
+      }
+
+      type Comment @key(fields: "id") {
+        id: ID!
+        text: String!
+      }
+    `),
+    resolvers: {
+      Query: { _reviewsPlaceholder: () => null },
+      Rating: {
+        __resolveReference: (ref: { id: string }) => {
+          console.log('[reviews] Rating.__resolveReference:', ref.id);
+          return { id: ref.id, score: 4, maxScore: 5 };
+        },
+      },
+      Comment: {
+        __resolveReference: (ref: { id: string }) => {
+          console.log('[reviews] Comment.__resolveReference:', ref.id);
+          return { id: ref.id, text: 'Great post!' };
         },
       },
     },
   });
   const postsSubgraph = buildSubgraphSchema({
     typeDefs: parse(/* GraphQL */ `
-      type GuestRating @key(fields: "id") @extends {
-        id: ID! @external
+      extend schema
+        @link(
+          url: "https://specs.apollo.dev/federation/v2.7"
+          import: ["@key", "@external", "@shareable", "@requires"]
+        )
+
+      type Query {
+        _postsPlaceholder: String
+      }
+
+      enum UserVisibility {
+        PUBLIC
+        PRIVATE
+      }
+
+      type User @key(fields: "id") {
+        id: ID!
+        isMe: Boolean! @external
+        userVisibility: UserVisibility! @external
+        posts(input: PageInput): PostPage
+          @requires(fields: "isMe userVisibility")
+      }
+
+      input PageInput {
+        limit: Int
+        cursor: String
+      }
+
+      type PostPage {
+        items: [Post!]!
+        currentPageToken: String
+        nextPageToken: String
       }
 
       type Post @key(fields: "id") {
         id: ID!
-        authorRating: GuestRating
+        visibility: String!
+        content: PostContent!
       }
 
-      type Query {
-        posts: [Post]
+      type PostContent {
+        text: String
+        createdAt: String
+        meta: PostMeta
+      }
+
+      type PostMeta {
+        rating: Rating
+        commentWrapper: CommentWrapper
+      }
+
+      type CommentWrapper {
+        comment: Comment
+      }
+
+      # WORKAROUND: Add "resolvable: false" to prevent the bug:
+      #   @key(fields: "id", resolvable: false)
+
+      type Rating @key(fields: "id") {
+        id: ID!
+      }
+
+      type Comment @key(fields: "id") {
+        id: ID!
+      }
+
+      type UnexpectedError @shareable {
+        message: String!
       }
     `),
     resolvers: {
-      Query: {
-        posts() {
-          return [
-            {
-              id: '1',
-              authorRating: {
-                id: '1',
-              },
-            },
-          ];
-        },
-      },
-      Post: {
-        __resolveReference(reference: { id: string }) {
+      Query: { _postsPlaceholder: () => null },
+      User: {
+        posts: (
+          user: { id: string; isMe?: boolean; userVisibility?: string },
+          _args: { input?: { limit?: number } },
+        ) => {
+          console.log(
+            '[posts] User.posts, isMe:',
+            user.isMe,
+            'userVisibility:',
+            user.userVisibility,
+          );
           return {
-            id: reference.id,
-            authorRating: {
-              id: '1',
-            },
+            items: [
+              {
+                id: 'post-1',
+                visibility: 'PUBLIC',
+                content: {
+                  text: 'Hello world!',
+                  createdAt: '2024-01-15',
+                  meta: {
+                    rating: { id: 'rating-1' },
+                    commentWrapper: { comment: { id: 'comment-1' } },
+                  },
+                },
+              },
+            ],
+            currentPageToken: 'token-1',
+            nextPageToken: null,
           };
         },
       },
     },
   });
-
-  const sentRequests: {
-    subgraphName: string;
-    query: string;
-  }[] = [];
-
+  const subgraphs = {
+    users: usersSubgraph,
+    reviews: reviewsSubgraph,
+    posts: postsSubgraph,
+  };
   const schema = await getStitchedSchemaFromLocalSchemas({
-    localSchemas: {
-      reviews: reviewsSubgraph,
-      posts: postsSubgraph,
-    },
+    localSchemas: subgraphs,
     onSubgraphExecute(subgraphName, executionRequest) {
-      sentRequests.push({
-        subgraphName,
-        query: print(executionRequest.document),
-      });
+      console.log(subgraphName, print(executionRequest.document));
     },
   });
 
   const document = parse(/* GraphQL */ `
-    query getPosts {
-      posts {
-        id
-        authorRating {
-          ...RatingFields
+    query getPosts($forUser: ID!, $page: PageInput) {
+      getUsers(userIds: [$forUser]) {
+        __typename
+        ... on GetUsersSuccess {
+          users {
+            __typename
+            posts(input: $page) {
+              __typename
+              ...PostPageFragment
+            }
+          }
+        }
+        ...UserDoesNotExistErrorFragment
+        ...UnexpectedErrorFragment
+      }
+    }
+
+    fragment PostPageFragment on PostPage {
+      __typename
+      items {
+        __typename
+        ...PostFragment
+      }
+      currentPageToken
+      nextPageToken
+    }
+
+    fragment PostFragment on Post {
+      __typename
+      id
+      visibility
+      content {
+        __typename
+        ...PostContentFragment
+      }
+    }
+
+    fragment PostContentFragment on PostContent {
+      __typename
+      text
+      createdAt
+      meta {
+        __typename
+        rating {
+          ...RatingFragment
+        }
+        commentWrapper {
+          __typename
+          comment {
+            ...CommentFragment
+          }
         }
       }
     }
 
-    fragment RatingFields on GuestRating {
+    fragment RatingFragment on Rating {
+      __typename
       id
-      rating
-      ratingSystem
+      score
+      maxScore
+    }
+
+    fragment CommentFragment on Comment {
+      __typename
+      id
+      text
+    }
+
+    fragment UserDoesNotExistErrorFragment on UserDoesNotExistError {
+      __typename
+      message
+    }
+
+    fragment UnexpectedErrorFragment on UnexpectedError {
+      __typename
+      message
     }
   `);
+  const variables = { forUser: 'user-123', page: { limit: 10 } };
   const result = await normalizedExecutor({
     schema,
     document,
+    variableValues: variables,
   });
 
   expect(result).toEqual({
     data: {
-      posts: [
-        {
-          id: '1',
-          authorRating: {
-            id: '1',
-            rating: 5,
-            ratingSystem: 'stars',
+      getUsers: {
+        __typename: 'GetUsersSuccess',
+        users: [
+          {
+            __typename: 'User',
+            posts: {
+              __typename: 'PostPage',
+              currentPageToken: 'token-1',
+              nextPageToken: null,
+              items: [
+                {
+                  __typename: 'Post',
+                  id: 'post-1',
+                  visibility: 'PUBLIC',
+                  content: {
+                    __typename: 'PostContent',
+                    text: 'Hello world!',
+                    createdAt: '2024-01-15',
+                    meta: {
+                      __typename: 'PostMeta',
+                      rating: {
+                        __typename: 'Rating',
+                        id: 'rating-1',
+                        score: 4,
+                        maxScore: 5,
+                      },
+                      commentWrapper: {
+                        __typename: 'CommentWrapper',
+                        comment: {
+                          __typename: 'Comment',
+                          id: 'comment-1',
+                          text: 'Great post!',
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
           },
-        },
-      ],
+        ],
+      },
     },
   });
-
-  expect(sentRequests).toMatchInlineSnapshot(`
-    [
-      {
-        "query": "query getPosts {
-      posts {
-        __typename
-        id
-        authorRating {
-          ...RatingFields
-        }
-      }
-    }
-
-    fragment RatingFields on GuestRating {
-      __typename
-      id
-    }",
-        "subgraphName": "posts",
-      },
-      {
-        "query": "query getPosts($representations: [_Any!]!) {
-      _entities(representations: $representations) {
-        __typename
-        ... on GuestRating {
-          rating
-          id
-          ratingSystem
-        }
-      }
-    }",
-        "subgraphName": "reviews",
-      },
-    ]
-  `);
 });

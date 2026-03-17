@@ -284,33 +284,6 @@ export function getStitchingOptionsFromSupergraphSdl(
         );
         if (joinTypeGraphArgNode?.value?.kind === Kind.ENUM) {
           const graphName = joinTypeGraphArgNode.value.value;
-          if (
-            typeNode.kind === Kind.OBJECT_TYPE_DEFINITION ||
-            typeNode.kind === Kind.INTERFACE_TYPE_DEFINITION
-          ) {
-            const keyArgumentNode = directiveNode.arguments?.find(
-              (argumentNode) => argumentNode.name.value === 'key',
-            );
-            const isResolvable = !directiveNode.arguments?.some(
-              (argumentNode) =>
-                argumentNode.name.value === 'resolvable' &&
-                argumentNode.value?.kind === Kind.BOOLEAN &&
-                argumentNode.value.value === false,
-            );
-            if (isResolvable && keyArgumentNode?.value?.kind === Kind.STRING) {
-              let typeNameKeysMap = typeNameKeysBySubgraphMap.get(graphName);
-              if (!typeNameKeysMap) {
-                typeNameKeysMap = new Map();
-                typeNameKeysBySubgraphMap.set(graphName, typeNameKeysMap);
-              }
-              let keys = typeNameKeysMap.get(typeNode.name.value);
-              if (!keys) {
-                keys = [];
-                typeNameKeysMap.set(typeNode.name.value, keys);
-              }
-              keys.push(keyArgumentNode.value.value);
-            }
-          }
           const fieldDefinitionNodesOfSubgraph: FieldDefinitionNode[] = [];
           typeNode.fields?.forEach((fieldNode) => {
             const joinFieldDirectives = fieldNode.directives?.filter(
@@ -612,6 +585,46 @@ export function getStitchingOptionsFromSupergraphSdl(
             graphName,
             fieldDefinitionNodesOfSubgraph,
           );
+
+          if (
+            typeNode.kind === Kind.OBJECT_TYPE_DEFINITION ||
+            typeNode.kind === Kind.INTERFACE_TYPE_DEFINITION
+          ) {
+            const keyArgumentNode = directiveNode.arguments?.find(
+              (argumentNode) => argumentNode.name.value === 'key',
+            );
+            const isResolvable = !directiveNode.arguments?.some(
+              (argumentNode) =>
+                argumentNode.name.value === 'resolvable' &&
+                argumentNode.value?.kind === Kind.BOOLEAN &&
+                argumentNode.value.value === false,
+            );
+
+            if (keyArgumentNode?.value?.kind === Kind.STRING) {
+              const keyArgVal = keyArgumentNode.value.value;
+              if (isResolvable) {
+                if (
+                  typeNode.kind !== Kind.OBJECT_TYPE_DEFINITION ||
+                  !fieldDefinitionNodesOfSubgraph.every((fieldDefNode) =>
+                    keyArgVal.includes(fieldDefNode.name.value),
+                  )
+                ) {
+                  let typeNameKeysMap =
+                    typeNameKeysBySubgraphMap.get(graphName);
+                  if (!typeNameKeysMap) {
+                    typeNameKeysMap = new Map();
+                    typeNameKeysBySubgraphMap.set(graphName, typeNameKeysMap);
+                  }
+                  let keys = typeNameKeysMap.get(typeNode.name.value);
+                  if (!keys) {
+                    keys = [];
+                    typeNameKeysMap.set(typeNode.name.value, keys);
+                  }
+                  keys.push(keyArgVal);
+                }
+              }
+            }
+          }
         }
       }
     });

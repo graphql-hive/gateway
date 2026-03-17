@@ -73,6 +73,13 @@ export function prepareGatewayDocument(
     definitions: [...operations, ...fragments, ...expandedFragments],
   };
 
+  const fragmentMap = Object.create(null);
+  for (const fragment of expandedDocument.definitions) {
+    if (fragment.kind === Kind.FRAGMENT_DEFINITION) {
+      fragmentMap[fragment.name.value] = fragment;
+    }
+  }
+
   const visitorKeyMap: ASTVisitorKeyMap = {
     Document: ['definitions'],
     OperationDefinition: ['selectionSet'],
@@ -99,6 +106,7 @@ export function prepareGatewayDocument(
           dynamicSelectionSetsByField,
           infoSchema,
           visitedSelections,
+          fragmentMap,
         ),
     }),
     // visitorKeys argument usage a la https://github.com/gatsbyjs/gatsby/blob/master/packages/gatsby-source-graphql/src/batching/merge-queries.js
@@ -167,11 +175,22 @@ function visitSelectionSet(
   // TODO: Refactor here later for Federation compat
   infoSchema: GraphQLSchema,
   visitedSelections: WeakSet<SelectionNode>,
+  fragmentMap: Record<string, FragmentDefinitionNode>,
 ): SelectionSetNode {
   const newSelections = new Set<SelectionNode>();
   const maybeType = typeInfo.getParentType();
   if (maybeType != null) {
     const parentType: GraphQLNamedType = getNamedType(maybeType);
+    if (
+      isSelectionSetSatisfiedBySchema(
+        transformedSchema,
+        parentType,
+        node,
+        fragmentMap,
+      )
+    ) {
+      return node;
+    }
     const parentTypeName = parentType.name;
 
     const fieldNodes = fieldNodesByType[parentTypeName];
@@ -401,6 +420,98 @@ function isFieldNodeSatisfiedBySelections(
     }
   }
   return false;
+}
+
+export function isSelectionSetSatisfiedBySchema(
+  schema: GraphQLSchema,
+  type: GraphQLNamedType,
+  selectionSet: SelectionSetNode,
+  fragmentsMap: Record<string, FragmentDefinitionNode>,
+) {
+  const namedType = getNamedType(type);
+  if (isLeafType(namedType)) {
+    return true;
+  }
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.FIELD) {
+      // TODO: Improve this later
+      if (isAbstractType(namedType)) {
+        return false;
+      }
+      const fieldName = selection.name.value;
+      if (fieldName === '__typename') {
+        continue;
+      }
+      if (isObjectType(namedType) || isInterfaceType(namedType)) {
+        const field = namedType.getFields()[fieldName];
+        if (!field) {
+          return false;
+        }
+        if (selection.selectionSet) {
+          const fieldType = getNamedType(field.type);
+          const satisfied = isSelectionSetSatisfiedBySchema(
+            schema,
+            fieldType,
+            selection.selectionSet,
+            fragmentsMap,
+          );
+          if (!satisfied) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    } else if (selection.kind === Kind.INLINE_FRAGMENT) {
+      if (selection.typeCondition) {
+        const typeConditionName = selection.typeCondition.name.value;
+        const typeCondition = schema.getType(typeConditionName);
+        if (!typeCondition) {
+          return false;
+        }
+        const satisfied = isSelectionSetSatisfiedBySchema(
+          schema,
+          typeCondition,
+          selection.selectionSet,
+          fragmentsMap,
+        );
+        if (!satisfied) {
+          return false;
+        }
+      } else {
+        const satisfied = isSelectionSetSatisfiedBySchema(
+          schema,
+          type,
+          selection.selectionSet,
+          fragmentsMap,
+        );
+        if (!satisfied) {
+          return false;
+        }
+      }
+    } else if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = selection.name.value;
+      const fragment = fragmentsMap[fragmentName];
+      if (!fragment) {
+        return false;
+      }
+      const typeConditionName = fragment.typeCondition.name.value;
+      const typeCondition = schema.getType(typeConditionName);
+      if (!typeCondition) {
+        return false;
+      }
+      const satisfied = isSelectionSetSatisfiedBySchema(
+        schema,
+        typeCondition,
+        fragment.selectionSet,
+        fragmentsMap,
+      );
+      if (!satisfied) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function isSelectionSetSatisfied({
