@@ -6,17 +6,17 @@ This example demonstrates the MCP (Model Context Protocol) plugin for Hive Gatew
 
 | Script | Description |
 |--------|-------------|
-| `run.ts` | Programmatic config with operation files and `@mcpTool` directives |
-| `run-with-langfuse.ts` | YAML/JSON config with Langfuse as external description provider |
+| `basic.ts` | Programmatic config with operation files and `@mcpTool` directives |
+| `full.ts` | YAML/JSON config with Langfuse as external description provider |
 
 Both examples start a mock weather subgraph on `:4001` and a gateway with MCP on `:4000`.
 
 ---
 
-## run.ts — Programmatic Configuration
+## basic.ts — Programmatic Configuration
 
 ```bash
-npx tsx examples/mcp-example/run.ts
+npx tsx examples/mcp-example/basic.ts
 ```
 
 This example demonstrates:
@@ -114,7 +114,7 @@ curl -s http://localhost:4000/mcp \
 
 ---
 
-## run-with-langfuse.ts — YAML Config + Langfuse
+## full.ts — YAML Config + Langfuse
 
 This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https://langfuse.com) as an external description provider. Tool descriptions are fetched from Langfuse prompts at request time, so you can update them without restarting the server.
 
@@ -144,7 +144,7 @@ This example loads MCP configuration from `mcp.yaml` and uses [Langfuse](https:/
 ### Run
 
 ```bash
-npx tsx examples/mcp-example/run-with-langfuse.ts
+npx tsx examples/mcp-example/full.ts
 ```
 
 ### How it works
@@ -209,14 +209,3 @@ useMCP({
   providers: { ...yamlConfig.providers, custom: myProvider },
 })
 ```
-
----
-
-## Available Tools
-
-| Tool | Description | Arguments |
-|------|-------------|-----------|
-| `get_weather` | Get current weather | `location: String!` |
-| `get_forecast` | Get weather forecast | `location: String!`, `days: Int` |
-| `get_conditions` | Get just conditions (run.ts only, inline source) | `location: String!` |
-| `quick_weather` | Quick weather check (run.ts only, via `@mcpTool` directive) | `location: String!` |
