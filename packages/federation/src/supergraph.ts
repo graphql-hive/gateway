@@ -636,18 +636,10 @@ export function getStitchingOptionsFromSupergraphSdl(
                     fieldDefinitionNodesOfSubgraph,
                   )
                 ) {
-                  let typeNameKeysMap =
-                    typeNameKeysBySubgraphMap.get(graphName);
-                  if (!typeNameKeysMap) {
-                    typeNameKeysMap = new Map();
-                    typeNameKeysBySubgraphMap.set(graphName, typeNameKeysMap);
-                  }
-                  let keys = typeNameKeysMap.get(typeNode.name.value);
-                  if (!keys) {
-                    keys = [];
-                    typeNameKeysMap.set(typeNode.name.value, keys);
-                  }
-                  keys.push(keyArgVal);
+                  // Intentionally no longer mutating typeNameKeysBySubgraphMap here.
+                  // Key-based behavior for this join__type directive should rely on
+                  // the keyArgVal value directly during field processing, rather
+                  // than on a late update to a shared map.
                 }
               }
             }
