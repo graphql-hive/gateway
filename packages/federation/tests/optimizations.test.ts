@@ -930,7 +930,7 @@ it('does not add extra key fields', async () => {
           _,
           {
             input,
-          }: { input: { id: string; authenticatedPhoneNumber: string } },
+          }: { input: { id: string } },
         ) {
           return {
             __typename: 'ConfirmGuestSuccess',
