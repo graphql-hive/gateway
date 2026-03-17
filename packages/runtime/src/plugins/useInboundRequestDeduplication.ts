@@ -25,9 +25,8 @@ export function useInboundRequestDeduplication(
           inflightRequest$ = deferred.promise;
           inflightRequests.set(dedupeKey, inflightRequest$);
           Promise.resolve(paramsHandler(payload))
-            .then((result) => deferred.resolve(result), (error) =>
-              deferred.reject(error),
-            )
+            .then(deferred.resolve)
+            .catch(deferred.reject)
             .finally(() => {
               inflightRequests.delete(dedupeKey);
             });
@@ -89,7 +88,17 @@ function getDedupeKey(
         }
       }
     }
-    headerEntries.sort(([left], [right]) => left.localeCompare(right));
+    headerEntries.sort(([left], [right]) => {
+      const normalizedLeft = left.toLowerCase();
+      const normalizedRight = right.toLowerCase();
+      if (normalizedLeft < normalizedRight) {
+        return -1;
+      }
+      if (normalizedLeft > normalizedRight) {
+        return 1;
+      }
+      return 0;
+    });
     key += `|${JSON.stringify(headerEntries)}`;
   }
   key += `|${params.operationName || ''}`;
