@@ -78,7 +78,7 @@ async function resolveBuiltinProvider(
       );
     } catch (err) {
       throw new Error(
-        `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASE_URL env vars are set. ` +
+        `Failed to initialize Langfuse client. Ensure LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, and LANGFUSE_BASEURL env vars are set. ` +
           `Original error: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
