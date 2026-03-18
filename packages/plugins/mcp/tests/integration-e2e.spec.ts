@@ -1002,6 +1002,22 @@ describe('MCP E2E', () => {
         body: JSON.stringify({ query: '{ __typename }' }),
       });
 
+      // tools/list should omit outputSchema for tools with hooks
+      const listRes = await hooksGateway.fetch('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 0,
+          method: 'tools/list',
+          params: {},
+        }),
+      });
+      const listBody = await listRes.json();
+      for (const tool of listBody.result.tools) {
+        expect(tool.outputSchema).toBeUndefined();
+      }
+
       // Test postprocess transforms result
       const postRes = await hooksGateway.fetch('http://localhost/mcp', {
         method: 'POST',
