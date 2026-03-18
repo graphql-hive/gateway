@@ -324,16 +324,25 @@ const mcpPlugin = useMCP({
         schema: false,        // Suppress outputSchema in tools/list
       },
       // hooks transform inputs/outputs without changing the GraphQL query.
-      // postprocess: format the JSON array as a markdown table for LLM readability.
+      // postprocess receives the already-extracted items array (thanks to output.path).
+      // You can return any shape, here we format results as a markdown table
+      // and inject _metadata for the agent (query context, source, timing).
       hooks: {
-        postprocess: (result) => {
+        postprocess: (result, args) => {
           const items = result as Array<{ path: string; topic: string; description: string; score: number }>
           if (!Array.isArray(items) || items.length === 0) return result
           const header = '| Topic | Description | Score | Link |\n|-------|-------------|-------|------|'
           const rows = items.map(
             (item) => `| ${item.topic} | ${item.description} | ${item.score} | ${item.path} |`,
           )
-          return `${header}\n${rows.join('\n')}`
+          return {
+            results: `${header}\n${rows.join('\n')}`,
+            _metadata: {
+              query: args.q,
+              source: 'toast-central',
+              timestamp: Date.now(),
+            },
+          }
         },
       },
     },
