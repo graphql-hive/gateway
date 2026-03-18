@@ -113,6 +113,7 @@ export interface MCPToolConfig {
 export interface MCPConfig {
   name: string;
   version?: string;
+  protocolVersion?: string;
   path?: string;
   graphqlPath?: string;
   operationsPath?: string;
@@ -451,6 +452,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         const handler = createMCPHandler({
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
+          protocolVersion: config.protocolVersion,
           registry,
           requestContext: {
             headers: forwardedHeaders,

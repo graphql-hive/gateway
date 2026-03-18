@@ -4,6 +4,7 @@ import { getByPath, type ToolRegistry } from './registry.js';
 export interface MCPHandlerOptions {
   serverName: string;
   serverVersion: string;
+  protocolVersion?: string;
   registry: ToolRegistry;
   execute: (
     toolName: string,
@@ -32,7 +33,7 @@ interface JsonRpcResponse {
 }
 
 export function createMCPHandler(options: MCPHandlerOptions) {
-  const { serverName, serverVersion, registry } = options;
+  const { serverName, serverVersion, protocolVersion = '2025-11-25', registry } = options;
 
   return async function handleMCPRequest(request: Request): Promise<Response> {
     let body: JsonRpcRequest;
@@ -58,7 +59,7 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           jsonrpc: '2.0',
           id,
           result: {
-            protocolVersion: '2025-11-25',
+            protocolVersion,
             serverInfo: {
               name: serverName,
               version: serverVersion,

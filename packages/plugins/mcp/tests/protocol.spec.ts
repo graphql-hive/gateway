@@ -50,8 +50,36 @@ describe('createMCPHandler', () => {
     const response = await handler(request);
     const body = await response.json();
 
+    expect(body.result.protocolVersion).toBe('2025-11-25');
     expect(body.result.serverInfo.name).toBe('test-mcp');
     expect(body.result.capabilities.tools).toBeDefined();
+  });
+
+  it('uses custom protocolVersion when provided', async () => {
+    const handler = createMCPHandler({
+      ...options,
+      protocolVersion: '2024-11-05',
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'test-client', version: '1.0.0' },
+        },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.protocolVersion).toBe('2024-11-05');
   });
 
   it('handles tools/list request', async () => {
