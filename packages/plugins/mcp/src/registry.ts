@@ -227,7 +227,7 @@ export class ToolRegistry {
         inputSchema: tool.inputSchema,
       };
       if (tool.title) mcpTool.title = tool.title;
-      if (tool.outputSchema) mcpTool.outputSchema = tool.outputSchema;
+      if (tool.outputSchema && !tool.hooks?.postprocess && !tool.hooks?.preprocess) mcpTool.outputSchema = tool.outputSchema;
       return mcpTool;
     });
   }
