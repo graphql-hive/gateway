@@ -545,6 +545,73 @@ describe('ToolRegistry with overrides', () => {
     ).toThrow('hooks.postprocess must be a function');
   });
 
+  it('omits outputSchema from getMCPTools when hooks are configured', () => {
+    const weatherSchema = buildSchema(`
+      type Query { getWeather(location: String!): Weather }
+      type Weather { temperature: Float! }
+    `);
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'with_postprocess',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+          hooks: { postprocess: () => 'transformed' },
+        },
+        {
+          name: 'with_preprocess',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+          hooks: { preprocess: () => undefined },
+        },
+        {
+          name: 'no_hooks',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
+      weatherSchema,
+    );
+    const tools = registry.getMCPTools();
+    expect(
+      tools.find((t) => t.name === 'with_postprocess')!.outputSchema,
+    ).toBeUndefined();
+    expect(
+      tools.find((t) => t.name === 'with_preprocess')!.outputSchema,
+    ).toBeUndefined();
+    expect(
+      tools.find((t) => t.name === 'no_hooks')!.outputSchema,
+    ).toBeDefined();
+  });
+
+  it('omits outputSchema from getMCPTools when output.schema is false', () => {
+    const weatherSchema = buildSchema(`
+      type Query { getWeather(location: String!): Weather }
+      type Weather { temperature: Float! }
+    `);
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'suppressed',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+          output: { schema: false },
+        },
+        {
+          name: 'normal',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
+      weatherSchema,
+    );
+    const tools = registry.getMCPTools();
+    expect(
+      tools.find((t) => t.name === 'suppressed')!.outputSchema,
+    ).toBeUndefined();
+    expect(tools.find((t) => t.name === 'normal')!.outputSchema).toBeDefined();
+  });
+
   it('includes output schema', () => {
     const schemaWithOutput = buildSchema(`
       type Query {
