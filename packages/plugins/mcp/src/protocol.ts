@@ -78,7 +78,9 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         break;
 
       case 'tools/list': {
-        const tools = registry.getMCPTools({ suppressOutputSchema: options.suppressOutputSchema });
+        const tools = registry.getMCPTools({
+          suppressOutputSchema: options.suppressOutputSchema,
+        });
 
         if (options.resolveToolDescriptions) {
           try {
