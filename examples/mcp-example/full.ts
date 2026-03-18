@@ -151,6 +151,7 @@ subgraphServer.listen(4001, () => {
 const mcpPlugin = useMCP({
   name: 'weather-api',             // MCP server name (returned in initialize)
   version: '1.0.0',                // MCP server version
+  protocolVersion: '2025-11-25',   // MCP protocol version (default: '2025-11-25')
 
   path: '/mcp',                    // MCP JSON-RPC endpoint (default: '/mcp')
   // graphqlPath: '/graphql',      // GraphQL endpoint for internal dispatch (default: '/graphql')
@@ -174,7 +175,8 @@ const mcpPlugin = useMCP({
     },
   },
 
-  // disableGraphQLEndpoint: true,    // Block external /graphql access (MCP-only mode)
+  suppressOutputSchema: false,      // Suppress outputSchema for all tools in tools/list
+  disableGraphQLEndpoint: false,    // Block external /graphql access (MCP-only mode)
 
   // Each tool maps to a GraphQL operation. The MCP input schema is auto-derived
   // from the operation's variables, and the output schema from its selection set.
@@ -317,9 +319,10 @@ const mcpPlugin = useMCP({
           },
         },
       },
-      output: { 
-        path: 'search.items', // Returns items array directly 
-      },         
+      output: {
+        path: 'search.items', // Returns items array directly
+        schema: false,        // Suppress outputSchema in tools/list
+      },
       // hooks transform inputs/outputs without changing the GraphQL query.
       // postprocess: format the JSON array as a markdown table for LLM readability.
       hooks: {
