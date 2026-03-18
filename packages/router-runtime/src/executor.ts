@@ -31,10 +31,15 @@ import {
   type MaybePromise,
 } from '@whatwg-node/promise-helpers';
 import type {
+  DirectiveNode,
   DocumentNode,
   FragmentDefinitionNode,
+  GraphQLEnumType,
   GraphQLError,
+  GraphQLField,
+  GraphQLInterfaceType,
   GraphQLNamedType,
+  GraphQLObjectType,
   GraphQLSchema,
   OperationDefinitionNode,
   OperationTypeNode,
@@ -91,6 +96,108 @@ export interface QueryPlanExecutionContext {
     subgraphName: string,
     executionRequest: ExecutionRequest,
   ): MaybePromise<MaybeAsyncIterable<ExecutionResult>>;
+
+  /**
+   * Precompiled operation projection plan for response shaping
+   */
+  compiledProjection: CompiledProjectionPlan;
+
+  /**
+   * Runtime caches used while projecting data
+   */
+  projectionRuntimeCache: ProjectionRuntimeCache;
+}
+
+type CompiledDirectiveCondition =
+  | { kind: 'AlwaysExclude' }
+  | { kind: 'SkipIf'; variableName: string }
+  | { kind: 'SkipIf'; value: boolean }
+  | { kind: 'IncludeIf'; variableName: string }
+  | { kind: 'IncludeIf'; value: boolean };
+
+interface CompiledFieldSelection {
+  kind: 'Field';
+  fieldName: string;
+  responseKey: string;
+  directiveConditions?: CompiledDirectiveCondition[];
+  selectionSet?: CompiledProjectionSelectionSet;
+}
+
+interface CompiledInlineFragmentSelection {
+  kind: 'InlineFragment';
+  typeCondition?: string;
+  directiveConditions?: CompiledDirectiveCondition[];
+  selectionSet: CompiledProjectionSelectionSet;
+}
+
+interface CompiledFragmentSpreadSelection {
+  kind: 'FragmentSpread';
+  fragmentName: string;
+  directiveConditions?: CompiledDirectiveCondition[];
+}
+
+type CompiledProjectionSelection =
+  | CompiledFieldSelection
+  | CompiledInlineFragmentSelection
+  | CompiledFragmentSpreadSelection;
+
+interface CompiledProjectionSelectionSet {
+  selections: CompiledProjectionSelection[];
+}
+
+interface CompiledProjectionFragment {
+  typeCondition?: string;
+  selectionSet: CompiledProjectionSelectionSet;
+}
+
+interface CompiledProjectionPlan {
+  rootSelectionSet: CompiledProjectionSelectionSet;
+  fragments: Record<string, CompiledProjectionFragment>;
+}
+
+interface CompiledProjectionArtifacts {
+  operation: OperationDefinitionNode;
+  fragments: Record<string, FragmentDefinitionNode>;
+  compiledProjection: CompiledProjectionPlan;
+}
+
+interface CompiledRequiresFieldSelection {
+  kind: 'Field';
+  fieldName: string;
+  responseKey: string;
+  selections?: CompiledRequiresSelection[];
+}
+
+interface CompiledRequiresInlineFragmentSelection {
+  kind: 'InlineFragment';
+  typeCondition?: string | readonly string[];
+  selections: CompiledRequiresSelection[];
+}
+
+type CompiledRequiresSelection =
+  | CompiledRequiresFieldSelection
+  | CompiledRequiresInlineFragmentSelection;
+
+interface RequiresProjectionRuntime {
+  supergraphSchema: GraphQLSchema;
+  entityTypeConditionResult: Map<string, boolean>;
+}
+
+interface ProjectionFieldMeta {
+  field: GraphQLField<any, any>;
+  namedType: GraphQLNamedType;
+  enumType?: GraphQLEnumType;
+  isNonNull: boolean;
+}
+
+interface ProjectionRuntimeCache {
+  fieldMetaByParentType: WeakMap<
+    GraphQLObjectType | GraphQLInterfaceType,
+    Map<string, ProjectionFieldMeta | null>
+  >;
+  inaccessibleByObjectType: WeakMap<GraphQLObjectType, boolean>;
+  enumProjectionValueByType: WeakMap<GraphQLEnumType, Map<any, any>>;
+  entityTypeConditionResult: Map<string, boolean>;
 }
 
 export interface EntityRepresentation {
@@ -184,14 +291,22 @@ interface CreateExecutionContextOpts {
 }
 
 const globalEmpty = {};
+const projectionArtifactsByDocument = new WeakMap<
+  DocumentNode,
+  Map<string | null, CompiledProjectionArtifacts>
+>();
+const compiledRequiresCache = new WeakMap<
+  RequiresSelection[],
+  CompiledRequiresSelection[]
+>();
 
 function createQueryPlanExecutionContext({
   supergraphSchema,
   executionRequest,
   onSubgraphExecute,
 }: CreateExecutionContextOpts): QueryPlanExecutionContext {
-  const fragments = getFragmentsFromDocument(executionRequest.document);
-  const operation = getOperationASTFromRequest(executionRequest);
+  const { operation, fragments, compiledProjection } =
+    getOrCreateCompiledProjectionArtifacts(executionRequest);
 
   let variableValues = executionRequest.variables;
   if (operation.variableDefinitions) {
@@ -224,6 +339,13 @@ function createQueryPlanExecutionContext({
     errors: [],
     onSubgraphExecute,
     executionRequest,
+    compiledProjection,
+    projectionRuntimeCache: {
+      fieldMetaByParentType: new WeakMap(),
+      inaccessibleByObjectType: new WeakMap(),
+      enumProjectionValueByType: new WeakMap(),
+      entityTypeConditionResult: new Map(),
+    },
   };
 }
 
@@ -260,7 +382,7 @@ interface BatchAliasPreparedContext {
 
 interface BatchVariablePreparedContext {
   representations: EntityRepresentation[];
-  identityToEntityIndex: Map<string, number>;
+  identityToEntityIndex: Map<number, number>;
 }
 
 interface BatchPreparedContext {
@@ -448,7 +570,7 @@ function prepareFlattenContext(
   const entityPaths: (string | number)[][] = [];
   const representationOrder: number[] = [];
   const dedupedRepresentations: EntityRepresentation[] = [];
-  const representationKeyToIndex = new Map<string, number>();
+  const representationKeyToIndex = new Map<number, number>();
 
   for (const location of entityLocations) {
     const entityRef = location.entity;
@@ -539,13 +661,14 @@ function prepareBatchFetchContext(
     if (!variableBatchState) {
       variableBatchState = {
         representations: [],
-        identityToEntityIndex: new Map<string, number>(),
+        identityToEntityIndex: new Map<number, number>(),
       };
       representationsByVariableName.set(
         representationsVariableName,
         variableBatchState,
       );
     }
+    const ensuredVariableBatchState = variableBatchState;
 
     for (const path of alias.paths) {
       const normalizedPath = normalizeFlattenNodePath(path);
@@ -583,11 +706,15 @@ function prepareBatchFetchContext(
         }
 
         const identity = stableStringify(representation);
-        let dedupIndex = variableBatchState.identityToEntityIndex.get(identity);
+        let dedupIndex =
+          ensuredVariableBatchState.identityToEntityIndex.get(identity);
         if (dedupIndex == null) {
-          dedupIndex = variableBatchState.representations.length;
-          variableBatchState.identityToEntityIndex.set(identity, dedupIndex);
-          variableBatchState.representations.push(representation);
+          dedupIndex = ensuredVariableBatchState.representations.length;
+          ensuredVariableBatchState.identityToEntityIndex.set(
+            identity,
+            dedupIndex,
+          );
+          ensuredVariableBatchState.representations.push(representation);
         }
 
         entityRefs.push(entityRef);
@@ -672,7 +799,7 @@ function applyBatchAliasEntities(
       if (!target || !entity) {
         continue;
       }
-      Object.assign(target, mergeDeep([target, entity], false, true, true));
+      mergeEntityPayload(target, entity);
     }
   }
 }
@@ -940,16 +1067,13 @@ function executeFetchPlanNode(
         const entity = returnedEntities[index];
         const target = representationTargets[index];
         if (target && entity) {
-          Object.assign(target, mergeDeep([target, entity], false, true, true));
+          mergeEntityPayload(target, entity);
         }
       }
       return;
     }
 
-    Object.assign(
-      executionContext.data,
-      mergeDeep([executionContext.data, responseData], false, true, true),
-    );
+    mergeEntityPayload(executionContext.data, responseData);
     return;
   };
 
@@ -1072,7 +1196,7 @@ function mergeFlattenEntities(
     if (!target || !entity) {
       continue;
     }
-    Object.assign(target, mergeDeep([target, entity], false, true, true));
+    mergeEntityPayload(target, entity);
   }
 }
 
@@ -1177,40 +1301,8 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
   return responseKey ? [responseKey] : [];
 });
 
-function stableStringify(value: unknown): string {
-  if (value == null) {
-    return 'null';
-  }
-  if (value === true) {
-    return 'true';
-  }
-  if (value === false) {
-    return 'false';
-  }
-  const type = typeof value;
-  if (type === 'number') {
-    return value.toString();
-  }
-  if (type === 'bigint') {
-    return value.toString();
-  }
-  if (type === 'string') {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
-  }
-  if (type === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, entryValue]) => entryValue !== undefined)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(
-        ([key, entryValue]) =>
-          `${stableStringify(key)}:${stableStringify(entryValue)}`,
-      );
-    return `{${entries.join(',')}}`;
-  }
-  return 'null';
+function stableStringify(value: unknown) {
+  return hashValueOrderIndependent32Ultra(value);
 }
 
 /**
@@ -1501,7 +1593,7 @@ function entitySatisfiesTypeCondition(
  */
 function projectSelectionSet(
   data: any,
-  selectionSet: SelectionSetNode,
+  selectionSet: CompiledProjectionSelectionSet,
   type: GraphQLNamedType,
   executionContext: QueryPlanExecutionContext,
 ): any {
@@ -1519,100 +1611,49 @@ function projectSelectionSet(
   if (!isObjectType(parentType) && !isInterfaceType(parentType)) {
     return null;
   }
-  // Check if the type itself is marked with @inaccessible
-  if (isObjectType(parentType)) {
-    const inaccessibleDirective = parentType.astNode?.directives?.find(
-      (directive) => directive.name.value === 'inaccessible',
-    );
-    if (inaccessibleDirective) {
-      return null;
-    }
+  if (
+    isObjectType(parentType) &&
+    isInaccessibleObjectType(parentType, executionContext)
+  ) {
+    return null;
   }
   const result: Record<string, any> = {};
-  selectionLoop: for (const selection of selectionSet.selections) {
-    if (selection.directives?.length) {
-      for (const directiveNode of selection.directives) {
-        const ifArg = directiveNode.arguments?.find(
-          (arg) => arg.name.value === 'if',
-        );
-        if (directiveNode.name.value === 'skip') {
-          if (ifArg) {
-            const ifValueNode = ifArg.value;
-            if (ifValueNode.kind === Kind.VARIABLE) {
-              const variableName = ifValueNode.name.value;
-              if (executionContext.variableValues?.[variableName]) {
-                continue selectionLoop;
-              }
-            } else if (ifValueNode.kind === Kind.BOOLEAN) {
-              if (ifValueNode.value) {
-                continue selectionLoop;
-              }
-            }
-          } else {
-            continue selectionLoop;
-          }
-        }
-        if (directiveNode.name.value === 'include') {
-          if (ifArg) {
-            const ifValueNode = ifArg.value;
-            if (ifValueNode.kind === Kind.VARIABLE) {
-              const variableName = ifValueNode.name.value;
-              if (!executionContext.variableValues?.[variableName]) {
-                continue selectionLoop;
-              }
-            } else if (ifValueNode.kind === Kind.BOOLEAN) {
-              if (!ifValueNode.value) {
-                continue selectionLoop;
-              }
-            }
-          } else {
-            continue selectionLoop;
-          }
-        }
-      }
+  for (const selection of selectionSet.selections) {
+    if (
+      !shouldIncludeCompiledSelection(
+        selection.directiveConditions,
+        executionContext.variableValues,
+      )
+    ) {
+      continue;
     }
     if (selection.kind === 'Field') {
-      const field =
-        selection.name.value === '__typename'
-          ? TypeNameMetaFieldDef
-          : parentType.getFields()[selection.name.value];
-      if (!field) {
+      const fieldMeta = getProjectionFieldMeta(
+        parentType,
+        selection.fieldName,
+        executionContext,
+      );
+      if (!fieldMeta) {
         throw new Error(
-          `Field not found: ${selection.name.value} on ${parentType.name}`,
+          `Field not found: ${selection.fieldName} on ${parentType.name}`,
         );
       }
-      const fieldType = getNamedType(field.type);
-      const responseKey = selection.alias?.value || selection.name.value;
+      const responseKey = selection.responseKey;
       let projectedValue = selection.selectionSet
         ? projectSelectionSet(
             data[responseKey],
             selection.selectionSet,
-            fieldType,
+            fieldMeta.namedType,
             executionContext,
           )
         : data[responseKey];
       if (projectedValue !== undefined) {
-        if (isEnumType(fieldType)) {
-          const enumType = fieldType;
-          function projectEnumValue(value: any): any {
-            if (Array.isArray(value)) {
-              return value.map((item) => projectEnumValue(item));
-            }
-            const enumValue = enumType.getValue(value);
-            if (enumValue == null) {
-              return null;
-            } else if (
-              getDirective(
-                executionContext.supergraphSchema,
-                enumValue,
-                'inaccessible',
-              )?.length
-            ) {
-              return null;
-            }
-            return value;
-          }
-          projectedValue = projectEnumValue(projectedValue);
+        if (fieldMeta.enumType) {
+          projectedValue = projectEnumValue(
+            projectedValue,
+            fieldMeta.enumType,
+            executionContext,
+          );
         }
         if (result[responseKey] == null) {
           result[responseKey] = projectedValue;
@@ -1620,28 +1661,28 @@ function projectSelectionSet(
           typeof result[responseKey] === 'object' &&
           projectedValue != null
         ) {
-          result[responseKey] = Object.assign(
+          result[responseKey] = mergeProjectedFieldValue(
             result[responseKey],
-            mergeDeep([result[responseKey], projectedValue]),
+            projectedValue,
           );
         } else {
           result[responseKey] = projectedValue;
         }
-      } else if (field.name === '__typename') {
+      } else if (fieldMeta.field.name === '__typename') {
         result[responseKey] = type.name;
-      } else if (isNonNullType(field.type)) {
+      } else if (fieldMeta.isNonNull) {
         return null;
       } else {
         result[responseKey] = null;
       }
     } else if (selection.kind === 'InlineFragment') {
-      const typeCondition = selection.typeCondition?.name.value;
+      const typeCondition = selection.typeCondition;
       // If data has a __typename, check if it matches the type condition
       if (isEntityRepresentation(data)) {
         if (
           typeCondition &&
-          !entitySatisfiesTypeCondition(
-            executionContext.supergraphSchema,
+          !entitySatisfiesTypeConditionCached(
+            executionContext,
             data.__typename,
             typeCondition,
           )
@@ -1660,19 +1701,14 @@ function projectSelectionSet(
           typeByTypename,
           executionContext,
         );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
-        }
+        mergeProjectedSelectionObject(result, projectedValue);
       } else {
         // If data doesn't have a __typename, use the current parentType
         // and check if it satisfies the type condition
         if (
           typeCondition &&
-          !entitySatisfiesTypeCondition(
-            executionContext.supergraphSchema,
+          !entitySatisfiesTypeConditionCached(
+            executionContext,
             parentType.name,
             typeCondition,
           )
@@ -1687,24 +1723,20 @@ function projectSelectionSet(
             : parentType,
           executionContext,
         );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
-        }
+        mergeProjectedSelectionObject(result, projectedValue);
       }
     } else if (selection.kind === 'FragmentSpread') {
-      const fragment = executionContext.fragments[selection.name.value];
+      const fragment =
+        executionContext.compiledProjection.fragments[selection.fragmentName];
       if (!fragment) {
-        throw new Error(`Fragment "${selection.name.value}" not found`);
+        throw new Error(`Fragment "${selection.fragmentName}" not found`);
       }
-      const typeCondition = fragment.typeCondition?.name.value;
+      const typeCondition = fragment.typeCondition;
       if (
         isEntityRepresentation(data) &&
         typeCondition &&
-        !entitySatisfiesTypeCondition(
-          executionContext.supergraphSchema,
+        !entitySatisfiesTypeConditionCached(
+          executionContext,
           data.__typename,
           typeCondition,
         )
@@ -1723,12 +1755,7 @@ function projectSelectionSet(
         typeByTypename,
         executionContext,
       );
-      if (projectedValue != null) {
-        Object.assign(
-          result,
-          mergeDeep([result, projectedValue], false, true, true),
-        );
-      }
+      mergeProjectedSelectionObject(result, projectedValue);
     }
   }
   return result;
@@ -1747,7 +1774,7 @@ function projectDataByOperation(executionContext: QueryPlanExecutionContext) {
   }
   return projectSelectionSet(
     executionContext.data,
-    executionContext.operation.selectionSet,
+    executionContext.compiledProjection.rootSelectionSet,
     rootType,
     executionContext,
   );
@@ -1777,61 +1804,663 @@ function projectRequires(
   if (!entity) {
     return entity;
   }
+  const runtime: RequiresProjectionRuntime = {
+    supergraphSchema,
+    entityTypeConditionResult: new Map(),
+  };
+  const compiledRequiresSelections =
+    getOrCompileRequiresSelections(requiresSelections);
+  return projectRequiresCompiled(compiledRequiresSelections, entity, runtime);
+}
+
+function projectRequiresCompiled(
+  requiresSelections: CompiledRequiresSelection[],
+  entity: EntityRepresentation | EntityRepresentation[],
+  runtime: RequiresProjectionRuntime,
+): EntityRepresentation | EntityRepresentation[] | null {
+  if (!entity) {
+    return entity;
+  }
   if (Array.isArray(entity)) {
     return entity.map((item) =>
-      projectRequires(requiresSelections, item, supergraphSchema),
-    );
+      projectRequiresCompiled(requiresSelections, item, runtime),
+    ) as EntityRepresentation[];
   }
-  const result = {} as EntityRepresentation;
+  let result: EntityRepresentation | null = null;
   for (const requiresSelection of requiresSelections) {
     switch (requiresSelection.kind) {
       case 'Field': {
-        const fieldName = requiresSelection.name;
-        const responseKey = requiresSelection.alias ?? fieldName;
-        let original = entity[fieldName];
+        let original = entity[requiresSelection.fieldName];
         if (original === undefined) {
-          original = entity[responseKey];
+          original = entity[requiresSelection.responseKey];
         }
         const projectedValue = requiresSelection.selections
-          ? projectRequires(
+          ? projectRequiresCompiled(
               requiresSelection.selections,
               original,
-              supergraphSchema,
+              runtime,
             )
           : original;
         if (projectedValue != null) {
-          result[responseKey] = projectedValue;
+          result ??= {} as EntityRepresentation;
+          result[requiresSelection.responseKey] = projectedValue;
         }
         break;
       }
-      case 'InlineFragment':
+      case 'InlineFragment': {
         if (
-          entitySatisfiesTypeCondition(
-            supergraphSchema,
+          entitySatisfiesTypeConditionForRequires(
+            runtime,
             entity.__typename,
             requiresSelection.typeCondition,
           )
         ) {
-          const projected = projectRequires(
+          const projected = projectRequiresCompiled(
             requiresSelection.selections,
             entity,
-            supergraphSchema,
+            runtime,
           );
           if (projected) {
-            Object.assign(
-              result,
-              mergeDeep([result, projected], false, true, true),
-            );
+            result ??= {} as EntityRepresentation;
+            mergeEntityPayload(result, projected);
           }
         }
         break;
+      }
     }
   }
-  if (
-    (Object.keys(result).length === 1 && result.__typename) ||
-    Object.keys(result).length === 0
-  ) {
+  if (!result) {
     return null;
   }
+  for (const key in result) {
+    if (key !== '__typename') {
+      return result;
+    }
+  }
+  return null;
+}
+
+function entitySatisfiesTypeConditionForRequires(
+  runtime: RequiresProjectionRuntime,
+  typeNameInEntity: string,
+  typeConditionInInlineFragment: string | readonly string[] | undefined,
+): boolean {
+  if (!typeConditionInInlineFragment) {
+    return false;
+  }
+  const typeConditionCacheKey = Array.isArray(typeConditionInInlineFragment)
+    ? typeConditionInInlineFragment.join(',')
+    : typeConditionInInlineFragment;
+  const cacheKey = `${typeNameInEntity}::${typeConditionCacheKey}`;
+  const cachedResult = runtime.entityTypeConditionResult.get(cacheKey);
+  if (cachedResult != null) {
+    return cachedResult;
+  }
+  const result = entitySatisfiesTypeCondition(
+    runtime.supergraphSchema,
+    typeNameInEntity,
+    typeConditionInInlineFragment,
+  );
+  runtime.entityTypeConditionResult.set(cacheKey, result);
   return result;
+}
+
+function getOperationProjectionCacheKey(executionRequest: ExecutionRequest) {
+  return executionRequest.operationName ?? null;
+}
+
+/**
+ * Cache compiled projection artifacts by parsed DocumentNode identity and operationName.
+ * WeakMap keeps memory bounded to document lifecycle without explicit invalidation.
+ */
+function getOrCreateCompiledProjectionArtifacts(
+  executionRequest: ExecutionRequest,
+): CompiledProjectionArtifacts {
+  let artifactsByOperation = projectionArtifactsByDocument.get(
+    executionRequest.document,
+  );
+  if (!artifactsByOperation) {
+    artifactsByOperation = new Map();
+    projectionArtifactsByDocument.set(
+      executionRequest.document,
+      artifactsByOperation,
+    );
+  }
+
+  const cacheKey = getOperationProjectionCacheKey(executionRequest);
+  const cachedArtifacts = artifactsByOperation.get(cacheKey);
+  if (cachedArtifacts) {
+    return cachedArtifacts;
+  }
+
+  const fragments = getFragmentsFromDocument(executionRequest.document);
+  const operation = getOperationASTFromRequest(executionRequest);
+  const artifacts: CompiledProjectionArtifacts = {
+    operation,
+    fragments,
+    compiledProjection: compileProjectionPlan(operation, fragments),
+  };
+  artifactsByOperation.set(cacheKey, artifacts);
+  return artifacts;
+}
+
+/**
+ * Requires selections are planner-owned structures; identity cache is stable per plan.
+ */
+function getOrCompileRequiresSelections(
+  requiresSelections: RequiresSelection[],
+): CompiledRequiresSelection[] {
+  const cached = compiledRequiresCache.get(requiresSelections);
+  if (cached) {
+    return cached;
+  }
+  const compiled = compileRequiresSelections(requiresSelections);
+  compiledRequiresCache.set(requiresSelections, compiled);
+  return compiled;
+}
+
+function compileRequiresSelections(
+  requiresSelections: RequiresSelection[],
+): CompiledRequiresSelection[] {
+  const compiled: CompiledRequiresSelection[] = [];
+  for (const requiresSelection of requiresSelections) {
+    switch (requiresSelection.kind) {
+      case 'Field': {
+        compiled.push({
+          kind: 'Field',
+          fieldName: requiresSelection.name,
+          responseKey: requiresSelection.alias ?? requiresSelection.name,
+          selections: requiresSelection.selections
+            ? compileRequiresSelections(requiresSelection.selections)
+            : undefined,
+        });
+        break;
+      }
+      case 'InlineFragment': {
+        compiled.push({
+          kind: 'InlineFragment',
+          typeCondition: requiresSelection.typeCondition,
+          selections: compileRequiresSelections(requiresSelection.selections),
+        });
+        break;
+      }
+      default:
+        throw new Error(
+          `Unsupported requires selection kind: ${(requiresSelection as any).kind}`,
+        );
+    }
+  }
+  return compiled;
+}
+
+function compileProjectionPlan(
+  operation: OperationDefinitionNode,
+  fragments: Record<string, FragmentDefinitionNode>,
+): CompiledProjectionPlan {
+  const compiledFragments: Record<string, CompiledProjectionFragment> = {};
+  for (const fragmentName in fragments) {
+    const fragment = fragments[fragmentName];
+    if (!fragment) {
+      continue;
+    }
+    compiledFragments[fragmentName] = {
+      typeCondition: fragment.typeCondition?.name.value,
+      selectionSet: compileProjectionSelectionSet(fragment.selectionSet),
+    };
+  }
+  return {
+    rootSelectionSet: compileProjectionSelectionSet(operation.selectionSet),
+    fragments: compiledFragments,
+  };
+}
+
+function compileProjectionSelectionSet(
+  selectionSet: SelectionSetNode,
+): CompiledProjectionSelectionSet {
+  const selections: CompiledProjectionSelection[] = [];
+  for (const selection of selectionSet.selections) {
+    const directiveConditions = compileDirectiveConditions(
+      selection.directives,
+    );
+    if (selection.kind === Kind.FIELD) {
+      selections.push({
+        kind: 'Field',
+        fieldName: selection.name.value,
+        responseKey: selection.alias?.value || selection.name.value,
+        directiveConditions,
+        selectionSet: selection.selectionSet
+          ? compileProjectionSelectionSet(selection.selectionSet)
+          : undefined,
+      });
+      continue;
+    }
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
+      selections.push({
+        kind: 'InlineFragment',
+        typeCondition: selection.typeCondition?.name.value,
+        directiveConditions,
+        selectionSet: compileProjectionSelectionSet(selection.selectionSet),
+      });
+      continue;
+    }
+    if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      selections.push({
+        kind: 'FragmentSpread',
+        fragmentName: selection.name.value,
+        directiveConditions,
+      });
+      continue;
+    }
+    assertNever(selection);
+  }
+  return { selections };
+}
+
+function compileDirectiveConditions(
+  directives: readonly DirectiveNode[] | undefined,
+): CompiledDirectiveCondition[] | undefined {
+  if (!directives?.length) {
+    return undefined;
+  }
+  const conditions: CompiledDirectiveCondition[] = [];
+  for (const directiveNode of directives) {
+    const directiveName = directiveNode.name.value;
+    if (directiveName !== 'skip' && directiveName !== 'include') {
+      continue;
+    }
+    const ifArg = directiveNode.arguments?.find(
+      (arg) => arg.name.value === 'if',
+    );
+    if (!ifArg) {
+      conditions.push({ kind: 'AlwaysExclude' });
+      continue;
+    }
+    const ifValueNode = ifArg.value;
+    if (ifValueNode.kind === Kind.VARIABLE) {
+      conditions.push(
+        directiveName === 'skip'
+          ? { kind: 'SkipIf', variableName: ifValueNode.name.value }
+          : { kind: 'IncludeIf', variableName: ifValueNode.name.value },
+      );
+      continue;
+    }
+    if (ifValueNode.kind === Kind.BOOLEAN) {
+      conditions.push(
+        directiveName === 'skip'
+          ? { kind: 'SkipIf', value: ifValueNode.value }
+          : { kind: 'IncludeIf', value: ifValueNode.value },
+      );
+    }
+  }
+  return conditions.length ? conditions : undefined;
+}
+
+function shouldIncludeCompiledSelection(
+  directiveConditions: CompiledDirectiveCondition[] | undefined,
+  variableValues: QueryPlanExecutionContext['variableValues'],
+): boolean {
+  if (!directiveConditions?.length) {
+    return true;
+  }
+  for (const condition of directiveConditions) {
+    switch (condition.kind) {
+      case 'AlwaysExclude':
+        return false;
+      case 'SkipIf': {
+        const ifValue =
+          'variableName' in condition
+            ? variableValues?.[condition.variableName]
+            : condition.value;
+        if (ifValue) {
+          return false;
+        }
+        break;
+      }
+      case 'IncludeIf': {
+        const ifValue =
+          'variableName' in condition
+            ? variableValues?.[condition.variableName]
+            : condition.value;
+        if (!ifValue) {
+          return false;
+        }
+        break;
+      }
+      default:
+        assertNever(condition);
+    }
+  }
+  return true;
+}
+
+function getProjectionFieldMeta(
+  parentType: GraphQLObjectType | GraphQLInterfaceType,
+  fieldName: string,
+  executionContext: QueryPlanExecutionContext,
+): ProjectionFieldMeta | null {
+  let byFieldName =
+    executionContext.projectionRuntimeCache.fieldMetaByParentType.get(
+      parentType,
+    );
+  if (!byFieldName) {
+    byFieldName = new Map();
+    executionContext.projectionRuntimeCache.fieldMetaByParentType.set(
+      parentType,
+      byFieldName,
+    );
+  }
+  if (byFieldName.has(fieldName)) {
+    return byFieldName.get(fieldName) || null;
+  }
+  const field =
+    fieldName === '__typename'
+      ? TypeNameMetaFieldDef
+      : parentType.getFields()[fieldName];
+  if (!field) {
+    byFieldName.set(fieldName, null);
+    return null;
+  }
+  const namedType = getNamedType(field.type);
+  const meta: ProjectionFieldMeta = {
+    field,
+    namedType,
+    isNonNull: isNonNullType(field.type),
+    enumType: isEnumType(namedType) ? namedType : undefined,
+  };
+  byFieldName.set(fieldName, meta);
+  return meta;
+}
+
+function isInaccessibleObjectType(
+  objectType: GraphQLObjectType,
+  executionContext: QueryPlanExecutionContext,
+): boolean {
+  const existing =
+    executionContext.projectionRuntimeCache.inaccessibleByObjectType.get(
+      objectType,
+    );
+  if (existing != null) {
+    return existing;
+  }
+  const inaccessible = !!objectType.astNode?.directives?.find(
+    (directive) => directive.name.value === 'inaccessible',
+  );
+  executionContext.projectionRuntimeCache.inaccessibleByObjectType.set(
+    objectType,
+    inaccessible,
+  );
+  return inaccessible;
+}
+
+function projectEnumValue(
+  value: any,
+  enumType: GraphQLEnumType,
+  executionContext: QueryPlanExecutionContext,
+): any {
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      projectEnumValue(item, enumType, executionContext),
+    );
+  }
+  let projectedByValue =
+    executionContext.projectionRuntimeCache.enumProjectionValueByType.get(
+      enumType,
+    );
+  if (!projectedByValue) {
+    projectedByValue = new Map();
+    executionContext.projectionRuntimeCache.enumProjectionValueByType.set(
+      enumType,
+      projectedByValue,
+    );
+  }
+  if (projectedByValue.has(value)) {
+    return projectedByValue.get(value);
+  }
+  const enumValue = enumType.getValue(value);
+  let projected = value;
+  if (enumValue == null) {
+    projected = null;
+  } else if (
+    getDirective(executionContext.supergraphSchema, enumValue, 'inaccessible')
+      ?.length
+  ) {
+    projected = null;
+  }
+  projectedByValue.set(value, projected);
+  return projected;
+}
+
+function entitySatisfiesTypeConditionCached(
+  executionContext: QueryPlanExecutionContext,
+  typeNameInEntity: string,
+  typeConditionInInlineFragment: string,
+): boolean {
+  const cacheKey = `${typeNameInEntity}::${typeConditionInInlineFragment}`;
+  const cachedResult =
+    executionContext.projectionRuntimeCache.entityTypeConditionResult.get(
+      cacheKey,
+    );
+  if (cachedResult != null) {
+    return cachedResult;
+  }
+  const result = entitySatisfiesTypeCondition(
+    executionContext.supergraphSchema,
+    typeNameInEntity,
+    typeConditionInInlineFragment,
+  );
+  executionContext.projectionRuntimeCache.entityTypeConditionResult.set(
+    cacheKey,
+    result,
+  );
+  return result;
+}
+
+function canFastPathMergeObjects(
+  left: unknown,
+  right: unknown,
+): left is Record<string, any> {
+  return (
+    typeof left === 'object' &&
+    left != null &&
+    !Array.isArray(left) &&
+    typeof right === 'object' &&
+    right != null &&
+    !Array.isArray(right)
+  );
+}
+
+function isPlainObject(value: unknown): value is Record<string, any> {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function hasOverlappingKeys(
+  left: Record<string, any>,
+  right: Record<string, any>,
+): boolean {
+  for (const key in right) {
+    if (Object.prototype.hasOwnProperty.call(left, key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function mergeProjectedSelectionObject(
+  target: Record<string, any>,
+  projectedValue: any,
+) {
+  if (projectedValue == null) {
+    return;
+  }
+  if (
+    canFastPathMergeObjects(target, projectedValue) &&
+    !hasOverlappingKeys(target, projectedValue)
+  ) {
+    Object.assign(target, projectedValue);
+    return;
+  }
+  Object.assign(target, mergeDeep([target, projectedValue], false, true, true));
+}
+
+/**
+ * Fast merge for entity payloads that avoids mergeDeep unless object shape overlap
+ * requires deep reconciliation (nested object/array collisions).
+ */
+function mergeEntityPayload(
+  target: Record<string, any>,
+  patch: Record<string, any>,
+) {
+  for (const key in patch) {
+    if (!Object.prototype.hasOwnProperty.call(patch, key)) {
+      continue;
+    }
+    const patchValue = patch[key];
+    if (patchValue === undefined) {
+      continue;
+    }
+    const existingValue = target[key];
+    if (existingValue === undefined) {
+      target[key] = patchValue;
+      continue;
+    }
+    if (isPlainObject(existingValue) && isPlainObject(patchValue)) {
+      if (!hasOverlappingKeys(existingValue, patchValue)) {
+        Object.assign(existingValue, patchValue);
+        continue;
+      }
+      mergeEntityPayload(existingValue, patchValue);
+      continue;
+    }
+    if (isPlainObject(existingValue) || isPlainObject(patchValue)) {
+      target[key] = mergeDeep([existingValue, patchValue], false, true, true);
+      continue;
+    }
+    if (Array.isArray(existingValue) || Array.isArray(patchValue)) {
+      target[key] = mergeDeep([existingValue, patchValue], false, true, true);
+      continue;
+    }
+    target[key] = patchValue;
+  }
+}
+
+function mergeProjectedFieldValue(existingValue: any, projectedValue: any) {
+  if (
+    canFastPathMergeObjects(existingValue, projectedValue) &&
+    !hasOverlappingKeys(existingValue, projectedValue)
+  ) {
+    return Object.assign(existingValue, projectedValue);
+  }
+  return Object.assign(
+    existingValue,
+    mergeDeep([existingValue, projectedValue]),
+  );
+}
+
+function assertNever(_value: never): never {
+  throw new Error('Unreachable code path');
+}
+
+function rotl32(value: number, by: number): number {
+  return (value << by) | (value >>> (32 - by));
+}
+
+function fmix32(input: number): number {
+  let h = input >>> 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+const numberBuffer = new ArrayBuffer(8);
+const numberFloat64 = new Float64Array(numberBuffer);
+const numberUint32 = new Uint32Array(numberBuffer);
+
+function hashNumber32(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0x42108421;
+  }
+  numberFloat64[0] = Object.is(value, -0) ? 0 : value;
+  return fmix32(numberUint32[0]! ^ rotl32(numberUint32[1]!, 13));
+}
+
+function hashString32(value: string): number {
+  const cached = stringHashCache.get(value);
+  if (cached != null) {
+    return cached;
+  }
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  const hashed = hash >>> 0;
+  stringHashCache.set(value, hashed);
+  return hashed;
+}
+
+const stringHashCache = new Map<string, number>();
+
+function hashNumber32Turbo(value: number): number {
+  if (Number.isInteger(value)) {
+    const intValue = value | 0;
+    if (intValue === value) {
+      return (Math.imul(intValue ^ 0x9e3779b9, 0x85ebca6b) ^ 0xc2b2ae35) >>> 0;
+    }
+  }
+  return hashNumber32(value);
+}
+
+function hashValueOrderIndependent32Ultra(value: unknown): number {
+  if (value === null) {
+    return 0x27d4eb2d;
+  }
+  const type = typeof value;
+  if (type === 'number') {
+    return (hashNumber32Turbo(value as number) ^ 0x31f8a5b7) >>> 0;
+  }
+  if (type === 'boolean') {
+    return (value ? 0x9e3779b9 : 0x7f4a7c15) >>> 0;
+  }
+  if (type === 'string') {
+    return (
+      (Math.imul(hashString32(value as string), 0x45d9f3b) ^ 0x165667b1) >>> 0
+    );
+  }
+  if (Array.isArray(value)) {
+    let acc = (0x811c9dc5 ^ value.length) >>> 0;
+    for (let i = 0; i < value.length; i++) {
+      const itemHash = hashValueOrderIndependent32Ultra(value[i]);
+      acc = Math.imul(acc ^ itemHash ^ i, 0x9e3779b1) >>> 0;
+      acc = rotl32(acc, 5) ^ 0x85ebca6b;
+    }
+    return fmix32(acc ^ 0x239b961b);
+  }
+  if (type === 'object') {
+    const obj = value as Record<string, unknown>;
+    let sumAcc = 0;
+    let xorAcc = 0;
+    let count = 0;
+    for (const key in obj) {
+      const entryValue = obj[key];
+      if (entryValue === undefined) {
+        continue;
+      }
+      const keyHash = hashString32(key);
+      const valueHash = hashValueOrderIndependent32Ultra(entryValue);
+      const pairHash =
+        Math.imul(keyHash ^ rotl32(valueHash, 9), 0x9e3779b1) >>> 0;
+      sumAcc = (sumAcc + pairHash) >>> 0;
+      xorAcc ^= rotl32(pairHash, pairHash & 31);
+      count++;
+    }
+    return fmix32(sumAcc ^ xorAcc ^ count ^ 0xab0e9789);
+  }
+  return 0x27d4eb2d;
 }
