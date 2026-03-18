@@ -127,6 +127,7 @@ export interface MCPConfig {
     };
     [key: string]: DescriptionProvider | Record<string, unknown> | undefined;
   };
+  suppressOutputSchema?: boolean;
   disableGraphQLEndpoint?: boolean;
 }
 
@@ -455,6 +456,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           protocolVersion: config.protocolVersion,
+          suppressOutputSchema: config.suppressOutputSchema,
           registry,
           requestContext: {
             headers: forwardedHeaders,
