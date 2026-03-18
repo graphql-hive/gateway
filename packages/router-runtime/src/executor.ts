@@ -14,7 +14,6 @@ import {
 } from '@graphql-tools/executor';
 import {
   ExecutionRequest,
-  getDirective,
   getOperationASTFromDocument,
   getOperationASTFromRequest,
   isAsyncIterable,
@@ -34,23 +33,15 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   GraphQLError,
-  GraphQLNamedType,
   GraphQLSchema,
   OperationDefinitionNode,
   OperationTypeNode,
-  SelectionSetNode,
 } from 'graphql';
 import {
-  getNamedType,
   isAbstractType,
-  isEnumType,
-  isInterfaceType,
-  isNonNullType,
   isObjectType,
-  isOutputType,
   Kind,
   parse,
-  TypeNameMetaFieldDef,
 } from 'graphql';
 
 export interface QueryPlanExecutionContext {
@@ -145,7 +136,7 @@ export function executeQueryPlan({
   function handleResp() {
     const executionResult = {} as ExecutionResult;
     if (Object.keys(executionContext.data).length > 0) {
-      executionResult.data = projectDataByOperation(executionContext);
+      executionResult.data = executionContext.data;
     }
     if (executionContext.errors.length > 0) {
       executionResult.errors = executionContext.errors;
@@ -1494,263 +1485,6 @@ function entitySatisfiesTypeCondition(
     }
   }
   return false;
-}
-
-/**
- * Helper function for `projectDocumentNode` to iterate over the data with selections
- */
-function projectSelectionSet(
-  data: any,
-  selectionSet: SelectionSetNode,
-  type: GraphQLNamedType,
-  executionContext: QueryPlanExecutionContext,
-): any {
-  if (data == null) {
-    return data;
-  }
-  if (Array.isArray(data)) {
-    return data.map((item) =>
-      projectSelectionSet(item, selectionSet, type, executionContext),
-    );
-  }
-  const parentType = isEntityRepresentation(data)
-    ? executionContext.supergraphSchema.getType(data.__typename)
-    : type;
-  if (!isObjectType(parentType) && !isInterfaceType(parentType)) {
-    return null;
-  }
-  // Check if the type itself is marked with @inaccessible
-  if (isObjectType(parentType)) {
-    const inaccessibleDirective = parentType.astNode?.directives?.find(
-      (directive) => directive.name.value === 'inaccessible',
-    );
-    if (inaccessibleDirective) {
-      return null;
-    }
-  }
-  const result: Record<string, any> = {};
-  selectionLoop: for (const selection of selectionSet.selections) {
-    if (selection.directives?.length) {
-      for (const directiveNode of selection.directives) {
-        const ifArg = directiveNode.arguments?.find(
-          (arg) => arg.name.value === 'if',
-        );
-        if (directiveNode.name.value === 'skip') {
-          if (ifArg) {
-            const ifValueNode = ifArg.value;
-            if (ifValueNode.kind === Kind.VARIABLE) {
-              const variableName = ifValueNode.name.value;
-              if (executionContext.variableValues?.[variableName]) {
-                continue selectionLoop;
-              }
-            } else if (ifValueNode.kind === Kind.BOOLEAN) {
-              if (ifValueNode.value) {
-                continue selectionLoop;
-              }
-            }
-          } else {
-            continue selectionLoop;
-          }
-        }
-        if (directiveNode.name.value === 'include') {
-          if (ifArg) {
-            const ifValueNode = ifArg.value;
-            if (ifValueNode.kind === Kind.VARIABLE) {
-              const variableName = ifValueNode.name.value;
-              if (!executionContext.variableValues?.[variableName]) {
-                continue selectionLoop;
-              }
-            } else if (ifValueNode.kind === Kind.BOOLEAN) {
-              if (!ifValueNode.value) {
-                continue selectionLoop;
-              }
-            }
-          } else {
-            continue selectionLoop;
-          }
-        }
-      }
-    }
-    if (selection.kind === 'Field') {
-      const field =
-        selection.name.value === '__typename'
-          ? TypeNameMetaFieldDef
-          : parentType.getFields()[selection.name.value];
-      if (!field) {
-        throw new Error(
-          `Field not found: ${selection.name.value} on ${parentType.name}`,
-        );
-      }
-      const fieldType = getNamedType(field.type);
-      const responseKey = selection.alias?.value || selection.name.value;
-      let projectedValue = selection.selectionSet
-        ? projectSelectionSet(
-            data[responseKey],
-            selection.selectionSet,
-            fieldType,
-            executionContext,
-          )
-        : data[responseKey];
-      if (projectedValue !== undefined) {
-        if (isEnumType(fieldType)) {
-          const enumType = fieldType;
-          function projectEnumValue(value: any): any {
-            if (Array.isArray(value)) {
-              return value.map((item) => projectEnumValue(item));
-            }
-            const enumValue = enumType.getValue(value);
-            if (enumValue == null) {
-              return null;
-            } else if (
-              getDirective(
-                executionContext.supergraphSchema,
-                enumValue,
-                'inaccessible',
-              )?.length
-            ) {
-              return null;
-            }
-            return value;
-          }
-          projectedValue = projectEnumValue(projectedValue);
-        }
-        if (result[responseKey] == null) {
-          result[responseKey] = projectedValue;
-        } else if (
-          typeof result[responseKey] === 'object' &&
-          projectedValue != null
-        ) {
-          result[responseKey] = Object.assign(
-            result[responseKey],
-            mergeDeep([result[responseKey], projectedValue]),
-          );
-        } else {
-          result[responseKey] = projectedValue;
-        }
-      } else if (field.name === '__typename') {
-        result[responseKey] = type.name;
-      } else if (isNonNullType(field.type)) {
-        return null;
-      } else {
-        result[responseKey] = null;
-      }
-    } else if (selection.kind === 'InlineFragment') {
-      const typeCondition = selection.typeCondition?.name.value;
-      // If data has a __typename, check if it matches the type condition
-      if (isEntityRepresentation(data)) {
-        if (
-          typeCondition &&
-          !entitySatisfiesTypeCondition(
-            executionContext.supergraphSchema,
-            data.__typename,
-            typeCondition,
-          )
-        ) {
-          continue;
-        }
-        const typeByTypename = executionContext.supergraphSchema.getType(
-          data.__typename,
-        );
-        if (!isOutputType(typeByTypename)) {
-          throw new Error('Invalid type');
-        }
-        const projectedValue = projectSelectionSet(
-          data,
-          selection.selectionSet,
-          typeByTypename,
-          executionContext,
-        );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
-        }
-      } else {
-        // If data doesn't have a __typename, use the current parentType
-        // and check if it satisfies the type condition
-        if (
-          typeCondition &&
-          !entitySatisfiesTypeCondition(
-            executionContext.supergraphSchema,
-            parentType.name,
-            typeCondition,
-          )
-        ) {
-          continue;
-        }
-        const projectedValue = projectSelectionSet(
-          data,
-          selection.selectionSet,
-          typeCondition
-            ? executionContext.supergraphSchema.getType(typeCondition)!
-            : parentType,
-          executionContext,
-        );
-        if (projectedValue != null) {
-          Object.assign(
-            result,
-            mergeDeep([result, projectedValue], false, true, true),
-          );
-        }
-      }
-    } else if (selection.kind === 'FragmentSpread') {
-      const fragment = executionContext.fragments[selection.name.value];
-      if (!fragment) {
-        throw new Error(`Fragment "${selection.name.value}" not found`);
-      }
-      const typeCondition = fragment.typeCondition?.name.value;
-      if (
-        isEntityRepresentation(data) &&
-        typeCondition &&
-        !entitySatisfiesTypeCondition(
-          executionContext.supergraphSchema,
-          data.__typename,
-          typeCondition,
-        )
-      ) {
-        continue;
-      }
-      const typeByTypename = executionContext.supergraphSchema.getType(
-        data.__typename || typeCondition,
-      );
-      if (!isOutputType(typeByTypename)) {
-        throw new Error('Invalid type');
-      }
-      const projectedValue = projectSelectionSet(
-        data,
-        fragment.selectionSet,
-        typeByTypename,
-        executionContext,
-      );
-      if (projectedValue != null) {
-        Object.assign(
-          result,
-          mergeDeep([result, projectedValue], false, true, true),
-        );
-      }
-    }
-  }
-  return result;
-}
-
-/**
- * After execution of the execution, in order to remove the extra data in the response,
- * the data is projected based on the original selection set of the operation.
- */
-function projectDataByOperation(executionContext: QueryPlanExecutionContext) {
-  const rootType = executionContext.supergraphSchema.getRootType(
-    executionContext.operation.operation,
-  );
-  if (!rootType) {
-    throw new Error('Root type not found');
-  }
-  return projectSelectionSet(
-    executionContext.data,
-    executionContext.operation.selectionSet,
-    rootType,
-    executionContext,
-  );
 }
 
 /**
