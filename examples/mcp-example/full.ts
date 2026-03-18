@@ -165,7 +165,7 @@ const mcpPlugin = useMCP({
   providers: {
     langfuse: {
       // Langfuse SDK constructor options (secretKey, publicKey, baseUrl)
-      // are read from LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASE_URL env vars.
+      // are read from LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASEURL env vars.
 
       // `defaults` — default options for all getPrompt() calls.
       // Use this to set a global label per environment instead of repeating it per tool.
