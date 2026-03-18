@@ -222,7 +222,7 @@ export class ToolRegistry {
     return Array.from(this.tools.keys());
   }
 
-  getMCPTools(): MCPTool[] {
+  getMCPTools(options?: { suppressOutputSchema?: boolean }): MCPTool[] {
     return Array.from(this.tools.values()).map((tool) => {
       const mcpTool: MCPTool = {
         name: tool.name,
@@ -231,6 +231,7 @@ export class ToolRegistry {
       };
       if (tool.title) mcpTool.title = tool.title;
       const omitSchema =
+        options?.suppressOutputSchema ||
         tool.suppressOutputSchema ||
         tool.hooks?.preprocess ||
         tool.hooks?.postprocess;

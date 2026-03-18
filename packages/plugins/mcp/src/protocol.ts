@@ -5,6 +5,7 @@ export interface MCPHandlerOptions {
   serverName: string;
   serverVersion: string;
   protocolVersion?: string;
+  suppressOutputSchema?: boolean;
   registry: ToolRegistry;
   execute: (
     toolName: string,
@@ -77,7 +78,7 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         break;
 
       case 'tools/list': {
-        const tools = registry.getMCPTools();
+        const tools = registry.getMCPTools({ suppressOutputSchema: options.suppressOutputSchema });
 
         if (options.resolveToolDescriptions) {
           try {

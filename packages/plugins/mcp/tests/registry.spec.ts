@@ -612,6 +612,27 @@ describe('ToolRegistry with overrides', () => {
     expect(tools.find((t) => t.name === 'normal')!.outputSchema).toBeDefined();
   });
 
+  it('omits all outputSchemas when getMCPTools suppressOutputSchema option is true', () => {
+    const weatherSchema = buildSchema(`
+      type Query { getWeather(location: String!): Weather }
+      type Weather { temperature: Float! }
+    `);
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'weather',
+          query:
+            'query($location: String!) { getWeather(location: $location) { temperature } }',
+        },
+      ],
+      weatherSchema,
+    );
+    expect(registry.getMCPTools()[0]!.outputSchema).toBeDefined();
+    expect(
+      registry.getMCPTools({ suppressOutputSchema: true })[0]!.outputSchema,
+    ).toBeUndefined();
+  });
+
   it('includes output schema', () => {
     const schemaWithOutput = buildSchema(`
       type Query {
