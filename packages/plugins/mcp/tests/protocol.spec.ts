@@ -486,8 +486,9 @@ describe('createMCPHandler', () => {
     expect(hookExecute).toHaveBeenCalledWith('passthrough_tool', {
       name: 'Bob',
     });
-    // Tool has outputSchema so result uses structuredContent format
-    expect(body.result.structuredContent).toEqual({ hello: 'world' });
+    // Even though preprocess passed through, hooks are configured so no structuredContent
+    expect(body.result.structuredContent).toBeUndefined();
+    expect(body.result.content[0].text).toContain('hello');
   });
 
   it('postprocess hook transforms execution result', async () => {
