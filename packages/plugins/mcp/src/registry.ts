@@ -26,6 +26,8 @@ export interface RegisteredTool {
   argumentAliases?: Record<string, string>;
   /** Dot-notation path to extract from the GraphQL response data */
   outputPath?: string;
+  /** Explicitly suppress outputSchema in tools/list */
+  suppressOutputSchema?: boolean;
   hooks?: MCPToolHooks;
 }
 
@@ -206,6 +208,7 @@ export class ToolRegistry {
         outputSchema,
         argumentAliases,
         outputPath,
+        suppressOutputSchema: config.output?.schema === false,
         hooks: config.hooks,
       });
     }
@@ -227,7 +230,12 @@ export class ToolRegistry {
         inputSchema: tool.inputSchema,
       };
       if (tool.title) mcpTool.title = tool.title;
-      if (tool.outputSchema && !tool.hooks?.postprocess && !tool.hooks?.preprocess) mcpTool.outputSchema = tool.outputSchema;
+      const omitSchema =
+        tool.suppressOutputSchema ||
+        tool.hooks?.preprocess ||
+        tool.hooks?.postprocess;
+      if (tool.outputSchema && !omitSchema)
+        mcpTool.outputSchema = tool.outputSchema;
       return mcpTool;
     });
   }

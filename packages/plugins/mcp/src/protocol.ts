@@ -33,7 +33,12 @@ interface JsonRpcResponse {
 }
 
 export function createMCPHandler(options: MCPHandlerOptions) {
-  const { serverName, serverVersion, protocolVersion = '2025-11-25', registry } = options;
+  const {
+    serverName,
+    serverVersion,
+    protocolVersion = '2025-11-25',
+    registry,
+  } = options;
 
   return async function handleMCPRequest(request: Request): Promise<Response> {
     let body: JsonRpcRequest;

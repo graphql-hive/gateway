@@ -67,7 +67,9 @@ export interface MCPInputOverrides {
 
 export interface MCPOutputOverrides {
   /** Dot-notation path to extract from the GraphQL response data, e.g. "search.items" */
-  path: string;
+  path?: string;
+  /** Set to false to suppress outputSchema in tools/list */
+  schema?: false;
 }
 
 export interface ToolHookContext {
