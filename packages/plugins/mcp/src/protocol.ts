@@ -227,17 +227,13 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           const textContent = {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };
-          // Hooks (preprocess short-circuit or postprocess) transform the result shape,
-          // so structuredContent (which relies on outputSchema) would be wrong.
-          // Use structuredContent only when no hooks modified the result.
-          const hookModified = shortCircuited || !!tool.hooks?.postprocess;
-          if (tool.outputSchema && hookModified) {
-            console.debug(
-              `[MCP] Tool "${callParams.name}" has hooks registered; using text content instead of structuredContent.`,
-            );
-          }
+          // Hooks can transform the result shape, so structuredContent
+          // (which relies on outputSchema) may not match. Suppress it
+          // whenever any hook is configured, consistent with tools/list.
+          const hasHooks =
+            !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
           const callResult: Record<string, unknown> =
-            tool.outputSchema && !hookModified
+            tool.outputSchema && !hasHooks
               ? {
                   structuredContent: result,
                   ...textContent,

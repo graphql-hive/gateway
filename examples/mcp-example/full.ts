@@ -321,7 +321,7 @@ const mcpPlugin = useMCP({
       },
       output: {
         path: 'search.items', // Returns items array directly
-        schema: false,        // Suppress outputSchema in tools/list
+        // schema: false,        // Suppress outputSchema in tools/list
       },
       // hooks transform inputs/outputs without changing the GraphQL query.
       // postprocess receives the already-extracted items array (thanks to output.path).
