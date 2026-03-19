@@ -1,5 +1,11 @@
 import { parse, type GraphQLSchema } from 'graphql';
-import type { MCPToolHooks, ResolvedToolConfig } from './plugin.js';
+import type {
+  MCPToolAnnotations,
+  MCPToolExecution,
+  MCPToolHooks,
+  MCPToolIcon,
+  ResolvedToolConfig,
+} from './plugin.js';
 import {
   getToolDescriptionFromSchema,
   operationToInputSchema,
@@ -13,6 +19,9 @@ export interface MCPTool {
   title?: string;
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
+  annotations?: MCPToolAnnotations;
+  icons?: MCPToolIcon[];
+  execution?: MCPToolExecution;
 }
 
 export interface RegisteredTool {
@@ -22,6 +31,9 @@ export interface RegisteredTool {
   query: string;
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
+  annotations?: MCPToolAnnotations;
+  icons?: MCPToolIcon[];
+  execution?: MCPToolExecution;
   /** Maps alias name -> original GraphQL variable name */
   argumentAliases?: Record<string, string>;
   /** Dot-notation path to extract from the GraphQL response data */
@@ -206,6 +218,9 @@ export class ToolRegistry {
         query,
         inputSchema,
         outputSchema,
+        annotations: config.tool?.annotations,
+        icons: config.tool?.icons,
+        execution: config.tool?.execution,
         argumentAliases,
         outputPath,
         suppressOutputSchema: config.output?.schema === false,
@@ -230,6 +245,9 @@ export class ToolRegistry {
         inputSchema: tool.inputSchema,
       };
       if (tool.title) mcpTool.title = tool.title;
+      if (tool.annotations) mcpTool.annotations = tool.annotations;
+      if (tool.icons) mcpTool.icons = tool.icons;
+      if (tool.execution) mcpTool.execution = tool.execution;
       const omitSchema =
         options?.suppressOutputSchema ||
         tool.suppressOutputSchema ||
