@@ -1,10 +1,10 @@
 import { parse, type GraphQLSchema } from 'graphql';
 import type {
   MCPContentAnnotations,
+  MCPIcon,
   MCPToolAnnotations,
   MCPToolExecution,
   MCPToolHooks,
-  MCPIcon,
   ResolvedToolConfig,
 } from './plugin.js';
 import {
