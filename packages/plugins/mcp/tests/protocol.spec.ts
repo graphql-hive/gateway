@@ -103,6 +103,143 @@ describe('createMCPHandler', () => {
     expect(body.result.tools[0].name).toBe('say_hello');
   });
 
+  it('tools/list returns all tools when no pageSize configured', async () => {
+    const handler = createMCPHandler(options);
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/list',
+        params: {},
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.tools).toHaveLength(1);
+    expect(body.result.nextCursor).toBeUndefined();
+  });
+
+  it('tools/list paginates with cursor and nextCursor', async () => {
+    const paginationSchema = buildSchema(`
+      type Query {
+        a(x: String!): String
+        b(x: String!): String
+        c(x: String!): String
+      }
+    `);
+    const paginationRegistry = new ToolRegistry(
+      [
+        { name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' },
+        { name: 'tool_b', query: 'query($x: String!) { b(x: $x) }' },
+        { name: 'tool_c', query: 'query($x: String!) { c(x: $x) }' },
+      ],
+      paginationSchema,
+    );
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: paginationRegistry,
+      execute: vi.fn(),
+      toolsListPageSize: 2,
+    });
+
+    // First page
+    const req1 = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/list',
+        params: {},
+      }),
+    });
+    const body1 = await (await handler(req1)).json();
+    expect(body1.result.tools).toHaveLength(2);
+    expect(body1.result.tools[0].name).toBe('tool_a');
+    expect(body1.result.tools[1].name).toBe('tool_b');
+    expect(body1.result.nextCursor).toBe('2');
+
+    // Second page
+    const req2 = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tools/list',
+        params: { cursor: '2' },
+      }),
+    });
+    const body2 = await (await handler(req2)).json();
+    expect(body2.result.tools).toHaveLength(1);
+    expect(body2.result.tools[0].name).toBe('tool_c');
+    expect(body2.result.nextCursor).toBeUndefined();
+  });
+
+  it('tools/list returns error for invalid cursor', async () => {
+    const paginationSchema = buildSchema(
+      `type Query { a(x: String!): String }`,
+    );
+    const paginationRegistry = new ToolRegistry(
+      [{ name: 'tool_a', query: 'query($x: String!) { a(x: $x) }' }],
+      paginationSchema,
+    );
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: paginationRegistry,
+      execute: vi.fn(),
+      toolsListPageSize: 10,
+    });
+
+    for (const badCursor of ['garbage', '-1', '999']) {
+      const req = new Request('http://localhost/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/list',
+          params: { cursor: badCursor },
+        }),
+      });
+      const body = await (await handler(req)).json();
+      expect(body.error.code).toBe(-32602);
+      expect(body.error.message).toContain('Invalid cursor');
+      expect(body.result).toBeUndefined();
+    }
+  });
+
+  it('throws on toolsListPageSize of 0', () => {
+    expect(() =>
+      createMCPHandler({
+        serverName: 'test',
+        serverVersion: '1.0.0',
+        registry,
+        execute: vi.fn(),
+        toolsListPageSize: 0,
+      }),
+    ).toThrow('toolsListPageSize must be a positive integer');
+  });
+
+  it('throws on negative toolsListPageSize', () => {
+    expect(() =>
+      createMCPHandler({
+        serverName: 'test',
+        serverVersion: '1.0.0',
+        registry,
+        execute: vi.fn(),
+        toolsListPageSize: -1,
+      }),
+    ).toThrow('toolsListPageSize must be a positive integer');
+  });
+
   it('handles tools/call request and executes GraphQL', async () => {
     const handler = createMCPHandler(options);
 
@@ -662,6 +799,51 @@ describe('createMCPHandler', () => {
     expect(hookExecute).not.toHaveBeenCalled();
     expect(body.result.content[0].text).toBe('Confirm action for Alice?');
     expect(body.result._confirmationRequired).toBe(true);
+  });
+
+  it('hook returning raw MCP result with isError: true passes through', async () => {
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const hookRegistry = new ToolRegistry(
+      [
+        {
+          name: 'error_hook',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            postprocess: () => ({
+              content: [{ type: 'text', text: 'Something went wrong' }],
+              isError: true,
+            }),
+          },
+        },
+      ],
+      hookSchema,
+    );
+    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: hookRegistry,
+      execute: hookExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'error_hook', arguments: { name: 'test' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.isError).toBe(true);
+    expect(body.result.content[0].text).toBe('Something went wrong');
   });
 
   it('does not misclassify GraphQL data with a content field as raw MCP result', async () => {
