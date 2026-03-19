@@ -1,24 +1,14 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import {
-  composeLocalSchemasWithApollo,
-  createDisposableServer,
-  getAvailablePort,
-} from '@internal/testing';
-import {
-  GqlModuleOptions,
-  GraphQLModule,
-  GraphQLSchemaHost,
-} from '@nestjs/graphql';
+import { composeLocalSchemasWithApollo, createDisposableServer, getAvailablePort } from '@internal/testing';
+import { GqlModuleOptions, GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
-import {
-  AsyncDisposableStack,
-  DisposableSymbols,
-} from '@whatwg-node/disposablestack';
+import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
+
 
 const schemaSDL = /* GraphQL */ `
   type Query {
@@ -76,27 +66,31 @@ async function createNestApp(
   };
 }
 
+async function runQuery(port: number) {
+  const res = await fetch(`http://localhost:${port}/graphql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: /* GraphQL */ `
+        query {
+          hello
+        }
+      `,
+    }),
+  });
+  expect(await res.json()).toEqual({
+    data: {
+      hello: 'world',
+    },
+  });
+}
+
 describe('NestJS', () => {
-  it('should execute queries and have the correct schema', async () => {
+  it('should execute queries and have the correct schama', async () => {
     await using nestApp = await createNestApp();
-    const res = await fetch(`http://localhost:${nestApp.port}/graphql`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: /* GraphQL */ `
-          query {
-            hello
-          }
-        `,
-      }),
-    });
-    expect(await res.json()).toEqual({
-      data: {
-        hello: 'world',
-      },
-    });
+    await runQuery(nestApp.port);
     const { schema } = nestApp.app.get(GraphQLSchemaHost);
     expect(stripIgnoredCharacters(printSchema(schema))).toBe(
       stripIgnoredCharacters(schemaSDL),
@@ -105,15 +99,16 @@ describe('NestJS', () => {
 
   it('should run transform schema only once', async () => {
     const transformFn = vi.fn((schema) => schema);
-    await using _ = await createNestApp({
+    await using nestApp = await createNestApp({
       transformSchema: transformFn,
-    });
+    });;
+    await runQuery(nestApp.port);
     expect(transformFn).toHaveBeenCalledTimes(1);
   });
 
   it('should sort schema only once', async () => {
     const schemaChangeFn = vi.fn();
-    await using _ = await createNestApp({
+    await using nestApp = await createNestApp({
       sortSchema: true,
       plugins: () => [
         {
@@ -121,6 +116,7 @@ describe('NestJS', () => {
         },
       ],
     });
+    await runQuery(nestApp.port);
     expect(schemaChangeFn).toHaveBeenCalledTimes(2); // 1st time for the lazy Hive Gateway schema, 2nd time for the sorted  schema
   });
 
@@ -138,26 +134,7 @@ describe('NestJS', () => {
         },
       ],
     });
-    const res = await fetch(`http://localhost:${nestApp.port}/graphql`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: /* GraphQL */ `
-          query {
-            hello
-          }
-        `,
-      }),
-    });
-    await expect(res.json()).resolves.toMatchInlineSnapshot(`
-      {
-        "data": {
-          "hello": "world",
-        },
-      }
-    `);
+    await runQuery(nestApp.port);
     expect(onCacheSetErrorFn).not.toHaveBeenCalled();
   });
 });

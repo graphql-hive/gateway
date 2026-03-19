@@ -21,6 +21,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 import type { GatewayPlugin } from '../src/types';
+import { setTimeout } from 'timers/promises';
 
 describe('Gateway Runtime', () => {
   let upstreamIsDownForNextRequest = false;
@@ -288,7 +289,7 @@ describe('Gateway Runtime', () => {
     }
     // trigger gw
     await triggerGw();
-    expect(onSchemaChangeCalls).toBe(1);
+    expect(onSchemaChangeCalls).toBe(2);
     expect(supergraphFetcherCalls).toBe(1);
 
     await new Promise<void>((resolve, reject) => {
@@ -296,8 +297,8 @@ describe('Gateway Runtime', () => {
         try {
           // trigger gateway again
           await triggerGw();
-          expect(onSchemaChangeCalls).toBe(1);
-          expect(supergraphFetcherCalls).toBe(2);
+          expect(onSchemaChangeCalls).toBe(2);
+          expect(supergraphFetcherCalls).toBe(1);
           await gwRuntime[DisposableSymbols.asyncDispose]();
           resolve();
         } catch (e) {
@@ -561,5 +562,51 @@ describe('Gateway Runtime', () => {
         ]),
       },
     });
+  });
+  it('defer/stream flag does not trigger onSchemaChange', async () => {
+    let onSchemaChangeCalls = 0;
+    let schemaFetcherCalls = 0;
+    await using gwRuntime = createGatewayRuntime({
+      logging: isDebug(),
+      deferStream: true,
+      supergraph() {
+        schemaFetcherCalls++;
+        return /* GraphQL */ `
+          type Query {
+            world: String!
+          }
+        `;
+      },
+      pollingInterval: 0, // disable polling to make sure onSchemaChange is not triggered by it
+      plugins: () => [
+        {
+          onSchemaChange() {
+            onSchemaChangeCalls++;
+          },
+        },
+      ],
+    });
+
+    async function triggerGw() {
+      const res = await gwRuntime.fetch(
+        'http://gateway/graphql?query={__typename}',
+      );
+      expect(res.ok).toBeTruthy();
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }
+    // trigger gw
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(2);
+    expect(schemaFetcherCalls).toBe(1);
+
+    await setTimeout(2000); // wait for 2 seconds to make sure onSchemaChange is not triggered by any polling
+
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(2);
+    expect(schemaFetcherCalls).toBe(1);
   });
 });
