@@ -62,6 +62,7 @@ export interface MCPToolOverrides {
   annotations?: MCPToolAnnotations;
   icons?: MCPToolIcon[];
   execution?: MCPToolExecution;
+  _meta?: Record<string, unknown>;
   descriptionProvider?:
     | {
         type: 'langfuse';

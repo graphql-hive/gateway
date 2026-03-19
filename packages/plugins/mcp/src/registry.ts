@@ -22,6 +22,7 @@ export interface MCPTool {
   annotations?: MCPToolAnnotations;
   icons?: MCPToolIcon[];
   execution?: MCPToolExecution;
+  _meta?: Record<string, unknown>;
 }
 
 export interface RegisteredTool {
@@ -34,6 +35,7 @@ export interface RegisteredTool {
   annotations?: MCPToolAnnotations;
   icons?: MCPToolIcon[];
   execution?: MCPToolExecution;
+  _meta?: Record<string, unknown>;
   /** Maps alias name -> original GraphQL variable name */
   argumentAliases?: Record<string, string>;
   /** Dot-notation path to extract from the GraphQL response data */
@@ -221,6 +223,7 @@ export class ToolRegistry {
         annotations: config.tool?.annotations,
         icons: config.tool?.icons,
         execution: config.tool?.execution,
+        _meta: config.tool?._meta,
         argumentAliases,
         outputPath,
         suppressOutputSchema: config.output?.schema === false,
@@ -248,6 +251,7 @@ export class ToolRegistry {
       if (tool.annotations) mcpTool.annotations = tool.annotations;
       if (tool.icons) mcpTool.icons = tool.icons;
       if (tool.execution) mcpTool.execution = tool.execution;
+      if (tool._meta) mcpTool._meta = tool._meta;
       const omitSchema =
         options?.suppressOutputSchema ||
         tool.suppressOutputSchema ||
