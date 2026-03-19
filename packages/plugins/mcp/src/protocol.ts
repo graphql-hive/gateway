@@ -122,7 +122,8 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           serverInfo,
           capabilities: { tools: {} },
         };
-        if (options.instructions) initResult['instructions'] = options.instructions;
+        if (options.instructions)
+          initResult['instructions'] = options.instructions;
         response = {
           jsonrpc: '2.0',
           id,
