@@ -1,4 +1,4 @@
-import type { ToolHookContext } from './plugin.js';
+import type { MCPIcon, ToolHookContext } from './plugin.js';
 import { getByPath, type ToolRegistry } from './registry.js';
 
 /**
@@ -42,6 +42,9 @@ export interface MCPHandlerOptions {
   serverName: string;
   serverVersion: string;
   serverTitle?: string;
+  serverDescription?: string;
+  serverIcons?: MCPIcon[];
+  serverWebsiteUrl?: string;
   instructions?: string;
   protocolVersion?: string;
   suppressOutputSchema?: boolean;
@@ -117,6 +120,11 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           version: serverVersion,
         };
         if (options.serverTitle) serverInfo['title'] = options.serverTitle;
+        if (options.serverDescription)
+          serverInfo['description'] = options.serverDescription;
+        if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
+        if (options.serverWebsiteUrl)
+          serverInfo['websiteUrl'] = options.serverWebsiteUrl;
         const initResult: Record<string, unknown> = {
           protocolVersion,
           serverInfo,

@@ -45,7 +45,7 @@ export interface MCPToolAnnotations {
   openWorldHint?: boolean;
 }
 
-export interface MCPToolIcon {
+export interface MCPIcon {
   src: string;
   mimeType?: string;
   sizes?: string[];
@@ -60,7 +60,7 @@ export interface MCPToolOverrides {
   title?: string;
   description?: string;
   annotations?: MCPToolAnnotations;
-  icons?: MCPToolIcon[];
+  icons?: MCPIcon[];
   execution?: MCPToolExecution;
   _meta?: Record<string, unknown>;
   descriptionProvider?:
@@ -155,6 +155,9 @@ export interface MCPConfig {
   name: string;
   version?: string;
   title?: string;
+  description?: string;
+  icons?: MCPIcon[];
+  websiteUrl?: string;
   instructions?: string;
   protocolVersion?: string;
   path?: string;
@@ -535,6 +538,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
           serverTitle: config.title,
+          serverDescription: config.description,
+          serverIcons: config.icons,
+          serverWebsiteUrl: config.websiteUrl,
           instructions: config.instructions,
           protocolVersion: config.protocolVersion,
           suppressOutputSchema: config.suppressOutputSchema,
