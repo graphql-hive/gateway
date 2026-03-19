@@ -37,9 +37,31 @@ export type MCPToolSource =
       file?: string;
     };
 
+export interface MCPToolAnnotations {
+  title?: string;
+  readOnlyHint?: boolean;
+  destructiveHint?: boolean;
+  idempotentHint?: boolean;
+  openWorldHint?: boolean;
+}
+
+export interface MCPToolIcon {
+  src: string;
+  mimeType?: string;
+  sizes?: string[];
+  theme?: string;
+}
+
+export interface MCPToolExecution {
+  taskSupport?: 'forbidden' | 'optional' | 'required';
+}
+
 export interface MCPToolOverrides {
   title?: string;
   description?: string;
+  annotations?: MCPToolAnnotations;
+  icons?: MCPToolIcon[];
+  execution?: MCPToolExecution;
   descriptionProvider?:
     | {
         type: 'langfuse';

@@ -113,6 +113,56 @@ describe('ToolRegistry', () => {
       },
     });
   });
+
+  it('includes annotations, icons, and execution in MCP tool definitions', () => {
+    const registry = new ToolRegistry(
+      [
+        {
+          name: 'get_weather',
+          query:
+            'query GetWeather($location: String!) { getWeather(location: $location) { temperature } }',
+          tool: {
+            annotations: {
+              readOnlyHint: true,
+              idempotentHint: true,
+            },
+            icons: [
+              {
+                src: 'https://example.com/weather.png',
+                mimeType: 'image/png',
+                sizes: ['48x48'],
+              },
+            ],
+            execution: { taskSupport: 'optional' },
+          },
+        },
+      ],
+      schema,
+    );
+    const tools = registry.getMCPTools();
+
+    expect(tools[0]!.annotations).toEqual({
+      readOnlyHint: true,
+      idempotentHint: true,
+    });
+    expect(tools[0]!.icons).toEqual([
+      {
+        src: 'https://example.com/weather.png',
+        mimeType: 'image/png',
+        sizes: ['48x48'],
+      },
+    ]);
+    expect(tools[0]!.execution).toEqual({ taskSupport: 'optional' });
+  });
+
+  it('omits annotations, icons, and execution when not provided', () => {
+    const registry = new ToolRegistry(toolConfigs, schema);
+    const tools = registry.getMCPTools();
+
+    expect(tools[0]!.annotations).toBeUndefined();
+    expect(tools[0]!.icons).toBeUndefined();
+    expect(tools[0]!.execution).toBeUndefined();
+  });
 });
 
 describe('ToolRegistry with overrides', () => {
