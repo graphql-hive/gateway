@@ -1,5 +1,6 @@
 import { parse, type GraphQLSchema } from 'graphql';
 import type {
+  MCPContentAnnotations,
   MCPToolAnnotations,
   MCPToolExecution,
   MCPToolHooks,
@@ -42,6 +43,8 @@ export interface RegisteredTool {
   outputPath?: string;
   /** Explicitly suppress outputSchema in tools/list */
   suppressOutputSchema?: boolean;
+  /** Annotations to attach to content items in tool responses */
+  contentAnnotations?: MCPContentAnnotations;
   hooks?: MCPToolHooks;
 }
 
@@ -227,6 +230,7 @@ export class ToolRegistry {
         argumentAliases,
         outputPath,
         suppressOutputSchema: config.output?.schema === false,
+        contentAnnotations: config.output?.contentAnnotations,
         hooks: config.hooks,
       });
     }

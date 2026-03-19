@@ -362,6 +362,72 @@ describe('createMCPHandler', () => {
     expect(body.result.content).toBeDefined();
   });
 
+  it('includes content annotations when configured', async () => {
+    const annotSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const annotRegistry = new ToolRegistry(
+      [
+        {
+          name: 'say_hello',
+          query: 'query($name: String!) { hello(name: $name) }',
+          output: {
+            contentAnnotations: {
+              audience: ['assistant'],
+              priority: 0.8,
+            },
+          },
+        },
+      ],
+      annotSchema,
+    );
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: annotRegistry,
+      execute: vi.fn().mockResolvedValue({ hello: 'world' }),
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'say_hello', arguments: { name: 'World' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.content[0].annotations).toEqual({
+      audience: ['assistant'],
+      priority: 0.8,
+    });
+  });
+
+  it('omits content annotations when not configured', async () => {
+    const handler = createMCPHandler(options);
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'say_hello', arguments: { name: 'World' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.content[0].annotations).toBeUndefined();
+  });
+
   it('extracts data by outputPath on tools/call', async () => {
     const pathSchema = buildSchema(`
       type Query { search(q: String!): SearchResult }

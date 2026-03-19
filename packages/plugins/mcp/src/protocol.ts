@@ -317,10 +317,14 @@ export function createMCPHandler(options: MCPHandlerOptions) {
               ...(result as Record<string, unknown>),
             };
           } else {
+            const textItem: Record<string, unknown> = {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            };
+            if (tool.contentAnnotations)
+              textItem['annotations'] = tool.contentAnnotations;
             const textContent = {
-              content: [
-                { type: 'text', text: JSON.stringify(result, null, 2) },
-              ],
+              content: [textItem],
               isError: false,
             };
             // Hooks can transform the result shape, so structuredContent

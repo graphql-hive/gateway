@@ -7,6 +7,7 @@ export type {
   MCPToolAnnotations,
   MCPToolIcon,
   MCPToolExecution,
+  MCPContentAnnotations,
   MCPInputOverrides,
   MCPOutputOverrides,
   MCPToolHooks,
