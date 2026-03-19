@@ -29,6 +29,15 @@ export type HiveTracingSpanProcessorOptions =
       processor?: never;
       circuitBreaker?: CircuitBreakerConfiguration;
       log?: Logger;
+      /**
+       * Tail-based sampling rate for Hive Console reporting.
+       *
+       * Traces that contain GraphQL errors are ALWAYS reported, regardless of this setting.
+       * For successful (error-free) traces, this value controls the fraction to report.
+       *
+       * Set to `1` (the default) to report all traces, or `0` to report none.
+       */
+      samplingRate?: number;
     }
   | {
       processor: SpanProcessor;
@@ -45,10 +54,12 @@ type TraceState = {
 export class HiveTracingSpanProcessor implements SpanProcessor {
   private traceStateById: Map<string, TraceState> = new Map();
   private processor: SpanProcessor;
+  private samplingRate: number;
 
   constructor(config: HiveTracingSpanProcessorOptions) {
     if (config.processor) {
       this.processor = config.processor;
+      this.samplingRate = 1;
     } else {
       this.processor = new BatchSpanProcessor(
         new CircuitBreakerExporter(
@@ -64,6 +75,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
         ),
         config.batching,
       );
+      this.samplingRate = config.samplingRate ?? 1;
     }
   }
 
@@ -125,7 +137,17 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       // Clean up trace state early to avoid any memory leak in case of error thrown
       this.traceStateById.delete(traceId);
 
-      for (let operationSpan of new Set(traceState.operationRoots.values())) {
+      // Tail-based sampling: always report traces with errors, apply samplingRate to others
+      const operationSpans = new Set(traceState.operationRoots.values());
+      const hasErrors = [...operationSpans].some(
+        (op) => (op.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT] as number) > 0,
+      );
+      if (!hasErrors && this.samplingRate < 1 && Math.random() >= this.samplingRate) {
+        // This trace is not sampled
+        return;
+      }
+
+      for (let operationSpan of operationSpans) {
         // @ts-expect-error set the start time to the HTTP start time, so that operation span replaces http span
         operationSpan.startTime = span.startTime;
         operationSpan.endTime = span.endTime;
