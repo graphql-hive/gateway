@@ -123,6 +123,8 @@ export interface MCPToolConfig {
 export interface MCPConfig {
   name: string;
   version?: string;
+  title?: string;
+  instructions?: string;
   protocolVersion?: string;
   path?: string;
   graphqlPath?: string;
@@ -501,6 +503,8 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         const handler = createMCPHandler({
           serverName: config.name,
           serverVersion: config.version || '1.0.0',
+          serverTitle: config.title,
+          instructions: config.instructions,
           protocolVersion: config.protocolVersion,
           suppressOutputSchema: config.suppressOutputSchema,
           registry,
