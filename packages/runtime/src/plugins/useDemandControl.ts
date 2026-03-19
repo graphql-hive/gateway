@@ -1,8 +1,10 @@
 import { EMPTY_OBJECT } from '@graphql-tools/delegate';
 import {
   createGraphQLError,
+  ExecutionRequest,
   isAsyncIterable,
   mapAsyncIterator,
+  MaybePromise,
 } from '@graphql-tools/utils';
 import { getNodeEnv } from '~internal/env';
 import {
@@ -12,16 +14,40 @@ import {
   OperationTypeNode,
   TypeInfo,
 } from 'graphql';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 
+export interface DemandControlMaxCostPayload {
+  /**
+   * The estimated cost of the current subgraph operation.
+   */
+  operationCost: number;
+  /**
+   * The total estimated cost accumulated for the whole request context so far.
+   */
+  totalCost: number;
+  /**
+   * The name of the subgraph being executed.
+   */
+  subgraphName: string;
+  /**
+   * The execution request being processed.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  executionRequest: ExecutionRequest<any, any>;
+}
+
 export interface DemandControlPluginOptions {
   /**
-   * 	The maximum cost of an accepted operation. An operation with a higher cost than this is rejected.
-   *  If not provided, no maximum cost is enforced.
-   *  @default Infinity
+   * The maximum cost of an accepted operation. An operation with a higher cost than this is rejected.
+   * Can be a static number or a function (sync or async) that receives cost details and returns the
+   * maximum cost allowed. Use a function to implement dynamic cost limits based on the context,
+   * subgraph, or estimated cost.
+   * If not provided, no maximum cost is enforced.
+   * @default Infinity
    */
-  maxCost?: number;
+  maxCost?: number | ((payload: DemandControlMaxCostPayload) => MaybePromise<number>);
   /**
    * The assumed maximum size of a list for fields that return lists.
    * @default 0
@@ -68,8 +94,9 @@ export function useDemandControl<TContext extends Record<string, any>>({
     typeCost,
   });
   const costByContextMap = new WeakMap<any, number>();
+  const resolvedMaxCostByContextMap = new WeakMap<any, number>();
   return {
-    onSubgraphExecute({ subgraph, executionRequest, log }) {
+    onSubgraphExecute({ subgraph, subgraphName, executionRequest, log }) {
       if (!subgraph) {
         return;
       }
@@ -92,24 +119,62 @@ export function useDemandControl<TContext extends Record<string, any>>({
         },
         '[useDemandControl]',
       );
-      if (maxCost != null && costByContext > maxCost) {
-        throw createGraphQLError(
-          `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,
-          {
-            extensions: {
-              code: 'COST_ESTIMATED_TOO_EXPENSIVE',
-              cost: {
-                estimated: costByContext,
-                max: maxCost,
+      if (maxCost != null) {
+        if (typeof maxCost === 'function') {
+          return handleMaybePromise(
+            () =>
+              maxCost({
+                operationCost,
+                totalCost: costByContext,
+                subgraphName,
+                executionRequest,
+              }),
+            (resolvedMaxCost) => {
+              if (executionRequest.context) {
+                resolvedMaxCostByContextMap.set(
+                  executionRequest.context,
+                  resolvedMaxCost,
+                );
+              }
+              if (costByContext > resolvedMaxCost) {
+                throw createGraphQLError(
+                  `Operation estimated cost ${costByContext} exceeded configured maximum ${resolvedMaxCost}`,
+                  {
+                    extensions: {
+                      code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                      cost: {
+                        estimated: costByContext,
+                        max: resolvedMaxCost,
+                      },
+                    },
+                  },
+                );
+              }
+            },
+          );
+        } else if (costByContext > maxCost) {
+          throw createGraphQLError(
+            `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,
+            {
+              extensions: {
+                code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                cost: {
+                  estimated: costByContext,
+                  max: maxCost,
+                },
               },
             },
-          },
-        );
+          );
+        }
       }
     },
     onExecutionResult({ result, setResult, context }) {
       if (includeExtensionMetadata) {
         const costByContext = costByContextMap.get(context) || 0;
+        const resolvedMaxCost =
+          typeof maxCost === 'function'
+            ? resolvedMaxCostByContextMap.get(context)
+            : maxCost;
         if (isAsyncIterable(result)) {
           setResult(
             mapAsyncIterator(result, (value) => ({
@@ -118,7 +183,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
                 ...(value.extensions || {}),
                 cost: {
                   estimated: costByContext,
-                  max: maxCost,
+                  ...(resolvedMaxCost != null ? { max: resolvedMaxCost } : {}),
                 },
               },
             })),
@@ -130,7 +195,7 @@ export function useDemandControl<TContext extends Record<string, any>>({
               ...(result?.extensions || {}),
               cost: {
                 estimated: costByContext,
-                max: maxCost,
+                ...(resolvedMaxCost != null ? { max: resolvedMaxCost } : {}),
               },
             },
           });
