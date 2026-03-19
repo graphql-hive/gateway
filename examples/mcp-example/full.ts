@@ -386,8 +386,11 @@ const mcpPlugin = useMCP({
 
     // Tool 6: @mcpTool directive (auto-registered)
     // Operations with @mcpTool directives in operationsPath are auto-registered.
-    // Example in weather_directive.graphql:
+    // Example in a .graphql file:
     //   query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check") { ... }
+    //
+    // With Langfuse description provider (format: "type:prompt" or "type:prompt:version"):
+    //   query SearchDocs($q: String!) @mcpTool(name: "search_docs", descriptionProvider: "langfuse:search_tool_desc:3") { ... }
     //
     // Directive tools can be augmented by adding a matching entry here with the same name.
   ],

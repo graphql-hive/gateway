@@ -10,6 +10,7 @@ export interface MCPDirectiveArgs {
   name: string;
   description?: string;
   title?: string;
+  descriptionProvider?: string;
 }
 
 export interface ParsedOperation {
@@ -38,6 +39,7 @@ function extractMcpToolDirective(
   const result: MCPDirectiveArgs = { name: args['name'] };
   if (args['description']) result.description = args['description'];
   if (args['title']) result.title = args['title'];
+  if (args['descriptionProvider']) result.descriptionProvider = args['descriptionProvider'];
   return result;
 }
 

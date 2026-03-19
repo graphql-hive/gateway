@@ -91,6 +91,32 @@ describe('loadOperationsFromString', () => {
     expect(ops[0]!.mcpDirective).toBeUndefined();
   });
 
+  it('extracts descriptionProvider from @mcpTool directive', () => {
+    const source = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_description") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const ops = loadOperationsFromString(source);
+    expect(ops[0]!.mcpDirective).toEqual({
+      name: 'get_weather',
+      descriptionProvider: 'langfuse:weather_description',
+    });
+  });
+
+  it('extracts descriptionProvider with version from @mcpTool directive', () => {
+    const source = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_description:3") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const ops = loadOperationsFromString(source);
+    expect(ops[0]!.mcpDirective).toEqual({
+      name: 'get_weather',
+      descriptionProvider: 'langfuse:weather_description:3',
+    });
+  });
+
   it('handles mixed operations with and without @mcpTool', () => {
     const source = `
       query GetWeather($location: String!) @mcpTool(name: "get_weather") {

@@ -142,6 +142,39 @@ export interface ResolvedToolConfig {
   providerDescription?: string;
 }
 
+/**
+ * Parse a directive descriptionProvider string into a DescriptionProviderConfig.
+ * Format: "type:prompt" or "type:prompt:version"
+ * Example: "langfuse:my_prompt" or "langfuse:my_prompt:3"
+ */
+function parseDescriptionProviderDirective(
+  value: string,
+): DescriptionProviderConfig {
+  const parts = value.split(':');
+  if (parts.length < 2 || parts.length > 3 || !parts[0] || !parts[1]) {
+    throw new Error(
+      `Invalid descriptionProvider directive format: "${value}". Expected "type:prompt" or "type:prompt:version" (e.g., "langfuse:my_prompt" or "langfuse:my_prompt:3")`,
+    );
+  }
+  const [type, prompt, versionStr] = parts;
+  if (parts.length === 3 && !versionStr) {
+    throw new Error(
+      `Invalid descriptionProvider directive format: "${value}". Trailing colon with no version. Expected "type:prompt" or "type:prompt:version".`,
+    );
+  }
+  const config: DescriptionProviderConfig = { type, prompt };
+  if (versionStr) {
+    const version = Number(versionStr);
+    if (!Number.isInteger(version) || version < 1) {
+      throw new Error(
+        `Invalid version "${versionStr}" in descriptionProvider directive "${value}". Version must be a positive integer.`,
+      );
+    }
+    config['version'] = version;
+  }
+  return config;
+}
+
 interface ResolveToolConfigsInput {
   tools: MCPToolConfig[];
   operationsSource?: string;
@@ -164,6 +197,11 @@ export function resolveToolConfigs(
       if (!op.mcpDirective) continue;
       const toolOverrides: MCPToolOverrides = {};
       if (op.mcpDirective.title) toolOverrides.title = op.mcpDirective.title;
+      if (op.mcpDirective.descriptionProvider) {
+        toolOverrides.descriptionProvider = parseDescriptionProviderDirective(
+          op.mcpDirective.descriptionProvider,
+        );
+      }
       directiveTools.set(op.mcpDirective.name, {
         name: op.mcpDirective.name,
         query: op.document,
