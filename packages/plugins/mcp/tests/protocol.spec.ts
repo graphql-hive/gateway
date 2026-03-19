@@ -232,7 +232,9 @@ describe('createMCPHandler', () => {
     const response = await handler(request);
     const body = await response.json();
 
-    expect(body.result.isError).toBe(true);
+    expect(body.error.code).toBe(-32602);
+    expect(body.error.message).toContain('unknown_tool');
+    expect(body.result).toBeUndefined();
   });
 
   it('de-aliases arguments before executing', async () => {
@@ -543,6 +545,263 @@ describe('createMCPHandler', () => {
     expect(body.result.content[0].text).toContain(
       '- [Doc](https://example.com)',
     );
+  });
+
+  it('postprocess hook returning raw MCP result is passed through directly', async () => {
+    const hookSchema = buildSchema(`
+      type Query { search(q: String!): SearchResult }
+      type SearchResult { items: [Item!]! }
+      type Item { title: String! url: String! }
+    `);
+    const hookRegistry = new ToolRegistry(
+      [
+        {
+          name: 'search_mcp',
+          query: 'query($q: String!) { search(q: $q) { items { title url } } }',
+          hooks: {
+            postprocess: (result, args) => {
+              const data = result as {
+                search: { items: { title: string; url: string }[] };
+              };
+              const rows = data.search.items
+                .map((i) => `| ${i.title} | ${i.url} |`)
+                .join('\n');
+              return {
+                content: [{ type: 'text', text: `| Title | URL |\n${rows}` }],
+                _metadata: {
+                  query: args['q'],
+                  source: 'test',
+                },
+              };
+            },
+          },
+        },
+      ],
+      hookSchema,
+    );
+    const hookExecute = vi.fn().mockResolvedValue({
+      search: { items: [{ title: 'Doc', url: 'https://example.com' }] },
+    });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: hookRegistry,
+      execute: hookExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'search_mcp', arguments: { q: 'test' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    // Raw MCP result passed through — not wrapped in JSON.stringify
+    expect(body.result.content[0].text).toBe(
+      '| Title | URL |\n| Doc | https://example.com |',
+    );
+    expect(body.result._metadata).toEqual({
+      query: 'test',
+      source: 'test',
+    });
+  });
+
+  it('preprocess hook returning raw MCP result is passed through directly', async () => {
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const hookRegistry = new ToolRegistry(
+      [
+        {
+          name: 'mcp_gate',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            preprocess: (args) => ({
+              content: [
+                {
+                  type: 'text',
+                  text: `Confirm action for ${args['name']}?`,
+                },
+              ],
+              _confirmationRequired: true,
+            }),
+          },
+        },
+      ],
+      hookSchema,
+    );
+    const hookExecute = vi.fn();
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: hookRegistry,
+      execute: hookExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'mcp_gate', arguments: { name: 'Alice' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(hookExecute).not.toHaveBeenCalled();
+    expect(body.result.content[0].text).toBe('Confirm action for Alice?');
+    expect(body.result._confirmationRequired).toBe(true);
+  });
+
+  it('does not misclassify GraphQL data with a content field as raw MCP result', async () => {
+    const cmsSchema = buildSchema(`
+      type Query { getPage(id: ID!): Page }
+      type Page { title: String! content: [Block!]! }
+      type Block { type: String! text: String }
+    `);
+    const cmsRegistry = new ToolRegistry(
+      [
+        {
+          name: 'get_page',
+          query: 'query($id: ID!) { getPage(id: $id) { title content { type text } } }',
+          output: { path: 'getPage' },
+        },
+      ],
+      cmsSchema,
+    );
+    const cmsExecute = vi.fn().mockResolvedValue({
+      getPage: {
+        title: 'Hello',
+        content: [{ type: 'paragraph', text: 'World' }],
+      },
+    });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: cmsRegistry,
+      execute: cmsExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'get_page', arguments: { id: '1' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    // Should be wrapped as structuredContent, NOT passed through as raw MCP result
+    expect(body.result.structuredContent).toEqual({
+      title: 'Hello',
+      content: [{ type: 'paragraph', text: 'World' }],
+    });
+  });
+
+  it('does not treat hook result with empty content array as raw MCP result', async () => {
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const hookRegistry = new ToolRegistry(
+      [
+        {
+          name: 'empty_content',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            postprocess: () => ({ content: [] }),
+          },
+        },
+      ],
+      hookSchema,
+    );
+    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: hookRegistry,
+      execute: hookExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'empty_content', arguments: { name: 'test' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    // Empty content array is NOT a valid MCP result — should be wrapped as text
+    const parsed = JSON.parse(body.result.content[0].text);
+    expect(parsed).toEqual({ content: [] });
+  });
+
+  it('does not treat hook result with non-MCP content types as raw MCP result', async () => {
+    const hookSchema = buildSchema(
+      `type Query { hello(name: String!): String }`,
+    );
+    const hookRegistry = new ToolRegistry(
+      [
+        {
+          name: 'bad_content_type',
+          query: 'query($name: String!) { hello(name: $name) }',
+          hooks: {
+            postprocess: () => ({
+              content: [{ type: 'paragraph', text: 'not MCP' }],
+            }),
+          },
+        },
+      ],
+      hookSchema,
+    );
+    const hookExecute = vi.fn().mockResolvedValue({ hello: 'world' });
+    const handler = createMCPHandler({
+      serverName: 'test',
+      serverVersion: '1.0.0',
+      registry: hookRegistry,
+      execute: hookExecute,
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 102,
+        method: 'tools/call',
+        params: { name: 'bad_content_type', arguments: { name: 'test' } },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    // Non-MCP content types should be wrapped as text, not passed through
+    const parsed = JSON.parse(body.result.content[0].text);
+    expect(parsed).toEqual({
+      content: [{ type: 'paragraph', text: 'not MCP' }],
+    });
   });
 
   it('applies output.path before postprocess', async () => {
