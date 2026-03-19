@@ -23,8 +23,15 @@ function looksLikeMCPResult(value: unknown): value is Record<string, unknown> {
       return (
         typeof rec['data'] === 'string' && typeof rec['mimeType'] === 'string'
       );
-    if (type === 'resource')
-      return typeof rec['resource'] === 'object' && rec['resource'] !== null;
+    if (type === 'resource') {
+      const resource = rec['resource'];
+      return (
+        typeof resource === 'object' &&
+        resource !== null &&
+        !Array.isArray(resource) &&
+        typeof (resource as Record<string, unknown>)['uri'] === 'string'
+      );
+    }
     if (type === 'resource_link')
       return typeof rec['uri'] === 'string' && typeof rec['name'] === 'string';
     return false;
@@ -36,6 +43,8 @@ export interface MCPHandlerOptions {
   serverVersion: string;
   protocolVersion?: string;
   suppressOutputSchema?: boolean;
+  /** Page size for tools/list pagination. Defaults to returning all tools (no pagination). */
+  toolsListPageSize?: number;
   registry: ToolRegistry;
   execute: (
     toolName: string,
@@ -64,6 +73,16 @@ interface JsonRpcResponse {
 }
 
 export function createMCPHandler(options: MCPHandlerOptions) {
+  if (
+    options.toolsListPageSize !== undefined &&
+    (!Number.isInteger(options.toolsListPageSize) ||
+      options.toolsListPageSize <= 0)
+  ) {
+    throw new Error(
+      `[MCP] toolsListPageSize must be a positive integer, got ${options.toolsListPageSize}`,
+    );
+  }
+
   const {
     serverName,
     serverVersion,
@@ -108,14 +127,14 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         break;
 
       case 'tools/list': {
-        const tools = registry.getMCPTools({
+        const allTools = registry.getMCPTools({
           suppressOutputSchema: options.suppressOutputSchema,
         });
 
         if (options.resolveToolDescriptions) {
           try {
             const descriptions = await options.resolveToolDescriptions();
-            for (const tool of tools) {
+            for (const tool of allTools) {
               if (descriptions.has(tool.name)) {
                 tool.description = descriptions.get(tool.name)!;
               }
@@ -130,7 +149,7 @@ export function createMCPHandler(options: MCPHandlerOptions) {
         if (options.resolveFieldDescriptions) {
           try {
             const fieldDescs = await options.resolveFieldDescriptions();
-            for (const tool of tools) {
+            for (const tool of allTools) {
               const fields = fieldDescs.get(tool.name);
               if (fields && tool.inputSchema.properties) {
                 for (const [fieldName, description] of fields) {
@@ -153,10 +172,39 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           }
         }
 
+        const listParams = params as { cursor?: string } | undefined;
+        const cursor = listParams?.cursor;
+        let startIndex = 0;
+        if (cursor !== undefined && cursor !== '') {
+          startIndex = parseInt(cursor, 10);
+          if (
+            Number.isNaN(startIndex) ||
+            startIndex < 0 ||
+            startIndex >= allTools.length
+          ) {
+            response = {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32602,
+                message: `Invalid cursor: ${JSON.stringify(cursor)}`,
+              },
+            };
+            break;
+          }
+        }
+        const pageSize = options.toolsListPageSize ?? allTools.length;
+        const page = allTools.slice(startIndex, startIndex + pageSize);
+        const nextIndex = startIndex + pageSize;
+        const result: Record<string, unknown> = { tools: page };
+        if (nextIndex < allTools.length) {
+          result['nextCursor'] = String(nextIndex);
+        }
+
         response = {
           jsonrpc: '2.0',
           id,
-          result: { tools },
+          result,
         };
         break;
       }
