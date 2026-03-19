@@ -674,7 +674,8 @@ describe('createMCPHandler', () => {
       [
         {
           name: 'get_page',
-          query: 'query($id: ID!) { getPage(id: $id) { title content { type text } } }',
+          query:
+            'query($id: ID!) { getPage(id: $id) { title content { type text } } }',
           output: { path: 'getPage' },
         },
       ],

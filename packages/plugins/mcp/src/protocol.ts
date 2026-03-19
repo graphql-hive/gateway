@@ -6,9 +6,7 @@ import { getByPath, type ToolRegistry } from './registry.js';
  * Each content item must have a `type` field matching a known MCP content type
  * and the required fields for that type per the MCP spec.
  */
-function looksLikeMCPResult(
-  value: unknown,
-): value is Record<string, unknown> {
+function looksLikeMCPResult(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false;
   const content = (value as Record<string, unknown>)['content'];
   if (!Array.isArray(content) || content.length === 0) return false;
@@ -257,12 +255,14 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           // If a hook returned a raw MCP result (object with valid `content` array),
           // pass it through directly. Only checked when a hook actually produced the result
           // to avoid false positives on GraphQL data that happens to have a `content` field.
-          const isMCPResult =
-            hookProducedResult && looksLikeMCPResult(result);
+          const isMCPResult = hookProducedResult && looksLikeMCPResult(result);
 
           let callResult: Record<string, unknown>;
           if (isMCPResult) {
-            callResult = { isError: false, ...result as Record<string, unknown> };
+            callResult = {
+              isError: false,
+              ...(result as Record<string, unknown>),
+            };
           } else {
             const textContent = {
               content: [
