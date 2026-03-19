@@ -22,3 +22,10 @@ query QuickWeather($location: String!) @mcpTool(name: "quick_weather", descripti
     conditions
   }
 }
+
+query QuickWeatherProvider($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check", descriptionProvider: "langfuse:get_weather_description") {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}

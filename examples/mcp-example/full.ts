@@ -336,9 +336,9 @@ const mcpPlugin = useMCP({
             (item) => `| ${item.topic} | ${item.description} | ${item.score} | ${item.path} |`,
           )
           return {
-            results: `${header}\n${rows.join('\n')}`,
+            content: [{ type: 'text', text: `${header}\n${rows.join('\n')}` }],
             _metadata: {
-              query: args.q,
+              query: args['q'],
               source: 'toast-central',
               timestamp: Date.now(),
             },
