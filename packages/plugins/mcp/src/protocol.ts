@@ -41,6 +41,8 @@ function looksLikeMCPResult(value: unknown): value is Record<string, unknown> {
 export interface MCPHandlerOptions {
   serverName: string;
   serverVersion: string;
+  serverTitle?: string;
+  instructions?: string;
   protocolVersion?: string;
   suppressOutputSchema?: boolean;
   /** Page size for tools/list pagination. Defaults to returning all tools (no pagination). */
@@ -109,22 +111,25 @@ export function createMCPHandler(options: MCPHandlerOptions) {
     let response: JsonRpcResponse;
 
     switch (method) {
-      case 'initialize':
+      case 'initialize': {
+        const serverInfo: Record<string, unknown> = {
+          name: serverName,
+          version: serverVersion,
+        };
+        if (options.serverTitle) serverInfo['title'] = options.serverTitle;
+        const initResult: Record<string, unknown> = {
+          protocolVersion,
+          serverInfo,
+          capabilities: { tools: {} },
+        };
+        if (options.instructions) initResult['instructions'] = options.instructions;
         response = {
           jsonrpc: '2.0',
           id,
-          result: {
-            protocolVersion,
-            serverInfo: {
-              name: serverName,
-              version: serverVersion,
-            },
-            capabilities: {
-              tools: {},
-            },
-          },
+          result: initResult,
         };
         break;
+      }
 
       case 'tools/list': {
         const allTools = registry.getMCPTools({

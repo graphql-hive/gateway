@@ -82,6 +82,62 @@ describe('createMCPHandler', () => {
     expect(body.result.protocolVersion).toBe('2024-11-05');
   });
 
+  it('includes serverTitle and instructions in initialize response when provided', async () => {
+    const handler = createMCPHandler({
+      ...options,
+      serverTitle: 'Weather API',
+      instructions: 'Use the weather tools to get forecasts.',
+    });
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-11-25',
+          capabilities: {},
+          clientInfo: { name: 'test-client', version: '1.0.0' },
+        },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.serverInfo.title).toBe('Weather API');
+    expect(body.result.instructions).toBe(
+      'Use the weather tools to get forecasts.',
+    );
+  });
+
+  it('omits serverTitle and instructions from initialize response when not provided', async () => {
+    const handler = createMCPHandler(options);
+
+    const request = new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-11-25',
+          capabilities: {},
+          clientInfo: { name: 'test-client', version: '1.0.0' },
+        },
+      }),
+    });
+
+    const response = await handler(request);
+    const body = await response.json();
+
+    expect(body.result.serverInfo.title).toBeUndefined();
+    expect(body.result.instructions).toBeUndefined();
+  });
+
   it('handles tools/list request', async () => {
     const handler = createMCPHandler(options);
 
