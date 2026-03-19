@@ -4502,7 +4502,7 @@ __metadata:
     "@rollup/plugin-sucrase": "npm:^5.0.2"
     "@tsconfig/node18": "npm:^18.2.5"
     "@types/adm-zip": "npm:^0.5.5"
-    "@types/bun": "npm:1.3.10"
+    "@types/bun": "npm:1.3.11"
     "@types/ws": "npm:^8.5.12"
     "@whatwg-node/fetch": "npm:^0.10.13"
     "@whatwg-node/server": "npm:^0.10.17"
@@ -8674,13 +8674,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-aarch64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-darwin-aarch64@npm:1.3.10"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-darwin-aarch64@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-darwin-aarch64@npm:1.3.11"
@@ -8688,23 +8681,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-darwin-x64-baseline@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-darwin-x64-baseline@npm:1.3.10"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-darwin-x64-baseline@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-darwin-x64-baseline@npm:1.3.11"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-darwin-x64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-darwin-x64@npm:1.3.10"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -8716,23 +8695,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-aarch64-musl@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-aarch64-musl@npm:1.3.10"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-linux-aarch64-musl@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-linux-aarch64-musl@npm:1.3.11"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-aarch64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-aarch64@npm:1.3.10"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
@@ -8744,23 +8709,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-baseline@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-x64-baseline@npm:1.3.10"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-linux-x64-baseline@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-linux-x64-baseline@npm:1.3.11"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-x64-musl-baseline@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-x64-musl-baseline@npm:1.3.10"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8772,23 +8723,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-linux-x64-musl@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-x64-musl@npm:1.3.10"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-linux-x64-musl@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-linux-x64-musl@npm:1.3.11"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-linux-x64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-linux-x64@npm:1.3.10"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -8800,13 +8737,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-aarch64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-windows-aarch64@npm:1.3.10"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-windows-aarch64@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-windows-aarch64@npm:1.3.11"
@@ -8814,23 +8744,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oven/bun-windows-x64-baseline@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-windows-x64-baseline@npm:1.3.10"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@oven/bun-windows-x64-baseline@npm:1.3.11":
   version: 1.3.11
   resolution: "@oven/bun-windows-x64-baseline@npm:1.3.11"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@oven/bun-windows-x64@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@oven/bun-windows-x64@npm:1.3.10"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -10332,12 +10248,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bun@npm:1.3.10":
-  version: 1.3.10
-  resolution: "@types/bun@npm:1.3.10"
+"@types/bun@npm:1.3.11":
+  version: 1.3.11
+  resolution: "@types/bun@npm:1.3.11"
   dependencies:
-    bun-types: "npm:1.3.10"
-  checksum: 10c0/cd25063422129c648aa2b9d276c9860666e5ae430c7b300995ed8e4ee6d4aaecf9add29699aaef32243bac5daa323807574922ff11fa382ffa24a1264651dc43
+    bun-types: "npm:1.3.11"
+  checksum: 10c0/ab50a22f900c09928d7b2bcd45829433667bb6e383930f9862b563f509df41a22f021156d9d30890c76fdd154e8581b48a2707b3a9b73259870df9dae2d17c52
   languageName: node
   linkType: hard
 
@@ -12946,16 +12862,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bun-types@npm:1.3.10":
-  version: 1.3.10
-  resolution: "bun-types@npm:1.3.10"
+"bun-types@npm:1.3.11":
+  version: 1.3.11
+  resolution: "bun-types@npm:1.3.11"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 10c0/f4c9ab72113a32f903c49ed388cc2a1052e868f639cc95b0cd5fd77fe464e6dad3bfa27fbc772d0d83f447a30305032ecb13c0c5c97cd8997df43805949893f5
+  checksum: 10c0/1dcbde8abc4d7dbf732a81d580fee476eb41c295324f9f55268aca80f49366c88ece7447fa69945f17391ee42d2f026270f9e4c8ab766b5c9d393a241cf6e953
   languageName: node
   linkType: hard
 
-"bun@npm:1.3.11":
+"bun@npm:1.3.11, bun@npm:^1.3.2":
   version: 1.3.11
   resolution: "bun@npm:1.3.11"
   dependencies:
@@ -13000,55 +12916,6 @@ __metadata:
     bun: bin/bun.exe
     bunx: bin/bunx.exe
   checksum: 10c0/c82604e5e9bc97c44ee78f6f90bb36a51b02c3209c9f28b41de00474997bec57e3528a162cbafb34e6a7faa7384ed945e9bf75a9310aa318edfef4d9c6abb2da
-  conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
-  languageName: node
-  linkType: hard
-
-"bun@npm:^1.3.2":
-  version: 1.3.10
-  resolution: "bun@npm:1.3.10"
-  dependencies:
-    "@oven/bun-darwin-aarch64": "npm:1.3.10"
-    "@oven/bun-darwin-x64": "npm:1.3.10"
-    "@oven/bun-darwin-x64-baseline": "npm:1.3.10"
-    "@oven/bun-linux-aarch64": "npm:1.3.10"
-    "@oven/bun-linux-aarch64-musl": "npm:1.3.10"
-    "@oven/bun-linux-x64": "npm:1.3.10"
-    "@oven/bun-linux-x64-baseline": "npm:1.3.10"
-    "@oven/bun-linux-x64-musl": "npm:1.3.10"
-    "@oven/bun-linux-x64-musl-baseline": "npm:1.3.10"
-    "@oven/bun-windows-aarch64": "npm:1.3.10"
-    "@oven/bun-windows-x64": "npm:1.3.10"
-    "@oven/bun-windows-x64-baseline": "npm:1.3.10"
-  dependenciesMeta:
-    "@oven/bun-darwin-aarch64":
-      optional: true
-    "@oven/bun-darwin-x64":
-      optional: true
-    "@oven/bun-darwin-x64-baseline":
-      optional: true
-    "@oven/bun-linux-aarch64":
-      optional: true
-    "@oven/bun-linux-aarch64-musl":
-      optional: true
-    "@oven/bun-linux-x64":
-      optional: true
-    "@oven/bun-linux-x64-baseline":
-      optional: true
-    "@oven/bun-linux-x64-musl":
-      optional: true
-    "@oven/bun-linux-x64-musl-baseline":
-      optional: true
-    "@oven/bun-windows-aarch64":
-      optional: true
-    "@oven/bun-windows-x64":
-      optional: true
-    "@oven/bun-windows-x64-baseline":
-      optional: true
-  bin:
-    bun: bin/bun.exe
-    bunx: bin/bunx.exe
-  checksum: 10c0/2691db7e00293c831e853e4ecd40333b2c885eeaeda2d1add1a72cab17fe68b52c3b5b861a6bb7842b992d4ae45efb16c6b0f4fc3e901d633b0aa44df96c80a1
   conditions: (os=darwin | os=linux | os=win32) & (cpu=arm64 | cpu=x64)
   languageName: node
   linkType: hard
