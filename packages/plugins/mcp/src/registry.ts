@@ -4,7 +4,7 @@ import type {
   MCPToolAnnotations,
   MCPToolExecution,
   MCPToolHooks,
-  MCPToolIcon,
+  MCPIcon,
   ResolvedToolConfig,
 } from './plugin.js';
 import {
@@ -21,7 +21,7 @@ export interface MCPTool {
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
   annotations?: MCPToolAnnotations;
-  icons?: MCPToolIcon[];
+  icons?: MCPIcon[];
   execution?: MCPToolExecution;
   _meta?: Record<string, unknown>;
 }
@@ -34,7 +34,7 @@ export interface RegisteredTool {
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
   annotations?: MCPToolAnnotations;
-  icons?: MCPToolIcon[];
+  icons?: MCPIcon[];
   execution?: MCPToolExecution;
   _meta?: Record<string, unknown>;
   /** Maps alias name -> original GraphQL variable name */
