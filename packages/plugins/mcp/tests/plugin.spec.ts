@@ -159,6 +159,153 @@ describe('resolveToolConfigs', () => {
     expect(tools[0]!.hooks).toBe(hooks);
   });
 
+  it('parses descriptionProvider from @mcpTool directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_prompt") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({ tools: [], operationsSource });
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.tool?.descriptionProvider).toEqual({
+      type: 'langfuse',
+      prompt: 'weather_prompt',
+    });
+  });
+
+  it('parses descriptionProvider with version from @mcpTool directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:weather_prompt:3") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({ tools: [], operationsSource });
+    expect(tools[0]!.tool?.descriptionProvider).toEqual({
+      type: 'langfuse',
+      prompt: 'weather_prompt',
+      version: 3,
+    });
+  });
+
+  it('throws on invalid descriptionProvider format in directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "invalid") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Invalid descriptionProvider directive format',
+    );
+  });
+
+  it('throws on invalid version in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:abc") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Invalid version',
+    );
+  });
+
+  it('throws on version 0 in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:0") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Version must be a positive integer',
+    );
+  });
+
+  it('throws on negative version in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:-1") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Version must be a positive integer',
+    );
+  });
+
+  it('throws on trailing colon in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Trailing colon with no version',
+    );
+  });
+
+  it('throws on extra segments in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:prompt:3:extra") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Invalid descriptionProvider directive format',
+    );
+  });
+
+  it('throws on empty type in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: ":prompt") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Invalid descriptionProvider directive format',
+    );
+  });
+
+  it('throws on empty prompt in descriptionProvider directive', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    expect(() => resolveToolConfigs({ tools: [], operationsSource })).toThrow(
+      'Invalid descriptionProvider directive format',
+    );
+  });
+
+  it('config descriptionProvider wins over directive descriptionProvider', () => {
+    const operationsSource = `
+      query GetWeather($location: String!) @mcpTool(name: "get_weather", descriptionProvider: "langfuse:directive_prompt") {
+        weather(location: $location) { temperature }
+      }
+    `;
+    const tools = resolveToolConfigs({
+      tools: [
+        {
+          name: 'get_weather',
+          source: {
+            type: 'graphql',
+            operationName: 'GetWeather',
+            operationType: 'query' as const,
+          },
+          tool: {
+            descriptionProvider: {
+              type: 'langfuse',
+              prompt: 'config_prompt',
+            },
+          },
+        },
+      ],
+      operationsSource,
+    });
+    expect(tools[0]!.tool?.descriptionProvider).toEqual({
+      type: 'langfuse',
+      prompt: 'config_prompt',
+    });
+  });
+
   it('does not auto-register operations without @mcpTool', () => {
     const operationsSource = `
       query GetWeather($location: String!) {
