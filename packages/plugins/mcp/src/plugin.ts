@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
 import type { GraphQLSchema } from 'graphql';
@@ -316,31 +316,35 @@ export function resolveToolConfigs(
 }
 
 function loadOperationsSource(config: MCPConfig): string | undefined {
-  let operationsSource;
+  if (!config.operationsPath) return undefined;
 
-  // Load from top-level operations path
-  if (config.operationsPath) {
-    const opsPath = resolve(config.operationsPath);
-    try {
-      const stat = readFileSync(opsPath);
-      // If it's a file, read it directly
-      operationsSource = stat.toString('utf-8');
-    } catch {
-      // Try as directory
-      try {
-        const files = readdirSync(opsPath)
-          .filter((f) => f.endsWith('.graphql'))
-          .map((f) => readFileSync(join(opsPath, f), 'utf-8'));
-        operationsSource = files.join('\n');
-      } catch {
-        throw new Error(
-          `Cannot read operations from "${config.operationsPath}"`,
-        );
-      }
-    }
+  const opsPath = resolve(config.operationsPath);
+  let stat;
+  try {
+    stat = statSync(opsPath);
+  } catch (err) {
+    throw new Error(
+      `Cannot access operations path "${config.operationsPath}": ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 
-  return operationsSource;
+  if (stat.isFile()) {
+    return readFileSync(opsPath, 'utf-8');
+  }
+
+  if (stat.isDirectory()) {
+    const files = readdirSync(opsPath).filter((f) => f.endsWith('.graphql'));
+    if (files.length === 0) {
+      throw new Error(
+        `Operations directory "${config.operationsPath}" contains no .graphql files`,
+      );
+    }
+    return files.map((f) => readFileSync(join(opsPath, f), 'utf-8')).join('\n');
+  }
+
+  throw new Error(
+    `Operations path "${config.operationsPath}" is neither a file nor a directory`,
+  );
 }
 
 export function useMCP(config: MCPConfig): GatewayPlugin {
