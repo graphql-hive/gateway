@@ -88,11 +88,18 @@ export interface MCPInputOverrides {
   };
 }
 
+export interface MCPContentAnnotations {
+  audience?: Array<'user' | 'assistant'>;
+  priority?: number;
+}
+
 export interface MCPOutputOverrides {
   /** Dot-notation path to extract from the GraphQL response data, e.g. "search.items" */
   path?: string;
   /** Set to false to suppress outputSchema in tools/list */
   schema?: false;
+  /** Annotations to attach to content items in tool responses (audience, priority) */
+  contentAnnotations?: MCPContentAnnotations;
 }
 
 export interface ToolHookContext {
