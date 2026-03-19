@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
@@ -255,7 +256,7 @@ describe('Gateway Runtime', () => {
     let onSchemaChangeCalls = 0;
     let supergraphFetcherCalls = 0;
 
-    const gwRuntime = createGatewayRuntime({
+    await using gwRuntime = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
       supergraph() {
@@ -291,20 +292,11 @@ describe('Gateway Runtime', () => {
     expect(onSchemaChangeCalls).toBe(1);
     expect(supergraphFetcherCalls).toBe(1);
 
-    await new Promise<void>((resolve, reject) => {
-      globalThis.setTimeout(async () => {
-        try {
-          // trigger gateway again
-          await triggerGw();
-          expect(onSchemaChangeCalls).toBe(1);
-          expect(supergraphFetcherCalls).toBe(2);
-          await gwRuntime[DisposableSymbols.asyncDispose]();
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      }, 2000);
-    });
+    await setTimeout(2000); // wait for 2 seconds to make sure onSchemaChange is not triggered by any polling
+
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(1);
+    expect(supergraphFetcherCalls).toBe(2);
   });
 
   describe('Cache', () => {
@@ -561,5 +553,50 @@ describe('Gateway Runtime', () => {
         ]),
       },
     });
+  });
+  it('defer/stream flag does not trigger onSchemaChange', async () => {
+    let onSchemaChangeCalls = 0;
+    let schemaFetcherCalls = 0;
+    await using gwRuntime = createGatewayRuntime({
+      logging: isDebug(),
+      deferStream: true,
+      supergraph() {
+        schemaFetcherCalls++;
+        return /* GraphQL */ `
+          type Query {
+            world: String!
+          }
+        `;
+      },
+      plugins: () => [
+        {
+          onSchemaChange() {
+            onSchemaChangeCalls++;
+          },
+        },
+      ],
+    });
+
+    async function triggerGw() {
+      const res = await gwRuntime.fetch(
+        'http://gateway/graphql?query={__typename}',
+      );
+      expect(res.ok).toBeTruthy();
+      expect(await res.json()).toMatchObject({
+        data: {
+          __typename: 'Query',
+        },
+      });
+    }
+    // trigger gw
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(2);
+    expect(schemaFetcherCalls).toBe(1);
+
+    await setTimeout(2000); // wait for 2 seconds to make sure onSchemaChange is not triggered by any polling
+
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(2);
+    expect(schemaFetcherCalls).toBe(1);
   });
 });
