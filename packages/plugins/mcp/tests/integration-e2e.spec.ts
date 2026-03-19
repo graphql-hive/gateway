@@ -201,7 +201,7 @@ describe('MCP E2E', () => {
     });
     const body = await res.json();
 
-    expect(body.result.isError).toBeUndefined();
+    expect(body.result.isError).toBe(false);
     expect(body.result.structuredContent.weather).toMatchObject({
       temperature: 12.5,
       conditions: 'Cloudy',
@@ -451,7 +451,7 @@ describe('MCP E2E', () => {
       });
       const body = await res.json();
 
-      expect(body.result.isError).toBeUndefined();
+      expect(body.result.isError).toBe(false);
       expect(body.result.structuredContent.weather).toMatchObject({
         temperature: 12.5,
         conditions: 'Cloudy',

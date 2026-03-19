@@ -262,12 +262,13 @@ export function createMCPHandler(options: MCPHandlerOptions) {
 
           let callResult: Record<string, unknown>;
           if (isMCPResult) {
-            callResult = result as Record<string, unknown>;
+            callResult = { isError: false, ...result as Record<string, unknown> };
           } else {
             const textContent = {
               content: [
                 { type: 'text', text: JSON.stringify(result, null, 2) },
               ],
+              isError: false,
             };
             // Hooks can transform the result shape, so structuredContent
             // (which relies on outputSchema) may not match. Suppress it
