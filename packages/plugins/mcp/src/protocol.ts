@@ -1,6 +1,38 @@
 import type { ToolHookContext } from './plugin.js';
 import { getByPath, type ToolRegistry } from './registry.js';
 
+/**
+ * Check if a value looks like a raw MCP CallToolResult (object with a valid `content` array).
+ * Each content item must have a `type` field matching a known MCP content type
+ * and the required fields for that type per the MCP spec.
+ */
+function looksLikeMCPResult(
+  value: unknown,
+): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) return false;
+  const content = (value as Record<string, unknown>)['content'];
+  if (!Array.isArray(content) || content.length === 0) return false;
+  return content.every((item) => {
+    if (typeof item !== 'object' || item === null) return false;
+    const rec = item as Record<string, unknown>;
+    const type = rec['type'];
+    if (type === 'text') return typeof rec['text'] === 'string';
+    if (type === 'image')
+      return (
+        typeof rec['data'] === 'string' && typeof rec['mimeType'] === 'string'
+      );
+    if (type === 'audio')
+      return (
+        typeof rec['data'] === 'string' && typeof rec['mimeType'] === 'string'
+      );
+    if (type === 'resource')
+      return typeof rec['resource'] === 'object' && rec['resource'] !== null;
+    if (type === 'resource_link')
+      return typeof rec['uri'] === 'string' && typeof rec['name'] === 'string';
+    return false;
+  });
+}
+
 export interface MCPHandlerOptions {
   serverName: string;
   serverVersion: string;
@@ -146,16 +178,9 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           response = {
             jsonrpc: '2.0',
             id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    error: `Unknown tool: ${callParams.name}`,
-                  }),
-                },
-              ],
-              isError: true,
+            error: {
+              code: -32602,
+              message: `Unknown tool: ${callParams.name}`,
             },
           };
           break;
@@ -224,21 +249,37 @@ export function createMCPHandler(options: MCPHandlerOptions) {
             }
           }
 
-          const textContent = {
-            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-          };
-          // Hooks can transform the result shape, so structuredContent
-          // (which relies on outputSchema) may not match. Suppress it
-          // whenever any hook is configured, consistent with tools/list.
           const hasHooks =
             !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
-          const callResult: Record<string, unknown> =
-            tool.outputSchema && !hasHooks
-              ? {
-                  structuredContent: result,
-                  ...textContent,
-                }
-              : textContent;
+          const hookProducedResult =
+            shortCircuited || !!tool.hooks?.postprocess;
+
+          // If a hook returned a raw MCP result (object with valid `content` array),
+          // pass it through directly. Only checked when a hook actually produced the result
+          // to avoid false positives on GraphQL data that happens to have a `content` field.
+          const isMCPResult =
+            hookProducedResult && looksLikeMCPResult(result);
+
+          let callResult: Record<string, unknown>;
+          if (isMCPResult) {
+            callResult = result as Record<string, unknown>;
+          } else {
+            const textContent = {
+              content: [
+                { type: 'text', text: JSON.stringify(result, null, 2) },
+              ],
+            };
+            // Hooks can transform the result shape, so structuredContent
+            // (which relies on outputSchema) may not match. Suppress it
+            // whenever any hook is configured, consistent with tools/list.
+            callResult =
+              tool.outputSchema && !hasHooks
+                ? {
+                    structuredContent: result,
+                    ...textContent,
+                  }
+                : textContent;
+          }
           response = {
             jsonrpc: '2.0',
             id,

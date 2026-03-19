@@ -85,6 +85,10 @@ export interface MCPToolHooks {
    * Return a non-undefined value to short-circuit execution and use that value as the tool result.
    * Return undefined (or void) to continue with normal GraphQL execution.
    * When preprocess short-circuits, postprocess is NOT called.
+   *
+   * To return a raw MCP result, return an object with a `content` array of MCP content items
+   * (each with `type: "text" | "image" | "audio" | "resource" | "resource_link"`). This will be passed through directly
+   * as the MCP response, allowing custom fields like `_metadata` or `isError`.
    */
   preprocess?: (
     args: Record<string, unknown>,
@@ -95,6 +99,10 @@ export interface MCPToolHooks {
    * Not called when preprocess short-circuits.
    * When a postprocess hook is registered, the response uses text content
    * instead of structuredContent since the hook may change the result shape.
+   *
+   * To return a raw MCP result, return an object with a `content` array of MCP content items
+   * (each with `type: "text" | "image" | "audio" | "resource" | "resource_link"`). This will be passed through directly
+   * as the MCP response, allowing custom fields like `_metadata` or `isError`.
    */
   postprocess?: (
     result: unknown,

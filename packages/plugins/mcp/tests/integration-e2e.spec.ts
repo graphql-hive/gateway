@@ -225,7 +225,7 @@ describe('MCP E2E', () => {
     });
   });
 
-  it('tools/call returns isError for unknown tool', async () => {
+  it('tools/call returns protocol error for unknown tool', async () => {
     await graphqlRequest('{ __typename }');
 
     const res = await mcpRequest('tools/call', {
@@ -234,10 +234,10 @@ describe('MCP E2E', () => {
     });
     const body = await res.json();
 
-    expect(body.result.isError).toBe(true);
-    const text = JSON.parse(body.result.content[0].text);
-    expect(text.error).toContain('Unknown tool');
-    expect(text.error).toContain('nonexistent_tool');
+    expect(body.error.code).toBe(-32602);
+    expect(body.error.message).toContain('Unknown tool');
+    expect(body.error.message).toContain('nonexistent_tool');
+    expect(body.result).toBeUndefined();
   });
 
   it('auto-triggers schema loading when MCP is called before any gql request', async () => {
