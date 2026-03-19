@@ -91,6 +91,7 @@ export interface MCPInputOverrides {
 export interface MCPContentAnnotations {
   audience?: Array<'user' | 'assistant'>;
   priority?: number;
+  lastModified?: string;
 }
 
 export interface MCPOutputOverrides {
