@@ -1,5 +1,15 @@
 # @graphql-hive/gateway-runtime
 
+## 2.7.9
+### Patch Changes
+
+
+
+- [#2127](https://github.com/graphql-hive/gateway/pull/2127) [`6e15d41`](https://github.com/graphql-hive/gateway/commit/6e15d4107159c931aa65f075278104832f3f64a8) Thanks [@ardatan](https://github.com/ardatan)! - When a plugin like Defer/Stream plugin updates the schema, the gateway considers the original schema as a new schema then tries to overwrite it.
+  After the overwrite, the external plugin tries to update it again on each request. So this causes extra schema changes on each request which causes extra resource consumption.
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
 ## 2.7.8
 ### Patch Changes
 

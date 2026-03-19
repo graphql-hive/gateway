@@ -1,5 +1,11 @@
 # @graphql-hive/gateway-testing
 
+## 6.0.9
+### Patch Changes
+
+- Updated dependencies [[`6e15d41`](https://github.com/graphql-hive/gateway/commit/6e15d4107159c931aa65f075278104832f3f64a8)]:
+  - @graphql-hive/gateway-runtime@2.7.9
+
 ## 6.0.8
 ### Patch Changes
 
