@@ -98,7 +98,7 @@ async function runQuery(port: number) {
 }
 
 describe('NestJS', () => {
-  it('should execute queries and have the correct schama', async () => {
+  it('should execute queries and have the correct schema', async () => {
     await using nestApp = await createNestApp();
     await runQuery(nestApp.port);
     const { schema } = nestApp.app.get(GraphQLSchemaHost);
