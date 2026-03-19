@@ -1,14 +1,24 @@
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { composeLocalSchemasWithApollo, createDisposableServer, getAvailablePort } from '@internal/testing';
-import { GqlModuleOptions, GraphQLModule, GraphQLSchemaHost } from '@nestjs/graphql';
+import {
+  composeLocalSchemasWithApollo,
+  createDisposableServer,
+  getAvailablePort,
+} from '@internal/testing';
+import {
+  GqlModuleOptions,
+  GraphQLModule,
+  GraphQLSchemaHost,
+} from '@nestjs/graphql';
 import { Test } from '@nestjs/testing';
-import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from '@whatwg-node/disposablestack';
 import { fetch } from '@whatwg-node/fetch';
 import { parse, printSchema, stripIgnoredCharacters } from 'graphql';
 import { createYoga } from 'graphql-yoga';
 import { describe, expect, it, vi } from 'vitest';
 import { HiveGatewayDriver, HiveGatewayDriverConfig } from '../src';
-
 
 const schemaSDL = /* GraphQL */ `
   type Query {
@@ -101,7 +111,7 @@ describe('NestJS', () => {
     const transformFn = vi.fn((schema) => schema);
     await using nestApp = await createNestApp({
       transformSchema: transformFn,
-    });;
+    });
     await runQuery(nestApp.port);
     expect(transformFn).toHaveBeenCalledTimes(1);
   });

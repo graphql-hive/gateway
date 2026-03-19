@@ -335,6 +335,7 @@ export function createGatewayRuntime<
                   assumeValid: true,
                   assumeValidSDL: true,
                 });
+                replaceSchema(unifiedGraph);
               }
               continuePolling();
               return true;
@@ -377,6 +378,7 @@ export function createGatewayRuntime<
                   assumeValidSDL: true,
                 });
               }
+              replaceSchema(unifiedGraph);
               continuePolling();
               return true;
             },
@@ -396,6 +398,7 @@ export function createGatewayRuntime<
               }),
             (schema) => {
               unifiedGraph = schema;
+              replaceSchema(unifiedGraph);
               continuePolling();
               return true;
             },
@@ -464,6 +467,7 @@ export function createGatewayRuntime<
       () => unifiedGraph,
       (newUnifiedGraph) => {
         unifiedGraph = newUnifiedGraph;
+        replaceSchema(newUnifiedGraph);
       },
       onSubgraphExecuteHooks,
       onDelegateHooks,
@@ -632,9 +636,7 @@ export function createGatewayRuntime<
       }
     },
     onRequestParse() {
-      return handleMaybePromise(getSchema, (schema) => {
-        replaceSchema(schema);
-      });
+      return handleMaybePromise(getSchema, () => {});
     },
     onPluginInit({ plugins, setSchema }) {
       replaceSchema = setSchema;

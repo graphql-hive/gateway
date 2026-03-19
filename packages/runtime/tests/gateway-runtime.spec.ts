@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { getUnifiedGraphGracefully } from '@graphql-mesh/fusion-composition';
 import restTransport from '@graphql-mesh/transport-rest';
 import { KeyValueCache, Logger } from '@graphql-mesh/types';
@@ -21,7 +22,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { createGatewayRuntime } from '../src/createGatewayRuntime';
 import { useCustomFetch } from '../src/plugins/useCustomFetch';
 import type { GatewayPlugin } from '../src/types';
-import { setTimeout } from 'timers/promises';
 
 describe('Gateway Runtime', () => {
   let upstreamIsDownForNextRequest = false;
@@ -256,7 +256,7 @@ describe('Gateway Runtime', () => {
     let onSchemaChangeCalls = 0;
     let supergraphFetcherCalls = 0;
 
-    const gwRuntime = createGatewayRuntime({
+    await using gwRuntime = createGatewayRuntime({
       logging: isDebug(),
       pollingInterval: 500,
       supergraph() {
@@ -289,23 +289,14 @@ describe('Gateway Runtime', () => {
     }
     // trigger gw
     await triggerGw();
-    expect(onSchemaChangeCalls).toBe(2);
+    expect(onSchemaChangeCalls).toBe(1);
     expect(supergraphFetcherCalls).toBe(1);
 
-    await new Promise<void>((resolve, reject) => {
-      globalThis.setTimeout(async () => {
-        try {
-          // trigger gateway again
-          await triggerGw();
-          expect(onSchemaChangeCalls).toBe(2);
-          expect(supergraphFetcherCalls).toBe(1);
-          await gwRuntime[DisposableSymbols.asyncDispose]();
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      }, 2000);
-    });
+    await setTimeout(2000); // wait for 2 seconds to make sure onSchemaChange is not triggered by any polling
+
+    await triggerGw();
+    expect(onSchemaChangeCalls).toBe(1);
+    expect(supergraphFetcherCalls).toBe(2);
   });
 
   describe('Cache', () => {
@@ -577,7 +568,6 @@ describe('Gateway Runtime', () => {
           }
         `;
       },
-      pollingInterval: 0, // disable polling to make sure onSchemaChange is not triggered by it
       plugins: () => [
         {
           onSchemaChange() {
