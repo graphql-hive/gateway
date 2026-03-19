@@ -19,16 +19,25 @@ import { buildSchemaObjectFromType, resolveFieldType } from 'sofa-api';
 export { resolveFieldType, buildSchemaObjectFromType };
 
 /**
- * SOFA's resolveFieldType doesn't handle InputObjectType (it uses $ref for ObjectType in its OpenAPI pipeline)
- * For mcp tool schemas we need inline expansion of input objects, so we wrap resolveFieldType to handle that case via buildSchemaObjectFromType.
+ * SOFA's resolveFieldType doesn't handle InputObjectType (it uses $ref for ObjectType in its OpenAPI pipeline).
+ * For mcp tool schemas we need inline expansion of input objects, so we recursively unwrap
+ * NonNull and List wrappers to find the leaf type, and use buildSchemaObjectFromType for InputObjectTypes.
  */
 function graphqlTypeToJsonSchema(
   type: GraphQLType,
   opts: { customScalars: Record<string, any> },
 ): any {
-  const unwrapped = isNonNullType(type) ? type.ofType : type;
-  if (isInputObjectType(unwrapped)) {
-    return buildSchemaObjectFromType(unwrapped as GraphQLInputObjectType, opts);
+  if (isNonNullType(type)) {
+    return graphqlTypeToJsonSchema(type.ofType, opts);
+  }
+  if (isListType(type)) {
+    return {
+      type: 'array',
+      items: graphqlTypeToJsonSchema(type.ofType, opts),
+    };
+  }
+  if (isInputObjectType(type)) {
+    return buildSchemaObjectFromType(type as GraphQLInputObjectType, opts);
   }
   return resolveFieldType(type, opts);
 }
