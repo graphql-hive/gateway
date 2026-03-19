@@ -161,6 +161,78 @@ describe('operationToInputSchema', () => {
     });
   });
 
+  it('handles input object variable', () => {
+    const inputSchema = buildSchema(`
+      type Query { createUser(input: UserInput!): String }
+      input UserInput { name: String!, email: String! }
+    `);
+    const operation = `
+      mutation CreateUser($input: UserInput!) {
+        createUser(input: $input)
+      }
+    `;
+    const result = operationToInputSchema(operation, inputSchema);
+    expect(result.properties!['input']).toEqual({
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        email: { type: 'string' },
+      },
+      required: ['name', 'email'],
+    });
+    expect(result.required).toContain('input');
+  });
+
+  it('handles list of input objects [InputObject!]!', () => {
+    const inputSchema = buildSchema(`
+      type Query { batchCreate(items: [ItemInput!]!): String }
+      input ItemInput { title: String!, quantity: Int! }
+    `);
+    const operation = `
+      mutation BatchCreate($items: [ItemInput!]!) {
+        batchCreate(items: $items)
+      }
+    `;
+    const result = operationToInputSchema(operation, inputSchema);
+    expect(result.properties!['items']).toEqual({
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          quantity: { type: 'integer', format: 'int32' },
+        },
+        required: ['title', 'quantity'],
+      },
+    });
+    expect(result.required).toContain('items');
+  });
+
+  it('handles nullable list of input objects [InputObject]', () => {
+    const inputSchema = buildSchema(`
+      type Query { search(filters: [FilterInput]): String }
+      input FilterInput { field: String!, value: String! }
+    `);
+    const operation = `
+      query Search($filters: [FilterInput]) {
+        search(filters: $filters)
+      }
+    `;
+    const result = operationToInputSchema(operation, inputSchema);
+    expect(result.properties!['filters']).toEqual({
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          field: { type: 'string' },
+          value: { type: 'string' },
+        },
+        required: ['field', 'value'],
+      },
+    });
+    expect(result.required ?? []).not.toContain('filters');
+  });
+
   it('returns empty schema for operation with no variables', () => {
     const operation = `
       query GetDefaultWeather {
