@@ -1,3 +1,4 @@
+import type { DescriptionProviderContext } from './description-provider.js';
 import type { MCPIcon, ToolHookContext } from './plugin.js';
 import {
   getByPath,
@@ -31,7 +32,7 @@ export async function handleToolCall(options: {
   jsonrpc: '2.0';
   id: number | string;
   result?: unknown;
-  error?: unknown;
+  error?: { code: number; message: string; data?: unknown };
 }> {
   const tool = options.registry.getTool(options.toolName);
 
@@ -178,7 +179,10 @@ export async function processExecutionResult(options: {
     return {
       jsonrpc: '2.0',
       id: options.id,
-      result: formatToolCallResult(data, tool, { hookProducedResult, hasHooks }),
+      result: formatToolCallResult(data, tool, {
+        hookProducedResult,
+        hasHooks,
+      }),
     };
   } catch (error) {
     console.error(
@@ -280,9 +284,13 @@ export interface MCPHandlerOptions {
     toolName: string,
     args: Record<string, unknown>,
   ) => Promise<unknown>;
-  resolveToolDescriptions?: () => Promise<Map<string, string>>;
+  resolveToolDescriptions?: (
+    context?: DescriptionProviderContext,
+  ) => Promise<Map<string, string>>;
   /** Resolve per-field descriptions from providers. Returns toolName -> fieldName -> description. */
-  resolveFieldDescriptions?: () => Promise<Map<string, Map<string, string>>>;
+  resolveFieldDescriptions?: (
+    context?: DescriptionProviderContext,
+  ) => Promise<Map<string, Map<string, string>>>;
   requestContext?: {
     headers: Record<string, string>;
   };
@@ -302,17 +310,11 @@ interface JsonRpcResponse {
   error?: { code: number; message: string; data?: unknown };
 }
 
-export function createMCPHandler(options: MCPHandlerOptions) {
-  if (
-    options.toolsListPageSize !== undefined &&
-    (!Number.isInteger(options.toolsListPageSize) ||
-      options.toolsListPageSize <= 0)
-  ) {
-    throw new Error(
-      `[MCP] toolsListPageSize must be a positive integer, got ${options.toolsListPageSize}`,
-    );
-  }
-
+export async function handleMCPRequest(
+  body: JsonRpcRequest,
+  options: MCPHandlerOptions,
+  providerContext?: DescriptionProviderContext,
+): Promise<JsonRpcResponse | null> {
   const {
     serverName,
     serverVersion,
@@ -320,179 +322,143 @@ export function createMCPHandler(options: MCPHandlerOptions) {
     registry,
   } = options;
 
-  return async function handleMCPRequest(
-    input: Request | JsonRpcRequest,
-  ): Promise<Response> {
-    let body: JsonRpcRequest;
-    if (input instanceof Request) {
-      try {
-        body = (await input.json()) as JsonRpcRequest;
-      } catch (parseError) {
-        console.warn(
-          `[MCP] Failed to parse JSON-RPC request body:`,
-          parseError instanceof Error ? parseError.message : parseError,
-        );
-        return new Response(
-          JSON.stringify({
-            jsonrpc: '2.0',
-            id: null,
-            error: { code: -32700, message: 'Parse error: Invalid JSON' },
-          }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } },
-        );
-      }
-    } else {
-      body = input;
+  const { id, method, params } = body;
+
+  switch (method) {
+    case 'initialize': {
+      const serverInfo: Record<string, unknown> = {
+        name: serverName,
+        version: serverVersion,
+      };
+      if (options.serverTitle) serverInfo['title'] = options.serverTitle;
+      if (options.serverDescription)
+        serverInfo['description'] = options.serverDescription;
+      if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
+      if (options.serverWebsiteUrl)
+        serverInfo['websiteUrl'] = options.serverWebsiteUrl;
+      const initResult: Record<string, unknown> = {
+        protocolVersion,
+        serverInfo,
+        capabilities: { tools: {} },
+      };
+      if (options.instructions)
+        initResult['instructions'] = options.instructions;
+      return { jsonrpc: '2.0', id, result: initResult };
     }
-    const { id, method, params } = body;
 
-    let response: JsonRpcResponse;
+    case 'tools/list': {
+      const allTools = registry.getMCPTools({
+        suppressOutputSchema: options.suppressOutputSchema,
+      });
 
-    switch (method) {
-      case 'initialize': {
-        const serverInfo: Record<string, unknown> = {
-          name: serverName,
-          version: serverVersion,
-        };
-        if (options.serverTitle) serverInfo['title'] = options.serverTitle;
-        if (options.serverDescription)
-          serverInfo['description'] = options.serverDescription;
-        if (options.serverIcons) serverInfo['icons'] = options.serverIcons;
-        if (options.serverWebsiteUrl)
-          serverInfo['websiteUrl'] = options.serverWebsiteUrl;
-        const initResult: Record<string, unknown> = {
-          protocolVersion,
-          serverInfo,
-          capabilities: { tools: {} },
-        };
-        if (options.instructions)
-          initResult['instructions'] = options.instructions;
-        response = {
-          jsonrpc: '2.0',
-          id,
-          result: initResult,
-        };
-        break;
+      if (options.resolveToolDescriptions) {
+        try {
+          const descriptions =
+            await options.resolveToolDescriptions(providerContext);
+          for (const tool of allTools) {
+            if (descriptions.has(tool.name)) {
+              tool.description = descriptions.get(tool.name)!;
+            }
+          }
+        } catch (err) {
+          console.warn(
+            `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
       }
 
-      case 'tools/list': {
-        const allTools = registry.getMCPTools({
-          suppressOutputSchema: options.suppressOutputSchema,
-        });
-
-        if (options.resolveToolDescriptions) {
-          try {
-            const descriptions = await options.resolveToolDescriptions();
-            for (const tool of allTools) {
-              if (descriptions.has(tool.name)) {
-                tool.description = descriptions.get(tool.name)!;
-              }
-            }
-          } catch (err) {
-            console.warn(
-              `[MCP] Failed to resolve tool descriptions: ${err instanceof Error ? err.message : String(err)}`,
-            );
-          }
-        }
-
-        if (options.resolveFieldDescriptions) {
-          try {
-            const fieldDescs = await options.resolveFieldDescriptions();
-            for (const tool of allTools) {
-              const fields = fieldDescs.get(tool.name);
-              if (fields && tool.inputSchema.properties) {
-                for (const [fieldName, description] of fields) {
-                  if (tool.inputSchema.properties[fieldName]) {
-                    tool.inputSchema.properties[fieldName].description =
-                      description;
-                  } else {
-                    console.warn(
-                      `[MCP] Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
-                        `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
-                    );
-                  }
+      if (options.resolveFieldDescriptions) {
+        try {
+          const fieldDescs =
+            await options.resolveFieldDescriptions(providerContext);
+          for (const tool of allTools) {
+            const fields = fieldDescs.get(tool.name);
+            if (fields && tool.inputSchema.properties) {
+              for (const [fieldName, description] of fields) {
+                if (tool.inputSchema.properties[fieldName]) {
+                  tool.inputSchema.properties[fieldName].description =
+                    description;
+                } else {
+                  console.warn(
+                    `[MCP] Resolved field description for "${fieldName}" on tool "${tool.name}" but no matching input property exists. ` +
+                      `Available properties: ${Object.keys(tool.inputSchema.properties).join(', ')}`,
+                  );
                 }
               }
             }
-          } catch (err) {
-            console.warn(
-              `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
-            );
           }
+        } catch (err) {
+          console.warn(
+            `[MCP] Failed to resolve field descriptions: ${err instanceof Error ? err.message : String(err)}`,
+          );
         }
-
-        const listParams = params as { cursor?: string } | undefined;
-        const cursor = listParams?.cursor;
-        let startIndex = 0;
-        if (cursor !== undefined && cursor !== '') {
-          startIndex = parseInt(cursor, 10);
-          if (
-            Number.isNaN(startIndex) ||
-            startIndex < 0 ||
-            startIndex >= allTools.length
-          ) {
-            response = {
-              jsonrpc: '2.0',
-              id,
-              error: {
-                code: -32602,
-                message: `Invalid cursor: ${JSON.stringify(cursor)}`,
-              },
-            };
-            break;
-          }
-        }
-        const pageSize = options.toolsListPageSize ?? allTools.length;
-        const page = allTools.slice(startIndex, startIndex + pageSize);
-        const nextIndex = startIndex + pageSize;
-        const result: Record<string, unknown> = { tools: page };
-        if (nextIndex < allTools.length) {
-          result['nextCursor'] = String(nextIndex);
-        }
-
-        response = {
-          jsonrpc: '2.0',
-          id,
-          result,
-        };
-        break;
       }
 
-      case 'notifications/initialized':
-        // Client notification, no response needed but we return empty for simplicity
-        return new Response(null, { status: 204 });
-
-      case 'tools/call': {
-        const callParams = params as {
-          name: string;
-          arguments?: Record<string, unknown>;
-        };
-        const toolCallResponse = await handleToolCall({
-          id,
-          toolName: callParams.name,
-          arguments: callParams.arguments || {},
-          registry,
-          execute: options.execute,
-          headers: options.requestContext?.headers ?? {},
-        });
-        return new Response(JSON.stringify(toolCallResponse), {
-          headers: { 'Content-Type': 'application/json' },
-        });
+      if (options.toolsListPageSize !== undefined) {
+        if (
+          !Number.isInteger(options.toolsListPageSize) ||
+          options.toolsListPageSize <= 0
+        ) {
+          throw new Error(
+            `[MCP] toolsListPageSize must be a positive integer, got ${options.toolsListPageSize}`,
+          );
+        }
       }
 
-      default:
-        response = {
-          jsonrpc: '2.0',
-          id,
-          error: {
-            code: -32601,
-            message: `Method not found: ${method}`,
-          },
-        };
+      const listParams = params as { cursor?: string } | undefined;
+      const cursor = listParams?.cursor;
+      let startIndex = 0;
+      if (cursor !== undefined && cursor !== '') {
+        startIndex = parseInt(cursor, 10);
+        if (
+          Number.isNaN(startIndex) ||
+          startIndex < 0 ||
+          startIndex >= allTools.length
+        ) {
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32602,
+              message: `Invalid cursor: ${JSON.stringify(cursor)}`,
+            },
+          };
+        }
+      }
+      const pageSize = options.toolsListPageSize ?? allTools.length;
+      const page = allTools.slice(startIndex, startIndex + pageSize);
+      const nextIndex = startIndex + pageSize;
+      const result: Record<string, unknown> = { tools: page };
+      if (nextIndex < allTools.length) {
+        result['nextCursor'] = String(nextIndex);
+      }
+
+      return { jsonrpc: '2.0', id, result };
     }
 
-    return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  };
+    case 'notifications/initialized':
+      return null;
+
+    case 'tools/call': {
+      const callParams = params as {
+        name: string;
+        arguments?: Record<string, unknown>;
+      };
+      return handleToolCall({
+        id,
+        toolName: callParams.name,
+        arguments: callParams.arguments || {},
+        registry,
+        execute: options.execute,
+        headers: options.requestContext?.headers ?? {},
+      });
+    }
+
+    default:
+      return {
+        jsonrpc: '2.0',
+        id,
+        error: { code: -32601, message: `Method not found: ${method}` },
+      };
+  }
 }
