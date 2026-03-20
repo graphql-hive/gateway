@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { GatewayPlugin } from '@graphql-hive/gateway-runtime';
-import type { GraphQLSchema } from 'graphql';
+import type { ExecutionResult, GraphQLSchema } from 'graphql';
 import type { LangfuseOptions } from 'langfuse';
 import {
   resolveDescriptions,
@@ -12,20 +12,27 @@ import {
   type DescriptionProviderContext,
   type ProviderRegistry,
 } from './description-provider.js';
-import { createGraphQLExecutor } from './executor.js';
 import {
   loadOperationsFromString,
   resolveOperation,
   type ParsedOperation,
 } from './operation-loader.js';
-import { createMCPHandler } from './protocol.js';
+import {
+  createMCPHandler,
+  dealiasArgs,
+  formatToolCallResult,
+  processExecutionResult,
+  type JsonRpcRequest,
+} from './protocol.js';
 import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
-import { ToolRegistry } from './registry.js';
+import { ToolRegistry, type RegisteredTool } from './registry.js';
 
-declare module '@graphql-hive/gateway-runtime' {
-  interface GatewayConfigContext {
-    dispatchRequest?: (req: Request) => Response | Promise<Response>;
-  }
+interface MCPToolCallContext {
+  jsonrpcId: number | string;
+  toolName: string;
+  args: Record<string, unknown>;
+  tool: RegisteredTool;
+  headers: Record<string, string>;
 }
 
 export type MCPToolSource =
@@ -352,7 +359,6 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   const graphqlPath = config.graphqlPath || '/graphql';
   let registry: ToolRegistry | null = null;
   let schema: GraphQLSchema | null = null;
-  let schemaLoadingPromise: Promise<void> | null = null;
 
   // Resolve operations from files at startup
   const operationsSource = config.operationsStr || loadOperationsSource(config);
@@ -400,6 +406,95 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
   );
 
   const internalRequests = new WeakSet<Request>();
+  const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
+
+  function mcpErrorResponse(id: number | string, message: string) {
+    return new Response(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id,
+        result: {
+          content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
+          isError: true,
+        },
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
+  // Create an MCP handler for non-tools/call methods with per-request provider context
+  function createHandler(providerContext?: DescriptionProviderContext) {
+    if (!registry) return null;
+    return createMCPHandler({
+      serverName: config.name,
+      serverVersion: config.version || '1.0.0',
+      serverTitle: config.title,
+      serverDescription: config.description,
+      serverIcons: config.icons,
+      serverWebsiteUrl: config.websiteUrl,
+      instructions: config.instructions,
+      protocolVersion: config.protocolVersion,
+      suppressOutputSchema: config.suppressOutputSchema,
+      registry,
+      resolveToolDescriptions:
+        providerToolConfigs.length > 0
+          ? async () => {
+              if (!resolvedProviders) {
+                resolvedProviders = await resolveProviders(
+                  config.providers || {},
+                );
+              }
+              const resolved = await resolveDescriptions(
+                providerToolConfigs,
+                resolvedProviders,
+                { isStartup: false, context: providerContext },
+              );
+              const map = new Map();
+              for (const tool of resolved) {
+                if (tool.providerDescription) {
+                  map.set(tool.name, tool.providerDescription);
+                }
+              }
+              return map;
+            }
+          : undefined,
+      resolveFieldDescriptions:
+        fieldProviderToolConfigs.length > 0
+          ? async () => {
+              if (!resolvedProviders) {
+                resolvedProviders = await resolveProviders(
+                  config.providers || {},
+                );
+              }
+              const fieldDescs = await resolveFieldDescriptions(
+                fieldProviderToolConfigs,
+                resolvedProviders,
+                { isStartup: false, context: providerContext },
+              );
+              for (const tool of fieldProviderToolConfigs) {
+                const toolDescs = fieldDescs.get(tool.name);
+                if (!toolDescs) continue;
+                const aliases = tool.input?.schema?.properties;
+                if (!aliases) continue;
+                for (const [origName, overrides] of Object.entries(aliases)) {
+                  if (overrides.alias && toolDescs.has(origName)) {
+                    const desc = toolDescs.get(origName)!;
+                    toolDescs.delete(origName);
+                    toolDescs.set(overrides.alias, desc);
+                  }
+                }
+              }
+              return fieldDescs;
+            }
+          : undefined,
+      execute: () => {
+        throw new Error(
+          'tools/call must be routed through the Yoga hook pipeline. ' +
+            'Ensure the MCP plugin is registered as a gateway plugin.',
+        );
+      },
+    });
+  }
 
   return {
     onSchemaChange({ schema: newSchema }) {
@@ -407,7 +502,14 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       registry = new ToolRegistry(resolvedTools, newSchema);
     },
 
-    onRequest({ request, url, endResponse, serverContext }) {
+    async onRequest({
+      request,
+      url,
+      endResponse,
+      setRequest,
+      requestHandler,
+      serverContext,
+    }) {
       // Block external GraphQL access when disableGraphQLEndpoint is set
       if (
         config.disableGraphQLEndpoint &&
@@ -422,61 +524,26 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         return;
       }
 
-      if (!serverContext.dispatchRequest) {
-        endResponse(
-          new Response(
-            JSON.stringify({
-              jsonrpc: '2.0',
-              id: null,
-              error: {
-                code: -32000,
-                message:
-                  'MCP plugin requires dispatchRequest in server context. Ensure it is used within createGatewayRuntime.',
-              },
-            }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } },
-          ),
-        );
-        return;
-      }
-
-      const graphqlEndpoint = `${url.protocol}//${url.host}${graphqlPath}`;
-      const dispatch = (url: string, init: RequestInit) => {
-        const req = new Request(url, init);
-        if (config.disableGraphQLEndpoint) internalRequests.add(req);
-        return serverContext.dispatchRequest!(req);
-      };
-
-      // Trigger schema introspection if not loaded
-      const ensureSchema = async (): Promise<boolean> => {
-        if (registry && schema) {
-          return true;
+      // Schema bootstrap: one-time dispatch to trigger schema loading
+      if (!registry || !schema) {
+        try {
+          const bootstrapReq = new Request(`http://localhost${graphqlPath}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: '{ __typename }' }),
+          });
+          if (config.disableGraphQLEndpoint) internalRequests.add(bootstrapReq);
+          await requestHandler(bootstrapReq, serverContext);
+        } catch (bootstrapError) {
+          console.error(
+            `[MCP] Schema bootstrap failed:`,
+            bootstrapError instanceof Error
+              ? bootstrapError.message
+              : bootstrapError,
+          );
         }
 
-        // Avoid multiple concurrent introspection requests
-        if (!schemaLoadingPromise) {
-          schemaLoadingPromise = (async () => {
-            try {
-              await dispatch(graphqlEndpoint, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-mcp-internal': '1',
-                },
-                body: JSON.stringify({ query: '{ __typename }' }),
-              });
-            } finally {
-              schemaLoadingPromise = null;
-            }
-          })();
-        }
-
-        await schemaLoadingPromise;
-        return !!(registry && schema);
-      };
-
-      return ensureSchema().then((ready) => {
-        if (!ready || !registry || !schema) {
+        if (!registry || !schema) {
           endResponse(
             new Response(
               JSON.stringify({
@@ -484,7 +551,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
                 id: null,
                 error: {
                   code: -32000,
-                  message: 'MCP server not ready. Schema introspection failed.',
+                  message: 'MCP server not ready. Schema loading failed.',
                 },
               }),
               {
@@ -495,126 +562,288 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           );
           return;
         }
+      }
 
-        const execute = createGraphQLExecutor(
-          registry,
-          graphqlEndpoint,
-          dispatch,
+      // Parse JSON-RPC body
+      let bodyText: string;
+      let body: JsonRpcRequest;
+      try {
+        bodyText = await request.text();
+        body = JSON.parse(bodyText);
+      } catch (parseError) {
+        console.warn(
+          `[MCP] Failed to parse JSON-RPC request body:`,
+          parseError instanceof Error ? parseError.message : parseError,
+        );
+        endResponse(
+          new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              id: null,
+              error: { code: -32700, message: 'Parse error: Invalid JSON' },
+            }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
+          ),
+        );
+        return;
+      }
+
+      // tools/call: route through Yoga's pipeline via onRequestParse -> execute -> onResultProcess
+      if (body.method === 'tools/call') {
+        if (
+          !body.params ||
+          typeof body.params !== 'object' ||
+          Array.isArray(body.params)
+        ) {
+          endResponse(
+            new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: body.id,
+                error: {
+                  code: -32602,
+                  message:
+                    'Invalid params: expected an object with "name" field',
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+          return;
+        }
+
+        const callParams = body.params as {
+          name: string;
+          arguments?: Record<string, unknown>;
+        };
+        const tool = registry.getTool(callParams.name);
+
+        if (!tool) {
+          endResponse(
+            new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: body.id,
+                error: {
+                  code: -32602,
+                  message: `Unknown tool: ${callParams.name}`,
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+          return;
+        }
+
+        const args = dealiasArgs(
+          callParams.arguments || {},
+          tool.argumentAliases,
         );
 
-        const rawPromptLabel = url.searchParams.get('promptLabel');
-        const promptLabel =
-          rawPromptLabel &&
-          rawPromptLabel.length <= 256 &&
-          /^[\w-]+$/.test(rawPromptLabel)
-            ? rawPromptLabel
-            : undefined;
-        if (rawPromptLabel && !promptLabel) {
-          console.warn(
-            `[MCP] Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
-          );
-        }
-        if (
-          promptLabel &&
-          providerToolConfigs.length === 0 &&
-          fieldProviderToolConfigs.length === 0
-        ) {
-          console.warn(
-            `[MCP] "promptLabel" query parameter was provided but no tools use description providers. The parameter has no effect.`,
-          );
-        }
-        const providerContext: DescriptionProviderContext | undefined =
-          promptLabel ? { label: promptLabel } : undefined;
-
-        // Extract headers once for both requestContext and execute
+        // Extract forwarded headers
         const forwardedHeaders: Record<string, string> = {};
         request.headers.forEach((value, key) => {
-          if (
-            key !== 'host' &&
-            key !== 'content-type' &&
-            key !== 'content-length'
-          ) {
-            forwardedHeaders[key] = value;
+          forwardedHeaders[key] = value;
+        });
+
+        const hookContext: ToolHookContext = {
+          toolName: callParams.name,
+          headers: forwardedHeaders,
+          query: tool.query,
+        };
+
+        // Preprocess hook can short-circuit execution
+        if (tool.hooks?.preprocess) {
+          try {
+            const preprocessResult = await tool.hooks.preprocess(
+              args,
+              hookContext,
+            );
+            if (preprocessResult !== undefined) {
+              const callResult = formatToolCallResult(preprocessResult, tool, {
+                hookProducedResult: true,
+                hasHooks: true,
+              });
+              endResponse(
+                new Response(
+                  JSON.stringify({
+                    jsonrpc: '2.0',
+                    id: body.id,
+                    result: callResult,
+                  }),
+                  { headers: { 'Content-Type': 'application/json' } },
+                ),
+              );
+              return;
+            }
+          } catch (hookError) {
+            console.error(
+              `[MCP] tools/call failed for tool "${callParams.name}":`,
+              `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+            );
+            endResponse(
+              new Response(
+                JSON.stringify({
+                  jsonrpc: '2.0',
+                  id: body.id,
+                  result: {
+                    content: [
+                      {
+                        type: 'text',
+                        text: JSON.stringify({
+                          error: `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+                        }),
+                      },
+                    ],
+                    isError: true,
+                  },
+                }),
+                { headers: { 'Content-Type': 'application/json' } },
+              ),
+            );
+            return;
           }
+        }
+
+        // Normal path: rewrite request to /graphql and let Yoga execute
+        const graphqlUrl = `${url.protocol}//${url.host}${graphqlPath}`;
+        const newRequest = new Request(graphqlUrl, {
+          method: 'POST',
+          headers: request.headers,
+          body: JSON.stringify({ query: tool.query, variables: args }),
         });
 
-        const handler = createMCPHandler({
-          serverName: config.name,
-          serverVersion: config.version || '1.0.0',
-          serverTitle: config.title,
-          serverDescription: config.description,
-          serverIcons: config.icons,
-          serverWebsiteUrl: config.websiteUrl,
-          instructions: config.instructions,
-          protocolVersion: config.protocolVersion,
-          suppressOutputSchema: config.suppressOutputSchema,
-          registry,
-          requestContext: {
-            headers: forwardedHeaders,
-          },
-          resolveToolDescriptions:
-            providerToolConfigs.length > 0
-              ? async () => {
-                  if (!resolvedProviders) {
-                    resolvedProviders = await resolveProviders(
-                      config.providers || {},
-                    );
-                  }
-                  const resolved = await resolveDescriptions(
-                    providerToolConfigs,
-                    resolvedProviders,
-                    { isStartup: false, context: providerContext },
-                  );
-                  const map = new Map();
-                  for (const tool of resolved) {
-                    if (tool.providerDescription) {
-                      map.set(tool.name, tool.providerDescription);
-                    }
-                  }
-                  return map;
-                }
-              : undefined,
-          resolveFieldDescriptions:
-            fieldProviderToolConfigs.length > 0
-              ? async () => {
-                  if (!resolvedProviders) {
-                    resolvedProviders = await resolveProviders(
-                      config.providers || {},
-                    );
-                  }
-                  const fieldDescs = await resolveFieldDescriptions(
-                    fieldProviderToolConfigs,
-                    resolvedProviders,
-                    { isStartup: false, context: providerContext },
-                  );
-                  // Remap original field names to alias names
-                  for (const tool of fieldProviderToolConfigs) {
-                    const toolDescs = fieldDescs.get(tool.name);
-                    if (!toolDescs) continue;
-                    const aliases = tool.input?.schema?.properties;
-                    if (!aliases) continue;
-                    for (const [origName, overrides] of Object.entries(
-                      aliases,
-                    )) {
-                      if (overrides.alias && toolDescs.has(origName)) {
-                        const desc = toolDescs.get(origName)!;
-                        toolDescs.delete(origName);
-                        toolDescs.set(overrides.alias, desc);
-                      }
-                    }
-                  }
-                  return fieldDescs;
-                }
-              : undefined,
-          execute: async (toolName, args) => {
-            return execute(toolName, args, { headers: forwardedHeaders });
-          },
+        if (config.disableGraphQLEndpoint) internalRequests.add(newRequest);
+        mcpToolCalls.set(newRequest, {
+          jsonrpcId: body.id,
+          toolName: callParams.name,
+          args,
+          tool,
+          headers: forwardedHeaders,
         });
 
-        return handler(request).then((response) => {
-          endResponse(response);
-        });
-      });
+        setRequest(newRequest);
+        return; // Don't endResponse, request flows to onRequestParse
+      }
+
+      // All other MCP methods: delegate to createMCPHandler
+      const rawPromptLabel = url.searchParams.get('promptLabel');
+      const promptLabel =
+        rawPromptLabel &&
+        rawPromptLabel.length <= 256 &&
+        /^[\w-]+$/.test(rawPromptLabel)
+          ? rawPromptLabel
+          : undefined;
+      if (rawPromptLabel && !promptLabel) {
+        console.warn(
+          `[MCP] Invalid "promptLabel" query parameter ignored. Must be alphanumeric/hyphens/underscores, max 256 chars.`,
+        );
+      }
+      if (
+        promptLabel &&
+        providerToolConfigs.length === 0 &&
+        fieldProviderToolConfigs.length === 0
+      ) {
+        console.warn(
+          `[MCP] "promptLabel" query parameter was provided but no tools use description providers. The parameter has no effect.`,
+        );
+      }
+      const providerContext: DescriptionProviderContext | undefined =
+        promptLabel ? { label: promptLabel } : undefined;
+
+      const handler = createHandler(providerContext);
+      if (!handler) {
+        endResponse(
+          new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              id: null,
+              error: {
+                code: -32000,
+                message: 'MCP server not ready. Schema loading failed.',
+              },
+            }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } },
+          ),
+        );
+        return;
+      }
+
+      const response = await handler(body);
+      endResponse(response);
+    },
+
+    // Set custom parser for MCP tools/call requests, returns GraphQLParams directly
+    onRequestParse({ request, setRequestParser }: any) {
+      const ctx = mcpToolCalls.get(request);
+      if (!ctx) return;
+
+      setRequestParser(() => ({
+        query: ctx.tool.query,
+        variables: ctx.args,
+      }));
+    },
+
+    // Transform GraphQL execution result into MCP JSON-RPC response
+    onResultProcess({ request, setResultProcessor }: any) {
+      const ctx = mcpToolCalls.get(request);
+      if (!ctx) return;
+
+      mcpToolCalls.delete(request);
+
+      setResultProcessor(async (executionResult: unknown) => {
+        try {
+          // Validate execution result shape
+          if (
+            executionResult == null ||
+            typeof executionResult !== 'object' ||
+            Array.isArray(executionResult)
+          ) {
+            console.error(
+              `[MCP] Unexpected execution result for tool "${ctx.toolName}":`,
+              typeof executionResult,
+            );
+            return mcpErrorResponse(ctx.jsonrpcId, 'Unexpected execution result format');
+          }
+
+          const execResult = executionResult as ExecutionResult;
+
+          // Check for GraphQL errors
+          if (execResult.errors?.length) {
+            const errorMessage =
+              (execResult.errors[0] as { message?: string })?.message ||
+              'GraphQL execution error';
+            console.error(
+              `[MCP] tools/call failed for tool "${ctx.toolName}":`,
+              errorMessage,
+            );
+            return mcpErrorResponse(ctx.jsonrpcId, errorMessage);
+          }
+
+          // Post-execution: output.path, postprocess, format
+          const response = await processExecutionResult({
+            id: ctx.jsonrpcId,
+            toolName: ctx.toolName,
+            args: ctx.args,
+            tool: ctx.tool,
+            data: execResult.data,
+            headers: ctx.headers,
+          });
+
+          return new Response(JSON.stringify(response), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error(
+            `[MCP] tools/call result processing failed for tool "${ctx.toolName}":`,
+            error instanceof Error ? error.message : error,
+          );
+          return mcpErrorResponse(
+            ctx.jsonrpcId,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }, 'application/json');
     },
   };
 }

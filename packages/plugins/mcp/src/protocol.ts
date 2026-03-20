@@ -1,12 +1,237 @@
 import type { MCPIcon, ToolHookContext } from './plugin.js';
-import { getByPath, type ToolRegistry } from './registry.js';
+import {
+  getByPath,
+  type RegisteredTool,
+  type ToolRegistry,
+} from './registry.js';
+
+export function dealiasArgs(
+  args: Record<string, unknown>,
+  aliases?: Record<string, string>,
+): Record<string, unknown> {
+  if (!aliases) return args;
+  const dealiased: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(args)) {
+    dealiased[aliases[key] || key] = value;
+  }
+  return dealiased;
+}
+
+export async function handleToolCall(options: {
+  id: number | string;
+  toolName: string;
+  arguments: Record<string, unknown>;
+  registry: ToolRegistry;
+  execute: (
+    toolName: string,
+    args: Record<string, unknown>,
+  ) => Promise<unknown>;
+  headers: Record<string, string>;
+}): Promise<{
+  jsonrpc: '2.0';
+  id: number | string;
+  result?: unknown;
+  error?: unknown;
+}> {
+  const tool = options.registry.getTool(options.toolName);
+
+  if (!tool) {
+    return {
+      jsonrpc: '2.0',
+      id: options.id,
+      error: { code: -32602, message: `Unknown tool: ${options.toolName}` },
+    };
+  }
+
+  const args = dealiasArgs(options.arguments, tool.argumentAliases);
+  const hookContext: ToolHookContext = {
+    toolName: options.toolName,
+    headers: options.headers,
+    query: tool.query,
+  };
+
+  try {
+    // Preprocess hook can short-circuit
+    let result: unknown;
+    let shortCircuited = false;
+    if (tool.hooks?.preprocess) {
+      try {
+        const preprocessResult = await tool.hooks.preprocess(args, hookContext);
+        if (preprocessResult !== undefined) {
+          result = preprocessResult;
+          shortCircuited = true;
+        }
+      } catch (hookError) {
+        throw new Error(
+          `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+        );
+      }
+    }
+
+    if (!shortCircuited) {
+      result = await options.execute(options.toolName, args);
+      if (tool.outputPath) {
+        const extracted = getByPath(result, tool.outputPath);
+        if (extracted === undefined && result !== undefined) {
+          console.warn(
+            `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
+              `Check your output.path configuration.`,
+          );
+        }
+        result = extracted ?? null;
+      }
+    }
+
+    // Postprocess hook (skipped when preprocess short-circuits)
+    if (!shortCircuited && tool.hooks?.postprocess) {
+      try {
+        result = await tool.hooks.postprocess(result, args, hookContext);
+      } catch (hookError) {
+        throw new Error(
+          `postprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+        );
+      }
+    }
+
+    const hasHooks = !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
+    const hookProducedResult = shortCircuited || !!tool.hooks?.postprocess;
+
+    return {
+      jsonrpc: '2.0',
+      id: options.id,
+      result: formatToolCallResult(result, tool, {
+        hookProducedResult,
+        hasHooks,
+      }),
+    };
+  } catch (error) {
+    console.error(
+      `[MCP] tools/call failed for tool "${options.toolName}":`,
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      jsonrpc: '2.0',
+      id: options.id,
+      result: {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: error instanceof Error ? error.message : String(error),
+            }),
+          },
+        ],
+        isError: true,
+      },
+    };
+  }
+}
+
+export async function processExecutionResult(options: {
+  id: number | string;
+  toolName: string;
+  args: Record<string, unknown>;
+  tool: RegisteredTool;
+  data: unknown;
+  headers: Record<string, string>;
+}): Promise<{
+  jsonrpc: '2.0';
+  id: number | string;
+  result: Record<string, unknown>;
+}> {
+  const { tool } = options;
+
+  try {
+    let data = options.data;
+
+    // Apply output.path extraction
+    if (tool.outputPath) {
+      const extracted = getByPath(data, tool.outputPath);
+      if (extracted === undefined && data !== undefined) {
+        console.warn(
+          `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${options.toolName}". ` +
+            `Check your output.path configuration.`,
+        );
+      }
+      data = extracted ?? null;
+    }
+
+    // Postprocess hook
+    const hasHooks = !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
+    let hookProducedResult = false;
+    if (tool.hooks?.postprocess) {
+      try {
+        const hookContext: ToolHookContext = {
+          toolName: options.toolName,
+          headers: options.headers,
+          query: tool.query,
+        };
+        data = await tool.hooks.postprocess(data, options.args, hookContext);
+        hookProducedResult = true;
+      } catch (hookError) {
+        throw new Error(
+          `postprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
+        );
+      }
+    }
+
+    return {
+      jsonrpc: '2.0',
+      id: options.id,
+      result: formatToolCallResult(data, tool, { hookProducedResult, hasHooks }),
+    };
+  } catch (error) {
+    console.error(
+      `[MCP] tools/call failed for tool "${options.toolName}":`,
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      jsonrpc: '2.0',
+      id: options.id,
+      result: {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: error instanceof Error ? error.message : String(error),
+            }),
+          },
+        ],
+        isError: true,
+      },
+    };
+  }
+}
+
+export function formatToolCallResult(
+  result: unknown,
+  tool: RegisteredTool,
+  opts: { hookProducedResult: boolean; hasHooks: boolean },
+): Record<string, unknown> {
+  const isMCPResult = opts.hookProducedResult && looksLikeMCPResult(result);
+  if (isMCPResult) {
+    return { isError: false, ...(result as Record<string, unknown>) };
+  }
+  const textItem: Record<string, unknown> = {
+    type: 'text',
+    text: JSON.stringify(result, null, 2),
+  };
+  if (tool.contentAnnotations)
+    textItem['annotations'] = tool.contentAnnotations;
+  const textContent = { content: [textItem], isError: false };
+  return tool.outputSchema && !opts.hasHooks
+    ? { structuredContent: result, ...textContent }
+    : textContent;
+}
 
 /**
  * Check if a value looks like a raw MCP CallToolResult (object with a valid `content` array).
  * Each content item must have a `type` field matching a known MCP content type
  * and the required fields for that type per the MCP spec.
  */
-function looksLikeMCPResult(value: unknown): value is Record<string, unknown> {
+export function looksLikeMCPResult(
+  value: unknown,
+): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false;
   const content = (value as Record<string, unknown>)['content'];
   if (!Array.isArray(content) || content.length === 0) return false;
@@ -63,7 +288,7 @@ export interface MCPHandlerOptions {
   };
 }
 
-interface JsonRpcRequest {
+export interface JsonRpcRequest {
   jsonrpc: '2.0';
   id: number | string;
   method: string;
@@ -95,19 +320,29 @@ export function createMCPHandler(options: MCPHandlerOptions) {
     registry,
   } = options;
 
-  return async function handleMCPRequest(request: Request): Promise<Response> {
+  return async function handleMCPRequest(
+    input: Request | JsonRpcRequest,
+  ): Promise<Response> {
     let body: JsonRpcRequest;
-    try {
-      body = (await request.json()) as JsonRpcRequest;
-    } catch {
-      return new Response(
-        JSON.stringify({
-          jsonrpc: '2.0',
-          id: null,
-          error: { code: -32700, message: 'Parse error: Invalid JSON' },
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+    if (input instanceof Request) {
+      try {
+        body = (await input.json()) as JsonRpcRequest;
+      } catch (parseError) {
+        console.warn(
+          `[MCP] Failed to parse JSON-RPC request body:`,
+          parseError instanceof Error ? parseError.message : parseError,
+        );
+        return new Response(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id: null,
+            error: { code: -32700, message: 'Parse error: Invalid JSON' },
+          }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+    } else {
+      body = input;
     }
     const { id, method, params } = body;
 
@@ -232,149 +467,17 @@ export function createMCPHandler(options: MCPHandlerOptions) {
           name: string;
           arguments?: Record<string, unknown>;
         };
-        const tool = registry.getTool(callParams.name);
-
-        if (!tool) {
-          response = {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32602,
-              message: `Unknown tool: ${callParams.name}`,
-            },
-          };
-          break;
-        }
-
-        try {
-          // De-alias arguments: map MCP alias names back to GraphQL variable names
-          let args = callParams.arguments || {};
-          if (tool.argumentAliases) {
-            const dealiased: Record<string, unknown> = {};
-            for (const [key, value] of Object.entries(args)) {
-              const originalName = tool.argumentAliases[key] || key;
-              dealiased[originalName] = value;
-            }
-            args = dealiased;
-          }
-
-          const hookContext: ToolHookContext = {
-            toolName: callParams.name,
-            headers: options.requestContext?.headers ?? {},
-            query: tool.query,
-          };
-
-          // Preprocess hook can short-circuit by returning non-undefined
-          let result: unknown;
-          let shortCircuited = false;
-          if (tool.hooks?.preprocess) {
-            try {
-              const preprocessResult = await tool.hooks.preprocess(
-                args,
-                hookContext,
-              );
-              if (preprocessResult !== undefined) {
-                result = preprocessResult;
-                shortCircuited = true;
-              }
-            } catch (hookError) {
-              throw new Error(
-                `preprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-              );
-            }
-          }
-
-          if (!shortCircuited) {
-            result = await options.execute(callParams.name, args);
-            if (tool.outputPath) {
-              const extracted = getByPath(result, tool.outputPath);
-              if (extracted === undefined && result !== undefined) {
-                console.warn(
-                  `[MCP] output.path "${tool.outputPath}" resolved to undefined for tool "${callParams.name}". ` +
-                    `Check your output.path configuration.`,
-                );
-              }
-              result = extracted ?? null;
-            }
-          }
-
-          // Postprocess hook transforms result (skipped when preprocess short-circuits)
-          if (!shortCircuited && tool.hooks?.postprocess) {
-            try {
-              result = await tool.hooks.postprocess(result, args, hookContext);
-            } catch (hookError) {
-              throw new Error(
-                `postprocess hook failed: ${hookError instanceof Error ? hookError.message : String(hookError)}`,
-              );
-            }
-          }
-
-          const hasHooks =
-            !!tool.hooks?.preprocess || !!tool.hooks?.postprocess;
-          const hookProducedResult =
-            shortCircuited || !!tool.hooks?.postprocess;
-
-          // If a hook returned a raw MCP result (object with valid `content` array),
-          // pass it through directly. Only checked when a hook actually produced the result
-          // to avoid false positives on GraphQL data that happens to have a `content` field.
-          const isMCPResult = hookProducedResult && looksLikeMCPResult(result);
-
-          let callResult: Record<string, unknown>;
-          if (isMCPResult) {
-            callResult = {
-              isError: false,
-              ...(result as Record<string, unknown>),
-            };
-          } else {
-            const textItem: Record<string, unknown> = {
-              type: 'text',
-              text: JSON.stringify(result, null, 2),
-            };
-            if (tool.contentAnnotations)
-              textItem['annotations'] = tool.contentAnnotations;
-            const textContent = {
-              content: [textItem],
-              isError: false,
-            };
-            // Hooks can transform the result shape, so structuredContent
-            // (which relies on outputSchema) may not match. Suppress it
-            // whenever any hook is configured, consistent with tools/list.
-            callResult =
-              tool.outputSchema && !hasHooks
-                ? {
-                    structuredContent: result,
-                    ...textContent,
-                  }
-                : textContent;
-          }
-          response = {
-            jsonrpc: '2.0',
-            id,
-            result: callResult,
-          };
-        } catch (error) {
-          console.error(
-            `[MCP] tools/call failed for tool "${callParams.name}":`,
-            error instanceof Error ? error.message : error,
-          );
-          response = {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    error:
-                      error instanceof Error ? error.message : 'Unknown error',
-                  }),
-                },
-              ],
-              isError: true,
-            },
-          };
-        }
-        break;
+        const toolCallResponse = await handleToolCall({
+          id,
+          toolName: callParams.name,
+          arguments: callParams.arguments || {},
+          registry,
+          execute: options.execute,
+          headers: options.requestContext?.headers ?? {},
+        });
+        return new Response(JSON.stringify(toolCallResponse), {
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       default:

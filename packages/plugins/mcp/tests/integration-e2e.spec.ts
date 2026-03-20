@@ -468,10 +468,8 @@ describe('MCP E2E', () => {
       proxy: { endpoint: 'http://upstream:4000/graphql' },
       plugins: () => [
         {
-          onRequest({ request }: { request: Request }) {
-            if (request.headers.get('content-type') === 'application/json') {
-              capturedRequest = request;
-            }
+          onRequestParse({ request }: { request: Request }) {
+            capturedRequest = request;
           },
         } as any,
         useCustomFetch(
@@ -528,7 +526,6 @@ describe('MCP E2E', () => {
         'custom-value',
       );
       expect(capturedRequest!.headers.get('x-request-id')).toBe('req-456');
-      expect(capturedRequest!.headers.get('x-mcp-internal')).toBe('1');
     } finally {
       await headerGateway[Symbol.asyncDispose]?.();
     }
