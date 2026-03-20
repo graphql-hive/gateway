@@ -1,0 +1,5 @@
+query GetForecast($location: String!, $days: Int) {
+  forecast(location: $location, days: $days) {
+    conditions
+  }
+}

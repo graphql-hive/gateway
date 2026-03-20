@@ -1,0 +1,31 @@
+query GetWeather($location: String!) {
+  weather(location: $location) {
+    temperature
+    conditions
+    humidity
+    location
+  }
+}
+
+query GetForecast($location: String!, $days: Int) {
+  forecast(location: $location, days: $days) {
+    date
+    high
+    low
+    conditions
+  }
+}
+
+query QuickWeather($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check returns just temperature and conditions") {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
+
+query QuickWeatherProvider($location: String!) @mcpTool(name: "quick_weather", description: "Quick weather check", descriptionProvider: "langfuse:get_weather_description") {
+  weather(location: $location) {
+    temperature
+    conditions
+  }
+}
