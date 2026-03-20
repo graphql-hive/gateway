@@ -770,16 +770,6 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       }
     },
 
-    // Set custom parser for MCP tools/call requests, returns GraphQLParams directly
-    onRequestParse({ request, setRequestParser }: any) {
-      const ctx = mcpToolCalls.get(request);
-      if (!ctx) return;
-
-      setRequestParser(() => ({
-        query: ctx.tool.query,
-        variables: ctx.args,
-      }));
-    },
 
     // Transform GraphQL execution result into MCP JSON-RPC response
     onResultProcess({ request, setResultProcessor }: any) {
