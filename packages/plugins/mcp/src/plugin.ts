@@ -18,11 +18,12 @@ import {
   type ParsedOperation,
 } from './operation-loader.js';
 import {
-  createMCPHandler,
   dealiasArgs,
   formatToolCallResult,
+  handleMCPRequest,
   processExecutionResult,
   type JsonRpcRequest,
+  type MCPHandlerOptions,
 } from './protocol.js';
 import type { LangfuseGetPromptOptions } from './providers/langfuse.js';
 import { ToolRegistry, type RegisteredTool } from './registry.js';
@@ -407,25 +408,10 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
 
   const internalRequests = new WeakSet<Request>();
   const mcpToolCalls = new WeakMap<Request, MCPToolCallContext>();
+  let mcpHandlerOptions: MCPHandlerOptions | null = null;
 
-  function mcpErrorResponse(id: number | string, message: string) {
-    return new Response(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        id,
-        result: {
-          content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
-          isError: true,
-        },
-      }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
-  }
-
-  // Create an MCP handler for non-tools/call methods with per-request provider context
-  function createHandler(providerContext?: DescriptionProviderContext) {
-    if (!registry) return null;
-    return createMCPHandler({
+  function buildHandlerOptions(): MCPHandlerOptions {
+    return {
       serverName: config.name,
       serverVersion: config.version || '1.0.0',
       serverTitle: config.title,
@@ -435,10 +421,10 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       instructions: config.instructions,
       protocolVersion: config.protocolVersion,
       suppressOutputSchema: config.suppressOutputSchema,
-      registry,
+      registry: registry!,
       resolveToolDescriptions:
         providerToolConfigs.length > 0
-          ? async () => {
+          ? async (ctx) => {
               if (!resolvedProviders) {
                 resolvedProviders = await resolveProviders(
                   config.providers || {},
@@ -447,9 +433,9 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               const resolved = await resolveDescriptions(
                 providerToolConfigs,
                 resolvedProviders,
-                { isStartup: false, context: providerContext },
+                { isStartup: false, context: ctx },
               );
-              const map = new Map();
+              const map = new Map<string, string>();
               for (const tool of resolved) {
                 if (tool.providerDescription) {
                   map.set(tool.name, tool.providerDescription);
@@ -460,7 +446,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
           : undefined,
       resolveFieldDescriptions:
         fieldProviderToolConfigs.length > 0
-          ? async () => {
+          ? async (ctx) => {
               if (!resolvedProviders) {
                 resolvedProviders = await resolveProviders(
                   config.providers || {},
@@ -469,7 +455,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               const fieldDescs = await resolveFieldDescriptions(
                 fieldProviderToolConfigs,
                 resolvedProviders,
-                { isStartup: false, context: providerContext },
+                { isStartup: false, context: ctx },
               );
               for (const tool of fieldProviderToolConfigs) {
                 const toolDescs = fieldDescs.get(tool.name);
@@ -493,13 +479,28 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
             'Ensure the MCP plugin is registered as a gateway plugin.',
         );
       },
-    });
+    };
+  }
+
+  function mcpErrorResponse(id: number | string, message: string) {
+    return new Response(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id,
+        result: {
+          content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
+          isError: true,
+        },
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   return {
     onSchemaChange({ schema: newSchema }) {
       schema = newSchema;
       registry = new ToolRegistry(resolvedTools, newSchema);
+      mcpHandlerOptions = buildHandlerOptions();
     },
 
     async onRequest({
@@ -726,7 +727,7 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
         return; // Don't endResponse, request flows to onRequestParse
       }
 
-      // All other MCP methods: delegate to createMCPHandler
+      // All other MCP methods (initialize, tools/list, etc.)
       const rawPromptLabel = url.searchParams.get('promptLabel');
       const promptLabel =
         rawPromptLabel &&
@@ -751,26 +752,22 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       const providerContext: DescriptionProviderContext | undefined =
         promptLabel ? { label: promptLabel } : undefined;
 
-      const handler = createHandler(providerContext);
-      if (!handler) {
-        endResponse(
-          new Response(
-            JSON.stringify({
-              jsonrpc: '2.0',
-              id: null,
-              error: {
-                code: -32000,
-                message: 'MCP server not ready. Schema loading failed.',
-              },
-            }),
-            { status: 503, headers: { 'Content-Type': 'application/json' } },
-          ),
-        );
-        return;
-      }
+      const result = await handleMCPRequest(
+        body,
+        mcpHandlerOptions!,
+        providerContext,
+      );
 
-      const response = await handler(body);
-      endResponse(response);
+      if (result === null) {
+        // notifications/initialized: no response
+        endResponse(new Response(null, { status: 204 }));
+      } else {
+        endResponse(
+          new Response(JSON.stringify(result), {
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        );
+      }
     },
 
     // Set custom parser for MCP tools/call requests, returns GraphQLParams directly
@@ -803,7 +800,10 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
               `[MCP] Unexpected execution result for tool "${ctx.toolName}":`,
               typeof executionResult,
             );
-            return mcpErrorResponse(ctx.jsonrpcId, 'Unexpected execution result format');
+            return mcpErrorResponse(
+              ctx.jsonrpcId,
+              'Unexpected execution result format',
+            );
           }
 
           const execResult = executionResult as ExecutionResult;
