@@ -2850,7 +2850,7 @@ __metadata:
   resolution: "@e2e/aws-sigv4@workspace:e2e/aws-sigv4"
   dependencies:
     "@apollo/subgraph": "npm:^2.11.3"
-    aws4-express: "npm:^0.12.0"
+    aws4-express: "npm:^0.14.1"
     express: "npm:^5.0.0"
     graphql: "npm:^16.12.0"
     graphql-yoga: "npm:^5.16.2"
@@ -12453,12 +12453,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aws4-express@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "aws4-express@npm:0.12.0"
+"aws4-express@npm:^0.14.1":
+  version: 0.14.1
+  resolution: "aws4-express@npm:0.14.1"
   dependencies:
-    express: "npm:^4.21.2"
-  checksum: 10c0/f12712485162c9ae02f0233cf0d3b405ca9e5252b7b123915ce18c9c514f37e43d3c37fdeb8ba0d435fb525ec561f48eceacc50dbc6bb6bbfabfa72568a1c792
+    express: "npm:^5.2.1"
+  checksum: 10c0/6f8aeff5c458edb3feb575c50763d54263d82ec644770870f23c2f63b36005a8092cb4ff8181bbf795094c2a019e37211cf40c2c290ff94d0857114577b2a99a
   languageName: node
   linkType: hard
 
