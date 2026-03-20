@@ -56,6 +56,8 @@ export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
 export type { CircuitBreakerConfiguration };
 
+export type { DemandControlMaxCostPayload } from './plugins/useDemandControl';
+
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
 > =
