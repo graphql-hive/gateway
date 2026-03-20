@@ -41,6 +41,15 @@ export type HiveTracingSpanProcessorOptions =
     }
   | {
       processor: SpanProcessor;
+      /**
+       * Tail-based sampling rate for Hive Console reporting.
+       *
+       * Traces that contain GraphQL errors are ALWAYS reported, regardless of this setting.
+       * For successful (error-free) traces, this value controls the fraction to report.
+       *
+       * Set to `1` (the default) to report all traces, or `0` to report none.
+       */
+      samplingRate?: number;
     };
 
 type TraceState = {
@@ -59,7 +68,7 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
   constructor(config: HiveTracingSpanProcessorOptions) {
     if (config.processor) {
       this.processor = config.processor;
-      this.samplingRate = 1;
+      this.samplingRate = config.samplingRate ?? 1;
     } else {
       this.processor = new BatchSpanProcessor(
         new CircuitBreakerExporter(

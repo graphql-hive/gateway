@@ -343,7 +343,10 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
 
   let processorOptions: HiveTracingSpanProcessorOptions;
   if (options.processor) {
-    processorOptions = { processor: options.processor };
+    processorOptions = {
+      processor: options.processor,
+      samplingRate: options.samplingRate,
+    };
   } else {
     options.target ??= getEnvStr('HIVE_TARGET');
     if (!options.target) {
