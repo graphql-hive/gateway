@@ -6,6 +6,7 @@ import {
   mapAsyncIterator,
   MaybePromise,
 } from '@graphql-tools/utils';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getNodeEnv } from '~internal/env';
 import {
   FieldNode,
@@ -14,7 +15,6 @@ import {
   OperationTypeNode,
   TypeInfo,
 } from 'graphql';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { GatewayPlugin } from '../types';
 import { createCalculateCost } from './demand-control/calculateCost';
 
@@ -34,7 +34,6 @@ export interface DemandControlMaxCostPayload {
   /**
    * The execution request being processed.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   executionRequest: ExecutionRequest<any, any>;
 }
 
@@ -47,7 +46,9 @@ export interface DemandControlPluginOptions {
    * If not provided, no maximum cost is enforced.
    * @default Infinity
    */
-  maxCost?: number | ((payload: DemandControlMaxCostPayload) => MaybePromise<number>);
+  maxCost?:
+    | number
+    | ((payload: DemandControlMaxCostPayload) => MaybePromise<number>);
   /**
    * The assumed maximum size of a list for fields that return lists.
    * @default 0

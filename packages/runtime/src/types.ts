@@ -44,10 +44,7 @@ import { GraphQLResolveInfo } from 'graphql/type';
 import type { UnifiedGraphConfig } from './handleUnifiedGraphConfig';
 import type { UseContentEncodingOpts } from './plugins/useContentEncoding';
 import type { AgentFactory } from './plugins/useCustomAgent';
-import {
-  DemandControlPluginOptions,
-} from './plugins/useDemandControl';
-export type { DemandControlMaxCostPayload } from './plugins/useDemandControl';
+import { DemandControlPluginOptions } from './plugins/useDemandControl';
 import { HiveConsolePluginOptions } from './plugins/useHiveConsole';
 import { PropagateHeadersOpts } from './plugins/usePropagateHeaders';
 import { RequestIdOptions } from './plugins/useRequestId';
@@ -58,6 +55,8 @@ import { UpstreamTimeoutPluginOptions } from './plugins/useUpstreamTimeout';
 export type { UnifiedGraphHandler, UnifiedGraphPlugin };
 export type { TransportEntryAdditions, UnifiedGraphConfig };
 export type { CircuitBreakerConfiguration };
+
+export type { DemandControlMaxCostPayload } from './plugins/useDemandControl';
 
 export type GatewayConfig<
   TContext extends Record<string, any> = Record<string, any>,
