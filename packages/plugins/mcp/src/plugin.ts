@@ -770,7 +770,6 @@ export function useMCP(config: MCPConfig): GatewayPlugin {
       }
     },
 
-
     // Transform GraphQL execution result into MCP JSON-RPC response
     onResultProcess({ request, setResultProcessor }: any) {
       const ctx = mcpToolCalls.get(request);
