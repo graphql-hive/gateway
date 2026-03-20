@@ -93,6 +93,12 @@ export function useDemandControl<TContext extends Record<string, any>>({
     fieldCost,
     typeCost,
   });
+  const maxCostFn =
+    maxCost == null
+      ? null
+      : typeof maxCost === 'function'
+        ? maxCost
+        : () => maxCost;
   const costByContextMap = new WeakMap<any, number>();
   const resolvedMaxCostByContextMap = new WeakMap<any, number>();
   return {
@@ -119,62 +125,44 @@ export function useDemandControl<TContext extends Record<string, any>>({
         },
         '[useDemandControl]',
       );
-      if (maxCost != null) {
-        if (typeof maxCost === 'function') {
-          return handleMaybePromise(
-            () =>
-              maxCost({
-                operationCost,
-                totalCost: costByContext,
-                subgraphName,
-                executionRequest,
-              }),
-            (resolvedMaxCost) => {
-              if (executionRequest.context) {
-                resolvedMaxCostByContextMap.set(
-                  executionRequest.context,
-                  resolvedMaxCost,
-                );
-              }
-              if (costByContext > resolvedMaxCost) {
-                throw createGraphQLError(
-                  `Operation estimated cost ${costByContext} exceeded configured maximum ${resolvedMaxCost}`,
-                  {
-                    extensions: {
-                      code: 'COST_ESTIMATED_TOO_EXPENSIVE',
-                      cost: {
-                        estimated: costByContext,
-                        max: resolvedMaxCost,
-                      },
+      if (maxCostFn != null) {
+        return handleMaybePromise(
+          () =>
+            maxCostFn({
+              operationCost,
+              totalCost: costByContext,
+              subgraphName,
+              executionRequest,
+            }),
+          (resolvedMaxCost) => {
+            if (executionRequest.context) {
+              resolvedMaxCostByContextMap.set(
+                executionRequest.context,
+                resolvedMaxCost,
+              );
+            }
+            if (costByContext > resolvedMaxCost) {
+              throw createGraphQLError(
+                `Operation estimated cost ${costByContext} exceeded configured maximum ${resolvedMaxCost}`,
+                {
+                  extensions: {
+                    code: 'COST_ESTIMATED_TOO_EXPENSIVE',
+                    cost: {
+                      estimated: costByContext,
+                      max: resolvedMaxCost,
                     },
                   },
-                );
-              }
-            },
-          );
-        } else if (costByContext > maxCost) {
-          throw createGraphQLError(
-            `Operation estimated cost ${costByContext} exceeded configured maximum ${maxCost}`,
-            {
-              extensions: {
-                code: 'COST_ESTIMATED_TOO_EXPENSIVE',
-                cost: {
-                  estimated: costByContext,
-                  max: maxCost,
                 },
-              },
-            },
-          );
-        }
+              );
+            }
+          },
+        );
       }
     },
     onExecutionResult({ result, setResult, context }) {
       if (includeExtensionMetadata) {
         const costByContext = costByContextMap.get(context) || 0;
-        const resolvedMaxCost =
-          typeof maxCost === 'function'
-            ? resolvedMaxCostByContextMap.get(context)
-            : maxCost;
+        const resolvedMaxCost = resolvedMaxCostByContextMap.get(context);
         if (isAsyncIterable(result)) {
           setResult(
             mapAsyncIterator(result, (value) => ({
