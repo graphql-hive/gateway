@@ -1,5 +1,16 @@
 # @graphql-hive/gateway-runtime
 
+## 2.7.10
+### Patch Changes
+
+
+
+- [#2141](https://github.com/graphql-hive/gateway/pull/2141) [`f35b57a`](https://github.com/graphql-hive/gateway/commit/f35b57ab3d03053ed52d5d57f86e42f54d8ff613) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/plugin-response-cache@^0.104.34` ↗︎](https://www.npmjs.com/package/@graphql-mesh/plugin-response-cache/v/0.104.34) (from `^0.104.18`, in `dependencies`)
+- Updated dependencies []:
+  - @graphql-mesh/hmac-upstream-signature@2.0.10
+
 ## 2.7.9
 ### Patch Changes
 
