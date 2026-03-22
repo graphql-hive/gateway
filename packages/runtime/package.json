@@ -57,7 +57,7 @@
     "@graphql-mesh/cross-helpers": "^0.4.10",
     "@graphql-mesh/fusion-runtime": "workspace:^",
     "@graphql-mesh/hmac-upstream-signature": "workspace:^",
-    "@graphql-mesh/plugin-response-cache": "^0.104.18",
+    "@graphql-mesh/plugin-response-cache": "^0.104.34",
     "@graphql-mesh/transport-common": "workspace:^",
     "@graphql-mesh/types": "^0.104.16",
     "@graphql-mesh/utils": "^0.104.16",
