@@ -5123,7 +5123,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-mesh/string-interpolation@npm:0.5.12, @graphql-mesh/string-interpolation@npm:^0.5.12, @graphql-mesh/string-interpolation@npm:^0.5.9":
+"@graphql-mesh/string-interpolation@npm:0.5.12":
   version: 0.5.12
   resolution: "@graphql-mesh/string-interpolation@npm:0.5.12"
   dependencies:
@@ -5134,6 +5134,20 @@ __metadata:
   peerDependencies:
     graphql: "*"
   checksum: 10c0/1dada29addd1918a832b726e43d6ae8a0d2a92b4d665a6373b28154062ace3cd5711e3928c2cf01eb3bc887dfa4199eedd60db0def83cc70ab6b3c6eb7b5c10f
+  languageName: node
+  linkType: hard
+
+"@graphql-mesh/string-interpolation@npm:^0.5.12, @graphql-mesh/string-interpolation@npm:^0.5.13":
+  version: 0.5.13
+  resolution: "@graphql-mesh/string-interpolation@npm:0.5.13"
+  dependencies:
+    dayjs: "npm:1.11.20"
+    json-pointer: "npm:0.6.2"
+    lodash.get: "npm:4.4.2"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    graphql: "*"
+  checksum: 10c0/838d799ade88462d8887ee43dd094b98fca38be50a665a3ae48aaa14099e717a818ae463cd13773b1ce25d7633838664aa8476679e1396457e5e61f315e747da
   languageName: node
   linkType: hard
 
@@ -5165,7 +5179,7 @@ __metadata:
   dependencies:
     "@graphql-hive/signal": "workspace:^"
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/string-interpolation": "npm:^0.5.9"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.13"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
@@ -5187,7 +5201,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-http@workspace:packages/transports/http"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/string-interpolation": "npm:^0.5.9"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.13"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
@@ -5250,7 +5264,7 @@ __metadata:
   resolution: "@graphql-mesh/transport-ws@workspace:packages/transports/ws"
   dependencies:
     "@graphql-mesh/cross-helpers": "npm:^0.4.10"
-    "@graphql-mesh/string-interpolation": "npm:^0.5.9"
+    "@graphql-mesh/string-interpolation": "npm:^0.5.13"
     "@graphql-mesh/transport-common": "workspace:^"
     "@graphql-mesh/types": "npm:^0.104.16"
     "@graphql-mesh/utils": "npm:^0.104.16"
@@ -9532,21 +9546,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@smithy/config-resolver@npm:^4.4.11":
-  version: 4.4.11
-  resolution: "@smithy/config-resolver@npm:4.4.11"
-  dependencies:
-    "@smithy/node-config-provider": "npm:^4.3.12"
-    "@smithy/types": "npm:^4.13.1"
-    "@smithy/util-config-provider": "npm:^4.2.2"
-    "@smithy/util-endpoints": "npm:^3.3.3"
-    "@smithy/util-middleware": "npm:^4.2.12"
-    tslib: "npm:^2.6.2"
-  checksum: 10c0/5769c91e4dc82411bb476836fdc1a6f354c03dbcc8a8693b098655c0aadb4f117b0b58a3f2a2397f55991e24247b810cd0994e691ed62083a419ebe49a1550b0
-  languageName: node
-  linkType: hard
-
-"@smithy/config-resolver@npm:^4.4.12":
+"@smithy/config-resolver@npm:^4.4.11, @smithy/config-resolver@npm:^4.4.12":
   version: 4.4.12
   resolution: "@smithy/config-resolver@npm:4.4.12"
   dependencies:
@@ -11379,7 +11379,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:4.6.0, @yarnpkg/core@npm:^4.6.0":
+"@yarnpkg/core@npm:4.6.0, @yarnpkg/core@npm:^4.4.2, @yarnpkg/core@npm:^4.6.0":
   version: 4.6.0
   resolution: "@yarnpkg/core@npm:4.6.0"
   dependencies:
@@ -11413,40 +11413,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:^4.4.2":
-  version: 4.5.0
-  resolution: "@yarnpkg/core@npm:4.5.0"
-  dependencies:
-    "@arcanis/slice-ansi": "npm:^1.1.1"
-    "@types/semver": "npm:^7.1.0"
-    "@types/treeify": "npm:^1.0.0"
-    "@yarnpkg/fslib": "npm:^3.1.4"
-    "@yarnpkg/libzip": "npm:^3.2.2"
-    "@yarnpkg/parsers": "npm:^3.0.3"
-    "@yarnpkg/shell": "npm:^4.1.3"
-    camelcase: "npm:^5.3.1"
-    chalk: "npm:^4.1.2"
-    ci-info: "npm:^4.0.0"
-    clipanion: "npm:^4.0.0-rc.2"
-    cross-spawn: "npm:^7.0.3"
-    diff: "npm:^5.1.0"
-    dotenv: "npm:^16.3.1"
-    es-toolkit: "npm:^1.39.7"
-    fast-glob: "npm:^3.2.2"
-    got: "npm:^11.7.0"
-    hpagent: "npm:^1.2.0"
-    micromatch: "npm:^4.0.2"
-    p-limit: "npm:^2.2.0"
-    semver: "npm:^7.1.2"
-    strip-ansi: "npm:^6.0.0"
-    tar: "npm:^6.0.5"
-    tinylogic: "npm:^2.0.0"
-    treeify: "npm:^1.1.0"
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/3fc4a161d243279c3d554a723dd21192bdaade0c852daffdb991e8411e3874ec1c50547d5bcc1abd14395290b820e3714f4d5a02a7bafcfd65509ad40dbeb2d1
-  languageName: node
-  linkType: hard
-
 "@yarnpkg/extensions@npm:^2.0.6":
   version: 2.0.6
   resolution: "@yarnpkg/extensions@npm:2.0.6"
@@ -11456,16 +11422,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/fslib@npm:^3.1.2, @yarnpkg/fslib@npm:^3.1.3, @yarnpkg/fslib@npm:^3.1.4":
-  version: 3.1.4
-  resolution: "@yarnpkg/fslib@npm:3.1.4"
-  dependencies:
-    tslib: "npm:^2.4.0"
-  checksum: 10c0/d38e108a6349b34b6bd885ad9fc8dcc3b7d50be5e54246e260cba899a80b5c91c8e9b27ad1e9c59b2d46e02cc07f8b7d839a851e388aa568d6efc85f5d6d10dc
-  languageName: node
-  linkType: hard
-
-"@yarnpkg/fslib@npm:^3.1.5":
+"@yarnpkg/fslib@npm:^3.1.2, @yarnpkg/fslib@npm:^3.1.3, @yarnpkg/fslib@npm:^3.1.4, @yarnpkg/fslib@npm:^3.1.5":
   version: 3.1.5
   resolution: "@yarnpkg/fslib@npm:3.1.5"
   dependencies:
@@ -11474,19 +11431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/libui@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@yarnpkg/libui@npm:3.0.2"
-  dependencies:
-    tslib: "npm:^2.4.0"
-  peerDependencies:
-    ink: ^3.0.8
-    react: ^17.0.2
-  checksum: 10c0/ca9523992c2168864e334da4e83f682c65616e7d25a02fd3e8900b4ee22577e861f7beb62b3ca327c1b0b59b858a47ca70b3e48e92900790e134c1b698efa2df
-  languageName: node
-  linkType: hard
-
-"@yarnpkg/libui@npm:^3.1.0":
+"@yarnpkg/libui@npm:^3.0.2, @yarnpkg/libui@npm:^3.1.0":
   version: 3.1.0
   resolution: "@yarnpkg/libui@npm:3.1.0"
   dependencies:
