@@ -37,12 +37,9 @@ import type {
   OperationDefinitionNode,
   OperationTypeNode,
 } from 'graphql';
-import {
-  isAbstractType,
-  isObjectType,
-  Kind,
-  parse,
-} from 'graphql';
+import { isAbstractType, isObjectType, Kind, parse } from 'graphql';
+import { stringifyWithoutSelectionSet } from './stringify/data';
+import { stringifyExecutionResult } from './stringify/stringify-with-document';
 
 export interface QueryPlanExecutionContext {
   /**
@@ -134,14 +131,13 @@ export function executeQueryPlan({
     onSubgraphExecute,
   });
   function handleResp() {
-    const executionResult = {} as ExecutionResult;
-    if (Object.keys(executionContext.data).length > 0) {
-      executionResult.data = executionContext.data;
-    }
-    if (executionContext.errors.length > 0) {
-      executionResult.errors = executionContext.errors;
-    }
-    return executionResult;
+    return {
+      data: executionContext.data,
+      errors: executionContext.errors,
+      stringify(result: ExecutionResult) {
+        return stringifyExecutionResult(result, executionContext);
+      },
+    };
   }
   return handleMaybePromise(
     () => executePlanNode(node, executionContext),
@@ -465,7 +461,7 @@ function prepareFlattenContext(
       );
     }
 
-    const dedupeKey = stableStringify(representation);
+    const dedupeKey = stringifyWithoutSelectionSet(representation);
     let dedupIndex = representationKeyToIndex.get(dedupeKey);
     if (dedupIndex === undefined) {
       dedupIndex = dedupedRepresentations.length;
@@ -573,7 +569,7 @@ function prepareBatchFetchContext(
           );
         }
 
-        const identity = stableStringify(representation);
+        const identity = stringifyWithoutSelectionSet(representation);
         let dedupIndex = variableBatchState.identityToEntityIndex.get(identity);
         if (dedupIndex == null) {
           dedupIndex = variableBatchState.representations.length;
@@ -1168,42 +1164,6 @@ const getDefaultErrorPath = memoize1(function getDefaultErrorPath(
   return responseKey ? [responseKey] : [];
 });
 
-function stableStringify(value: unknown): string {
-  if (value == null) {
-    return 'null';
-  }
-  if (value === true) {
-    return 'true';
-  }
-  if (value === false) {
-    return 'false';
-  }
-  const type = typeof value;
-  if (type === 'number') {
-    return value.toString();
-  }
-  if (type === 'bigint') {
-    return value.toString();
-  }
-  if (type === 'string') {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
-  }
-  if (type === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, entryValue]) => entryValue !== undefined)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(
-        ([key, entryValue]) =>
-          `${stableStringify(key)}:${stableStringify(entryValue)}`,
-      );
-    return `{${entries.join(',')}}`;
-  }
-  return 'null';
-}
-
 /**
  * Executes the individual plan node
  */
@@ -1321,7 +1281,9 @@ function normalizeRewrite(rewrite: FetchRewrite): NormalizedRewrite {
       renameKeyTo: rewrite.KeyRenamer?.renameKeyTo,
     };
   }
-  throw new Error(`Unsupported fetch node rewrite: ${JSON.stringify(rewrite)}`);
+  throw new Error(
+    `Unsupported fetch node rewrite: ${stringifyWithoutSelectionSet(rewrite)}`,
+  );
 }
 
 function normalizeRewritePath(path: FetchNodePathSegment[]): string[] {
@@ -1333,7 +1295,7 @@ function normalizeRewritePath(path: FetchNodePathSegment[]): string[] {
       normalized.push(segment.Key);
     } else {
       throw new Error(
-        `Unsupported fetch node path segment: ${JSON.stringify(segment)}`,
+        `Unsupported fetch node path segment: ${stringifyWithoutSelectionSet(segment)}`,
       );
     }
   }
