@@ -334,11 +334,11 @@ function extractDirectives(
       : [...inheritedIncludeIfVars, ...(includeIfVars ?? [])];
 
   // If they collide, literalSkip
-  for (const skipIfVar of combinedSkipIfVars) {
+  outer: for (const skipIfVar of combinedSkipIfVars) {
     for (const includeIfVar of combinedIncludeIfVars) {
       if (skipIfVar === includeIfVar) {
         literalSkip = true;
-        break;
+        break outer;
       }
     }
   }
