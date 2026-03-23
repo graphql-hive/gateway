@@ -1,5 +1,14 @@
 # @graphql-mesh/transport-http
 
+## 1.0.18
+### Patch Changes
+
+
+
+- [#2148](https://github.com/graphql-hive/gateway/pull/2148) [`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  
+  - Updated dependency [`@graphql-mesh/string-interpolation@^0.5.15` ↗︎](https://www.npmjs.com/package/@graphql-mesh/string-interpolation/v/0.5.15) (from `^0.5.13`, in `dependencies`)
+
 ## 1.0.17
 ### Patch Changes
 
