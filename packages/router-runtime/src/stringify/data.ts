@@ -185,7 +185,7 @@ function projectObject(
       let skip = false;
       const skipVars = field.skipIfVars;
       for (let si = 0; si < skipVars.length; si++) {
-        if (variables[skipVars[si]!] === true) {
+        if (variables?.[skipVars[si]!] === true) {
           skip = true;
           break;
         }
@@ -196,7 +196,7 @@ function projectObject(
       let exclude = false;
       const includeVars = field.includeIfVars;
       for (let ii = 0; ii < includeVars.length; ii++) {
-        if (variables[includeVars[ii]!] === false) {
+        if (variables?.[includeVars[ii]!] === false) {
           exclude = true;
           break;
         }
