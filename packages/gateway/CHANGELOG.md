@@ -1,5 +1,13 @@
 # @graphql-hive/gateway
 
+## 2.5.13
+### Patch Changes
+
+- Updated dependencies [[`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce), [`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce), [`ed7abb9`](https://github.com/graphql-hive/gateway/commit/ed7abb9b6471d27591460749c5f5bac3d41d37ce)]:
+  - @graphql-mesh/transport-http@1.0.18
+  - @graphql-mesh/transport-http-callback@1.0.18
+  - @graphql-mesh/transport-ws@2.0.18
+
 ## 2.5.12
 ### Patch Changes
 
