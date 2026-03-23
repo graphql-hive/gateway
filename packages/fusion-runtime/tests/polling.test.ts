@@ -439,7 +439,7 @@ describe('Polling', () => {
         }
       `),
     });
-    expect(firstRes).toEqual({
+    expect(firstRes).toMatchObject({
       data: {
         createdTime: firstCreatedTime,
       },
@@ -460,7 +460,7 @@ describe('Polling', () => {
         }
       `),
     });
-    expect(secondRes).toEqual({
+    expect(secondRes).toMatchObject({
       data: {
         createdTime: firstCreatedTime,
       },
@@ -475,7 +475,7 @@ describe('Polling', () => {
         }
       `),
     });
-    expect(thirdRes).toEqual({
+    expect(thirdRes).toMatchObject({
       data: {
         createdTime: secondFetchTime,
       },

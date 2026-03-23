@@ -1,6 +1,7 @@
 import { ExecutionResult } from '@graphql-tools/utils';
 import { DocumentNode, GraphQLSchema } from 'graphql';
 import { QueryPlanExecutionContext } from '../executor.js';
+import { CLOSE_BRACE, CLOSE_BRACKET, COMMA, OPEN_BRACE } from './consts.js';
 import {
   ObjectStringifyOptions,
   projectWithPlan,
@@ -39,11 +40,11 @@ export function stringifyExecutionResult(
   // Retrieve (or build and cache) the pre-compiled projection plan.
   const plan = getOrCompileProjectionPlan(executionContext);
   if (!plan) {
-    // Could not find the operation in the document – fall back to JSON.stringify.
-    return JSON.stringify(result);
+    // Could not find the operation in the document – fall back to regular stringify
+    return stringifyWithoutSelectionSet(result);
   }
 
-  let buf = '{';
+  let buf = OPEN_BRACE;
   let first = true;
 
   if (result.data !== undefined) {
@@ -60,11 +61,11 @@ export function stringifyExecutionResult(
   if (result.errors?.length) {
     buf += first ? ERRORS_KEY_OPEN : COMMA_ERRORS_KEY_OPEN;
     first = false;
-    for (let i = 0; i < executionContext.errors.length; i++) {
-      if (i > 0) buf += ',';
-      buf += stringifyError(executionContext.errors[i]!);
+    for (let i = 0; i < result.errors.length; i++) {
+      if (i > 0) buf += COMMA;
+      buf += stringifyError(result.errors[i]!);
     }
-    buf += ']';
+    buf += CLOSE_BRACKET;
   }
 
   if (result.extensions != null) {
@@ -88,6 +89,6 @@ export function stringifyExecutionResult(
     }
   }
 
-  buf += '}';
+  buf += CLOSE_BRACE;
   return buf;
 }

@@ -8,6 +8,7 @@ import {
   GraphQLSchema,
   isAbstractType,
   isEnumType,
+  isNonNullType,
   isScalarType,
   Kind,
   OperationDefinitionNode,
@@ -84,6 +85,8 @@ export interface ProjectionPlanField {
    * four branch checks (typeGuard, hasSkip, hasInclude, isTypename) per field.
    */
   isSimple: boolean;
+
+  nullable: boolean;
 }
 
 /**
@@ -413,6 +416,7 @@ function mergeField(
     children,
     scalarHint: existing.scalarHint ?? incoming.scalarHint,
     isSimple: typeGuard === null && !hasSkip && !hasInclude && !isTypename,
+    nullable: existing.nullable || incoming.nullable,
   };
 }
 
@@ -481,6 +485,7 @@ function buildSelectionSet(
             scalarHint: 'string',
             // __typename fields are never "simple" because they need the typename lookup.
             isSimple: false,
+            nullable: false,
           };
           const existing = fields.get(responseKey);
           fields.set(
@@ -492,14 +497,17 @@ function buildSelectionSet(
 
         // Resolve field return type from schema.
         let fieldType: GraphQLNamedOutputType | undefined;
+        let nullable = true;
         if (fieldName === __SCHEMA_FIELD) {
           fieldType = getNamedType(
             SchemaMetaFieldDef.type,
           ) as GraphQLNamedOutputType;
+          nullable = false;
         } else if (fieldName === __TYPE_FIELD) {
           fieldType = getNamedType(
             TypeMetaFieldDef.type,
           ) as GraphQLNamedOutputType;
+          nullable = false;
         } else {
           const parentSchemaType = schema.getType(parentTypeName);
           if (parentSchemaType && 'getFields' in parentSchemaType) {
@@ -509,6 +517,9 @@ function buildSelectionSet(
               }
             ).getFields()[fieldName];
             if (fieldDef) {
+              if (isNonNullType(fieldDef.type)) {
+                nullable = false;
+              }
               fieldType = getNamedType(
                 fieldDef.type as Parameters<typeof getNamedType>[0],
               ) as GraphQLNamedOutputType;
@@ -561,6 +572,7 @@ function buildSelectionSet(
           children,
           scalarHint,
           isSimple: parentTypeGuard === null && !hasSkip && !hasInclude,
+          nullable,
         };
         const existing = fields.get(responseKey);
         fields.set(responseKey, existing ? mergeField(existing, field) : field);

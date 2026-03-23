@@ -156,16 +156,22 @@ function projectObject(
   for (let fi = 0; fi < fields.length; fi++) {
     const field = fields[fi]!;
 
+    const fieldValue = obj[field.responseKey];
+
     // Fast path: field has no type guard, no @skip/@include, and is not __typename.
     // This branch is taken for the vast majority of fields in real-world schemas, allowing
     // the JIT to eliminate four branch checks (typeGuard, hasSkip, hasInclude, isTypename).
     if (field.isSimple) {
+      if (fieldValue == null && !field.nullable) {
+        return NULL;
+      }
       buf += first ? field.escapedKey : field.commaEscapedKey;
       first = false;
+
       if (field.children === null) {
-        buf += projectLeafValue(obj[field.responseKey], field);
+        buf += projectLeafValue(fieldValue, field);
       } else {
-        buf += projectValue(obj[field.responseKey], field.children, variables);
+        buf += projectValue(fieldValue, field.children, variables);
       }
       continue;
     }
@@ -212,16 +218,16 @@ function projectObject(
         typename = obj[TYPENAME] as string;
       }
       if (typename == null) {
-        typename = obj[field.responseKey] as string;
+        typename = fieldValue as string;
       }
       if (!field.isTypename.has(typename)) {
         return NULL;
       }
       buf += stringifyString(typename);
     } else if (field.children === null) {
-      buf += projectLeafValue(obj[field.responseKey], field);
+      buf += projectLeafValue(fieldValue, field);
     } else {
-      buf += projectValue(obj[field.responseKey], field.children, variables);
+      buf += projectValue(fieldValue, field.children, variables);
     }
   }
 
