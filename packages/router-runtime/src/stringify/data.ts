@@ -54,9 +54,9 @@ export function stringifyWithoutSelectionSet(
       }
       let buf = OPEN_BRACE;
       let first = true;
-      for (const [key, val] of Object.entries(value as Record<string, unknown>)
-        .filter(([, entryValue]) => {
-          if (entryValue === undefined) {
+      const entries = Object.entries(value)
+        .filter(([key, val]) => {
+          if (val === undefined) {
             return false;
           }
           if (objectOptions?.ignoredFields?.has(key)) {
@@ -64,18 +64,13 @@ export function stringifyWithoutSelectionSet(
           }
           return true;
         })
-        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-        if (objectOptions?.ignoredFields?.has(key)) {
-          continue;
-        }
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+      for (const [key, val] of entries) {
         if (!first) {
           buf += COMMA;
         }
         first = false;
-        buf +=
-          stringifyString(key) +
-          COLON +
-          stringifyWithoutSelectionSet((value as Record<string, unknown>)[key]);
+        buf += stringifyString(key) + COLON + stringifyWithoutSelectionSet(val);
       }
       buf += CLOSE_BRACE;
       return buf;
