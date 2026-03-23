@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "@apollo/server": "^5.4.0",
-    "@apollo/subgraph": "^2.11.3",
+    "@apollo/subgraph": "^2.13.3",
     "graphql": "^16.12.0"
   }
 }
