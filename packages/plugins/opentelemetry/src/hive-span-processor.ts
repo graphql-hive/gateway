@@ -149,9 +149,14 @@ export class HiveTracingSpanProcessor implements SpanProcessor {
       // Tail-based sampling: always report traces with errors, apply samplingRate to others
       const operationSpans = new Set(traceState.operationRoots.values());
       const hasErrors = [...operationSpans].some(
-        (op) => (op.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT] as number) > 0,
+        (op) =>
+          (op.attributes[SEMATTRS_HIVE_GRAPHQL_ERROR_COUNT] as number) > 0,
       );
-      if (!hasErrors && this.samplingRate < 1 && Math.random() >= this.samplingRate) {
+      if (
+        !hasErrors &&
+        this.samplingRate < 1 &&
+        Math.random() >= this.samplingRate
+      ) {
         // This trace is not sampled
         return;
       }

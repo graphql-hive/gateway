@@ -395,14 +395,20 @@ export function hiveTracingSetup(options: HiveTracingSetupOptions) {
     : {};
 
   openTelemetrySetup({
-    ...options,
-    ...setupSamplingOptions,
+    // Pass only the fields relevant to openTelemetrySetup, explicitly.
+    // Do NOT spread `options` to avoid forwarding Hive-specific fields (processor,
+    // accessToken, samplingRate, etc.) which are not part of OpentelemetrySetupOptions.
+    contextManager: options.contextManager,
+    propagators: options.propagators,
+    generalLimits: options.generalLimits,
     log,
+    configureDiagLogger: options.configureDiagLogger,
     resource: createResource(options).merge(
       resourceFromAttributes({
         'hive.target_id': options.target,
       }),
     ),
+    ...setupSamplingOptions,
     traces: {
       processors: [new HiveTracingSpanProcessor(processorOptions)],
       spanLimits: options.spanLimits,
