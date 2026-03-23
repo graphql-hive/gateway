@@ -54,7 +54,17 @@ export function stringifyWithoutSelectionSet(
       }
       let buf = OPEN_BRACE;
       let first = true;
-      for (const key in value as object) {
+      for (const [key, val] of Object.entries(value as Record<string, unknown>)
+        .filter(([, entryValue]) => {
+          if (entryValue === undefined) {
+            return false;
+          }
+          if (objectOptions?.ignoredFields?.has(key)) {
+            return false;
+          }
+          return true;
+        })
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
         if (objectOptions?.ignoredFields?.has(key)) {
           continue;
         }
