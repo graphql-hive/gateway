@@ -1,3 +1,4 @@
+import { getDefinedRootType } from '@graphql-tools/utils';
 import {
   FragmentDefinitionNode,
   getNamedType,
@@ -144,20 +145,10 @@ function buildProjectionPlan(
 ): CompiledProjectionPlan | null {
   // `schema.getRootType()` was added in GraphQL v16.
   // For v15 compatibility we use the individual accessor methods instead.
-  let rootType: ReturnType<GraphQLSchema['getQueryType']>;
-  switch (executionContext.operation.operation) {
-    case 'query':
-      rootType = executionContext.supergraphSchema.getQueryType();
-      break;
-    case 'mutation':
-      rootType = executionContext.supergraphSchema.getMutationType();
-      break;
-    case 'subscription':
-      rootType = executionContext.supergraphSchema.getSubscriptionType();
-      break;
-    default:
-      return null;
-  }
+  const rootType = getDefinedRootType(
+    executionContext.supergraphSchema,
+    executionContext.operation.operation,
+  );
   if (!rootType) return null;
 
   const fields = buildSelectionSet(
@@ -170,12 +161,12 @@ function buildProjectionPlan(
     /* inheritedIncludeIfVars */ EMPTY_STRINGS,
   );
 
-  return Object.freeze({
+  return {
     fields,
     variableDefinitions:
       executionContext.operation.variableDefinitions ?? EMPTY_VARIABLE_DEFS,
     hasConditionalFields: anyFieldHasConditional(fields),
-  });
+  };
 }
 
 // Stable empty arrays shared across all plans – avoids repeated allocations.

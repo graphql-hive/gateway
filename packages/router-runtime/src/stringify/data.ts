@@ -8,6 +8,7 @@ import {
   OPEN_BRACE,
   OPEN_BRACKET,
   TRUE,
+  TYPENAME,
 } from './consts.js';
 import type { ProjectionPlanField } from './projection-plan.js';
 
@@ -167,7 +168,7 @@ function projectObject(
     // --- Type guard (lazy __typename lookup) ---
     if (field.typeGuard !== null) {
       if (typename == null) {
-        typename = obj['__typename'] as string;
+        typename = obj[TYPENAME] as string;
       }
       if (typename != null && !field.typeGuard.has(typename)) {
         continue;
@@ -203,7 +204,7 @@ function projectObject(
     if (field.isTypename) {
       // Ensure __typename is resolved before writing it.
       if (typename == null) {
-        typename = obj['__typename'] as string;
+        typename = obj[TYPENAME] as string;
       }
       if (typename == null) {
         typename = obj[field.responseKey] as string;

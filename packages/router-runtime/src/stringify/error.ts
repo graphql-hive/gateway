@@ -1,6 +1,12 @@
 import { getSchemaCoordinate } from '@graphql-tools/utils';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
-import { CLOSE_BRACE, OPEN_BRACE } from './consts.js';
+import {
+  CLOSE_BRACE,
+  CLOSE_BRACKET,
+  COMMA,
+  OPEN_BRACE,
+  QUOTE,
+} from './consts.js';
 import {
   ObjectStringifyOptions,
   stringifyString,
@@ -40,12 +46,12 @@ export function stringifyError(error: GraphQLError): string {
     first = false;
     for (let i = 0; i < serializedError.locations.length; i++) {
       const location = serializedError.locations[i]!;
-      if (i > 0) buf += ',';
+      if (i > 0) buf += COMMA;
       buf += OPEN_BRACE;
       buf += LINE_KEY + location.line + COMMA_COLUMN_KEY + location.column;
       buf += CLOSE_BRACE;
     }
-    buf += ']';
+    buf += CLOSE_BRACKET;
   }
 
   if (serializedError.path) {
@@ -53,13 +59,13 @@ export function stringifyError(error: GraphQLError): string {
     first = false;
     for (let i = 0; i < serializedError.path.length; i++) {
       const segment = serializedError.path[i]!;
-      if (i > 0) buf += ',';
+      if (i > 0) buf += COMMA;
       buf +=
         typeof segment === 'string'
           ? stringifyString(segment)
           : String(segment);
     }
-    buf += ']';
+    buf += CLOSE_BRACKET;
   }
 
   if (serializedError.extensions) {
@@ -76,7 +82,7 @@ export function stringifyError(error: GraphQLError): string {
     buf +=
       (first ? SCHEMA_COORDINATE_KEY : COMMA_SCHEMA_COORDINATE_KEY) +
       coordinate +
-      '"';
+      QUOTE;
   }
 
   buf += CLOSE_BRACE;
