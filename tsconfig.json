@@ -114,7 +114,9 @@
       "~internal/env/node": ["./internal/env/src/node.ts"]
       // INTENTIONAL: the heapsnapshot package needs to be built to be used (because of the worker script)
       // "@internal/heapsnapshot": ["./internal/heapsnapshot/src/index.ts"]
-    }
+    },
+    "ignoreDeprecations": "6.0",
+    "types": ["node"]
   },
   "include": [
     "./.yarn/custom-plugins",
